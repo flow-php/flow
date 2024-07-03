@@ -30,9 +30,6 @@ final class Int64DateTimeConverter implements Converter
         return $this->dateTimeToMicroseconds($data);
     }
 
-    /**
-     * @psalm-suppress ArgumentTypeCoercion
-     */
     private function dateTimeToMicroseconds(\DateTimeInterface $dateTime) : int
     {
         return (int) \bcadd(\bcmul($dateTime->format('U'), '1000000'), $dateTime->format('u'));

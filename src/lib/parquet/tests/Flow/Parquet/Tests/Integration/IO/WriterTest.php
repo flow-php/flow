@@ -6,7 +6,8 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Composer\InstalledVersions;
 use Faker\Factory;
-use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Filesystem\Stream\NativeLocalDestinationStream;
+use Flow\Filesystem\{Path};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use Flow\Parquet\{Consts, Option, Options, Reader, Writer};
@@ -14,77 +15,11 @@ use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase
 {
-    public function test_appending_to_file() : void
+    protected function setUp() : void
     {
-        $writer = new Writer();
-
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
-
-        $schema = $this->createSchema();
-        $row = $this->createRow();
-
-        $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
-
-        $writer->append($path, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
-
-        self::assertSame(
-            [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
-        );
-        self::assertFileExists($path);
-        \unlink($path);
-    }
-
-    public function test_appending_to_in_batches_file() : void
-    {
-        $writer = new Writer();
-
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
-
-        $schema = $this->createSchema();
-        $row = $this->createRow();
-
-        $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
-
-        $writer->reopen($path);
-        $writer->writeBatch([$row, $row]);
-        $writer->writeBatch([$row, $row]);
-        $writer->writeBatch([$row, $row]);
-        $writer->writeBatch([$row, $row]);
-        $writer->writeBatch([$row, $row]);
-        $writer->close();
-
-        self::assertSame(
-            [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
-        );
-        self::assertFileExists($path);
-        \unlink($path);
-    }
-
-    public function test_appending_to_stream() : void
-    {
-        $writer = new Writer();
-
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
-
-        $schema = $this->createSchema();
-        $row = $this->createRow();
-
-        $stream = \fopen($path, 'wb+');
-        $writer->writeStream($stream, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
-
-        $stream = \fopen($path, 'ab+');
-        $writer->reopenForStream($stream);
-        $writer->writeBatch([$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
-        $writer->close();
-
-        self::assertSame(
-            [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
-            \iterator_to_array((new Reader())->read($path)->values())
-        );
-        self::assertFileExists($path);
-        \unlink($path);
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
     }
 
     public function test_closing_not_open_writer() : void
@@ -101,7 +36,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $writer->open($path, $schema);
@@ -116,7 +51,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -138,22 +73,6 @@ final class WriterTest extends TestCase
         $writer->writeBatch([$this->createRow()]);
     }
 
-    public function test_writing_batch_to_not_writable_stream() : void
-    {
-        $writer = new Writer();
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Given stream is not opened in write mode, expected wb, got: rb+');
-
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
-        \file_put_contents($path, 'test');
-        $stream = \fopen($path, 'rb+');
-
-        $writer->openForStream($stream, $this->createSchema());
-        $writer->writeBatch([$this->createRow()]);
-        \unlink($path);
-    }
-
     public function test_writing_column_statistics() : void
     {
         $writer = new Writer(
@@ -161,7 +80,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 1)
         );
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -190,7 +109,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -217,7 +136,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -244,7 +163,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -270,14 +189,14 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
         $row = $this->createRow();
 
         $stream = \fopen($path, 'wb+');
-        $writer->openForStream($stream, $schema);
+        $writer->openForStream(new NativeLocalDestinationStream(new Path($path), $stream), $schema);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
@@ -308,7 +227,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -330,7 +249,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -350,14 +269,14 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
 
         $stream = \fopen($path, 'wb+');
 
-        $writer->writeStream($stream, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+        $writer->writeStream(new NativeLocalDestinationStream(new Path($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
         self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Exception\RuntimeException, FlowContext, Loader, Rows};
+use Flow\Filesystem\Path;
 
 final class AvroLoader implements Closure, Loader, Loader\FileLoader
 {

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\{FlowContext, Formatter, Loader, Loader\StreamLoader\Type, Rows};
+use Flow\Filesystem\Stream\Mode;
 
 final class StreamLoader implements Closure, Loader
 {

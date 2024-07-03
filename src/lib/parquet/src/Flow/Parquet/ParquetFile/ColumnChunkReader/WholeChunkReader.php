@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\ColumnChunkReader;
 
+use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
 use Flow\Parquet\ParquetFile\Page\{ColumnData, PageHeader};
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\{ColumnChunkReader, PageReader};
-use Flow\Parquet\ThriftStream\TPhpFileStream;
+use Flow\Parquet\ThriftStream\{TPhpFileStream};
 use Thrift\Protocol\TCompactProtocol;
-use Thrift\Transport\TBufferedTransport;
+use Thrift\Transport\{TBufferedTransport};
 
 final class WholeChunkReader implements ColumnChunkReader
 {
@@ -23,33 +24,35 @@ final class WholeChunkReader implements ColumnChunkReader
     }
 
     /**
-     * @param resource $stream
-     *
      * @return \Generator<array<mixed>>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream) : \Generator
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
-        $offset = $columnChunk->pageOffset();
+        $pageStream = fopen('php://temp', 'rb+');
 
-        \fseek($stream, $offset);
+        if ($pageStream === false) {
+            throw new RuntimeException('Cannot open temporary stream');
+        }
 
-        $firstHeader = $this->readHeader($stream, $offset);
+        /** @phpstan-ignore-next-line */
+        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset()));
+        \rewind($pageStream);
 
-        if ($firstHeader === null) {
+        $header = $this->readHeader($pageStream);
+
+        if ($header === null) {
             throw new RuntimeException('Cannot read first page header');
         }
 
-        if ($firstHeader->type()->isDictionaryPage()) {
+        if ($header->type()->isDictionaryPage()) {
             $dictionary = $this->pageReader->readDictionary(
                 $column,
-                $firstHeader,
+                $header,
                 $columnChunk->codec(),
-                $stream
+                $pageStream
             );
-            $offset = \ftell($stream);
         } else {
             $dictionary = null;
-            \fseek($stream, $offset);
         }
 
         $columnData = ColumnData::initialize($column);
@@ -57,8 +60,7 @@ final class WholeChunkReader implements ColumnChunkReader
         $rowsToRead = $columnChunk->valuesCount();
 
         while (true) {
-            /** @phpstan-ignore-next-line */
-            $dataHeader = $this->readHeader($stream, $offset);
+            $dataHeader = $dictionary ? $this->readHeader($pageStream) : $header;
 
             /** There are no more pages in given column chunk */
             if ($dataHeader === null || $columnData->size() >= $rowsToRead || $dataHeader->type()->isDataPage() === false) {
@@ -70,6 +72,8 @@ final class WholeChunkReader implements ColumnChunkReader
                     $yieldedRows++;
 
                     if ($yieldedRows >= $rowsToRead) {
+                        \fclose($pageStream);
+
                         return;
                     }
                 }
@@ -82,22 +86,21 @@ final class WholeChunkReader implements ColumnChunkReader
                 $dataHeader,
                 $columnChunk->codec(),
                 $dictionary,
-                $stream
+                $pageStream
             ));
-
-            $offset = \ftell($stream);
         }
+
+        \fclose($pageStream);
     }
 
     /**
      * @param resource $stream
      */
-    private function readHeader($stream, int $pageOffset) : ?PageHeader
+    private function readHeader($stream) : ?PageHeader
     {
         $currentOffset = \ftell($stream);
 
         try {
-            \fseek($stream, $pageOffset);
             $thriftHeader = new \Flow\Parquet\Thrift\PageHeader();
             @$thriftHeader->read(new TCompactProtocol(new TBufferedTransport(new TPhpFileStream($stream))));
 

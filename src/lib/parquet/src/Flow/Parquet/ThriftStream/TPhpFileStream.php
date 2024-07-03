@@ -47,7 +47,7 @@ final class TPhpFileStream extends TTransport
     public function open() : void
     {
         if (!\is_resource($this->stream)) {
-            throw new TException('TPhpStream: Could not open php://input');
+            throw new TException('TPhpStream: Could not open stream');
         }
     }
 

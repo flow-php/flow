@@ -11,5 +11,5 @@ making it a prime choice for developers dealing with XML data in large-scale and
 PHP's Adapter XML, managing XML data within your ETL workflows becomes a more simplified and efficient endeavor,
 aligning perfectly with the robust and adaptable nature of the Flow PHP ecosystem.
 
-- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/adapters/xml.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

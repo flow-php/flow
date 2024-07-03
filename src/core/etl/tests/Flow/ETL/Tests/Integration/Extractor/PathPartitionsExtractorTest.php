@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
-use function Flow\ETL\DSL\{flow_context, rows};
-use Flow\ETL\Extractor\PathPartitionsExtractor;
-use Flow\ETL\Filesystem\Path;
+use function Flow\ETL\DSL\{flow_context, from_path_partitions, rows};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\Filesystem\Path;
 
 final class PathPartitionsExtractorTest extends IntegrationTestCase
 {
     public function test_extracting_data_from_path_partitions() : void
     {
-        $extractor = new PathPartitionsExtractor(Path::realpath(__DIR__ . '/Fixtures/multi_partitioned/**/*'));
+        $extractor = from_path_partitions(Path::realpath(__DIR__ . '/Fixtures/multi_partitioned/**/*'));
 
         $extractedData = \iterator_to_array($extractor->extract(flow_context()));
 

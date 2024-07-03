@@ -21,7 +21,7 @@ trait Limitable
         $this->limit = $limit;
     }
 
-    public function countRow() : void
+    public function incrementReturnedRows() : void
     {
         $this->yieldedRows++;
     }

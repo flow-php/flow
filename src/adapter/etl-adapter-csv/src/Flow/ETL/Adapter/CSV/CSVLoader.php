@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\{FlowContext, Loader, Partition, Rows};
+use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class CSVLoader implements Closure, Loader, Loader\FileLoader
 {
@@ -71,7 +70,7 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         }
     }
 
-    private function writeCSV(array $row, FileStream $destination) : void
+    private function writeCSV(array $row, DestinationStream $stream) : void
     {
         /**
          * @var string $entry
@@ -83,13 +82,27 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
             }
         }
 
+        $tmpHandle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
+
+        if ($tmpHandle === false) {
+            throw new RuntimeException('Failed to open temporary stream for CSV row');
+        }
+
         \fputcsv(
-            stream: $destination->resource(),
+            stream: $tmpHandle,
             fields: $row,
             separator: $this->separator,
             enclosure: $this->enclosure,
             escape: $this->escape,
             eol: $this->newLineSeparator
         );
+        $csvRowData = \stream_get_contents($tmpHandle, offset: 0);
+        \fclose($tmpHandle);
+
+        if ($csvRowData === false) {
+            throw new RuntimeException('Failed to read temporary stream for CSV row');
+        }
+
+        $stream->append($csvRowData);
     }
 }

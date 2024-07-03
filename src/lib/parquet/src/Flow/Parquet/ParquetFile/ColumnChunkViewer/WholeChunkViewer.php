@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\ColumnChunkViewer;
 
+use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\ColumnChunkViewer;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
@@ -15,29 +16,30 @@ use Thrift\Transport\TBufferedTransport;
 
 final class WholeChunkViewer implements ColumnChunkViewer
 {
-    /**
-     * @param resource $stream
-     */
-    public function view(ColumnChunk $columnChunk, FlatColumn $column, $stream) : \Generator
+    public function view(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
-        $offset = $columnChunk->pageOffset();
+        $pageStream = fopen('php://temp', 'rb+');
 
-        \fseek($stream, $offset);
+        if ($pageStream === false) {
+            throw new RuntimeException('Cannot open temporary stream');
+        }
+
+        /** @phpstan-ignore-next-line */
+        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset()));
+        \rewind($pageStream);
 
         if ($columnChunk->dictionaryPageOffset()) {
-            $dictionaryHeader = $this->readHeader($stream, $offset);
+            $dictionaryHeader = $this->readHeader($pageStream);
 
             if ($dictionaryHeader === null) {
-                throw new RuntimeException('Dictionary page header not found in column chunk under offset: ' . $offset);
+                throw new RuntimeException('Dictionary page header not found in column chunk under offset: ' . $columnChunk->pageOffset());
             }
 
             yield $dictionaryHeader;
-
-            $offset += $dictionaryHeader->compressedPageSize();
         }
 
         while (true) {
-            $dataHeader = $this->readHeader($stream, $offset);
+            $dataHeader = $this->readHeader($pageStream);
 
             /** There are no more pages in given column chunk */
             if ($dataHeader === null || $dataHeader->type()->isDataPage() === false) {
@@ -45,20 +47,19 @@ final class WholeChunkViewer implements ColumnChunkViewer
             }
 
             yield $dataHeader;
-
-            $offset += $dataHeader->compressedPageSize();
         }
+
+        \fclose($pageStream);
     }
 
     /**
      * @param resource $stream
      */
-    private function readHeader($stream, int $pageOffset) : ?PageHeader
+    private function readHeader($stream) : ?PageHeader
     {
         $currentOffset = \ftell($stream);
 
         try {
-            \fseek($stream, $pageOffset);
             $thriftHeader = new \Flow\Parquet\Thrift\PageHeader();
             @$thriftHeader->read(new TCompactProtocol(new TBufferedTransport(new TPhpFileStream($stream))));
 

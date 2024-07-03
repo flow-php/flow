@@ -17,7 +17,7 @@ final class ParquetTest extends TestCase
 {
     public function test_writing_to_file() : void
     {
-        $path = \sys_get_temp_dir() . '/file.snappy.parquet';
+        $path = __DIR__ . '/var/file.snappy.parquet';
         $this->removeFile($path);
 
         df()
@@ -46,7 +46,7 @@ final class ParquetTest extends TestCase
 
     public function test_writing_with_provided_schema() : void
     {
-        $path = \sys_get_temp_dir() . '/file_schema.snappy.parquet';
+        $path = __DIR__ . '/var/file_schema.snappy.parquet';
         $this->removeFile($path);
 
         df()

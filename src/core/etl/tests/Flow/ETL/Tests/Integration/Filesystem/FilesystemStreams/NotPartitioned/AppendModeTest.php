@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned;
 
 use function Flow\ETL\DSL\append;
-use Flow\ETL\Filesystem\{FilesystemStreams, Path};
+use Flow\ETL\Filesystem\{FilesystemStreams};
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
+use Flow\Filesystem\Path;
 
 final class AppendModeTest extends FilesystemStreamsTestCase
 {
@@ -28,16 +29,16 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         self::assertFileExists($file->path());
 
         $appendFileStream = $streams->writeTo($file);
-        \fwrite($appendFileStream->resource(), 'new content');
+        $appendFileStream->append('new content');
         $streams->closeWriters($file);
 
-        $files = \iterator_to_array($this->fs->scan(new Path($file->parentDirectory()->path() . '/*')));
+        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
 
         self::assertCount(2, $files);
 
         foreach ($files as $streamFile) {
-            self::assertStringStartsWith('existing-file', $streamFile->basename());
-            self::assertStringEndsWith('.txt', $streamFile->basename());
+            self::assertStringStartsWith('existing-file', $streamFile->path->basename());
+            self::assertStringEndsWith('.txt', $streamFile->path->basename());
         }
     }
 
@@ -51,18 +52,18 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         self::assertFileDoesNotExist($file->path());
 
         $appendFileStream = $streams->writeTo($file);
-        \fwrite($appendFileStream->resource(), 'new content');
+        $appendFileStream->append('new content');
         $streams->closeWriters($file);
 
-        $files = \iterator_to_array($this->fs->scan(new Path($file->parentDirectory()->path() . '/*')));
+        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
 
         self::assertCount(1, $files);
-        self::assertSame('non-existing-file.txt', $files[0]->basename());
+        self::assertSame('non-existing-file.txt', $files[0]->path->basename());
     }
 
     protected function streams() : FilesystemStreams
     {
-        $streams = new FilesystemStreams($this->fs);
+        $streams = new FilesystemStreams($this->fstab());
         $streams->setSaveMode(append());
 
         return $streams;

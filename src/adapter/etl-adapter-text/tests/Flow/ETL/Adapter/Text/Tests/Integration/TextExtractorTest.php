@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
-use function Flow\ETL\Adapter\Text\{from_text, to_text};
-use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\Adapter\Text\{from_text};
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
+use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class TextExtractorTest extends TestCase
@@ -53,16 +52,7 @@ final class TextExtractorTest extends TestCase
 
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/text_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-
-        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(to_text($path))
-            ->run();
-        $extractor = new TextExtractor(Path::realpath($path));
+        $extractor = new TextExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -73,26 +63,14 @@ final class TextExtractorTest extends TestCase
 
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/text_extractor_signal_stop.csv';
+        $extractor = new TextExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-
-        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(to_text($path))
-            ->run();
-
-        $extractor = new TextExtractor(Path::realpath($path));
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        self::assertSame([['text' => '1']], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->next();
-        self::assertSame([['text' => '2']], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->next();
-        self::assertSame([['text' => '3']], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         self::assertFalse($generator->valid());

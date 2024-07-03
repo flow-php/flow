@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PartitionFiltering};
-use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor};
 use Flow\ETL\{Exception\RuntimeException, Extractor, FlowContext};
+use Flow\Filesystem\Path;
 
 final class AvroExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
+    use Extractor\PathFiltering;
     use Limitable;
-    use PartitionFiltering;
 
     public function __construct(private readonly Path $path)
     {

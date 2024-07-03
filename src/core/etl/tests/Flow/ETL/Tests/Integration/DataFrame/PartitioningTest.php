@@ -13,14 +13,15 @@ use function Flow\ETL\DSL\{collect,
     int_entry,
     lit,
     overwrite,
-    partition,
     ref,
     row,
     rows,
     rows_partitioned,
     str_entry};
+use function Flow\Filesystem\DSL\partition;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
-use Flow\ETL\{Partition, Rows};
+use Flow\ETL\{Rows};
+use Flow\Filesystem\Partition;
 
 final class PartitioningTest extends IntegrationTestCase
 {

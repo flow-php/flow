@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PartitionFiltering, Signal};
-use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
 use Flow\ETL\{Extractor, FlowContext};
+use Flow\Filesystem\Path;
 
 final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
-    use PartitionFiltering;
+    use PathFiltering;
 
     /**
      * In order to iterate only over <element> nodes us root/elements/element.
@@ -40,7 +40,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
+        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             $xmlReader = new \XMLReader();
             $xmlReader->open($stream->path()->path());
 
@@ -80,7 +80,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
                         $signal = yield array_to_rows($rowData, $context->entryFactory(), $stream->path()->partitions());
 
-                        $this->countRow();
+                        $this->incrementReturnedRows();
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
                             $xmlReader->close();

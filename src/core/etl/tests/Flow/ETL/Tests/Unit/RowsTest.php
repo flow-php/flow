@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, partition, partitions, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
+use function Flow\ETL\DSL\{array_entry, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
+use function Flow\Filesystem\DSL\{partition, partitions};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;

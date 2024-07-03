@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\Filesystem\Path;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\{Options, Writer};
 
@@ -74,7 +74,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                     options: $this->options
                 );
 
-                $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
+                $this->writers[$stream->path()->uri()]->openForStream($stream, $this->converter->toParquet($this->schema()));
             }
 
             $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));
@@ -87,7 +87,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                     options: $this->options
                 );
 
-                $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
+                $this->writers[$stream->path()->uri()]->openForStream($stream, $this->converter->toParquet($this->schema()));
             }
 
             $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));

@@ -11,9 +11,16 @@ use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SynchronousPipelineTest extends IntegrationTestCase
 {
+    protected function setUp() : void
+    {
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
+    }
+
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/synchronous_pipeline_' . __FUNCTION__ . '.csv';
+        $path = __DIR__ . '/var/synchronous_pipeline_' . __FUNCTION__ . '.csv';
 
         if (\file_exists($path)) {
             \unlink($path);

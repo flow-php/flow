@@ -64,9 +64,6 @@ final class LogicalType
         return new self(self::ENUM);
     }
 
-    /**
-     * @psalm-suppress RedundantConditionGivenDocblockType
-     */
     public static function fromThrift(\Flow\Parquet\Thrift\LogicalType $logicalType) : self
     {
         $name = null;

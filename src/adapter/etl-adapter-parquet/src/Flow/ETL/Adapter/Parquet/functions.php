@@ -6,9 +6,9 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Extractor, Loader};
+use Flow\Filesystem\Path;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\{ByteOrder, Options};
 

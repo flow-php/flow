@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\ParquetFile\ColumnChunkReader\WholeChunkReader;
@@ -13,8 +14,8 @@ use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 use Flow\Parquet\ParquetFile\{ColumnPageHeader, Metadata, PageReader, Schema};
 use Flow\Parquet\Thrift\FileMetaData;
-use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
+use Thrift\Transport\TMemoryBuffer;
 
 final class ParquetFile
 {
@@ -22,11 +23,8 @@ final class ParquetFile
 
     private ?Metadata $metadata = null;
 
-    /**
-     * @param resource $stream
-     */
     public function __construct(
-        private $stream,
+        private SourceStream $stream,
         private readonly ByteOrder $byteOrder,
         private readonly DataConverter $dataConverter,
         private readonly Options $options
@@ -35,10 +33,7 @@ final class ParquetFile
 
     public function __destruct()
     {
-        /** @psalm-suppress RedundantConditionGivenDocblockType */
-        if (\is_resource($this->stream)) {
-            \fclose($this->stream);
-        }
+        $this->stream->close();
     }
 
     public function metadata() : Metadata
@@ -47,22 +42,19 @@ final class ParquetFile
             return $this->metadata;
         }
 
-        \fseek($this->stream, -4, SEEK_END);
-
-        if (\fread($this->stream, 4) !== self::PARQUET_MAGIC_NUMBER) {
+        if ($this->stream->read(4, -4) !== self::PARQUET_MAGIC_NUMBER) {
             throw new InvalidArgumentException('Given file is not valid Parquet file');
         }
-
-        \fseek($this->stream, -8, SEEK_END);
 
         /**
          * @phpstan-ignore-next-line
          */
-        $metadataLength = \unpack($this->byteOrder->value, \fread($this->stream, 4))[1];
-        \fseek($this->stream, -($metadataLength + 8), SEEK_END);
+        $metadataLength = \unpack($this->byteOrder->value, $this->stream->read(4, -8))[1];
+
+        $metadata = $this->stream->read($metadataLength, -($metadataLength + 8));
 
         $thriftMetadata = new FileMetaData();
-        $thriftMetadata->read(new TCompactProtocol(new TPhpFileStream($this->stream)));
+        $thriftMetadata->read(new TCompactProtocol(new TMemoryBuffer($metadata)));
 
         $this->metadata = Metadata::fromThrift($thriftMetadata);
 

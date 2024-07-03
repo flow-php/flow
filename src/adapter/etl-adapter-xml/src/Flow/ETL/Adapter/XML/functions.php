@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Extractor;
-use Flow\ETL\Filesystem\Path;
+use Flow\Filesystem\Path;
 
 /**
  * @param array<Path|string>|Path|string $path

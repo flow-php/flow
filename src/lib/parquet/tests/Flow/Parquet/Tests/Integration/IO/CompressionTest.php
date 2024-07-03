@@ -12,9 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 final class CompressionTest extends TestCase
 {
+    protected function setUp() : void
+    {
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
+    }
+
     public function test_writing_and_reading_file_with_gzip_compression() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer(Compressions::GZIP);
 
@@ -61,7 +68,7 @@ final class CompressionTest extends TestCase
 
     public function test_writing_and_reading_file_with_snappy_compression() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer(Compressions::SNAPPY);
 
@@ -108,7 +115,7 @@ final class CompressionTest extends TestCase
 
     public function test_writing_and_reading_file_with_uncompressed_compression() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer(Compressions::UNCOMPRESSED);
 

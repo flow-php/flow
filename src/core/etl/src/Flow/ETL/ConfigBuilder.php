@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function Flow\Filesystem\DSL\fstab;
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\ExternalSort\MemorySort;
-use Flow\ETL\Filesystem\{FilesystemStreams, LocalFilesystem};
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
 final class ConfigBuilder
@@ -27,7 +29,7 @@ final class ConfigBuilder
 
     private ?ExternalSort $externalSort;
 
-    private ?Filesystem $filesystem;
+    private ?FilesystemTable $fstab;
 
     private ?string $id;
 
@@ -43,7 +45,7 @@ final class ConfigBuilder
         $this->serializer = null;
         $this->cache = null;
         $this->externalSort = null;
-        $this->filesystem = null;
+        $this->fstab = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
         $this->caster = null;
@@ -75,19 +77,6 @@ final class ConfigBuilder
             \is_string(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) ? Unit::fromString(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) : Unit::fromMb(200)
         );
 
-        // We need to keep it as a string in order to avoid circular dependency between etl and flysystem adapter
-        $flysystemFSClass = '\Flow\ETL\Adapter\Filesystem\FlysystemFS';
-
-        if (!$this->filesystem instanceof Filesystem) {
-            if (\class_exists($flysystemFSClass)) {
-                /** @var Filesystem $flysystemFS */
-                $flysystemFS = new $flysystemFSClass();
-                $this->filesystem = $flysystemFS;
-            } else {
-                $this->filesystem = new LocalFilesystem();
-            }
-        }
-
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
             new Optimizer\BatchSizeOptimization(batchSize: 1000)
@@ -100,7 +89,8 @@ final class ConfigBuilder
             $this->serializer,
             $this->cache,
             $this->externalSort,
-            new FilesystemStreams($this->filesystem),
+            $this->fstab(),
+            new FilesystemStreams($this->fstab()),
             $this->optimizer,
             $this->caster,
             $this->putInputIntoRows,
@@ -144,16 +134,16 @@ final class ConfigBuilder
         return $this;
     }
 
-    public function filesystem(Filesystem $filesystem) : self
+    public function id(string $id) : self
     {
-        $this->filesystem = $filesystem;
+        $this->id = $id;
 
         return $this;
     }
 
-    public function id(string $id) : self
+    public function mount(Filesystem $filesystem) : self
     {
-        $this->id = $id;
+        $this->fstab()->mount($filesystem);
 
         return $this;
     }
@@ -186,5 +176,21 @@ final class ConfigBuilder
         $this->serializer = $serializer;
 
         return $this;
+    }
+
+    public function unmount(Filesystem $filesystem) : self
+    {
+        $this->fstab()->unmount($filesystem);
+
+        return $this;
+    }
+
+    private function fstab() : FilesystemTable
+    {
+        if ($this->fstab === null) {
+            $this->fstab = fstab();
+        }
+
+        return $this->fstab;
     }
 }

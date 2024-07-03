@@ -70,9 +70,6 @@ final class FloatEntry implements Entry
                 && $this->type->isEqual($entry->type);
         }
 
-        /**
-         * @psalm-suppress ArgumentTypeCoercion
-         */
         return $this->is($entry->name())
             && $entry instanceof self
             && $this->type->isEqual($entry->type)

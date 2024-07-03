@@ -11,6 +11,7 @@
 >
     <projectFiles>
         <directory name="src/adapter/**/src" />
+        <directory name="src/bridge/**/**/src" />
         <directory name="src/core/**/src" />
         <directory name="src/lib/**/src" />
         <ignoreFiles>
@@ -24,9 +25,6 @@
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php"/>
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php"/>
 
-            <file name="src/adapter/etl-adapter-filesystem/src/Flow/ETL/Adapter/Filesystem/AwsS3Stream.php" />
-            <file name="src/adapter/etl-adapter-filesystem/src/Flow/ETL/Adapter/Filesystem/AzureBlobStream.php" />
-
             <file name="src/lib/parquet-viewer/src/Flow/ParquetViewer/Command/ReadMetadataCommand.php" />
 
             <directory name="src/lib/parquet/src/Flow/Parquet/ThriftStream/" />
@@ -36,9 +34,11 @@
         </ignoreFiles>
     </projectFiles>
     <issueHandlers>
+        <RedundantConditionGivenDocblockType errorLevel="suppress" />
         <DocblockTypeContradiction errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
         <LessSpecificReturnStatement errorLevel="suppress" />
         <MoreSpecificReturnType errorLevel="suppress" />
+        <ArgumentTypeCoercion errorLevel="suppress" />
     </issueHandlers>
 </psalm>

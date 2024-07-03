@@ -8,7 +8,8 @@ use function Flow\ETL\DSL\{from_all, from_cache};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\{Extractor, FlowContext, Loader, Partition, Pipeline, Transformer};
+use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
+use Flow\Filesystem\Partition;
 
 final class PartitioningPipeline implements Pipeline
 {

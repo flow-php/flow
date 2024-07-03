@@ -9,13 +9,12 @@ use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
 use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, RuntimeException};
 use Flow\ETL\Extractor\PartitionExtractor;
-use Flow\ETL\Filesystem\SaveMode;
+use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, WindowFunction};
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Partition\ScalarFunctionFilter;
 use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Pipeline\{BatchingPipeline,
     CachingPipeline,
@@ -50,6 +49,7 @@ use Flow\ETL\Transformer\{
     UntilTransformer,
     WindowFunctionTransformer
 };
+use Flow\Filesystem\Path\Filter;
 use Flow\RDSL\AccessControl\{AllowAll, AllowList, DenyAll};
 use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
@@ -360,7 +360,7 @@ final class DataFrame
      *
      * @throws RuntimeException
      */
-    public function filterPartitions(Partition\PartitionFilter|ScalarFunction $filter) : self
+    public function filterPartitions(Filter|ScalarFunction $filter) : self
     {
         $extractor = $this->pipeline->source();
 
@@ -368,13 +368,13 @@ final class DataFrame
             throw new RuntimeException('filterPartitions can be used only with extractors that implement PartitionsExtractor interface');
         }
 
-        if ($filter instanceof Partition\PartitionFilter) {
-            $extractor->addPartitionFilter($filter);
+        if ($filter instanceof Filter) {
+            $extractor->addFilter($filter);
 
             return $this;
         }
 
-        $extractor->addPartitionFilter(
+        $extractor->addFilter(
             new ScalarFunctionFilter(
                 $filter,
                 $this->context->entryFactory(),

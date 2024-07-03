@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 
 final class Flow
@@ -41,7 +41,7 @@ final class Flow
     public function process(Rows ...$rows) : DataFrame
     {
         return new DataFrame(
-            (new SynchronousPipeline(new ProcessExtractor(...$rows))),
+            (new SynchronousPipeline(new RowsExtractor(...$rows))),
             $this->config
         );
     }

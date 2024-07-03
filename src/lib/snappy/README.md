@@ -6,5 +6,5 @@ This library is a port of javascript [snappyjs](https://github.com/zhipeng-jia/s
 Whenever it's possible, it's recommended to install [PHP Extension.](https://github.com/kjdev/php-ext-snappy)
 Otherwise, this lib will register polyfill functions. 
 
-- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/libs/snappy.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

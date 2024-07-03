@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\Partition\PartitionFilter;
+use Flow\Filesystem\Path\Filter;
 
 interface PartitionExtractor
 {
-    public function addPartitionFilter(PartitionFilter $filter) : void;
+    public function addFilter(Filter $filter) : void;
 
-    public function partitionFilter() : ?PartitionFilter;
+    public function filter() : Filter;
 }

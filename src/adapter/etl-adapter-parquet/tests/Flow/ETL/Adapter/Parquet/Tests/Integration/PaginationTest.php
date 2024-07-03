@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
-use Flow\ETL\Filesystem\Path;
+use Flow\Filesystem\Path;
 use Flow\Parquet\{Options, Reader};
 use PHPUnit\Framework\TestCase;
 

@@ -9,6 +9,7 @@ use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
+use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
 
 /**
@@ -29,6 +30,7 @@ final class Config
         private readonly Serializer $serializer,
         private readonly Cache $cache,
         private readonly ExternalSort $externalSort,
+        private readonly FilesystemTable $filesystemTable,
         private readonly FilesystemStreams $filesystemStreams,
         private readonly Optimizer $optimizer,
         private readonly Caster $caster,
@@ -82,6 +84,11 @@ final class Config
     public function filesystemStreams() : FilesystemStreams
     {
         return $this->filesystemStreams;
+    }
+
+    public function fstab() : FilesystemTable
+    {
+        return $this->filesystemTable;
     }
 
     public function id() : string

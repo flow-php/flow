@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\{FlowContext, Loader, Partition, Rows};
+use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class JsonLoader implements Closure, Loader, Loader\FileLoader
 {
@@ -28,7 +27,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
     {
         foreach ($context->streams() as $stream) {
             if ($stream->path()->extension() === 'json') {
-                \fwrite($stream->resource(), ']');
+                $stream->append(']');
             }
         }
 
@@ -63,7 +62,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            \fwrite($stream->resource(), '[');
+            $stream->append('[');
         } else {
             $stream = $streams->writeTo($this->path, $partitions);
         }
@@ -73,12 +72,12 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     /**
      * @param Rows $rows
-     * @param FileStream $stream
+     * @param DestinationStream $stream
      *
      * @throws RuntimeException
      * @throws \JsonException
      */
-    public function writeJSON(Rows $rows, FileStream $stream) : void
+    public function writeJSON(Rows $rows, DestinationStream $stream) : void
     {
         if (!\count($rows)) {
             return;
@@ -87,7 +86,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         $json = \substr(\substr(\json_encode($rows->toArray(), JSON_THROW_ON_ERROR), 0, -1), 1);
         $json = ($this->writes[$stream->path()->path()] > 0) ? ',' . $json : $json;
 
-        \fwrite($stream->resource(), $json);
+        $stream->append($json);
 
         $this->writes[$stream->path()->path()]++;
     }

@@ -7,8 +7,8 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\df;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\{Config, FlowContext, Rows};
 use PHPUnit\Framework\TestCase;
@@ -17,15 +17,10 @@ final class JsonTest extends TestCase
 {
     public function test_json_loader() : void
     {
-        $path = \sys_get_temp_dir() . '/flow_php_etl_json_loader' . bin2hex(random_bytes(16)) . '.json';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
 
         df()
             ->read(new FakeExtractor(100))
-            ->write(to_json($path))
+            ->write(to_json($path = __DIR__ . '/var/test_json_loader.json'))
             ->run();
 
         self::assertEquals(
@@ -40,9 +35,7 @@ final class JsonTest extends TestCase
 
     public function test_json_loader_loading_empty_string() : void
     {
-        $stream = \sys_get_temp_dir() . '/flow_php_etl_json_loader' . bin2hex(random_bytes(16)) . '.json';
-
-        $loader = new JsonLoader(Path::realpath($stream));
+        $loader = new JsonLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.json'));
 
         $loader->load(new Rows(), $context = new FlowContext(Config::default()));
 
@@ -53,11 +46,11 @@ final class JsonTest extends TestCase
 [
 ]
 JSON,
-            \file_get_contents($stream)
+            \file_get_contents($path)
         );
 
-        if (\file_exists($stream)) {
-            \unlink($stream);
+        if (\file_exists($path)) {
+            \unlink($path);
         }
     }
 }

@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PartitionFiltering, Signal};
-use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
 use Flow\ETL\{Extractor, FlowContext};
+use Flow\Filesystem\Path;
 
 final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
-    use PartitionFiltering;
+    use PathFiltering;
 
     public function __construct(
         private readonly Path $path,
@@ -24,15 +24,9 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
+        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
 
-            $rowData = \fgets($stream->resource());
-
-            if ($rowData === false) {
-                return;
-            }
-
-            while ($rowData !== false) {
+            foreach ($stream->readLines() as $rowData) {
                 if ($shouldPutInputIntoRows) {
                     $row = [['text' => \rtrim($rowData), '_input_file_uri' => $stream->path()->uri()]];
                 } else {
@@ -41,15 +35,13 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions());
 
-                $this->countRow();
+                $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     $context->streams()->closeWriters($this->path);
 
                     return;
                 }
-
-                $rowData = \fgets($stream->resource());
             }
 
             $stream->close();

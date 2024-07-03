@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams;
 
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Partition;
-use Flow\ETL\Partition\NoopFilter;
+use Flow\Filesystem\Partition;
+use Flow\Filesystem\Path\Filter\KeepAll;
 
 final class FilesystemStreamsTest extends FilesystemStreamsTestCase
 {
@@ -111,12 +111,12 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         $streams = $this->streams();
         self::assertCount(
             4,
-            \iterator_to_array($streams->scan($this->getPath(__FUNCTION__ . '/**/*.txt'), new NoopFilter()))
+            \iterator_to_array($streams->list($this->getPath(__FUNCTION__ . '/**/*.txt'), new KeepAll()))
         );
     }
 
     protected function streams() : FilesystemStreams
     {
-        return new FilesystemStreams($this->fs);
+        return new FilesystemStreams($this->fstab());
     }
 }

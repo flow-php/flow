@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS;
 
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\Filesystem\Path;
 
 final class ChartJSLoader implements Closure, Loader
 {
@@ -33,8 +33,7 @@ final class ChartJSLoader implements Closure, Loader
 
             $templateStream = $context->streams()->read($this->template);
 
-            /** @var string $template */
-            $template = \stream_get_contents($templateStream->resource());
+            $template = \implode('', \iterator_to_array($templateStream->readLines()));
             $templateStream->close();
 
             $content = \str_replace(
@@ -43,7 +42,7 @@ final class ChartJSLoader implements Closure, Loader
                 $template
             );
 
-            \fwrite($output->resource(), $content);
+            $output->append($content);
 
             $context->streams()->closeWriters($this->output);
         }

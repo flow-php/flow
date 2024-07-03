@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\Adapter\CSV\CSVDetector;
+use Flow\Filesystem\SourceStream;
+use Flow\Filesystem\Stream\MemorySourceStream;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -63,10 +65,7 @@ final class CSVDetectorTest extends TestCase
         self::assertSame($separator, $detector->detect()->separator);
     }
 
-    /**
-     * @return resource
-     */
-    private function createResource(string $separator = ',', string $enclosure = '"')
+    private function createResource(string $separator = ',', string $enclosure = '"') : SourceStream
     {
         $data = [
             ['id', 'name', 'email'],
@@ -89,8 +88,9 @@ final class CSVDetectorTest extends TestCase
             \fputcsv($resource, $line, $separator, $enclosure);
         }
 
-        \rewind($resource);
+        $csv = \stream_get_contents($resource, offset: 0);
+        \fclose($resource);
 
-        return $resource;
+        return new MemorySourceStream($csv);
     }
 }

@@ -6,12 +6,12 @@ namespace Flow\ETL\Adapter\CSV;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Extractor, Loader};
+use Flow\Filesystem\{Path, SourceStream};
 
 /**
- * @param int<0, max> $characters_read_in_line
+ * @param int<1, max> $characters_read_in_line
  */
 function from_csv(
     string|Path|array $path,
@@ -73,12 +73,12 @@ function to_csv(
 }
 
 /**
- * @param resource $resource - valid resource to CSV file opened with 'r' mode
+ * @param SourceStream $stream - valid resource to CSV file
  * @param int<1, max> $lines - number of lines to read from CSV file, default 5, more lines means more accurate detection but slower detection
  * @param null|Option $fallback - fallback option to use when no best option can be detected, default is Option(',', '"', '\\')
  * @param null|Options $options - options to use for detection, default is Options::all()
  */
-function csv_detect_separator($resource, int $lines = 5, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null) : Option
+function csv_detect_separator(SourceStream $stream, int $lines = 5, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null) : Option
 {
-    return (new CSVDetector($resource, $fallback, $options))->detect($lines);
+    return (new CSVDetector($stream, $fallback, $options))->detect($lines);
 }

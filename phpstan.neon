@@ -10,7 +10,6 @@ parameters:
         - src/adapter/etl-adapter-csv/src
         - src/adapter/etl-adapter-doctrine/src
         - src/adapter/etl-adapter-elasticsearch/src
-        - src/adapter/etl-adapter-filesystem/src
         - src/adapter/etl-adapter-google-sheet/src
         - src/adapter/etl-adapter-http/src
         - src/adapter/etl-adapter-json/src
@@ -19,12 +18,17 @@ parameters:
         - src/adapter/etl-adapter-parquet/src
         - src/adapter/etl-adapter-text/src
         - src/adapter/etl-adapter-xml/src
+        - src/bridge/filesystem/azure/src
+        - src/bridge/monolog/http/src
         - src/lib/array-dot/src
+        - src/lib/azure-sdk/src
         - src/lib/doctrine-dbal-bulk/src
         - src/lib/dremel/src
+        - src/lib/filesystem/src
         - src/lib/parquet/src
-        - src/lib/snappy/src
+        - src/lib/parquet-viewer/src
         - src/lib/rdsl/src
+        - src/lib/snappy/src
         - examples/topics
 
     excludePaths:

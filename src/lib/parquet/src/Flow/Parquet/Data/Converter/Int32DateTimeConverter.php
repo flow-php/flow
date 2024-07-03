@@ -30,9 +30,6 @@ final class Int32DateTimeConverter implements Converter
         return $this->dateTimeToMicroseconds($data);
     }
 
-    /**
-     * @psalm-suppress ArgumentTypeCoercion
-     */
     private function dateTimeToMicroseconds(\DateTimeInterface $dateTime) : int
     {
         $microseconds = \number_format((((int) $dateTime->format('u')) / 1000), 0, '', '') . '000';

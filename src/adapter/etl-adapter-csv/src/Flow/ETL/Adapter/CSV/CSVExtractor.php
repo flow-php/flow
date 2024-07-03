@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PartitionFiltering, Signal};
-use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Extractor, FlowContext};
+use Flow\Filesystem\Path;
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
-    use PartitionFiltering;
+    use PathFiltering;
 
     /**
-     * @param int<0, max> $charactersReadInLine
+     * @param ?int<1, max> $charactersReadInLine
      */
     public function __construct(
         private readonly Path $path,
@@ -25,7 +25,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         private readonly ?string $separator = null,
         private readonly ?string $enclosure = null,
         private readonly ?string $escape = null,
-        private readonly int $charactersReadInLine = 1000,
+        private readonly ?int $charactersReadInLine = null,
         private readonly ?Schema $schema = null
     ) {
         $this->resetLimit();
@@ -35,9 +35,9 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
+        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
 
-            $option = \Flow\ETL\Adapter\CSV\csv_detect_separator($stream->resource());
+            $option = \Flow\ETL\Adapter\CSV\csv_detect_separator($stream);
 
             $separator = $this->separator ?? $option->separator;
             $enclosure = $this->enclosure ?? $option->enclosure;
@@ -45,22 +45,24 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
             $headers = [];
 
-            if ($this->withHeader && \count($headers) === 0) {
-                /** @var array<string> $headers */
-                $headers = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
-            }
+            foreach ($stream->readLines(length: $this->charactersReadInLine) as $csvLine) {
+                if ($this->withHeader && \count($headers) === 0) {
+                    /** @var array<string> $headers */
+                    $headers = \str_getcsv($csvLine, $separator, $enclosure, $escape);
 
-            /** @var array<mixed> $rowData */
-            $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
+                    continue;
+                }
 
-            if (!\count($headers)) {
-                $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
-            }
+                /** @var array<mixed> $rowData */
+                $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
 
-            $headers = \array_map(fn (string $header) : string => \trim($header), $headers);
-            $headers = \array_map(fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad((string) $index, 2, '0', STR_PAD_LEFT), $headers, \array_keys($headers));
+                if (!\count($headers)) {
+                    $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
+                }
 
-            while (\is_array($rowData)) {
+                $headers = \array_map(fn (string $header) : string => \trim($header), $headers);
+                $headers = \array_map(fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad((string) $index, 2, '0', STR_PAD_LEFT), $headers, \array_keys($headers));
+
                 if (\count($headers) > \count($rowData)) {
                     \array_push(
                         $rowData,
@@ -84,8 +86,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                 }
 
                 if (\count($headers) !== \count($rowData)) {
-                    $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
-
                     continue;
                 }
 
@@ -96,7 +96,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                 }
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions(), $this->schema);
-                $this->countRow();
+                $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     $context->streams()->closeWriters($this->path);
@@ -104,7 +104,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     return;
                 }
 
-                $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
+                $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
             }
 
             $stream->close();

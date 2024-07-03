@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
 use function Flow\ETL\Adapter\ChartJS\{bar_chart, line_chart, pie_chart, to_chartjs_file, to_chartjs_var};
-use function Flow\ETL\DSL\{df, first, from_memory, lit, ref, refs, sum};
-use Flow\ETL\Memory\ArrayMemory;
+use function Flow\ETL\DSL\{df, first, from_array, lit, ref, refs, sum};
 use PHPUnit\Framework\TestCase;
 
 final class ChartJSLoaderTest extends TestCase
@@ -23,7 +22,7 @@ final class ChartJSLoaderTest extends TestCase
         ];
 
         df()
-            ->read(from_memory(new ArrayMemory($data)))
+            ->read(from_array($data))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->write(
                 to_chartjs_file(
@@ -95,7 +94,7 @@ final class ChartJSLoaderTest extends TestCase
         $output = [];
 
         df()
-            ->read(from_memory(new ArrayMemory($data)))
+            ->read(from_array($data))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->write(
                 to_chartjs_var(
@@ -164,7 +163,7 @@ final class ChartJSLoaderTest extends TestCase
         ];
 
         df()
-            ->read(from_memory(new ArrayMemory($data)))
+            ->read(from_array($data))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->write(
                 to_chartjs_file(
@@ -247,7 +246,7 @@ final class ChartJSLoaderTest extends TestCase
             ->setOptions(['label' => 'PnL']);
 
         df()
-            ->read(from_memory(new ArrayMemory($data)))
+            ->read(from_array($data))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->aggregate(
                 first(ref('Date')->as('Date')),

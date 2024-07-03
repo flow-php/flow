@@ -36,3 +36,15 @@ services:
         environment:
             - MEILI_MASTER_KEY=masterKey
             - MEILI_NO_ANALYTICS=true
+    azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
+        container_name: flow-php-azurite
+        hostname: azurite
+        restart: always
+        command: "azurite --loose --blobHost 0.0.0.0 --blobPort 10000 --location /workspace --debug /workspace/debug.log"
+        environment:
+            - AZURITE_ACCOUNTS=flowphpaccount01:flowphpkey01
+        ports:
+            - 10000:10000
+        volumes:
+            - ./var/azurite:/workspace
