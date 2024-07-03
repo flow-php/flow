@@ -13,7 +13,7 @@ final class TextTest extends TestCase
 {
     public function test_loading_text_files() : void
     {
-        $path = \sys_get_temp_dir() . '/flow_php_etl_csv_loader' . bin2hex(random_bytes(16)) . '.csv';
+        $path = __DIR__ . '/var/flow_php_etl_csv_loader' . bin2hex(random_bytes(16)) . '.csv';
 
         (new Flow())
             ->process(

@@ -67,6 +67,13 @@ final class PathTest extends TestCase
         yield '/nested/partition=[one]/*.csv' => ['file://nested', '/nested/partition=[one]/*.csv'];
     }
 
+    protected function setUp() : void
+    {
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
+    }
+
     public function test_add_partitions_to_path_pattern() : void
     {
         $this->expectExceptionMessage("Can't add partitions to path pattern.");
@@ -115,8 +122,8 @@ final class PathTest extends TestCase
     public function test_equal_paths_starts_with() : void
     {
         self::assertTrue(
-            Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
-                ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path/file.json'))
+            Path::realpath(__DIR__ . '/var/some/path/file.json')
+                ->startsWith(Path::realpath(__DIR__ . '/var/some/path/file.json'))
         );
     }
 
@@ -180,16 +187,16 @@ final class PathTest extends TestCase
     public function test_path_starting_with_other_path() : void
     {
         self::assertTrue(
-            Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
-                ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path'))
+            Path::realpath(__DIR__ . '/var/some/path/file.json')
+                ->startsWith(Path::realpath(__DIR__ . '/var/some/path'))
         );
     }
 
     public function test_pattern_path_starting_with_realpath_path() : void
     {
         self::assertTrue(
-            Path::realpath(\sys_get_temp_dir() . '/some/path/*.json')
-                ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path'))
+            Path::realpath(__DIR__ . '/var/some/path/*.json')
+                ->startsWith(Path::realpath(__DIR__ . '/var/some/path'))
         );
     }
 
@@ -220,7 +227,7 @@ final class PathTest extends TestCase
     public function test_realpath_starting_with_non_realpath_path() : void
     {
         self::assertFalse(
-            Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
+            Path::realpath(__DIR__ . '/var/some/path/file.json')
                 ->startsWith(new Path('/some/path'))
         );
     }

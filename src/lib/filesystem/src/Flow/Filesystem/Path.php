@@ -121,13 +121,6 @@ final class Path
         return new self(DIRECTORY_SEPARATOR . \implode(DIRECTORY_SEPARATOR, $absoluteParts), $options);
     }
 
-    public static function tmpFile(string $extension, ?string $name = null) : self
-    {
-        $name = \ltrim($name ?? bin2hex(random_bytes(16)), '/');
-
-        return new self(\sys_get_temp_dir() . DIRECTORY_SEPARATOR . $name . '.' . $extension);
-    }
-
     public function addPartitions(Partition $partition, Partition ...$partitions) : self
     {
         if ($this->isPattern()) {

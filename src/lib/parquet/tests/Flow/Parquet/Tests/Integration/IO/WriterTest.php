@@ -15,6 +15,13 @@ use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase
 {
+    protected function setUp() : void
+    {
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
+    }
+
     public function test_closing_not_open_writer() : void
     {
         $writer = new Writer();
@@ -29,7 +36,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $writer->open($path, $schema);
@@ -44,7 +51,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -73,7 +80,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 1)
         );
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -102,7 +109,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -129,7 +136,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -156,7 +163,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -182,7 +189,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -220,7 +227,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -242,7 +249,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -262,7 +269,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();

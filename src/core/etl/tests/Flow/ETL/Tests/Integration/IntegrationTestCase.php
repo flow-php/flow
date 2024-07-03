@@ -17,7 +17,7 @@ abstract class IntegrationTestCase extends TestCase
 
     protected FilesystemTable $fstab;
 
-    private string $baseMemoryLimit;
+    private string $baseMemoryLimit = '-1';
 
     protected function setUp() : void
     {

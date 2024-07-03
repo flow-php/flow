@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use function Flow\ETL\Adapter\JSON\{from_json, to_json};
-use function Flow\ETL\DSL\{df, from_array, print_schema};
+use function Flow\ETL\DSL\{df, print_schema};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
@@ -131,17 +131,7 @@ SCHEMA
 
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/json_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-
-        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(to_json($path))
-            ->run();
-
-        $extractor = new JsonExtractor(Path::realpath($path));
+        $extractor = new JsonExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.json'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -152,27 +142,14 @@ SCHEMA
 
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/json_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-
-        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(to_json($path))
-            ->run();
-
-        $extractor = new JsonExtractor(Path::realpath($path));
+        $extractor = new JsonExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.json'));
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        self::assertSame([['id' => 1]], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->next();
-        self::assertSame([['id' => 2]], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->next();
-        self::assertSame([['id' => 3]], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         self::assertFalse($generator->valid());

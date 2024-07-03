@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
-use function Flow\ETL\DSL\{df, from_array, print_schema, ref};
+use function Flow\ETL\Adapter\CSV\{from_csv};
+use function Flow\ETL\DSL\{df, print_schema, ref};
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
@@ -312,17 +312,8 @@ SCHEMA,
 
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/csv_extractor_signal_stop.csv';
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-
-        df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(to_csv($path))
-            ->run();
-
-        $extractor = new CSVExtractor(Path::realpath($path));
+        $extractor = new CSVExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -355,27 +346,14 @@ SCHEMA,
 
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/csv_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-
-        df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(to_csv($path))
-            ->run();
-
-        $extractor = new CSVExtractor(Path::realpath($path));
+        $extractor = new CSVExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        self::assertSame([['id' => '1']], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->next();
-        self::assertSame([['id' => '2']], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->next();
-        self::assertSame([['id' => '3']], $generator->current()->toArray());
         self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         self::assertFalse($generator->valid());

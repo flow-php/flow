@@ -12,9 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 final class StructsWritingTest extends TestCase
 {
+    protected function setUp() : void
+    {
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
+    }
+
     public function test_writing_flat_nullable_structure() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::struct('struct', [
@@ -60,7 +67,7 @@ final class StructsWritingTest extends TestCase
 
     public function test_writing_flat_structure() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::struct('struct', [
@@ -104,7 +111,7 @@ final class StructsWritingTest extends TestCase
 
     public function test_writing_flat_structure_with_nullable_elements() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::struct('struct', [

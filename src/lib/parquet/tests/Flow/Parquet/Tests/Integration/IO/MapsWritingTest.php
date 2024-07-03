@@ -12,9 +12,16 @@ use PHPUnit\Framework\TestCase;
 
 final class MapsWritingTest extends TestCase
 {
+    protected function setUp() : void
+    {
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
+    }
+
     public function test_writing_map_of_int_int() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -43,7 +50,7 @@ final class MapsWritingTest extends TestCase
 
     public function test_writing_map_of_int_string() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_string', MapKey::int32(), MapValue::string()));
@@ -72,7 +79,7 @@ final class MapsWritingTest extends TestCase
 
     public function test_writing_nullable_map_of_int_int() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
