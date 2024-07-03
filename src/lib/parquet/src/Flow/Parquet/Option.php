@@ -54,6 +54,14 @@ enum Option
     case INT_96_AS_DATETIME;
 
     /**
+     * Compression level for LZ4 codec. This option is going to be passed to lz4_compress function when Compression is set to LZ4.
+     * The level of compression (1-12, Recommended values are between 4 and 9).
+     *
+     * Default value is 4
+     */
+    case LZ4_COMPRESSION_LEVEL;
+
+    /**
      * PageBuilder is going to use this value to determine how many rows should be stored in one page.
      * PageBuilder is not going to make it precisely equal to this value, but it will try to make it as close as possible.
      * This should be considered as a threshold rather than a strict value.

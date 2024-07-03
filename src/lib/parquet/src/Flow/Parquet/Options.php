@@ -26,6 +26,7 @@ final class Options
             Option::DICTIONARY_PAGE_SIZE->name => SizeUnits::MiB_SIZE,
             Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,
+            Option::LZ4_COMPRESSION_LEVEL->name => 4,
             Option::ZSTD_COMPRESSION_LEVEL->name => 3,
             Option::WRITER_VERSION->name => 1,
             Option::VALIDATE_DATA->name => true,
