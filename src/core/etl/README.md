@@ -12,5 +12,5 @@ for managing large-scale data processing tasks and building scalable web systems
 Whether you are dealing with data transformation or orchestrating complex data flows, Flow PHP is tailored to meet the
 demands of modern web infrastructures.
 
-- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/core/core.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

@@ -10,8 +10,10 @@ use Psr\Http\Message\RequestInterface;
 final class SharedKeyFactory implements AuthorizationFactory
 {
     public function __construct(
-        #[\SensitiveParameter] private readonly string $account,
-        #[\SensitiveParameter] private readonly string $accountKey
+        #[\SensitiveParameter]
+        private readonly string $account,
+        #[\SensitiveParameter]
+        private readonly string $accountKey
     ) {
     }
 

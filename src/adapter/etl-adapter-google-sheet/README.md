@@ -12,5 +12,5 @@ developers dealing with Google Sheets in large-scale and data-intensive projects
 managing Google Sheets data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning
 with the robust and adaptable nature of the Flow PHP ecosystem.
 
-- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/adapters/google-sheet.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

@@ -10,5 +10,5 @@ it a valuable asset for developers aiming to streamline their array handling tas
 configuration data, nested JSON objects, or any other complex array structures, the Array Dot library is a reliable
 companion for achieving cleaner and more efficient array operations.
 
-- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/libs/array-dot.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

@@ -12,5 +12,5 @@ large-scale and data-intensive environments. With Flow PHP's Adapter HTTP, navig
 workflows becomes a more refined and efficient endeavor, harmoniously aligning with the robust and adaptable framework
 of the Flow PHP ecosystem.
 
-- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/adapters/http.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

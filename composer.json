@@ -215,7 +215,7 @@
             "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=transformer"
         ],
         "test:mutation": [
-            "tools/infection/vendor/bin/infection -j2"
+            "tools/infection/vendor/bin/infection --threads=max"
         ],
         "test:monorepo": "tools/monorepo/vendor/bin/monorepo-builder validate",
         "static:analyze": [

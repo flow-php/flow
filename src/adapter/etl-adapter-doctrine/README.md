@@ -12,5 +12,5 @@ operations in large-scale and data-intensive environments. With Flow PHP's Adapt
 interactions within your ETL workflows becomes a more simplified and efficient endeavor, perfectly aligning with the
 robust and adaptable nature of the Flow PHP ecosystem.
 
-- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/adapters/doctrine.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)
