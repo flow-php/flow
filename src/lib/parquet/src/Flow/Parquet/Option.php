@@ -7,6 +7,13 @@ namespace Flow\Parquet;
 enum Option
 {
     /**
+     * Compression level for Brotli codec. This option is going to be passed to gzcompress function when Compression is set to Brotli.
+     * The higher the quality, the slower the compression.
+     *
+     * Default value is 11 (BROTLI_COMPRESS_LEVEL_DEFAULT)
+     */
+    case BROTLI_COMPRESSION_LEVEL;
+    /**
      * Some parquet writers might not properly use LogicalTyp for storing Strings or JSON's.
      * This option would tell the reader to treat all BYTE_ARRAY's as UTF-8 strings.
      *

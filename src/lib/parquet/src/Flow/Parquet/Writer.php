@@ -31,6 +31,7 @@ final class Writer
         switch ($this->compression) {
             case Compressions::UNCOMPRESSED:
             case Compressions::SNAPPY:
+            case Compressions::BROTLI:
             case Compressions::GZIP:
             case Compressions::LZ4:
             case Compressions::LZ4_RAW:

@@ -20,6 +20,58 @@ final class CompressionTest extends TestCase
         }
     }
 
+    #[Group('brotli-extension')]
+    public function test_writing_and_reading_file_with_brotli_compression() : void
+    {
+        if (!\extension_loaded('brotli')) {
+            self::markTestSkipped('The Brotli extension is not available');
+        }
+
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+
+        $writer = new Writer(Compressions::BROTLI);
+
+        $schema = Schema::with(NestedColumn::struct('struct', [
+            FlatColumn::int64('int64'),
+            FlatColumn::boolean('boolean'),
+            FlatColumn::string('string'),
+            FlatColumn::int32('int32'),
+            NestedColumn::list('list_of_int', ListElement::int32()),
+            NestedColumn::list('list_of_string', ListElement::string()),
+        ]));
+
+        $faker = Factory::create();
+        $inputData = \array_merge(...\array_map(static function (int $i) use ($faker) : array {
+            return [
+                [
+                    'struct' => [
+                        'int64' => $faker->numberBetween(0, Consts::PHP_INT64_MAX),
+                        'boolean' => $faker->boolean,
+                        'string' => $faker->text(150),
+                        'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                        'list_of_int' => \array_map(
+                            static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                            \range(1, \random_int(2, 10))
+                        ),
+                        'list_of_string' => \array_map(
+                            static fn ($i) => $faker->text(10),
+                            \range(1, \random_int(2, 10))
+                        ),
+                    ],
+                ],
+            ];
+        }, \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+        self::assertFileExists($path);
+        \unlink($path);
+    }
+
     public function test_writing_and_reading_file_with_gzip_compression() : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';

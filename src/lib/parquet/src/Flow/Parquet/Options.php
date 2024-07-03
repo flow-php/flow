@@ -25,6 +25,7 @@ final class Options
             Option::ROW_GROUP_SIZE_CHECK_INTERVAL->name => 1000,
             Option::DICTIONARY_PAGE_SIZE->name => SizeUnits::MiB_SIZE,
             Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
+            Option::BROTLI_COMPRESSION_LEVEL->name => 11,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,
             Option::LZ4_COMPRESSION_LEVEL->name => 4,
             Option::ZSTD_COMPRESSION_LEVEL->name => 3,

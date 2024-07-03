@@ -11,6 +11,23 @@ use PHPUnit\Framework\TestCase;
 
 final class CodecTest extends TestCase
 {
+    #[Group('brotli-extension')]
+    public function test_brotli() : void
+    {
+        if (!\extension_loaded('brotli')) {
+            self::markTestSkipped('The Brotli extension is not available');
+        }
+
+        $data = 'this is some test data to be compressed';
+
+        $codec = new Codec((new Options()));
+
+        self::assertSame(
+            $data,
+            $codec->decompress($codec->compress($data, Compressions::BROTLI), Compressions::BROTLI)
+        );
+    }
+
     public function test_gzip() : void
     {
         $data = 'this is some test data to be compressed';
