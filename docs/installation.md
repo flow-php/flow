@@ -8,7 +8,6 @@ this will reduce the number of unnecessary dependencies in your project (less ma
 
 - [ETL](components/core/core.md)
 - Adapters
-    - [avro](components/adapters/avro.md)
     - [chartjs](components/adapters/chartjs.md)
     - [csv](components/adapters/csv.md)
     - [doctrine](components/adapters/doctrine.md)
