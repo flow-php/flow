@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function Flow\Filesystem\DSL\fstab;
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\ExternalSort\MemorySort;
-use Flow\ETL\Filesystem\{FilesystemStreams};
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
@@ -89,6 +89,7 @@ final class ConfigBuilder
             $this->serializer,
             $this->cache,
             $this->externalSort,
+            $this->fstab(),
             new FilesystemStreams($this->fstab()),
             $this->optimizer,
             $this->caster,
@@ -187,7 +188,7 @@ final class ConfigBuilder
     private function fstab() : FilesystemTable
     {
         if ($this->fstab === null) {
-            $this->fstab = new FilesystemTable(new NativeLocalFilesystem());
+            $this->fstab = fstab();
         }
 
         return $this->fstab;

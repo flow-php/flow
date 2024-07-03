@@ -8,7 +8,7 @@ use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
 use Flow\ETL\Exception\{InvalidArgumentException,
     RuntimeException,
     SchemaDefinitionNotFoundException};
-use Flow\ETL\Extractor\LocalFileListExtractor;
+use Flow\ETL\Extractor\FilesExtractor;
 use Flow\ETL\Filesystem\{SaveMode};
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
@@ -68,14 +68,14 @@ function data_frame(Config|ConfigBuilder|null $config = null) : Flow
     return new Flow($config);
 }
 
-function from_rows(Rows ...$rows) : Extractor\ProcessExtractor
+function from_rows(Rows ...$rows) : Extractor\RowsExtractor
 {
-    return new Extractor\ProcessExtractor(...$rows);
+    return new Extractor\RowsExtractor(...$rows);
 }
 
 function from_path_partitions(Path|string $path) : Extractor\PathPartitionsExtractor
 {
-    return new Extractor\PathPartitionsExtractor(\is_string($path) ? Path::realpath($path) : $path);
+    return new Extractor\PathPartitionsExtractor(\is_string($path) ? \Flow\Filesystem\DSL\path($path) : $path);
 }
 
 function from_array(iterable $array, ?Schema $schema = null) : Extractor\ArrayExtractor
@@ -98,9 +98,9 @@ function from_memory(Memory $memory) : Extractor\MemoryExtractor
     return new Extractor\MemoryExtractor($memory);
 }
 
-function local_files(string|Path $directory, bool $recursive = false) : LocalFileListExtractor
+function files(string|Path $directory) : FilesExtractor
 {
-    return new LocalFileListExtractor(\is_string($directory) ? Path::realpath($directory) : $directory, $recursive);
+    return new FilesExtractor(\is_string($directory) ? \Flow\Filesystem\DSL\path($directory) : $directory);
 }
 
 /**

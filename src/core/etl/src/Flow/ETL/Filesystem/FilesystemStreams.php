@@ -187,9 +187,9 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
         $destinationPathUri = $destination->uri();
 
-        $fs = $this->fstab->for($path);
-
         if (!\array_key_exists($destinationPathUri, $this->writingStreams[$pathUri])) {
+            $fs = $this->fstab->for($path);
+
             $outputPath = $destination;
 
             if ($this->saveMode === SaveMode::Append) {

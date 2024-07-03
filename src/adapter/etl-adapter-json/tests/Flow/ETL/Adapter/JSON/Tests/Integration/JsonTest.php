@@ -7,10 +7,10 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\df;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\{Config, FlowContext, Rows};
-use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class JsonTest extends TestCase
@@ -42,7 +42,7 @@ final class JsonTest extends TestCase
     {
         $stream = \sys_get_temp_dir() . '/flow_php_etl_json_loader' . bin2hex(random_bytes(16)) . '.json';
 
-        $loader = new JsonLoader(Path::realpath($stream));
+        $loader = new JsonLoader(path($stream));
 
         $loader->load(new Rows(), $context = new FlowContext(Config::default()));
 

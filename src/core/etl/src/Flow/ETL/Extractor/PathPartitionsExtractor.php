@@ -15,16 +15,15 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
 
     public function __construct(private readonly Path $path)
     {
-
     }
 
     public function extract(FlowContext $context) : \Generator
     {
-        foreach ($context->config->filesystemStreams()->list($this->path, $this->filter()) as $stream) {
-            $partitions = $stream->path()->partitions();
+        foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
+            $partitions = $fileStatus->path->partitions();
 
             $row = row(
-                string_entry('path', $stream->path()->uri()),
+                string_entry('path', $fileStatus->path->uri()),
                 array_entry('partitions', \array_merge(...\array_values(\array_map(static fn (Partition $p) => [$p->name => $p->value], $partitions->toArray()))))
             );
 

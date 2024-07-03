@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{from_rows, int_entry, str_entry};
 use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
-final class ProcessExtractorTest extends TestCase
+final class RowsExtractorTest extends TestCase
 {
     public function test_process_extractor() : void
     {

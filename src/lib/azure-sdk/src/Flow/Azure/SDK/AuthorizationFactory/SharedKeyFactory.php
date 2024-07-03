@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Flow\Azure\SDK\AuthorizationFactory;
 
 use Flow\Azure\SDK\AuthorizationFactory;
-use Flow\Azure\SDK\BlobService\{Configuration};
 use Psr\Http\Message\RequestInterface;
 
 final class SharedKeyFactory implements AuthorizationFactory
 {
-    public function __construct(private readonly Configuration $configuration, private readonly string $accountKey)
-    {
+    public function __construct(
+        #[\SensitiveParameter] private readonly string $account,
+        #[\SensitiveParameter] private readonly string $accountKey
+    ) {
     }
 
     public function for(RequestInterface $request) : string
@@ -23,7 +24,7 @@ final class SharedKeyFactory implements AuthorizationFactory
             $request->getMethod()
         );
 
-        return 'SharedKey ' . $this->configuration->account . ':' . base64_encode(
+        return 'SharedKey ' . $this->account . ':' . base64_encode(
             hash_hmac('sha256', $signature, (string) base64_decode($this->accountKey, true), true)
         );
     }
@@ -62,7 +63,7 @@ final class SharedKeyFactory implements AuthorizationFactory
     {
         $queryParams = array_change_key_case($queryParams);
 
-        $canonicalizedResource = '/' . $this->configuration->account;
+        $canonicalizedResource = '/' . $this->account;
 
         $canonicalizedResource .= parse_url($url, PHP_URL_PATH);
 

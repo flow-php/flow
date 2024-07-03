@@ -9,7 +9,7 @@ use Flow\ETL\{Extractor, FlowContext, Rows};
 /**
  * @internal
  */
-final class ProcessExtractor implements Extractor
+final class RowsExtractor implements Extractor
 {
     /**
      * @var array<Rows>

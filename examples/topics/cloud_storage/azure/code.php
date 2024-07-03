@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-use function Flow\Azure\SDK\DSL\{azure_blob_service, azure_blob_service_config, azure_http_factory, azure_shared_key_authorization_factory, azure_url_factory};
+use function Flow\Azure\SDK\DSL\{azure_blob_service, azure_blob_service_config, azure_shared_key_authorization_factory};
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite};
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\DSL\path;
-use Http\Discovery\{Psr17FactoryDiscovery, Psr18ClientDiscovery};
 use Symfony\Component\Dotenv\Dotenv;
 
 require __DIR__ . '/../../../autoload.php';
@@ -22,15 +21,14 @@ $dotenv = new Dotenv();
 $dotenv->load(__DIR__ . '/.env');
 
 $config = config_builder()
-    ->mount(azure_filesystem(
-        azure_blob_service(
-            $azureConfig = azure_blob_service_config($_ENV['AZURE_ACCOUNT'], $_ENV['AZURE_CONTAINER']),
-            Psr18ClientDiscovery::find(),
-            azure_http_factory(Psr17FactoryDiscovery::findRequestFactory(), Psr17FactoryDiscovery::findStreamFactory()),
-            azure_url_factory(),
-            azure_shared_key_authorization_factory($azureConfig, $_ENV['AZURE_ACCOUNT_KEY'])
+    ->mount(
+        azure_filesystem(
+            azure_blob_service(
+                $azureConfig = azure_blob_service_config($_ENV['AZURE_ACCOUNT'], $_ENV['AZURE_CONTAINER']),
+                azure_shared_key_authorization_factory($_ENV['AZURE_ACCOUNT'], $_ENV['AZURE_ACCOUNT_KEY']),
+            )
         )
-    ));
+    );
 
 data_frame($config)
     ->read(from_array([

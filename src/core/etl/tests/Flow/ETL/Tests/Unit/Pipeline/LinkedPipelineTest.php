@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use function Flow\ETL\DSL\{bool_entry, int_entry, lit};
-use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Pipeline\{LinkedPipeline, SynchronousPipeline};
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
@@ -16,7 +16,7 @@ final class LinkedPipelineTest extends TestCase
     public function test_linked_pipelines() : void
     {
         $pipeline = new LinkedPipeline(
-            (new SynchronousPipeline(new ProcessExtractor(
+            (new SynchronousPipeline(new RowsExtractor(
                 new Rows(
                     Row::create(int_entry('id', 1)),
                     Row::create(int_entry('id', 2))
