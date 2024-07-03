@@ -17,7 +17,6 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
     - [csv](components/adapters/csv.md)
     - [doctrine](components/adapters/doctrine.md)
     - [elasticsearch](components/adapters/elasticsearch.md)
-    - [filesystem](components/adapters/filesystem.md)
     - [google sheet](components/adapters/google-sheet.md)
     - [http](components/adapters/http.md)
     - [json](components/adapters/json.md)
