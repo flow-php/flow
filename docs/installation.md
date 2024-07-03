@@ -12,7 +12,6 @@ this will reduce the number of unnecessary dependencies in your project (less ma
     - [csv](components/adapters/csv.md)
     - [doctrine](components/adapters/doctrine.md)
     - [elasticsearch](components/adapters/elasticsearch.md)
-    - [filesystem](components/adapters/filesystem.md)
     - [google sheet](components/adapters/google-sheet.md)
     - [http](components/adapters/http.md)
     - [json](components/adapters/json.md)
@@ -23,6 +22,7 @@ this will reduce the number of unnecessary dependencies in your project (less ma
     - [xml](components/adapters/xml.md)
 - Libraries
     - [array-dot](components/libs/array-dot.md)
+    - [array-dot](components/libs/azure-sdk.md)
     - [doctrine-dbal-bulk](components/libs/doctrine-dbal-bulk.md)
     - [dremel](components/libs/dremel.md)
     - [filesystem](components/libs/filesystem.md)
