@@ -32,6 +32,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [20b8f6](https://github.com/flow-php/flow/commit/20b8f6173b51efa2b8baec7dbe445bc496ac7042) - **etl core dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1096](https://github.com/flow-php/flow/pull/1096) - **handling negative numbers in parquet binary reader/writer** - [@norberttech](https://github.com/norberttech)
 - [#1094](https://github.com/flow-php/flow/pull/1094) - **Recognize INT32 with deprecated ConvertedType as DateTimeImmutable object** - [@norberttech](https://github.com/norberttech)
 - [#1086](https://github.com/flow-php/flow/pull/1086) - **Fix deprecated dynamic property usage** - [@stloyd](https://github.com/stloyd)
