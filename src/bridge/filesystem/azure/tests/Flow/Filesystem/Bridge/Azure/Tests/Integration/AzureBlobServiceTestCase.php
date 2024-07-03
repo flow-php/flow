@@ -36,7 +36,7 @@ abstract class AzureBlobServiceTestCase extends TestCase
     protected function blobService(string $container) : BlobService
     {
         $blobService = azure_blob_service(
-            $config = azure_blob_service_config($_ENV['AZURITE_ACCOUNT_NAME'], $container),
+            azure_blob_service_config($_ENV['AZURITE_ACCOUNT_NAME'], $container),
             azure_shared_key_authorization_factory($_ENV['AZURITE_ACCOUNT_NAME'], $_ENV['AZURITE_ACCOUNT_KEY']),
             Psr18ClientDiscovery::find(),
             azure_http_factory(Psr17FactoryDiscovery::findRequestFactory(), Psr17FactoryDiscovery::findStreamFactory()),

@@ -14,9 +14,9 @@ final class PSR7Processor implements ProcessorInterface
     {
     }
 
-    public function __invoke(LogRecord $record) : LogRecord
+    public function __invoke(LogRecord|array $record) : LogRecord|array
     {
-        $context = $record->context;
+        $context = \is_array($record) ? $record['context'] : $record->context;
 
         foreach ($context as $key => $val) {
             if ($val instanceof RequestInterface) {
@@ -34,6 +34,12 @@ final class PSR7Processor implements ProcessorInterface
                     unset($context[$key]);
                 }
             }
+        }
+
+        if (\is_array($record)) {
+            $record['context'] = $context;
+
+            return $record;
         }
 
         return $record->with(context: $context);

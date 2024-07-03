@@ -72,6 +72,7 @@ final class BlobService implements BlobServiceInterface
         $this->logger->info('Azure - Blob Service - Copy Blob', ['request' => $request]);
 
         $request = $request->withHeader('authorization', $this->authorizationFactory->for($request));
+        $request = $request->withHeader('content-length', '0');
 
         $response = $this->httpClient->sendRequest($request);
 
@@ -441,6 +442,10 @@ final class BlobService implements BlobServiceInterface
 
         $request = $request->withHeader('authorization', $this->authorizationFactory->for($request));
 
+        if (!$content) {
+            $request = $request->withHeader('content-length', '0');
+        }
+
         $response = $this->httpClient->sendRequest($request);
 
         $this->logger->info('Azure - Blob Service - Put Blob Block', ['response' => $response]);
@@ -514,7 +519,9 @@ final class BlobService implements BlobServiceInterface
             )
         );
 
-        $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
+        $request = $request
+            ->withHeader('content-type', 'application/x-www-form-urlencoded')
+            ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
             $request = $request->withHeader($header, $value);
@@ -522,7 +529,7 @@ final class BlobService implements BlobServiceInterface
 
         $request = $request
             ->withBody($this->httpFactory->stream($blockListString = $serializer->serialize($blockList)))
-            ->withHeader('Content-Length', (string) \strlen($blockListString));
+            ->withHeader('content-length', (string) \strlen($blockListString));
 
         $this->logger->info('Azure - Blob Service - Put Block Blob Block List', ['request' => $request]);
 
