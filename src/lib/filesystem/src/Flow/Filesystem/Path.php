@@ -287,7 +287,7 @@ final class Path
         $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
 
         return new self(
-            $this->protocol->scheme() . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . \bin2hex(\random_bytes(16))  . $extension,
+            $this->protocol->scheme() . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . \bin2hex(\random_bytes(16)) . $extension,
             $this->options
         );
     }
