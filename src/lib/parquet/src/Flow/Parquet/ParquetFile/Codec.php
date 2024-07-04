@@ -22,6 +22,7 @@ final class Codec
         $result = match ($compression) {
             Compressions::UNCOMPRESSED => $data,
             Compressions::SNAPPY => \snappy_compress($data),
+            Compressions::BROTLI => \brotli_compress($data, $this->options->getInt(Option::BROTLI_COMPRESSION_LEVEL)),
             Compressions::GZIP => \gzencode($data, $this->options->getInt(Option::GZIP_COMPRESSION_LEVEL)),
             Compressions::LZ4 => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
             Compressions::LZ4_RAW => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
@@ -42,6 +43,7 @@ final class Codec
         $result = match ($compression) {
             Compressions::UNCOMPRESSED => $data,
             Compressions::SNAPPY => \snappy_uncompress($data),
+            Compressions::BROTLI => \brotli_uncompress($data),
             Compressions::GZIP => \gzdecode($data),
             Compressions::LZ4 => \lz4_uncompress($data),
             Compressions::LZ4_RAW => \lz4_uncompress($data),

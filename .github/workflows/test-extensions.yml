@@ -46,7 +46,7 @@ jobs:
 
       - name: "Install dependencies"
         run: |
-          sudo apt-get update && sudo apt-get install liblz4-1 libzstd1 --assume-yes
+          sudo apt-get update && sudo apt-get install libbrotli1 liblz4-1 libzstd1 --assume-yes
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
@@ -54,7 +54,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
-          extensions: :psr, lz4, zstd
+          extensions: :psr, brotli, lz4, zstd
 
       - name: "List PHP Extensions"
         run: php -m
@@ -86,6 +86,9 @@ jobs:
       - name: "Install locked dependencies"
         if: ${{ matrix.dependencies == 'locked' }}
         run: "composer install --no-interaction --no-progress --no-suggest"
+
+      - name: "Test Brotli"
+        run: "composer test -- --group brotli-extension"
 
       - name: "Test LZ4"
         run: "composer test -- --group lz4-extension"

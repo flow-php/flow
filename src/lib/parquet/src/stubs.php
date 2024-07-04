@@ -2,6 +2,20 @@
 
 declare(strict_types=1);
 
+if (!\function_exists('brotli_compress')) {
+    function brotli_compress(string $data, int $quality = 11, int $mode = 0) : string
+    {
+        throw new RuntimeException('The Brotli extension is not available');
+    }
+}
+
+if (!\function_exists('brotli_uncompress')) {
+    function brotli_uncompress(string $data, int $length = 0) : string
+    {
+        throw new RuntimeException('The Brotli extension is not available');
+    }
+}
+
 if (!\function_exists('lz4_compress')) {
     function lz4_compress(string $data, int $level = 0, ?string $extra = null) : string
     {
