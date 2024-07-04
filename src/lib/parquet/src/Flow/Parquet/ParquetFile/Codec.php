@@ -23,6 +23,8 @@ final class Codec
             Compressions::UNCOMPRESSED => $data,
             Compressions::SNAPPY => \snappy_compress($data),
             Compressions::GZIP => \gzencode($data, $this->options->getInt(Option::GZIP_COMPRESSION_LEVEL)),
+            Compressions::LZ4 => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
+            Compressions::LZ4_RAW => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
             Compressions::ZSTD => \zstd_compress($data, $this->options->getInt(Option::ZSTD_COMPRESSION_LEVEL)),
             default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet')
         };
@@ -41,6 +43,8 @@ final class Codec
             Compressions::UNCOMPRESSED => $data,
             Compressions::SNAPPY => \snappy_uncompress($data),
             Compressions::GZIP => \gzdecode($data),
+            Compressions::LZ4 => \lz4_uncompress($data),
+            Compressions::LZ4_RAW => \lz4_uncompress($data),
             Compressions::ZSTD => \zstd_uncompress($data),
             default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet')
         };

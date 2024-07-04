@@ -32,6 +32,8 @@ final class Writer
             case Compressions::UNCOMPRESSED:
             case Compressions::SNAPPY:
             case Compressions::GZIP:
+            case Compressions::LZ4:
+            case Compressions::LZ4_RAW:
             case Compressions::ZSTD:
                 break;
 
