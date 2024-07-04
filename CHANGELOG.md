@@ -37,6 +37,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1111](https://github.com/flow-php/flow/pull/1111) - **Fixed merging nullable with non nullable schema definitions** - [@norberttech](https://github.com/norberttech)
 - [bad1f4](https://github.com/flow-php/flow/commit/bad1f4c95220c73a64ac795b9e26c35a72e67f02) - **failing tests** - [@norberttech](https://github.com/norberttech)
 - [20b8f6](https://github.com/flow-php/flow/commit/20b8f6173b51efa2b8baec7dbe445bc496ac7042) - **etl core dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1096](https://github.com/flow-php/flow/pull/1096) - **handling negative numbers in parquet binary reader/writer** - [@norberttech](https://github.com/norberttech)
