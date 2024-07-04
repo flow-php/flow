@@ -28,6 +28,22 @@ final class DateTimeTypeTest extends TestCase
         self::assertFalse(type_datetime()->isValid('2020-01-01 00:00:00'));
     }
 
+    public function test_merge_non_nullable_with_non_nullable() : void
+    {
+        self::assertFalse(type_datetime()->merge(type_datetime())->nullable());
+    }
+
+    public function test_merge_non_nullable_with_nullable() : void
+    {
+        self::assertTrue(type_datetime()->merge(type_datetime(true))->nullable());
+        self::assertTrue(type_datetime(true)->merge(type_datetime(false))->nullable());
+    }
+
+    public function test_merge_nullable_with_nullable() : void
+    {
+        self::assertTrue(type_datetime(true)->merge(type_datetime(true))->nullable());
+    }
+
     public function test_to_string() : void
     {
         self::assertSame(

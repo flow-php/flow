@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use function Flow\ETL\DSL\{int_entry,
+use function Flow\ETL\DSL\{datetime_schema,
+    int_entry,
     str_entry,
     struct_element,
     struct_entry,
@@ -72,6 +73,19 @@ final class DefinitionTest extends TestCase
         self::assertEquals(
             Definition::integer('id', true),
             Definition::integer('id')->merge(Definition::integer('id', true))
+        );
+    }
+
+    public function test_merge_nullable_with_non_nullable_dateime_definitions() : void
+    {
+        self::assertEquals(
+            datetime_schema('col', true),
+            datetime_schema('col')->merge(datetime_schema('col', true))
+        );
+
+        self::assertEquals(
+            datetime_schema('col'),
+            datetime_schema('col')->merge(datetime_schema('col'))
         );
     }
 
