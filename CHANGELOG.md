@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-07-04
 
 ### Added
+- [#1106](https://github.com/flow-php/flow/pull/1106) - **Added support for BROTLI compression algorithm to parquet** - [@flavioheleno](https://github.com/flavioheleno)
 - [#1107](https://github.com/flow-php/flow/pull/1107) - **Added support for LZ4 compression algorithm to parquet** - [@flavioheleno](https://github.com/flavioheleno)
 - [#1105](https://github.com/flow-php/flow/pull/1105) - **zstd compression functions** - [@flavioheleno](https://github.com/flavioheleno)
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Flow Filesystem Library** - [@norberttech](https://github.com/norberttech)
