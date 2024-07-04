@@ -54,7 +54,9 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
-          extensions: :psr, brotli, lz4, zstd
+          extensions: :psr, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1
+        env:
+            SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
 
       - name: "List PHP Extensions"
         run: php -m
@@ -95,3 +97,6 @@ jobs:
 
       - name: "Test ZSTD"
         run: "composer test -- --group zstd-extension"
+
+      - name: "Test Snappy"
+        run: "composer test -- --group snappy-extension"

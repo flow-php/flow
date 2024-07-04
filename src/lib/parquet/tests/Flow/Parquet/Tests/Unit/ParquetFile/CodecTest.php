@@ -74,8 +74,13 @@ final class CodecTest extends TestCase
         );
     }
 
+    #[Group('snappy-extension')]
     public function test_snappy() : void
     {
+        if (!\extension_loaded('snappy')) {
+            self::markTestSkipped('The snappy extension is not available');
+        }
+
         $data = 'this is some test data to be compressed';
 
         $codec = new Codec((new Options()));
@@ -86,7 +91,23 @@ final class CodecTest extends TestCase
         );
     }
 
-    public function test_uncompressed() : void
+    public function test_snappy_polyfill() : void
+    {
+        if (\extension_loaded('snappy')) {
+            self::markTestSkipped('The snappy extension is available');
+        }
+
+        $data = 'this is some test data to be compressed';
+
+        $codec = new Codec((new Options()));
+
+        self::assertSame(
+            $data,
+            $codec->decompress($codec->compress($data, Compressions::SNAPPY), Compressions::SNAPPY)
+        );
+    }
+
+    public function test_snappy_uncompressed() : void
     {
         $data = 'this is some test data to be compressed';
 
