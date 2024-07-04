@@ -176,14 +176,8 @@ final class Schema implements \Countable
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
                 $newDefinitions[$entry] = $definition->makeNullable();
-            } elseif (!$newDefinitions[$entry]->isEqual($definition)) {
+            } else {
                 $newDefinitions[$entry] = $newDefinitions[$entry]->merge($definition);
-            }
-        }
-
-        foreach ($schema->definitions as $entry => $definition) {
-            if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
-                $newDefinitions[$entry] = $definition->makeNullable();
             }
         }
 
