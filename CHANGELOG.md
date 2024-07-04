@@ -22,6 +22,7 @@
 - [#1054](https://github.com/flow-php/flow/pull/1054) - **missing tests for parquet rows normalizer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1110](https://github.com/flow-php/flow/pull/1110) - **Simplify making schema definitions nullable** - [@norberttech](https://github.com/norberttech)
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Remote and Local files extractor are now merged into single FilesExtractor** - [@norberttech](https://github.com/norberttech)
 - [#1102](https://github.com/flow-php/flow/pull/1102) - **Replace `uniqid` with guarantee uniqueness** - [@stloyd](https://github.com/stloyd)
 - [#1087](https://github.com/flow-php/flow/pull/1087) - **Prepare for PHPUnit 11** - [@stloyd](https://github.com/stloyd)
@@ -67,6 +68,10 @@
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::closure** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::cleanCopy** - [@norberttech](https://github.com/norberttech)
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Join expression comparison types other than equal/identical/any/all** - [@norberttech](https://github.com/norberttech)
+
+### Deprecated
+- [#1110](https://github.com/flow-php/flow/pull/1110) - **Schema::nullable() in favor of Schema::makeNullable()** - [@norberttech](https://github.com/norberttech)
+- [#1110](https://github.com/flow-php/flow/pull/1110) - **Definition::nullable() in favor of Definition::makeNullable(bool $nullable)** - [@norberttech](https://github.com/norberttech)
 
 ## [0.7.4] - 2024-04-18
 
