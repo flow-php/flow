@@ -218,6 +218,11 @@ final class Definition
         return $this->type->nullable();
     }
 
+    public function makeNullable(bool $nullable = true) : self
+    {
+        return new self($this->ref, $this->entryClass, $this->type->makeNullable($nullable), $this->metadata);
+    }
+
     public function matches(Entry $entry) : bool
     {
         if ($this->isNullable() && $entry->is($this->ref)) {
@@ -317,9 +322,12 @@ final class Definition
         ];
     }
 
+    /**
+     * @deprecated Use makeNullable() instead
+     */
     public function nullable() : self
     {
-        return new self($this->ref, $this->entryClass, $this->type->makeNullable(true), $this->metadata);
+        return $this->makeNullable();
     }
 
     public function rename(string $newName) : self

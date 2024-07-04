@@ -383,7 +383,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
                 $entries = [];
 
                 foreach ($rightSchema->definitions() as $definition) {
-                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->nullable());
+                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->makeNullable());
                 }
 
                 $joinedRow = $leftRow->merge(row(...$entries), $expression->prefix());
@@ -457,7 +457,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
                 $entries = [];
 
                 foreach ($leftSchema->definitions() as $definition) {
-                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->nullable());
+                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->makeNullable());
                 }
 
                 $joined[] = row(...$entries)->merge($rightRow, $expression->prefix());

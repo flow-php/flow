@@ -157,7 +157,7 @@ final class SchemaTest extends TestCase
                 Schema\Definition::integer('id', $nullable = true),
                 Schema\Definition::string('name', $nullable = true)
             ),
-            $schema->nullable()
+            $schema->makeNullable()
         );
     }
 

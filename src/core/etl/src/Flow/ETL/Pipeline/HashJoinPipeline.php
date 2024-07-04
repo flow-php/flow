@@ -64,7 +64,7 @@ final class HashJoinPipeline implements Pipeline
 
         if ($this->join === Join::left) {
             foreach ($rightSchema->definitions() as $rightEntryDefinition) {
-                $rightEntries[] = $context->entryFactory()->create($rightEntryDefinition->entry()->name(), null, $rightEntryDefinition->nullable());
+                $rightEntries[] = $context->entryFactory()->create($rightEntryDefinition->entry()->name(), null, $rightEntryDefinition->makeNullable());
             }
         }
 
@@ -104,7 +104,7 @@ final class HashJoinPipeline implements Pipeline
 
         if ($this->join === Join::right) {
             foreach ($leftSchema->definitions() as $leftEntryDefinition) {
-                $leftEntries[] = $context->entryFactory()->create($leftEntryDefinition->entry()->name(), null, $leftEntryDefinition->nullable());
+                $leftEntries[] = $context->entryFactory()->create($leftEntryDefinition->entry()->name(), null, $leftEntryDefinition->makeNullable());
             }
 
             foreach ($hashTable->unmatchedRows() as $unmatchedRow) {

@@ -136,6 +136,26 @@ final class Schema implements \Countable
         return $this;
     }
 
+    /**
+     * Makes all schema definitions nullable.
+     */
+    public function makeNullable() : self
+    {
+        $definitions = [];
+
+        foreach ($this->definitions as $definition) {
+            if (!$definition->isNullable()) {
+                $definitions[] = $definition->makeNullable();
+            } else {
+                $definitions[] = $definition;
+            }
+        }
+
+        $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
     public function matches(self $schema, SchemaMatcher $matcher = new StrictSchemaMatcher()) : bool
     {
         return $matcher->match($this, $schema);
@@ -155,7 +175,7 @@ final class Schema implements \Countable
 
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
-                $newDefinitions[$entry] = $definition->nullable();
+                $newDefinitions[$entry] = $definition->makeNullable();
             } elseif (!$newDefinitions[$entry]->isEqual($definition)) {
                 $newDefinitions[$entry] = $newDefinitions[$entry]->merge($definition);
             }
@@ -163,13 +183,13 @@ final class Schema implements \Countable
 
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
-                $newDefinitions[$entry] = $definition->nullable();
+                $newDefinitions[$entry] = $definition->makeNullable();
             }
         }
 
         foreach ($newDefinitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry()->name(), $schema->definitions)) {
-                $newDefinitions[$entry] = $definition->nullable();
+                $newDefinitions[$entry] = $definition->makeNullable();
             }
         }
 
@@ -189,21 +209,12 @@ final class Schema implements \Countable
         return $definitions;
     }
 
+    /**
+     * @deprecated use makeNullable instead
+     */
     public function nullable() : self
     {
-        $definitions = [];
-
-        foreach ($this->definitions as $definition) {
-            if (!$definition->isNullable()) {
-                $definitions[] = $definition->nullable();
-            } else {
-                $definitions[] = $definition;
-            }
-        }
-
-        $this->setDefinitions(...$definitions);
-
-        return $this;
+        return $this->makeNullable();
     }
 
     public function remove(string|Reference ...$entries) : self
