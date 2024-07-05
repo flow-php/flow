@@ -20,9 +20,6 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 
 Flow is the most advanced PHP ETL framework. 
 
-📜 [Documentation](docs/introduction.md)
-
-
 ```php
 <?php
 
