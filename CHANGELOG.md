@@ -37,6 +37,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1114](https://github.com/flow-php/flow/pull/1114) - **Fixed Flow to Parquet Schema converter not respecting deprecated parquet converted types** - [@norberttech](https://github.com/norberttech)
 - [#1112](https://github.com/flow-php/flow/pull/1112) - **Any comparison function will now return false when comparing non null value wth nulls** - [@norberttech](https://github.com/norberttech)
 - [#1111](https://github.com/flow-php/flow/pull/1111) - **Fixed merging nullable with non nullable schema definitions** - [@norberttech](https://github.com/norberttech)
 - [bad1f4](https://github.com/flow-php/flow/commit/bad1f4c95220c73a64ac795b9e26c35a72e67f02) - **failing tests** - [@norberttech](https://github.com/norberttech)
