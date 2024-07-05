@@ -24,6 +24,10 @@ final class LessThan extends ScalarFunctionChain
 
         $this->assertComparable($base, $next, '<');
 
+        if ($base === null || $next === null) {
+            return false;
+        }
+
         return $base < $next;
     }
 }
