@@ -2,9 +2,10 @@
 
 - [⬅️️ Back](introduction.md)
 
-This repository is a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/).
-Please check the below packages and select only those that you are going to use,
-this will reduce the number of unnecessary dependencies in your project (less maintenance).
+Flow is developed as a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/) in order
+to reduce maintenance overhead and to make it easier to manage dependencies between components. 
+
+Instead of installing whole repository with all dependencies, it's recommended to install only the components you need.
 
 - [ETL](components/core/core.md)
 - Adapters

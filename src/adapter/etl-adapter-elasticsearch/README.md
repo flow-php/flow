@@ -12,5 +12,9 @@ making it an excellent choice for developers dealing with Elasticsearch in large
 With Flow PHP's Adapter Elasticsearch, managing Elasticsearch data within your ETL workflows becomes a more refined and
 efficient endeavor, harmoniously aligning with the robust and adaptable framework of the Flow PHP ecosystem.
 
+> [!IMPORTANT]  
+> This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
+
 - 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/adapters/elasticsearch.md)
+- ➡️ [Installation](https://github.com/flow-php/flow/blob/1.x/docs/installation.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

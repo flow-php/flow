@@ -12,5 +12,9 @@ for developers dealing with Parquet data in large-scale and data-intensive scena
 managing Parquet data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning with
 the robust and adaptable nature of the Flow PHP ecosystem.
 
+> [!IMPORTANT]  
+> This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).
+
 - 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/docs/components/adapters/parquet.md)
+- ➡️ [Installation](https://github.com/flow-php/flow/blob/1.x/docs/installation.md)
 - 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)
