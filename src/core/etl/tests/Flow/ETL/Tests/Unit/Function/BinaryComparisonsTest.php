@@ -35,15 +35,23 @@ final class BinaryComparisonsTest extends TestCase
             int_entry('c', 10),
             datetime_entry('d', '2023-01-01 00:00:00 UTC'),
             datetime_entry('e', '2023-01-02 00:00:00 UTC'),
+            int_entry('f', null),
         );
 
         self::assertTrue((new GreaterThan(ref('a'), ref('c')))->eval($row));
+        self::assertFalse((new GreaterThan(ref('a'), ref('f')))->eval($row));
+        self::assertFalse((new GreaterThan(ref('f'), ref('c')))->eval($row));
+        self::assertFalse((new GreaterThan(ref('f'), ref('f')))->eval($row));
         self::assertFalse((new GreaterThan(ref('a'), ref('b')))->eval($row));
         self::assertTrue((new GreaterThanEqual(ref('a'), ref('c')))->eval($row));
         self::assertTrue((new GreaterThanEqual(ref('a'), ref('b')))->eval($row));
         self::assertTrue((new GreaterThanEqual(ref('e'), ref('d')))->eval($row));
         self::assertTrue((new GreaterThanEqual(ref('e'), lit(new \DateTimeImmutable('2022-01-01 00:00:00 UTC'))))->eval($row));
         self::assertFalse((new GreaterThanEqual(ref('e'), lit(new \DateTimeImmutable('2024-01-01 00:00:00 UTC'))))->eval($row));
+        self::assertFalse((new GreaterThanEqual(ref('a'), ref('f')))->eval($row));
+        self::assertFalse((new GreaterThanEqual(ref('f'), ref('c')))->eval($row));
+        self::assertFalse((new GreaterThanEqual(ref('f'), ref('f')))->eval($row));
+
     }
 
     public function test_is_in() : void
@@ -101,20 +109,18 @@ final class BinaryComparisonsTest extends TestCase
 
     public function test_less_than() : void
     {
-        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), int_entry('d', null));
 
-        self::assertFalse(
-            (new LessThan(ref('a'), ref('c')))->eval($row)
-        );
-        self::assertFalse(
-            (new LessThan(ref('a'), ref('b')))->eval($row)
-        );
-        self::assertTrue(
-            (new LessThanEqual(ref('c'), ref('a')))->eval($row)
-        );
-        self::assertTrue(
-            (new LessThanEqual(ref('a'), ref('b')))->eval($row)
-        );
+        self::assertFalse((new LessThan(ref('a'), ref('c')))->eval($row));
+        self::assertFalse((new LessThan(ref('a'), ref('d')))->eval($row));
+        self::assertFalse((new LessThan(ref('d'), ref('d')))->eval($row));
+        self::assertFalse((new LessThan(ref('d'), ref('c')))->eval($row));
+        self::assertFalse((new LessThan(ref('a'), ref('b')))->eval($row));
+        self::assertTrue((new LessThanEqual(ref('c'), ref('a')))->eval($row));
+        self::assertTrue((new LessThanEqual(ref('a'), ref('b')))->eval($row));
+        self::assertFalse((new LessThanEqual(ref('a'), ref('d')))->eval($row));
+        self::assertFalse((new LessThanEqual(ref('d'), ref('c')))->eval($row));
+        self::assertFalse((new LessThanEqual(ref('d'), ref('d')))->eval($row));
     }
 
     public function test_not_equals() : void
