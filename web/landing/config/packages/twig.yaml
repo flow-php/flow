@@ -2,7 +2,7 @@ twig:
     default_path: '%kernel.project_dir%/templates'
     globals:
         google_analytics_id: '%env(GOOGLE_ANALYTICS_ID)%'
-        
+        google_conversion_tag: '%env(GOOGLE_CONVERSION_TAG)%'
 when@test:
     twig:
         strict_variables: true
