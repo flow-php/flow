@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-07-05
+## [Unreleased] - 2024-07-09
 
 ### Added
+- [e4b84b](https://github.com/flow-php/flow/commit/e4b84b3248bbe67c823c43272f460b80b6b26171) - **google converstion tag for landing page** - [@norberttech](https://github.com/norberttech)
 - [#1108](https://github.com/flow-php/flow/pull/1108) - **Tests based on snappy extension and polyfill** - [@norberttech](https://github.com/norberttech)
 - [#1106](https://github.com/flow-php/flow/pull/1106) - **Added support for BROTLI compression algorithm to parquet** - [@flavioheleno](https://github.com/flavioheleno)
 - [#1107](https://github.com/flow-php/flow/pull/1107) - **Added support for LZ4 compression algorithm to parquet** - [@flavioheleno](https://github.com/flavioheleno)
