@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder;
+namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Flattener;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;

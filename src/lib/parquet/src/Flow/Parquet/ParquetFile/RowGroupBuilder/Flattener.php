@@ -13,6 +13,12 @@ final class Flattener
     {
     }
 
+    /**
+     * @param Column $column
+     * @param array<mixed> $row
+     *
+     * @return array<mixed>
+     */
     public function flattenColumn(Column $column, array $row) : array
     {
         if (!\array_key_exists($column->name(), $row)) {
@@ -58,12 +64,6 @@ final class Flattener
     {
         $listElementColumn = $column->getListElement();
 
-        //        if ($columnData === null) {
-        //            return [
-        //                $listElementColumn->flatPath() => null,
-        //            ];
-        //        }
-
         if ($listElementColumn instanceof FlatColumn) {
             $this->validator->validate($listElementColumn, $columnData);
 
@@ -76,8 +76,18 @@ final class Flattener
         if ($listElementColumn->isList()) {
             $data = [];
 
-            foreach ($columnData as $listElement) {
-                $data[] = $this->flattenColumn($listElementColumn, [$listElementColumn->name() => [$listElement]]);
+            if (\is_array($columnData)) {
+                if (\count($columnData)) {
+                    foreach ($columnData as $listElement) {
+                        $data[] = $this->flattenColumn($listElementColumn, [$listElementColumn->name() => [$listElement]]);
+                    }
+                } else {
+                    $data[] = $this->flattenColumn($listElementColumn, [$listElementColumn->name() => []]);
+                }
+            }
+
+            if ($columnData === null) {
+                $data[] = $this->flattenColumn($listElementColumn, [$listElementColumn->name() => null]);
             }
 
             return \array_merge_recursive(...$data);
@@ -86,9 +96,23 @@ final class Flattener
         if ($listElementColumn->isMap()) {
             $data = [];
 
-            foreach ($columnData as $listMapElementData) {
-                foreach ($this->flattenMap($listElementColumn, $listMapElementData) as $key => $value) {
-                    $data[$key][] = $value;
+            if (\is_array($columnData)) {
+                if (\count($columnData)) {
+                    foreach ($columnData as $listMapElementData) {
+                        foreach ($this->flattenMap($listElementColumn, $listMapElementData) as $key => $value) {
+                            $data[$key][] = $value;
+                        }
+                    }
+                } else {
+                    foreach ($this->flattenColumn($listElementColumn, [$listElementColumn->name() => []]) as $key => $value) {
+                        $data[$key] = $value;
+                    }
+                }
+            }
+
+            if ($columnData === null) {
+                foreach ($this->flattenColumn($listElementColumn, [$listElementColumn->name() => null]) as $key => $value) {
+                    $data[$key] = $value;
                 }
             }
 
@@ -99,12 +123,20 @@ final class Flattener
 
         if ($columnData === null) {
             foreach ($this->flattenStructure($listElementColumn, null) as $key => $value) {
-                $data[$key][] = $value;
+                $data[$key] = $value;
             }
-        } else {
-            foreach ($columnData as $listStructureElementData) {
-                foreach ($this->flattenStructure($listElementColumn, $listStructureElementData) as $key => $value) {
-                    $data[$key][] = $value;
+        }
+
+        if (\is_array($columnData)) {
+            if (\count($columnData)) {
+                foreach ($columnData as $listStructureElementData) {
+                    foreach ($this->flattenStructure($listElementColumn, $listStructureElementData) as $key => $value) {
+                        $data[$key][] = $value;
+                    }
+                }
+            } else {
+                foreach ($this->flattenStructure($listElementColumn, []) as $key => $value) {
+                    $data[$key] = [];
                 }
             }
         }
@@ -112,19 +144,25 @@ final class Flattener
         return $data;
     }
 
+    /**
+     * @psalm-suppress PossiblyNullArgument
+     * @psalm-suppress NamedArgumentNotAllowed
+     *
+     * @return array<mixed>
+     */
     private function flattenMap(NestedColumn $column, mixed $columnData) : array
     {
         $keyColumn = $column->getMapKeyColumn();
         $valueColumn = $column->getMapValueColumn();
 
-        if ($columnData === null) {
-            return [
-                $keyColumn->flatPath() => null,
-                $valueColumn->flatPath() => null,
-            ];
-        }
-
         if ($valueColumn instanceof FlatColumn) {
+            if ($columnData === null) {
+                return [
+                    $keyColumn->flatPath() => null,
+                    $valueColumn->flatPath() => null,
+                ];
+            }
+
             $this->validator->validate($keyColumn, \array_keys($columnData));
             $this->validator->validate($valueColumn, \array_values($columnData));
 
@@ -135,13 +173,33 @@ final class Flattener
         }
 
         if ($valueColumn->isList()) {
-            $data = [
-                $keyColumn->flatPath() => \array_keys($columnData),
-            ];
+            if ($columnData === null) {
+                $data = [
+                    $keyColumn->flatPath() => null,
+                ];
+            } else {
+                $data = [
+                    $keyColumn->flatPath() => \array_keys($columnData),
+                ];
+            }
 
-            foreach ($columnData as $listElement) {
-                foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => $listElement]) as $key => $value) {
-                    $data[$key][] = $value;
+            if (\is_array($columnData)) {
+                if (\count($columnData) === 0) {
+                    foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => []]) as $key => $value) {
+                        $data[$key] = $value;
+                    }
+                } else {
+                    foreach ($columnData as $listElement) {
+                        foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => $listElement]) as $key => $value) {
+                            $data[$key][] = $value;
+                        }
+                    }
+                }
+            }
+
+            if ($columnData === null) {
+                foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => null]) as $key => $value) {
+                    $data[$key] = $value;
                 }
             }
 
@@ -149,13 +207,33 @@ final class Flattener
         }
 
         if ($valueColumn->isMap()) {
-            $data = [
-                $keyColumn->flatPath() => \array_keys($columnData),
-            ];
+            if ($columnData === null) {
+                $data = [
+                    $keyColumn->flatPath() => null,
+                ];
+            } else {
+                $data = [
+                    $keyColumn->flatPath() => \array_keys($columnData),
+                ];
+            }
 
-            foreach ($columnData as $mapValue) {
-                foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => $mapValue]) as $key => $value) {
-                    $data[$key][] = $value;
+            if (\is_array($columnData)) {
+                if (\count($columnData)) {
+                    foreach ($columnData as $mapValue) {
+                        foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => $mapValue]) as $key => $value) {
+                            $data[$key][] = $value;
+                        }
+                    }
+                } else {
+                    foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => []]) as $key => $value) {
+                        $data[$key] = $value;
+                    }
+                }
+            }
+
+            if ($columnData === null) {
+                foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => null]) as $key => $value) {
+                    $data[$key] = $value;
                 }
             }
 
@@ -164,14 +242,47 @@ final class Flattener
 
         $data = [];
 
-        foreach ($columnData as $listElement) {
-            $data[] = $this->flattenColumn($valueColumn, [$valueColumn->name() => $listElement]);
+        if ($columnData === null) {
+            $data = [
+                $keyColumn->flatPath() => null,
+            ];
+        }
+
+        if (\is_array($columnData)) {
+            if (\count($columnData)) {
+                foreach ($columnData as $structElement) {
+                    $data[] = $this->flattenColumn($valueColumn, [$valueColumn->name() => $structElement]);
+                }
+            } else {
+                foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => []]) as $key => $value) {
+                    $data[$key] = [];
+                }
+
+                return \array_merge(
+                    [
+                        $keyColumn->flatPath() => \array_keys($columnData),
+                    ],
+                    $data
+                );
+            }
+        } else {
+            foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => null]) as $key => $value) {
+                $data[$key] = $value;
+            }
+
+            return \array_merge(
+                [
+                    $keyColumn->flatPath() => $columnData,
+                ],
+                $data
+            );
         }
 
         return \array_merge(
             [
                 $keyColumn->flatPath() => \array_keys($columnData),
             ],
+            /** @phpstan-ignore-next-line */
             \array_merge_recursive(...$data)
         );
     }
@@ -180,8 +291,18 @@ final class Flattener
     {
         $data = [];
 
+        if ($columnData === null) {
+            foreach ($column->children() as $child) {
+                $data = \array_merge($data, $this->flattenColumn($child, [$child->name() => null]));
+            }
+
+            return $data;
+        }
+
         foreach ($column->children() as $child) {
-            $data = \array_merge($data, $this->flattenColumn($child, $columnData ?? [$child->name() => null]));
+            $fieldData = [$child->name() => $columnData[$child->name()] ?? null];
+
+            $data = \array_merge($data, $this->flattenColumn($child, $fieldData));
         }
 
         return $data;
