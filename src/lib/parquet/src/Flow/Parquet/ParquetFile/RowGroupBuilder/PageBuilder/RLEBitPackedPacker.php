@@ -17,10 +17,10 @@ final class RLEBitPackedPacker
     /**
      * @param array<int> $values
      */
-    public function pack(array $values) : string
+    public function pack(int $bitWidth, array $values) : string
     {
         $dataBuffer = '';
-        $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $values);
+        $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
 
         return $dataBuffer;
     }
@@ -28,10 +28,10 @@ final class RLEBitPackedPacker
     /**
      * @param array<int> $values
      */
-    public function packWithBitWidth(array $values) : string
+    public function packWithBitWidth(int $bitWidth, array $values) : string
     {
         $dataBuffer = '';
-        $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $values);
+        $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
         $outputBuffer = '';
         $outputWriter = new BinaryBufferWriter($outputBuffer);
         $outputWriter->writeVarInts32([BitWidth::fromArray($values)]);
@@ -43,10 +43,10 @@ final class RLEBitPackedPacker
     /**
      * @param array<int> $values
      */
-    public function packWithLength(array $values) : string
+    public function packWithLength(int $bitWidth, array $values) : string
     {
         $dataBuffer = '';
-        $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $values);
+        $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $bitWidth, $values);
         $outputBuffer = '';
         $outputWriter = new BinaryBufferWriter($outputBuffer);
         $outputWriter->writeInts32([$length = \strlen($dataBuffer)]);

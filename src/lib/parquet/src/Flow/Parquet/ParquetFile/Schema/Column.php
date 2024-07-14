@@ -8,6 +8,8 @@ use Flow\Parquet\Thrift\SchemaElement;
 
 interface Column
 {
+    public function convertedType() : ?ConvertedType;
+
     public function ddl() : array;
 
     public function flatPath() : string;

@@ -15,6 +15,11 @@ final class RLEBitPackedTest extends TestCase
     public static function values_provider() : \Generator
     {
         yield [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            1,
+        ];
+
+        yield [
             [0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             4,
         ];
@@ -30,7 +35,7 @@ final class RLEBitPackedTest extends TestCase
     {
         $packer = new RLEBitPackedPacker($rleBitPackedHybrid = new RLEBitPackedHybrid());
 
-        $buffer = $packer->packWithLength($values);
+        $buffer = $packer->packWithLength(BitWidth::fromArray($values), $values);
         $reader = new BinaryBufferReader($buffer);
         self::assertSame($length, $reader->readInts32(1)[0]);
         $unpacked = $rleBitPackedHybrid->decodeHybrid($reader, BitWidth::fromArray($values), \count($values));

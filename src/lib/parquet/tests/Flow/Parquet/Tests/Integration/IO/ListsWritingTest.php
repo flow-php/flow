@@ -19,6 +19,31 @@ final class ListsWritingTest extends TestCase
         }
     }
 
+    public function test_writing_empty_lists_of_ints() : void
+    {
+        self::markTestSkipped('Empty lists are not supported yet');
+
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
+
+        $inputData = \array_merge(...\array_map(static function (int $i) : array {
+            return [
+                [
+                    'list_of_ints' => [],
+                ],
+            ];
+        }, \range(1, 10)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
+
     public function test_writing_list_of_ints() : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
