@@ -142,6 +142,28 @@ final class FlatColumn implements Column
         return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::uuid(), $repetition);
     }
 
+    public function __debugInfo() : ?array
+    {
+        return [
+            'name' => $this->name,
+            'type' => 'flat_column',
+            'flat_path' => $this->flatPath(),
+            'parent' => $this->parent ? [
+                'name' => $this->parent->name(),
+                'flat_path' => $this->parent->flatPath(),
+            ] : null,
+            'physical_type' => $this->type,
+            'logical_type' => $this->logicalType,
+            'converted_type' => $this->convertedType,
+            'repetition' => $this->repetition,
+            'precision' => $this->precision,
+            'scale' => $this->scale,
+            'type_length' => $this->typeLength,
+            'max_definitions_level' => $this->maxDefinitionsLevel(),
+            'max_repetitions_level' => $this->maxRepetitionsLevel(),
+        ];
+    }
+
     public function convertedType() : ?ConvertedType
     {
         return $this->convertedType;
@@ -286,6 +308,7 @@ final class FlatColumn implements Column
     public function maxDefinitionsLevel() : int
     {
         $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
+        $level += $this->repetition === Repetition::REPEATED ? 1 : 0;
 
         return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }

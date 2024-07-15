@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\Thrift\FileMetaData;
 
@@ -18,11 +19,11 @@ final class Metadata
     ) {
     }
 
-    public static function fromThrift(FileMetaData $thrift) : self
+    public static function fromThrift(FileMetaData $thrift, Options $options) : self
     {
         return new self(
             Schema::fromThrift($thrift->schema),
-            RowGroups::fromThrift($thrift->row_groups),
+            RowGroups::fromThrift($thrift->row_groups, $options),
             $thrift->num_rows,
             $thrift->version,
             $thrift->created_by

@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValueUnpacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
 use Flow\Parquet\ParquetFile\Page\{ColumnData, Dictionary};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\{ByteOrder, Options};
 
 final class DataCoder
 {
     public function __construct(
-        private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN
+        private readonly Options $options,
+        private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
     ) {
     }
 
@@ -25,6 +26,7 @@ final class DataCoder
         DataPageHeader $pageHeader,
         ?Dictionary $dictionary = null
     ) : ColumnData {
+
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
@@ -61,7 +63,7 @@ final class DataCoder
                 $column->logicalType(),
                 $repetitions,
                 $definitions,
-                (new PlainValueUnpacker($reader))->unpack($column, $pageHeader->valuesCount() - $nullsCount)
+                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $pageHeader->valuesCount() - $nullsCount)
             );
         }
 
@@ -82,7 +84,7 @@ final class DataCoder
                 $values = [];
 
                 foreach ($indices as $index) {
-                    $values[] = $dictionary?->values[$index];
+                    $values[] = $dictionary && \array_key_exists($index, $dictionary->values) ? $dictionary->values[$index] : null;
                 }
             } else {
                 $values = [];
@@ -134,7 +136,7 @@ final class DataCoder
                 $column->logicalType(),
                 $repetitions,
                 $definitions,
-                (new PlainValueUnpacker($reader))->unpack($column, $pageHeader->valuesCount() - $nullsCount)
+                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $pageHeader->valuesCount() - $nullsCount)
             );
         }
 
@@ -175,7 +177,7 @@ final class DataCoder
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         return new Dictionary(
-            (new PlainValueUnpacker($reader))->unpack($column, $pageHeader->valuesCount())
+            (new PlainValueUnpacker($reader, $this->options))->unpack($column, $pageHeader->valuesCount())
         );
     }
 

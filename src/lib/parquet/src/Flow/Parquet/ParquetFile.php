@@ -56,7 +56,7 @@ final class ParquetFile
         $thriftMetadata = new FileMetaData();
         $thriftMetadata->read(new TCompactProtocol(new TMemoryBuffer($metadata)));
 
-        $this->metadata = Metadata::fromThrift($thriftMetadata);
+        $this->metadata = Metadata::fromThrift($thriftMetadata, $this->options);
 
         return $this->metadata;
     }
@@ -78,6 +78,7 @@ final class ParquetFile
         $reader = new WholeChunkReader(
             new DataBuilder($this->dataConverter),
             new PageReader($this->byteOrder, $this->options),
+            $this->options
         );
 
         $yieldedRows = 0;
@@ -256,6 +257,7 @@ final class ParquetFile
         $mapFlat->attachIterator($values, 'values');
 
         foreach ($mapFlat as $row) {
+
             if ($row['keys'] === null) {
                 yield null;
             } else {
@@ -305,6 +307,7 @@ final class ParquetFile
 
         foreach ($childrenRowsData as $childrenRowData) {
             if ($isCollection) {
+
                 $structsCollection = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
                 /** @var null|array<array-key, mixed> $childColumnValue */
@@ -351,7 +354,7 @@ final class ParquetFile
      */
     private function viewChunksPages(FlatColumn $column) : \Generator
     {
-        $viewer = new WholeChunkViewer();
+        $viewer = new WholeChunkViewer($this->options);
 
         foreach ($this->getColumnChunks($column) as $columnChunk) {
             foreach ($viewer->view($columnChunk->chunk, $column, $this->stream) as $pageHeader) {

@@ -109,6 +109,25 @@ final class NestedColumn implements Column
         return new self($name, $repetition, $children);
     }
 
+    public function __debugInfo() : ?array
+    {
+        return [
+            'name' => $this->name,
+            'type' => 'nested_column',
+            'flat_path' => $this->flatPath(),
+            'parent' => $this->parent ? [
+                'name' => $this->parent->name(),
+                'flat_path' => $this->parent->flatPath(),
+            ] : null,
+            'physical_type' => $this->type(),
+            'logical_type' => $this->logicalType,
+            'converted_type' => $this->convertedType,
+            'repetition' => $this->repetition,
+            'max_definitions_level' => $this->maxDefinitionsLevel(),
+            'max_repetitions_level' => $this->maxRepetitionsLevel(),
+        ];
+    }
+
     /**
      * @return array<Column>
      */

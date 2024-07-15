@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\{Compressions, Encodings, Statistics};
 use Flow\Parquet\Thrift\ColumnMetaData;
@@ -36,10 +37,11 @@ final class ColumnChunk
         private readonly ?int $dataPageOffset,
         private readonly ?int $indexPageOffset,
         private readonly ?Statistics $statistics,
+        private readonly Options $options
     ) {
     }
 
-    public static function fromThrift(\Flow\Parquet\Thrift\ColumnChunk $thrift) : self
+    public static function fromThrift(\Flow\Parquet\Thrift\ColumnChunk $thrift, Options $options) : self
     {
         return new self(
             PhysicalType::from($thrift->meta_data->type),
@@ -54,6 +56,7 @@ final class ColumnChunk
             $thrift->meta_data->data_page_offset,
             $thrift->meta_data->index_page_offset,
             $thrift->meta_data->statistics ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
+            $options
         );
     }
 
@@ -111,7 +114,7 @@ final class ColumnChunk
             return null;
         }
 
-        return new StatisticsReader($this->statistics);
+        return new StatisticsReader($this->statistics, $this->options);
     }
 
     public function totalCompressedSize() : int

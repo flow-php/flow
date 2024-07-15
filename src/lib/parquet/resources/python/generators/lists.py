@@ -41,12 +41,12 @@ list_of_structs_nullable_col = pd.Series([generate_list_of_structs() if i % 2 ==
 
 # Creating the DataFrame with only the new column
 df_nested_list = pd.DataFrame({
-    'list': list_col,
-    'list_nullable': list_nullable_col,
-    'list_mixed_types': list_mixed_types_col,
-    'list_nested': list_nested_col,
-    'list_of_structs': list_of_structs_col,
-    'list_of_structs_nullable': list_of_structs_nullable_col
+    'list_int': list_col,
+    # 'list_nullable': list_nullable_col,
+    # 'list_mixed_types': list_mixed_types_col,
+    # 'list_nested': list_nested_col,
+    # 'list_of_structs': list_of_structs_col,
+    # 'list_of_structs_nullable': list_of_structs_nullable_col
 })
 
 # Types
@@ -68,12 +68,12 @@ list_of_structs_type = pa.list_(struct_type)
 
 # Define the schema
 schema = pa.schema([
-    ('list', list_type),
-    ('list_nullable', list_type),
-    ('list_mixed_types', list_mixed_type),
-    ('list_nested', list_nested_type),
-    ('list_of_structs', list_of_structs_type),
-    ('list_of_structs_nullable', list_of_structs_type)
+    ('list_int', list_type),
+    # ('list_nullable', list_type),
+    # ('list_mixed_types', list_mixed_type),
+    # ('list_nested', list_nested_type),
+    # ('list_of_structs', list_of_structs_type),
+    # ('list_of_structs_nullable', list_of_structs_type)
 ])
 
 parquet_file = 'output/lists.parquet'

@@ -6,6 +6,7 @@ namespace Flow\Parquet\ParquetFile\ColumnChunkReader;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
 use Flow\Parquet\ParquetFile\Page\{ColumnData, PageHeader};
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
@@ -20,6 +21,7 @@ final class WholeChunkReader implements ColumnChunkReader
     public function __construct(
         private readonly DataBuilder $dataBuilder,
         private readonly PageReader $pageReader,
+        private readonly Options $options
     ) {
     }
 
@@ -108,7 +110,7 @@ final class WholeChunkReader implements ColumnChunkReader
                 return null;
             }
 
-            return PageHeader::fromThrift($thriftHeader);
+            return PageHeader::fromThrift($thriftHeader, $this->options);
         } catch (\Throwable $e) {
             /** @phpstan-ignore-next-line */
             \fseek($stream, $currentOffset);

@@ -28,7 +28,7 @@ final class DremelTest extends TestCase
 
         self::assertSame(
             $values,
-            (new Dremel())->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
+            (new Dremel())->assemble($shredded->repetitions, $shredded->definitions, $shredded->values, 3, 2)
         );
     }
 
@@ -44,7 +44,7 @@ final class DremelTest extends TestCase
         self::assertSame($repetitions, $shredded->repetitions);
         self::assertSame($definitions, $shredded->definitions);
 
-        $assembledValues = $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values);
+        $assembledValues = $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values, 2, 1);
 
         self::assertSame($values, $assembledValues);
     }
@@ -63,7 +63,7 @@ final class DremelTest extends TestCase
 
         self::assertSame(
             $values,
-            $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
+            $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values, 3, 1)
         );
     }
 
@@ -81,7 +81,7 @@ final class DremelTest extends TestCase
 
         self::assertSame(
             $values,
-            $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
+            $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values, 3, 1)
         );
     }
 
@@ -101,7 +101,7 @@ final class DremelTest extends TestCase
 
         self::assertSame(
             $values,
-            $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
+            $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values, 2, 1)
         );
     }
 }

@@ -11,7 +11,7 @@ final class EdgeCasesReadingTest extends TestCase
 {
     public function test_nonullable_impala() : void
     {
-        self::markTestSkipped('something isn\'t working when bitWidth is read from maxDefinition/repetitionLevels');
+        //        self::markTestSkipped('require additional investigation');
 
         $path = __DIR__ . '/Fixtures/EdgeCases/nonnullable.impala.parquet';
 
@@ -28,55 +28,29 @@ final class EdgeCasesReadingTest extends TestCase
                 [
                     'ID' => 8,
                     'Int_Array' => [
-                        'list' => [
-                            'element' => -1,
-                        ],
+                        -1,
                     ],
                     'int_array_array' => [
-                        'list' => [
-                            'element' => [
-                                'list' => [
-                                    'element' => [
-                                        [-1, -2],
-                                        [null],
-                                    ],
-                                ],
-                            ],
-                        ],
+                        [-1, -2],
+                        [],
                     ],
                     'Int_Map' => [
-                        'map' => [
-                            'key' => 'k1',
-                            'value' => -1,
-                        ],
+                        'k1' => -1,
                     ],
                     'int_map_array' => [
-                        'list' => [
-                            'element' => [
-                                'map' => [
-                                    'key' => [null, 'k1', null, null],
-                                    'value' => [null, 1, null, null]],
-                            ],
-                        ],
+                        [],
+                        ['k1' => 1],
+                        [],
+                        [],
                     ],
                     'nested_Struct' => [
                         'a' => -1,
-                        'B' => [
-                            'list' => [
-                                'element' => -1,
-                            ],
-                        ],
+                        'B' => [-1],
                         'c' => [
                             'D' => [
-                                'list' => [
-                                    'element' => [
-                                        'list' => [
-                                            'element' => [
-                                                'e' => -1,
-                                                'f' => 'nonnullable',
-                                            ],
-                                        ],
-                                    ],
+                                [
+                                    'e' => [-1],
+                                    'f' => ['nonnullable'],
                                 ],
                             ],
                         ],
@@ -124,7 +98,7 @@ final class EdgeCasesReadingTest extends TestCase
 
         self::assertSame(
             [
-                ['emptylist' => null],
+                ['emptylist' => []],
             ],
             $rows
         );
