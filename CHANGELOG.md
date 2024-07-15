@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-09
+## [Unreleased] - 2024-07-15
 
 ### Added
 - [e4b84b](https://github.com/flow-php/flow/commit/e4b84b3248bbe67c823c43272f460b80b6b26171) - **google converstion tag for landing page** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +23,7 @@
 - [#1054](https://github.com/flow-php/flow/pull/1054) - **missing tests for parquet rows normalizer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1117](https://github.com/flow-php/flow/pull/1117) - **Parquet - reading byte arrays now returns strings when option byte string as array is set** - [@norberttech](https://github.com/norberttech)
 - [#1110](https://github.com/flow-php/flow/pull/1110) - **Simplify making schema definitions nullable** - [@norberttech](https://github.com/norberttech)
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Remote and Local files extractor are now merged into single FilesExtractor** - [@norberttech](https://github.com/norberttech)
 - [#1102](https://github.com/flow-php/flow/pull/1102) - **Replace `uniqid` with guarantee uniqueness** - [@stloyd](https://github.com/stloyd)
@@ -38,6 +39,8 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1117](https://github.com/flow-php/flow/pull/1117) - **Parquet flattened for empty nested structures** - [@norberttech](https://github.com/norberttech)
+- [#1117](https://github.com/flow-php/flow/pull/1117) - **Parquet RLEHybrid bitWidth calculation** - [@norberttech](https://github.com/norberttech)
 - [#1114](https://github.com/flow-php/flow/pull/1114) - **Fixed Flow to Parquet Schema converter not respecting deprecated parquet converted types** - [@norberttech](https://github.com/norberttech)
 - [#1112](https://github.com/flow-php/flow/pull/1112) - **Any comparison function will now return false when comparing non null value wth nulls** - [@norberttech](https://github.com/norberttech)
 - [#1111](https://github.com/flow-php/flow/pull/1111) - **Fixed merging nullable with non nullable schema definitions** - [@norberttech](https://github.com/norberttech)
@@ -68,6 +71,7 @@
 - [03dc6d](https://github.com/flow-php/flow/commit/03dc6dfa7e30473ae10e1d146a607106536cbe31) - **installation.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1117](https://github.com/flow-php/flow/pull/1117) - **BytesToString data converted as it became redundant** - [@norberttech](https://github.com/norberttech)
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Parquet append to existing files** - [@norberttech](https://github.com/norberttech)
 - [#1101](https://github.com/flow-php/flow/pull/1101) - **Temporarily drop support for Avro file format** - [@norberttech](https://github.com/norberttech)
 - [#1071](https://github.com/flow-php/flow/pull/1071) - **removed empty aws/azure client credentials** - [@norberttech](https://github.com/norberttech)
