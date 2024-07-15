@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnChunkStatistics;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use PHPUnit\Framework\TestCase;
 
 final class ColumnChunkStatisticsTest extends TestCase
@@ -179,6 +179,23 @@ final class ColumnChunkStatisticsTest extends TestCase
         self::assertSame(7, $statistics->valuesCount());
         self::assertSame(5, $statistics->distinctCount());
         self::assertSame(1, $statistics->nullCount());
+    }
+
+    public function test_statistics_for_list_of_ints() : void
+    {
+        /** @var FlatColumn $listElement */
+        $listElement = NestedColumn::list('list_of_ints', ListElement::int64())->getListElement();
+
+        $statistics = new ColumnChunkStatistics($listElement);
+
+        $statistics->add([]);
+        $statistics->add([1]);
+        $statistics->add([1, 2]);
+        $statistics->add([1, 2, 3]);
+
+        self::assertSame(1, $statistics->min());
+        self::assertSame(3, $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
     }
 
     public function test_statistics_for_string() : void
