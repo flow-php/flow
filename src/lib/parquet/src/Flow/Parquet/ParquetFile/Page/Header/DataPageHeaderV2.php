@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Page\Header;
 
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\{Encodings, Statistics};
 
@@ -21,11 +22,12 @@ final class DataPageHeaderV2
         private readonly int $definitionsByteLength,
         private readonly int $repetitionsByteLength,
         private readonly ?bool $isCompressed,
-        private readonly ?Statistics $statistics
+        private readonly ?Statistics $statistics,
+        private readonly Options $options
     ) {
     }
 
-    public static function fromThrift(\Flow\Parquet\Thrift\DataPageHeaderV2 $thrift) : self
+    public static function fromThrift(\Flow\Parquet\Thrift\DataPageHeaderV2 $thrift, Options $options) : self
     {
         return new self(
             $thrift->num_values,
@@ -36,7 +38,8 @@ final class DataPageHeaderV2
             $thrift->repetition_levels_byte_length,
             /** @phpstan-ignore-next-line */
             $thrift->is_compressed ?? null,
-            $thrift->statistics ? Statistics::fromThrift($thrift->statistics) : null
+            $thrift->statistics ? Statistics::fromThrift($thrift->statistics) : null,
+            $options
         );
     }
 
@@ -61,7 +64,7 @@ final class DataPageHeaderV2
             return null;
         }
 
-        return new StatisticsReader($this->statistics);
+        return new StatisticsReader($this->statistics, $this->options);
     }
 
     public function toThrift() : \Flow\Parquet\Thrift\DataPageHeaderV2

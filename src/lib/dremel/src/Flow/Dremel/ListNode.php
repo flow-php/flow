@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Dremel;
 
+use Flow\Dremel\Exception\RuntimeException;
+
 final class ListNode implements Node
 {
     private int $maxRepetitionLevel;
@@ -22,11 +24,11 @@ final class ListNode implements Node
     public function push(mixed $value, int $level) : self
     {
         if ($level > $this->maxRepetitionLevel) {
-            throw new \RuntimeException('Invalid level, max repetition level is ' . $this->maxRepetitionLevel . ' but ' . $level . ' was given');
+            throw new RuntimeException('Invalid level, max repetition level is ' . $this->maxRepetitionLevel . ' but ' . $level . ' was given');
         }
 
         if ($level === 0) {
-            throw new \RuntimeException('Invalid level, level must be greater than 0');
+            throw new RuntimeException('Invalid level, level must be greater than 0');
         }
 
         $this->pushToLevel($this->value, $value, $level, $level);
@@ -53,6 +55,10 @@ final class ListNode implements Node
     private function initializeListWithValue(int $level, mixed $value) : array
     {
         if ($level === 1) {
+            if ($value === null) {
+                return [];
+            }
+
             return [$value];
         }
 

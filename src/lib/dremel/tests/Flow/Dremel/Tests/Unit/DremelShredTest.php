@@ -17,7 +17,7 @@ final class DremelShredTest extends TestCase
         $shredded = (new Dremel())->shred($data, 10);
         self::assertEquals(
             [
-                'repetitions' => [],
+                'repetitions' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 'definitions' => [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
                 'values' => $data,
             ],

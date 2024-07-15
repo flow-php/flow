@@ -11,7 +11,7 @@ final class Reader
 {
     public function __construct(
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-        private Options $options = new Options()
+        public readonly Options $options = new Options()
     ) {
     }
 
@@ -28,10 +28,5 @@ final class Reader
     public function readStream(SourceStream $stream) : ParquetFile
     {
         return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options);
-    }
-
-    public function set(Options $options) : void
-    {
-        $this->options = $options;
     }
 }

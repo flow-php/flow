@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
+use Flow\Parquet\Options;
+
 final class RowGroups
 {
     /**
@@ -16,12 +18,12 @@ final class RowGroups
     /**
      * @param array<\Flow\Parquet\Thrift\RowGroup> $rowGroups
      */
-    public static function fromThrift(array $rowGroups) : self
+    public static function fromThrift(array $rowGroups, Options $options) : self
     {
         $groups = [];
 
         foreach ($rowGroups as $rowGroup) {
-            $groups[] = RowGroup::fromThrift($rowGroup);
+            $groups[] = RowGroup::fromThrift($rowGroup, $options);
         }
 
         return new self($groups);

@@ -7,7 +7,7 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 use Flow\Dremel\Dremel;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Data\{PlainValuesPacker, RLEBitPackedHybrid};
+use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValuesPacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageContainer;
@@ -49,15 +49,15 @@ final class DataPageBuilder
         $pageWriter = new BinaryBufferWriter($pageBuffer);
 
         if ($column->maxRepetitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength($shredded->repetitions));
+            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($column->maxRepetitionsLevel()), $shredded->repetitions));
         }
 
         if ($column->maxDefinitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength($shredded->definitions));
+            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($column->maxDefinitionsLevel()), $shredded->definitions));
         }
 
         if ($dictionary && $indices) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($indices));
+            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth(BitWidth::fromArray($indices), $indices));
         } else {
             (new PlainValuesPacker($pageWriter, $this->dataConverter))->packValues($column, $shredded->values);
         }
@@ -106,7 +106,7 @@ final class DataPageBuilder
         $pageWriter = new BinaryBufferWriter($pageBuffer);
 
         if ($column->maxRepetitionsLevel() > 0) {
-            $repetitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack($shredded->repetitions);
+            $repetitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($column->maxRepetitionsLevel()), $shredded->repetitions);
             $repetitionsLength = \strlen($repetitionsBuffer);
         } else {
             $repetitionsBuffer = '';
@@ -114,7 +114,7 @@ final class DataPageBuilder
         }
 
         if ($column->maxDefinitionsLevel() > 0) {
-            $definitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack($shredded->definitions);
+            $definitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($column->maxDefinitionsLevel()), $shredded->definitions);
             $definitionsLength = \strlen($definitionsBuffer);
         } else {
             $definitionsBuffer = '';
@@ -122,7 +122,7 @@ final class DataPageBuilder
         }
 
         if ($dictionary && $indices) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($indices));
+            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth(BitWidth::fromArray($indices), $indices));
         } else {
             (new PlainValuesPacker($pageWriter, $this->dataConverter))->packValues($column, $shredded->values);
         }
@@ -143,6 +143,7 @@ final class DataPageBuilder
                 repetitionsByteLength: $repetitionsLength,
                 isCompressed: !($this->compression === Compressions::UNCOMPRESSED),
                 statistics: $statistics,
+                options: $this->options
             ),
             dictionaryPageHeader: null,
         );

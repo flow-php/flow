@@ -24,6 +24,10 @@ function array_combine_recursive(array $keys, array $values) : array
     $result = [];
 
     foreach ($keys as $keyIndex => $keyValue) {
+        if ($keyValue === null) {
+            continue;
+        }
+
         $value = $values[$keyIndex] ?? null;
 
         if (\is_array($keyValue) && \is_array($value)) {

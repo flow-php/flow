@@ -19,6 +19,29 @@ final class MapsWritingTest extends TestCase
         }
     }
 
+    public function test_writing_empty_map_of_int_int() : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
+
+        $inputData = \array_merge(...\array_map(static function () : array {
+            return [
+                [
+                    'map_int_int' => [],
+                ],
+            ];
+        }, \range(1, 10)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
+
     public function test_writing_map_of_int_int() : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
@@ -39,6 +62,29 @@ final class MapsWritingTest extends TestCase
                 ],
             ];
         }, \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
+
+    public function test_writing_map_of_int_int_with_all_maps_null() : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
+
+        $inputData = \array_merge(...\array_map(static function () : array {
+            return [
+                [
+                    'map_int_int' => null,
+                ],
+            ];
+        }, \range(1, 10)));
 
         $writer->write($path, $schema, $inputData);
 

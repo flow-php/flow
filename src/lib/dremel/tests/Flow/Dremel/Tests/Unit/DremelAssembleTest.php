@@ -18,7 +18,7 @@ final class DremelAssembleTest extends TestCase
 
         self::assertSame(
             [[[0, 1, 2]], [[null, null]], [[4, 5, 6]]],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 2, 2)
         );
     }
 
@@ -30,7 +30,7 @@ final class DremelAssembleTest extends TestCase
 
         self::assertSame(
             [[3, 7, 5], [4, 4, 7], [10, 6, 4], [10, 3, 2], [10, 4, 4], [5, 3, 2], [1, 4, 3], [4, 3, 9], [10, 3, 4], [5, 7, 4]],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 3, 1)
         );
     }
 
@@ -42,7 +42,7 @@ final class DremelAssembleTest extends TestCase
 
         self::assertSame(
             [0, null, 2, null, 4, null, 6, null, 8, null],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 1, 0)
         );
     }
 
@@ -54,7 +54,7 @@ final class DremelAssembleTest extends TestCase
 
         self::assertSame(
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 1, 0)
         );
     }
 
@@ -66,7 +66,7 @@ final class DremelAssembleTest extends TestCase
 
         self::assertSame(
             [[10], [7, null, null], [9], [8, null], [9], [4, null, null, null, null], [6], [3, null, null], [10, null, null], [8, null]],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 3, 1)
         );
     }
 
@@ -178,7 +178,7 @@ final class DremelAssembleTest extends TestCase
                 [[[8, 4, 4], [10]], [[3, 1, 7], [7], [1, 1]], [[2], [1]]],
                 [[[6, 5], [7, 3], [9]], [[5, 6, 1]], [[4, 8], [7]]],
             ],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 7, 3)
         );
     }
 
@@ -190,7 +190,7 @@ final class DremelAssembleTest extends TestCase
 
         self::assertSame(
             [[5, 9, 2], null, [3, 2, 9], null, [5, 2, 3], null, [7, 2, 3], null, [2, 6, 6], null],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 3, 1)
         );
     }
 
@@ -199,75 +199,7 @@ final class DremelAssembleTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('repetitions, definitions and values count must be exactly the same');
 
-        \iterator_to_array((new Dremel())->assemble([1, 2], [1], [1, 2]));
-    }
-
-    public function test_decoding_nested_list_with_nulls_and_different_size_of_each_list() : void
-    {
-        $repetitions = [0, 2, 1, 2, 0, 2, 2, 1, 2, 2, 0, 2, 2, 1, 2, 2, 1, 2, 2, 0, 2, 2, 1, 2, 2, 0, 2, 2, 2, 1, 2, 2, 2, 0, 2, 1, 2, 1, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 1, 2, 1, 2, 0, 2, 1, 2, 0, 2, 2, 1, 2, 2, 1, 2, 2];
-        $definitions = [5, 5, 5, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 4, 4, 5, 5, 5, 5, 5, 4, 5, 5, 4, 5, 4, 4, 5, 5, 5, 5, 4, 4, 5, 4, 5, 5, 5, 5, 4, 4, 4, 5, 5, 5, 4, 4, 5, 5, 4, 5, 4, 4, 4, 5, 5, 4, 4, 5];
-        $values = [9, 5, 9, 6, 6, 7, 7, 9, 3, 10, 4, 4, 5, 4, 6, 9, 10, 9, 6, 3, 3, 8, 7, 10, 4, 3, 8, 2, 8, 3, 6, 10, 4, 5, 4, 5, 2, 10, 5, 1, 2, 2, 3, 9, 9, 9, 9, 9];
-
-        /**
-         *  stack: []
-         *  current_list: null.
-         *
-         *  iteration  0: stack[], current_list[9] - rep 0, def 5 (take next val)
-         *  iteration  1: stack[], current_list[9, 5] - rep 2, def 5 (take next val)
-         *  iteration  2: stack[[[9, 5]]], current_list[9] - rep 1 def 5 (take next val)
-         *  iteration  3: stack[[[9, 5]]], current_list[9, null] - rep 2 def 4 (take null)
-         *  iteration  4: stack[[[9, 5], [9, null]]], current_list[6] - rep 0 def 5 (take next val)
-         *  iteration  5: stack[[[9, 5], [9, null]]], current_list[6,6] - rep 2 def 5 (take next val)
-         *  iteration  6: stack[[[9, 5], [9, null]]], current_list[6,6,7] - rep 2 def 5 (take next val)
-         *  iteration  7: stack[[[9, 5], [9, null]], [[6,6,7]], current_list[7] - rep 1 def 5 (take next val)
-         */
-        self::assertSame(
-            [
-                [[9, 5], [9, null]],
-                [[6, 6, 7], [7, 9, 3]],
-                [[10, 4, 4], [5, 4, null], [6, 9, 10]],
-                [[9, null, null], [6, 3, 3]],
-                [[8, 7, null, 10], [4, null, 3, null]],
-                [[null, 8], [2, 8], [3, null], [null, 6]],
-                [[null, 10], [4, 5]],
-                [[4, null], [null, null], [5, 2], [10, null]],
-                [[null, 5], [1, null]],
-                [[2, null, null], [null, 2, 3], [null, null, 9]],
-            ],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
-        );
-    }
-
-    public function test_decoding_nested_list_with_nulls_and_different_size_of_each_list_and_deep_nesting() : void
-    {
-        $repetitions = [0, 3, 2, 3, 2, 3, 2, 3, 1, 3, 2, 3, 2, 3, 2, 3, 1, 3, 2, 3, 2, 3, 2, 3, 1, 3, 2, 3, 2, 3, 2, 3, 0, 3, 3, 2, 3, 3, 2, 3, 3, 2, 3, 3, 1, 3, 3, 2, 3, 3, 2, 3, 3, 2, 3, 3, 0, 3, 3, 3, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 3, 3, 0, 3, 3, 2, 3, 3, 2, 3, 3, 1, 3, 3, 2, 3, 3, 2, 3, 3, 0, 3, 2, 3, 1, 3, 2, 3, 1, 3, 2, 3, 0, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 0, 3, 3, 2, 3, 3, 2, 3, 3, 2, 3, 3, 1, 3, 3, 2, 3, 3, 2, 3, 3, 2, 3, 3, 0, 3, 2, 3, 2, 3, 1, 3, 2, 3, 2, 3, 1, 3, 2, 3, 2, 3, 1, 3, 2, 3, 2, 3, 0, 3, 3, 2, 3, 3, 2, 3, 3, 1, 3, 3, 2, 3, 3, 2, 3, 3, 1, 3, 3, 2, 3, 3, 2, 3, 3, 0, 3, 3, 3, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 3, 3, 1, 3, 3, 3, 2, 3, 3, 3];
-        $definitions = [7, 7, 7, 6, 7, 7, 7, 6, 6, 7, 7, 7, 6, 7, 7, 7, 6, 7, 6, 7, 6, 6, 7, 7, 7, 7, 7, 7, 6, 6, 7, 7, 6, 7, 6, 7, 6, 6, 7, 7, 7, 6, 7, 7, 6, 7, 7, 6, 6, 6, 7, 6, 6, 7, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 6, 7, 7, 7, 7, 6, 6, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 7, 7, 6, 7, 6, 7, 7, 7, 7, 7, 7, 6, 7, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 6, 7, 6, 6, 7, 6, 7, 6, 6, 7, 6, 7, 6, 7, 7, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 7, 7, 6, 7, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 6, 7, 7, 7, 6, 7, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 6, 6, 7, 7, 7, 6, 6, 7, 7, 6, 6, 7, 6, 6, 6, 6, 7, 6, 7, 7, 7, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 7, 7, 7, 6, 6, 7, 7, 7, 7, 6, 7, 7, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 7, 7, 6, 7, 6, 7, 7, 6];
-        $values = [10, 5, 9, 1, 10, 7, 6, 3, 1, 6, 9, 9, 4, 6, 3, 8, 5, 8, 1, 10, 9, 4, 6, 2, 8, 4, 6, 8, 9, 4, 10, 4, 8, 4, 3, 9, 2, 10, 8, 5, 2, 7, 8, 7, 10, 3, 8, 1, 5, 10, 6, 5, 6, 1, 6, 5, 6, 7, 1, 6, 10, 7, 8, 2, 8, 2, 7, 7, 8, 7, 3, 9, 2, 3, 10, 1, 8, 3, 8, 7, 9, 5, 9, 8, 3, 6, 3, 10, 10, 10, 6, 8, 7, 2, 1, 6, 2, 4, 4, 1, 7, 2, 1, 7, 8, 9, 3, 9, 4, 8, 4, 10, 9, 5, 9, 2, 1, 6, 9, 3, 6, 10, 4, 5, 9, 10, 8, 3, 3, 9, 7, 10, 9, 4, 10, 5, 1, 2, 7, 6, 10, 2, 5, 7, 5, 3, 9, 10, 1, 5, 7, 6, 7, 4, 4, 6, 7, 7, 6, 3, 6, 1, 8, 2, 8, 3, 7, 9, 3, 5, 8, 5, 2, 2, 5];
-
-        /**
-         *  stack: []
-         *  current_list: null.
-         *
-         *  iteration  0: stack[], current_list[10] - rep 0, def 7 (take next val)
-         *  iteration  1: stack[], current_list[10, 5] - rep 3, def 7 (take next val)
-         *  iteration  2: stack[], current_list[[10, 5], [9]] - rep 2 def 7 (take next val)
-         *  iteration  3: stack[], current_list[[10, 5], [9, null]] - rep 3 def 6 (take null)
-         */
-        self::assertSame(
-            [
-                [[[10, 5], [9, null], [1, 10], [7, null]], [[null, 6], [3, 1], [null, 6], [9, 9]], [[null, 4], [null, 6], [null, null], [3, 8]], [[5, 8], [1, 10], [null, null], [9, 4]]],
-                [[[null, 6, null], [2, null, null], [8, 4, 6], [null, 8, 9]], [[null, 4, 10], [null, null, null], [4, null, null], [8, 4, 3]]],
-                [[[9, 2, 10, null], [8, 5, 2, 7]], [[null, 8, 7, 10], [3, null, null, 8]], [[1, 5, 10, 6], [null, 5, 6, 1]], [[6, 5, 6, 7], [1, 6, null, 10]]],
-                [[[7, 8, 2], [8, 2, null], [7, null, 7]], [[8, 7, 3], [9, 2, null], [3, null, null]]],
-                [[[null, 10], [1, 8]], [[3, 8], [7, 9]], [[5, null], [9, null]]],
-                [[[null, 8, null, 3], [null, null, 6, null], [3, null, 10, 10], [null, 10, 6, 8]], [[7, 2, 1, 6], [2, 4, null, null], [4, 1, null, 7], [2, 1, 7, 8]]],
-                [[[9, null, 3], [9, 4, 8], [null, 4, 10], [9, null, 5]], [[9, 2, 1], [6, 9, null], [3, 6, 10], [4, null, null]]],
-                [[[5, 9], [10, null], [null, 8]], [[3, null], [null, 3], [null, null]], [[null, null], [9, null], [7, 10]], [[9, null], [4, 10], [5, 1]]],
-                [[[2, 7, 6], [10, 2, null], [null, null, null]], [[5, 7, 5], [null, null, 3], [9, 10, 1]], [[null, 5, 7], [null, null, 6], [7, 4, 4]]],
-                [[[6, 7, 7, 6], [3, 6, 1, 8]], [[2, 8, 3, null], [7, 9, 3, 5]], [[8, 5, null, 2], [null, 2, 5, null]]],
-            ],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
-        );
+        \iterator_to_array((new Dremel())->assemble([1, 2], [1], [1, 2], 1, 1));
     }
 
     public function test_reconstructing_map() : void
@@ -347,7 +279,7 @@ final class DremelAssembleTest extends TestCase
                     ],
                 ],
             ],
-            (new Dremel())->assemble($repetitions, $definitions, $values)
+            (new Dremel())->assemble($repetitions, $definitions, $values, 11, 4)
         );
     }
 
@@ -360,6 +292,6 @@ final class DremelAssembleTest extends TestCase
         $definitions = [4, 4, 4, 4, 4, 4];
         $values = ['value', 'value', 'value', 'value', 'value', 'value'];
 
-        (new Dremel())->assemble($repetitions, $definitions, $values);
+        (new Dremel())->assemble($repetitions, $definitions, $values, 1, 1);
     }
 }

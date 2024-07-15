@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
-use Flow\Parquet\Data\Converter\{BytesStringConverter,
+use Flow\Parquet\Data\Converter\{
     Int32DateConverter,
     Int32DateTimeConverter,
     Int64DateTimeConverter,
@@ -40,7 +40,6 @@ final class DataConverter
                 new Int32DateTimeConverter(),
                 new Int64DateTimeConverter(),
                 new Int96DateTimeConverter(),
-                new BytesStringConverter(),
                 new UuidConverter(),
                 new JsonConverter(),
             ],

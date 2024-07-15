@@ -53,7 +53,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
 
         self::assertNull($fs->status(new Path('azure-blob://some_path')));
     }
@@ -62,7 +62,7 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://some_path_to/*.txt'))->isFile());
         self::assertSame('azure-blob://some_path_to/file.txt', $fs->status(new Path('azure-blob://some_path_to/*.txt'))->path->uri());

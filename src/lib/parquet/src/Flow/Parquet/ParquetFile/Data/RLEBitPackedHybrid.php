@@ -155,10 +155,8 @@ final class RLEBitPackedHybrid
     /**
      * @param array<int> $values
      */
-    public function encodeHybrid(BinaryWriter $writer, array $values) : void
+    public function encodeHybrid(BinaryWriter $writer, int $bitWidth, array $values) : void
     {
-        $bitWidth = BitWidth::fromArray($values);
-
         $rleBuffer = [];
         $bitPackedBuffer = [];
 

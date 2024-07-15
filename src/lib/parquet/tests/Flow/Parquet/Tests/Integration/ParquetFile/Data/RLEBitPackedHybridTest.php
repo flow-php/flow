@@ -15,7 +15,7 @@ final class RLEBitPackedHybridTest extends TestCase
     {
         $values = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1];
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
         self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
@@ -30,7 +30,7 @@ final class RLEBitPackedHybridTest extends TestCase
     {
         $values = [5, 5, 5, 5, 5, 5, 4, 4, 4, 4];
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
         self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
@@ -45,7 +45,7 @@ final class RLEBitPackedHybridTest extends TestCase
     {
         $values = [3, 3, 3, 3];
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
         $writer->writeBytes([1, 2, 3]);
         self::assertSame(
             $values,
@@ -62,7 +62,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = [1, 2, 3, 1234];
 
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
         self::assertSame(
             $values,
@@ -82,7 +82,7 @@ final class RLEBitPackedHybridTest extends TestCase
         ];
 
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
         self::assertSame(
             $values,
@@ -99,7 +99,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = [0, 0, 0, 0];
 
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
         self::assertSame(
             $values,
@@ -115,7 +115,7 @@ final class RLEBitPackedHybridTest extends TestCase
     {
         $values = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
         $writer->writeBytes([1, 2, 3]);
         self::assertSame(
             $values,
@@ -132,7 +132,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = [1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 13, 412, 5];
 
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
         self::assertSame(
             $values,
@@ -149,7 +149,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1];
 
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
         self::assertSame(
             $values,
@@ -165,8 +165,23 @@ final class RLEBitPackedHybridTest extends TestCase
     {
         $values = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1];
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
+        self::assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
+    public function test_only_zeroes() : void
+    {
+        $values = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
         self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
@@ -182,7 +197,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = \array_fill(0, 100, 1);
 
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
         self::assertSame(
             $values,
@@ -199,7 +214,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
         $buffer = '';
-        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
         self::assertSame(
             $values,
@@ -222,7 +237,7 @@ final class RLEBitPackedHybridTest extends TestCase
             }
 
             $buffer = '';
-            (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+            (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), BitWidth::fromArray($values), $values);
 
             self::assertSame(
                 $values,

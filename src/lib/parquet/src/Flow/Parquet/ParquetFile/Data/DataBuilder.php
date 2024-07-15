@@ -20,7 +20,7 @@ final class DataBuilder
     {
         $dremel = new Dremel();
 
-        foreach ($dremel->assemble($columnData->repetitions, $columnData->definitions, $columnData->values) as $value) {
+        foreach ($dremel->assemble($columnData->repetitions, $columnData->definitions, $columnData->values, $column->maxDefinitionsLevel(), $column->maxRepetitionsLevel()) as $value) {
             yield $this->enrichData($value, $column);
         }
     }

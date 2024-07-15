@@ -20,12 +20,9 @@ final class Dremel
      *
      * @psalm-suppress UndefinedInterfaceMethod
      */
-    public function assemble(array $repetitions, array $definitions, array $values) : array
+    public function assemble(array $repetitions, array $definitions, array $values, int $maxDefinitionLevel, int $maxRepetitionLevel) : array
     {
         $this->assertInput($repetitions, $definitions);
-
-        $maxDefinitionLevel = \count($definitions) ? \max($definitions) : 0;
-        $maxRepetitionLevel = \count($repetitions) ? \max($repetitions) : 0;
 
         $output = [];
         $valueIndex = 0;
@@ -34,7 +31,7 @@ final class Dremel
             foreach ($definitions as $definition) {
                 if ($definition === 0) {
                     $output[] = null;
-                } elseif ($definition === $maxDefinitionLevel) {
+                } else {
                     $output[] = $values[$valueIndex] ?? null;
                     $valueIndex++;
                 }
@@ -79,10 +76,6 @@ final class Dremel
         $this->buildDefinitions($data, $definitions, $maxDefinitionLevel);
         $repetitions = [];
         $this->buildRepetitions($data, 0, 0, $repetitions);
-
-        if (!\count($repetitions) || \max($repetitions) === 0) {
-            $repetitions = [];
-        }
 
         return new DataShredded(
             $repetitions,

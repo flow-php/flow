@@ -109,6 +109,25 @@ final class NestedColumn implements Column
         return new self($name, $repetition, $children);
     }
 
+    public function __debugInfo() : ?array
+    {
+        return [
+            'name' => $this->name,
+            'type' => 'nested_column',
+            'flat_path' => $this->flatPath(),
+            'parent' => $this->parent ? [
+                'name' => $this->parent->name(),
+                'flat_path' => $this->parent->flatPath(),
+            ] : null,
+            'physical_type' => $this->type(),
+            'logical_type' => $this->logicalType,
+            'converted_type' => $this->convertedType,
+            'repetition' => $this->repetition,
+            'max_definitions_level' => $this->maxDefinitionsLevel(),
+            'max_repetitions_level' => $this->maxRepetitionsLevel(),
+        ];
+    }
+
     /**
      * @return array<Column>
      */
@@ -134,6 +153,11 @@ final class NestedColumn implements Column
         }
 
         return $flat;
+    }
+
+    public function convertedType() : ?ConvertedType
+    {
+        return $this->convertedType;
     }
 
     public function ddl() : array
@@ -223,19 +247,19 @@ final class NestedColumn implements Column
 
     public function isList() : bool
     {
-        return $this->logicalType()?->name() === 'LIST';
+        return $this->logicalType()?->name() === 'LIST' || $this->convertedType() === ConvertedType::LIST;
     }
 
     public function isListElement() : bool
     {
         if ($this->parent !== null) {
             // element
-            if ($this->parent->logicalType()?->name() === 'LIST') {
+            if ($this->parent->logicalType()?->name() === 'LIST' || $this->parent->convertedType() === ConvertedType::LIST) {
                 return true;
             }
 
             // list.element
-            if ($this->parent->parent()?->logicalType()?->name() === 'LIST') {
+            if ($this->parent->parent()?->logicalType()?->name() === 'LIST' || $this->parent->parent()?->convertedType() === ConvertedType::LIST) {
                 return true;
             }
         }
@@ -245,7 +269,7 @@ final class NestedColumn implements Column
 
     public function isMap() : bool
     {
-        return $this->logicalType()?->name() === 'MAP';
+        return $this->logicalType()?->name() === 'MAP' || $this->convertedType() === ConvertedType::MAP;
     }
 
     public function isMapElement() : bool
@@ -254,11 +278,11 @@ final class NestedColumn implements Column
             return false;
         }
 
-        if ($this->parent()?->logicalType()?->name() === 'MAP') {
+        if ($this->parent()?->logicalType()?->name() === 'MAP' || $this->parent()?->convertedType() === ConvertedType::MAP) {
             return true;
         }
 
-        if ($this->parent()?->parent()?->logicalType()?->name() === 'MAP') {
+        if ($this->parent()?->parent()?->logicalType()?->name() === 'MAP' || $this->parent()?->parent()?->convertedType() === ConvertedType::MAP) {
             return true;
         }
 

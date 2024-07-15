@@ -2,156 +2,105 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder;
+namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Flattener;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use PHPUnit\Framework\TestCase;
 
-final class FlattenerTest extends TestCase
+final class FlattenMapsTest extends TestCase
 {
-    public function test_flattening_flat_column() : void
+    public function test_flattening_empty_map_of_maps() : void
     {
-        $column = FlatColumn::int32('int32');
+        $column = NestedColumn::map('map_of_maps', MapKey::string(), MapValue::map(MapKey::string(), MapValue::int32()));
         $row = [
-            'int32' => 1,
+            'map_of_maps' => [],
         ];
 
         $flattener = new Flattener(new DisabledValidator());
         self::assertSame(
             [
-                'int32' => 1,
+                'map_of_maps.key_value.key' => [],
+                'map_of_maps.key_value.value.key_value.key' => [],
+                'map_of_maps.key_value.value.key_value.value' => [],
             ],
             $flattener->flattenColumn($column, $row)
         );
     }
 
-    public function test_flattening_flat_structure() : void
+    public function test_flattening_empty_map_of_string_structure() : void
     {
-        $column = NestedColumn::struct('struct', [
-            FlatColumn::int32('int32'),
-            FlatColumn::string('string'),
-        ]);
-        $row = [
-            'struct' => [
-                'int32' => 1,
-                'string' => 'string',
-            ],
-        ];
-
-        $flattener = new Flattener(new DisabledValidator());
-        self::assertSame(
-            [
-                'struct.int32' => 1,
-                'struct.string' => 'string',
-            ],
-            $flattener->flattenColumn($column, $row)
-        );
-    }
-
-    public function test_flattening_list_of_ints() : void
-    {
-        $column = NestedColumn::list('list', ListElement::int32());
-        $row = [
-            'list' => [1, 2, 3],
-        ];
-
-        $flattener = new Flattener(new DisabledValidator());
-        self::assertSame(
-            [
-                'list.list.element' => [1, 2, 3],
-            ],
-            $flattener->flattenColumn($column, $row)
-        );
-    }
-
-    public function test_flattening_list_of_lists() : void
-    {
-        $column = NestedColumn::list('list', ListElement::list(ListElement::int32()));
-        $row = [
-            'list' => [
-                [1, 2, 3],
-                [],
-                [4, 5, 6],
-                null,
-                [null, null, null],
-            ],
-        ];
-
-        $flattener = new Flattener(new DisabledValidator());
-        self::assertSame(
-            [
-                'list.list.element.list.element' => [
-                    [1, 2, 3],
-                    [],
-                    [4, 5, 6],
-                    null,
-                    [null, null, null],
-                ],
-            ],
-            $flattener->flattenColumn($column, $row)
-        );
-    }
-
-    public function test_flattening_list_of_maps() : void
-    {
-        $column = NestedColumn::list('list_of_maps', ListElement::map(MapKey::string(), MapValue::int32()));
-        $row = [
-            'list_of_maps' => [
-                [
-                    'a' => 1,
-                    'b' => 2,
-                ],
-                [
-                    'c' => 3,
-                    'd' => 4,
-                ],
-                [
-                    'e' => 5,
-                    'f' => 6,
-                ],
-            ],
-        ];
-
-        $flattener = new Flattener(new DisabledValidator());
-        self::assertSame(
-            [
-                'list_of_maps.list.element.key_value.key' => [['a', 'b'], ['c', 'd'], ['e', 'f']],
-                'list_of_maps.list.element.key_value.value' => [[1, 2], [3, 4], [5, 6]],
-            ],
-            $flattener->flattenColumn($column, $row)
-        );
-    }
-
-    public function test_flattening_list_of_structs() : void
-    {
-        $column = NestedColumn::list('list_of_structs', ListElement::structure([
+        $column = NestedColumn::map('map_of_string_struct', MapKey::string(), MapValue::structure([
             FlatColumn::int32('int32'),
             FlatColumn::string('string'),
         ]));
         $row = [
-            'list_of_structs' => [
-                [
-                    'int32' => 1,
-                    'string' => 'string',
-                ],
-                [
-                    'int32' => 2,
-                    'string' => 'string',
-                ],
-                [
-                    'int32' => 3,
-                    'string' => 'string',
-                ],
+            'map_of_string_struct' => [],
+        ];
+
+        $flattener = new Flattener(new DisabledValidator());
+        self::assertSame(
+            [
+                'map_of_string_struct.key_value.key' => [],
+                'map_of_string_struct.key_value.value.int32' => [],
+                'map_of_string_struct.key_value.value.string' => [],
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_empty_map_str_int() : void
+    {
+        $column = NestedColumn::map('map_str_int', MapKey::string(), MapValue::int32());
+        $row = [
+            'map_str_int' => [],
+        ];
+
+        $flattener = new Flattener(new DisabledValidator());
+        self::assertSame(
+            [
+                'map_str_int.key_value.key' => [],
+                'map_str_int.key_value.value' => [],
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_empty_map_str_map_list_int() : void
+    {
+        $column = NestedColumn::map('map_str_list_int', MapKey::string(), MapValue::list(ListElement::int32()));
+        $row = [
+            'map_str_list_int' => [],
+        ];
+
+        $flattener = new Flattener(new DisabledValidator());
+        self::assertSame(
+            [
+                'map_str_list_int.key_value.key' => [],
+                'map_str_list_int.key_value.value.list.element' => [],
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_map_of_empty_maps() : void
+    {
+        $column = NestedColumn::map('map_of_maps', MapKey::string(), MapValue::map(MapKey::string(), MapValue::int32()));
+        $row = [
+            'map_of_maps' => [
+                'a' => [],
+                'b' => [],
+                'c' => [],
             ],
         ];
 
         $flattener = new Flattener(new DisabledValidator());
         self::assertSame(
             [
-                'list_of_structs.list.element.int32' => [1, 2, 3],
-                'list_of_structs.list.element.string' => ['string', 'string', 'string'],
+                'map_of_maps.key_value.key' => ['a', 'b', 'c'],
+                'map_of_maps.key_value.value.key_value.key' => [[], [], []],
+                'map_of_maps.key_value.value.key_value.value' => [[], [], []],
             ],
             $flattener->flattenColumn($column, $row)
         );
@@ -200,6 +149,28 @@ final class FlattenerTest extends TestCase
                 'map_of_maps.key_value.key' => ['a', 'b', 'c'],
                 'map_of_maps.key_value.value.key_value.key' => [['d', 'e'], ['f'], null],
                 'map_of_maps.key_value.value.key_value.value' => [[1, 2], [null], null],
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_map_of_nullable_maps() : void
+    {
+        $column = NestedColumn::map('map_of_maps', MapKey::string(), MapValue::map(MapKey::string(), MapValue::int32()));
+        $row = [
+            'map_of_maps' => [
+                'a' => null,
+                'b' => null,
+                'c' => null,
+            ],
+        ];
+
+        $flattener = new Flattener(new DisabledValidator());
+        self::assertSame(
+            [
+                'map_of_maps.key_value.key' => ['a', 'b', 'c'],
+                'map_of_maps.key_value.value.key_value.key' => [null, null, null],
+                'map_of_maps.key_value.value.key_value.value' => [null, null, null],
             ],
             $flattener->flattenColumn($column, $row)
         );
@@ -260,17 +231,74 @@ final class FlattenerTest extends TestCase
         );
     }
 
-    public function test_flattening_nullable_list_of_ints() : void
+    public function test_flattening_nullable_map_of_maps() : void
     {
-        $column = NestedColumn::list('list', ListElement::int32());
+        $column = NestedColumn::map('map_of_maps', MapKey::string(), MapValue::map(MapKey::string(), MapValue::int32()));
         $row = [
-            'list' => null,
+            'map_of_maps' => null,
         ];
 
         $flattener = new Flattener(new DisabledValidator());
         self::assertSame(
             [
-                'list.list.element' => null,
+                'map_of_maps.key_value.key' => null,
+                'map_of_maps.key_value.value.key_value.key' => null,
+                'map_of_maps.key_value.value.key_value.value' => null,
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_nullable_map_of_string_structure() : void
+    {
+        $column = NestedColumn::map('map_of_string_struct', MapKey::string(), MapValue::structure([
+            FlatColumn::int32('int32'),
+            FlatColumn::string('string'),
+        ]));
+        $row = [
+            'map_of_string_struct' => null,
+        ];
+
+        $flattener = new Flattener(new DisabledValidator());
+        self::assertSame(
+            [
+                'map_of_string_struct.key_value.key' => null,
+                'map_of_string_struct.key_value.value.int32' => null,
+                'map_of_string_struct.key_value.value.string' => null,
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_nullable_map_str_int() : void
+    {
+        $column = NestedColumn::map('map_str_int', MapKey::string(), MapValue::int32());
+        $row = [
+            'map_str_int' => null,
+        ];
+
+        $flattener = new Flattener(new DisabledValidator());
+        self::assertSame(
+            [
+                'map_str_int.key_value.key' => null,
+                'map_str_int.key_value.value' => null,
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_nullable_map_str_map_list_int() : void
+    {
+        $column = NestedColumn::map('map_str_list_int', MapKey::string(), MapValue::list(ListElement::int32()));
+        $row = [
+            'map_str_list_int' => null,
+        ];
+
+        $flattener = new Flattener(new DisabledValidator());
+        self::assertSame(
+            [
+                'map_str_list_int.key_value.key' => null,
+                'map_str_list_int.key_value.value.list.element' => null,
             ],
             $flattener->flattenColumn($column, $row)
         );
@@ -291,68 +319,5 @@ final class FlattenerTest extends TestCase
             ],
             $flattener->flattenColumn($column, $row)
         );
-    }
-
-    public function test_flattening_nullable_structure_with_list_of_ints_and_map_string_string() : void
-    {
-        $column = NestedColumn::struct('struct', [
-            FlatColumn::int32('int32'),
-            NestedColumn::list('list_of_ints', ListElement::int32()),
-            NestedColumn::map('map_string_string', MapKey::string(), MapValue::string()),
-        ]);
-        $row = [
-            'struct' => null,
-        ];
-
-        $flattener = new Flattener(new DisabledValidator());
-        self::assertSame(
-            [
-                'struct.int32' => null,
-                'struct.list_of_ints.list.element' => null,
-                'struct.map_string_string.key_value.key' => null,
-                'struct.map_string_string.key_value.value' => null,
-            ],
-            $flattener->flattenColumn($column, $row)
-        );
-    }
-
-    public function test_flattening_structure_with_list_of_ints_and_map_string_string() : void
-    {
-        $column = NestedColumn::struct('struct', [
-            FlatColumn::int32('int32'),
-            NestedColumn::list('list_of_ints', ListElement::int32()),
-            NestedColumn::map('map_string_string', MapKey::string(), MapValue::string()),
-        ]);
-        $row = [
-            'struct' => [
-                'int32' => 1,
-                'list_of_ints' => [1, 2, 3],
-                'map_string_string' => [
-                    'a' => 'a',
-                    'b' => 'b',
-                    'c' => 'c',
-                ],
-            ],
-        ];
-
-        $flattener = new Flattener(new DisabledValidator());
-        self::assertSame(
-            [
-                'struct.int32' => 1,
-                'struct.list_of_ints.list.element' => [1, 2, 3],
-                'struct.map_string_string.key_value.key' => ['a', 'b', 'c'],
-                'struct.map_string_string.key_value.value' => ['a', 'b', 'c'],
-            ],
-            $flattener->flattenColumn($column, $row)
-        );
-    }
-
-    public function test_flattening_when_column_is_not_present_in_row() : void
-    {
-        $column = FlatColumn::int32('int32');
-        $row = [];
-
-        $flattener = new Flattener(new DisabledValidator());
-        self::assertSame(['int32' => null], $flattener->flattenColumn($column, $row));
     }
 }

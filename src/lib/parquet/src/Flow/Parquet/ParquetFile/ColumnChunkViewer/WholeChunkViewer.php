@@ -6,6 +6,7 @@ namespace Flow\Parquet\ParquetFile\ColumnChunkViewer;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\ColumnChunkViewer;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
@@ -16,6 +17,10 @@ use Thrift\Transport\TBufferedTransport;
 
 final class WholeChunkViewer implements ColumnChunkViewer
 {
+    public function __construct(private readonly Options $options)
+    {
+    }
+
     public function view(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
@@ -67,7 +72,7 @@ final class WholeChunkViewer implements ColumnChunkViewer
                 return null;
             }
 
-            return PageHeader::fromThrift($thriftHeader);
+            return PageHeader::fromThrift($thriftHeader, $this->options);
         } catch (\Throwable $e) {
             /** @phpstan-ignore-next-line */
             \fseek($stream, $currentOffset);
