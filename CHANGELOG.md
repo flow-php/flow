@@ -39,6 +39,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1118](https://github.com/flow-php/flow/pull/1118) - **calculating column chunk statistics for empty array values** - [@norberttech](https://github.com/norberttech)
 - [#1117](https://github.com/flow-php/flow/pull/1117) - **Parquet flattened for empty nested structures** - [@norberttech](https://github.com/norberttech)
 - [#1117](https://github.com/flow-php/flow/pull/1117) - **Parquet RLEHybrid bitWidth calculation** - [@norberttech](https://github.com/norberttech)
 - [#1114](https://github.com/flow-php/flow/pull/1114) - **Fixed Flow to Parquet Schema converter not respecting deprecated parquet converted types** - [@norberttech](https://github.com/norberttech)
