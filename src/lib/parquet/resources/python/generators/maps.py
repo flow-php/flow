@@ -104,14 +104,14 @@ map_of_struct_of_structs_col = generate_map_of_struct_of_structs(n_rows)
 
 # Creating the DataFrame with only the new column
 df_nested_list = pd.DataFrame({
-    'map_str_int': map_col,
-    # 'map_nullable': map_nullable_col,
-    # 'map_of_maps': map_of_maps_col,
-    # 'map_of_lists': map_of_lists_col,
-    # 'map_of_complex_lists': map_of_complex_lists_col,
-    # 'map_of_list_of_map_of_lists': map_of_list_of_map_of_lists_col,
-    # 'map_of_structs': map_of_structs_col,
-    # 'map_of_struct_of_structs': map_of_struct_of_structs_col
+    'map': map_col,
+    'map_nullable': map_nullable_col,
+    'map_of_maps': map_of_maps_col,
+    'map_of_lists': map_of_lists_col,
+    'map_of_complex_lists': map_of_complex_lists_col,
+    'map_of_list_of_map_of_lists': map_of_list_of_map_of_lists_col,
+    'map_of_structs': map_of_structs_col,
+    'map_of_struct_of_structs': map_of_struct_of_structs_col
 })
 
 # Types
@@ -167,14 +167,14 @@ map_of_struct_of_structs_type = pa.map_(
 
 # Define the schema
 schema = pa.schema([
-    ('map_str_int', map_type),
-    # ('map_nullable', map_type),
-    # ('map_of_maps', map_of_maps_type),
-    # ('map_of_lists', map_of_lists_type),
-    # ('map_of_complex_lists', map_of_complex_lists_type),
-    # ('map_of_list_of_map_of_lists', map_of_list_of_map_of_lists_type),
-    # ('map_of_structs', map_of_structs_type),
-    # ('map_of_struct_of_structs', map_of_struct_of_structs_type),
+    ('map', map_type),
+    ('map_nullable', map_type),
+    ('map_of_maps', map_of_maps_type),
+    ('map_of_lists', map_of_lists_type),
+    ('map_of_complex_lists', map_of_complex_lists_type),
+    ('map_of_list_of_map_of_lists', map_of_list_of_map_of_lists_type),
+    ('map_of_structs', map_of_structs_type),
+    ('map_of_struct_of_structs', map_of_struct_of_structs_type),
 ])
 
 parquet_file = 'output/maps.parquet'

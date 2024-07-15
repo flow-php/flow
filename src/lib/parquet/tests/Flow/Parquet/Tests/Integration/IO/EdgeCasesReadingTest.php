@@ -11,8 +11,6 @@ final class EdgeCasesReadingTest extends TestCase
 {
     public function test_nonullable_impala() : void
     {
-        //        self::markTestSkipped('require additional investigation');
-
         $path = __DIR__ . '/Fixtures/EdgeCases/nonnullable.impala.parquet';
 
         $reader = (new Reader())->read($path);

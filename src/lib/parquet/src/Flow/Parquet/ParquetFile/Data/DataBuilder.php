@@ -20,24 +20,7 @@ final class DataBuilder
     {
         $dremel = new Dremel();
 
-        //        if ($column->flatPath() === 'int_map_array.list.element.map.key') {
-        //            $columnData = new ColumnData(
-        //                $columnData->type,
-        //                $columnData->logicalType,
-        //                $columnData->repetitions,
-        //                $columnData->definitions,
-        //                [$columnData->values[0]->toArray()]
-        //            );
-        //        }
-
-        //        if ($column->flatPath() === 'int_map_array.list.element.map.key') {
-        //            dd($columnData);
-        //        }
-
         foreach ($dremel->assemble($columnData->repetitions, $columnData->definitions, $columnData->values, $column->maxDefinitionsLevel(), $column->maxRepetitionsLevel()) as $value) {
-            //            if ($column->flatPath() === 'int_map_array.list.element.map.key') {
-            //                dd($value);
-            //            }
             yield $this->enrichData($value, $column);
         }
     }
