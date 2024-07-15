@@ -46,7 +46,8 @@ final class ColumnChunkStatistics
         }
 
         if (\is_array($value)) {
-            $this->valuesCount += \count($value);
+            $arrayValuesCount = \count($value);
+            $this->valuesCount += $arrayValuesCount ?: 1;
         } else {
             $this->valuesCount++;
         }
