@@ -45,17 +45,22 @@ final class RowsMinHeap extends \SplMinHeap
      */
     protected function compare($value1, $value2) : int
     {
-        $values1 = [];
-        $values2 = [];
+        $leftValues = [];
+        $rightValues = [];
 
         foreach ($this->ref as $entry) {
             $row1Value = $value1->row()->valueOf($entry->name());
             $row2Value = $value2->row()->valueOf($entry->name());
 
-            $values1[] = $entry->sort() === SortOrder::ASC ? $row1Value : -$row1Value;
-            $values2[] = $entry->sort() === SortOrder::ASC ? $row2Value : -$row2Value;
+            if ($entry->sort() === SortOrder::DESC) {
+                $leftValues[] = $row1Value;
+                $rightValues[] = $row2Value;
+            } else {
+                $leftValues[] = $row2Value;
+                $rightValues[] = $row1Value;
+            }
         }
 
-        return $values1 <=> $values2;
+        return $leftValues <=> $rightValues;
     }
 }
