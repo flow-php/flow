@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-15
+## [Unreleased] - 2024-07-17
 
 ### Added
 - [e4b84b](https://github.com/flow-php/flow/commit/e4b84b3248bbe67c823c43272f460b80b6b26171) - **google converstion tag for landing page** - [@norberttech](https://github.com/norberttech)
@@ -39,6 +39,8 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1119](https://github.com/flow-php/flow/pull/1119) - **RowsMinSort ASC/DESC sorting** - [@norberttech](https://github.com/norberttech)
+- [#1119](https://github.com/flow-php/flow/pull/1119) - **RowsMinSort non numeric values sorting** - [@norberttech](https://github.com/norberttech)
 - [#1118](https://github.com/flow-php/flow/pull/1118) - **calculating column chunk statistics for empty array values** - [@norberttech](https://github.com/norberttech)
 - [#1117](https://github.com/flow-php/flow/pull/1117) - **Parquet flattened for empty nested structures** - [@norberttech](https://github.com/norberttech)
 - [#1117](https://github.com/flow-php/flow/pull/1117) - **Parquet RLEHybrid bitWidth calculation** - [@norberttech](https://github.com/norberttech)
