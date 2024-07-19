@@ -15,8 +15,8 @@
         "ext-bcmath": "*",
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
-        "flow-php/dremel": "^0.7 || 1.x-dev",
-        "flow-php/snappy": "^0.7 || 1.x-dev",
+        "flow-php/dremel": "^0.8 || 1.x-dev",
+        "flow-php/snappy": "^0.8 || 1.x-dev",
         "packaged/thrift": "^0.15.0"
     },
     "config": {
