@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-19
+## [0.8.0] - 2024-07-19
 
 ### Added
 - [e4b84b](https://github.com/flow-php/flow/commit/e4b84b3248bbe67c823c43272f460b80b6b26171) - **google converstion tag for landing page** - [@norberttech](https://github.com/norberttech)
