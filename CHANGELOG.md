@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-17
+## [Unreleased] - 2024-07-19
 
 ### Added
 - [e4b84b](https://github.com/flow-php/flow/commit/e4b84b3248bbe67c823c43272f460b80b6b26171) - **google converstion tag for landing page** - [@norberttech](https://github.com/norberttech)
@@ -64,6 +64,7 @@
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Right Join before duplicating right side rows in each batch from the left side dataset** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [ba8e35](https://github.com/flow-php/flow/commit/ba8e3522526d9f939f61a3d14badb8bc19d0b6c2) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [92d9a5](https://github.com/flow-php/flow/commit/92d9a5f3da1649deb818e306d258d3128a475688) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [c911e6](https://github.com/flow-php/flow/commit/c911e640dd164af1f2acc0570d4f086b0f0201d4) - **documentations** - [@norberttech](https://github.com/norberttech)
 - [90a2f0](https://github.com/flow-php/flow/commit/90a2f073ccc94e2166cddf6412c1aebcb0614052) - **README.md** - [@norberttech](https://github.com/norberttech)
