@@ -21,7 +21,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_empty_lists_of_ints() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -44,7 +44,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_of_ints() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -53,7 +53,7 @@ final class ListsWritingTest extends TestCase
         $inputData = \array_merge(...\array_map(static function (int $i) use ($faker) : array {
             return [
                 [
-                    'list_of_ints' => \array_map(static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \random_int(2, 10))),
+                    'list_of_ints' => \array_map(static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \Flow\ETL\UniqueFactory::int(2, 10))),
                 ],
             ];
         }, \range(1, 100)));
@@ -68,7 +68,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_of_strings() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_strings', ListElement::string()));
@@ -77,7 +77,7 @@ final class ListsWritingTest extends TestCase
         $inputData = \array_merge(...\array_map(static function (int $i) use ($faker) : array {
             return [
                 [
-                    'list_of_strings' => \array_map(static fn ($i) => $faker->text(10), \range(1, \random_int(2, 10))),
+                    'list_of_strings' => \array_map(static fn ($i) => $faker->text(10), \range(1, \Flow\ETL\UniqueFactory::int(2, 10))),
                 ],
             ];
         }, \range(1, 100)));
@@ -92,7 +92,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_of_structures() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(
@@ -111,7 +111,7 @@ final class ListsWritingTest extends TestCase
                     'list_of_structs' => \array_map(static fn ($i) => [
                         'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'name' => $faker->text(10),
-                    ], \range(1, \random_int(2, 10))),
+                    ], \range(1, \Flow\ETL\UniqueFactory::int(2, 10))),
                 ],
             ];
         }, \range(1, 10)));
@@ -126,7 +126,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_with_nullable_elements() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -136,7 +136,7 @@ final class ListsWritingTest extends TestCase
             return [
                 [
                     'list_of_ints' => $i % 2 === 0
-                        ? \array_map(static fn ($a) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \random_int(2, 10)))
+                        ? \array_map(static fn ($a) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \Flow\ETL\UniqueFactory::int(2, 10)))
                         : null,
                 ],
             ];
@@ -152,7 +152,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_with_nullable_list_values() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -162,7 +162,7 @@ final class ListsWritingTest extends TestCase
             return [
                 [
                     'list_of_ints' => $i % 2 === 0
-                        ? \array_map(static fn ($a) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \random_int(2, 2)))
+                        ? \array_map(static fn ($a) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \Flow\ETL\UniqueFactory::int(2, 2)))
                         : [null, null],
                 ],
             ];
@@ -178,7 +178,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_nullable_list_of_ints() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -188,7 +188,7 @@ final class ListsWritingTest extends TestCase
             return [
                 [
                     'list_of_ints' => $i % 2 === 0
-                        ? \array_map(static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \random_int(2, 10)))
+                        ? \array_map(static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX), \range(1, \Flow\ETL\UniqueFactory::int(2, 10)))
                         : null,
                 ],
             ];
@@ -204,7 +204,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_nullable_list_of_structures() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(
@@ -227,7 +227,7 @@ final class ListsWritingTest extends TestCase
                         ? \array_map(static fn ($i) => [
                             'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                             'name' => $faker->text(10),
-                        ], \range(1, \random_int(2, 10)))
+                        ], \range(1, \Flow\ETL\UniqueFactory::int(2, 10)))
                         : null,
                 ],
             ];
@@ -243,7 +243,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_nullable_lists_of_ints() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));

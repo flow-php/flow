@@ -36,7 +36,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
         $writer->open($path, $schema);
@@ -51,7 +51,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -80,7 +80,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 1)
         );
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -109,7 +109,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -136,7 +136,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -163,7 +163,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -189,7 +189,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -227,7 +227,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -249,7 +249,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -269,7 +269,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -298,11 +298,11 @@ final class WriterTest extends TestCase
                 'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                 'list_of_int' => \array_map(
                     static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                    \range(1, \random_int(2, 10))
+                    \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                 ),
                 'list_of_string' => \array_map(
                     static fn ($i) => $faker->text(10),
-                    \range(1, \random_int(2, 10))
+                    \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                 ),
             ],
         ];

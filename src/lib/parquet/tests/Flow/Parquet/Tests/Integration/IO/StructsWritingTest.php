@@ -21,7 +21,7 @@ final class StructsWritingTest extends TestCase
 
     public function test_writing_flat_nullable_structure() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::struct('struct', [
@@ -45,11 +45,11 @@ final class StructsWritingTest extends TestCase
                             'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                             'list_of_int' => \array_map(
                                 static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                                \range(1, \random_int(2, 10))
+                                \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                             ),
                             'list_of_string' => \array_map(
                                 static fn ($i) => $faker->text(10),
-                                \range(1, \random_int(2, 10))
+                                \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                             ),
                         ]
                         : null,
@@ -67,7 +67,7 @@ final class StructsWritingTest extends TestCase
 
     public function test_writing_flat_structure() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::struct('struct', [
@@ -90,11 +90,11 @@ final class StructsWritingTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \random_int(2, 10))
+                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \random_int(2, 10))
+                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                         ),
                     ],
                 ],
@@ -111,7 +111,7 @@ final class StructsWritingTest extends TestCase
 
     public function test_writing_flat_structure_with_nullable_elements() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::struct('struct', [
@@ -135,13 +135,13 @@ final class StructsWritingTest extends TestCase
                         'list_of_int' => $i % 2 === 0
                             ? \array_map(
                                 static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                                \range(1, \random_int(2, 10))
+                                \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                             )
                             : null,
                         'list_of_string' => $i % 2 === 0
                             ? \array_map(
                                 static fn ($i) => $faker->text(10),
-                                \range(1, \random_int(2, 10))
+                                \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                             )
                             : null,
                     ],

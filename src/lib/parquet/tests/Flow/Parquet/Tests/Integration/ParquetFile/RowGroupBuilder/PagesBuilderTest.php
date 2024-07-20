@@ -58,7 +58,7 @@ final class PagesBuilderTest extends TestCase
             1 => 'GREEN',
             2 => 'BLUE',
         ];
-        $values = \array_map(static fn ($i) => $enum[\random_int(0, 2)], \range(0, 99));
+        $values = \array_map(static fn ($i) => $enum[\Flow\ETL\UniqueFactory::int(0, 2)], \range(0, 99));
         $statistics = new ColumnChunkStatistics($column);
 
         foreach ($values as $value) {

@@ -125,12 +125,12 @@ final class PaginationTest extends TestCase
                     'created_at' => new \DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
                     'list_of_int' => \array_map(
                         static fn (int $i) => $i,
-                        \range(1, \random_int(2, 10))
+                        \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                     ),
                     'map_of_int_string' => \array_merge(
                         ...\array_map(
                             static fn (int $i) => [$i => 'value-' . $i],
-                            \range(1, \random_int(2, 10))
+                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                         )
                     ),
                     'struct' => [
@@ -140,12 +140,12 @@ final class PaginationTest extends TestCase
                         'created_at' => new \DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
                         'list_of_int' => \array_map(
                             static fn (int $i) => $i,
-                            \range(1, \random_int(2, 10))
+                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                         ),
                         'map_of_int_string' => \array_merge(
                             ...\array_map(
                                 static fn (int $i) => [$i => 'value-' . $i],
-                                \range(1, \random_int(2, 10))
+                                \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                             )
                         ),
                     ],

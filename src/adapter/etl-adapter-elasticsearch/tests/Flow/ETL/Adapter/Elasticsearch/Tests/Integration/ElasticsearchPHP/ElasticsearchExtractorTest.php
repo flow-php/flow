@@ -40,7 +40,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
                 ),
                 \range(1, 100)
             ),
@@ -80,7 +80,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
                 ),
                 \range(1, 2000)
             ),
@@ -123,7 +123,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
                 ),
                 \range(1, 2005)
             ),
@@ -159,7 +159,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
                 ),
                 \range(1, 2005)
             ),
@@ -200,7 +200,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
                 ),
                 \range(1, 2005)
             ),

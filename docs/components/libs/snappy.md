@@ -37,7 +37,7 @@ $faker = \Faker\Factory::create();
 
 $texts = [];
 for ($i = 0; $i < 10_000; $i++) {
-    $textSize = \random_int(100, 5000);
+    $textSize = \Flow\ETL\UniqueFactory::int(100, 5000);
     $texts[] = $faker->text($textSize);
 }
 

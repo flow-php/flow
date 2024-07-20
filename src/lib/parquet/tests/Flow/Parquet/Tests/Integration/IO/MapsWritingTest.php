@@ -21,7 +21,7 @@ final class MapsWritingTest extends TestCase
 
     public function test_writing_empty_map_of_int_int() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -44,7 +44,7 @@ final class MapsWritingTest extends TestCase
 
     public function test_writing_map_of_int_int() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -56,7 +56,7 @@ final class MapsWritingTest extends TestCase
                     'map_int_int' => \array_merge(
                         ...\array_map(
                             static fn ($i) => [$i => $faker->numberBetween(0, Consts::PHP_INT32_MAX)],
-                            \range(1, \random_int(2, 10))
+                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                         )
                     ),
                 ],
@@ -73,7 +73,7 @@ final class MapsWritingTest extends TestCase
 
     public function test_writing_map_of_int_int_with_all_maps_null() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -96,7 +96,7 @@ final class MapsWritingTest extends TestCase
 
     public function test_writing_map_of_int_string() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_string', MapKey::int32(), MapValue::string()));
@@ -108,7 +108,7 @@ final class MapsWritingTest extends TestCase
                     'map_int_string' => \array_merge(
                         ...\array_map(
                             static fn ($i) => [$i => $faker->text(10)],
-                            \range(1, \random_int(2, 10))
+                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                         )
                     ),
                 ],
@@ -125,7 +125,7 @@ final class MapsWritingTest extends TestCase
 
     public function test_writing_nullable_map_of_int_int() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -138,7 +138,7 @@ final class MapsWritingTest extends TestCase
                         ? \array_merge(
                             ...\array_map(
                                 static fn ($i) => [$i => $faker->numberBetween(0, Consts::PHP_INT32_MAX)],
-                                \range(1, \random_int(2, 10))
+                                \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
                             )
                         )
                         : null,
