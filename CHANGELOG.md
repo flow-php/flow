@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-07-20
 
 ### Added
+- [#1127](https://github.com/flow-php/flow/pull/1127) - **Explain the “ETL” acronym** - [@alexislefebvre](https://github.com/alexislefebvre)
 - [#1122](https://github.com/flow-php/flow/pull/1122) - **Generic algorithm abstraction instead of native calls** - [@mleczakm](https://github.com/mleczakm)
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
@@ -8,6 +9,9 @@
 - [#1125](https://github.com/flow-php/flow/pull/1125) - **Replaced github discussions with discord server link at landing page** - [@norberttech](https://github.com/norberttech)
 - [#1123](https://github.com/flow-php/flow/pull/1123) - **Rework `References` to do fewer loops** - [@stloyd](https://github.com/stloyd)
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1126](https://github.com/flow-php/flow/pull/1126) - **Typo “Discrod”** - [@alexislefebvre](https://github.com/alexislefebvre)
 
 ### Updated
 - [1390ef](https://github.com/flow-php/flow/commit/1390ef624af334ea3d5b2ca22bf8b637ab8aea87) - **introduction.md** - [@norberttech](https://github.com/norberttech)
@@ -1791,6 +1795,7 @@
 
 ## Contributors
 
+- @alexislefebvre
 - @DawidSajdak
 - @drupol
 - @flavioheleno
