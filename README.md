@@ -19,7 +19,7 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 
 ## Flow PHP
 
-Flow is the most advanced PHP ETL framework. 
+Flow is the most advanced PHP ETL (Extract, Transform, Load) framework. 
 
 ```php
 <?php
