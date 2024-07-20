@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Row\{Entries, Entry, Reference, References, Schema};
 
 final class Row
@@ -54,11 +55,9 @@ final class Row
         return $this->entries->has($ref);
     }
 
-    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : string
+    public function hash(?Algorithm $algorithm = null) : string
     {
-        if (!\in_array($algorithm, \hash_algos(), true)) {
-            throw new \InvalidArgumentException(\sprintf('Hashing algorithm "%s" is not supported', $algorithm));
-        }
+        $algorithm = $algorithm ?? new NativePHPHash();
 
         $string = '';
 
@@ -66,7 +65,7 @@ final class Row
             $string .= $entry->name() . $entry->toString();
         }
 
-        return \hash($algorithm, $string, $binary, $options);
+        return $algorithm->hash($string);
     }
 
     public function isEqual(self $row) : bool

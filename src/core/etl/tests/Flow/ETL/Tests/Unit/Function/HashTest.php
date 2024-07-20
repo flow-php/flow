@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{array_entry, concat, datetime_entry, hash, lit, ref, str_entry};
+use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -21,8 +22,8 @@ final class HashTest extends TestCase
     public function test_hashing_concat() : void
     {
         self::assertSame(
-            \hash('xxh128', 'test_test'),
-            hash(concat(ref('value'), lit('_'), ref('value')))->eval(Row::create(str_entry('value', 'test')))
+            (new NativePHPHash('xxh128'))->hash('test_test'),
+            hash(concat(ref('value'), lit('_'), ref('value')), new NativePHPHash('xxh128'))->eval(Row::create(str_entry('value', 'test')))
         );
     }
 

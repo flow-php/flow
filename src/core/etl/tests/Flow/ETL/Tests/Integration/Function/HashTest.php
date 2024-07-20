@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Function;
 
 use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Flow;
+use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -52,7 +53,7 @@ final class HashTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('hash', ref('key')->hash('sha512'))
+            ->withEntry('hash', ref('key')->hash(new NativePHPHash('sha512')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

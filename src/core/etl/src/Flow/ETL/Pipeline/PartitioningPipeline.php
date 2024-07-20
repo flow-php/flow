@@ -8,11 +8,13 @@ use function Flow\ETL\DSL\{from_all, from_cache};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
+use Flow\ETL\{Extractor, FlowContext, Hash\Algorithm, Hash\NativePHPHash, Loader, Pipeline, Transformer};
 use Flow\Filesystem\Partition;
 
 final class PartitioningPipeline implements Pipeline
 {
+    private readonly Algorithm $hashAlgorithm;
+
     /**
      * @param Pipeline $pipeline
      * @param array<Reference> $partitionBy
@@ -28,6 +30,7 @@ final class PartitioningPipeline implements Pipeline
         if (!\count($this->partitionBy)) {
             throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');
         }
+        $this->hashAlgorithm = new NativePHPHash();
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline
@@ -56,7 +59,7 @@ final class PartitioningPipeline implements Pipeline
 
                 $rows = $partitionedRows->sortBy(...$this->orderBy);
 
-                $partitionId = \hash('xxh128', $context->config->id() . '_' . \implode('_', \array_map(
+                $partitionId = $this->hashAlgorithm->hash($context->config->id() . '_' . \implode('_', \array_map(
                     static fn (Partition $partition) : string => $partition->id(),
                     $partitionedRows->partitions()->toArray()
                 )));

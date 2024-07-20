@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Row\{Reference, References};
 
 final class GroupBy
@@ -198,6 +199,6 @@ final class GroupBy
             }
         }
 
-        return \hash('xxh128', \implode('', $stringValues));
+        return (new NativePHPHash('xxh128'))->hash(\implode('', $stringValues));
     }
 }
