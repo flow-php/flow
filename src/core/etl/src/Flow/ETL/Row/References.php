@@ -15,40 +15,32 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @var array<string, Reference>
      */
-    private array $refs;
+    private array $refs = [];
 
     /**
-     * @var array<string>
+     * @var array<string, true>
      */
     private array $without = [];
 
-    public function __construct(string|Reference ...$reference)
+    public function __construct(string|Reference ...$references)
     {
-        $refs = [];
+        foreach ($references as $ref) {
+            $ref = EntryReference::init($ref);
 
-        foreach ($reference as $ref) {
-            $refs[] = EntryReference::init($ref);
+            $this->refs[$ref->name()] = $ref;
         }
-
-        $indexedRefs = [];
-
-        foreach ($refs as $ref) {
-            $indexedRefs[$ref->name()] = $ref;
-        }
-
-        $this->refs = $indexedRefs;
     }
 
-    public static function init(string|Reference ...$reference) : self
+    public static function init(string|Reference ...$references) : self
     {
-        return new self(...$reference);
+        return new self(...$references);
     }
 
     public function add(string|Reference $ref) : self
     {
         $reference = EntryReference::init($ref);
 
-        if (\in_array($reference->name(), $this->without, true)) {
+        if (\array_key_exists($reference->name(), $this->without)) {
             return $this;
         }
 
@@ -89,8 +81,10 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function has(string|Reference $reference) : bool
     {
+        $reference = EntryReference::init($reference);
+
         foreach ($this->refs as $ref) {
-            if ($ref->is(EntryReference::init($reference))) {
+            if ($ref->is($reference)) {
                 return true;
             }
         }
@@ -141,28 +135,15 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function without(string|Reference ...$reference) : self
     {
-        /**
-         * @var array<string>
-         */
-        $without = [];
-
         foreach ($reference as $ref) {
-            $without[] = $ref instanceof Reference ? $ref->name() : $ref;
-        }
+            $refName = $ref instanceof Reference ? $ref->name() : $ref;
 
-        $this->without = \array_values(\array_unique(\array_merge($this->without, $without)));
+            $this->without[$refName] = true;
 
-        $keepReferences = [];
-
-        foreach ($this->refs as $refName => $ref) {
-            if (\in_array($refName, $without, true)) {
-                continue;
+            if (\array_key_exists($refName, $this->refs)) {
+                unset($this->refs[$refName]);
             }
-
-            $keepReferences[$ref->name()] = $ref;
         }
-
-        $this->refs = $keepReferences;
 
         return $this;
     }
