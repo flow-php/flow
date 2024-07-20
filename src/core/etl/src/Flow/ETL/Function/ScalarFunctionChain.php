@@ -10,6 +10,7 @@ use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 
@@ -150,9 +151,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new GreaterThanEqual($this, $ref);
     }
 
-    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : self
+    public function hash(Algorithm $algorithm = new NativePHPHash()) : self
     {
-        return new Hash($this, $algorithm, $binary, $options);
+        return new Hash($this, $algorithm);
     }
 
     public function isEven() : self

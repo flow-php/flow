@@ -6,6 +6,7 @@ namespace Flow\ETL;
 
 use function Flow\ETL\DSL\{array_to_rows, row};
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, RuntimeException};
+use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Row\CartesianProduct;
 use Flow\ETL\Row\Comparator\NativeComparator;
@@ -267,19 +268,15 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return new \ArrayIterator($this->rows);
     }
 
-    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : string
+    public function hash(Algorithm $algorithm = new NativePHPHash()) : string
     {
-        $hashes = [];
-
-        if (!\in_array($algorithm, \hash_algos(), true)) {
-            throw new \InvalidArgumentException(\sprintf('Hashing algorithm "%s" is not supported', $algorithm));
-        }
+        $hash = '';
 
         foreach ($this->rows as $row) {
-            $hashes[] = $row->hash($algorithm, $binary, $options);
+            $hash .= $row->hash($algorithm);
         }
 
-        return \hash($algorithm, \implode('', $hashes), $binary, $options);
+        return $algorithm->hash($hash);
     }
 
     public function isPartitioned() : bool

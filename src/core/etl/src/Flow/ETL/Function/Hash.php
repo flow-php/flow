@@ -4,19 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Row;
 
 final class Hash extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly string $algorithm = 'xxh128',
-        private readonly bool $binary = false,
-        private readonly array $options = []
+        private readonly Algorithm $algorithm = new NativePHPHash(),
     ) {
-        if (!\in_array($this->algorithm, \hash_algos(), true)) {
-            throw new \InvalidArgumentException(\sprintf('Hash algorithm "%s" is not supported', $this->algorithm));
-        }
     }
 
     public function eval(Row $row) : ?string
@@ -27,8 +23,8 @@ final class Hash extends ScalarFunctionChain
         return match ($value) {
             null => null,
             default => match (\gettype($value)) {
-                'array', 'object' => \hash($this->algorithm, \serialize($value), $this->binary, $this->options),
-                default => \hash($this->algorithm, (string) $value, $this->binary, $this->options),
+                'array', 'object' => $this->algorithm->hash(\serialize($value)),
+                default => $this->algorithm->hash((string) $value),
             }
         };
     }

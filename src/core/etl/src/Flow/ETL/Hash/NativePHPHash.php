@@ -13,6 +13,11 @@ final class NativePHPHash implements Algorithm
         }
     }
 
+    public static function xxh128(string $string) : string
+    {
+        return (new self('xxh128'))->hash($string);
+    }
+
     public function hash(string $value) : string
     {
         return \hash($this->algorithm, $value, $this->binary, $this->options);

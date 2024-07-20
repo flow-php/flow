@@ -7,7 +7,7 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
-use Flow\ETL\{FlowContext, Rows, Transformer};
+use Flow\ETL\{FlowContext, Hash\Algorithm, Hash\NativePHPHash, Rows, Transformer};
 
 final class DropDuplicatesTransformer implements Transformer
 {
@@ -18,6 +18,8 @@ final class DropDuplicatesTransformer implements Transformer
      */
     private array $entries;
 
+    private Algorithm $hashAlgorithm;
+
     public function __construct(string|Reference ...$entries)
     {
         if ([] === $entries) {
@@ -26,6 +28,7 @@ final class DropDuplicatesTransformer implements Transformer
 
         $this->entries = $entries;
         $this->deduplication = new Hashes();
+        $this->hashAlgorithm = new NativePHPHash();
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
@@ -43,7 +46,7 @@ final class DropDuplicatesTransformer implements Transformer
                 }
             }
 
-            $hash = \hash('xxh128', \serialize($values));
+            $hash = $this->hashAlgorithm->hash(\serialize($values));
 
             if (!$this->deduplication->exists($hash)) {
                 $newRows[] = $row;
