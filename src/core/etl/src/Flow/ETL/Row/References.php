@@ -136,15 +136,13 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     public function without(string|Reference ...$reference) : self
     {
         foreach ($reference as $ref) {
-            $this->without[$ref instanceof Reference ? $ref->name() : $ref] = true;
-        }
+            $refName = $ref instanceof Reference ? $ref->name() : $ref;
 
-        foreach ($this->refs as $refName => $ref) {
-            if (!\array_key_exists($refName, $this->without)) {
-                continue;
+            $this->without[$refName] = true;
+
+            if (\array_key_exists($refName, $this->refs)) {
+                unset($this->refs[$refName]);
             }
-
-            unset($this->refs[$refName]);
         }
 
         return $this;
