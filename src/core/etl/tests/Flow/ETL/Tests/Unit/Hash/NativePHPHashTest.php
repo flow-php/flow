@@ -21,7 +21,7 @@ class NativePHPHashTest extends TestCase
     {
         static::assertSame(
             '6c78e0e3bd51d358d01e758642b85fb8',
-            NativePHPHash::xxh128('test'),
+            (new NativePHPHash())->hash('test'),
         );
     }
 
