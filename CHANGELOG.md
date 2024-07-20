@@ -1,10 +1,13 @@
-## [Unreleased] - 2024-07-19
+## [Unreleased] - 2024-07-20
 
 ### Added
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
+
+### Updated
+- [f5ad85](https://github.com/flow-php/flow/commit/f5ad85efac1d71255370a6ee8ba36b791dc14645) - **CONTRIBUTING.md** - [@norberttech](https://github.com/norberttech)
 
 ## [0.8.0] - 2024-07-19
 
