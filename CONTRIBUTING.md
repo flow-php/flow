@@ -1,5 +1,8 @@
 # Contributing
 
+> [!TIP]
+> In case of any questions regarding contributing to this project, feel free to join our <img src="https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a69f118df70ad7828d4_icon_clyde_blurple_RGB.svg" width="16px" height="16px" alt="Discord"> [Discrod Server](https://discord.gg/5dNXfQyACW)
+
 In order to run tests locally please make sure you have [docker](https://www.docker.com/) up and running.
 You also need [PHP 8.1](https://www.php.net/) and [composer](https://getcomposer.org/) to be available from your CLI.
 Even that we are supporting 3 PHP versions at time, we are using the lowest supported one for development, currently it's PHP 8.1.
