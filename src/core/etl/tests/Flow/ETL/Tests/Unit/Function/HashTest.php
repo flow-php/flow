@@ -22,7 +22,7 @@ final class HashTest extends TestCase
     public function test_hashing_concat() : void
     {
         self::assertSame(
-            (new NativePHPHash('xxh128'))->hash('test_test'),
+            NativePHPHash::xxh128('test_test'),
             hash(concat(ref('value'), lit('_'), ref('value')), new NativePHPHash('xxh128'))->eval(Row::create(str_entry('value', 'test')))
         );
     }

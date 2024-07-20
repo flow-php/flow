@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Hash\Algorithm;
+use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Row;
 
 final class Hash extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly Algorithm $algorithm,
+        private readonly Algorithm $algorithm = new NativePHPHash(),
     ) {
-
     }
 
     public function eval(Row $row) : ?string

@@ -199,6 +199,6 @@ final class GroupBy
             }
         }
 
-        return (new NativePHPHash('xxh128'))->hash(\implode('', $stringValues));
+        return NativePHPHash::xxh128(\implode('', $stringValues));
     }
 }
