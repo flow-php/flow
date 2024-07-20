@@ -43,6 +43,7 @@ use Flow\ETL\{Config,
     FlowContext,
     Formatter,
     Hash\Algorithm,
+    Hash\NativePHPHash,
     Join\Comparison,
     Join\Comparison\Equal,
     Join\Comparison\Identical,
@@ -594,7 +595,7 @@ function concat(ScalarFunction ...$functions) : Concat
     return new Concat(...$functions);
 }
 
-function hash(ScalarFunction $function, Algorithm $algorithm) : Hash
+function hash(ScalarFunction $function, Algorithm $algorithm = new NativePHPHash()) : Hash
 {
     return new Hash($function, $algorithm);
 }
