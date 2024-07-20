@@ -270,13 +270,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function hash(Algorithm $algorithm = new NativePHPHash()) : string
     {
-        $hashes = [];
+        $hash = '';
 
         foreach ($this->rows as $row) {
-            $hashes[] = $row->hash($algorithm);
+            $hash .= $row->hash($algorithm);
         }
 
-        return $algorithm->hash(\implode('', $hashes));
+        return $algorithm->hash($hash);
     }
 
     public function isPartitioned() : bool
