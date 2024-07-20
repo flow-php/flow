@@ -151,9 +151,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new GreaterThanEqual($this, $ref);
     }
 
-    public function hash(?Algorithm $algorithm = null) : self
+    public function hash(Algorithm $algorithm = new NativePHPHash()) : self
     {
-        return new Hash($this, $algorithm ?? new NativePHPHash());
+        return new Hash($this, $algorithm);
     }
 
     public function isEven() : self

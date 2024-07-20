@@ -55,10 +55,8 @@ final class Row
         return $this->entries->has($ref);
     }
 
-    public function hash(?Algorithm $algorithm = null) : string
+    public function hash(Algorithm $algorithm = new NativePHPHash()) : string
     {
-        $algorithm = $algorithm ?? new NativePHPHash();
-
         $string = '';
 
         foreach ($this->entries->sort()->all() as $entry) {

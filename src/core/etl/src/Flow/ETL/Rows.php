@@ -268,10 +268,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return new \ArrayIterator($this->rows);
     }
 
-    public function hash(?Algorithm $algorithm = null) : string
+    public function hash(Algorithm $algorithm = new NativePHPHash()) : string
     {
-        $algorithm = $algorithm ?? new NativePHPHash();
-
         $hashes = [];
 
         foreach ($this->rows as $row) {
