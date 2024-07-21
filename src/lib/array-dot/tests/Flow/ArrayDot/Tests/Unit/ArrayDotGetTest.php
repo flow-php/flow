@@ -8,10 +8,12 @@ use function Flow\ArrayDot\{array_dot_exists,
     array_dot_get,
     array_dot_get_bool,
     array_dot_get_datetime,
+    array_dot_get_enum,
     array_dot_get_float,
     array_dot_get_int,
     array_dot_get_string};
 use Flow\ArrayDot\Exception\InvalidPathException;
+use Flow\ArrayDot\Tests\Unit\Fixtures\{Letters, Numbers};
 use PHPUnit\Framework\TestCase;
 
 final class ArrayDotGetTest extends TestCase
@@ -546,6 +548,28 @@ final class ArrayDotGetTest extends TestCase
 
         self::assertNull(
             array_dot_get_datetime(['created_at' => '2021-01-01 00:00:00'], '?updated_at')
+        );
+    }
+
+    public function test_array_dot_get_enum() : void
+    {
+        self::assertSame(
+            Numbers::ONE,
+            array_dot_get_enum(['id' => 1], 'id', Numbers::class)
+        );
+
+        self::assertSame(
+            Letters::A,
+            array_dot_get_enum(['id' => 'A'], 'id', Letters::class)
+        );
+
+        self::assertSame(
+            Numbers::ONE,
+            array_dot_get_enum(['id' => '1'], 'id', Numbers::class)
+        );
+
+        self::assertNull(
+            array_dot_get_enum(['identifier' => 1], '?id', Numbers::class)
         );
     }
 
