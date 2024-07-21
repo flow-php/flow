@@ -161,13 +161,13 @@ function array_dot_get_datetime(array $array, string $path) : ?\DateTimeImmutabl
 }
 
 /**
- * @template T of \BackedEnum
+ * @template T is \BackedEnum
  *
  * @param array<mixed> $array
  * @param string $path
  * @param class-string<T> $enumClass
  *
- * @return null|T
+ * @return null|\BackedEnum
  */
 function array_dot_get_enum(array $array, string $path, string $enumClass) : ?\BackedEnum
 {
