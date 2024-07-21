@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-20
+## [Unreleased] - 2024-07-21
 
 ### Added
 - [#1127](https://github.com/flow-php/flow/pull/1127) - **Explain the “ETL” acronym** - [@alexislefebvre](https://github.com/alexislefebvre)
@@ -11,6 +11,7 @@
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1129](https://github.com/flow-php/flow/pull/1129) - **Monolog http bridge http-message dependency range** - [@norberttech](https://github.com/norberttech)
 - [#1126](https://github.com/flow-php/flow/pull/1126) - **Typo “Discrod”** - [@alexislefebvre](https://github.com/alexislefebvre)
 
 ### Updated
