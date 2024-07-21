@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot\Tests\Unit;
 
-use function Flow\ArrayDot\{array_dot_exists, array_dot_get};
+use function Flow\ArrayDot\{array_dot_exists,
+    array_dot_get,
+    array_dot_get_bool,
+    array_dot_get_datetime,
+    array_dot_get_float,
+    array_dot_get_int,
+    array_dot_get_string};
 use Flow\ArrayDot\Exception\InvalidPathException;
 use PHPUnit\Framework\TestCase;
 
@@ -513,6 +519,89 @@ final class ArrayDotGetTest extends TestCase
                 ],
                 'array.*.{id, name,    property.?status.value}'
             ),
+        );
+    }
+
+    public function test_array_dot_get_boolean() : void
+    {
+        self::assertTrue(
+            array_dot_get_bool(['active' => true], 'active')
+        );
+
+        self::assertFalse(
+            array_dot_get_bool(['active' => false], 'active')
+        );
+
+        self::assertNull(
+            array_dot_get_bool(['activate' => 'true'], '?active')
+        );
+    }
+
+    public function test_array_dot_get_datetime() : void
+    {
+        self::assertEquals(
+            new \DateTimeImmutable('2021-01-01 00:00:00'),
+            array_dot_get_datetime(['created_at' => '2021-01-01 00:00:00'], 'created_at')
+        );
+
+        self::assertNull(
+            array_dot_get_datetime(['created_at' => '2021-01-01 00:00:00'], '?updated_at')
+        );
+    }
+
+    public function test_array_dot_get_float() : void
+    {
+        self::assertSame(
+            1.0,
+            array_dot_get_float(['id' => 1.0], 'id')
+        );
+
+        self::assertSame(
+            10.0,
+            array_dot_get_float(['id' => 10], 'id')
+        );
+
+        self::assertSame(
+            1.0,
+            array_dot_get_float(['id' => '1.0'], 'id')
+        );
+
+        self::assertNull(
+            array_dot_get_float(['identifier' => 1.0], '?id')
+        );
+    }
+
+    public function test_array_dot_get_int() : void
+    {
+        self::assertSame(
+            1,
+            array_dot_get_int(['id' => 1], 'id')
+        );
+
+        self::assertSame(
+            1,
+            array_dot_get_int(['id' => '01'], 'id')
+        );
+
+        self::assertNull(
+            array_dot_get_int(['identifier' => 1], '?id')
+        );
+    }
+
+    public function test_array_dot_get_string() : void
+    {
+        self::assertSame(
+            'foo',
+            array_dot_get_string(['name' => 'foo'], 'name')
+        );
+
+        self::assertSame(
+            '1',
+            array_dot_get_string(['name' => 1], 'name')
+        );
+
+        self::assertNull(
+            array_dot_get_string(['identifier' => 'foo'], '?name')
         );
     }
 

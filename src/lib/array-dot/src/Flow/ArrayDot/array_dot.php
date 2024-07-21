@@ -105,6 +105,61 @@ function array_dot_set(array $array, string $path, $value) : array
     return \array_merge($array, $newArray);
 }
 
+function array_dot_get_int(array $array, string $path) : ?int
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (int) $result;
+}
+
+function array_dot_get_string(array $array, string $path) : ?string
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (string) $result;
+}
+
+function array_dot_get_bool(array $array, string $path) : ?bool
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (bool) $result;
+}
+
+function array_dot_get_float(array $array, string $path) : ?float
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (float) $result;
+}
+
+function array_dot_get_datetime(array $array, string $path) : ?\DateTimeImmutable
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return new \DateTimeImmutable($result);
+}
+
 /**
  * @param array<mixed> $array
  * @param string $path
