@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-07-21
 
 ### Added
+- [#1130](https://github.com/flow-php/flow/pull/1130) - **typed functions to array-dot library** - [@norberttech](https://github.com/norberttech)
 - [#1127](https://github.com/flow-php/flow/pull/1127) - **Explain the “ETL” acronym** - [@alexislefebvre](https://github.com/alexislefebvre)
 - [#1122](https://github.com/flow-php/flow/pull/1122) - **Generic algorithm abstraction instead of native calls** - [@mleczakm](https://github.com/mleczakm)
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
