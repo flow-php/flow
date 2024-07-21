@@ -105,6 +105,95 @@ function array_dot_set(array $array, string $path, $value) : array
     return \array_merge($array, $newArray);
 }
 
+function array_dot_get_int(array $array, string $path) : ?int
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (int) $result;
+}
+
+function array_dot_get_string(array $array, string $path) : ?string
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (string) $result;
+}
+
+function array_dot_get_bool(array $array, string $path) : ?bool
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (bool) $result;
+}
+
+function array_dot_get_float(array $array, string $path) : ?float
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return (float) $result;
+}
+
+function array_dot_get_datetime(array $array, string $path) : ?\DateTimeImmutable
+{
+    $result = array_dot_get($array, $path);
+
+    if ($result === null) {
+        return null;
+    }
+
+    return new \DateTimeImmutable($result);
+}
+
+/**
+ * @template T is \BackedEnum
+ *
+ * @param array<mixed> $array
+ * @param string $path
+ * @param class-string<T> $enumClass
+ *
+ * @return null|\BackedEnum
+ */
+function array_dot_get_enum(array $array, string $path, string $enumClass) : ?\BackedEnum
+{
+    if (!\class_exists($enumClass)) {
+        throw new Exception('Enum class does not exist');
+    }
+
+    if (!\is_subclass_of($enumClass, \BackedEnum::class)) {
+        throw new Exception('Enum class must be subclass of BackedEnum');
+    }
+
+    $reflection = new \ReflectionEnum($enumClass);
+
+    $result = match ((string) $reflection->getBackingType()) {
+        'int' => array_dot_get_int($array, $path),
+        'string' => array_dot_get_string($array, $path),
+        default => throw new Exception('Unsupported enum backing type: ' . $reflection->getBackingType())
+    };
+
+    if ($result === null) {
+        return null;
+    }
+
+    return $enumClass::tryFrom($result);
+}
+
 /**
  * @param array<mixed> $array
  * @param string $path
