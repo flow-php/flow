@@ -93,6 +93,20 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
+     * @return array<string>
+     */
+    public function names() : array
+    {
+        $names = [];
+
+        foreach ($this->refs as $ref) {
+            $names[] = $ref->name();
+        }
+
+        return $names;
+    }
+
+    /**
      * @param string $offset
      *
      * @return bool

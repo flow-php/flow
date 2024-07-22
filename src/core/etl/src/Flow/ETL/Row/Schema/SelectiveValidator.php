@@ -15,7 +15,7 @@ final class SelectiveValidator implements SchemaValidator
 {
     public function isValid(Rows $rows, Schema $schema) : bool
     {
-        foreach ($schema->entries() as $ref) {
+        foreach ($schema->references() as $ref) {
             $definition = $schema->getDefinition($ref);
 
             foreach ($rows as $row) {

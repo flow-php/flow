@@ -55,17 +55,13 @@ final class Schema implements \Countable
     }
 
     /**
+     * @deprecated use references() : References instead
+     *
      * @return array<Reference>
      */
     public function entries() : array
     {
-        $refs = [];
-
-        foreach ($this->definitions as $definition) {
-            $refs[] = $definition->entry();
-        }
-
-        return $refs;
+        return $this->references()->all();
     }
 
     public function findDefinition(string|Reference $ref) : ?Definition
@@ -209,6 +205,17 @@ final class Schema implements \Countable
     public function nullable() : self
     {
         return $this->makeNullable();
+    }
+
+    public function references() : References
+    {
+        $refs = [];
+
+        foreach ($this->definitions as $definition) {
+            $refs[] = $definition->entry();
+        }
+
+        return References::init(...$refs);
     }
 
     public function remove(string|Reference ...$entries) : self

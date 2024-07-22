@@ -20,6 +20,16 @@ final class ReferencesTest extends TestCase
         );
     }
 
+    public function test_references_names() : void
+    {
+        $refs = refs('id', 'name');
+
+        self::assertEquals(
+            ['id', 'name'],
+            $refs->names()
+        );
+    }
+
     public function test_that_reference_with_alias_exists() : void
     {
         $refs = new References(ref('id')->as('test'), ref('name'));
