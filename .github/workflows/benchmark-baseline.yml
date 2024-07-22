@@ -91,7 +91,7 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: "Store Benchmark baseline"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: phpbench-baseline
           path: ./var/phpbench/
