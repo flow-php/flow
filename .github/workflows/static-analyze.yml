@@ -62,7 +62,7 @@ jobs:
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: "Cache Composer dependencies"
-        uses: "actions/cache@v3"
+        uses: "actions/cache@v4"
         with:
           path: "${{ steps.composer-cache.outputs.dir }}"
           key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
@@ -73,7 +73,7 @@ jobs:
         run: "composer install --no-interaction --no-progress"
 
       - name: "Cache cs-fixer results"
-        uses: "actions/cache@v3"
+        uses: "actions/cache@v4"
         with:
           path: "var/cs-fixer"
           key: "php-${{ matrix.php-version }}-cache-cs-fixer-${{ github.run_id }}"
@@ -81,7 +81,7 @@ jobs:
             php-${{ matrix.php-version }}-cache-cs-fixer-
 
       - name: "Cache phpstan results"
-        uses: "actions/cache@v3"
+        uses: "actions/cache@v4"
         with:
           path: "var/phpstan/cache"
           key: "php-${{ matrix.php-version }}-cache-phpstan-${{ github.run_id }}"
@@ -89,7 +89,7 @@ jobs:
             php-${{ matrix.php-version }}-cache-phpstan-
 
       - name: "Cache psalm results"
-        uses: "actions/cache@v3"
+        uses: "actions/cache@v4"
         with:
           path: "var/psalm/cache"
           key: "php-${{ matrix.php-version }}-cache-psalm-${{ github.run_id }}"
