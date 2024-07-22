@@ -90,7 +90,7 @@ jobs:
           BUILD_TAG=${GITHUB_SHA:0:7}
           echo "BUILD_TAG=$BUILD_TAG" >> $GITHUB_ENV
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: flow-${{ env.BUILD_TAG }}.phar
           path: build/flow.phar
