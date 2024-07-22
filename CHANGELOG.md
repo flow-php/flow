@@ -8,6 +8,7 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1137](https://github.com/flow-php/flow/pull/1137) - **Deprecate Schema::entries in favor to Schema::references** - [@norberttech](https://github.com/norberttech)
 - [#1131](https://github.com/flow-php/flow/pull/1131) - **Updated cache@v3 into cache@v4 across all github actions workflows** - [@norberttech](https://github.com/norberttech)
 - [#1125](https://github.com/flow-php/flow/pull/1125) - **Replaced github discussions with discord server link at landing page** - [@norberttech](https://github.com/norberttech)
 - [#1123](https://github.com/flow-php/flow/pull/1123) - **Rework `References` to do fewer loops** - [@stloyd](https://github.com/stloyd)
