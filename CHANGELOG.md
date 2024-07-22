@@ -1,12 +1,14 @@
-## [Unreleased] - 2024-07-21
+## [Unreleased] - 2024-07-22
 
 ### Added
+- [#1131](https://github.com/flow-php/flow/pull/1131) - **Dependabot for github actions dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1130](https://github.com/flow-php/flow/pull/1130) - **typed functions to array-dot library** - [@norberttech](https://github.com/norberttech)
 - [#1127](https://github.com/flow-php/flow/pull/1127) - **Explain the “ETL” acronym** - [@alexislefebvre](https://github.com/alexislefebvre)
 - [#1122](https://github.com/flow-php/flow/pull/1122) - **Generic algorithm abstraction instead of native calls** - [@mleczakm](https://github.com/mleczakm)
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1131](https://github.com/flow-php/flow/pull/1131) - **Updated cache@v3 into cache@v4 across all github actions workflows** - [@norberttech](https://github.com/norberttech)
 - [#1125](https://github.com/flow-php/flow/pull/1125) - **Replaced github discussions with discord server link at landing page** - [@norberttech](https://github.com/norberttech)
 - [#1123](https://github.com/flow-php/flow/pull/1123) - **Rework `References` to do fewer loops** - [@stloyd](https://github.com/stloyd)
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
