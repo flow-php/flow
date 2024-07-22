@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-class UniqueFactory
+final class UniqueFactory
 {
+    private function __construct()
+    {
+    }
+
     public static function int(int $min, int $max) : int
     {
         return \random_int($min, $max);
@@ -17,6 +21,6 @@ class UniqueFactory
         $bytes = (int) \ceil($int / 2);
         $bytes >= 1 ?: $bytes = 1;
 
-        return \mb_substr(\bin2hex(\random_bytes($bytes)), 0, \max(0, $int));
+        return \substr(\bin2hex(\random_bytes($bytes)), 0, \max(0, $int));
     }
 }
