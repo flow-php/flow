@@ -55,7 +55,7 @@ jobs:
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: "Cache Composer dependencies"
-        uses: "actions/cache@v3"
+        uses: "actions/cache@v4"
         with:
           path: "${{ steps.composer-cache.outputs.dir }}"
           key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
@@ -66,7 +66,7 @@ jobs:
         run: "mkdir -p var/infection/cache"
 
       - name: "Cache infection results"
-        uses: "actions/cache@v3"
+        uses: "actions/cache@v4"
         with:
           path: "var/infection/cache"
           key: "php-${{ matrix.php-version }}-cache-infection-${{ github.run_id }}"
