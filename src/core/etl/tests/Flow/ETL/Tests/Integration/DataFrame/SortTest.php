@@ -6,45 +6,52 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{df, ref};
 use Flow\ETL\Config;
-use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Tests\Double\{CacheSpy, FakeExtractor};
+use Flow\ETL\Tests\Double\{FakeExtractor};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SortTest extends IntegrationTestCase
 {
-    public function test_etl_sort_at_disk_in_memory() : void
+    private static string $memoryLimit = '';
+
+    public static function setUpBeforeClass() : void
+    {
+        parent::setUpBeforeClass();
+        self::$memoryLimit = \ini_get('memory_limit');
+    }
+
+    public static function tearDownAfterClass() : void
+    {
+        parent::tearDownAfterClass();
+        \ini_set('memory_limit', self::$memoryLimit);
+    }
+
+    public function test_etl_sort_by_external_sort() : void
     {
         \ini_set('memory_limit', '500M');
 
         $config = Config::builder()
-            ->id($id = 'test_etl_sort_by_in_memory')
-            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
-            ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromKb(10)));
+            ->sortMemoryLimit(Unit::fromBytes(1))
+            ->build();
 
-        df($config)
-            ->read(new FakeExtractor($rowsets = 2500))
+        $rows = df($config)
+            ->read(new FakeExtractor(2500))
             ->batchSize(50)
             ->sortBy(ref('int'))
-            ->run();
+            ->fetch();
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
 
         self::assertEmpty($cache);
-        self::assertSame(9, $cacheSpy->writes());
-        self::assertSame(5, $cacheSpy->clears());
+        self::assertSame(\range(0, 2499), $rows->reduceToArray('int'));
     }
 
     public function test_etl_sort_by_in_memory() : void
     {
         \ini_set('memory_limit', '-1');
 
-        $config = Config::builder()
-            ->id($id = 'test_etl_sort_by_in_memory')
-            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()));
-
-        $rows = df($config)
-            ->read(new FakeExtractor($rowsets = 40))
+        $rows = df()
+            ->read(new FakeExtractor(40))
             ->batchSize(2)
             ->sortBy(ref('int'))
             ->fetch();
@@ -53,6 +60,5 @@ final class SortTest extends IntegrationTestCase
 
         self::assertEmpty($cache);
         self::assertSame(\range(0, 39), $rows->reduceToArray('int'));
-        self::assertSame(1, $cacheSpy->writes());
     }
 }

@@ -285,27 +285,6 @@ final class Path
         );
     }
 
-    //    public function setExtension(string $extension) : self
-    //    {
-    //        if ($this->extension) {
-    //            if ($this->extension === $extension) {
-    //                return $this;
-    //            }
-    //
-    //            $pathinfo = \pathinfo($this->path);
-    //            $path = ($pathinfo['dirname'] ?? '') . DIRECTORY_SEPARATOR . $pathinfo['filename'] . '.' . $extension;
-    //
-    //            return new self($this->protocol->scheme() . \ltrim($path, DIRECTORY_SEPARATOR), $this->options);
-    //        }
-    //
-    //        return new self($this->uri() . '.' . $extension, $this->options);
-    //    }
-
-    //    public function startsWith(self $path) : bool
-    //    {
-    //        return \str_starts_with($this->path, $path->path);
-    //    }
-
     public function staticPart() : self
     {
         if (!$this->isPathPattern($this->path)) {

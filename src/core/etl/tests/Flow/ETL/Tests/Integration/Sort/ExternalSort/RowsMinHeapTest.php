@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration\ExternalSort;
+namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
 use function Flow\ETL\DSL\{int_entry, ref, row, str_entry};
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\ExternalSort\{CachedRow, RowsMinHeap};
+use Flow\ETL\Sort\{ExternalSort\CachedRow, ExternalSort\RowsMinHeap};
 
 final class RowsMinHeapTest extends TestCase
 {
@@ -31,7 +31,7 @@ final class RowsMinHeapTest extends TestCase
                 ['id' => 6],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row()->toArray(),
+                fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );
@@ -58,7 +58,7 @@ final class RowsMinHeapTest extends TestCase
                 ['id' => 1],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row()->toArray(),
+                fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );
@@ -85,7 +85,7 @@ final class RowsMinHeapTest extends TestCase
                 ['id' => 'f'],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row()->toArray(),
+                fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );
@@ -112,7 +112,7 @@ final class RowsMinHeapTest extends TestCase
                 ['id' => 'a'],
             ],
             \array_map(
-                fn () => $minHeap->extract()->row()->toArray(),
+                fn () => $minHeap->extract()->row->toArray(),
                 \range(1, \count($minHeap))
             )
         );

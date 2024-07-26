@@ -19,7 +19,7 @@
             <directory name="src/adapter/etl-adapter-avro/src" />
 
             <file name="src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php" />
-            <file name="src/core/etl/src/Flow/ETL/ExternalSort/RowsMinHeap.php" />
+            <file name="src/core/etl/src/Flow/ETL/Sort/ExternalSort/RowsMinHeap.php" />
 
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php"/>
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php"/>

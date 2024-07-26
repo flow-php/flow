@@ -7,7 +7,6 @@ namespace Flow\ETL;
 use function Flow\Filesystem\DSL\fstab;
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
@@ -18,6 +17,8 @@ use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
 final class ConfigBuilder
 {
+    public const DEFAULT_SORT_MEMORY_PERCENTAGE = 70;
+
     private ?Cache $cache;
 
     /**
@@ -26,8 +27,6 @@ final class ConfigBuilder
     private int $cacheBatchSize = 1000;
 
     private ?Caster $caster;
-
-    private ?ExternalSort $externalSort;
 
     private ?FilesystemTable $fstab;
 
@@ -39,12 +38,14 @@ final class ConfigBuilder
 
     private ?Serializer $serializer;
 
+    private ?Unit $sortMemoryLimit;
+
     public function __construct()
     {
         $this->id = null;
         $this->serializer = null;
         $this->cache = null;
-        $this->externalSort = null;
+        $this->sortMemoryLimit = null;
         $this->fstab = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
@@ -71,11 +72,19 @@ final class ConfigBuilder
             $this->cache = new LocalFilesystemCache($cachePath, $this->serializer);
         }
 
-        $this->externalSort ??= new MemorySort(
-            $this->id,
-            $this->cache,
-            \is_string(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) ? Unit::fromString(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) : Unit::fromMb(200)
-        );
+        if ($this->sortMemoryLimit === null) {
+            if (\is_string(\getenv(Config::SORT_MAX_MEMORY_ENV))) {
+                $this->sortMemoryLimit = Unit::fromString(\getenv(Config::SORT_MAX_MEMORY_ENV));
+            } else {
+                $memoryLimit = \ini_get('memory_limit');
+
+                if ($memoryLimit === '-1') {
+                    $this->sortMemoryLimit = Unit::fromBytes(\PHP_INT_MAX);
+                } else {
+                    $this->sortMemoryLimit = Unit::fromString($memoryLimit)->percentage(self::DEFAULT_SORT_MEMORY_PERCENTAGE);
+                }
+            }
+        }
 
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
@@ -88,7 +97,7 @@ final class ConfigBuilder
             $this->id,
             $this->serializer,
             $this->cache,
-            $this->externalSort,
+            $this->sortMemoryLimit,
             $this->fstab(),
             new FilesystemStreams($this->fstab()),
             $this->optimizer,
@@ -123,13 +132,6 @@ final class ConfigBuilder
     public function dontPutInputIntoRows() : self
     {
         $this->putInputIntoRows = false;
-
-        return $this;
-    }
-
-    public function externalSort(ExternalSort $externalSort) : self
-    {
-        $this->externalSort = $externalSort;
 
         return $this;
     }
@@ -174,6 +176,13 @@ final class ConfigBuilder
     public function serializer(Serializer $serializer) : self
     {
         $this->serializer = $serializer;
+
+        return $this;
+    }
+
+    public function sortMemoryLimit(Unit $unit) : self
+    {
+        $this->sortMemoryLimit = $unit;
 
         return $this;
     }
