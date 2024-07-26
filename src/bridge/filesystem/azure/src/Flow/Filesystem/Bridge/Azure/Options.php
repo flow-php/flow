@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure;
 
 use Flow\Azure\SDK\BlobService\ListBlobs\{ListBlobOptions, OptionInclude, OptionShowOnly};
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
 
@@ -23,9 +24,12 @@ final class Options
 
     private ?OptionShowOnly $listBlobShowOnly = null;
 
+    private Path $tmpDir;
+
     public function __construct()
     {
         $this->blockFactory = new NativeLocalFileBlocksFactory();
+        $this->tmpDir = new Path('azure-blob://_$azure_flow_tmp$/');
     }
 
     public function blockFactory() : BlockFactory
@@ -55,6 +59,11 @@ final class Options
         }
 
         return $listBlobOptions;
+    }
+
+    public function tmpDir() : Path
+    {
+        return $this->tmpDir;
     }
 
     public function withBlockFactory(BlockFactory $blockFactory) : self
@@ -88,6 +97,13 @@ final class Options
     public function withListBlobShowOnly(OptionShowOnly $listBlobShowOnly) : self
     {
         $this->listBlobShowOnly = $listBlobShowOnly;
+
+        return $this;
+    }
+
+    public function withTmpDir(Path $tmpDir) : self
+    {
+        $this->tmpDir = $tmpDir;
 
         return $this;
     }

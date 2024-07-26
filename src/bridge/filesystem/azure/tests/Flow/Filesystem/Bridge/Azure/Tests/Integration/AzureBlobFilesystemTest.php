@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
-use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
+use function Flow\Filesystem\Bridge\Azure\DSL\{azure_filesystem, azure_filesystem_options};
 use Flow\Filesystem\Path;
 
 final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
@@ -135,6 +135,64 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/orders.txt'))->isFile());
         self::assertNull($fs->status(new Path('azure-blob://nested/orders/orders.csv')));
         self::assertNull($fs->status(new Path('azure-blob://nested/orders/orders_01.csv')));
+    }
+
+    public function test_rm_tmp_dir() : void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        self::assertFalse($fs->rm($fs->getSystemTmpDir()));
+    }
+
+    public function test_tmp_dir() : void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        self::assertSame('azure-blob://_$azure_flow_tmp$/', $fs->getSystemTmpDir()->uri());
+    }
+
+    public function test_tmp_dir_status() : void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        self::assertTrue($fs->status($fs->getSystemTmpDir())->isDirectory());
+    }
+
+    public function test_write_to_custom_tmp_dir() : void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'), azure_filesystem_options()->withTmpDir(new Path('azure-blob://custom-tmp-dir/')));
+
+        $stream = $fs->writeTo($fs->getSystemTmpDir()->suffix('file.txt'));
+        $stream->append('Hello, World!');
+        $stream->close();
+
+        self::assertTrue($fs->status(new Path('azure-blob://custom-tmp-dir/file.txt'))->isFile());
+        self::assertSame('Hello, World!', $fs->readFrom(new Path('azure-blob://custom-tmp-dir/file.txt'))->content());
+
+        $fs->rm($fs->getSystemTmpDir()->suffix('file.txt'));
+    }
+
+    public function test_write_to_tmp_dir() : void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        $stream = $fs->writeTo($fs->getSystemTmpDir()->suffix('file.txt'));
+        $stream->append('Hello, World!');
+        $stream->close();
+
+        self::assertTrue($fs->status($fs->getSystemTmpDir()->suffix('file.txt'))->isFile());
+        self::assertSame('Hello, World!', $fs->readFrom($fs->getSystemTmpDir()->suffix('file.txt'))->content());
+
+        $fs->rm($fs->getSystemTmpDir()->suffix('file.txt'));
+    }
+
+    public function test_write_to_tmp_dir_as_to_a_file() : void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        $this->expectExceptionMessage('Cannot write to system tmp directory');
+
+        $fs->writeTo($fs->getSystemTmpDir());
     }
 
     public function test_writing_to_azure_blob_storage() : void

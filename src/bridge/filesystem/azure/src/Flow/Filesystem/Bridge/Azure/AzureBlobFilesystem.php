@@ -7,12 +7,23 @@ namespace Flow\Filesystem\Bridge\Azure;
 use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
-use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Protocol, SourceStream};
+use Flow\Filesystem\{DestinationStream,
+    Exception\RuntimeException,
+    FileStatus,
+    Filesystem,
+    Path,
+    Protocol,
+    SourceStream};
 
 final class AzureBlobFilesystem implements Filesystem
 {
     public function __construct(private readonly BlobServiceInterface $blobService, private readonly Options $options)
     {
+    }
+
+    public function getSystemTmpDir() : Path
+    {
+        return $this->options->tmpDir();
     }
 
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
@@ -68,6 +79,10 @@ final class AzureBlobFilesystem implements Filesystem
 
     public function rm(Path $path) : bool
     {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            return false;
+        }
+
         $this->protocol()->validateScheme($path);
 
         if ($path->isPattern()) {
@@ -111,6 +126,10 @@ final class AzureBlobFilesystem implements Filesystem
 
     public function status(Path $path) : ?FileStatus
     {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            return new FileStatus($path, false);
+        }
+
         $this->protocol()->validateScheme($path);
 
         if (!$path->isPattern()) {
@@ -147,6 +166,10 @@ final class AzureBlobFilesystem implements Filesystem
 
     public function writeTo(Path $path) : DestinationStream
     {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            throw new RuntimeException('Cannot write to system tmp directory');
+        }
+
         $this->protocol()->validateScheme($path);
 
         return AzureBlobDestinationStream::openBlank(

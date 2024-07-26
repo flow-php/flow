@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Integration;
 
 use function Flow\ETL\DSL\{all, lit, ref};
+use function Flow\Filesystem\DSL\native_local_filesystem;
 use Flow\ETL\Filesystem\{ScalarFunctionFilter};
 use Flow\ETL\PHP\Type\{AutoCaster, Caster};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\{FileStatus, Path, Stream\NativeLocalDestinationStream};
 
@@ -23,27 +23,27 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_dir_exists() : void
     {
-        self::assertFalse((new NativeLocalFilesystem())->status(new Path(__DIR__))->isFile());
-        self::assertTrue((new NativeLocalFilesystem())->status(new Path(__DIR__))->isDirectory());
-        self::assertNull((new NativeLocalFilesystem())->status(new Path(__DIR__ . '/not_existing_directory')));
+        self::assertFalse((native_local_filesystem())->status(new Path(__DIR__))->isFile());
+        self::assertTrue((native_local_filesystem())->status(new Path(__DIR__))->isDirectory());
+        self::assertNull((native_local_filesystem())->status(new Path(__DIR__ . '/not_existing_directory')));
     }
 
     public function test_fie_exists() : void
     {
-        self::assertTrue((new NativeLocalFilesystem())->status(new Path(__FILE__))->isFile());
-        self::assertFalse((new NativeLocalFilesystem())->status(new Path(__FILE__))->isDirectory());
-        self::assertNull((new NativeLocalFilesystem())->status(new Path(__DIR__ . '/not_existing_file.php')));
+        self::assertTrue((native_local_filesystem())->status(new Path(__FILE__))->isFile());
+        self::assertFalse((native_local_filesystem())->status(new Path(__FILE__))->isDirectory());
+        self::assertNull((native_local_filesystem())->status(new Path(__DIR__ . '/not_existing_file.php')));
     }
 
     public function test_file_pattern_exists() : void
     {
-        self::assertTrue((new NativeLocalFilesystem())->status(new Path(__DIR__ . '/**/*.txt'))->isFile());
-        self::assertNull((new NativeLocalFilesystem())->status(new Path(__DIR__ . '/**/*.pdf')));
+        self::assertTrue((native_local_filesystem())->status(new Path(__DIR__ . '/**/*.txt'))->isFile());
+        self::assertNull((native_local_filesystem())->status(new Path(__DIR__ . '/**/*.pdf')));
     }
 
     public function test_file_status_on_existing_file() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
@@ -52,7 +52,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_file_status_on_existing_folder() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
@@ -62,28 +62,28 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_file_status_on_non_existing_file() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         self::assertNull($fs->status(new Path(__DIR__ . '/var/non-existing-file.txt')));
     }
 
     public function test_file_status_on_non_existing_folder() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         self::assertNull($fs->status(new Path(__DIR__ . '/var/non-existing-folder/')));
     }
 
     public function test_file_status_on_non_existing_pattern() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         self::assertNull($fs->status(new Path(__DIR__ . '/var/non-existing-folder/*')));
     }
 
     public function test_file_status_on_partial_path() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
@@ -92,7 +92,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_file_status_on_pattern() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
@@ -105,14 +105,14 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_file_status_on_root_folder() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         self::assertTrue($fs->status(new Path(__DIR__ . '/var/'))->isDirectory());
     }
 
     public function test_move_blob() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/file.txt'))->append('Hello, World!');
 
@@ -124,7 +124,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_not_removing_a_content_when_its_not_a_full_folder_path_pattern() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
         $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
@@ -138,7 +138,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_open_file_stream_for_existing_file() : void
     {
-        $stream = (new NativeLocalFilesystem())->readFrom(new Path(__FILE__));
+        $stream = (native_local_filesystem())->readFrom(new Path(__FILE__));
 
         self::assertIsString($stream->read(100, 0));
         self::assertSame(
@@ -151,7 +151,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $path = __DIR__ . '/var/file.txt';
 
-        $stream = (new NativeLocalFilesystem())->writeTo(new Path($path));
+        $stream = (native_local_filesystem())->writeTo(new Path($path));
 
         self::assertInstanceOf(NativeLocalDestinationStream::class, $stream);
     }
@@ -159,7 +159,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     public function test_reading_multi_partitioned_path() : void
     {
         $paths = \iterator_to_array(
-            (new NativeLocalFilesystem())
+            (native_local_filesystem())
                 ->list(
                     new Path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
                     new ScalarFunctionFilter(
@@ -193,7 +193,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_reading_partitioned_folder() : void
     {
-        $paths = \iterator_to_array((new NativeLocalFilesystem())->list(new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'), new KeepAll()));
+        $paths = \iterator_to_array((native_local_filesystem())->list(new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'), new KeepAll()));
         \sort($paths);
 
         self::assertEquals(
@@ -215,7 +215,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
                 new FileStatus($path, true),
             ],
             \iterator_to_array(
-                (new NativeLocalFilesystem())
+                (native_local_filesystem())
                     ->list(
                         new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
                         new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new NativeEntryFactory(), new AutoCaster(Caster::default()))
@@ -226,7 +226,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_reading_partitioned_folder_with_pattern() : void
     {
-        $paths = \iterator_to_array((new NativeLocalFilesystem())->list(new Path(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'), new KeepAll()));
+        $paths = \iterator_to_array((native_local_filesystem())->list(new Path(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'), new KeepAll()));
         \sort($paths);
 
         self::assertEquals(
@@ -240,7 +240,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_remove_directory_with_content_when_exists() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $dirPath = Path::realpath(__DIR__ . '/var/flow-fs-test-directory/');
 
@@ -254,7 +254,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_remove_file_when_exists() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $stream = $fs->writeTo(Path::realpath(__DIR__ . '/var/flow-fs-test/remove_file_when_exists.txt'));
         $stream->append('some data to make file not empty');
@@ -265,7 +265,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_remove_pattern() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $dirPath = Path::realpath(__DIR__ . '/var/flow-fs-test-directory/');
 
@@ -283,7 +283,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_removing_folder() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
         $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
@@ -301,7 +301,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_removing_folder_pattern() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
         $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
@@ -320,7 +320,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     public function test_that_scan_sort_files_by_path_names() : void
     {
         $paths = \iterator_to_array(
-            (new NativeLocalFilesystem())
+            (native_local_filesystem())
                 ->list(
                     new Path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
                 )
@@ -343,9 +343,46 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         );
     }
 
+    public function test_tmp_dir() : void
+    {
+        $fs = native_local_filesystem();
+
+        self::assertSame('file:/' . sys_get_temp_dir(), $fs->getSystemTmpDir()->uri());
+    }
+
+    public function test_tmp_dir_status() : void
+    {
+        $fs = native_local_filesystem();
+
+        self::assertTrue($fs->status($fs->getSystemTmpDir())->isDirectory());
+    }
+
+    public function test_write_to_tmp_dir() : void
+    {
+        $fs = native_local_filesystem();
+
+        $stream = $fs->writeTo($fs->getSystemTmpDir()->suffix('file.txt'));
+        $stream->append('Hello, World!');
+        $stream->close();
+
+        self::assertTrue($fs->status($fs->getSystemTmpDir()->suffix('file.txt'))->isFile());
+        self::assertSame('Hello, World!', $fs->readFrom($fs->getSystemTmpDir()->suffix('file.txt'))->content());
+
+        $fs->rm($fs->getSystemTmpDir()->suffix('file.txt'));
+    }
+
+    public function test_write_to_tmp_dir_as_to_a_file() : void
+    {
+        $fs = native_local_filesystem();
+
+        $this->expectExceptionMessage('Cannot write to system tmp directory');
+
+        $fs->writeTo($fs->getSystemTmpDir());
+    }
+
     public function test_writing_to_azure_blob_storage() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $stream = $fs->writeTo(new Path(__DIR__ . '/var/file.txt'));
         $stream->append('Hello, World!');
@@ -360,7 +397,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     public function test_writing_to_to_azure_from_resources() : void
     {
-        $fs = new NativeLocalFilesystem();
+        $fs = native_local_filesystem();
 
         $stream = $fs->writeTo(new Path(__DIR__ . '/var/orders.csv'));
         $stream->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));

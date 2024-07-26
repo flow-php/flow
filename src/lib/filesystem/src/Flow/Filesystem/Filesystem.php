@@ -9,6 +9,8 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 
 interface Filesystem
 {
+    public function getSystemTmpDir() : Path;
+
     /**
      * @return \Generator<FileStatus>
      */
