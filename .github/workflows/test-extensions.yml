@@ -39,16 +39,19 @@ jobs:
           - "8.3"
         operating-system:
           - "ubuntu-latest"
+          - "windows-latest"
 
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v4"
 
       - name: "Install dependencies"
+        if: ${{ matrix.operating-system == 'ubuntu-latest' }}
         run: |
           sudo apt-get update && sudo apt-get install libbrotli1 liblz4-1 libzstd1 --assume-yes
 
       - name: "Install PHP"
+        if: ${{ matrix.operating-system == 'ubuntu-latest' }}
         uses: "shivammathur/setup-php@v2"
         with:
           tools: composer:v2
@@ -57,6 +60,15 @@ jobs:
           extensions: :psr, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1
         env:
             SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
+
+      - name: "Install PHP"
+        if: ${{ matrix.operating-system == 'windows-latest' }}
+        uses: "shivammathur/setup-php@v2"
+        with:
+          tools: composer:v2
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
+          extensions: :psr
 
       - name: "List PHP Extensions"
         run: php -m
@@ -90,13 +102,17 @@ jobs:
         run: "composer install --no-interaction --no-progress --no-suggest"
 
       - name: "Test Brotli"
+        if: ${{ matrix.operating-system == 'ubuntu-latest' }}
         run: "composer test -- --group brotli-extension"
 
       - name: "Test LZ4"
+        if: ${{ matrix.operating-system == 'ubuntu-latest' }}
         run: "composer test -- --group lz4-extension"
 
       - name: "Test ZSTD"
+        if: ${{ matrix.operating-system == 'ubuntu-latest' }}
         run: "composer test -- --group zstd-extension"
 
       - name: "Test Snappy"
+        if: ${{ matrix.operating-system == 'ubuntu-latest' }}
         run: "composer test -- --group snappy-extension"
