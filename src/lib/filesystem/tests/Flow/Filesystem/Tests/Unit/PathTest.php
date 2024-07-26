@@ -119,14 +119,6 @@ final class PathTest extends TestCase
         self::assertSame($dirPath, (new Path($uri))->parentDirectory()->path());
     }
 
-    public function test_equal_paths_starts_with() : void
-    {
-        self::assertTrue(
-            Path::realpath(__DIR__ . '/var/some/path/file.json')
-                ->startsWith(Path::realpath(__DIR__ . '/var/some/path/file.json'))
-        );
-    }
-
     public function test_extension() : void
     {
         self::assertSame('php', (new Path(__FILE__))->extension());
@@ -184,22 +176,6 @@ final class PathTest extends TestCase
         );
     }
 
-    public function test_path_starting_with_other_path() : void
-    {
-        self::assertTrue(
-            Path::realpath(__DIR__ . '/var/some/path/file.json')
-                ->startsWith(Path::realpath(__DIR__ . '/var/some/path'))
-        );
-    }
-
-    public function test_pattern_path_starting_with_realpath_path() : void
-    {
-        self::assertTrue(
-            Path::realpath(__DIR__ . '/var/some/path/*.json')
-                ->startsWith(Path::realpath(__DIR__ . '/var/some/path'))
-        );
-    }
-
     public function test_randomization_file_path() : void
     {
         $path = new Path('flow-file://var/file/test.csv', []);
@@ -224,41 +200,18 @@ final class PathTest extends TestCase
         );
     }
 
-    public function test_realpath_starting_with_non_realpath_path() : void
+    public function test_suffix() : void
     {
-        self::assertFalse(
-            Path::realpath(__DIR__ . '/var/some/path/file.json')
-                ->startsWith(new Path('/some/path'))
+        $path = new Path('flow-file://var/dir', []);
+
+        self::assertSame(
+            'flow-file://var/dir/test.csv',
+            $path->suffix('test.csv')->uri()
         );
-    }
 
-    public function test_set_extension_different_than_existing_one() : void
-    {
-        $path = new Path('flow-file://var/file/folder/file.txt', ['option' => true]);
-
-        self::assertEquals(
-            new Path('flow-file://var/file/folder/file.csv', ['option' => true]),
-            $path->setExtension('csv')
-        );
-    }
-
-    public function test_set_extension_when_is_not_set_yet() : void
-    {
-        $path = (new Path('flow-file://var/file/folder/file', ['option' => true]))->randomize();
-
-        self::assertEquals(
-            new Path($path->uri() . '.csv', ['option' => true]),
-            $path->setExtension('csv')
-        );
-    }
-
-    public function test_set_same_extension() : void
-    {
-        $path = new Path('flow-file://var/file/folder/file.csv', ['option' => true]);
-
-        self::assertEquals(
-            $path,
-            $path->setExtension('csv')
+        self::assertSame(
+            'flow-file://var/dir/test.csv',
+            $path->suffix('/test.csv')->uri()
         );
     }
 }

@@ -15,6 +15,11 @@ use Webmozart\Glob\Glob;
  */
 final class NativeLocalFilesystem implements Filesystem
 {
+    public function getSystemTmpDir() : Path
+    {
+        return new Path(\sys_get_temp_dir());
+    }
+
     public function list(Path $path, Filter $pathFilter = new Filter\OnlyFiles()) : \Generator
     {
         $this->protocol()->validateScheme($path);
@@ -130,6 +135,10 @@ final class NativeLocalFilesystem implements Filesystem
 
     public function writeTo(Path $path) : DestinationStream
     {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            throw new RuntimeException('Cannot write to system tmp directory');
+        }
+
         $this->protocol()->validateScheme($path);
 
         if ($path->isPattern()) {

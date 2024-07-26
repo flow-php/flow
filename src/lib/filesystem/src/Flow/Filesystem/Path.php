@@ -285,26 +285,26 @@ final class Path
         );
     }
 
-    public function setExtension(string $extension) : self
-    {
-        if ($this->extension) {
-            if ($this->extension === $extension) {
-                return $this;
-            }
+    //    public function setExtension(string $extension) : self
+    //    {
+    //        if ($this->extension) {
+    //            if ($this->extension === $extension) {
+    //                return $this;
+    //            }
+    //
+    //            $pathinfo = \pathinfo($this->path);
+    //            $path = ($pathinfo['dirname'] ?? '') . DIRECTORY_SEPARATOR . $pathinfo['filename'] . '.' . $extension;
+    //
+    //            return new self($this->protocol->scheme() . \ltrim($path, DIRECTORY_SEPARATOR), $this->options);
+    //        }
+    //
+    //        return new self($this->uri() . '.' . $extension, $this->options);
+    //    }
 
-            $pathinfo = \pathinfo($this->path);
-            $path = ($pathinfo['dirname'] ?? '') . DIRECTORY_SEPARATOR . $pathinfo['filename'] . '.' . $extension;
-
-            return new self($this->protocol->scheme() . \ltrim($path, DIRECTORY_SEPARATOR), $this->options);
-        }
-
-        return new self($this->uri() . '.' . $extension, $this->options);
-    }
-
-    public function startsWith(self $path) : bool
-    {
-        return \str_starts_with($this->path, $path->path);
-    }
+    //    public function startsWith(self $path) : bool
+    //    {
+    //        return \str_starts_with($this->path, $path->path);
+    //    }
 
     public function staticPart() : self
     {
@@ -333,6 +333,11 @@ final class Path
         }
 
         return new self($this->protocol->scheme() . \implode(DIRECTORY_SEPARATOR, $staticPath), $this->options);
+    }
+
+    public function suffix(string $string) : self
+    {
+        return new self(\rtrim($this->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \ltrim($string, DIRECTORY_SEPARATOR), $this->options);
     }
 
     /**
