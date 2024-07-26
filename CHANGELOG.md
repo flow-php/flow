@@ -1,6 +1,10 @@
-## [Unreleased] - 2024-07-22
+## [Unreleased] - 2024-07-26
 
 ### Added
+- [#1144](https://github.com/flow-php/flow/pull/1144) - **Filesystem - added getSystemTmpDir() method** - [@norberttech](https://github.com/norberttech)
+- [#1144](https://github.com/flow-php/flow/pull/1144) - **Path - added suffix(string $suffix): Path method** - [@norberttech](https://github.com/norberttech)
+- [#1144](https://github.com/flow-php/flow/pull/1144) - **Path - removed setExtension()** - [@norberttech](https://github.com/norberttech)
+- [#1144](https://github.com/flow-php/flow/pull/1144) - **Path - removed startsWith()** - [@norberttech](https://github.com/norberttech)
 - [#1131](https://github.com/flow-php/flow/pull/1131) - **Dependabot for github actions dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1130](https://github.com/flow-php/flow/pull/1130) - **typed functions to array-dot library** - [@norberttech](https://github.com/norberttech)
 - [#1127](https://github.com/flow-php/flow/pull/1127) - **Explain the “ETL” acronym** - [@alexislefebvre](https://github.com/alexislefebvre)
