@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\ExternalSort;
+namespace Flow\ETL\Sort\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row;
 use Flow\ETL\Row\{Reference, References, SortOrder};
 
 /**
@@ -21,8 +22,21 @@ final class RowsMinHeap extends \SplMinHeap
         $this->ref = References::init(...$refs);
     }
 
+    public function __debugInfo() : array
+    {
+        $clone = clone $this;
+        $elements = [];
+
+        while (!$clone->isEmpty()) {
+            $cachedRow = $clone->extract();
+            $elements[] = [$cachedRow->generatorId => $cachedRow->row->toArray()];
+        }
+
+        return $elements;
+    }
+
     /**
-     * @return CachedRow
+     * @return Row
      */
     public function extract() : mixed
     {
@@ -49,8 +63,8 @@ final class RowsMinHeap extends \SplMinHeap
         $rightValues = [];
 
         foreach ($this->ref as $entry) {
-            $row1Value = $value1->row()->valueOf($entry->name());
-            $row2Value = $value2->row()->valueOf($entry->name());
+            $row1Value = $value1->row->valueOf($entry->name());
+            $row2Value = $value2->row->valueOf($entry->name());
 
             if ($entry->sort() === SortOrder::DESC) {
                 $leftValues[] = $row1Value;

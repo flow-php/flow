@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{refs, to_output};
+use function Flow\Filesystem\DSL\protocol;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
-use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, RuntimeException};
-use Flow\ETL\Extractor\PartitionExtractor;
+use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, OutOfMemoryException, RuntimeException};
+use Flow\ETL\Extractor\{PartitionExtractor, PipelineExtractor};
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, WindowFunction};
@@ -26,6 +27,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     SynchronousPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema};
+use Flow\ETL\Sort\{ExternalSort, MemorySort};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\{
     AutoCastTransformer,
@@ -793,11 +795,22 @@ final class DataFrame
      */
     public function sortBy(Reference ...$entries) : self
     {
-        $this
-            ->cache($this->context->config->id())
-            ->run();
+        try {
+            $extractor = (new MemorySort(new PipelineExtractor($this->pipeline), $this->context->config->sortMemoryLimit()))->sortBy($this->context, refs(...$entries));
+        } catch (OutOfMemoryException $e) {
+            $extractor = (new ExternalSort(
+                $this->context->config->id(),
+                $this->context->cache(),
+                new PipelineExtractor($this->pipeline),
+                new ExternalSort\RowCache\FilesystemSortRowCache(
+                    $this->context->filesystem(protocol('file')),
+                    $this->context->config->serializer()
+                ),
+                100
+            ))->sortBy($this->context, refs(...$entries));
+        }
 
-        $this->pipeline = new SynchronousPipeline($this->context->config->externalSort()->sortBy(...$entries));
+        $this->pipeline = new LinkedPipeline(new SynchronousPipeline($extractor));
 
         return $this;
     }

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration\ExternalSort;
+namespace Flow\ETL\Tests\Integration\Sort\MemorySort;
 
-use function Flow\ETL\DSL\{array_to_rows, flow_context, ref};
+use function Flow\ETL\DSL\{array_to_rows, config_builder, flow_context, from_cache, ref, refs};
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\Cache\InMemoryCache;
-use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Monitoring\Memory\Unit;
+use Flow\ETL\Sort\MemorySort;
 
 final class MemorySortTest extends TestCase
 {
@@ -29,12 +29,16 @@ final class MemorySortTest extends TestCase
         $cache->add('cache_id', array_to_rows($randomizedInput));
 
         $sort = new MemorySort(
-            'cache_id',
-            $cache,
+            from_cache('cache_id'),
             Unit::fromMb(1024)
         );
 
-        $sortedOutput = \iterator_to_array($sort->sortBy(ref('id')->desc())->extract(flow_context()));
+        $sortedOutput = \iterator_to_array(
+            $sort->sortBy(
+                flow_context(config_builder()->cache($cache)->build()),
+                refs(ref('id')->desc())
+            )->extract(flow_context())
+        );
 
         self::assertEquals(
             $input,

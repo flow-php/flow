@@ -6,10 +6,11 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\FilesystemStreams;
+use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
-use Flow\Filesystem\FilesystemTable;
+use Flow\Filesystem\{FilesystemTable};
 use Flow\Serializer\Serializer;
 
 /**
@@ -20,7 +21,7 @@ final class Config
 {
     public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
 
-    public const EXTERNAL_SORT_MAX_MEMORY_ENV = 'FLOW_EXTERNAL_SORT_MAX_MEMORY';
+    public const SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
 
     /**
      * @param int<1, max> $cacheBatchSize
@@ -29,14 +30,14 @@ final class Config
         private readonly string $id,
         private readonly Serializer $serializer,
         private readonly Cache $cache,
-        private readonly ExternalSort $externalSort,
+        private readonly Unit $sortMemoryLimit,
         private readonly FilesystemTable $filesystemTable,
         private readonly FilesystemStreams $filesystemStreams,
         private readonly Optimizer $optimizer,
         private readonly Caster $caster,
         private readonly bool $putInputIntoRows,
         private readonly EntryFactory $entryFactory,
-        private readonly int $cacheBatchSize
+        private readonly int $cacheBatchSize,
     ) {
         if ($this->cacheBatchSize < 1) {
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
@@ -76,11 +77,6 @@ final class Config
         return $this->entryFactory;
     }
 
-    public function externalSort() : ExternalSort
-    {
-        return $this->externalSort;
-    }
-
     public function filesystemStreams() : FilesystemStreams
     {
         return $this->filesystemStreams;
@@ -109,5 +105,10 @@ final class Config
     public function shouldPutInputIntoRows() : bool
     {
         return $this->putInputIntoRows;
+    }
+
+    public function sortMemoryLimit() : Unit
+    {
+        return $this->sortMemoryLimit;
     }
 }
