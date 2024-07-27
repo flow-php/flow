@@ -11,6 +11,8 @@ use Flow\Serializer\{NativePHPSerializer, Serializer};
 
 final class FilesystemSortRowCache implements SortRowCache
 {
+    private Path $cacheDir;
+
     /**
      * @param Filesystem $filesystem
      * @param Serializer $serializer
@@ -20,10 +22,13 @@ final class FilesystemSortRowCache implements SortRowCache
         private readonly Filesystem $filesystem,
         private readonly Serializer $serializer = new NativePHPSerializer(),
         private readonly int $chunkSize = 10,
+        ?Path $cacheDir = null
     ) {
         if ($this->chunkSize < 1) {
             throw new InvalidArgumentException('Chunk size must be greater than 0');
         }
+
+        $this->cacheDir = $cacheDir ?? $this->filesystem->getSystemTmpDir()->suffix('/flow-php-external-sort/');
     }
 
     /**
@@ -45,22 +50,35 @@ final class FilesystemSortRowCache implements SortRowCache
 
     public function remove(string $key) : void
     {
-        $this->filesystem->rm($this->keyPath($key));
+        // we want to remove not only cache file but entire directory
+        $this->filesystem->rm($this->keyPath($key)->parentDirectory());
     }
 
-    public function set(string $key, Rows $rows) : void
+    /**
+     * @param string $key
+     * @param iterable<Row> $rows
+     */
+    public function set(string $key, iterable $rows) : void
     {
         $path = $this->keyPath($key);
 
         $stream = $this->filesystem->writeTo($path);
 
-        foreach ($rows->chunks($this->chunkSize) as $rowsChunk) {
-            $serializedRows = '';
+        $serializedRows = '';
+        $counter = 0;
 
-            foreach ($rowsChunk as $row) {
-                $serializedRows .= $this->serializer->serialize($row) . "\n";
+        foreach ($rows as $row) {
+            $serializedRows .= $this->serializer->serialize($row) . "\n";
+            $counter++;
+
+            if ($counter >= $this->chunkSize) {
+                $stream->append($serializedRows);
+                $serializedRows = '';
+                $counter = 0;
             }
+        }
 
+        if ($counter > 0) {
             $stream->append($serializedRows);
         }
 
@@ -69,6 +87,8 @@ final class FilesystemSortRowCache implements SortRowCache
 
     private function keyPath(string $key) : Path
     {
-        return $this->filesystem->getSystemTmpDir()->suffix('/flow-php-external-sort/' . NativePHPHash::xxh128($key) . '/rows.php.cache');
+        return $this->cacheDir->suffix($key . '/rows.php.cache');
+
+        return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/rows.php.cache');
     }
 }

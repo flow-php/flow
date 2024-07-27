@@ -16,6 +16,7 @@ use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, WindowFunction};
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Pipeline\{BatchingPipeline,
     CachingPipeline,
@@ -51,10 +52,12 @@ use Flow\ETL\Transformer\{
     UntilTransformer,
     WindowFunctionTransformer
 };
+use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\RDSL\AccessControl\{AllowAll, AllowList, DenyAll};
 use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
+use Flow\Serializer\NativePHPSerializer;
 
 final class DataFrame
 {
@@ -796,17 +799,26 @@ final class DataFrame
     public function sortBy(Reference ...$entries) : self
     {
         try {
-            $extractor = (new MemorySort(new PipelineExtractor($this->pipeline), $this->context->config->sortMemoryLimit()))->sortBy($this->context, refs(...$entries));
+            if ($this->context->config->sortMemoryLimit()->isGreaterThan(Unit::fromBytes(0))) {
+                $extractor = (new MemorySort(new PipelineExtractor($this->pipeline), $this->context->config->sortMemoryLimit()))->sortBy($this->context, refs(...$entries));
+            } else {
+                $extractor = (new ExternalSort(
+                    new PipelineExtractor(new BatchingPipeline($this->pipeline, 500)),
+                    new ExternalSort\RowCache\FilesystemSortRowCache(
+                        $this->context->filesystem(protocol('file')),
+                        new NativePHPSerializer(),// $this->context->config->serializer(),
+                        10,
+                        new Path('/Users/norbert/Workspace/flow-php/flow/.scratchpad/sort_performance/rows-cache')
+                    ),
+                ))->sortBy($this->context, refs(...$entries));
+            }
         } catch (OutOfMemoryException $e) {
             $extractor = (new ExternalSort(
-                $this->context->config->id(),
-                $this->context->cache(),
-                new PipelineExtractor($this->pipeline),
+                new PipelineExtractor(new BatchingPipeline($this->pipeline, 500)),
                 new ExternalSort\RowCache\FilesystemSortRowCache(
                     $this->context->filesystem(protocol('file')),
-                    $this->context->config->serializer()
+                    new NativePHPSerializer(),// $this->context->config->serializer()
                 ),
-                100
             ))->sortBy($this->context, refs(...$entries));
         }
 
