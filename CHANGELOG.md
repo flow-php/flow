@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-26
+## [Unreleased] - 2024-07-27
 
 ### Added
 - [#1144](https://github.com/flow-php/flow/pull/1144) - **Filesystem - added getSystemTmpDir() method** - [@norberttech](https://github.com/norberttech)
@@ -19,6 +19,7 @@
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1148](https://github.com/flow-php/flow/pull/1148) - **Typo in docs** - [@inmanturbo](https://github.com/inmanturbo)
 - [#1129](https://github.com/flow-php/flow/pull/1129) - **Monolog http bridge http-message dependency range** - [@norberttech](https://github.com/norberttech)
 - [#1126](https://github.com/flow-php/flow/pull/1126) - **Typo “Discrod”** - [@alexislefebvre](https://github.com/alexislefebvre)
 
@@ -1809,6 +1810,7 @@
 - @drupol
 - @flavioheleno
 - @ghost
+- @inmanturbo
 - @jguittard
 - @jpiatko
 - @jwojtyra-aterian
