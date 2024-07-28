@@ -796,8 +796,55 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
 }
 
 /**
- * @psalm-suppress PossiblyInvalidIterator
- *
+ * @param array<array<mixed>>|array<mixed|string> $data
+ * @param array<Partition>|Partitions $partitions
+ */
+function array_to_row(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|Partitions $partitions = [], ?Schema $schema = null) : Row
+{
+    foreach ($data as $key => $v) {
+        if (!\is_string($key)) {
+            throw new InvalidArgumentException('Passed array keys must be a string. Maybe consider using "array_to_rows()" function?');
+        }
+    }
+
+    $entries = [];
+
+    foreach ($data as $key => $value) {
+        $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
+
+        try {
+            $entries[$name] = $entryFactory->create($name, $value, $schema);
+        } catch (SchemaDefinitionNotFoundException $e) {
+            if ($schema === null) {
+                throw $e;
+            }
+        }
+    }
+
+    foreach ($partitions as $partition) {
+        if (!\array_key_exists($partition->name, $entries)) {
+            try {
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
+            } catch (SchemaDefinitionNotFoundException $e) {
+                if ($schema === null) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    if ($schema !== null) {
+        foreach ($schema->definitions() as $definition) {
+            if (!\array_key_exists($definition->entry()->name(), $entries)) {
+                $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
+            }
+        }
+    }
+
+    return Row::create(...\array_values($entries));
+}
+
+/**
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition>|Partitions $partitions
  */
@@ -816,81 +863,13 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
     }
 
     if (!$isRows) {
-        $entries = [];
-
-        foreach ($data as $key => $value) {
-            $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
-
-            try {
-                $entries[$name] = $entryFactory->create($name, $value, $schema);
-            } catch (SchemaDefinitionNotFoundException $e) {
-                if ($schema === null) {
-                    throw $e;
-                }
-            }
-        }
-
-        foreach ($partitions as $partition) {
-            if (!\array_key_exists($partition->name, $entries)) {
-                try {
-                    $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
-                } catch (SchemaDefinitionNotFoundException $e) {
-                    if ($schema === null) {
-                        throw $e;
-                    }
-                }
-            }
-        }
-
-        if ($schema !== null) {
-            foreach ($schema->definitions() as $definition) {
-                if (!\array_key_exists($definition->entry()->name(), $entries)) {
-                    $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
-                }
-            }
-        }
-
-        return Rows::partitioned([Row::create(...\array_values($entries))], $partitions);
+        return Rows::partitioned([array_to_row($data, $entryFactory, $partitions, $schema)], $partitions);
     }
 
     $rows = [];
 
     foreach ($data as $row) {
-        $entries = [];
-
-        foreach ($row as $column => $value) {
-            $name = \is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column;
-
-            try {
-                $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value, $schema);
-            } catch (SchemaDefinitionNotFoundException $e) {
-                if ($schema === null) {
-                    throw $e;
-                }
-            }
-        }
-
-        foreach ($partitions as $partition) {
-            if (!\array_key_exists($partition->name, $entries)) {
-                try {
-                    $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
-                } catch (SchemaDefinitionNotFoundException $e) {
-                    if ($schema === null) {
-                        throw $e;
-                    }
-                }
-            }
-        }
-
-        if ($schema !== null) {
-            foreach ($schema->definitions() as $definition) {
-                if (!\array_key_exists($definition->entry()->name(), $entries)) {
-                    $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
-                }
-            }
-        }
-
-        $rows[] = Row::create(...\array_values($entries));
+        $rows[] = array_to_row($row, $entryFactory, $partitions, $schema);
     }
 
     return Rows::partitioned($rows, $partitions);
