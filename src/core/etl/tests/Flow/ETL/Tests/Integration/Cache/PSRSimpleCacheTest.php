@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Cache;
 
 use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Cache\PSRSimpleCache;
+use Flow\ETL\Cache\RowsCache\PSRSimpleCache;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\{Row, Rows};
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;

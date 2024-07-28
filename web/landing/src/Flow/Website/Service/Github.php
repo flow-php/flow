@@ -6,7 +6,7 @@ namespace Flow\Website\Service;
 
 use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, to_memory};
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\Cache\PSRSimpleCache;
+use Flow\ETL\Cache\RowsCache\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\Website\Factory\Github\ContributorsRequestFactory;
 use Http\Client\Curl\Client;
@@ -33,7 +33,7 @@ final class Github
         $from_github = new PsrHttpClientDynamicExtractor($client, $this->requestFactory);
 
         try {
-            df(config_builder()->cache($adapter))
+            df(config_builder()->rowsCache($adapter))
                 ->read(
                     from_cache(
                         'flow_github_contributors',

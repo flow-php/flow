@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Cache;
 
-use Flow\ETL\Cache\LocalFilesystemCache;
+use Flow\ETL\Cache\RowsCache\LocalFilesystemCache;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\{Row, Rows};

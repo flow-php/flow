@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{
-    Exception\OutOfMemoryException,
+use Flow\ETL\{Exception\OutOfMemoryException,
     Extractor,
     FlowContext,
     Monitoring\Memory\Configuration,
     Monitoring\Memory\Consumption,
     Monitoring\Memory\Unit,
+    Pipeline,
     Row\References,
     Rows};
 
@@ -19,7 +19,7 @@ final class MemorySort implements SortingAlgorithm
     private Configuration $configuration;
 
     public function __construct(
-        private readonly Extractor $extractor,
+        private readonly Pipeline $pipeline,
         private Unit $maximumMemory
     ) {
         $this->configuration = new Configuration(10);
@@ -40,7 +40,7 @@ final class MemorySort implements SortingAlgorithm
         $mergedRows = new Rows();
         $maxSize = 1;
 
-        foreach ($this->extractor->extract($context) as $rows) {
+        foreach ($this->pipeline->process($context) as $rows) {
             $maxSize = \max($rows->count(), $maxSize);
             $mergedRows = $mergedRows->merge($rows);
 

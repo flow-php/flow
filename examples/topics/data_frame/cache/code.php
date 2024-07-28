@@ -5,7 +5,7 @@ declare(strict_types=1);
 use function Flow\ETL\DSL\{config_builder, data_frame, from_cache, ref, to_stream};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\Cache\PSRSimpleCache;
+use Flow\ETL\Cache\RowsCache\PSRSimpleCache;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
@@ -41,7 +41,7 @@ $adapter = new PSRSimpleCache(
     )
 );
 
-data_frame(config_builder()->cache($adapter))
+data_frame(config_builder()->rowsCache($adapter))
     ->read(
         from_cache(
             id: 'github_api',

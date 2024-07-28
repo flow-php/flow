@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\{Cache, Rows};
+use Flow\ETL\{Cache\RowsCache, Rows};
 
-final class CacheSpy implements Cache
+final class CacheSpy implements RowsCache
 {
     private int $clearsCount = 0;
 
@@ -19,7 +19,7 @@ final class CacheSpy implements Cache
 
     private int $writesCount = 0;
 
-    public function __construct(private readonly Cache $cache)
+    public function __construct(private readonly RowsCache $cache)
     {
     }
 

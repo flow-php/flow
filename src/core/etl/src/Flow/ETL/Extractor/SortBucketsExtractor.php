@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\Sort\ExternalSort\SortRowCache;
-use Flow\ETL\{Extractor, FlowContext, Row, Rows};
+use Flow\ETL\Cache\RowCache;
+use Flow\ETL\{Extractor, FlowContext, Rows, Sort\ExternalSort\Bucket};
 
-final class SortRowCacheExtractor implements Extractor
+final class SortBucketsExtractor implements Extractor
 {
     /**
-     * @param array<string, \Generator<Row>> $sortBuckets
+     * @param array<Bucket> $sortBuckets
      */
     public function __construct(
         private readonly array $sortBuckets,
         private readonly int $batchSize,
-        private readonly SortRowCache $cache
+        private readonly RowCache $cache
     ) {
 
     }
 
     public function extract(FlowContext $context) : \Generator
     {
-        foreach ($this->sortBuckets as $bucketId => $bucket) {
+        foreach ($this->sortBuckets as $bucket) {
             $rows = new Rows();
 
-            foreach ($bucket as $row) {
+            foreach ($bucket->rows as $row) {
                 $rows = $rows->add($row);
 
                 if ($rows->count() >= $this->batchSize) {
@@ -38,7 +38,7 @@ final class SortRowCacheExtractor implements Extractor
                 yield $rows;
             }
 
-            $this->cache->remove($bucketId);
+            $this->cache->remove($bucket->id);
         }
     }
 }

@@ -22,7 +22,7 @@ final class CacheExtractor implements Extractor
      */
     public function extract(FlowContext $context) : \Generator
     {
-        if (!$context->cache()->has($this->id)) {
+        if (!$context->rowsCache()->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
                 foreach ($this->fallbackExtractor->extract($context) as $rows) {
                     $signal = yield $rows;
@@ -33,7 +33,7 @@ final class CacheExtractor implements Extractor
                 }
             }
         } else {
-            foreach ($context->cache()->read($this->id) as $rows) {
+            foreach ($context->rowsCache()->read($this->id) as $rows) {
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
@@ -43,7 +43,7 @@ final class CacheExtractor implements Extractor
         }
 
         if ($this->clear) {
-            $context->cache()->clear($this->id);
+            $context->rowsCache()->clear($this->id);
         }
     }
 }

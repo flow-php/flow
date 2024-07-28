@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Sort\ExternalSort;
+namespace Flow\ETL\Cache;
 
 use Flow\ETL\{Row, Rows};
 
-interface SortRowCache
+interface RowCache
 {
     /**
      * @return \Generator<Row>
@@ -15,5 +15,8 @@ interface SortRowCache
 
     public function remove(string $key) : void;
 
-    public function set(string $key, Rows $rows) : void;
+    /**
+     * @param iterable<Row>|Rows $rows
+     */
+    public function set(string $key, iterable|Rows $rows) : void;
 }

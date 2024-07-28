@@ -65,7 +65,7 @@ final class PartitioningPipeline implements Pipeline
                 )));
 
                 $partitionIds[] = $partitionId;
-                $context->cache()->add($partitionId, $rows);
+                $context->rowsCache()->add($partitionId, $rows);
             }
         }
 

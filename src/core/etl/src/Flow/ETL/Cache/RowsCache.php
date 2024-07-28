@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL;
+namespace Flow\ETL\Cache;
 
-interface Cache
+use Flow\ETL\Rows;
+
+interface RowsCache
 {
     public function add(string $id, Rows $rows) : void;
 

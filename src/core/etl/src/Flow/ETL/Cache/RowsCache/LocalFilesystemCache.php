@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Cache;
+namespace Flow\ETL\Cache\RowsCache;
 
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\{Cache, Rows};
+use Flow\ETL\{Cache\RowsCache, Rows};
 use Flow\Serializer\Serializer;
 
 /**
  * @infection-ignore-all
  */
-final class LocalFilesystemCache implements Cache
+final class LocalFilesystemCache implements RowsCache
 {
     public function __construct(
         private readonly string $path,

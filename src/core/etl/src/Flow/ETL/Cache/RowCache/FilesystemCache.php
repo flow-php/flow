@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Sort\ExternalSort\RowCache;
+namespace Flow\ETL\Cache\RowCache;
 
-use Flow\ETL\Sort\ExternalSort\SortRowCache;
+use Flow\ETL\Cache\RowCache;
 use Flow\ETL\{Exception\InvalidArgumentException, Hash\NativePHPHash, Row, Rows};
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Serializer\{NativePHPSerializer, Serializer};
 
-final class FilesystemSortRowCache implements SortRowCache
+final class FilesystemCache implements RowCache
 {
     private Path $cacheDir;
 
@@ -21,7 +21,7 @@ final class FilesystemSortRowCache implements SortRowCache
     public function __construct(
         private readonly Filesystem $filesystem,
         private readonly Serializer $serializer = new NativePHPSerializer(),
-        private readonly int $chunkSize = 10,
+        private readonly int $chunkSize = 100,
         ?Path $cacheDir = null
     ) {
         if ($this->chunkSize < 1) {
@@ -56,7 +56,7 @@ final class FilesystemSortRowCache implements SortRowCache
 
     /**
      * @param string $key
-     * @param iterable<Row> $rows
+     * @param iterable<Row>|Rows $rows
      */
     public function set(string $key, iterable $rows) : void
     {
@@ -87,8 +87,6 @@ final class FilesystemSortRowCache implements SortRowCache
 
     private function keyPath(string $key) : Path
     {
-        return $this->cacheDir->suffix($key . '/rows.php.cache');
-
         return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/rows.php.cache');
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Cache\{RowCache, RowsCache};
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Row\EntryFactory;
@@ -22,11 +23,6 @@ final class FlowContext
         $this->errorHandler = new ThrowError();
     }
 
-    public function cache() : Cache
-    {
-        return $this->config->cache();
-    }
-
     public function entryFactory() : EntryFactory
     {
         return $this->config->entryFactory();
@@ -40,6 +36,16 @@ final class FlowContext
     public function filesystem(Path|Protocol $path) : Filesystem
     {
         return $this->config->fstab()->for($path);
+    }
+
+    public function rowCache() : RowCache
+    {
+        return $this->config->rowCache();
+    }
+
+    public function rowsCache() : RowsCache
+    {
+        return $this->config->rowsCache();
     }
 
     public function setErrorHandler(ErrorHandler $handler) : self

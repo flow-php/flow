@@ -7,13 +7,21 @@ namespace Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
-final class SortBuckets
+final class Buckets
 {
     /**
-     * @param array<string, \Generator<Row>> $buckets
+     * @param array<string, Bucket> $buckets
      */
-    public function __construct(private readonly array $buckets)
+    private array $buckets = [];
+
+    /**
+     * @param array<Bucket> $buckets
+     */
+    public function __construct(array $buckets)
     {
+        foreach ($buckets as $bucket) {
+            $this->buckets[$bucket->id] = $bucket->rows;
+        }
     }
 
     /**

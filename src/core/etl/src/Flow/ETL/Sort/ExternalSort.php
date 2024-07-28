@@ -4,121 +4,127 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{
+use Flow\ETL\{Cache\RowCache,
+    Exception\InvalidArgumentException,
     Extractor,
     FlowContext,
+    Pipeline,
     Pipeline\BatchingPipeline,
-    Pipeline\SynchronousPipeline,
-    Row,
     Row\References,
-    Rows,
-    Sort\ExternalSort\Config,
-    Sort\ExternalSort\SortBuckets,
-    Sort\ExternalSort\SortRowCache};
+    Sort\ExternalSort\Bucket,
+    Sort\ExternalSort\Buckets};
 
 /**
  * External sorting is explained here:.
  *
  * https://medium.com/outco/how-to-merge-k-sorted-arrays-c35d87aa298e
  * https://web.archive.org/web/20150202022830/http://faculty.simpson.edu/lydia.sinapova/www/cmsc250/LN250_Weiss/L17-ExternalSortEX2.htm
- *
- * There is still much space for optimization, for example currently heap is created from all parts that for
- * massive datasets with millions of small Rows might become a potential memory leak.
- * Ideally in that case, Rows should be merged in multiple runs with a limited heap.
  */
 final class ExternalSort implements SortingAlgorithm
 {
-    private int $batchSize = 1;
-
-    public function __construct(
-        private readonly Extractor $extractor,
-        private readonly SortRowCache $rowCache,
-        private readonly Config $config = new Config(),
-        private readonly int $iteration = 0
-    ) {
-    }
+    private int $batchSize = -1;
 
     /**
-     * @param SortBuckets $sortBuckets
-     * @param References $refs
-     *
-     * @return array<string, \Generator<Row>>
+     * @param Pipeline $pipeline
+     * @param RowCache $rowCache
+     * @param int<1,max> $bucketsCount - Buckets counts defines how many rows are compared at time. Higher number can reduce IO but increase memory consumption
      */
-    public function sortBuckets(SortBuckets $sortBuckets, References $refs) : array
-    {
-        /** @var array<string, \Generator<Row>> $sortedChunks */
-        $sortedBuckets = [];
-
-        $nextBucketId = \bin2hex(\random_bytes(16));
-        $this->rowCache->set($nextBucketId, $sortBuckets->sort(...$refs->all()));
-
-        foreach ($sortBuckets->bucketIds() as $bucketId) {
-            $this->rowCache->remove($bucketId);
+    public function __construct(
+        private readonly Pipeline $pipeline,
+        private readonly RowCache $rowCache,
+        private readonly int $bucketsCount = 10
+    ) {
+        if ($this->bucketsCount < 1) {
+            throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);
         }
-
-        $sortedBuckets[$nextBucketId] = $this->rowCache->get($nextBucketId);
-
-        return $sortedBuckets;
     }
 
     public function sortBy(FlowContext $context, References $refs) : Extractor
     {
         $sortedBuckets = [];
 
-        foreach ($this->createSortBuckets($context, $refs) as $sortBuckets) {
-            $sortedBuckets[] = $this->sortBuckets($sortBuckets, $refs);
+        foreach ($this->createBuckets($context, $refs) as $buckets) {
+            $sortedBuckets[] = $this->sortBuckets($buckets, $refs);
         }
 
-        return new Extractor\SortRowCacheExtractor($this->mergeSortedBuckets(\array_merge(...$sortedBuckets), $refs), $this->batchSize, $this->rowCache);
+        return new Extractor\SortBucketsExtractor($this->mergeBuckets($sortedBuckets, $refs), \abs($this->batchSize), $this->rowCache);
     }
 
     /**
-     * @return \Generator<int, SortBuckets>
+     * @return \Generator<int, Buckets>
      */
-    private function createSortBuckets(FlowContext $context, References $refs) : \Generator
+    private function createBuckets(FlowContext $context, References $refs) : \Generator
     {
         /**
-         * @var array<string, \Generator<Row>> $sortedRowsGenerators
+         * @var array<string, Bucket> $buckets
          */
-        $sortedRowsGenerators = [];
+        $buckets = [];
 
-        foreach ((new BatchingPipeline(new SynchronousPipeline($this->extractor), $this->config->sortBucketMaxSize))->process($context) as $rows) {
-            $this->batchSize = \max($this->batchSize, $rows->count());
-            $partId = \bin2hex(\random_bytes(16));
-            $this->rowCache->set($partId, $rows->sortBy(...$refs));
-            $sortedRowsGenerators[$partId] = $this->rowCache->get($partId);
+        $generator = $this->pipeline->process($context);
 
-            if (\count($sortedRowsGenerators) >= $this->config->sortBucketsCount) {
-                yield new SortBuckets($sortedRowsGenerators);
-                $sortedRowsGenerators = [];
+        generator:
+        foreach ($generator as $rows) {
+            if ($this->batchSize === -1) {
+                $this->batchSize = $rows->count();
+
+                /**
+                 * Batch size below 500 will generate too many buckets and will increase IO.
+                 */
+                if ($this->batchSize < 500) {
+                    $generator->rewind();
+                    $generator = (new BatchingPipeline($this->pipeline, 500))->process($context);
+
+                    goto generator;
+                }
+            }
+
+            $bucketId = \bin2hex(\random_bytes(16));
+            $this->rowCache->set($bucketId, $rows->sortBy(...$refs));
+            $buckets[] = new Bucket($bucketId, $this->rowCache->get($bucketId));
+
+            if (\count($buckets) >= $this->bucketsCount) {
+                yield new Buckets($buckets);
+                $buckets = [];
             }
         }
 
-        if (\count($sortedRowsGenerators) > 0) {
-            yield new SortBuckets($sortedRowsGenerators);
+        if (\count($buckets) > 0) {
+            yield new Buckets($buckets);
         }
     }
 
-    private function mergeSortedBuckets(array $sortedBuckets, References $refs) : array
+    /**
+     * @param array<Bucket> $buckets
+     */
+    private function mergeBuckets(array $buckets, References $refs) : array
     {
-        if (\count($sortedBuckets) > $this->config->sortBucketsCount) {
-            $runs = \array_chunk($sortedBuckets, $this->config->sortBucketsCount, true);
-        } else {
-            $runs = [$sortedBuckets];
+        $bucketChunks = \array_chunk($buckets, $this->bucketsCount, true);
+
+        $buckets = [];
+
+        foreach ($bucketChunks as $runBuckets) {
+            $buckets[] = $this->sortBuckets(new Buckets($runBuckets), $refs);
         }
 
-        $sortedBuckets = [];
-
-        foreach ($runs as $runBuckets) {
-            $sortedBuckets[] = $this->sortBuckets(new SortBuckets($runBuckets), $refs);
+        while (\count($buckets) > 1) {
+            $buckets = $this->mergeBuckets($buckets, $refs);
         }
 
-        $sortedBuckets = \array_merge(...$sortedBuckets);
+        return $buckets;
+    }
 
-        while (\count($sortedBuckets) > 1) {
-            $sortedBuckets = $this->mergeSortedBuckets($sortedBuckets, $refs);
+    /**
+     * @param Buckets $sortBuckets
+     * @param References $refs
+     */
+    private function sortBuckets(Buckets $sortBuckets, References $refs) : Bucket
+    {
+        $this->rowCache->set($nextBucketId = \bin2hex(\random_bytes(16)), $sortBuckets->sort(...$refs->all()));
+
+        foreach ($sortBuckets->bucketIds() as $bucketId) {
+            $this->rowCache->remove($bucketId);
         }
 
-        return $sortedBuckets;
+        return new Bucket($nextBucketId, $this->rowCache->get($nextBucketId));
     }
 }

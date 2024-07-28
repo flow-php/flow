@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Cache;
+namespace Flow\ETL\Cache\RowsCache;
 
-use Flow\ETL\{Cache, Rows};
+use Flow\ETL\{Cache\RowsCache, Rows};
 use Flow\Serializer\{NativePHPSerializer, Serializer};
 use Psr\SimpleCache\CacheInterface;
 
-final class PSRSimpleCache implements Cache
+final class PSRSimpleCache implements RowsCache
 {
     public function __construct(
         private readonly CacheInterface $cache,

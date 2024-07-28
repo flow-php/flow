@@ -5,18 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\{refs, to_output};
-use function Flow\Filesystem\DSL\protocol;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
-use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, OutOfMemoryException, RuntimeException};
-use Flow\ETL\Extractor\{PartitionExtractor, PipelineExtractor};
+use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, RuntimeException};
+use Flow\ETL\Extractor\{PartitionExtractor};
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, WindowFunction};
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Pipeline\{BatchingPipeline,
     CachingPipeline,
@@ -25,10 +23,9 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     HashJoinPipeline,
     LinkedPipeline,
     PartitioningPipeline,
-    SynchronousPipeline,
+    SortingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema};
-use Flow\ETL\Sort\{ExternalSort, MemorySort};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\{
     AutoCastTransformer,
@@ -52,12 +49,10 @@ use Flow\ETL\Transformer\{
     UntilTransformer,
     WindowFunctionTransformer
 };
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Filter;
 use Flow\RDSL\AccessControl\{AllowAll, AllowList, DenyAll};
 use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
-use Flow\Serializer\NativePHPSerializer;
 
 final class DataFrame
 {
@@ -798,31 +793,7 @@ final class DataFrame
      */
     public function sortBy(Reference ...$entries) : self
     {
-        try {
-            if ($this->context->config->sortMemoryLimit()->isGreaterThan(Unit::fromBytes(0))) {
-                $extractor = (new MemorySort(new PipelineExtractor($this->pipeline), $this->context->config->sortMemoryLimit()))->sortBy($this->context, refs(...$entries));
-            } else {
-                $extractor = (new ExternalSort(
-                    new PipelineExtractor(new BatchingPipeline($this->pipeline, 500)),
-                    new ExternalSort\RowCache\FilesystemSortRowCache(
-                        $this->context->filesystem(protocol('file')),
-                        new NativePHPSerializer(),// $this->context->config->serializer(),
-                        10,
-                        new Path('/Users/norbert/Workspace/flow-php/flow/.scratchpad/sort_performance/rows-cache')
-                    ),
-                ))->sortBy($this->context, refs(...$entries));
-            }
-        } catch (OutOfMemoryException $e) {
-            $extractor = (new ExternalSort(
-                new PipelineExtractor(new BatchingPipeline($this->pipeline, 500)),
-                new ExternalSort\RowCache\FilesystemSortRowCache(
-                    $this->context->filesystem(protocol('file')),
-                    new NativePHPSerializer(),// $this->context->config->serializer()
-                ),
-            ))->sortBy($this->context, refs(...$entries));
-        }
-
-        $this->pipeline = new LinkedPipeline(new SynchronousPipeline($extractor));
+        $this->pipeline = new LinkedPipeline(new SortingPipeline($this->pipeline, refs(...$entries)));
 
         return $this;
     }

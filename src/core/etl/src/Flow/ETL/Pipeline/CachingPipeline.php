@@ -32,11 +32,11 @@ final class CachingPipeline implements Pipeline
     public function process(FlowContext $context) : \Generator
     {
         $id = $this->id ?: $context->config->id();
-        $cacheExists = $context->config->cache()->has($id);
+        $cacheExists = $context->config->rowsCache()->has($id);
 
         foreach ($this->pipeline->process($context) as $rows) {
             if (!$cacheExists) {
-                $context->config->cache()->add($id, $rows);
+                $context->config->rowsCache()->add($id, $rows);
             }
 
             yield $rows;

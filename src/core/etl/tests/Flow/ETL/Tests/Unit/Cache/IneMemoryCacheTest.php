@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Cache;
 
 use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Cache\InMemoryCache;
+use Flow\ETL\Cache\RowsCache\InMemoryCache;
 use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Cache\{RowCache, RowsCache};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
@@ -29,7 +30,8 @@ final class Config
     public function __construct(
         private readonly string $id,
         private readonly Serializer $serializer,
-        private readonly Cache $cache,
+        private readonly RowsCache $rowsCache,
+        private readonly RowCache $rowCache,
         private readonly Unit $sortMemoryLimit,
         private readonly FilesystemTable $filesystemTable,
         private readonly FilesystemStreams $filesystemStreams,
@@ -52,11 +54,6 @@ final class Config
     public static function default() : self
     {
         return self::builder()->build();
-    }
-
-    public function cache() : Cache
-    {
-        return $this->cache;
     }
 
     /**
@@ -95,6 +92,16 @@ final class Config
     public function optimizer() : Optimizer
     {
         return $this->optimizer;
+    }
+
+    public function rowCache() : RowCache
+    {
+        return $this->rowCache;
+    }
+
+    public function rowsCache() : RowsCache
+    {
+        return $this->rowsCache;
     }
 
     public function serializer() : Serializer
