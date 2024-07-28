@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Cache;
 
-use Flow\ETL\Cache\Cache;
+use Flow\ETL\Cache;
 use Flow\Filesystem\Path;
 
 final class CacheConfig

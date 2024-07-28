@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Cache;
 
 use function Flow\ETL\DSL\{row, rows, str_entry};
-use Flow\ETL\Cache\{Cache, CacheIndex};
+use Flow\ETL\Cache\{CacheIndex};
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
@@ -119,5 +119,5 @@ abstract class CacheBaseTestSuite extends IntegrationTestCase
         static::assertFalse($cache->has('non-existing'));
     }
 
-    abstract protected function cache() : Cache;
+    abstract protected function cache() : \Flow\ETL\Cache;
 }

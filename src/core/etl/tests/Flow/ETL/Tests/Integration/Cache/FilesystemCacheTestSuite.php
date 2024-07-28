@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Cache;
 
-use Flow\ETL\Cache\Cache;
+use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\Filesystem\Path;
 

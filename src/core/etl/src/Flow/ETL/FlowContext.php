@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Cache\{Cache};
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Row\EntryFactory;

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Config;
 
 use function Flow\Filesystem\DSL\fstab;
-use Flow\ETL\Cache\Cache;
-use Flow\ETL\Config;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -15,6 +13,7 @@ use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\ETL\{Cache, Config};
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Cache;
+namespace Flow\ETL;
 
 use Flow\ETL\Exception\KeyNotInCacheException;
-use Flow\ETL\{Row, Rows};
+use Flow\ETL\{Cache\CacheIndex};
 
 interface Cache
 {
