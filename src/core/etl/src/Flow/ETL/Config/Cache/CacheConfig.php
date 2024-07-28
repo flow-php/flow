@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Cache;
 
-use Flow\ETL\Cache\{RowCache, RowsCache};
+use Flow\ETL\Cache\Cache;
 use Flow\Filesystem\Path;
 
 final class CacheConfig
@@ -16,8 +16,7 @@ final class CacheConfig
      * @param int<1, max> $externalSortBucketsCount
      */
     public function __construct(
-        public readonly RowsCache $rowsCache,
-        public readonly RowCache $rowCache,
+        public readonly Cache $cache,
         public readonly int $cacheBatchSize,
         public readonly Path $localFilesystemCacheDir,
         public readonly int $externalSortBucketsCount

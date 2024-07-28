@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Cache\RowCache;
+namespace Flow\ETL\Sort\ExternalSort\BucketsCache;
 
-use Flow\ETL\Cache\RowCache;
-use Flow\ETL\{Exception\InvalidArgumentException, Hash\NativePHPHash, Row, Rows};
+use Flow\ETL\{Exception\InvalidArgumentException, Hash\NativePHPHash, Row, Rows, Sort\ExternalSort\BucketsCache};
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Serializer\{NativePHPSerializer, Serializer};
 
-final class FilesystemCache implements RowCache
+final class FilesystemBucketsCache implements BucketsCache
 {
     private Path $cacheDir;
 
@@ -28,15 +27,15 @@ final class FilesystemCache implements RowCache
             throw new InvalidArgumentException('Chunk size must be greater than 0');
         }
 
-        $this->cacheDir = ($cacheDir ?? $this->filesystem->getSystemTmpDir())->suffix('/row/');
+        $this->cacheDir = ($cacheDir ?? $this->filesystem->getSystemTmpDir())->suffix('/flow-php-external-sort/');
     }
 
     /**
      * @return \Generator<Row>
      */
-    public function get(string $key) : \Generator
+    public function get(string $bucketId) : \Generator
     {
-        $path = $this->keyPath($key);
+        $path = $this->keyPath($bucketId);
 
         if (!$this->filesystem->status($path)) {
             return;
@@ -45,26 +44,25 @@ final class FilesystemCache implements RowCache
         $stream = $this->filesystem->readFrom($path);
 
         foreach ($stream->readLines() as $serializedRow) {
-            /** @phpstan-ignore-next-line */
-            yield $this->serializer->unserialize($serializedRow, Row::class);
+            yield $this->serializer->unserialize($serializedRow, [Row::class]);
         }
 
         $stream->close();
     }
 
-    public function remove(string $key) : void
+    public function remove(string $bucketId) : void
     {
         // we want to remove not only cache file but entire directory
-        $this->filesystem->rm($this->keyPath($key));
+        $this->filesystem->rm($this->keyPath($bucketId)->parentDirectory());
     }
 
     /**
-     * @param string $key
+     * @param string $bucketId
      * @param iterable<Row>|Rows $rows
      */
-    public function set(string $key, iterable $rows) : void
+    public function set(string $bucketId, iterable $rows) : void
     {
-        $path = $this->keyPath($key);
+        $path = $this->keyPath($bucketId);
 
         $stream = $this->filesystem->writeTo($path);
 
@@ -92,6 +90,6 @@ final class FilesystemCache implements RowCache
     private function keyPath(string $key) : Path
     {
 
-        return $this->cacheDir->suffix(implode('/', \str_split(\substr(NativePHPHash::xxh128($key), 0, 8), 2)) . '/' . $key . '.php.cache');
+        return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/' . $key . '.php.cache');
     }
 }

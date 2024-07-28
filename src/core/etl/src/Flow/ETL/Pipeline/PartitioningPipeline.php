@@ -8,7 +8,14 @@ use function Flow\ETL\DSL\{from_all, from_cache};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\{Extractor, FlowContext, Hash\Algorithm, Hash\NativePHPHash, Loader, Pipeline, Transformer};
+use Flow\ETL\{Cache\CacheIndex,
+    Extractor,
+    FlowContext,
+    Hash\Algorithm,
+    Hash\NativePHPHash,
+    Loader,
+    Pipeline,
+    Transformer};
 use Flow\Filesystem\Partition;
 
 final class PartitioningPipeline implements Pipeline
@@ -52,7 +59,10 @@ final class PartitioningPipeline implements Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $partitionIds = [];
+        /**
+         * @var array<CacheIndex> $partitionIndexes
+         */
+        $partitionIndexes = [];
 
         foreach ($this->pipeline->process($context) as $rows) {
             foreach ($rows->partitionBy(...$this->partitionBy) as $partitionedRows) {
@@ -64,15 +74,23 @@ final class PartitioningPipeline implements Pipeline
                     $partitionedRows->partitions()->toArray()
                 )));
 
-                $partitionIds[] = $partitionId;
-                $context->rowsCache()->append($partitionId, $rows);
+                if (!\array_key_exists($partitionId, $partitionIndexes)) {
+                    $partitionIndexes[$partitionId] = new CacheIndex($partitionId);
+                }
+
+                $context->cache()->set($rowsCacheId = \bin2hex(\random_bytes(16)), $rows);
+                $partitionIndexes[$partitionId]->add($rowsCacheId);
             }
+        }
+
+        foreach ($partitionIndexes as $partitionIndex) {
+            $context->cache()->set($partitionIndex->key, $partitionIndex);
         }
 
         return from_all(
             ...\array_map(
-                static fn (string $id) : Extractor => new CollectingExtractor(from_cache($id, null, true)),
-                \array_unique($partitionIds)
+                static fn (string $id) : Extractor => new CollectingExtractor(from_cache($id, clear: true)),
+                \array_keys($partitionIndexes)
             )
         )->extract($context);
     }

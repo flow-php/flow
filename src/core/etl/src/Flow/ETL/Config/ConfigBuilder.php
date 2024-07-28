@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config;
 
-use function Flow\Filesystem\DSL\{fstab};
-use Flow\ETL\Cache\{RowCache, RowsCache};
+use function Flow\Filesystem\DSL\fstab;
+use Flow\ETL\Cache\Cache;
 use Flow\ETL\Config;
+use Flow\ETL\Config\Cache\CacheConfigBuilder;
+use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
@@ -18,9 +20,9 @@ use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
 final class ConfigBuilder
 {
-    public readonly Cache\CacheConfigBuilder $cache;
+    public readonly CacheConfigBuilder $cache;
 
-    public readonly Sort\SortConfigBuilder $sort;
+    public readonly SortConfigBuilder $sort;
 
     private ?Caster $caster;
 
@@ -42,8 +44,8 @@ final class ConfigBuilder
         $this->putInputIntoRows = false;
         $this->optimizer = null;
         $this->caster = null;
-        $this->cache = new Cache\CacheConfigBuilder();
-        $this->sort = new Sort\SortConfigBuilder();
+        $this->cache = new CacheConfigBuilder();
+        $this->sort = new SortConfigBuilder();
     }
 
     public function build() : Config
@@ -73,13 +75,9 @@ final class ConfigBuilder
         );
     }
 
-    public function cache(RowsCache|RowCache $cache) : self
+    public function cache(Cache $cache) : self
     {
-        if ($cache instanceof RowsCache) {
-            $this->cache->rowsCache($cache);
-        } else {
-            $this->cache->rowCache($cache);
-        }
+        $this->cache->cache($cache);
 
         return $this;
     }

@@ -5,26 +5,24 @@ declare(strict_types=1);
 namespace Flow\ETL\Config\Cache;
 
 use function Flow\Filesystem\DSL\protocol;
-use Flow\ETL\Cache\{RowCache, RowsCache};
+use Flow\ETL\Cache\{Cache, Implementation\FilesystemCache};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Filesystem\{FilesystemTable, Path};
 use Flow\Serializer\Serializer;
 
 final class CacheConfigBuilder
 {
+    private ?Cache $cache = null;
+
     /**
      * @var int<1, max>
      */
-    private int $cacheBatchSize = 1000;
+    private int $cacheBatchSize = 100;
 
     /**
      * @var int<1, max>
      */
     private int $externalSortBucketsCount = 100;
-
-    private ?RowCache $rowCache = null;
-
-    private ?RowsCache $rowsCache = null;
 
     public function build(FilesystemTable $fstab, Serializer $serializer) : CacheConfig
     {
@@ -42,30 +40,23 @@ final class CacheConfigBuilder
             }
         }
 
-        if ($this->rowsCache === null) {
-            $this->rowsCache = new RowsCache\FilesystemCache(
-                $fstab->for(protocol('file')),
-                $serializer,
-                Path::realpath($cachePath)
-            );
-        }
-
-        if ($this->rowCache === null) {
-            $this->rowCache = new RowCache\FilesystemCache(
-                $fstab->for(protocol('file')),
-                $serializer,
-                chunkSize: 100,
-                cacheDir: Path::realpath($cachePath)
-            );
-        }
-
         return new CacheConfig(
-            rowsCache: $this->rowsCache,
-            rowCache: $this->rowCache,
+            cache: $this->cache ?? new FilesystemCache(
+                $fstab->for(protocol('file')),
+                $serializer,
+                cacheDir: Path::realpath($cachePath)
+            ),
             cacheBatchSize: $this->cacheBatchSize,
             localFilesystemCacheDir: Path::realpath($cachePath),
             externalSortBucketsCount: $this->externalSortBucketsCount
         );
+    }
+
+    public function cache(Cache $cache) : self
+    {
+        $this->cache = $cache;
+
+        return $this;
     }
 
     /**
@@ -92,20 +83,6 @@ final class CacheConfigBuilder
         }
 
         $this->externalSortBucketsCount = $externalSortBucketsCount;
-
-        return $this;
-    }
-
-    public function rowCache(RowCache $rowCache) : self
-    {
-        $this->rowCache = $rowCache;
-
-        return $this;
-    }
-
-    public function rowsCache(RowsCache $rowsCache) : self
-    {
-        $this->rowsCache = $rowsCache;
 
         return $this;
     }

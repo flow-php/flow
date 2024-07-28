@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration;
 use Flow\ETL\{Config\Cache\CacheConfig};
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem};
+use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase
@@ -16,6 +17,8 @@ abstract class IntegrationTestCase extends TestCase
     protected Filesystem $fs;
 
     protected FilesystemTable $fstab;
+
+    protected Serializer $serializer;
 
     private string|false $baseMemoryLimit;
 
@@ -27,6 +30,7 @@ abstract class IntegrationTestCase extends TestCase
         $this->cacheDir = Path::realpath(\getenv(CacheConfig::CACHE_DIR_ENV));
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs);
+        $this->serializer = new Base64Serializer(new NativePHPSerializer());
     }
 
     protected function setUp() : void
@@ -74,6 +78,11 @@ abstract class IntegrationTestCase extends TestCase
     protected function getPath(string $relativePath) : Path
     {
         return new Path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
+    }
+
+    protected function serializer() : Serializer
+    {
+        return $this->serializer;
     }
 
     /**

@@ -15,9 +15,9 @@ final class Base64Serializer implements Serializer
         return \base64_encode($this->serializer->serialize($serializable));
     }
 
-    public function unserialize(string $serialized, string $class) : object
+    public function unserialize(string $serialized, array $classes) : object
     {
         /** @phpstan-ignore-next-line */
-        return $this->serializer->unserialize(\base64_decode($serialized, true), $class);
+        return $this->serializer->unserialize(\base64_decode($serialized, true), $classes);
     }
 }

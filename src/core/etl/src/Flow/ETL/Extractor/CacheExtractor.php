@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\{Extractor, FlowContext, Rows};
+use Flow\ETL\{Cache\CacheIndex, Extractor, FlowContext, Rows};
 
 final class CacheExtractor implements Extractor
 {
@@ -15,14 +15,9 @@ final class CacheExtractor implements Extractor
     ) {
     }
 
-    /**
-     * @param FlowContext $context
-     *
-     * @return \Generator<int, Rows, mixed, void>
-     */
     public function extract(FlowContext $context) : \Generator
     {
-        if (!$context->rowsCache()->has($this->id)) {
+        if (!$context->cache()->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
                 foreach ($this->fallbackExtractor->extract($context) as $rows) {
                     $signal = yield $rows;
@@ -33,17 +28,26 @@ final class CacheExtractor implements Extractor
                 }
             }
         } else {
-            foreach ($context->rowsCache()->get($this->id) as $rows) {
+            /** @var CacheIndex $index */
+            $index = $context->cache()->get($this->id);
+
+            foreach ($index->values() as $cacheKey) {
+                /** @var Rows $rows */
+                $rows = $context->cache()->get($cacheKey);
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
                     return;
                 }
+
+                if ($this->clear) {
+                    $context->cache()->delete($cacheKey);
+                }
             }
         }
 
-        if ($this->clear) {
-            $context->rowsCache()->remove($this->id);
+        if ($this->clear && $context->cache()->has($this->id)) {
+            $context->cache()->delete($this->id);
         }
     }
 }

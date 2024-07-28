@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\Cache\RowCache;
-use Flow\ETL\{Extractor, FlowContext, Rows, Sort\ExternalSort\Bucket};
+use Flow\ETL\{Extractor, FlowContext, Rows, Sort\ExternalSort\Bucket, Sort\ExternalSort\BucketsCache};
 
 final class SortBucketsExtractor implements Extractor
 {
@@ -15,7 +14,7 @@ final class SortBucketsExtractor implements Extractor
     public function __construct(
         private readonly array $sortBuckets,
         private readonly int $batchSize,
-        private readonly RowCache $cache
+        private readonly BucketsCache $cache
     ) {
 
     }

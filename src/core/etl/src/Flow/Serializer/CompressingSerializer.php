@@ -31,7 +31,7 @@ final class CompressingSerializer implements Serializer
         return $content;
     }
 
-    public function unserialize(string $serialized, string $class) : object
+    public function unserialize(string $serialized, array $classes) : object
     {
         if (!\function_exists('gzcompress')) {
             // @codeCoverageIgnoreStart
@@ -47,6 +47,6 @@ final class CompressingSerializer implements Serializer
             // @codeCoverageIgnoreEnd
         }
 
-        return $this->serializer->unserialize($content, $class);
+        return $this->serializer->unserialize($content, $classes);
     }
 }

@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
 use function Flow\ETL\DSL\{flow_context, from_array, ref, refs};
-use function Flow\Filesystem\DSL\native_local_filesystem;
-use Flow\ETL\Cache\RowCache\FilesystemCache;
 use Flow\ETL\Pipeline\{SynchronousPipeline};
 use Flow\ETL\Sort\ExternalSort;
+use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\Filesystem\Path;
 
@@ -33,10 +32,12 @@ final class ExternalSortTest extends IntegrationTestCase
 
         $sort = new ExternalSort(
             new SynchronousPipeline(from_array($randomizedInput)),
-            new FilesystemCache(
-                native_local_filesystem(),
-                cacheDir: $cacheDir
-            ),
+            new FilesystemBucketsCache(
+                $this->fs(),
+                $this->serializer(),
+                100,
+                $cacheDir
+            )
         );
 
         $sortedOutput = \iterator_to_array(

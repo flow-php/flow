@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{Cache\RowCache,
+use Flow\ETL\{
     Exception\InvalidArgumentException,
     Extractor,
     FlowContext,
@@ -12,7 +12,8 @@ use Flow\ETL\{Cache\RowCache,
     Pipeline\BatchingPipeline,
     Row\References,
     Sort\ExternalSort\Bucket,
-    Sort\ExternalSort\Buckets};
+    Sort\ExternalSort\Buckets,
+    Sort\ExternalSort\BucketsCache};
 
 /**
  * External sorting is explained here:.
@@ -26,12 +27,12 @@ final class ExternalSort implements SortingAlgorithm
 
     /**
      * @param Pipeline $pipeline
-     * @param RowCache $rowCache
+     * @param BucketsCache $bucketsCache
      * @param int<1,max> $bucketsCount - Buckets counts defines how many rows are compared at time. Higher number can reduce IO but increase memory consumption
      */
     public function __construct(
         private readonly Pipeline $pipeline,
-        private readonly RowCache $rowCache,
+        private readonly BucketsCache $bucketsCache,
         private readonly int $bucketsCount = 10
     ) {
         if ($this->bucketsCount < 1) {
@@ -47,7 +48,7 @@ final class ExternalSort implements SortingAlgorithm
             $sortedBuckets[] = $this->sortBuckets($buckets, $refs);
         }
 
-        return new Extractor\SortBucketsExtractor($this->mergeBuckets($sortedBuckets, $refs), \abs($this->batchSize), $this->rowCache);
+        return new Extractor\SortBucketsExtractor($this->mergeBuckets($sortedBuckets, $refs), \abs($this->batchSize), $this->bucketsCache);
     }
 
     /**
@@ -79,8 +80,8 @@ final class ExternalSort implements SortingAlgorithm
             }
 
             $bucketId = \bin2hex(\random_bytes(16));
-            $this->rowCache->set($bucketId, $rows->sortBy(...$refs));
-            $buckets[] = new Bucket($bucketId, $this->rowCache->get($bucketId));
+            $this->bucketsCache->set($bucketId, $rows->sortBy(...$refs));
+            $buckets[] = new Bucket($bucketId, $this->bucketsCache->get($bucketId));
 
             if (\count($buckets) >= $this->bucketsCount) {
                 yield new Buckets($buckets);
@@ -119,12 +120,12 @@ final class ExternalSort implements SortingAlgorithm
      */
     private function sortBuckets(Buckets $sortBuckets, References $refs) : Bucket
     {
-        $this->rowCache->set($nextBucketId = \bin2hex(\random_bytes(16)), $sortBuckets->sort(...$refs->all()));
+        $this->bucketsCache->set($nextBucketId = \bin2hex(\random_bytes(16)), $sortBuckets->sort(...$refs->all()));
 
         foreach ($sortBuckets->bucketIds() as $bucketId) {
-            $this->rowCache->remove($bucketId);
+            $this->bucketsCache->remove($bucketId);
         }
 
-        return new Bucket($nextBucketId, $this->rowCache->get($nextBucketId));
+        return new Bucket($nextBucketId, $this->bucketsCache->get($nextBucketId));
     }
 }

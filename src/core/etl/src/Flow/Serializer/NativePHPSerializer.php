@@ -17,14 +17,20 @@ final class NativePHPSerializer implements Serializer
         return \serialize($serializable);
     }
 
-    public function unserialize(string $serialized, string $class) : object
+    /**
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
+     */
+    public function unserialize(string $serialized, array $classes) : object
     {
         $value = \unserialize($serialized, ['allowed_classes' => true]);
 
-        if (!\is_a($value, $class)) {
-            throw new RuntimeException("NativePHPSerializer::unserialize must return instance of {$class}, got: " . $value::class);
+        foreach ($classes as $class) {
+            if (\is_a($value, $class)) {
+                return $value;
+            }
         }
 
-        return $value;
+        throw new RuntimeException(\sprintf('NativePHPSerializer::unserialize must return instance of {%s}, got: %s', \implode(', ', $classes), $value::class));
     }
 }

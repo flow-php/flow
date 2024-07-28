@@ -35,8 +35,7 @@ use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
 use Flow\ETL\Row\{Entry, EntryFactory, EntryReference, Reference, References, Schema};
-use Flow\ETL\{Cache\RowCache,
-    Cache\RowsCache,
+use Flow\ETL\{Cache\Implementation\FilesystemCache,
     Config,
     Config\ConfigBuilder,
     DataFrame,
@@ -108,17 +107,9 @@ function files(string|Path $directory) : FilesExtractor
     return new FilesExtractor(\is_string($directory) ? \Flow\Filesystem\DSL\path($directory) : $directory);
 }
 
-function filesystem_rows_cache(Path|string|null $cache_dir = null, Filesystem $filesystem = new NativeLocalFilesystem(), Serializer $serializer = new NativePHPSerializer()) : RowsCache
+function filesystem_cache(Path|string|null $cache_dir = null, Filesystem $filesystem = new NativeLocalFilesystem(), Serializer $serializer = new NativePHPSerializer()) : FilesystemCache
 {
-    return new RowsCache\FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? Path::realpath($cache_dir) : $cache_dir);
-}
-
-/**
- * @param int<1, max> $batch_size
- */
-function filesystem_row_cache(Path|string|null $cache_dir = null, Filesystem $filesystem = new NativeLocalFilesystem(), Serializer $serializer = new NativePHPSerializer(), int $batch_size = 100) : RowCache
-{
-    return new RowCache\FilesystemCache($filesystem, $serializer, $batch_size, \is_string($cache_dir) ? Path::realpath($cache_dir) : $cache_dir);
+    return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? Path::realpath($cache_dir) : $cache_dir);
 }
 
 /**
