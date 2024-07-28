@@ -26,22 +26,18 @@ final class PSRSimpleCache implements Cache
 
     public function delete(string $key) : void
     {
-        try {
-            $this->cache->delete($key);
-        } catch (InvalidArgumentException $e) {
-            throw new KeyNotInCacheException("Key {$key} not found in cache");
-        }
+        $this->cache->delete($key);
     }
 
     public function get(string $key) : Row|Rows|CacheIndex
     {
-        try {
-            $serializedValue = $this->cache->get($key);
-        } catch (InvalidArgumentException $e) {
-            throw new KeyNotInCacheException("Key {$key} not found in cache");
+        $serializedValue = $this->cache->get($key);
+
+        if (!$serializedValue) {
+            throw new KeyNotInCacheException($key);
         }
 
-        return $this->serializer->unserialize((string) $serializedValue, [Row::class, Rows::class, CacheIndex::class]);
+        return $this->serializer->unserialize($serializedValue, [Row::class, Rows::class, CacheIndex::class]);
     }
 
     public function has(string $key) : bool

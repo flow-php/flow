@@ -63,6 +63,10 @@ jobs:
           MYSQL_PASSWORD: mysql
           MYSQL_DATABASE: mysql
           MYSQL_ROOT_PASSWORD: root
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
 
     strategy:
       fail-fast: false

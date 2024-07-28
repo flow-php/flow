@@ -27,7 +27,7 @@ final class InMemoryCache implements Cache
     public function delete(string $key) : void
     {
         if (!$this->has($key)) {
-            throw new KeyNotInCacheException($key);
+            return;
         }
 
         unset($this->cache[$key]);

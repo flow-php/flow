@@ -48,3 +48,9 @@ services:
             - 10000:10000
         volumes:
             - ./var/azurite:/workspace
+    redis:
+        image: redis:latest
+        container_name: flow-php-redis
+        ports:
+            - "6379:6379"
+

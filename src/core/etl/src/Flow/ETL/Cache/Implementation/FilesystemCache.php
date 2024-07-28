@@ -30,11 +30,7 @@ final class FilesystemCache implements Cache
 
     public function delete(string $key) : void
     {
-        $result = $this->filesystem->rm($this->cachePath($key));
-
-        if ($result === false) {
-            throw new KeyNotInCacheException($key);
-        }
+        $this->filesystem->rm($this->cachePath($key));
     }
 
     public function get(string $key) : Row|Rows|CacheIndex
