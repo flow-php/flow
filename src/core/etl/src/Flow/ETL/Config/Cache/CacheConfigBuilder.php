@@ -17,6 +17,11 @@ final class CacheConfigBuilder
      */
     private int $cacheBatchSize = 1000;
 
+    /**
+     * @var int<1, max>
+     */
+    private int $externalSortBucketsCount = 100;
+
     private ?RowCache $rowCache = null;
 
     private ?RowsCache $rowsCache = null;
@@ -58,7 +63,8 @@ final class CacheConfigBuilder
             rowsCache: $this->rowsCache,
             rowCache: $this->rowCache,
             cacheBatchSize: $this->cacheBatchSize,
-            localFilesystemCacheDir: Path::realpath($cachePath)
+            localFilesystemCacheDir: Path::realpath($cachePath),
+            externalSortBucketsCount: $this->externalSortBucketsCount
         );
     }
 
@@ -72,6 +78,20 @@ final class CacheConfigBuilder
         }
 
         $this->cacheBatchSize = $cacheBatchSize;
+
+        return $this;
+    }
+
+    /**
+     * @param int<1, max> $externalSortBucketsCount
+     */
+    public function externalSortBucketsCount(int $externalSortBucketsCount) : self
+    {
+        if ($externalSortBucketsCount < 1) {
+            throw new InvalidArgumentException('External sort buckets count must be greater than 0');
+        }
+
+        $this->externalSortBucketsCount = $externalSortBucketsCount;
 
         return $this;
     }

@@ -12,15 +12,15 @@ final class CacheConfig
     public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
 
     /**
-     * @param RowsCache $rowsCache
-     * @param RowCache $rowCache
      * @param int<1, max> $cacheBatchSize
+     * @param int<1, max> $externalSortBucketsCount
      */
     public function __construct(
         public readonly RowsCache $rowsCache,
         public readonly RowCache $rowCache,
         public readonly int $cacheBatchSize,
         public readonly Path $localFilesystemCacheDir,
+        public readonly int $externalSortBucketsCount
     ) {
     }
 }

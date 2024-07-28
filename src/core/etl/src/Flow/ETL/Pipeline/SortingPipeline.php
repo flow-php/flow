@@ -39,10 +39,10 @@ final class SortingPipeline implements Pipeline
             if ($context->config->sort->algorithm->useMemory() && $context->config->sort->memoryLimit->isGreaterThan(Unit::fromBytes(0))) {
                 $extractor = (new MemorySort($this->pipeline, $context->config->sort->memoryLimit))->sortBy($context, $this->refs);
             } else {
-                $extractor = (new ExternalSort($this->pipeline, $context->rowCache()))->sortBy($context, $this->refs);
+                $extractor = (new ExternalSort($this->pipeline, $context->rowCache(), $context->config->cache->externalSortBucketsCount))->sortBy($context, $this->refs);
             }
         } catch (OutOfMemoryException $memoryException) {
-            $extractor = (new ExternalSort($this->pipeline, $context->rowCache()))->sortBy($context, $this->refs);
+            $extractor = (new ExternalSort($this->pipeline, $context->rowCache(), $context->config->cache->externalSortBucketsCount))->sortBy($context, $this->refs);
         }
 
         return $extractor->extract($context);

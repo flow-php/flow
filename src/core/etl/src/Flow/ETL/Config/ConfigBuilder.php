@@ -103,6 +103,16 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param int<1, max> $externalSortBucketsCount
+     */
+    public function externalSortBucketsCount(int $externalSortBucketsCount) : self
+    {
+        $this->cache->externalSortBucketsCount($externalSortBucketsCount);
+
+        return $this;
+    }
+
     public function id(string $id) : self
     {
         $this->id = $id;
