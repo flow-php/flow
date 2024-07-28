@@ -40,12 +40,12 @@ final class FlowContext
 
     public function rowCache() : RowCache
     {
-        return $this->config->rowCache();
+        return $this->config->cache->rowCache;
     }
 
     public function rowsCache() : RowsCache
     {
-        return $this->config->rowsCache();
+        return $this->config->cache->rowsCache;
     }
 
     public function setErrorHandler(ErrorHandler $handler) : self

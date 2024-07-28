@@ -8,24 +8,24 @@ use Flow\ETL\{Cache\RowsCache, Rows};
 
 final class NullCache implements RowsCache
 {
-    public function add(string $id, Rows $rows) : void
+    public function append(string $key, Rows $rows) : void
     {
-    }
-
-    public function clear(string $id) : void
-    {
-    }
-
-    public function has(string $id) : bool
-    {
-        return false;
     }
 
     /**
      * @psalm-suppress InvalidReturnType
      */
-    public function read(string $id) : \Generator
+    public function get(string $key) : \Generator
     {
         yield from [];
+    }
+
+    public function has(string $key) : bool
+    {
+        return false;
+    }
+
+    public function remove(string $key) : void
+    {
     }
 }

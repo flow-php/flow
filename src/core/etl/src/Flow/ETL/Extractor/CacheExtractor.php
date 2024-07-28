@@ -33,7 +33,7 @@ final class CacheExtractor implements Extractor
                 }
             }
         } else {
-            foreach ($context->rowsCache()->read($this->id) as $rows) {
+            foreach ($context->rowsCache()->get($this->id) as $rows) {
                 $signal = yield $rows;
 
                 if ($signal === Signal::STOP) {
@@ -43,7 +43,7 @@ final class CacheExtractor implements Extractor
         }
 
         if ($this->clear) {
-            $context->rowsCache()->clear($this->id);
+            $context->rowsCache()->remove($this->id);
         }
     }
 }

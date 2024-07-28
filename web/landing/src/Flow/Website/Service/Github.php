@@ -33,7 +33,7 @@ final class Github
         $from_github = new PsrHttpClientDynamicExtractor($client, $this->requestFactory);
 
         try {
-            df(config_builder()->rowsCache($adapter))
+            df(config_builder()->cache($adapter))
                 ->read(
                     from_cache(
                         'flow_github_contributors',

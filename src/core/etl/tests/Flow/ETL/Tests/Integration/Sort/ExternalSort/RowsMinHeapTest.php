@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
 use function Flow\ETL\DSL\{int_entry, ref, row, str_entry};
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\Sort\{ExternalSort\CachedRow, ExternalSort\RowsMinHeap};
+use Flow\ETL\Sort\{ExternalSort\BucketRow, ExternalSort\RowsMinHeap};
 
 final class RowsMinHeapTest extends TestCase
 {
@@ -14,12 +14,12 @@ final class RowsMinHeapTest extends TestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->asc());
 
-        $minHeap->insert(new CachedRow(row(int_entry('id', 1)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 2)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 3)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 4)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 5)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 6)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 1)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 2)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 3)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 4)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 5)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 6)), 'cache_id'));
 
         self::assertEquals(
             [
@@ -41,12 +41,12 @@ final class RowsMinHeapTest extends TestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->desc());
 
-        $minHeap->insert(new CachedRow(row(int_entry('id', 1)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 2)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 3)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 4)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 5)), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(int_entry('id', 6)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 1)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 2)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 3)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 4)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 5)), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(int_entry('id', 6)), 'cache_id'));
 
         self::assertEquals(
             [
@@ -68,12 +68,12 @@ final class RowsMinHeapTest extends TestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->asc());
 
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'a')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'b')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'c')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'd')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'e')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'f')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'a')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'b')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'c')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'd')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'e')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'f')), 'cache_id'));
 
         self::assertEquals(
             [
@@ -95,12 +95,12 @@ final class RowsMinHeapTest extends TestCase
     {
         $minHeap = new RowsMinHeap(ref('id')->desc());
 
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'a')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'b')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'c')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'd')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'e')), 'cache_id'));
-        $minHeap->insert(new CachedRow(row(str_entry('id', 'f')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'a')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'b')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'c')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'd')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'e')), 'cache_id'));
+        $minHeap->insert(new BucketRow(row(str_entry('id', 'f')), 'cache_id'));
 
         self::assertEquals(
             [

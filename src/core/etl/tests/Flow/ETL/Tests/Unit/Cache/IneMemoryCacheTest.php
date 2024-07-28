@@ -18,17 +18,17 @@ final class IneMemoryCacheTest extends TestCase
         self::assertFalse($cache->has('id-1'));
         self::assertFalse($cache->has('id-2'));
 
-        $cache->add('id-1', $rows1 = new Rows(Row::create(int_entry('id', 1))));
-        $cache->add('id-2', $rows2 = new Rows(Row::create(int_entry('id', 1))));
+        $cache->append('id-1', $rows1 = new Rows(Row::create(int_entry('id', 1))));
+        $cache->append('id-2', $rows2 = new Rows(Row::create(int_entry('id', 1))));
 
-        self::assertEquals([$rows1], \iterator_to_array($cache->read('id-1')));
-        self::assertEquals([$rows2], \iterator_to_array($cache->read('id-2')));
+        self::assertEquals([$rows1], \iterator_to_array($cache->get('id-1')));
+        self::assertEquals([$rows2], \iterator_to_array($cache->get('id-2')));
 
-        $cache->clear('id-1');
-        $cache->clear('id-2');
+        $cache->remove('id-1');
+        $cache->remove('id-2');
 
-        self::assertEquals([], \iterator_to_array($cache->read('id-1')));
-        self::assertEquals([], \iterator_to_array($cache->read('id-2')));
+        self::assertEquals([], \iterator_to_array($cache->get('id-1')));
+        self::assertEquals([], \iterator_to_array($cache->get('id-2')));
         self::assertTrue($cache->has('id-1'));
         self::assertTrue($cache->has('id-2'));
     }

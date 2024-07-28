@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Sort\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
 use Flow\ETL\Row\{Reference, References, SortOrder};
 
 /**
@@ -29,14 +28,14 @@ final class RowsMinHeap extends \SplMinHeap
 
         while (!$clone->isEmpty()) {
             $cachedRow = $clone->extract();
-            $elements[] = [$cachedRow->generatorId => $cachedRow->row->toArray()];
+            $elements[] = [$cachedRow->bucketId => $cachedRow->row->toArray()];
         }
 
         return $elements;
     }
 
     /**
-     * @return Row
+     * @return BucketRow
      */
     public function extract() : mixed
     {
@@ -46,7 +45,7 @@ final class RowsMinHeap extends \SplMinHeap
     #[\ReturnTypeWillChange]
     public function insert(mixed $value) : void
     {
-        if (!$value instanceof CachedRow) {
+        if (!$value instanceof BucketRow) {
             throw new InvalidArgumentException('Value inserted into RowsMinHeap must be an instance of Flow\\ETL\\ExternalSort\\CachedRow');
         }
 
@@ -54,8 +53,8 @@ final class RowsMinHeap extends \SplMinHeap
     }
 
     /**
-     * @param CachedRow $value1
-     * @param CachedRow $value2
+     * @param BucketRow $value1
+     * @param BucketRow $value2
      */
     protected function compare($value1, $value2) : int
     {

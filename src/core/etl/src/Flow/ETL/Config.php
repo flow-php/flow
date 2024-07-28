@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Cache\{RowCache, RowsCache};
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Config\Cache\CacheConfig;
+use Flow\ETL\Config\ConfigBuilder;
+use Flow\ETL\Config\Sort\SortConfig;
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
@@ -20,30 +20,28 @@ use Flow\Serializer\Serializer;
  */
 final class Config
 {
+    /**
+     * @deprecated Use CacheConfig::CACHE_DIR_ENV instead
+     */
     public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
 
+    /**
+     * @deprecated Use SortConfig::SORT_MAX_MEMORY_ENV instead
+     */
     public const SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
 
-    /**
-     * @param int<1, max> $cacheBatchSize
-     */
     public function __construct(
         private readonly string $id,
         private readonly Serializer $serializer,
-        private readonly RowsCache $rowsCache,
-        private readonly RowCache $rowCache,
-        private readonly Unit $sortMemoryLimit,
         private readonly FilesystemTable $filesystemTable,
         private readonly FilesystemStreams $filesystemStreams,
         private readonly Optimizer $optimizer,
         private readonly Caster $caster,
         private readonly bool $putInputIntoRows,
         private readonly EntryFactory $entryFactory,
-        private readonly int $cacheBatchSize,
+        public readonly CacheConfig $cache,
+        public readonly SortConfig $sort,
     ) {
-        if ($this->cacheBatchSize < 1) {
-            throw new InvalidArgumentException('Cache batch size must be greater than 0');
-        }
     }
 
     public static function builder() : ConfigBuilder
@@ -54,14 +52,6 @@ final class Config
     public static function default() : self
     {
         return self::builder()->build();
-    }
-
-    /**
-     * @return int<1, max>
-     */
-    public function cacheBatchSize() : int
-    {
-        return $this->cacheBatchSize;
     }
 
     public function caster() : Caster
@@ -94,16 +84,6 @@ final class Config
         return $this->optimizer;
     }
 
-    public function rowCache() : RowCache
-    {
-        return $this->rowCache;
-    }
-
-    public function rowsCache() : RowsCache
-    {
-        return $this->rowsCache;
-    }
-
     public function serializer() : Serializer
     {
         return $this->serializer;
@@ -112,10 +92,5 @@ final class Config
     public function shouldPutInputIntoRows() : bool
     {
         return $this->putInputIntoRows;
-    }
-
-    public function sortMemoryLimit() : Unit
-    {
-        return $this->sortMemoryLimit;
     }
 }

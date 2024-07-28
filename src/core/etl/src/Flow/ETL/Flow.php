@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 

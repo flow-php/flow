@@ -179,7 +179,7 @@ final class DataFrame
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
         }
 
-        $this->batchSize($cacheBatchSize ?? $this->context->config->cacheBatchSize());
+        $this->batchSize($cacheBatchSize ?? $this->context->config->cache->cacheBatchSize);
         $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id));
 
         return $this;

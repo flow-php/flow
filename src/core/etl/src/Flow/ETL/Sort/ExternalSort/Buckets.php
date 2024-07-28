@@ -43,7 +43,7 @@ final class Buckets
 
         foreach ($bucketsCopy as $bucketId => $bucket) {
             if ($bucket->valid()) {
-                $row = new CachedRow($bucket->current(), $bucketId);
+                $row = new BucketRow($bucket->current(), $bucketId);
                 $heap->insert($row);
                 $bucket->next();
             } else {
@@ -52,20 +52,20 @@ final class Buckets
         }
 
         while (!$heap->isEmpty()) {
-            /** @var CachedRow $cachedRow */
+            /** @var BucketRow $cachedRow */
             $cachedRow = $heap->extract();
 
             yield $cachedRow->row;
 
-            if (isset($bucketsCopy[$cachedRow->generatorId])) {
-                $bucket = $bucketsCopy[$cachedRow->generatorId];
+            if (isset($bucketsCopy[$cachedRow->bucketId])) {
+                $bucket = $bucketsCopy[$cachedRow->bucketId];
 
                 if ($bucket->valid()) {
-                    $row = new CachedRow($bucket->current(), $cachedRow->generatorId);
+                    $row = new BucketRow($bucket->current(), $cachedRow->bucketId);
                     $heap->insert($row);
                     $bucket->next();
                 } else {
-                    unset($bucketsCopy[$cachedRow->generatorId]);  // Remove the empty generator
+                    unset($bucketsCopy[$cachedRow->bucketId]);  // Remove the empty generator
                 }
             }
         }

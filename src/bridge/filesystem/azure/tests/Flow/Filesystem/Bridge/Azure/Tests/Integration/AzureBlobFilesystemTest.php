@@ -5,10 +5,102 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
 use function Flow\Filesystem\Bridge\Azure\DSL\{azure_filesystem, azure_filesystem_options};
+use Flow\Filesystem\Bridge\Azure\Options;
 use Flow\Filesystem\Path;
 
 final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
 {
+    public function test_appending_to_existing_blob() : void
+    {
+        $fs = azure_filesystem($this->blobService('flow-php'));
+
+        $stream = $fs->writeTo(new Path('azure-blob://file.txt'));
+        $stream->append("This is first line\n");
+        $stream->close();
+
+        $stream = $fs->appendTo(new Path('azure-blob://file.txt'));
+        $stream->append("This is second line\n");
+        $stream->close();
+
+        self::assertTrue($fs->status(new Path('azure-blob://file.txt'))->isFile());
+        self::assertFalse($fs->status(new Path('azure-blob://file.txt'))->isDirectory());
+        self::assertSame(
+            <<<'TXT'
+This is first line
+This is second line
+
+TXT
+            ,
+            $fs->readFrom(new Path('azure-blob://file.txt'))->content()
+        );
+
+        $fs->rm(new Path('azure-blob://file.txt'));
+    }
+
+    public function test_appending_to_existing_block_blob_new_blocks() : void
+    {
+        $fs = azure_filesystem(
+            $this->blobService('flow-php'),
+            (new Options())->withBlockSize(1024)
+        );
+
+        $stream = $fs->writeTo(new Path('azure-blob://file.txt'));
+        $output = '';
+
+        for ($i = 0; $i < 10; $i++) {
+            $output .= \str_repeat('a', 1024) . "\n";
+            $stream->append(\str_repeat('a', 1024) . "\n");
+        }
+        $stream->close();
+
+        $stream = $fs->appendTo(new Path('azure-blob://file.txt'));
+
+        for ($i = 0; $i < 10; $i++) {
+            $output .= \str_repeat('n', 1024) . "\n";
+            $stream->append(\str_repeat('n', 1024) . "\n");
+        }
+        $stream->close();
+
+        self::assertTrue($fs->status(new Path('azure-blob://file.txt'))->isFile());
+        self::assertFalse($fs->status(new Path('azure-blob://file.txt'))->isDirectory());
+        self::assertSame(
+            $output,
+            $fs->readFrom(new Path('azure-blob://file.txt'))->content()
+        );
+
+        $fs->rm(new Path('azure-blob://file.txt'));
+    }
+
+    public function test_appending_to_existing_non_block_blob_new_blocks() : void
+    {
+        $fs = azure_filesystem(
+            $this->blobService('flow-php'),
+            (new Options())->withBlockSize(1024)
+        );
+
+        $stream = $fs->writeTo(new Path('azure-blob://file.txt'));
+        $stream->append("This is first line\n");
+        $stream->close();
+
+        $stream = $fs->appendTo(new Path('azure-blob://file.txt'));
+        $output = "This is first line\n";
+
+        for ($i = 0; $i < 10; $i++) {
+            $output .= \str_repeat('a', 1024) . "\n";
+            $stream->append(\str_repeat('a', 1024) . "\n");
+        }
+        $stream->close();
+
+        self::assertTrue($fs->status(new Path('azure-blob://file.txt'))->isFile());
+        self::assertFalse($fs->status(new Path('azure-blob://file.txt'))->isDirectory());
+        self::assertSame(
+            $output,
+            $fs->readFrom(new Path('azure-blob://file.txt'))->content()
+        );
+
+        $fs->rm(new Path('azure-blob://file.txt'));
+    }
+
     public function test_file_status_on_existing_file() : void
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
@@ -223,5 +315,25 @@ final class AzureBlobFilesystemTest extends AzureBlobServiceTestCase
         self::assertSame(\file_get_contents(__DIR__ . '/Fixtures/orders.csv'), $fs->readFrom(new Path('azure-blob://orders.csv'))->content());
 
         $fs->rm(new Path('azure-blob://orders.csv'));
+    }
+
+    public function test_writing_to_to_azure_using_blocks() : void
+    {
+        $fs = azure_filesystem(
+            $this->blobService('flow-php'),
+            (new Options())->withBlockSize(1024)
+        );
+
+        $stream = $fs->writeTo(new Path('azure-blob://block_blob.csv'));
+
+        for ($i = 0; $i < 10; $i++) {
+            $stream->append(\str_repeat('a', 1024) . "\n");
+        }
+        $stream->close();
+
+        self::assertTrue($fs->status(new Path('azure-blob://block_blob.csv'))->isFile());
+        self::assertFalse($fs->status(new Path('azure-blob://block_blob.csv'))->isDirectory());
+
+        $fs->rm(new Path('azure-blob://block_blob.csv'));
     }
 }

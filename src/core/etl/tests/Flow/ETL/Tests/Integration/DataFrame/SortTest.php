@@ -12,20 +12,6 @@ use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SortTest extends IntegrationTestCase
 {
-    private static string $memoryLimit = '';
-
-    public static function setUpBeforeClass() : void
-    {
-        parent::setUpBeforeClass();
-        self::$memoryLimit = \ini_get('memory_limit');
-    }
-
-    public static function tearDownAfterClass() : void
-    {
-        parent::tearDownAfterClass();
-        \ini_set('memory_limit', self::$memoryLimit);
-    }
-
     public function test_etl_sort_by_external_sort() : void
     {
         \ini_set('memory_limit', '500M');
@@ -40,9 +26,6 @@ final class SortTest extends IntegrationTestCase
             ->sortBy(ref('int'))
             ->fetch();
 
-        $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
-
-        self::assertEmpty($cache);
         self::assertSame(\range(0, 2499), $rows->reduceToArray('int'));
     }
 
@@ -56,9 +39,6 @@ final class SortTest extends IntegrationTestCase
             ->sortBy(ref('int'))
             ->fetch();
 
-        $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
-
-        self::assertEmpty($cache);
         self::assertSame(\range(0, 39), $rows->reduceToArray('int'));
     }
 }

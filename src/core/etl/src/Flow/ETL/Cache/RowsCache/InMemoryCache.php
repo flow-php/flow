@@ -13,33 +13,33 @@ final class InMemoryCache implements RowsCache
      */
     private array $cache = [];
 
-    public function add(string $id, Rows $rows) : void
+    public function append(string $key, Rows $rows) : void
     {
-        if (!\array_key_exists($id, $this->cache)) {
-            $this->cache[$id] = [];
+        if (!\array_key_exists($key, $this->cache)) {
+            $this->cache[$key] = [];
         }
 
-        $this->cache[$id][] = $rows;
+        $this->cache[$key][] = $rows;
     }
 
-    public function clear(string $id) : void
+    public function get(string $key) : \Generator
     {
-        if (\array_key_exists($id, $this->cache)) {
-            $this->cache[$id] = [];
-        }
-    }
-
-    public function has(string $id) : bool
-    {
-        return \array_key_exists($id, $this->cache);
-    }
-
-    public function read(string $id) : \Generator
-    {
-        if (\array_key_exists($id, $this->cache)) {
-            foreach ($this->cache[$id] as $rows) {
+        if (\array_key_exists($key, $this->cache)) {
+            foreach ($this->cache[$key] as $rows) {
                 yield $rows;
             }
+        }
+    }
+
+    public function has(string $key) : bool
+    {
+        return \array_key_exists($key, $this->cache);
+    }
+
+    public function remove(string $key) : void
+    {
+        if (\array_key_exists($key, $this->cache)) {
+            $this->cache[$key] = [];
         }
     }
 }

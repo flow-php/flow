@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{config_builder, data_frame, from_cache, ref, to_stream};
+use function Flow\ETL\DSL\{config_builder, data_frame, filesystem_rows_cache, from_cache, ref, to_stream};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\Cache\RowsCache\PSRSimpleCache;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-use Symfony\Component\Cache\Psr16Cache;
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -33,15 +30,7 @@ $from_github_api = new PsrHttpClientDynamicExtractor($client, new class implemen
     }
 });
 
-$adapter = new PSRSimpleCache(
-    new Psr16Cache(
-        new FilesystemAdapter(
-            directory: __DIR__ . '/output/cache'
-        )
-    )
-);
-
-data_frame(config_builder()->rowsCache($adapter))
+data_frame(config_builder()->cache(filesystem_rows_cache(__DIR__ . '/output/cache')))
     ->read(
         from_cache(
             id: 'github_api',

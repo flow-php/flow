@@ -17,29 +17,17 @@ final class PSRSimpleCache implements RowsCache
     ) {
     }
 
-    public function add(string $id, Rows $rows) : void
+    public function append(string $key, Rows $rows) : void
     {
         $rowsId = $rows->hash();
 
-        $this->addToIndex($id, $rowsId);
+        $this->addToIndex($key, $rowsId);
         $this->cache->set($rowsId, $this->serializer->serialize($rows), $this->ttl);
     }
 
-    public function clear(string $id) : void
+    public function get(string $key) : \Generator
     {
-        foreach ($this->index($id) as $entry) {
-            $this->cache->delete($entry);
-        }
-    }
-
-    public function has(string $id) : bool
-    {
-        return \count($this->index($id)) > 0;
-    }
-
-    public function read(string $id) : \Generator
-    {
-        foreach ($this->index($id) as $entry) {
+        foreach ($this->index($key) as $entry) {
             $serializedRows = $this->cache->get($entry);
 
             if ($serializedRows === null) {
@@ -52,6 +40,18 @@ final class PSRSimpleCache implements RowsCache
             $rows = $this->serializer->unserialize((string) $serializedRows, Rows::class);
 
             yield $rows;
+        }
+    }
+
+    public function has(string $key) : bool
+    {
+        return \count($this->index($key)) > 0;
+    }
+
+    public function remove(string $key) : void
+    {
+        foreach ($this->index($key) as $entry) {
+            $this->cache->delete($entry);
         }
     }
 

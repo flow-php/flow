@@ -6,6 +6,9 @@ namespace Flow\ETL\Cache;
 
 use Flow\ETL\{Row, Rows};
 
+/**
+ * Cache each row separately.
+ */
 interface RowCache
 {
     /**

@@ -6,11 +6,11 @@ namespace Flow\ETL\Sort\ExternalSort;
 
 use Flow\ETL\Row;
 
-final class CachedRow
+final class BucketRow
 {
     public function __construct(
         public readonly Row $row,
-        public readonly string $generatorId
+        public readonly string $bucketId
     ) {
     }
 }

@@ -23,18 +23,11 @@ final class CacheSpy implements RowsCache
     {
     }
 
-    public function add(string $id, Rows $rows) : void
+    public function append(string $key, Rows $rows) : void
     {
         $this->writesCount++;
 
-        $this->cache->add($id, $rows);
-    }
-
-    public function clear(string $id) : void
-    {
-        $this->clearsCount++;
-
-        $this->cache->clear($id);
+        $this->cache->append($key, $rows);
     }
 
     public function clears() : int
@@ -42,31 +35,38 @@ final class CacheSpy implements RowsCache
         return $this->clearsCount;
     }
 
-    public function has(string $id) : bool
+    public function get(string $key) : \Generator
     {
-        if (\array_key_exists($id, $this->reads)) {
-            return $this->reads[$id] > 0;
+        if (!\array_key_exists($key, $this->reads)) {
+            $this->reads[$key] = 1;
+        } else {
+            $this->reads[$key]++;
+        }
+
+        $this->readsCount++;
+
+        return $this->cache->get($key);
+    }
+
+    public function has(string $key) : bool
+    {
+        if (\array_key_exists($key, $this->reads)) {
+            return $this->reads[$key] > 0;
         }
 
         return false;
     }
 
-    public function read(string $id) : \Generator
-    {
-        if (!\array_key_exists($id, $this->reads)) {
-            $this->reads[$id] = 1;
-        } else {
-            $this->reads[$id]++;
-        }
-
-        $this->readsCount++;
-
-        return $this->cache->read($id);
-    }
-
     public function reads() : int
     {
         return $this->readsCount;
+    }
+
+    public function remove(string $key) : void
+    {
+        $this->clearsCount++;
+
+        $this->cache->remove($key);
     }
 
     public function writes() : int

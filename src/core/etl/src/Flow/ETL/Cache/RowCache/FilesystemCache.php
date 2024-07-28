@@ -28,7 +28,7 @@ final class FilesystemCache implements RowCache
             throw new InvalidArgumentException('Chunk size must be greater than 0');
         }
 
-        $this->cacheDir = $cacheDir ?? $this->filesystem->getSystemTmpDir()->suffix('/flow-php-external-sort/');
+        $this->cacheDir = ($cacheDir ?? $this->filesystem->getSystemTmpDir())->suffix('/row/');
     }
 
     /**
@@ -37,6 +37,10 @@ final class FilesystemCache implements RowCache
     public function get(string $key) : \Generator
     {
         $path = $this->keyPath($key);
+
+        if (!$this->filesystem->status($path)) {
+            return;
+        }
 
         $stream = $this->filesystem->readFrom($path);
 
@@ -51,7 +55,7 @@ final class FilesystemCache implements RowCache
     public function remove(string $key) : void
     {
         // we want to remove not only cache file but entire directory
-        $this->filesystem->rm($this->keyPath($key)->parentDirectory());
+        $this->filesystem->rm($this->keyPath($key));
     }
 
     /**
@@ -87,6 +91,7 @@ final class FilesystemCache implements RowCache
 
     private function keyPath(string $key) : Path
     {
-        return $this->cacheDir->suffix(NativePHPHash::xxh128($key) . '/rows.php.cache');
+
+        return $this->cacheDir->suffix(implode('/', \str_split(\substr(NativePHPHash::xxh128($key), 0, 8), 2)) . '/' . $key . '.php.cache');
     }
 }

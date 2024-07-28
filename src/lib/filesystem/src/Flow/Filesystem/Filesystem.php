@@ -9,6 +9,8 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 
 interface Filesystem
 {
+    public function appendTo(Path $path) : DestinationStream;
+
     public function getSystemTmpDir() : Path;
 
     /**
@@ -26,5 +28,8 @@ interface Filesystem
 
     public function status(Path $path) : ?FileStatus;
 
+    /**
+     * Open destination stream for writing, if file already exists it will be overwritten.
+     */
     public function writeTo(Path $path) : DestinationStream;
 }

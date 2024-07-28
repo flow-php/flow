@@ -21,7 +21,7 @@ final class CacheExtractorTest extends TestCase
         };
 
         $cache->expects(self::any())
-            ->method('read')
+            ->method('get')
             ->with('id')
             ->willReturn($generator());
 
@@ -31,7 +31,7 @@ final class CacheExtractorTest extends TestCase
             ->willReturn(true);
 
         $cache->expects(self::never())
-            ->method('clear')
+            ->method('remove')
             ->with('id');
 
         $extractor = from_cache('id');
@@ -42,7 +42,7 @@ final class CacheExtractorTest extends TestCase
                 new Rows(Row::create(int_entry('id', 2))),
                 new Rows(Row::create(int_entry('id', 3))),
             ],
-            \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->rowsCache($cache)->build())))
+            \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->cache($cache)->build())))
         );
     }
 
@@ -57,7 +57,7 @@ final class CacheExtractorTest extends TestCase
         };
 
         $cache->expects(self::any())
-            ->method('read')
+            ->method('get')
             ->with('id')
             ->willReturn($generator());
 
@@ -67,16 +67,16 @@ final class CacheExtractorTest extends TestCase
             ->willReturn(true);
 
         $cache->expects(self::once())
-            ->method('clear')
+            ->method('remove')
             ->with('id');
 
-        \iterator_to_array((from_cache('id', clear: true))->extract(new FlowContext(Config::builder()->rowsCache($cache)->build())));
+        \iterator_to_array((from_cache('id', clear: true))->extract(new FlowContext(Config::builder()->cache($cache)->build())));
     }
 
     public function test_extracting_from_fallback_extractor_when_cache_is_empty() : void
     {
         $config = Config::builder()
-            ->rowsCache($cache = $this->createMock(RowsCache::class))
+            ->cache($cache = $this->createMock(RowsCache::class))
             ->build();
 
         $cache->expects(self::exactly(2))
@@ -85,7 +85,7 @@ final class CacheExtractorTest extends TestCase
             ->willReturnOnConsecutiveCalls(false, true);
 
         $cache->expects(self::once())
-            ->method('read')
+            ->method('get')
             ->with('id')
             ->willReturn(
                 from_rows($rowsToCache = new Rows(
@@ -96,7 +96,7 @@ final class CacheExtractorTest extends TestCase
             );
 
         $cache->expects(self::never())
-            ->method('clear')
+            ->method('remove')
             ->with('id');
 
         $extractor = from_cache('id', from_rows($rowsToCache));

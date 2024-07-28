@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL;
+namespace Flow\ETL\Config;
 
-use function Flow\Filesystem\DSL\{fstab, protocol};
-use Flow\ETL\Cache\RowCache\FilesystemCache;
-use Flow\ETL\Cache\RowsCache\LocalFilesystemCache;
+use function Flow\Filesystem\DSL\{fstab};
 use Flow\ETL\Cache\{RowCache, RowsCache};
+use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
@@ -19,12 +18,9 @@ use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
 final class ConfigBuilder
 {
-    public const DEFAULT_SORT_MEMORY_PERCENTAGE = 70;
+    public readonly Cache\CacheConfigBuilder $cache;
 
-    /**
-     * @var int<1, max>
-     */
-    private int $cacheBatchSize = 1000;
+    public readonly Sort\SortConfigBuilder $sort;
 
     private ?Caster $caster;
 
@@ -36,69 +32,25 @@ final class ConfigBuilder
 
     private bool $putInputIntoRows;
 
-    private ?RowCache $rowCache;
-
-    private ?RowsCache $rowsCache;
-
     private ?Serializer $serializer;
-
-    private ?Unit $sortMemoryLimit;
 
     public function __construct()
     {
         $this->id = null;
         $this->serializer = null;
-        $this->rowsCache = null;
-        $this->rowCache = null;
-        $this->sortMemoryLimit = null;
         $this->fstab = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
         $this->caster = null;
+        $this->cache = new Cache\CacheConfigBuilder();
+        $this->sort = new Sort\SortConfigBuilder();
     }
 
-    /**
-     * @psalm-suppress  PossiblyFalseArgument
-     */
     public function build() : Config
     {
-        $this->id ??= 'flow_php' . bin2hex(random_bytes(16));
+        $this->id ??= 'flow_php_' . bin2hex(random_bytes(16));
         $entryFactory = new NativeEntryFactory();
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
-        $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
-            ? \getenv(Config::CACHE_DIR_ENV)
-            : \sys_get_temp_dir() . '/flow_php/cache';
-
-        if ($this->rowsCache === null) {
-            if (!\file_exists($cachePath)) {
-                \mkdir($cachePath, 0777, true);
-            }
-
-            $this->rowsCache = new LocalFilesystemCache($cachePath, $this->serializer);
-        }
-
-        if ($this->rowCache === null) {
-            $this->rowCache = new FilesystemCache(
-                $this->fstab()->for(protocol('file')),
-                $this->serializer,
-                chunkSize: 100,
-                cacheDir: $this->fstab()->for(protocol('file'))->getSystemTmpDir()
-            );
-        }
-
-        if ($this->sortMemoryLimit === null) {
-            if (\is_string(\getenv(Config::SORT_MAX_MEMORY_ENV))) {
-                $this->sortMemoryLimit = Unit::fromString(\getenv(Config::SORT_MAX_MEMORY_ENV));
-            } else {
-                $memoryLimit = \ini_get('memory_limit');
-
-                if ($memoryLimit === '-1') {
-                    $this->sortMemoryLimit = Unit::fromBytes(\PHP_INT_MAX);
-                } else {
-                    $this->sortMemoryLimit = Unit::fromString($memoryLimit)->percentage(self::DEFAULT_SORT_MEMORY_PERCENTAGE);
-                }
-            }
-        }
 
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
@@ -110,29 +62,36 @@ final class ConfigBuilder
         return new Config(
             $this->id,
             $this->serializer,
-            $this->rowsCache,
-            $this->rowCache,
-            $this->sortMemoryLimit,
             $this->fstab(),
             new FilesystemStreams($this->fstab()),
             $this->optimizer,
             $this->caster,
             $this->putInputIntoRows,
             $entryFactory,
-            $this->cacheBatchSize
+            $this->cache->build($this->fstab(), $this->serializer),
+            $this->sort->build()
         );
     }
 
+    public function cache(RowsCache|RowCache $cache) : self
+    {
+        if ($cache instanceof RowsCache) {
+            $this->cache->rowsCache($cache);
+        } else {
+            $this->cache->rowCache($cache);
+        }
+
+        return $this;
+    }
+
     /**
+     * @param int<1, max> $cacheBatchSize
+     *
      * @throws InvalidArgumentException
      */
     public function cacheBatchSize(int $cacheBatchSize) : self
     {
-        if ($cacheBatchSize < 1) {
-            throw new InvalidArgumentException('Cache batch size must be greater than 0');
-        }
-
-        $this->cacheBatchSize = $cacheBatchSize;
+        $this->cache->cacheBatchSize($cacheBatchSize);
 
         return $this;
     }
@@ -181,13 +140,6 @@ final class ConfigBuilder
         return new self();
     }
 
-    public function rowsCache(RowsCache $cache) : self
-    {
-        $this->rowsCache = $cache;
-
-        return $this;
-    }
-
     public function serializer(Serializer $serializer) : self
     {
         $this->serializer = $serializer;
@@ -197,7 +149,7 @@ final class ConfigBuilder
 
     public function sortMemoryLimit(Unit $unit) : self
     {
-        $this->sortMemoryLimit = $unit;
+        $this->sort->sortMemoryLimit($unit);
 
         return $this;
     }

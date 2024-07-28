@@ -36,8 +36,8 @@ final class SortingPipeline implements Pipeline
     public function process(FlowContext $context) : \Generator
     {
         try {
-            if ($context->config->sortMemoryLimit()->isGreaterThan(Unit::fromBytes(0))) {
-                $extractor = (new MemorySort($this->pipeline, $context->config->sortMemoryLimit()))->sortBy($context, $this->refs);
+            if ($context->config->sort->algorithm->useMemory() && $context->config->sort->memoryLimit->isGreaterThan(Unit::fromBytes(0))) {
+                $extractor = (new MemorySort($this->pipeline, $context->config->sort->memoryLimit))->sortBy($context, $this->refs);
             } else {
                 $extractor = (new ExternalSort($this->pipeline, $context->rowCache()))->sortBy($context, $this->refs);
             }

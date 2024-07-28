@@ -6,16 +6,19 @@ namespace Flow\ETL\Cache;
 
 use Flow\ETL\Rows;
 
+/**
+ * Cache whole Rows object at once with possibility to append more rows to the same key.
+ */
 interface RowsCache
 {
-    public function add(string $id, Rows $rows) : void;
-
-    public function clear(string $id) : void;
-
-    public function has(string $id) : bool;
+    public function append(string $key, Rows $rows) : void;
 
     /**
      * @return \Generator<Rows>
      */
-    public function read(string $id) : \Generator;
+    public function get(string $key) : \Generator;
+
+    public function has(string $key) : bool;
+
+    public function remove(string $key) : void;
 }
