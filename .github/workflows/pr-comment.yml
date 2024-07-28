@@ -17,14 +17,14 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - name: Download pull request id artifact
+      - name: Download pull request ID artifact
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: ${{ github.event.workflow_run.workflow_id }}
+          workflow: test-benchmark.yml
           name: pr
           path: ./var/phpbench/pr
 
-      - name: Save PR id
+      - name: Extract pull request ID
         id: pr
         run: |
           echo "id=$(<./var/phpbench/pr/pr-id.txt)" >> $GITHUB_OUTPUT

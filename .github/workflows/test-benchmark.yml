@@ -3,6 +3,7 @@ name: Benchmark Suite
 on:
   pull_request:
     paths:
+      - '.github/workflows/pr-baseline.yml'
       - '.github/workflows/benchmark-baseline.yml'
       - '.github/workflows/test-benchmark.yml'
       - 'src/adapter/**'
@@ -113,6 +114,7 @@ jobs:
         with:
           name: phpbench
           path: ./var/phpbench/summary.txt
+          overwrite: true
 
       - name: Save PR number
         run: echo ${{ github.event.pull_request.number }} > ./pr-id.txt
@@ -122,7 +124,8 @@ jobs:
         with:
           name: pr
           path: ./pr-id.txt
+          overwrite: true
 
       - name: "Set job summary"
         run: |
-          echo "${{ env.COMMENT_CONTENT }}" >> $GITHUB_STEP_SUMMARY
+          echo "$(<./var/phpbench/summary.txt)" >> $GITHUB_STEP_SUMMARY
