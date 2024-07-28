@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Row;
 use Jawira\CaseConverter\Convert;
@@ -15,9 +14,6 @@ final class ArrayKeysStyleConvert extends ScalarFunctionChain
         private readonly ScalarFunction $ref,
         private readonly StringStyles $style
     ) {
-        if (!\class_exists(Convert::class)) {
-            throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please add jawira/case-converter dependency to the project first.");
-        }
     }
 
     public function eval(Row $row) : mixed

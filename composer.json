@@ -24,6 +24,7 @@
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "google/apiclient": "^2.13",
         "halaxa/json-machine": "^1.0",
+        "jawira/case-converter": "^3.4",
         "meilisearch/meilisearch-php": "^1.1",
         "monolog/monolog": "^2.0||^3.0",
         "packaged/thrift": "^0.15.0",
@@ -39,7 +40,6 @@
         "aeon-php/calendar": "^1.0",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
-        "jawira/case-converter": "^3.4",
         "moneyphp/money": "^4",
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.2",
@@ -240,7 +240,6 @@
             "tools/box/vendor/bin/box compile"
         ],
         "pre-autoload-dump": [
-            "Aws\\Script\\Composer\\Composer::removeUnusedServices",
             "Google\\Task\\Composer::cleanup"
         ],
         "post-install-cmd": [
@@ -273,9 +272,6 @@
         ]
     },
     "extra": {
-        "aws/aws-sdk-php": [
-            "S3"
-        ],
         "google/apiclient-services": [
             "Sheets"
         ]
