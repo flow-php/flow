@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
+use function Flow\ETL\DSL\{array_entry, array_to_row, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
 use function Flow\Filesystem\DSL\{partition, partitions};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
@@ -282,6 +282,75 @@ final class RowsTest extends TestCase
                 )
             ),
             $rows
+        );
+    }
+
+    public function test_building_single_row_from_array_with_rows_fails() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Passed array keys must be a string. Maybe consider using "array_to_rows()" function?');
+
+        array_to_row(
+            [
+                ['id' => 1234, 'deleted' => false, 'phase' => null],
+                ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
+            ]
+        );
+    }
+
+    public function test_building_single_row_from_array_with_schema_and_additional_fields_not_covered_by_schema() : void
+    {
+        $row = array_to_row(
+            ['id' => 1234, 'deleted' => false, 'phase' => null],
+            schema: new Schema(
+                int_schema('id'),
+                bool_schema('deleted'),
+            )
+        );
+
+        self::assertEquals(
+            row(
+                int_entry('id', 1234),
+                bool_entry('deleted', false),
+            ),
+            $row
+        );
+    }
+
+    public function test_building_single_row_from_array_with_schema_but_entries_not_available_in_rows() : void
+    {
+        $row = array_to_row(
+            ['id' => 1234, 'deleted' => false],
+            schema: new Schema(
+                int_schema('id'),
+                bool_schema('deleted'),
+                str_schema('phase', true),
+            )
+        );
+
+        self::assertEquals(
+            row(
+                int_entry('id', 1234),
+                bool_entry('deleted', false),
+                str_entry('phase', null)
+            ),
+            $row
+        );
+    }
+
+    public function test_building_single_row_from_flat_array() : void
+    {
+        $row = array_to_row(
+            ['id' => 1234, 'deleted' => false, 'phase' => null],
+        );
+
+        self::assertEquals(
+            row(
+                int_entry('id', 1234),
+                bool_entry('deleted', false),
+                str_entry('phase', null),
+            ),
+            $row
         );
     }
 
