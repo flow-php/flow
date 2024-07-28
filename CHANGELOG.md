@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-07-27
+## [Unreleased] - 2024-07-28
 
 ### Added
+- [#1149](https://github.com/flow-php/flow/pull/1149) - **Add `array_to_row` helper function** - [@stloyd](https://github.com/stloyd)
 - [#1144](https://github.com/flow-php/flow/pull/1144) - **Filesystem - added getSystemTmpDir() method** - [@norberttech](https://github.com/norberttech)
 - [#1144](https://github.com/flow-php/flow/pull/1144) - **Path - added suffix(string $suffix): Path method** - [@norberttech](https://github.com/norberttech)
 - [#1144](https://github.com/flow-php/flow/pull/1144) - **Path - removed setExtension()** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +13,7 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1152](https://github.com/flow-php/flow/pull/1152) - **Make "jawira/case-converter" a hard dependency** - [@stloyd](https://github.com/stloyd)
 - [#1137](https://github.com/flow-php/flow/pull/1137) - **Deprecate Schema::entries in favor to Schema::references** - [@norberttech](https://github.com/norberttech)
 - [#1131](https://github.com/flow-php/flow/pull/1131) - **Updated cache@v3 into cache@v4 across all github actions workflows** - [@norberttech](https://github.com/norberttech)
 - [#1125](https://github.com/flow-php/flow/pull/1125) - **Replaced github discussions with discord server link at landing page** - [@norberttech](https://github.com/norberttech)
@@ -26,6 +28,9 @@
 ### Updated
 - [1390ef](https://github.com/flow-php/flow/commit/1390ef624af334ea3d5b2ca22bf8b637ab8aea87) - **introduction.md** - [@norberttech](https://github.com/norberttech)
 - [f5ad85](https://github.com/flow-php/flow/commit/f5ad85efac1d71255370a6ee8ba36b791dc14645) - **CONTRIBUTING.md** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#1152](https://github.com/flow-php/flow/pull/1152) - **Leftovers in main `composer.json` related to AWS SDK** - [@stloyd](https://github.com/stloyd)
 
 ## [0.8.0] - 2024-07-19
 
