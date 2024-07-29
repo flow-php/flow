@@ -113,6 +113,7 @@ jobs:
         with:
           name: phpbench
           path: ./var/phpbench/summary.txt
+          overwrite: true
 
       - name: Save PR number
         run: echo ${{ github.event.pull_request.number }} > ./pr-id.txt
@@ -122,6 +123,7 @@ jobs:
         with:
           name: pr
           path: ./pr-id.txt
+          overwrite: true
 
       - name: "Set job summary"
         run: |

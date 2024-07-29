@@ -94,3 +94,4 @@ jobs:
         with:
           name: flow-${{ env.BUILD_TAG }}.phar
           path: build/flow.phar
+          overwrite: true
