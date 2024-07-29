@@ -13,6 +13,7 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [44e875](https://github.com/flow-php/flow/commit/44e875d1433ba6cb42c0c9cb5a52150704814f6f) - **criteria for fetching latest artifacts after workflow runs** - [@norberttech](https://github.com/norberttech)
 - [#1152](https://github.com/flow-php/flow/pull/1152) - **Make "jawira/case-converter" a hard dependency** - [@stloyd](https://github.com/stloyd)
 - [#1137](https://github.com/flow-php/flow/pull/1137) - **Deprecate Schema::entries in favor to Schema::references** - [@norberttech](https://github.com/norberttech)
 - [#1131](https://github.com/flow-php/flow/pull/1131) - **Updated cache@v3 into cache@v4 across all github actions workflows** - [@norberttech](https://github.com/norberttech)
