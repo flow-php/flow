@@ -62,7 +62,7 @@ jobs:
         run: "composer install --no-interaction --no-progress"
 
       - name: "Download phpbench benchmarks artifact"
-        uses: dawidd6/action-download-artifact@v6
+        run_id: ${{ github.event.workflow_run.id }}
         with:
           workflow: benchmark-baseline.yml
           name: phpbench-baseline

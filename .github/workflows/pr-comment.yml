@@ -20,7 +20,7 @@ jobs:
       - name: Download pull request id artifact
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: ${{ github.event.workflow_run.workflow_id }}
+          run_id: ${{ github.event.workflow_run.id }}
           name: pr
           path: ./var/phpbench/pr
 
@@ -32,7 +32,7 @@ jobs:
       - name: Download phpbench benchmarks artifact
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: ${{ github.event.workflow_run.workflow_id }}
+          run_id: ${{ github.event.workflow_run.id }}
           name: phpbench
           path: ./var/phpbench/summary/
 
