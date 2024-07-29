@@ -95,3 +95,4 @@ jobs:
         with:
           name: phpbench-baseline
           path: ./var/phpbench/
+          overwrite: true
