@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-28
+## [Unreleased] - 2024-07-29
 
 ### Added
 - [#1149](https://github.com/flow-php/flow/pull/1149) - **Add `array_to_row` helper function** - [@stloyd](https://github.com/stloyd)
