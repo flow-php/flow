@@ -33,7 +33,7 @@ parameters:
 
     excludePaths:
         - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php
-        - src/core/etl/src/Flow/ETL/ExternalSort/RowsMinHeap.php
+        - src/core/etl/src/Flow/ETL/Sort/ExternalSort/RowsMinHeap.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php

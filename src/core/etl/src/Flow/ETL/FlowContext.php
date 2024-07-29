@@ -24,7 +24,7 @@ final class FlowContext
 
     public function cache() : Cache
     {
-        return $this->config->cache();
+        return $this->config->cache->cache;
     }
 
     public function entryFactory() : EntryFactory

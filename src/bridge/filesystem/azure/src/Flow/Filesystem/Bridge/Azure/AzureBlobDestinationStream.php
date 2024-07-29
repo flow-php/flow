@@ -25,6 +25,34 @@ final class AzureBlobDestinationStream implements DestinationStream
     ) {
     }
 
+    public static function openAppend(
+        BlobServiceInterface $blobService,
+        Path $path,
+        BlockFactory $blockFactory = new Block\NativeLocalFileBlocksFactory(),
+        int $blockSize = 1024 * 1024 * 4,
+    ) : self {
+        $blocks = new Blocks(
+            $blockSize,
+            $blockFactory,
+            new AzureBlobBlockLifecycle(
+                $blobService,
+                $path,
+                $blockList = $blobService->getBlockBlobBlockList($path->path())
+            )
+        );
+
+        if (\count($blockList->all()) === 0) {
+            $blocks->append($blobService->getBlob($path->path())->content());
+        }
+
+        return new self(
+            $blobService,
+            $path,
+            $blocks,
+            $blockList
+        );
+    }
+
     public static function openBlank(
         BlobServiceInterface $blobService,
         Path $path,

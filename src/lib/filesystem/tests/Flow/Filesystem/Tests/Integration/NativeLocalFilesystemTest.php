@@ -21,6 +21,33 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         }
     }
 
+    public function test_appending_to_existing_blob() : void
+    {
+        $fs = native_local_filesystem();
+
+        $stream = $fs->writeTo(new Path(__DIR__ . '/var/file.txt'));
+        $stream->append("This is first line\n");
+        $stream->close();
+
+        $stream = $fs->appendTo(new Path(__DIR__ . '/var/file.txt'));
+        $stream->append("This is second line\n");
+        $stream->close();
+
+        self::assertTrue($fs->status(new Path(__DIR__ . '/var/file.txt'))->isFile());
+        self::assertFalse($fs->status(new Path(__DIR__ . '/var/file.txt'))->isDirectory());
+        self::assertSame(
+            <<<'TXT'
+This is first line
+This is second line
+
+TXT
+            ,
+            $fs->readFrom(new Path(__DIR__ . '/var/file.txt'))->content()
+        );
+
+        $fs->rm(new Path(__DIR__ . '/var/file.txt'));
+    }
+
     public function test_dir_exists() : void
     {
         self::assertFalse((native_local_filesystem())->status(new Path(__DIR__))->isFile());

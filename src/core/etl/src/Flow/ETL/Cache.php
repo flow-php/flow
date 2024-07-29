@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\KeyNotInCacheException;
+use Flow\ETL\{Cache\CacheIndex};
+
 interface Cache
 {
-    public function add(string $id, Rows $rows) : void;
+    public function clear() : void;
 
-    public function clear(string $id) : void;
-
-    public function has(string $id) : bool;
+    public function delete(string $key) : void;
 
     /**
-     * @return \Generator<Rows>
+     * @throws KeyNotInCacheException
      */
-    public function read(string $id) : \Generator;
+    public function get(string $key) : Row|Rows|CacheIndex;
+
+    public function has(string $key) : bool;
+
+    public function set(string $key, Row|Rows|CacheIndex $value) : void;
 }

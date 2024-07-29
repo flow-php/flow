@@ -4,31 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration;
 
-use Flow\ETL\{Config};
+use Flow\ETL\{Config\Cache\CacheConfig};
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem};
+use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase
 {
-    protected string $cacheDir = __DIR__ . '/var/';
+    protected Path $cacheDir;
 
-    protected ?Filesystem $fs = null;
+    protected Filesystem $fs;
 
-    protected ?FilesystemTable $fstab = null;
+    protected FilesystemTable $fstab;
 
-    private string $baseMemoryLimit = '-1';
+    protected Serializer $serializer;
+
+    private string|false $baseMemoryLimit;
+
+    public function __construct(string $name)
+    {
+        parent::__construct($name);
+
+        $this->baseMemoryLimit = (\ini_get('memory_limit')) ?: '-1';
+        $this->cacheDir = Path::realpath(\getenv(CacheConfig::CACHE_DIR_ENV));
+        $this->fs = new NativeLocalFilesystem();
+        $this->fstab = new FilesystemTable($this->fs);
+        $this->serializer = new Base64Serializer(new NativePHPSerializer());
+    }
 
     protected function setUp() : void
     {
-        $this->baseMemoryLimit = \ini_get('memory_limit');
-        $this->cacheDir = Path::realpath(\getenv(Config::CACHE_DIR_ENV))->path();
-
         $this->cleanupCacheDir($this->cacheDir);
-
-        if (!$this->fs()->status(Path::realpath($this->cacheDir))?->isDirectory()) {
-            \mkdir($this->cacheDir, recursive: true);
-        }
+        \mkdir($this->cacheDir->path(), recursive: true);
     }
 
     protected function tearDown() : void
@@ -38,6 +46,7 @@ abstract class IntegrationTestCase extends TestCase
         }
 
         $this->cleanupCacheDir($this->cacheDir);
+        \mkdir($this->cacheDir->path(), recursive: true);
     }
 
     protected function cleanFiles() : void
@@ -58,25 +67,22 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function fs() : Filesystem
     {
-        if ($this->fs === null) {
-            $this->fs = new NativeLocalFilesystem();
-        }
-
         return $this->fs;
     }
 
     protected function fstab() : FilesystemTable
     {
-        if ($this->fstab === null) {
-            $this->fstab = new FilesystemTable($this->fs());
-        }
-
         return $this->fstab;
     }
 
     protected function getPath(string $relativePath) : Path
     {
         return new Path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
+    }
+
+    protected function serializer() : Serializer
+    {
+        return $this->serializer;
     }
 
     /**
@@ -104,10 +110,8 @@ abstract class IntegrationTestCase extends TestCase
         }
     }
 
-    private function cleanupCacheDir(string $directory) : void
+    private function cleanupCacheDir(Path $path) : void
     {
-        if ($this->fs()->status($path = Path::realpath($directory))?->isDirectory()) {
-            $this->fs()->rm($path);
-        }
+        $this->fs()->rm($path);
     }
 }

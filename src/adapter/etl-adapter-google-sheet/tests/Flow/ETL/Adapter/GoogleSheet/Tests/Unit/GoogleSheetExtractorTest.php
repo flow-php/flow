@@ -8,7 +8,7 @@ use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet_columns;
 use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\{ConfigBuilder, FlowContext, Row, Rows};
+use Flow\ETL\{Config\ConfigBuilder, FlowContext, Row, Rows};
 use Google\Service\Sheets;
 use Google\Service\Sheets\Resource\SpreadsheetsValues;
 use PHPUnit\Framework\TestCase;

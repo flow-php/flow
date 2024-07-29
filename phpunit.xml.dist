@@ -7,7 +7,6 @@
         cacheResultFile="./var/phpunit/phpunit.cache"
         displayDetailsOnTestsThatTriggerWarnings="true"
         displayDetailsOnTestsThatTriggerErrors="true"
-        executionOrder="random"
 >
   <coverage cacheDirectory="./var/phpunit/">
     <report>
@@ -19,6 +18,8 @@
     <env name="AZURITE_BLOB_PORT" value="10000"/>
     <env name="AZURITE_ACCOUNT_NAME" value="flowphpaccount01"/>
     <env name="AZURITE_ACCOUNT_KEY" value="flowphpkey01"/>
+    <env name="REDIS_HOST" value="localhost"/>
+    <env name="REDIS_PORT" value="6379"/>
     <env name="PGSQL_DATABASE_URL" value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>
     <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
     <env name="SQLITE_DATABASE_URL" value="sqlite:///:memory:"/>

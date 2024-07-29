@@ -130,7 +130,7 @@ final class NativeLocalSourceStream implements SourceStream
         \fseek($this->handle, 0);
 
         while (!\feof($this->handle)) {
-            $line = \stream_get_line($this->handle, 0, $separator);
+            $line = \stream_get_line($this->handle, \PHP_INT_MAX, $separator);
 
             if ($line === false) {
                 break;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
+use Flow\ETL\{Cache\CacheIndex, Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 final class CachingPipeline implements Pipeline
 {
@@ -32,15 +32,27 @@ final class CachingPipeline implements Pipeline
     public function process(FlowContext $context) : \Generator
     {
         $id = $this->id ?: $context->config->id();
-        $cacheExists = $context->config->cache()->has($id);
+        $cacheIndexExists = $context->cache()->has($id);
+
+        if ($cacheIndexExists) {
+            foreach ($this->pipeline->process($context) as $rows) {
+                yield $rows;
+            }
+
+            return;
+        }
+
+        $index = new CacheIndex($id);
 
         foreach ($this->pipeline->process($context) as $rows) {
-            if (!$cacheExists) {
-                $context->config->cache()->add($id, $rows);
-            }
+            $cacheKey = bin2hex(random_bytes(16));
+            $context->cache()->set($cacheKey, $rows);
+            $index->add($cacheKey);
 
             yield $rows;
         }
+
+        $context->cache()->set($id, $index);
     }
 
     public function source() : Extractor

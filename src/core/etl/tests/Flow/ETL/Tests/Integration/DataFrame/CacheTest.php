@@ -5,43 +5,56 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{config_builder, df, from_cache};
-use Flow\ETL\Cache\PSRSimpleCache;
-use Flow\ETL\Config;
+use Flow\ETL\Cache\CacheIndex;
+use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Cache\Psr16Cache;
+use Flow\ETL\{Extractor, FlowContext};
 
 final class CacheTest extends IntegrationTestCase
 {
     public function test_cache() : void
     {
-        df()
-            ->read(new FakeExtractor($rowsets = 20))
-            ->batchSize(2)
+        $spyExtractor = new class(20) implements Extractor {
+            public int $extractions = 0;
+
+            private Extractor $extractor;
+
+            public function __construct(int $rowsets)
+            {
+                $this->extractor = new FakeExtractor($rowsets);
+            }
+
+            public function extract(FlowContext $context) : \Generator
+            {
+                $this->extractions++;
+
+                return $this->extractor->extract($context);
+            }
+        };
+
+        $cache = new InMemoryCache();
+
+        df(config_builder()->cache($cache))
+            ->read(from_cache(
+                'test_etl_cache',
+                $spyExtractor,
+            ))
             ->cache('test_etl_cache')
             ->run();
 
-        $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
+        self::assertEquals(1, $spyExtractor->extractions);
+        self::assertInstanceOf(CacheIndex::class, $cache->get('test_etl_cache'));
 
-        self::assertContains('test_etl_cache', $cacheContent);
-    }
-
-    public function test_psr_cache() : void
-    {
-        $adapter = new PSRSimpleCache(new Psr16Cache(new ArrayAdapter()));
-
-        df(config_builder()->cache($adapter)->build())
-            ->read(new FakeExtractor($rowsets = 20))
-            ->batchSize(2)
-            ->cache('test_etl_cache')
+        df(config_builder()->cache($cache))
+            ->read(from_cache(
+                'test_etl_cache',
+                $spyExtractor,
+                clear: true
+            ))
             ->run();
 
-        $cachedRows = df(Config::builder()->cache($adapter)->build())->from(from_cache('test_etl_cache'))->fetch();
-
-        self::assertCount($rowsets, $cachedRows);
-
-        $adapter->clear('test_etl_cache');
-        self::assertCount(0, \iterator_to_array($adapter->read('test_etl_cache')));
+        self::assertEquals(1, $spyExtractor->extractions);
+        self::assertFalse($cache->has('test_etl_cache'));
     }
 }

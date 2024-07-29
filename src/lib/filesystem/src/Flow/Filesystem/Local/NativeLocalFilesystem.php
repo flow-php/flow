@@ -15,6 +15,27 @@ use Webmozart\Glob\Glob;
  */
 final class NativeLocalFilesystem implements Filesystem
 {
+    public function appendTo(Path $path) : DestinationStream
+    {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            throw new RuntimeException('Cannot write to system tmp directory');
+        }
+
+        $this->protocol()->validateScheme($path);
+
+        if ($path->isPattern()) {
+            throw new InvalidArgumentException("Pattern paths can't be written: " . $path->uri());
+        }
+
+        if (!$this->status($path->parentDirectory())) {
+            if (!\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true) && !\is_dir($concurrentDirectory)) {
+                throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
+            }
+        }
+
+        return NativeLocalDestinationStream::openAppend($path);
+    }
+
     public function getSystemTmpDir() : Path
     {
         return new Path(\sys_get_temp_dir());

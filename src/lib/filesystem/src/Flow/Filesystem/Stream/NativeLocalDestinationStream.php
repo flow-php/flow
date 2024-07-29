@@ -30,6 +30,17 @@ final class NativeLocalDestinationStream implements DestinationStream
         $this->handle = $handle;
     }
 
+    public static function openAppend(Path $path) : self
+    {
+        $resource = \fopen($path->path(), 'ab', false, $path->context()->resource());
+
+        if ($resource === false) {
+            throw new RuntimeException("Cannot open file: {$path->uri()}");
+        }
+
+        return new self($path, $resource);
+    }
+
     public static function openBlank(Path $path) : self
     {
         $resource = \fopen($path->path(), 'wb', false, $path->context()->resource());

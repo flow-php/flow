@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
 use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, RuntimeException};
-use Flow\ETL\Extractor\PartitionExtractor;
+use Flow\ETL\Extractor\{PartitionExtractor};
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, WindowFunction};
@@ -23,7 +23,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     HashJoinPipeline,
     LinkedPipeline,
     PartitioningPipeline,
-    SynchronousPipeline,
+    SortingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
@@ -179,7 +179,7 @@ final class DataFrame
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
         }
 
-        $this->batchSize($cacheBatchSize ?? $this->context->config->cacheBatchSize());
+        $this->batchSize($cacheBatchSize ?? $this->context->config->cache->cacheBatchSize);
         $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id));
 
         return $this;
@@ -793,11 +793,7 @@ final class DataFrame
      */
     public function sortBy(Reference ...$entries) : self
     {
-        $this
-            ->cache($this->context->config->id())
-            ->run();
-
-        $this->pipeline = new SynchronousPipeline($this->context->config->externalSort()->sortBy(...$entries));
+        $this->pipeline = new LinkedPipeline(new SortingPipeline($this->pipeline, refs(...$entries)));
 
         return $this;
     }

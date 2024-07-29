@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Serializer;
 
-use Flow\ETL\Exception\RuntimeException;
-
 /**
  * @internal
  */
@@ -17,9 +15,13 @@ interface Serializer
     public function serialize(object $serializable) : string;
 
     /**
-     * @param class-string $class
+     * @template T of object
+     *
+     * @param non-empty-array<class-string<T>> $classes
      *
      * @throw RuntimeException
+     *
+     * @return T
      */
-    public function unserialize(string $serialized, string $class) : object;
+    public function unserialize(string $serialized, array $classes) : object;
 }

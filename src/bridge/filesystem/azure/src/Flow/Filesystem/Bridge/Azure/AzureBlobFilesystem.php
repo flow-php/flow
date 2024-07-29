@@ -21,6 +21,22 @@ final class AzureBlobFilesystem implements Filesystem
     {
     }
 
+    public function appendTo(Path $path) : DestinationStream
+    {
+        if ($path->isEqual($this->getSystemTmpDir())) {
+            throw new RuntimeException('Cannot write to system tmp directory');
+        }
+
+        $this->protocol()->validateScheme($path);
+
+        return AzureBlobDestinationStream::openAppend(
+            $this->blobService,
+            $path,
+            $this->options->blockFactory(),
+            $this->options->blockSize()
+        );
+    }
+
     public function getSystemTmpDir() : Path
     {
         return $this->options->tmpDir();

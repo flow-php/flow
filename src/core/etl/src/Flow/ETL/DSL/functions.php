@@ -35,8 +35,9 @@ use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
 use Flow\ETL\Row\{Entry, EntryFactory, EntryReference, Reference, References, Schema};
-use Flow\ETL\{Config,
-    ConfigBuilder,
+use Flow\ETL\{Cache\Implementation\FilesystemCache,
+    Config,
+    Config\ConfigBuilder,
     DataFrame,
     Extractor,
     Flow,
@@ -55,7 +56,8 @@ use Flow\ETL\{Config,
     Transformer,
     Window};
 use Flow\Filesystem\Stream\Mode;
-use Flow\Filesystem\{Partition, Partitions, Path};
+use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
+use Flow\Serializer\{NativePHPSerializer, Serializer};
 
 /**
  * Alias for data_frame() : Flow.
@@ -103,6 +105,11 @@ function from_memory(Memory $memory) : Extractor\MemoryExtractor
 function files(string|Path $directory) : FilesExtractor
 {
     return new FilesExtractor(\is_string($directory) ? \Flow\Filesystem\DSL\path($directory) : $directory);
+}
+
+function filesystem_cache(Path|string|null $cache_dir = null, Filesystem $filesystem = new NativeLocalFilesystem(), Serializer $serializer = new NativePHPSerializer()) : FilesystemCache
+{
+    return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? Path::realpath($cache_dir) : $cache_dir);
 }
 
 /**

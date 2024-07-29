@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Pipeline\Pipes;
+use Flow\ETL\Pipeline\{Pipes};
 
 /**
  * @internal
@@ -18,7 +18,7 @@ interface Pipeline
     public function pipes() : Pipes;
 
     /**
-     * @return \Generator<Rows>
+     * @return \Generator<int, Rows>
      */
     public function process(FlowContext $context) : \Generator;
 

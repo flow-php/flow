@@ -6,6 +6,14 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
+/**
+ * Purpose of linked pipeline is to keep old pipeline as a source of data and add all elements to the new one that
+ * is wrapping the old one.
+ *
+ * SyncPipeline(OldPipeline)
+ *
+ * All new elements are added to the SyncPipeline
+ */
 final class LinkedPipeline implements OverridingPipeline, Pipeline
 {
     private readonly Pipeline $nextPipeline;

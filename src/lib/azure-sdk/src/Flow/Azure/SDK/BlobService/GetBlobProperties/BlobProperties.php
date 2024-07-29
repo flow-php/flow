@@ -10,7 +10,11 @@ final class BlobProperties
 {
     public function __construct(private readonly ResponseInterface $response)
     {
+    }
 
+    public function content() : string
+    {
+        return (string) $this->response->getBody();
     }
 
     public function size() : int
