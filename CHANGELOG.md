@@ -22,6 +22,7 @@
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [926e3b](https://github.com/flow-php/flow/commit/926e3ba79f1d5d99b870aa4f7d49ee81f7afc323) - **typo in test-benchmark.yml workflow** - [@norberttech](https://github.com/norberttech)
 - [bb50bd](https://github.com/flow-php/flow/commit/bb50bd5cce24379738304957f94dbd0a34b1a7cf) - **uploading artificats action by setting overwrite: true** - [@norberttech](https://github.com/norberttech)
 - [#1148](https://github.com/flow-php/flow/pull/1148) - **Typo in docs** - [@inmanturbo](https://github.com/inmanturbo)
 - [#1129](https://github.com/flow-php/flow/pull/1129) - **Monolog http bridge http-message dependency range** - [@norberttech](https://github.com/norberttech)
