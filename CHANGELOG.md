@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-07-29
 
 ### Added
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **Filesystem appendTo - which allows to append data to existing stream** - [@norberttech](https://github.com/norberttech)
 - [#1149](https://github.com/flow-php/flow/pull/1149) - **Add `array_to_row` helper function** - [@stloyd](https://github.com/stloyd)
 - [#1144](https://github.com/flow-php/flow/pull/1144) - **Filesystem - added getSystemTmpDir() method** - [@norberttech](https://github.com/norberttech)
 - [#1144](https://github.com/flow-php/flow/pull/1144) - **Path - added suffix(string $suffix): Path method** - [@norberttech](https://github.com/norberttech)
@@ -13,6 +14,11 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **Simplified Cache abstraction** - [@norberttech](https://github.com/norberttech)
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **Cache implementations does not need to maintain index anymore, this logic was moved outside of Cache** - [@norberttech](https://github.com/norberttech)
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **Extracted Sorting related configuration to standalone Config/ConfigBuilder** - [@norberttech](https://github.com/norberttech)
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **Extracted Caching related configuration to standalone Config/ConfigBuilder** - [@norberttech](https://github.com/norberttech)
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **Reduced default cache batch size to 100 from 1000** - [@norberttech](https://github.com/norberttech)
 - [44e875](https://github.com/flow-php/flow/commit/44e875d1433ba6cb42c0c9cb5a52150704814f6f) - **criteria for fetching latest artifacts after workflow runs** - [@norberttech](https://github.com/norberttech)
 - [#1152](https://github.com/flow-php/flow/pull/1152) - **Make "jawira/case-converter" a hard dependency** - [@stloyd](https://github.com/stloyd)
 - [#1137](https://github.com/flow-php/flow/pull/1137) - **Deprecate Schema::entries in favor to Schema::references** - [@norberttech](https://github.com/norberttech)
@@ -22,6 +28,7 @@
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **External Sort memory consumption** - [@norberttech](https://github.com/norberttech)
 - [6b275e](https://github.com/flow-php/flow/commit/6b275e40e1a0bd5931e1df457b02b34ff2ec05fd) - **broken test-benchmark.yml file** - [@norberttech](https://github.com/norberttech)
 - [926e3b](https://github.com/flow-php/flow/commit/926e3ba79f1d5d99b870aa4f7d49ee81f7afc323) - **typo in test-benchmark.yml workflow** - [@norberttech](https://github.com/norberttech)
 - [bb50bd](https://github.com/flow-php/flow/commit/bb50bd5cce24379738304957f94dbd0a34b1a7cf) - **uploading artificats action by setting overwrite: true** - [@norberttech](https://github.com/norberttech)
@@ -34,6 +41,7 @@
 - [f5ad85](https://github.com/flow-php/flow/commit/f5ad85efac1d71255370a6ee8ba36b791dc14645) - **CONTRIBUTING.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1147](https://github.com/flow-php/flow/pull/1147) - **NullCache implementation that wasn't used anywhere** - [@norberttech](https://github.com/norberttech)
 - [#1152](https://github.com/flow-php/flow/pull/1152) - **Leftovers in main `composer.json` related to AWS SDK** - [@stloyd](https://github.com/stloyd)
 
 ## [0.8.0] - 2024-07-19
