@@ -54,7 +54,7 @@ jobs:
           ./build/flow.phar --version
 
       - name: "Import GPG Key"
-        uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41
+        uses: crazy-max/ghaction-import-gpg@01dd5d3ca463c7f10f7f4f7b4f177225ac661ee4
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
