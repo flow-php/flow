@@ -13,7 +13,7 @@ use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\ETL\{Cache, Config};
+use Flow\ETL\{Cache, Config, NativePHPRandomValueGenerator};
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
