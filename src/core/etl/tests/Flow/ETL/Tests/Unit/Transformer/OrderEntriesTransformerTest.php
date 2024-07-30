@@ -46,8 +46,8 @@ final class OrderEntriesTransformerTest extends TestCase
             row(
                 int_entry('int_a', 1),
                 int_entry('int_b', 1),
-                float_entry('float_a', \Flow\ETL\UniqueFactory::int(100, 100000) / 100),
-                float_entry('float_b', \Flow\ETL\UniqueFactory::int(100, 100000) / 100),
+                float_entry('float_a', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000) / 100),
+                float_entry('float_b', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000) / 100),
                 bool_entry('bool', false),
                 bool_entry('bool_a', false),
                 bool_entry('bool_c', false),
@@ -141,7 +141,7 @@ final class OrderEntriesTransformerTest extends TestCase
         $rows = rows(
             row(
                 int_entry('int', 1),
-                float_entry('float', \Flow\ETL\UniqueFactory::int(100, 100000) / 100),
+                float_entry('float', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000) / 100),
                 bool_entry('bool', false),
                 datetime_entry('datetime', new \DateTimeImmutable('now')),
                 str_entry('null', null),

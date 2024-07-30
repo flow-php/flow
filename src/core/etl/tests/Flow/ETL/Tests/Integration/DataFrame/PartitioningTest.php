@@ -163,13 +163,13 @@ final class PartitioningTest extends IntegrationTestCase
                     function (int $i) : array {
                         $data = [];
 
-                        $maxItems = \Flow\ETL\UniqueFactory::int(2, 10);
+                        $maxItems = \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10);
 
                         for ($d = 0; $d < $maxItems; $d++) {
                             $data[] = [
-                                'id' => \Flow\ETL\UniqueFactory::string(32),
-                                'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(new \DateInterval('P' . $i . 'D'))->setTime(\Flow\ETL\UniqueFactory::int(0, 23), \Flow\ETL\UniqueFactory::int(0, 59), \Flow\ETL\UniqueFactory::int(0, 59)),
-                                'value' => \Flow\ETL\UniqueFactory::int(1, 1000),
+                                'id' => \Flow\ETL\NativePHPRandomValueGenerator::string(32),
+                                'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(new \DateInterval('P' . $i . 'D'))->setTime(\Flow\ETL\NativePHPRandomValueGenerator::int(0, 23), \Flow\ETL\NativePHPRandomValueGenerator::int(0, 59), \Flow\ETL\NativePHPRandomValueGenerator::int(0, 59)),
+                                'value' => \Flow\ETL\NativePHPRandomValueGenerator::int(1, 1000),
                             ];
                         }
 

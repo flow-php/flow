@@ -49,7 +49,7 @@ final class ConfigBuilder
 
     public function build() : Config
     {
-        $this->id ??= 'flow_php' . UniqueFactory::string(32);
+        $this->id ??= 'flow_php' . NativePHPRandomValueGenerator::string(32);
         $entryFactory = new NativeEntryFactory();
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
 

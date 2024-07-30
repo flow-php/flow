@@ -13,7 +13,7 @@ final class TextTest extends TestCase
 {
     public function test_loading_text_files() : void
     {
-        $path = __DIR__ . '/var/flow_php_etl_csv_loader' . \Flow\ETL\UniqueFactory::string(32) . '.csv';
+        $path = __DIR__ . '/var/flow_php_etl_csv_loader' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.csv';
 
         (new Flow())
             ->process(

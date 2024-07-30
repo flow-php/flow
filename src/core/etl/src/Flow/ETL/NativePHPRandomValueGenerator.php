@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-final class UniqueFactory
+final class NativePHPRandomValueGenerator implements RandomValueGenerator
 {
     private function __construct()
     {

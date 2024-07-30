@@ -71,7 +71,7 @@ final class SnappyTest extends TestCase
         $snappy = new Snappy();
 
         for ($iteration = 0; $iteration < 100; $iteration++) {
-            $string = Factory::create()->text(\Flow\ETL\UniqueFactory::int(10, 1000));
+            $string = Factory::create()->text(\Flow\ETL\NativePHPRandomValueGenerator::int(10, 1000));
 
             self::assertSame(
                 $string,

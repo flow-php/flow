@@ -78,8 +78,8 @@ final class RowTest extends TestCase
     public function test_getting_schema_from_row() : void
     {
         $row = row(
-            int_entry('id', \Flow\ETL\UniqueFactory::int(100, 100000)),
-            float_entry('price', \Flow\ETL\UniqueFactory::int(100, 100000) / 100),
+            int_entry('id', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000)),
+            float_entry('price', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000) / 100),
             bool_entry('deleted', false),
             datetime_entry('created-at', new \DateTimeImmutable('now')),
             str_entry('phase', null),

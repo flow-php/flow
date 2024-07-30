@@ -50,7 +50,7 @@ final class FakeExtractor implements Extractor
             yield rows(
                 row(
                     int_entry('int', $id),
-                    float_entry('float', \Flow\ETL\UniqueFactory::int(100, 100000) / 100),
+                    float_entry('float', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000) / 100),
                     bool_entry('bool', false),
                     datetime_entry('datetime', new \DateTimeImmutable('now')),
                     str_entry('null', null),

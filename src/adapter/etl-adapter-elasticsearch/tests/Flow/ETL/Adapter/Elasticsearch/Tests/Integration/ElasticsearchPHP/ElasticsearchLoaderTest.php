@@ -53,19 +53,19 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $loader->load(new Rows(
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\UniqueFactory::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
                 new Row\Entry\StringEntry('name', 'Łukasz')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\UniqueFactory::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
                 new Row\Entry\StringEntry('name', 'Norbert')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\UniqueFactory::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
                 new Row\Entry\StringEntry('name', 'Dawid')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\UniqueFactory::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
                 new Row\Entry\StringEntry('name', 'Tomek')
             ),
         ), new FlowContext(Config::default()));

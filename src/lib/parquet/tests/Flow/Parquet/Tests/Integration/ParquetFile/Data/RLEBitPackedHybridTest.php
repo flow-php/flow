@@ -230,10 +230,10 @@ final class RLEBitPackedHybridTest extends TestCase
     {
         for ($iteration = 0; $iteration < 100; $iteration++) {
             $values = [];
-            $maxValues = \Flow\ETL\UniqueFactory::int(10, 1000);
+            $maxValues = \Flow\ETL\NativePHPRandomValueGenerator::int(10, 1000);
 
             for ($i = 0; $i < $maxValues; $i++) {
-                $values[] = \Flow\ETL\UniqueFactory::int(0, 1000);
+                $values[] = \Flow\ETL\NativePHPRandomValueGenerator::int(0, 1000);
             }
 
             $buffer = '';

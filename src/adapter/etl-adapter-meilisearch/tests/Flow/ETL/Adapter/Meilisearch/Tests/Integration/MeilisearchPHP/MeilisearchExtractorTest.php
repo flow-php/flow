@@ -37,7 +37,7 @@ final class MeilisearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\NativePHPRandomValueGenerator::int(0, 1))
                 ),
                 \range(1, 100)
             ),
@@ -63,7 +63,7 @@ final class MeilisearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\NativePHPRandomValueGenerator::int(0, 1))
                 ),
                 // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
                 \range(1, 999)
@@ -102,7 +102,7 @@ final class MeilisearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\UniqueFactory::int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) \Flow\ETL\NativePHPRandomValueGenerator::int(0, 1))
                 ),
                 // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
                 \range(1, 999)

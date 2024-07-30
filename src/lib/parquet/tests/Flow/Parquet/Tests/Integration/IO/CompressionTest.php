@@ -27,7 +27,7 @@ final class CompressionTest extends TestCase
             self::markTestSkipped('The Brotli extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::BROTLI);
 
@@ -51,11 +51,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
@@ -74,7 +74,7 @@ final class CompressionTest extends TestCase
 
     public function test_writing_and_reading_file_with_gzip_compression() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::GZIP);
 
@@ -98,11 +98,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
@@ -126,7 +126,7 @@ final class CompressionTest extends TestCase
             self::markTestSkipped('The lz4 extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::LZ4);
 
@@ -150,11 +150,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
@@ -178,7 +178,7 @@ final class CompressionTest extends TestCase
             self::markTestSkipped('The lz4 extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::LZ4_RAW);
 
@@ -202,11 +202,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
@@ -230,7 +230,7 @@ final class CompressionTest extends TestCase
             self::markTestSkipped('The snappy extension is not available');
         }
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::SNAPPY);
 
@@ -254,11 +254,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
@@ -281,7 +281,7 @@ final class CompressionTest extends TestCase
             self::markTestSkipped('The snappy extension is available');
         }
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::SNAPPY);
 
@@ -305,11 +305,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
@@ -328,7 +328,7 @@ final class CompressionTest extends TestCase
 
     public function test_writing_and_reading_file_with_uncompressed_compression() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::UNCOMPRESSED);
 
@@ -352,11 +352,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
@@ -380,7 +380,7 @@ final class CompressionTest extends TestCase
             self::markTestSkipped('The Zstd extension is not available');
         }
 
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\UniqueFactory::string(32) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . \Flow\ETL\NativePHPRandomValueGenerator::string(32) . '.parquet';
 
         $writer = new Writer(Compressions::ZSTD);
 
@@ -404,11 +404,11 @@ final class CompressionTest extends TestCase
                         'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                         'list_of_int' => \array_map(
                             static fn ($i) => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                         'list_of_string' => \array_map(
                             static fn ($i) => $faker->text(10),
-                            \range(1, \Flow\ETL\UniqueFactory::int(2, 10))
+                            \range(1, \Flow\ETL\NativePHPRandomValueGenerator::int(2, 10))
                         ),
                     ],
                 ],
