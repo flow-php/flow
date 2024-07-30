@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile\RowGroupBuilder;
 
+use function Flow\ETL\DSL\generate_random_int;
 use Faker\Factory;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DictionaryPageHeader, Type};
