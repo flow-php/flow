@@ -6,8 +6,7 @@ namespace Flow\ETL;
 
 interface RandomValueGenerator
 {
-    public static function int(int $min, int $max) : int;
+    public function int(int $min, int $max) : int;
 
-    /** @param int<1, max> $int */
-    public static function string(int $int) : string;
+    public function string(int $int) : string;
 }

@@ -4,7 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, float_entry, int_entry, list_entry, map_entry, object_entry, row, str_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_object, type_string};
+use function Flow\ETL\DSL\{array_entry,
+    bool_entry,
+    datetime_entry,
+    float_entry,
+    generate_random_int,
+    int_entry,
+    list_entry,
+    map_entry,
+    object_entry,
+    row,
+    str_entry,
+    struct_element,
+    struct_entry,
+    struct_type,
+    type_int,
+    type_list,
+    type_map,
+    type_object,
+    type_string};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -78,8 +96,8 @@ final class RowTest extends TestCase
     public function test_getting_schema_from_row() : void
     {
         $row = row(
-            int_entry('id', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000)),
-            float_entry('price', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000) / 100),
+            int_entry('id', generate_random_int(100, 100000)),
+            float_entry('price', generate_random_int(100, 100000) / 100),
             bool_entry('deleted', false),
             datetime_entry('created-at', new \DateTimeImmutable('now')),
             str_entry('phase', null),

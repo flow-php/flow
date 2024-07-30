@@ -35,9 +35,9 @@ final class NativePHPRandomValueGeneratorTest extends TestCase
 
     public function test_can_create_random_int_from_given_range() : void
     {
-        self::assertSame(1, (NativePHPRandomValueGenerator::int(1, 1)));
+        self::assertSame(1, ((new NativePHPRandomValueGenerator())->int(1, 1)));
         self::assertThat(
-            NativePHPRandomValueGenerator::int(1, 2),
+            (new NativePHPRandomValueGenerator())->int(1, 2),
             self::logicalOr(
                 self::equalTo(1),
                 self::equalTo(2)
@@ -48,18 +48,18 @@ final class NativePHPRandomValueGeneratorTest extends TestCase
     /** @dataProvider integers_provider */
     public function test_can_create_random_string_with_given_length(int $expectedLength) : void
     {
-        self::assertSame($expectedLength, mb_strlen(NativePHPRandomValueGenerator::string($expectedLength)));
+        self::assertSame($expectedLength, mb_strlen((new NativePHPRandomValueGenerator())->string($expectedLength)));
     }
 
     public function test_empty_string_on_length_below_1() : void
     {
         self::assertSame(
             '',
-            NativePHPRandomValueGenerator::string(0)
+            (new NativePHPRandomValueGenerator())->string(0)
         );
         self::assertSame(
             '',
-            NativePHPRandomValueGenerator::string(-1)
+            (new NativePHPRandomValueGenerator())->string(-1)
         );
     }
 
@@ -67,14 +67,14 @@ final class NativePHPRandomValueGeneratorTest extends TestCase
     public function test_fail_on_invalid_range(int $min, int $max) : void
     {
         self::expectException(\ValueError::class);
-        NativePHPRandomValueGenerator::int($min, $max);
+        (new NativePHPRandomValueGenerator())->int($min, $max);
     }
 
     /** @dataProvider valid_range_provider */
     public function test_return_random_int_on_valid_range(int $min, int $max) : void
     {
         self::assertThat(
-            NativePHPRandomValueGenerator::int($min, $max),
+            (new NativePHPRandomValueGenerator())->int($min, $max),
             self::logicalOr(
                 self::greaterThanOrEqual($min),
                 self::lessThanOrEqual($max)

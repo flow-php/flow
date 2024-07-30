@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
 use function Flow\ETL\Adapter\Elasticsearch\{to_es_bulk_index, to_es_bulk_update};
+use function Flow\ETL\DSL\generate_random_string;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\{EntryIdFactory, HashIdFactory};
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
@@ -53,19 +54,19 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $loader->load(new Rows(
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . generate_random_string())),
                 new Row\Entry\StringEntry('name', 'Łukasz')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
                 new Row\Entry\StringEntry('name', 'Norbert')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
                 new Row\Entry\StringEntry('name', 'Dawid')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\NativePHPRandomValueGenerator::string(32))),
+                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
                 new Row\Entry\StringEntry('name', 'Tomek')
             ),
         ), new FlowContext(Config::default()));

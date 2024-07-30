@@ -32,7 +32,7 @@ final class NativeLocalFileBlocksFactory implements BlockFactory
 
     public function create(int $size) : Block
     {
-        $id = \Flow\ETL\NativePHPRandomValueGenerator::string(32);
+        $id = \Flow\ETL\DSL\generate_random_string();
 
         return new Block($id, $size, new Path($this->blockLocation . DIRECTORY_SEPARATOR . $id));
     }

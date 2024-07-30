@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\{array_entry,
     datetime_entry,
     enum_entry,
     float_entry,
+    generate_random_int,
     int_entry,
     json_entry,
     list_entry,
@@ -50,7 +51,7 @@ final class FakeExtractor implements Extractor
             yield rows(
                 row(
                     int_entry('int', $id),
-                    float_entry('float', \Flow\ETL\NativePHPRandomValueGenerator::int(100, 100000) / 100),
+                    float_entry('float', generate_random_int(100, 100000) / 100),
                     bool_entry('bool', false),
                     datetime_entry('datetime', new \DateTimeImmutable('now')),
                     str_entry('null', null),

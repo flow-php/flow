@@ -13,7 +13,7 @@ use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\ETL\{Cache, Config, NativePHPRandomValueGenerator};
+use Flow\ETL\{Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
@@ -33,6 +33,8 @@ final class ConfigBuilder
 
     private bool $putInputIntoRows;
 
+    private RandomValueGenerator $randomValueGenerator;
+
     private ?Serializer $serializer;
 
     public function __construct()
@@ -45,11 +47,12 @@ final class ConfigBuilder
         $this->caster = null;
         $this->cache = new CacheConfigBuilder();
         $this->sort = new SortConfigBuilder();
+        $this->randomValueGenerator = new NativePHPRandomValueGenerator();
     }
 
     public function build() : Config
     {
-        $this->id ??= 'flow_php' . NativePHPRandomValueGenerator::string(32);
+        $this->id ??= 'flow_php' . $this->randomValueGenerator->string(32);
         $entryFactory = new NativeEntryFactory();
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
 

@@ -50,6 +50,7 @@ use Flow\ETL\{Cache\Implementation\FilesystemCache,
     Join\Comparison\Identical,
     Join\Expression,
     Loader,
+    NativePHPRandomValueGenerator,
     Pipeline,
     Row,
     Rows,
@@ -1208,4 +1209,14 @@ function is_type(array $types, mixed $value) : bool
     }
 
     return false;
+}
+
+function generate_random_string(int $length = 32, NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator()) : string
+{
+    return $generator->string($length);
+}
+
+function generate_random_int(int $start = PHP_INT_MIN, int $end = PHP_INT_MAX, NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator()) : int
+{
+    return $generator->int($start, $end);
 }

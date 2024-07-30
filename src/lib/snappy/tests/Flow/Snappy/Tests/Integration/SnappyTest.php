@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Snappy\Tests\Integration;
 
+use function Flow\ETL\DSL\generate_random_int;
 use Faker\Factory;
 use Flow\Snappy\Snappy;
 use PHPUnit\Framework\TestCase;
@@ -71,7 +72,7 @@ final class SnappyTest extends TestCase
         $snappy = new Snappy();
 
         for ($iteration = 0; $iteration < 100; $iteration++) {
-            $string = Factory::create()->text(\Flow\ETL\NativePHPRandomValueGenerator::int(10, 1000));
+            $string = Factory::create()->text(generate_random_int(10, 1000));
 
             self::assertSame(
                 $string,

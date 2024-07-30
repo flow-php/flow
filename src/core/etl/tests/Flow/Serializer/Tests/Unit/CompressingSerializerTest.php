@@ -47,7 +47,7 @@ final class CompressingSerializerTest extends TestCase
 
         $serialized = $serializer->serialize($rows);
 
-        $unserialized = $serializer->unserialize($serialized, Rows::class);
+        $unserialized = $serializer->unserialize($serialized, [Rows::class]);
 
         self::assertEquals(
             $rows,
