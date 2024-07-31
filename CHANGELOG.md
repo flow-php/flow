@@ -34,6 +34,7 @@
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1161](https://github.com/flow-php/flow/pull/1161) - **Fixed invalid map type detection** - [@norberttech](https://github.com/norberttech)
 - [#1147](https://github.com/flow-php/flow/pull/1147) - **External Sort memory consumption** - [@norberttech](https://github.com/norberttech)
 - [6b275e](https://github.com/flow-php/flow/commit/6b275e40e1a0bd5931e1df457b02b34ff2ec05fd) - **broken test-benchmark.yml file** - [@norberttech](https://github.com/norberttech)
 - [926e3b](https://github.com/flow-php/flow/commit/926e3ba79f1d5d99b870aa4f7d49ee81f7afc323) - **typo in test-benchmark.yml workflow** - [@norberttech](https://github.com/norberttech)
