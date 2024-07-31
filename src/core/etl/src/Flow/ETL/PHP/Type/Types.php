@@ -9,16 +9,29 @@ final class Types implements \Countable
     private readonly ?Type $first;
 
     /**
-     * @var string[]
+     * @var array<Type>
      */
     private array $types;
 
     public function __construct(Type ...$types)
     {
-        $this->types = \array_unique(
-            \array_map(fn (Type $type) : string => $type->toString(), $types)
-        );
+        $typesList = [];
+
+        foreach ($types as $type) {
+            $typesList[$type->toString()] = $type;
+        }
+
+        $this->types = \array_values($typesList);
+
         $this->first = $types[0] ?? null;
+    }
+
+    /**
+     * @return array<Type>
+     */
+    public function all() : array
+    {
+        return $this->types;
     }
 
     public function count() : int
@@ -31,11 +44,22 @@ final class Types implements \Countable
         return $this->first;
     }
 
+    public function has(Type $type) : bool
+    {
+        foreach ($this->types as $existingType) {
+            if ($existingType->isEqual($type)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function without(Type ...$types) : self
     {
-        $this->types = \array_filter($this->types, function (string $type) use ($types) : bool {
+        $filteredTypes = \array_filter($this->types, function (Type $type) use ($types) : bool {
             foreach ($types as $withoutType) {
-                if ($type === $withoutType->toString()) {
+                if ($type->isEqual($withoutType)) {
                     return false;
                 }
             }
@@ -43,6 +67,6 @@ final class Types implements \Countable
             return true;
         });
 
-        return $this;
+        return new self(...$filteredTypes);
     }
 }

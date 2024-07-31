@@ -56,7 +56,7 @@ final class MapEntryTest extends TestCase
     public function test_creating_map_from_not_map_array() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map<integer, integer> got different types: structure{a: integer, b: integer}');
+        $this->expectExceptionMessage('Expected map<integer, integer> got different types: map<string, integer>');
 
         new MapEntry('map', ['a' => 1, 'b' => 2], new MapType(MapKey::integer(), MapValue::integer()));
     }

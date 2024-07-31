@@ -4,7 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Factory;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, enum_entry, float_entry, int_entry, json_entry, json_object_entry, list_entry, object_entry, str_entry, type_datetime, type_float, type_int, type_list, type_object, type_string, uuid_entry, xml_entry};
+use function Flow\ETL\DSL\{array_entry,
+    bool_entry,
+    datetime_entry,
+    enum_entry,
+    float_entry,
+    int_entry,
+    json_entry,
+    json_object_entry,
+    list_entry,
+    object_entry,
+    str_entry,
+    structure_element,
+    structure_type,
+    type_datetime,
+    type_float,
+    type_int,
+    type_list,
+    type_map,
+    type_object,
+    type_string,
+    uuid_entry,
+    xml_entry};
 use Flow\ETL\Exception\{CastingException, SchemaDefinitionNotFoundException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -271,17 +292,14 @@ final class NativeEntryFactoryTest extends TestCase
                     'street' => 'Floriańska',
                     'zip' => '31-021',
                 ],
-                new StructureType([
-                    new StructureElement('city', type_string()),
-                    new StructureElement(
+                structure_type([
+                    structure_element('city', type_string()),
+                    structure_element(
                         'geo',
-                        new StructureType([
-                            new StructureElement('lat', type_float()),
-                            new StructureElement('lon', type_float()),
-                        ]),
+                        type_map(type_string(), type_float())
                     ),
-                    new StructureElement('street', type_string()),
-                    new StructureElement('zip', type_string()),
+                    structure_element('street', type_string()),
+                    structure_element('zip', type_string()),
                 ]),
             ),
             (new NativeEntryFactory())->create('address', [

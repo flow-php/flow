@@ -26,6 +26,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_string(),
             ],
             true,
+            true,
         ];
 
         yield 'simple map' => [
@@ -35,6 +36,7 @@ final class ArrayContentDetectorTest extends TestCase
             [
                 type_string(),
             ],
+            false,
             false,
         ];
 
@@ -48,6 +50,7 @@ final class ArrayContentDetectorTest extends TestCase
                 new ListType(ListElement::integer()),
             ],
             false,
+            false,
         ];
 
         yield 'list of unique same structures' => [
@@ -60,6 +63,7 @@ final class ArrayContentDetectorTest extends TestCase
                     new StructureElement('name', type_string()),
                 ]),
             ],
+            true,
             true,
         ];
 
@@ -76,6 +80,7 @@ final class ArrayContentDetectorTest extends TestCase
                 ),
             ],
             false,
+            false,
         ];
 
         yield 'array of nulls' => [
@@ -87,33 +92,25 @@ final class ArrayContentDetectorTest extends TestCase
                 type_null(),
                 type_null(),
             ],
+            false,
             false,
         ];
     }
 
     public static function provide_map_data() : \Generator
     {
-        yield 'simple list' => [
+        yield 'string string' => [
             [
-                type_int(),
+                type_string(),
             ],
             [
                 type_string(),
             ],
             false,
-        ];
-
-        yield 'simple map' => [
-            [
-                type_string(),
-            ],
-            [
-                type_string(),
-            ],
             true,
         ];
 
-        yield 'simple structure' => [
+        yield 'string structure{map<string,string>,list<int>}' => [
             [
                 type_string(),
             ],
@@ -122,6 +119,7 @@ final class ArrayContentDetectorTest extends TestCase
                 new MapType(MapKey::string(), MapValue::string()),
                 new ListType(ListElement::integer()),
             ],
+            false,
             false,
         ];
 
@@ -135,6 +133,7 @@ final class ArrayContentDetectorTest extends TestCase
                     new StructureElement('name', type_string()),
                 ]),
             ],
+            true,
             false,
         ];
 
@@ -150,6 +149,7 @@ final class ArrayContentDetectorTest extends TestCase
                     )
                 ),
             ],
+            false,
             true,
         ];
 
@@ -162,6 +162,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_null(),
                 type_null(),
             ],
+            false,
             false,
         ];
     }
@@ -176,6 +177,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_string(),
             ],
             false,
+            false,
         ];
 
         yield 'simple map' => [
@@ -185,6 +187,7 @@ final class ArrayContentDetectorTest extends TestCase
             [
                 type_string(),
             ],
+            false,
             false,
         ];
 
@@ -198,6 +201,7 @@ final class ArrayContentDetectorTest extends TestCase
                 new ListType(ListElement::integer()),
             ],
             true,
+            true,
         ];
 
         yield 'list of unique same structures' => [
@@ -210,6 +214,7 @@ final class ArrayContentDetectorTest extends TestCase
                     new StructureElement('name', type_string()),
                 ]),
             ],
+            false,
             false,
         ];
 
@@ -226,6 +231,7 @@ final class ArrayContentDetectorTest extends TestCase
                 ),
             ],
             false,
+            false,
         ];
 
         yield 'array of nulls' => [
@@ -237,6 +243,7 @@ final class ArrayContentDetectorTest extends TestCase
                 type_null(),
                 type_null(),
             ],
+            false,
             false,
         ];
 
@@ -250,33 +257,34 @@ final class ArrayContentDetectorTest extends TestCase
                 ArrayType::empty(),
             ],
             false,
+            false,
         ];
     }
 
     #[DataProvider('provide_list_data')]
-    public function test_list_data(array $keys, array $values, bool $expected) : void
+    public function test_list_data(array $keys, array $values, bool $isList, bool $expected) : void
     {
         self::assertSame(
             $expected,
-            (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isList()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isList()
         );
     }
 
     #[DataProvider('provide_map_data')]
-    public function test_map_data(array $keys, array $values, bool $expected) : void
+    public function test_map_data(array $keys, array $values, bool $isList, bool $expected) : void
     {
         self::assertSame(
             $expected,
-            (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isMap()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isMap()
         );
     }
 
     #[DataProvider('provide_structure_data')]
-    public function test_structure_data(array $keys, array $values, bool $expected) : void
+    public function test_structure_data(array $keys, array $values, bool $isList, bool $expected) : void
     {
         self::assertSame(
             $expected,
-            (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isStructure()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values), $isList))->isStructure()
         );
     }
 }

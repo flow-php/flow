@@ -57,7 +57,7 @@ final class ListEntryTest extends TestCase
     public function test_creating_list_from_not_list_array() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<integer> got different types: structure{a: integer, b: integer}');
+        $this->expectExceptionMessage('Expected list<integer> got different types: map<string, integer>');
 
         new ListEntry('list', ['a' => 1, 'b' => 2], new ListType(ListElement::integer()));
     }
