@@ -10,6 +10,7 @@ use function Flow\ETL\DSL\{type_array,
     type_float,
     type_int,
     type_json,
+    type_map,
     type_null,
     type_object,
     type_string,
@@ -20,7 +21,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ScalarType};
 
 final class TypeDetector
 {
@@ -56,17 +57,25 @@ final class TypeDetector
             }
 
             $detector = new ArrayContentDetector(
-                new Types(...\array_map([$this, 'detectType'], \array_keys($value))),
-                new Types(...\array_map([$this, 'detectType'], \array_values($value)))
+                $keyTypes = new Types(...\array_map([$this, 'detectType'], \array_keys($value))),
+                $valueTypes = new Types(...\array_map([$this, 'detectType'], \array_values($value))),
+                \array_is_list($value)
             );
 
+            /** @var Type $firstValue */
             $firstValue = $detector->firstValueType();
+            /** @var ScalarType $firstKeyType */
+            $firstKeyType = $detector->firstKeyType();
 
-            if ($detector->isList() && $firstValue) {
-                return new ListType(ListElement::fromType($firstValue));
+            if ($detector->isList()) {
+                return new ListType(ListElement::fromType($firstValue->makeNullable($valueTypes->has(type_null()))));
             }
 
-            if ($detector->isStructure() || $detector->isMap()) {
+            if ($detector->isMap()) {
+                return type_map($firstKeyType, $firstValue->makeNullable($valueTypes->has(type_null())));
+            }
+
+            if ($detector->isStructure()) {
                 $elements = [];
 
                 foreach ($value as $key => $item) {

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\PHP\Type;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     JsonType,
     ListType,
+    MapType,
     StructureType,
     UuidType,
     XMLElementType,
@@ -82,8 +83,8 @@ final class TypeDetectorTest extends TestCase
                 'two' => 'two',
                 'three' => 'three',
             ],
-            StructureType::class,
-            'structure{one: string, two: string, three: string}',
+            MapType::class,
+            'map<string, string>',
         ];
 
         yield 'simple structure' => [
@@ -101,7 +102,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             StructureType::class,
-            'structure{one: string, two: string, three: string, list: list<integer>, map: structure{one: string, two: string, three: string}}',
+            'structure{one: string, two: string, three: string, list: list<integer>, map: map<string, string>}',
         ];
 
         yield 'list of unique same structures' => [
@@ -136,8 +137,8 @@ final class TypeDetectorTest extends TestCase
                     ],
                 ],
             ],
-            StructureType::class,
-            'structure{one: structure{map: structure{one: string, two: string, three: string}}, two: structure{map: structure{one: string, two: string, three: string}}}',
+            MapType::class,
+            'map<string, map<string, map<string, string>>>',
         ];
 
         yield 'empty array' => [
@@ -155,7 +156,17 @@ final class TypeDetectorTest extends TestCase
                 5,
             ],
             ListType::class,
-            'list<integer>',
+            'list<?integer>',
+        ];
+
+        yield 'map of int to string' => [
+            [
+                10 => '10',
+                20 => '20',
+                30 => '30',
+            ],
+            MapType::class,
+            'map<integer, string>',
         ];
 
         yield 'one level list' => [
@@ -242,7 +253,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            'list<?list<integer>>',
         ];
 
         yield 'list of lists with empty' => [
@@ -282,8 +293,8 @@ final class TypeDetectorTest extends TestCase
                 'two' => null,
                 'three' => 'three',
             ],
-            StructureType::class,
-            'structure{one: string, two: null, three: string}',
+            MapType::class,
+            'map<string, ?string>',
         ];
     }
 

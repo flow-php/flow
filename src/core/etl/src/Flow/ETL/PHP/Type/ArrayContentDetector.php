@@ -14,16 +14,19 @@ final class ArrayContentDetector
 
     private readonly ?Type $firstValueType;
 
+    private bool $isList;
+
     private readonly int $uniqueKeysTypeCount;
 
     private readonly int $uniqueValuesTypeCount;
 
-    public function __construct(Types $uniqueKeysType, Types $uniqueValuesType)
+    public function __construct(Types $uniqueKeysType, Types $uniqueValuesType, bool $isList = false)
     {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
         $this->uniqueKeysTypeCount = $uniqueKeysType->count();
         $this->uniqueValuesTypeCount = $uniqueValuesType->without(type_array(true), type_null())->count();
+        $this->isList = $isList;
     }
 
     public function firstKeyType() : ?ScalarType
@@ -42,16 +45,12 @@ final class ArrayContentDetector
 
     public function isList() : bool
     {
-        return 1 === $this->uniqueValuesTypeCount && $this->firstKeyType()?->isInteger();
+        return 1 === $this->uniqueValuesTypeCount && $this->firstKeyType()?->isInteger() && $this->isList;
     }
 
     public function isMap() : bool
     {
-        if (1 === $this->uniqueValuesTypeCount && 1 === $this->uniqueKeysTypeCount) {
-            return !$this->firstKeyType()?->isInteger();
-        }
-
-        return false;
+        return 1 === $this->uniqueValuesTypeCount && 1 === $this->uniqueKeysTypeCount && !$this->isList;
     }
 
     public function isStructure() : bool
