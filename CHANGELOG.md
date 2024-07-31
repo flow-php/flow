@@ -1,6 +1,8 @@
 ## [Unreleased] - 2024-07-31
 
 ### Added
+- [#1160](https://github.com/flow-php/flow/pull/1160) - **Regex Scalar Function** - [@norberttech](https://github.com/norberttech)
+- [#1160](https://github.com/flow-php/flow/pull/1160) - **Missing optional arguments to all regex scalar functions** - [@norberttech](https://github.com/norberttech)
 - [#1128](https://github.com/flow-php/flow/pull/1128) - **UniqueFactory as source of random ints/strings with given length** - [@mleczakm](https://github.com/mleczakm)
 - [#1147](https://github.com/flow-php/flow/pull/1147) - **Filesystem appendTo - which allows to append data to existing stream** - [@norberttech](https://github.com/norberttech)
 - [#1149](https://github.com/flow-php/flow/pull/1149) - **Add `array_to_row` helper function** - [@stloyd](https://github.com/stloyd)
@@ -15,6 +17,9 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1160](https://github.com/flow-php/flow/pull/1160) - **Renamed PregMatch into RegexMatch** - [@norberttech](https://github.com/norberttech)
+- [#1160](https://github.com/flow-php/flow/pull/1160) - **Renamed PregMatchAll into RegexMatchAll** - [@norberttech](https://github.com/norberttech)
+- [#1160](https://github.com/flow-php/flow/pull/1160) - **Renamed PregReplex into RegexReplace** - [@norberttech](https://github.com/norberttech)
 - [#1147](https://github.com/flow-php/flow/pull/1147) - **Simplified Cache abstraction** - [@norberttech](https://github.com/norberttech)
 - [#1147](https://github.com/flow-php/flow/pull/1147) - **Cache implementations does not need to maintain index anymore, this logic was moved outside of Cache** - [@norberttech](https://github.com/norberttech)
 - [#1147](https://github.com/flow-php/flow/pull/1147) - **Extracted Sorting related configuration to standalone Config/ConfigBuilder** - [@norberttech](https://github.com/norberttech)
