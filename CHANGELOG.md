@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-07-29
+## [Unreleased] - 2024-07-31
 
 ### Added
+- [#1128](https://github.com/flow-php/flow/pull/1128) - **UniqueFactory as source of random ints/strings with given length** - [@mleczakm](https://github.com/mleczakm)
 - [#1147](https://github.com/flow-php/flow/pull/1147) - **Filesystem appendTo - which allows to append data to existing stream** - [@norberttech](https://github.com/norberttech)
 - [#1149](https://github.com/flow-php/flow/pull/1149) - **Add `array_to_row` helper function** - [@stloyd](https://github.com/stloyd)
 - [#1144](https://github.com/flow-php/flow/pull/1144) - **Filesystem - added getSystemTmpDir() method** - [@norberttech](https://github.com/norberttech)
