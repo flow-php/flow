@@ -10,6 +10,7 @@ use function Flow\ETL\DSL\{collect,
     from_array,
     from_path_partitions,
     from_rows,
+    generate_random_int,
     int_entry,
     lit,
     overwrite,
@@ -163,13 +164,13 @@ final class PartitioningTest extends IntegrationTestCase
                     function (int $i) : array {
                         $data = [];
 
-                        $maxItems = \random_int(2, 10);
+                        $maxItems = generate_random_int(2, 10);
 
                         for ($d = 0; $d < $maxItems; $d++) {
                             $data[] = [
-                                'id' => bin2hex(random_bytes(16)),
-                                'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(new \DateInterval('P' . $i . 'D'))->setTime(\random_int(0, 23), \random_int(0, 59), \random_int(0, 59)),
-                                'value' => \random_int(1, 1000),
+                                'id' => \Flow\ETL\DSL\generate_random_string(),
+                                'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(new \DateInterval('P' . $i . 'D'))->setTime(generate_random_int(0, 23), generate_random_int(0, 59), generate_random_int(0, 59)),
+                                'value' => generate_random_int(1, 1000),
                             ];
                         }
 

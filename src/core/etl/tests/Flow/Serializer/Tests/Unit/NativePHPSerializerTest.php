@@ -42,7 +42,7 @@ final class NativePHPSerializerTest extends TestCase
 
         self::assertEquals(
             $rows,
-            $serializer->unserialize($serialized, Rows::class)
+            $serializer->unserialize($serialized, [Rows::class])
         );
     }
 }

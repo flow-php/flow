@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\Adapter\Meilisearch\{from_meilisearch, meilisearch_hits_to_rows, to_meilisearch_bulk_index};
+use function Flow\ETL\DSL\generate_random_int;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
@@ -37,7 +38,7 @@ final class MeilisearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
                 ),
                 \range(1, 100)
             ),
@@ -63,7 +64,7 @@ final class MeilisearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
                 ),
                 // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
                 \range(1, 999)
@@ -102,7 +103,7 @@ final class MeilisearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('id', \sha1((string) $i)),
                     new Row\Entry\IntegerEntry('position', $i),
                     new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
+                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
                 ),
                 // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
                 \range(1, 999)

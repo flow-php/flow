@@ -16,6 +16,7 @@ use function Flow\ETL\DSL\{array_entry,
     enum_entry,
     float_entry,
     flow_context,
+    generate_random_int,
     int_entry,
     json_entry,
     list_entry,
@@ -46,8 +47,8 @@ final class OrderEntriesTransformerTest extends TestCase
             row(
                 int_entry('int_a', 1),
                 int_entry('int_b', 1),
-                float_entry('float_a', \random_int(100, 100000) / 100),
-                float_entry('float_b', \random_int(100, 100000) / 100),
+                float_entry('float_a', generate_random_int(100, 100000) / 100),
+                float_entry('float_b', generate_random_int(100, 100000) / 100),
                 bool_entry('bool', false),
                 bool_entry('bool_a', false),
                 bool_entry('bool_c', false),
@@ -141,7 +142,7 @@ final class OrderEntriesTransformerTest extends TestCase
         $rows = rows(
             row(
                 int_entry('int', 1),
-                float_entry('float', \random_int(100, 100000) / 100),
+                float_entry('float', generate_random_int(100, 100000) / 100),
                 bool_entry('bool', false),
                 datetime_entry('datetime', new \DateTimeImmutable('now')),
                 str_entry('null', null),

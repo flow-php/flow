@@ -14,7 +14,65 @@ use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\StyleConverter\StringStyles;
-use Flow\ETL\Function\{All, Any, ArrayExists, ArrayGet, ArrayGetCollection, ArrayKeyRename, ArrayKeysStyleConvert, ArrayMerge, ArrayMergeCollection, ArrayReverse, ArraySort, ArrayUnpack, Average, Between, CallMethod, Capitalize, Cast, Collect, CollectUnique, Combine, Concat, Count, DateTimeFormat, DenseRank, Exists, First, Hash, Last, ListFunctions, Literal, Max, Min, Not, Now, NumberFormat, Optional, PregMatch, PregMatchAll, PregReplace, Rank, Round, RowNumber, Sanitize, ScalarFunction, Size, Split, Sprintf, StructureFunctions, Sum, ToDate, ToDateTime, ToLower, ToMoney, ToTimeZone, ToUpper, Ulid, Uuid, When};
+use Flow\ETL\Function\{All,
+    Any,
+    ArrayExists,
+    ArrayGet,
+    ArrayGetCollection,
+    ArrayKeyRename,
+    ArrayKeysStyleConvert,
+    ArrayMerge,
+    ArrayMergeCollection,
+    ArrayReverse,
+    ArraySort,
+    ArrayUnpack,
+    Average,
+    Between,
+    CallMethod,
+    Capitalize,
+    Cast,
+    Collect,
+    CollectUnique,
+    Combine,
+    Concat,
+    Count,
+    DateTimeFormat,
+    DenseRank,
+    Exists,
+    First,
+    Hash,
+    Last,
+    ListFunctions,
+    Literal,
+    Max,
+    Min,
+    Not,
+    Now,
+    NumberFormat,
+    Optional,
+    PregMatch,
+    PregMatchAll,
+    PregReplace,
+    RandomString,
+    Rank,
+    Round,
+    RowNumber,
+    Sanitize,
+    ScalarFunction,
+    Size,
+    Split,
+    Sprintf,
+    StructureFunctions,
+    Sum,
+    ToDate,
+    ToDateTime,
+    ToLower,
+    ToMoney,
+    ToTimeZone,
+    ToUpper,
+    Ulid,
+    Uuid,
+    When};
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\{CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Memory\Memory;
@@ -50,7 +108,9 @@ use Flow\ETL\{Cache\Implementation\FilesystemCache,
     Join\Comparison\Identical,
     Join\Expression,
     Loader,
+    NativePHPRandomValueGenerator,
     Pipeline,
+    RandomValueGenerator,
     Row,
     Rows,
     Transformer,
@@ -1208,4 +1268,21 @@ function is_type(array $types, mixed $value) : bool
     }
 
     return false;
+}
+
+function generate_random_string(int $length = 32, NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator()) : string
+{
+    return $generator->string($length);
+}
+
+function generate_random_int(int $start = PHP_INT_MIN, int $end = PHP_INT_MAX, NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator()) : int
+{
+    return $generator->int($start, $end);
+}
+
+function random_string(
+    int|ScalarFunction $length,
+    RandomValueGenerator $generator = new NativePHPRandomValueGenerator()
+) : RandomString {
+    return new RandomString($length, $generator);
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use function Flow\ETL\DSL\generate_random_int;
 use Faker\Factory;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -21,7 +22,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_bool_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::boolean('boolean'));
@@ -47,7 +48,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_bool_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::boolean('boolean'));
@@ -55,7 +56,7 @@ final class SimpleTypesWritingTest extends TestCase
         $inputData = \array_merge(...\array_map(static function (int $i) : array {
             return [
                 [
-                    'boolean' => $i % 2 == 0 ? (bool) \random_int(0, 1) : null,
+                    'boolean' => $i % 2 == 0 ? (bool) generate_random_int(0, 1) : null,
                 ],
             ];
         }, \range(1, 100)));
@@ -73,7 +74,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_date_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::date('date'));
@@ -101,7 +102,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_date_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::date('date'));
@@ -129,7 +130,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_decimal_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::decimal('decimal'));
@@ -157,7 +158,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_decimal_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::decimal('decimal'));
@@ -185,7 +186,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_double_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::double('double'));
@@ -213,7 +214,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_double_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::double('double'));
@@ -241,7 +242,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_enum_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::enum('enum'));
@@ -251,7 +252,7 @@ final class SimpleTypesWritingTest extends TestCase
         $inputData = \array_merge(...\array_map(static function (int $i) use ($enum) : array {
             return [
                 [
-                    'enum' => $enum[\random_int(0, 3)],
+                    'enum' => $enum[generate_random_int(0, 3)],
                 ],
             ];
         }, \range(1, 100)));
@@ -269,7 +270,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_float_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::float('float'));
@@ -295,7 +296,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_float_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::float('float'));
@@ -321,7 +322,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_int32_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int32('int32'));
@@ -349,7 +350,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_int32_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int32('int32'));
@@ -377,7 +378,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_int64() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int64('int64'));
@@ -404,7 +405,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_int64_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int64('int64'));
@@ -431,7 +432,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_json_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::json('json'));
@@ -458,7 +459,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_json_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::json('json'));
@@ -487,7 +488,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_string_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::string('string'));
@@ -514,7 +515,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_string_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::string('string'));
@@ -541,7 +542,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_time_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::time('time'));
@@ -566,7 +567,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_time_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::time('time'));
@@ -591,7 +592,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_timestamp_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
@@ -618,7 +619,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_timestamp_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
@@ -645,7 +646,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_uuid_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::uuid('uuid'));
@@ -672,7 +673,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_uuid_nullable_column() : void
     {
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::uuid('uuid'));

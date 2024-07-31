@@ -24,7 +24,7 @@ final class AzureBlobDestinationStreamTest extends TestCase
         $blockFactory->method('create')
             ->willReturnCallback(
                 function () use ($blockSize) {
-                    return new Block($id = \bin2hex(\random_bytes(16)), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'));
+                    return new Block($id = \Flow\ETL\DSL\generate_random_string(), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'));
                 }
             );
 
@@ -74,7 +74,7 @@ final class AzureBlobDestinationStreamTest extends TestCase
         $blockFactory->method('create')
             ->willReturnCallback(
                 function () use ($blockSize) {
-                    return new Block($id = \bin2hex(\random_bytes(16)), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'));
+                    return new Block($id = \Flow\ETL\DSL\generate_random_string(), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'));
                 }
             );
         $stream = AzureBlobDestinationStream::openBlank(

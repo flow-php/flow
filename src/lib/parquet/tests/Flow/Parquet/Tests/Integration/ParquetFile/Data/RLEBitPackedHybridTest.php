@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile\Data;
 
+use function Flow\ETL\DSL\generate_random_int;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
@@ -230,10 +231,10 @@ final class RLEBitPackedHybridTest extends TestCase
     {
         for ($iteration = 0; $iteration < 100; $iteration++) {
             $values = [];
-            $maxValues = \random_int(10, 1000);
+            $maxValues = generate_random_int(10, 1000);
 
             for ($i = 0; $i < $maxValues; $i++) {
-                $values[] = \random_int(0, 1000);
+                $values[] = generate_random_int(0, 1000);
             }
 
             $buffer = '';
