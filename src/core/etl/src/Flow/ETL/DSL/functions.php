@@ -14,7 +14,8 @@ use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\StyleConverter\StringStyles;
-use Flow\ETL\Function\{All,
+use Flow\ETL\Function\{
+    All,
     Any,
     ArrayExists,
     ArrayGet,
@@ -50,11 +51,13 @@ use Flow\ETL\Function\{All,
     Now,
     NumberFormat,
     Optional,
-    PregMatch,
-    PregMatchAll,
-    PregReplace,
-    RandomString,
     Rank,
+    Regex,
+    RegexAll,
+    RegexMatch,
+    RegexMatchAll,
+    RegexReplace,
+    RandomString,
     Round,
     RowNumber,
     Sanitize,
@@ -72,7 +75,8 @@ use Flow\ETL\Function\{All,
     ToUpper,
     Ulid,
     Uuid,
-    When};
+    When
+};
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\{CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Memory\Memory;
@@ -810,19 +814,29 @@ function to_money(ScalarFunction $amount, ScalarFunction $currency, ?\Money\Mone
     return new ToMoney($amount, $currency);
 }
 
-function regex_replace(ScalarFunction $pattern, ScalarFunction $replacement, ScalarFunction $subject) : PregReplace
+function regex_replace(ScalarFunction $pattern, ScalarFunction $replacement, ScalarFunction $subject, ?ScalarFunction $limit = null) : RegexReplace
 {
-    return new PregReplace($pattern, $replacement, $subject);
+    return new RegexReplace($pattern, $replacement, $subject, $limit);
 }
 
-function regex_match_all(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null) : PregMatchAll
+function regex_match_all(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : RegexMatchAll
 {
-    return new PregMatchAll($pattern, $subject, $flags);
+    return new RegexMatchAll($pattern, $subject, $flags, $offset);
 }
 
-function regex_match(ScalarFunction $pattern, ScalarFunction $subject) : PregMatch
+function regex_match(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : RegexMatch
 {
-    return new PregMatch($pattern, $subject);
+    return new RegexMatch($pattern, $subject, $flags, $offset);
+}
+
+function regex(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : Regex
+{
+    return new Regex($pattern, $subject, $flags, $offset);
+}
+
+function regex_all(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : RegexAll
+{
+    return new RegexAll($pattern, $subject, $flags, $offset);
 }
 
 function sprintf(ScalarFunction $format, ScalarFunction ...$args) : Sprintf

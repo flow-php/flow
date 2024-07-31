@@ -9,9 +9,9 @@ use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 
-final class PregMatchTest extends TestCase
+final class RegexReplaceTest extends TestCase
 {
-    public function test_preg_match() : void
+    public function test_regex_replace() : void
     {
         (new Flow())
             ->read(
@@ -21,19 +21,19 @@ final class PregMatchTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('preg_match', ref('key')->regexMatch(lit('/a/')))
+            ->withEntry('preg_replace', ref('key')->regexReplace(lit('/e/'), lit('es')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         self::assertSame(
             [
-                ['key' => 'value', 'preg_match' => true],
+                ['key' => 'value', 'preg_replace' => 'values'],
             ],
             $memory->dump()
         );
     }
 
-    public function test_preg_match_on_non_string_key() : void
+    public function test_regex_replace_on_non_string_key() : void
     {
         (new Flow())
             ->read(
@@ -43,19 +43,19 @@ final class PregMatchTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('preg_match', ref('id')->regexMatch(lit('1')))
+            ->withEntry('preg_replace', ref('id')->regexReplace(lit('1'), lit(1)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         self::assertSame(
             [
-                ['id' => 1, 'preg_match' => null],
+                ['id' => 1, 'preg_replace' => null],
             ],
             $memory->dump()
         );
     }
 
-    public function test_preg_match_on_non_string_value() : void
+    public function test_regex_replace_on_non_string_value() : void
     {
         (new Flow())
             ->read(
@@ -65,13 +65,13 @@ final class PregMatchTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('preg_match', ref('id')->regexMatch(lit(1)))
+            ->withEntry('preg_replace', ref('id')->regexReplace(lit(1), lit('1')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         self::assertSame(
             [
-                ['id' => '1', 'preg_match' => null],
+                ['id' => '1', 'preg_replace' => null],
             ],
             $memory->dump()
         );

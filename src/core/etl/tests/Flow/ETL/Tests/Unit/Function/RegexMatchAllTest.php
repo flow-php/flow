@@ -8,9 +8,9 @@ use function Flow\ETL\DSL\{lit, regex_match_all};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
-final class PregMatchAllTest extends TestCase
+final class RegexMatchAllTest extends TestCase
 {
-    public function test_preg_match_all_expression_on_invalid_flags() : void
+    public function test_regex_match_all_expression_on_invalid_flags() : void
     {
         $pregMatchAll = regex_match_all(
             lit('/\d+/'),
@@ -18,61 +18,56 @@ final class PregMatchAllTest extends TestCase
             lit('invalid')
         );
 
-        self::assertSame(
-            [],
+        self::assertNull(
             $pregMatchAll->eval(Row::create())
         );
     }
 
-    public function test_preg_match_all_expression_on_invalid_pattern() : void
+    public function test_regex_match_all_expression_on_invalid_pattern() : void
     {
         $pregMatchAll = regex_match_all(
             lit(1),
             lit('12 apples and 45 oranges')
         );
 
-        self::assertSame(
-            [],
+        self::assertNull(
             $pregMatchAll->eval(Row::create())
         );
     }
 
-    public function test_preg_match_all_expression_on_invalid_subject() : void
+    public function test_regex_match_all_expression_on_invalid_subject() : void
     {
         $pregMatchAll = regex_match_all(
             lit('/\d+/'),
             lit(2)
         );
 
-        self::assertSame(
-            [],
+        self::assertNull(
             $pregMatchAll->eval(Row::create())
         );
     }
 
-    public function test_preg_match_all_expression_on_valid_strings() : void
+    public function test_regex_match_all_expression_on_valid_strings() : void
     {
         $pregMatchAll = regex_match_all(
             lit('/\d+/'),
             lit('12 apples and 45 oranges')
         );
 
-        self::assertSame(
-            [['12', '45']],
+        self::assertTrue(
             $pregMatchAll->eval(Row::create())
         );
     }
 
-    public function test_preg_match_all_expression_on_valid_strings_with_flags() : void
+    public function test_regex_match_all_expression_on_valid_strings_with_flags() : void
     {
         $pregMatchAll = regex_match_all(
-            lit('/(\d+)/'),
-            lit('12 apples and 45 oranges'),
+            lit('/(\d+(?:\.\d+)?)\s+([A-Z]{3})/'),
+            lit('124.23 EUR 12 USD 45 PLN'),
             lit(PREG_PATTERN_ORDER)
         );
 
-        self::assertSame(
-            [['12', '45'], ['12', '45']],
+        self::assertTrue(
             $pregMatchAll->eval(Row::create())
         );
     }
