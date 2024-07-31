@@ -6,12 +6,13 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class PregReplace extends ScalarFunctionChain
+final class RegexReplace extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $pattern,
         private readonly ScalarFunction $replacement,
-        private readonly ScalarFunction $subject
+        private readonly ScalarFunction $subject,
+        private readonly ?ScalarFunction $limit = null,
     ) {
     }
 
@@ -24,10 +25,12 @@ final class PregReplace extends ScalarFunctionChain
         /** @var mixed $subject */
         $subject = $this->subject->eval($row);
 
-        if (!\is_string($pattern) || !\is_string($replacement) || !\is_string($subject)) {
+        $limit = $this->limit ? $this->limit->eval($row) : -1;
+
+        if (!\is_string($pattern) || !\is_string($replacement) || !\is_string($subject) || !\is_int($limit)) {
             return null;
         }
 
-        return \preg_replace($pattern, $replacement, $subject);
+        return \preg_replace($pattern, $replacement, $subject, $limit);
     }
 }

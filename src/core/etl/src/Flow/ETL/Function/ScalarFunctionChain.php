@@ -300,19 +300,29 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Power($this, $ref);
     }
 
-    public function regexMatch(ScalarFunction $pattern) : self
+    public function regex(ScalarFunction $pattern, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : self
     {
-        return new PregMatch($pattern, $this);
+        return new Regex($pattern, $this, $flags, $offset);
     }
 
-    public function regexMatchAll(ScalarFunction $pattern, ?ScalarFunction $flags = null) : self
+    public function regexAll(ScalarFunction $pattern, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : RegexAll
     {
-        return new PregMatchAll($pattern, $this, $flags);
+        return new RegexAll($pattern, $this, $flags, $offset);
     }
 
-    public function regexReplace(ScalarFunction $pattern, ScalarFunction $replacement) : self
+    public function regexMatch(ScalarFunction $pattern, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : self
     {
-        return new PregReplace($pattern, $replacement, $this);
+        return new RegexMatch($pattern, $this, $flags, $offset);
+    }
+
+    public function regexMatchAll(ScalarFunction $pattern, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : self
+    {
+        return new RegexMatchAll($pattern, $this, $flags, $offset);
+    }
+
+    public function regexReplace(ScalarFunction $pattern, ScalarFunction $replacement, ?ScalarFunction $limit = null) : self
+    {
+        return new RegexReplace($pattern, $replacement, $this, $limit);
     }
 
     /**
