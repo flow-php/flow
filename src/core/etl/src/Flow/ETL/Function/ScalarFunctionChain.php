@@ -349,6 +349,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Size($this);
     }
 
+    public function split(ScalarFunction|string $separator, ScalarFunction|int $limit = PHP_INT_MAX) : self
+    {
+        return new Split($this, $separator, $limit);
+    }
+
     public function sprintf(ScalarFunction ...$params) : self
     {
         return new Sprintf($this, ...$params);

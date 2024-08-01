@@ -8,24 +8,24 @@ use Flow\ETL\Row;
 
 final class Split extends ScalarFunctionChain
 {
-    /**
-     * @param non-empty-string $separator
-     */
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly string $separator,
-        private readonly int $limit = PHP_INT_MAX,
+        private readonly ScalarFunction|string $separator,
+        private readonly ScalarFunction|int $limit = PHP_INT_MAX,
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
+        $separator = $this->separator instanceof ScalarFunction ? $this->separator->eval($row) : $this->separator;
+        $limit = $this->limit instanceof ScalarFunction ? $this->limit->eval($row) : $this->limit;
+
         $val = $this->ref->eval($row);
 
-        if (!\is_string($val)) {
+        if (!\is_string($val) || !\is_string($separator) || !\is_int($limit) || $limit < 1 || $separator === '') {
             return $val;
         }
 
-        return \explode($this->separator, $val, $this->limit);
+        return \explode($separator, $val, $limit);
     }
 }

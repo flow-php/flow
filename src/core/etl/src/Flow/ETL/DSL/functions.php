@@ -648,10 +648,7 @@ function date_time_format(ScalarFunction $ref, string $format) : DateTimeFormat
     return new DateTimeFormat($ref, $format);
 }
 
-/**
- * @param non-empty-string $separator
- */
-function split(ScalarFunction $ref, string $separator, int $limit = PHP_INT_MAX) : Split
+function split(ScalarFunction $ref, ScalarFunction|string $separator, ScalarFunction|int $limit = PHP_INT_MAX) : Split
 {
     return new Split($ref, $separator, $limit);
 }
