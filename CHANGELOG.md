@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-07-31
+## [Unreleased] - 2024-08-01
 
 ### Added
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Regex Scalar Function** - [@norberttech](https://github.com/norberttech)
