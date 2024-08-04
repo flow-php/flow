@@ -14,7 +14,7 @@ use function Flow\ETL\DSL\{type_array,
     type_string,
     type_uuid,
     type_xml
-    };
+};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Caster\{ArrayCastingHandler, BooleanCastingHandler, CastingContext, CastingHandler, DateTimeCastingHandler, EnumCastingHandler, FloatCastingHandler, IntegerCastingHandler, JsonCastingHandler, ListCastingHandler, MapCastingHandler, NullCastingHandler, ObjectCastingHandler, StringCastingHandler, StructureCastingHandler, UuidCastingHandler, XMLCastingHandler};
 
