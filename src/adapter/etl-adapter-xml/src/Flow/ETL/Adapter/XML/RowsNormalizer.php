@@ -23,7 +23,7 @@ final class RowsNormalizer
             $node = XMLNode::nestedNode($this->rowNodeName);
 
             foreach ($row->entries() as $entry) {
-                $node = $node->appendChild($this->entryNormalizer->normalize($entry));
+                $node = $node->append($this->entryNormalizer->normalize($entry));
             }
 
             yield $node;

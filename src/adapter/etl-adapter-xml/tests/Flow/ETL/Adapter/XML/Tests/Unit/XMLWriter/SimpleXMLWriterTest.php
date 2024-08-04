@@ -18,7 +18,7 @@ final class SimpleXMLWriterTest extends TestCase
             '<root><child/></root>',
             $xmlWriter->write(
                 XMLNode::nestedNode('root')
-                    ->appendChild(XMLNode::nestedNode('child'))
+                    ->append(XMLNode::nestedNode('child'))
             )
         );
     }
@@ -43,11 +43,11 @@ final class SimpleXMLWriterTest extends TestCase
             '<root><child>value</child><child_with_children><child>value</child><child>value</child></child_with_children></root>',
             $xmlWriter->write(
                 XMLNode::nestedNode('root')
-                    ->appendChild(XMLNode::flatNode('child', 'value'))
-                    ->appendChild(
+                    ->append(XMLNode::flatNode('child', 'value'))
+                    ->append(
                         XMLNode::nestedNode('child_with_children')
-                            ->appendChild(XMLNode::flatNode('child', 'value'))
-                            ->appendChild(XMLNode::flatNode('child', 'value'))
+                            ->append(XMLNode::flatNode('child', 'value'))
+                            ->append(XMLNode::flatNode('child', 'value'))
                     )
             )
         );

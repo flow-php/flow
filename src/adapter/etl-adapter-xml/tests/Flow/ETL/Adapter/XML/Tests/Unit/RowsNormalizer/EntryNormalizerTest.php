@@ -4,8 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer;
 
-use function Flow\ETL\DSL\{structure_element, structure_entry, type_boolean, type_datetime, type_integer, type_list, type_map, type_string, type_structure};
-use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
+use function Flow\ETL\DSL\{str_entry,
+    structure_element,
+    structure_entry,
+    type_boolean,
+    type_datetime,
+    type_integer,
+    type_list,
+    type_map,
+    type_string,
+    type_structure};
+use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\PHP\Type\Caster;
@@ -13,6 +22,16 @@ use PHPUnit\Framework\TestCase;
 
 final class EntryNormalizerTest extends TestCase
 {
+    public function test_normalization_entries_into_attributes() : void
+    {
+        $entryNormalizer = new EntryNormalizer(new PHPValueNormalizer(Caster::default()));
+
+        self::assertEquals(
+            new XMLAttribute('id', '1'),
+            $entryNormalizer->normalize(str_entry('_id', '1'))
+        );
+    }
+
     public function test_normalizing_structure_entry() : void
     {
         $entryNormalizer = new EntryNormalizer(new PHPValueNormalizer(Caster::default()));
@@ -55,52 +74,52 @@ final class EntryNormalizerTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('structure')
-                ->appendChild(XMLNode::flatNode('id', '1'))
-                ->appendChild(XMLNode::flatNode('name', 'name'))
-                ->appendChild(XMLNode::flatNode('active', 'true'))
-                ->appendChild(XMLNode::flatNode('date', '2024-04-04T00:00:00.000000+00:00'))
-                ->appendChild(
+                ->append(XMLNode::flatNode('id', '1'))
+                ->append(XMLNode::flatNode('name', 'name'))
+                ->append(XMLNode::flatNode('active', 'true'))
+                ->append(XMLNode::flatNode('date', '2024-04-04T00:00:00.000000+00:00'))
+                ->append(
                     XMLNode::nestedNode('list')
-                    ->appendChild(XMLNode::flatNode('element', '1'))
-                    ->appendChild(XMLNode::flatNode('element', '2'))
-                    ->appendChild(XMLNode::flatNode('element', '3'))
+                    ->append(XMLNode::flatNode('element', '1'))
+                    ->append(XMLNode::flatNode('element', '2'))
+                    ->append(XMLNode::flatNode('element', '3'))
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('map')
-                    ->appendChild(
+                    ->append(
                         XMLNode::nestedNode('element')
-                        ->appendChild(XMLNode::flatNode('key', 'a'))
-                        ->appendChild(XMLNode::flatNode('value', '1'))
+                        ->append(XMLNode::flatNode('key', 'a'))
+                        ->append(XMLNode::flatNode('value', '1'))
                     )
-                    ->appendChild(
+                    ->append(
                         XMLNode::nestedNode('element')
-                        ->appendChild(XMLNode::flatNode('key', 'b'))
-                        ->appendChild(XMLNode::flatNode('value', '2'))
+                        ->append(XMLNode::flatNode('key', 'b'))
+                        ->append(XMLNode::flatNode('value', '2'))
                     )
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('nested_structure')
-                    ->appendChild(XMLNode::flatNode('id', '2'))
-                    ->appendChild(XMLNode::flatNode('name', 'nested-name'))
-                    ->appendChild(XMLNode::flatNode('active', 'false'))
-                    ->appendChild(XMLNode::flatNode('date', '2024-04-04T00:00:00.000000+00:00'))
-                    ->appendChild(
+                    ->append(XMLNode::flatNode('id', '2'))
+                    ->append(XMLNode::flatNode('name', 'nested-name'))
+                    ->append(XMLNode::flatNode('active', 'false'))
+                    ->append(XMLNode::flatNode('date', '2024-04-04T00:00:00.000000+00:00'))
+                    ->append(
                         XMLNode::nestedNode('list')
-                        ->appendChild(XMLNode::flatNode('element', '4'))
-                        ->appendChild(XMLNode::flatNode('element', '5'))
-                        ->appendChild(XMLNode::flatNode('element', '6'))
+                        ->append(XMLNode::flatNode('element', '4'))
+                        ->append(XMLNode::flatNode('element', '5'))
+                        ->append(XMLNode::flatNode('element', '6'))
                     )
-                    ->appendChild(
+                    ->append(
                         XMLNode::nestedNode('map')
-                        ->appendChild(
+                        ->append(
                             XMLNode::nestedNode('element')
-                            ->appendChild(XMLNode::flatNode('key', 'c'))
-                            ->appendChild(XMLNode::flatNode('value', '3'))
+                            ->append(XMLNode::flatNode('key', 'c'))
+                            ->append(XMLNode::flatNode('value', '3'))
                         )
-                        ->appendChild(
+                        ->append(
                             XMLNode::nestedNode('element')
-                            ->appendChild(XMLNode::flatNode('key', 'd'))
-                            ->appendChild(XMLNode::flatNode('value', '4'))
+                            ->append(XMLNode::flatNode('key', 'd'))
+                            ->append(XMLNode::flatNode('value', '4'))
                         )
                     )
                 ),

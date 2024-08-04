@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer;
 
 use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_integer, type_json, type_object, type_string};
-use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
+use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\PHP\Type\Caster;
 use PHPUnit\Framework\TestCase;
@@ -19,6 +19,16 @@ final class PHPValueNormalizerTest extends TestCase
         self::assertEquals(
             XMLNode::flatNode('array', '{"a":"1","b":22}'),
             $normalizer->normalize('array', type_array(), ['a' => '1', 'b' => 22])
+        );
+    }
+
+    public function test_normalizing_attribute() : void
+    {
+        $normalizer = new PHPValueNormalizer(Caster::default());
+
+        self::assertEquals(
+            new XMLAttribute('attribute', 'a'),
+            $normalizer->normalize('_attribute', type_string(), 'a')
         );
     }
 

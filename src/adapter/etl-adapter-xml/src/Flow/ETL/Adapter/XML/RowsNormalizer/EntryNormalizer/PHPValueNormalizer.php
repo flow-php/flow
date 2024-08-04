@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
 
 use function Flow\ETL\DSL\{type_json, type_string};
-use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
+use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType};
@@ -18,13 +18,18 @@ final class PHPValueNormalizer
 
     public function __construct(
         private readonly Caster $caster,
+        private readonly string $attributePrefix = '_',
         private readonly string $dateTimeFormat = self::DATE_TIME_FORMAT
     ) {
 
     }
 
-    public function normalize(string $name, Type $type, mixed $value) : XMLNode
+    public function normalize(string $name, Type $type, mixed $value) : XMLNode|XMLAttribute
     {
+        if (\str_starts_with($name, $this->attributePrefix)) {
+            return new XMLAttribute(\substr($name, \strlen($this->attributePrefix)), $this->caster->to(type_string())->value($value));
+        }
+
         if ($value === null) {
             return XMLNode::flatNode($name, '');
         }
@@ -37,7 +42,7 @@ final class PHPValueNormalizer
             }
 
             foreach ($value as $elementValue) {
-                $listNode = $listNode->appendChild($this->normalize('element', $type->element()->type(), $elementValue));
+                $listNode = $listNode->append($this->normalize('element', $type->element()->type(), $elementValue));
             }
 
             return $listNode;
@@ -51,10 +56,10 @@ final class PHPValueNormalizer
             }
 
             foreach ($value as $key => $elementValue) {
-                $mapNode = $mapNode->appendChild(
+                $mapNode = $mapNode->append(
                     XMLNode::nestedNode('element')
-                        ->appendChild($this->normalize('key', $type->key()->type(), $key))
-                        ->appendChild($this->normalize('value', $type->value()->type(), $elementValue))
+                        ->append($this->normalize('key', $type->key()->type(), $key))
+                        ->append($this->normalize('value', $type->value()->type(), $elementValue))
                 );
             }
 
@@ -77,7 +82,7 @@ final class PHPValueNormalizer
                 $structureElement = $element['structure_element'];
                 $structureValue = $element['value_element'];
 
-                $structureNode = $structureNode->appendChild($this->normalize($structureElement->name(), $structureElement->type(), $structureValue));
+                $structureNode = $structureNode->append($this->normalize($structureElement->name(), $structureElement->type(), $structureValue));
             }
 
             return $structureNode;

@@ -22,6 +22,8 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
         private readonly Path $path,
         private readonly string $rootElementName,
         private readonly string $rowElementName,
+        private readonly string $attributePrefix,
+        private readonly string $dateTimeFormat,
         private readonly XMLWriter $xmlWriter
     ) {
     }
@@ -44,7 +46,14 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $normalizer = new RowsNormalizer(new EntryNormalizer(new PHPValueNormalizer($context->config->caster())), $this->rowElementName);
+        $normalizer = new RowsNormalizer(
+            new EntryNormalizer(
+                new PHPValueNormalizer($context->config->caster(), $this->attributePrefix, $this->dateTimeFormat),
+                $this->attributePrefix,
+                $this->dateTimeFormat
+            ),
+            $this->rowElementName
+        );
 
         $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
     }

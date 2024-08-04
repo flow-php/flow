@@ -18,15 +18,15 @@ final class ListNormalizationTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('list')
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                        ->appendChild(XMLNode::flatNode('name', 'John'))
-                        ->appendChild(XMLNode::flatNode('age', '30'))
+                        ->append(XMLNode::flatNode('name', 'John'))
+                        ->append(XMLNode::flatNode('age', '30'))
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                        ->appendChild(XMLNode::flatNode('name', 'Jane'))
-                        ->appendChild(XMLNode::flatNode('age', '25'))
+                        ->append(XMLNode::flatNode('name', 'Jane'))
+                        ->append(XMLNode::flatNode('age', '25'))
                 ),
             $normalizer->normalize(
                 'list',
@@ -57,9 +57,9 @@ final class ListNormalizationTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('list')
-                ->appendChild(XMLNode::flatNode('element', '1'))
-                ->appendChild(XMLNode::flatNode('element', '2'))
-                ->appendChild(XMLNode::flatNode('element', '3')),
+                ->append(XMLNode::flatNode('element', '1'))
+                ->append(XMLNode::flatNode('element', '2'))
+                ->append(XMLNode::flatNode('element', '3')),
             $normalizer->normalize('list', type_list(type_integer()), [1, 2, 3])
         );
     }
@@ -70,17 +70,17 @@ final class ListNormalizationTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('list')
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                        ->appendChild(XMLNode::flatNode('element', '1'))
-                        ->appendChild(XMLNode::flatNode('element', '2'))
-                        ->appendChild(XMLNode::flatNode('element', '3'))
+                        ->append(XMLNode::flatNode('element', '1'))
+                        ->append(XMLNode::flatNode('element', '2'))
+                        ->append(XMLNode::flatNode('element', '3'))
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                        ->appendChild(XMLNode::flatNode('element', '4'))
-                        ->appendChild(XMLNode::flatNode('element', '5'))
-                        ->appendChild(XMLNode::flatNode('element', '6'))
+                        ->append(XMLNode::flatNode('element', '4'))
+                        ->append(XMLNode::flatNode('element', '5'))
+                        ->append(XMLNode::flatNode('element', '6'))
                 ),
             $normalizer->normalize('list', type_list(type_list(type_integer())), [[1, 2, 3], [4, 5, 6]])
         );
@@ -92,30 +92,30 @@ final class ListNormalizationTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('list')
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                        ->appendChild(
+                        ->append(
                             XMLNode::nestedNode('element')
-                            ->appendChild(XMLNode::flatNode('key', 'one'))
-                            ->appendChild(XMLNode::flatNode('value', '1'))
+                            ->append(XMLNode::flatNode('key', 'one'))
+                            ->append(XMLNode::flatNode('value', '1'))
                         )
-                        ->appendChild(
+                        ->append(
                             XMLNode::nestedNode('element')
-                            ->appendChild(XMLNode::flatNode('key', 'two'))
-                            ->appendChild(XMLNode::flatNode('value', '2'))
+                            ->append(XMLNode::flatNode('key', 'two'))
+                            ->append(XMLNode::flatNode('value', '2'))
                         )
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                        ->appendChild(
+                        ->append(
                             XMLNode::nestedNode('element')
-                            ->appendChild(XMLNode::flatNode('key', 'three'))
-                            ->appendChild(XMLNode::flatNode('value', '3'))
+                            ->append(XMLNode::flatNode('key', 'three'))
+                            ->append(XMLNode::flatNode('value', '3'))
                         )
-                        ->appendChild(
+                        ->append(
                             XMLNode::nestedNode('element')
-                            ->appendChild(XMLNode::flatNode('key', 'four'))
-                            ->appendChild(XMLNode::flatNode('value', '4'))
+                            ->append(XMLNode::flatNode('key', 'four'))
+                            ->append(XMLNode::flatNode('value', '4'))
                         )
                 ),
             $normalizer->normalize('list', type_list(type_map(type_integer(), type_string())), [['one' => 1, 'two' => 2], ['three' => 3, 'four' => 4]])

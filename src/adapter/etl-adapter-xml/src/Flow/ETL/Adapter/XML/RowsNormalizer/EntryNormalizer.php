@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\RowsNormalizer;
 
-use Flow\ETL\Adapter\XML\Abstraction\{XMLNode};
+use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -16,14 +16,17 @@ final class EntryNormalizer
 {
     public function __construct(
         private readonly PHPValueNormalizer $valueNormalizer,
+        private readonly string $attributePrefix = '_',
         private readonly string $dateTimeFormat = PHPValueNormalizer::DATE_TIME_FORMAT
     ) {
 
     }
 
-    public function normalize(Entry $entry) : XMLNode
+    public function normalize(Entry $entry) : XMLNode|XMLAttribute
     {
-        // TODO: detect entries with specific name to turn them into attributes
+        if (\str_starts_with($entry->name(), $this->attributePrefix)) {
+            return new XMLAttribute(\substr($entry->name(), \strlen($this->attributePrefix)), $entry->toString());
+        }
 
         if ($entry instanceof ListEntry) {
             return $this->listToNode($entry);
@@ -36,8 +39,6 @@ final class EntryNormalizer
         if ($entry instanceof StructureEntry) {
             return $this->structureToNode($entry);
         }
-
-        // TODO: handle XMLElementEntry and XMLEntry
 
         return match ($entry::class) {
             StringEntry::class => XMLNode::flatNode($entry->name(), $entry->value()),
@@ -73,7 +74,7 @@ final class EntryNormalizer
         }
 
         foreach ($listValue as $value) {
-            $node = $node->appendChild($this->valueNormalizer->normalize('element', $type->element()->type(), $value));
+            $node = $node->append($this->valueNormalizer->normalize('element', $type->element()->type(), $value));
         }
 
         return $node;
@@ -124,8 +125,8 @@ final class EntryNormalizer
         $type = $entry->type();
 
         foreach ($mapValue as $key => $value) {
-            $node = $node->appendChild($this->valueNormalizer->normalize('key', $type->key()->type(), $key));
-            $node = $node->appendChild($this->valueNormalizer->normalize('value', $type->value()->type(), $value));
+            $node = $node->append($this->valueNormalizer->normalize('key', $type->key()->type(), $key));
+            $node = $node->append($this->valueNormalizer->normalize('value', $type->value()->type(), $value));
         }
 
         return $node;
@@ -153,7 +154,7 @@ final class EntryNormalizer
             $structureElement = $element['structure_element'];
             $structureValue = $element['value_element'];
 
-            $node = $node->appendChild($this->valueNormalizer->normalize($structureElement->name(), $structureElement->type(), $structureValue));
+            $node = $node->append($this->valueNormalizer->normalize($structureElement->name(), $structureElement->type(), $structureValue));
         }
 
         return $node;

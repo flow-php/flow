@@ -28,20 +28,20 @@ final class MapNormalizationTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('map')
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                    ->appendChild(XMLNode::flatNode('key', '1'))
-                    ->appendChild(XMLNode::flatNode('value', 'one'))
+                    ->append(XMLNode::flatNode('key', '1'))
+                    ->append(XMLNode::flatNode('value', 'one'))
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                    ->appendChild(XMLNode::flatNode('key', '2'))
-                    ->appendChild(XMLNode::flatNode('value', 'two'))
+                    ->append(XMLNode::flatNode('key', '2'))
+                    ->append(XMLNode::flatNode('value', 'two'))
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                    ->appendChild(XMLNode::flatNode('key', '3'))
-                    ->appendChild(XMLNode::flatNode('value', 'three'))
+                    ->append(XMLNode::flatNode('key', '3'))
+                    ->append(XMLNode::flatNode('value', 'three'))
                 ),
             $normalizer->normalize('map', type_map(type_integer(), type_string()), [1 => 'one', 2 => 'two', 3 => 'three'])
         );
@@ -53,24 +53,24 @@ final class MapNormalizationTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('map')
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                    ->appendChild(XMLNode::flatNode('key', 'one'))
-                    ->appendChild(
+                    ->append(XMLNode::flatNode('key', 'one'))
+                    ->append(
                         XMLNode::nestedNode('value')
-                        ->appendChild(XMLNode::flatNode('element', '1'))
-                        ->appendChild(XMLNode::flatNode('element', '2'))
-                        ->appendChild(XMLNode::flatNode('element', '3'))
+                        ->append(XMLNode::flatNode('element', '1'))
+                        ->append(XMLNode::flatNode('element', '2'))
+                        ->append(XMLNode::flatNode('element', '3'))
                     )
                 )
-                ->appendChild(
+                ->append(
                     XMLNode::nestedNode('element')
-                    ->appendChild(XMLNode::flatNode('key', 'two'))
-                    ->appendChild(
+                    ->append(XMLNode::flatNode('key', 'two'))
+                    ->append(
                         XMLNode::nestedNode('value')
-                        ->appendChild(XMLNode::flatNode('element', '4'))
-                        ->appendChild(XMLNode::flatNode('element', '5'))
-                        ->appendChild(XMLNode::flatNode('element', '6'))
+                        ->append(XMLNode::flatNode('element', '4'))
+                        ->append(XMLNode::flatNode('element', '5'))
+                        ->append(XMLNode::flatNode('element', '6'))
                     )
                 ),
             $normalizer->normalize('map', type_map(type_string(), type_list(type_integer())), ['one' => [1, 2, 3], 'two' => [4, 5, 6]])

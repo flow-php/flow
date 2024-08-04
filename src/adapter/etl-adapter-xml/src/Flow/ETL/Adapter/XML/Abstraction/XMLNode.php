@@ -37,6 +37,15 @@ final class XMLNode
         return new self($name, null, XMLNodeType::NESTED);
     }
 
+    public function append(self|XMLAttribute $element) : self
+    {
+        if ($element instanceof XMLAttribute) {
+            return $this->appendAttribute($element);
+        }
+
+        return $this->appendChild($element);
+    }
+
     public function appendAttribute(XMLAttribute $attribute) : self
     {
         return new self(
@@ -48,7 +57,7 @@ final class XMLNode
         );
     }
 
-    public function appendChild(self $node) : self
+    public function appendChild(self $child) : self
     {
         if ($this->type === XMLNodeType::FLAT) {
             throw new InvalidArgumentException('XMLNode can not have children if it has value');
@@ -59,7 +68,7 @@ final class XMLNode
             $this->value,
             $this->type,
             $this->attributes,
-            [...$this->children, $node]
+            [...$this->children, $child]
         );
     }
 

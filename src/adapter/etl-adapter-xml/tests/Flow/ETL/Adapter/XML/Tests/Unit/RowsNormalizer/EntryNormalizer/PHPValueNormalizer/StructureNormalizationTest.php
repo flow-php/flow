@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 
-use function Flow\ETL\DSL\{structure_element, type_integer, type_list, type_string, type_structure};
-use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
+use function Flow\ETL\DSL\{structure_element, type_datetime, type_integer, type_list, type_string, type_structure};
+use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\PHP\Type\Caster;
 use PHPUnit\Framework\TestCase;
@@ -19,16 +19,18 @@ final class StructureNormalizationTest extends TestCase
         $normalized = $normalizer->normalize(
             'structure',
             type_structure([
+                structure_element('_id', type_string()),
                 structure_element('name', type_string()),
                 structure_element('age', type_string()),
             ]),
-            ['name' => 'John', 'age' => 30]
+            ['_id' => 1, 'name' => 'John', 'age' => 30]
         );
 
         self::assertEquals(
             XMLNode::nestedNode('structure')
-                ->appendChild(XMLNode::flatNode('name', 'John'))
-                ->appendChild(XMLNode::flatNode('age', '30')),
+                ->append(new XMLAttribute('id', '1'))
+                ->append(XMLNode::flatNode('name', 'John'))
+                ->append(XMLNode::flatNode('age', '30')),
             $normalized
         );
     }
@@ -49,15 +51,15 @@ final class StructureNormalizationTest extends TestCase
 
         self::assertEquals(
             XMLNode::nestedNode('structure')
-                ->appendChild(XMLNode::flatNode('name', 'John'))
-                ->appendChild(XMLNode::flatNode('age', '30'))
-                ->appendChild(
+                ->append(XMLNode::flatNode('name', 'John'))
+                ->append(XMLNode::flatNode('age', '30'))
+                ->append(
                     XMLNode::nestedNode('numbers')
-                        ->appendChild(XMLNode::flatNode('element', '1'))
-                        ->appendChild(XMLNode::flatNode('element', '2'))
-                        ->appendChild(XMLNode::flatNode('element', '3'))
-                        ->appendChild(XMLNode::flatNode('element', '4'))
-                        ->appendChild(XMLNode::flatNode('element', '5'))
+                        ->append(XMLNode::flatNode('element', '1'))
+                        ->append(XMLNode::flatNode('element', '2'))
+                        ->append(XMLNode::flatNode('element', '3'))
+                        ->append(XMLNode::flatNode('element', '4'))
+                        ->append(XMLNode::flatNode('element', '5'))
                 ),
             $normalized
         );
@@ -70,6 +72,7 @@ final class StructureNormalizationTest extends TestCase
         $normalized = $normalizer->normalize(
             'structure',
             type_structure([
+                structure_element('_created-at', type_datetime()),
                 structure_element('name', type_string()),
                 structure_element('age', type_string()),
                 structure_element('address', type_structure([
@@ -78,18 +81,19 @@ final class StructureNormalizationTest extends TestCase
                     structure_element('zip', type_string()),
                 ])),
             ]),
-            ['name' => 'John', 'age' => 30, 'address' => ['street' => 'Main St.', 'city' => 'New York', 'zip' => '10001']]
+            ['_created-at' => new \DateTimeImmutable('2024-08-22 00:00:00'), 'name' => 'John', 'age' => 30, 'address' => ['street' => 'Main St.', 'city' => 'New York', 'zip' => '10001']]
         );
 
         self::assertEquals(
             XMLNode::nestedNode('structure')
-                ->appendChild(XMLNode::flatNode('name', 'John'))
-                ->appendChild(XMLNode::flatNode('age', '30'))
-                ->appendChild(
+                ->append(new XMLAttribute('created-at', '2024-08-22T00:00:00+00:00'))
+                ->append(XMLNode::flatNode('name', 'John'))
+                ->append(XMLNode::flatNode('age', '30'))
+                ->append(
                     XMLNode::nestedNode('address')
-                        ->appendChild(XMLNode::flatNode('street', 'Main St.'))
-                        ->appendChild(XMLNode::flatNode('city', 'New York'))
-                        ->appendChild(XMLNode::flatNode('zip', '10001'))
+                        ->append(XMLNode::flatNode('street', 'Main St.'))
+                        ->append(XMLNode::flatNode('city', 'New York'))
+                        ->append(XMLNode::flatNode('zip', '10001'))
                 ),
             $normalized
         );
