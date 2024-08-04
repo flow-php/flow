@@ -16,7 +16,6 @@
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "ext-simplexml": "*",
         "ext-xmlreader": "*",
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
@@ -274,9 +273,6 @@
         ]
     },
     "extra": {
-        "aws/aws-sdk-php": [
-            "S3"
-        ],
         "google/apiclient-services": [
             "Sheets"
         ]

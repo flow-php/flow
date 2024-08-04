@@ -49,10 +49,5 @@
             "Flow\\": "tests/Flow"
         }
     },
-    "extra": {
-        "aws/aws-sdk-php": [
-            "S3"
-        ]
-    },
     "prefer-stable": true
 }
