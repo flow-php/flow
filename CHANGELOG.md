@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-08-04
 
 ### Added
+- [#1168](https://github.com/flow-php/flow/pull/1168) - **OnEach scalar function** - [@norberttech](https://github.com/norberttech)
 - [#1167](https://github.com/flow-php/flow/pull/1167) - **DOMElementAttributesCount scalar function** - [@norberttech](https://github.com/norberttech)
 - [#1167](https://github.com/flow-php/flow/pull/1167) - **DOMElementAttributeValue scalar function** - [@norberttech](https://github.com/norberttech)
 - [#1167](https://github.com/flow-php/flow/pull/1167) - **dom_element_to_string helper function** - [@norberttech](https://github.com/norberttech)
