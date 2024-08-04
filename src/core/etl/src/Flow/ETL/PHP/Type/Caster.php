@@ -4,7 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_integer, type_json, type_null, type_string, type_uuid, type_xml};
+use function Flow\ETL\DSL\{type_array,
+    type_boolean,
+    type_datetime,
+    type_float,
+    type_integer,
+    type_json,
+    type_null,
+    type_string,
+    type_uuid,
+    type_xml
+    };
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Caster\{ArrayCastingHandler, BooleanCastingHandler, CastingContext, CastingHandler, DateTimeCastingHandler, EnumCastingHandler, FloatCastingHandler, IntegerCastingHandler, JsonCastingHandler, ListCastingHandler, MapCastingHandler, NullCastingHandler, ObjectCastingHandler, StringCastingHandler, StructureCastingHandler, UuidCastingHandler, XMLCastingHandler};
 

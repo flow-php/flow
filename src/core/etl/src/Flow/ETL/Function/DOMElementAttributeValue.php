@@ -6,9 +6,9 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class DOMElementAttribute extends ScalarFunctionChain
+final class DOMElementAttributeValue extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $ref, private readonly string $attribute)
+    public function __construct(private readonly ScalarFunction $ref, private readonly ScalarFunction|string $attribute)
     {
     }
 
@@ -28,9 +28,15 @@ final class DOMElementAttribute extends ScalarFunctionChain
             return null;
         }
 
+        $attributeName = \is_string($this->attribute) ? $this->attribute : $this->attribute->eval($row);
+
+        if (!\is_string($attributeName)) {
+            return null;
+        }
+
         $attributes = $value->attributes;
 
-        if (!$namedItem = $attributes->getNamedItem($this->attribute)) {
+        if (!$namedItem = $attributes->getNamedItem($attributeName)) {
             return null;
         }
 

@@ -21,6 +21,10 @@ final class FloatCastingHandler implements CastingHandler
             return $value;
         }
 
+        if ($value instanceof \DOMElement) {
+            return (float) $value->nodeValue;
+        }
+
         if ($value instanceof \DateTimeImmutable) {
             return (float) $value->format('Uu');
         }

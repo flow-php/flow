@@ -20,7 +20,10 @@ final class XPath extends ScalarFunctionChain
         $value = $this->ref->eval($row);
 
         if ($value instanceof \DOMNode && !$value instanceof \DOMDocument) {
-            $value = (new \DOMDocument())->importNode($value, true);
+            $dom = new \DOMDocument();
+            $importedNode = $dom->importNode($value, true);
+            $dom->appendChild($importedNode);
+            $value = $dom;
         }
 
         if (!$value instanceof \DOMDocument) {
