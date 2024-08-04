@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
-use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\{df, overwrite};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
@@ -47,6 +47,33 @@ final class JsonTest extends TestCase
 ]
 JSON,
             \file_get_contents($path)
+        );
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+    }
+
+    public function test_json_loader_overwrite_mode() : void
+    {
+
+        df()
+            ->read(new FakeExtractor(100))
+            ->write(to_json($path = __DIR__ . '/var/test_json_loader.json'))
+            ->run();
+
+        df()
+            ->read(new FakeExtractor(100))
+            ->mode(overwrite())
+            ->write(to_json($path = __DIR__ . '/var/test_json_loader.json'))
+            ->run();
+
+        $content = \file_get_contents($path);
+        self::stringEndsWith(']', $content);
+
+        self::assertEquals(
+            100,
+            df()->read(from_json($path))->count()
         );
 
         if (\file_exists($path)) {

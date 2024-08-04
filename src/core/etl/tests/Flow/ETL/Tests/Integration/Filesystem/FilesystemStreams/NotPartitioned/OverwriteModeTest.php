@@ -27,7 +27,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         ]);
 
         $fileStream = $streams->writeTo($path = $this->getPath(__FUNCTION__ . '/existing-file.txt'));
-        self::assertStringEndsWith(FilesystemStreams::FLOW_TMP_SUFFIX, $fileStream->path()->path());
+        self::assertStringContainsString(FilesystemStreams::FLOW_TMP_FILE_PREFIX, $fileStream->path()->path());
         $fileStream->append('some other content');
         self::assertSame('some content', \file_get_contents($path->path()));
 
