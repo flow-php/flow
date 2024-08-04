@@ -1,6 +1,10 @@
 ## [Unreleased] - 2024-08-04
 
 ### Added
+- [#1167](https://github.com/flow-php/flow/pull/1167) - **DOMElementAttributesCount scalar function** - [@norberttech](https://github.com/norberttech)
+- [#1167](https://github.com/flow-php/flow/pull/1167) - **DOMElementAttributeValue scalar function** - [@norberttech](https://github.com/norberttech)
+- [#1167](https://github.com/flow-php/flow/pull/1167) - **dom_element_to_string helper function** - [@norberttech](https://github.com/norberttech)
+- [#1167](https://github.com/flow-php/flow/pull/1167) - **Support for casting DOMElement into different types in Caster** - [@norberttech](https://github.com/norberttech)
 - [#1166](https://github.com/flow-php/flow/pull/1166) - **XML Loader - writing to XML files** - [@norberttech](https://github.com/norberttech)
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Regex Scalar Function** - [@norberttech](https://github.com/norberttech)
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Missing optional arguments to all regex scalar functions** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +22,8 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1167](https://github.com/flow-php/flow/pull/1167) - **XMLReaderExtractor will now return each row with node{\DOMElement} instead of node{\DOMDocument}** - [@norberttech](https://github.com/norberttech)
+- [#1167](https://github.com/flow-php/flow/pull/1167) - **DOMElementAttribute scalar function is now deprecated in favor of DOMElementAttributeValue** - [@norberttech](https://github.com/norberttech)
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Renamed PregMatch into RegexMatch** - [@norberttech](https://github.com/norberttech)
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Renamed PregMatchAll into RegexMatchAll** - [@norberttech](https://github.com/norberttech)
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Renamed PregReplex into RegexReplace** - [@norberttech](https://github.com/norberttech)
