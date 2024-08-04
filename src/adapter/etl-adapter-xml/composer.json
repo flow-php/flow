@@ -14,10 +14,8 @@
         "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
         "ext-dom": "*",
         "ext-xmlreader": "*",
+        "ext-simplexml": "*",
         "flow-php/etl": "^0.8 || 1.x-dev"
-    },
-    "require-dev": {
-        "ext-xmlwriter": "*"
     },
     "config": {
         "optimize-autoloader": true,
