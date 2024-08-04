@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-08-04
 
 ### Added
+- [#1166](https://github.com/flow-php/flow/pull/1166) - **XML Loader - writing to XML files** - [@norberttech](https://github.com/norberttech)
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Regex Scalar Function** - [@norberttech](https://github.com/norberttech)
 - [#1160](https://github.com/flow-php/flow/pull/1160) - **Missing optional arguments to all regex scalar functions** - [@norberttech](https://github.com/norberttech)
 - [#1128](https://github.com/flow-php/flow/pull/1128) - **UniqueFactory as source of random ints/strings with given length** - [@mleczakm](https://github.com/mleczakm)
