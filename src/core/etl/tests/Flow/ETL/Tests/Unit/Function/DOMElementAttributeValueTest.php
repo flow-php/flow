@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
 
-final class DOMElementAttributeTest extends TestCase
+final class DOMElementAttributeValueTest extends TestCase
 {
     public function test_extracting_attribute_from_dom_element_entry() : void
     {
@@ -18,7 +18,7 @@ final class DOMElementAttributeTest extends TestCase
 
         self::assertEquals(
             'buz',
-            ref('value')->domElementAttribute('baz')->eval(
+            ref('value')->domElementAttributeValue('baz')->eval(
                 Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
             )
         );
@@ -30,7 +30,7 @@ final class DOMElementAttributeTest extends TestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertNull(
-            ref('value')->domElementAttribute('bar')->eval(
+            ref('value')->domElementAttributeValue('bar')->eval(
                 Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
             )
         );

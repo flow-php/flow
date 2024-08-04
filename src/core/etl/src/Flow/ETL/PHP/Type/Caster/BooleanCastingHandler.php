@@ -21,6 +21,10 @@ final class BooleanCastingHandler implements CastingHandler
             return $value;
         }
 
+        if ($value instanceof \DOMElement) {
+            $value = $value->nodeValue;
+        }
+
         if (\is_string($value)) {
             if (\in_array(\mb_strtolower($value), ['true', '1', 'yes', 'on'], true)) {
                 return true;

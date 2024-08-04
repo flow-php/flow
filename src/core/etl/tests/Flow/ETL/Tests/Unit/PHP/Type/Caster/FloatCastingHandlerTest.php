@@ -21,6 +21,7 @@ final class FloatCastingHandlerTest extends TestCase
         yield 'array' => [[1, 2, 3], 1.0];
         yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), 1609459200000000.0];
         yield 'DateInterval' => [new \DateInterval('P1D'), 86400000000.0];
+        yield 'DOMElement' => [new \DOMElement('element', '1.1'), 1.1];
     }
 
     #[DataProvider('float_castable_data_provider')]

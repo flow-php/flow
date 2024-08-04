@@ -36,4 +36,14 @@ final class UuidCastingHandlerTest extends TestCase
             (new UuidCastingHandler())->value('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e', type_uuid(), Caster::default())
         );
     }
+
+    public function test_casting_xml_element_to_uuid() : void
+    {
+        $uuid = \Ramsey\Uuid\Uuid::fromString('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e')->toString();
+
+        self::assertEquals(
+            $uuid,
+            (new UuidCastingHandler())->value(new \DOMElement('element', $uuid), type_uuid(), Caster::default())
+        );
+    }
 }

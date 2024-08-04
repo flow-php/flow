@@ -22,6 +22,10 @@ final class UuidCastingHandler implements CastingHandler
             return $value;
         }
 
+        if ($value instanceof \DOMElement) {
+            $value = $value->nodeValue;
+        }
+
         if (\is_string($value)) {
             return new Uuid($value);
         }

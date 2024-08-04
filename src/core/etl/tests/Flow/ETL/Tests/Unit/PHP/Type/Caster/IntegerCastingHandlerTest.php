@@ -21,6 +21,7 @@ final class IntegerCastingHandlerTest extends TestCase
         yield 'array' => [[1, 2, 3], 1];
         yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), 1609459200000000];
         yield 'DateInterval' => [new \DateInterval('P1D'), 86400000000];
+        yield 'DOMElement' => [new \DOMElement('element', '1'), 1];
     }
 
     #[DataProvider('integer_castable_data_provider')]

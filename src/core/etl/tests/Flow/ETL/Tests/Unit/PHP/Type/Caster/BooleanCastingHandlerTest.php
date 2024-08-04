@@ -30,6 +30,8 @@ final class BooleanCastingHandlerTest extends TestCase
         yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), true];
         yield 'DateInterval' => [new \DateInterval('P1D'), true];
         yield 'DOMDocument' => [new \DOMDocument(), true];
+        yield 'DOMElement - true' => [new \DOMElement('element', 'true'), true];
+        yield 'DOMElement - false' => [new \DOMElement('element', 'false'), false];
     }
 
     #[DataProvider('boolean_castable_data_provider')]

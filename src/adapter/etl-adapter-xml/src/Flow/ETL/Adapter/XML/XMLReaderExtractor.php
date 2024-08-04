@@ -66,8 +66,8 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                     $currentPath = \implode('/', $currentPathBreadCrumbs);
 
                     if ($currentPath === $this->xmlNodePath || ($this->xmlNodePath === '' && $xmlReader->depth === 0)) {
-                        $node = new \DOMDocument('1.0', '');
-                        $node->loadXML($xmlReader->readOuterXml());
+                        $dom = new \DOMDocument('1.0', '');
+                        $node = $xmlReader->expand($dom);
 
                         if ($shouldPutInputIntoRows) {
                             $rowData = [
