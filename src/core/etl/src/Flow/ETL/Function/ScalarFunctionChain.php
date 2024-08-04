@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\{lit, ref, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
@@ -301,6 +301,17 @@ abstract class ScalarFunctionChain implements ScalarFunction
         }
 
         return new NumberFormat($this, $decimals, $decimalSeparator, $thousandsSeparator);
+    }
+
+    /**
+     * Execute a scalar function on each element of an array/list/map/structure entry.
+     * In order to use this function, you need to provide a reference to the "element" that will be used in the function.
+     *
+     * Example: $df->withEntry('array', ref('array')->onEach(ref('element')->cast(type_string())))
+     */
+    public function onEach(self $cast, ScalarFunction|bool $preserveKeys = true) : OnEach
+    {
+        return new OnEach($this, $cast, $preserveKeys);
     }
 
     public function plus(ScalarFunction $ref) : self
