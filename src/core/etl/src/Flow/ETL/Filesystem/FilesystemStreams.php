@@ -13,7 +13,7 @@ use Flow\Filesystem\{FilesystemTable, Partition};
  */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
-    public const FLOW_TMP_SUFFIX = '._flow_tmp';
+    public const FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';
 
     private SaveMode $saveMode;
 
@@ -47,7 +47,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
                             $partitionFilesPatter = new Path($fileStream->path()->parentDirectory()->path() . '/*', $fileStream->path()->options());
 
                             foreach ($fs->list($partitionFilesPatter) as $partitionFile) {
-                                if (\str_ends_with($partitionFile->path->path(), self::FLOW_TMP_SUFFIX)) {
+                                if (\str_contains($partitionFile->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
                                     continue;
                                 }
 
@@ -58,7 +58,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
                         $fs->mv(
                             $fileStream->path(),
                             new Path(
-                                \str_replace(self::FLOW_TMP_SUFFIX, '', $fileStream->path()->uri()),
+                                \str_replace(self::FLOW_TMP_FILE_PREFIX, '', $fileStream->path()->uri()),
                                 $fileStream->path()->options()
                             )
                         );
@@ -199,7 +199,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
             }
 
             if ($this->saveMode === SaveMode::Overwrite) {
-                $outputPath = new Path($outputPath->uri() . self::FLOW_TMP_SUFFIX, $outputPath->options());
+                $outputPath = $outputPath->basenamePrefix(self::FLOW_TMP_FILE_PREFIX);
             }
 
             if ($this->saveMode === SaveMode::ExceptionIfExists) {

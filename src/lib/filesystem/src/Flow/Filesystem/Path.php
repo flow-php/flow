@@ -150,6 +150,14 @@ final class Path
         return $this->basename;
     }
 
+    public function basenamePrefix(string $prefix) : self
+    {
+        return new self(
+            $this->parentDirectory()->uri() . DIRECTORY_SEPARATOR . $prefix . $this->basename(),
+            $this->options()
+        );
+    }
+
     public function context() : ResourceContext
     {
         return ResourceContext::from($this);

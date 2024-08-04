@@ -125,6 +125,39 @@ final class PathTest extends TestCase
         self::assertFalse((new Path(__DIR__))->extension());
     }
 
+    public function test_file_prefix() : void
+    {
+        $path = new Path('flow-file://var/dir/file.csv', []);
+
+        self::assertSame(
+            'flow-file://var/dir/._flow_tmp.file.csv',
+            $path->basenamePrefix('._flow_tmp.')->uri()
+        );
+        self::assertSame('csv', $path->extension());
+    }
+
+    public function test_file_prefix_on_directory() : void
+    {
+        $path = new Path('flow-file://var/dir/', []);
+
+        self::assertSame(
+            'flow-file://var/._flow_tmp.dir',
+            $path->basenamePrefix('._flow_tmp.')->uri()
+        );
+        self::assertFalse($path->extension());
+    }
+
+    public function test_file_prefix_on_root_directory() : void
+    {
+        $path = new Path('flow-file://', []);
+
+        self::assertSame(
+            'flow-file://._flow_tmp.',
+            $path->basenamePrefix('._flow_tmp.')->uri()
+        );
+        self::assertFalse($path->extension());
+    }
+
     #[DataProvider('paths_with_static_parts')]
     public function test_finding_static_part_of_the_path(string $staticPart, string $uri) : void
     {
