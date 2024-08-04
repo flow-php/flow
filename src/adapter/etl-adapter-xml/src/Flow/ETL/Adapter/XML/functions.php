@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\from_all;
-use Flow\ETL\Extractor;
+use Flow\ETL\{Adapter\XML\Loader\XMLLoader,
+    Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer,
+    Adapter\XML\XMLWriter\DOMDocumentWriter,
+    Extractor};
 use Flow\Filesystem\Path;
 
 /**
  * @param array<Path|string>|Path|string $path
- * @param string $xml_node_path
- *
- * @return Extractor
  */
 function from_xml(
     string|Path|array $path,
@@ -35,5 +35,23 @@ function from_xml(
     return new XMLReaderExtractor(
         \is_string($path) ? Path::realpath($path) : $path,
         $xml_node_path
+    );
+}
+
+function to_xml(
+    string|Path $path,
+    string $root_element_name = 'rows',
+    string $row_element_name = 'row',
+    string $attribute_prefix = '_',
+    string $date_time_format = PHPValueNormalizer::DATE_TIME_FORMAT,
+    XMLWriter $xml_writer = new DOMDocumentWriter()
+) : XMLLoader {
+    return new XMLLoader(
+        \is_string($path) ? Path::realpath($path) : $path,
+        $root_element_name,
+        $row_element_name,
+        $attribute_prefix,
+        $date_time_format,
+        $xml_writer
     );
 }
