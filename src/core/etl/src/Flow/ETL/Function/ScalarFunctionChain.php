@@ -91,9 +91,22 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Divide($this, $ref);
     }
 
-    public function domElementAttribute(string $attribute) : self
+    /**
+     * @deprecated Use domElementAttributeValue instead
+     */
+    public function domElementAttribute(ScalarFunction|string $attribute) : self
     {
-        return new DOMElementAttribute($this, $attribute);
+        return new DOMElementAttributeValue($this, $attribute);
+    }
+
+    public function domElementAttributesCount() : self
+    {
+        return new DOMElementAttributesCount($this);
+    }
+
+    public function domElementAttributeValue(ScalarFunction|string $attribute) : self
+    {
+        return new DOMElementAttributeValue($this, $attribute);
     }
 
     public function domElementValue() : self

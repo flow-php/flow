@@ -21,6 +21,10 @@ final class IntegerCastingHandler implements CastingHandler
             return $value;
         }
 
+        if ($value instanceof \DOMElement) {
+            return (int) $value->nodeValue;
+        }
+
         if ($value instanceof \DateTimeImmutable) {
             return (int) $value->format('Uu');
         }

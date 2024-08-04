@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Caster;
 
+use function Flow\ETL\DSL\dom_element_to_string;
 use Flow\ETL\Exception\CastingException;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\{Caster, Type};
@@ -39,6 +40,10 @@ final class StringCastingHandler implements CastingHandler
 
         if ($value instanceof \DOMDocument) {
             return $value->saveXML() ?: null;
+        }
+
+        if ($value instanceof \DOMElement) {
+            return dom_element_to_string($value);
         }
 
         try {

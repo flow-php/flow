@@ -1297,3 +1297,15 @@ function random_string(
 ) : RandomString {
     return new RandomString($length, $generator);
 }
+
+function dom_element_to_string(\DOMElement $element, bool $format_output = false, bool $preserver_white_space = false) : string|false
+{
+    $doc = new \DOMDocument('1.0', 'UTF-8');
+    $doc->formatOutput = $format_output;
+    $doc->preserveWhiteSpace = $preserver_white_space;
+
+    $importedNode = $doc->importNode($element, true);
+    $doc->appendChild($importedNode);
+
+    return $doc->saveXML($doc->documentElement);
+}

@@ -28,6 +28,7 @@ final class StringCastingHandlerTest extends TestCase
             }
         }, 'stringable'];
         yield 'DOMDocument' => [new \DOMDocument(), '<?xml version="1.0"?>'];
+        yield 'DOMElement' => [new \DOMElement('element'), '<element/>'];
     }
 
     #[DataProvider('string_castable_data_provider')]

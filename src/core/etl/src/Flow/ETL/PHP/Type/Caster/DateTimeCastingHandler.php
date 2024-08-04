@@ -22,6 +22,10 @@ final class DateTimeCastingHandler implements CastingHandler
             return $value;
         }
 
+        if ($value instanceof \DOMElement) {
+            $value = $value->nodeValue;
+        }
+
         if ($value instanceof \DateTime) {
             return \DateTimeImmutable::createFromMutable($value);
         }
