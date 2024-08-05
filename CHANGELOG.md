@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-04
+## [Unreleased] - 2024-08-05
 
 ### Added
 - [#1168](https://github.com/flow-php/flow/pull/1168) - **OnEach scalar function** - [@norberttech](https://github.com/norberttech)
