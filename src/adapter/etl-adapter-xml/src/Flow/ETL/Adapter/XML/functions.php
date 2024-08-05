@@ -23,7 +23,7 @@ function from_xml(
         $extractors = [];
 
         foreach ($path as $next_path) {
-            $extractors[] = new XMLReaderExtractor(
+            $extractors[] = new XMLParserExtractor(
                 \is_string($next_path) ? Path::realpath($next_path) : $next_path,
                 $xml_node_path
             );
@@ -32,7 +32,7 @@ function from_xml(
         return from_all(...$extractors);
     }
 
-    return new XMLReaderExtractor(
+    return new XMLParserExtractor(
         \is_string($path) ? Path::realpath($path) : $path,
         $xml_node_path
     );

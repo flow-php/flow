@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
 use Flow\Filesystem\Path;
 
 final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
@@ -15,6 +15,8 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     use PathFiltering;
 
     /**
+     * @deprecated Use XMLParserExtractor instead, XMLReaderExtractor can't properly handle reading remote files since it requires a local file.
+     *
      * In order to iterate only over <element> nodes us root/elements/element.
      *
      * <root>
@@ -33,6 +35,9 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         private readonly Path $path,
         private readonly string $xmlNodePath = ''
     ) {
+        if (!$this->path->isLocal()) {
+            throw new InvalidArgumentException('XMLReaderExtractor supports only local files, please use XMLParserExtractor that depends on php-xml extension.');
+        }
         $this->resetLimit();
     }
 

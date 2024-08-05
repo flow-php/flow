@@ -1,0 +1,10 @@
+<root root_attribute_01="1">
+    <items items_attribute_01="1" items_attribute_02="2">
+        <item item_attribute_01="7">
+            <id id_attribute_01="7">7</id>
+        </item>
+        <item item_attribute_01="8">
+            <id id_attribute_01="8">8</id>
+        </item>
+    </items>
+</root>

@@ -17,7 +17,7 @@ final class XPathTest extends TestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertEquals(
-            $xml->documentElement->firstChild,
+            [$xml->documentElement->firstChild],
             ref('value')->xpath('/root/foo')->eval(Row::create((new NativeEntryFactory())->create('value', $xml)))
         );
     }

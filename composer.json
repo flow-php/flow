@@ -17,6 +17,8 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-xmlreader": "*",
+        "ext-xmlwriter": "*",
+        "ext-xml": "*",
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
         "coduo/php-humanizer": "^5.0",

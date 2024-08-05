@@ -12,9 +12,6 @@ final class XPath extends ScalarFunctionChain
     {
     }
 
-    /**
-     * @psalm-suppress InvalidReturnStatement
-     */
     public function eval(Row $row) : \DOMNode|array|null
     {
         $value = $this->ref->eval($row);
@@ -39,10 +36,6 @@ final class XPath extends ScalarFunctionChain
 
         if ($result->length === 0) {
             return null;
-        }
-
-        if ($result->length === 1) {
-            return $result->item(0);
         }
 
         $nodes = [];
