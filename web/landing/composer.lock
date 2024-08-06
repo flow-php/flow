@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0cfea22fd9d694833add7cff62270163",
+    "content-hash": "7ffce47f5ec3692a4516ce30fbcb265b",
     "packages": [
         {
             "name": "aeon-php/calendar",
@@ -391,12 +391,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "38f8a1b284b46a76fb657088f93f3eb9b83c2a24"
+                "reference": "84a9cb20b8892797afe4337515a104f10fabf79a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/38f8a1b284b46a76fb657088f93f3eb9b83c2a24",
-                "reference": "38f8a1b284b46a76fb657088f93f3eb9b83c2a24",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/84a9cb20b8892797afe4337515a104f10fabf79a",
+                "reference": "84a9cb20b8892797afe4337515a104f10fabf79a",
                 "shasum": ""
             },
             "require": {
@@ -422,11 +422,6 @@
             },
             "default-branch": true,
             "type": "library",
-            "extra": {
-                "aws/aws-sdk-php": [
-                    "S3"
-                ]
-            },
             "autoload": {
                 "files": [
                     "src/Flow/ETL/DSL/functions.php"
@@ -452,7 +447,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2024-07-22T21:31:50+00:00"
+            "time": "2024-08-06T20:04:04+00:00"
         },
         {
             "name": "flow-php/etl-adapter-http",

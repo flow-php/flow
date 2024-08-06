@@ -6,7 +6,7 @@ namespace Flow\Website\Service;
 
 use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, to_memory};
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\Cache\PSRSimpleCache;
+use Flow\ETL\Cache\Implementation\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\Website\Factory\Github\ContributorsRequestFactory;
 use Http\Client\Curl\Client;

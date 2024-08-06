@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
-use Flow\Website\Service\Github;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class FlowController extends AbstractController
 {
-    public function __construct(private readonly Github $github)
+    public function __construct()
     {
     }
 
