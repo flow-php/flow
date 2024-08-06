@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-05
+## [Unreleased] - 2024-08-06
 
 ### Added
 - [#1170](https://github.com/flow-php/flow/pull/1170) - **XMLParserExtractor implementation of XMLExtractor** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +44,8 @@
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1171](https://github.com/flow-php/flow/pull/1171) - **Fix docblock tag in FlowVersion** - [@szepeviktor](https://github.com/szepeviktor)
+- [#1172](https://github.com/flow-php/flow/pull/1172) - **Grammar in parquet.md** - [@szepeviktor](https://github.com/szepeviktor)
 - [#1165](https://github.com/flow-php/flow/pull/1165) - **Use basenamePrefix instead of suffix when creating temporary file in overwrite save mode** - [@norberttech](https://github.com/norberttech)
 - [#1163](https://github.com/flow-php/flow/pull/1163) - **Added missing split function to ScalarFunctionChain** - [@norberttech](https://github.com/norberttech)
 - [#1161](https://github.com/flow-php/flow/pull/1161) - **Fixed invalid map type detection** - [@norberttech](https://github.com/norberttech)
