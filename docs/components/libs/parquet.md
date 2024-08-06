@@ -281,7 +281,7 @@ A Much better approach is to reduce the row group size to something closer to 1M
 what your default page size should be - like for example 100 or 500 (that obviously depends on your data)
 
 This way you will keep memory usage low, and you will be able to paginate over big files without any issues.
-But it will take a bit longer to write into those files since writter will need to flush and calculate staticists
+But it will take a little longer to write to these files, because writer has to flush and calculate statistic
 more frequently.
 
 Unfortunately, there is no one size fits all solution here.
