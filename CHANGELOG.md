@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-08-06
 
 ### Added
+- [#1173](https://github.com/flow-php/flow/pull/1173) - **Added new page with a list of latest blog posts to landing page** - [@norberttech](https://github.com/norberttech)
 - [#1170](https://github.com/flow-php/flow/pull/1170) - **XMLParserExtractor implementation of XMLExtractor** - [@norberttech](https://github.com/norberttech)
 - [#1168](https://github.com/flow-php/flow/pull/1168) - **OnEach scalar function** - [@norberttech](https://github.com/norberttech)
 - [#1167](https://github.com/flow-php/flow/pull/1167) - **DOMElementAttributesCount scalar function** - [@norberttech](https://github.com/norberttech)
