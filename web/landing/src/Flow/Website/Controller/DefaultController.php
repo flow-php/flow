@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
-use Flow\Website\Service\{Examples, Github};
+use Flow\Website\Service\{Examples};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -12,7 +12,6 @@ use Symfony\Component\Routing\Attribute\Route;
 final class DefaultController extends AbstractController
 {
     public function __construct(
-        private readonly Github $github,
         private readonly Examples $examples,
     ) {
     }
