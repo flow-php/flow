@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Article - {{ post.title }}
+{%- endblock -%}
+
+{%- block description -%}
+    {{ post.description }}
+{%- endblock -%}
+
+{% block main %}
+    {{ block('article') }}
+{% endblock %}

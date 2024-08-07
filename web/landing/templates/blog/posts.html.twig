@@ -16,17 +16,17 @@
         <img src="{{ asset('images/icons/pencil.svg') }}" width="32" height="32" alt="feature" class="inline mr-2 bg-blue-100 p-1 -mt-4 rounded">
         <a
             class="text-white"
-            href="{{ path('blog_post', {date: post.date, slug: post.slug}) }}"
+            href="{{ path('blog_post', {date: post.date | date('Y-m-d'), slug: post.slug}) }}"
         >
         <h2 class="inline text-4xl font-bold">{{ post.title }}</h2>
         </a>
         <hr class="text-blue-100 my-4 border-t-2 rounded">
-        <h3 class="mb-2">Posted on {{ post.date }}</h3>
+        <h3 class="mb-2">Posted on {{ post.date | date }}</h3>
         <p class="mb-2">
             {{ post.description }}
         </p>
         <a
-                href="{{ path('blog_post', {date: post.date, slug: post.slug}) }}"
+                href="{{ path('blog_post', {date: post.date | date('Y-m-d'), slug: post.slug}) }}"
                 class="text-blue-500 hover:underline mt-2"
         >
             Read more

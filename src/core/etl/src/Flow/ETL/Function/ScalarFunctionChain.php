@@ -319,9 +319,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Plus($this, $ref);
     }
 
-    public function power(ScalarFunction $ref) : self
+    public function power(ScalarFunction|int|float $value) : self
     {
-        return new Power($this, $ref);
+        return new Power($this, $value instanceof ScalarFunction ? $value : lit($value));
     }
 
     public function regex(ScalarFunction $pattern, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : self
