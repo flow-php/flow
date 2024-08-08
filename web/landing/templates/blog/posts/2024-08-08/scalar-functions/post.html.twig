@@ -1,0 +1,101 @@
+{% extends 'blog/post.html.twig' %}
+
+{% block article %}
+<article id="blog-post">
+    <h1>Scalar Functions</h1>
+    <hr />
+    <p>
+        Scalar Functions are the most basic building blocks of Flow. These functions are used in all operations that occur at the level of a single cell.
+    </p>
+    <p>
+        If we wanted to imagine how Flow works, the easiest way is to think of a spreadsheet. After reading a portion of data from the source, Flow transforms it into a structure of rows, columns, and cells.
+    </p>
+    <p>
+        Once the read batch of data is converted into a tabular form, Flow proceeds to process the data row by row, column by column, cell by cell.
+    </p>
+    <p>
+        Scalar functions are called for each cell in a given row.
+        It's worth noticing that the execution context of scalar functions is the entire row, even though the operation usually takes place on a single cell.
+        This relationship allows using values from other cells as function arguments, for example.
+    </p>
+    <p>
+        Each scalar function implements a very simple interface.
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/scalar-function.php' %}{% endapply %}</code></pre>
+    <p>
+        As you can see, there's not much room for overly complicated operations here. The best and most efficient scalar functions are those that have only one, well-defined responsibility.
+        The fewer things a function does, the easier it is to test, understand, and maintain.
+    </p>
+    <p>
+        Let's see what an example of scalar functions in Flow looks like:
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/power.php' %}{% endapply %}</code></pre>
+    <p>
+        Let's start by analyzing the function constructor. We can notice that the arguments passed to the constructor are two other scalar functions.
+        This simple trick allows us to refer to values from different cells using the <code>ref</code> function.
+    </p>
+    <p>
+        The <code>ref(string $entry) : EntryReference</code> function returns an instance of the <code>EntryReference</code> object, which implements the <code>ScalarFunction</code> interface. This implementation involves returning the value from the cell that the reference points to.
+    </p>
+    <p>
+        It's worth mentioning another very frequently used scalar function, <code>lit(mixed $value) : Literal</code>. The <code>lit</code> function has a very similar operation to <code>ref</code>, with the difference that instead of extracting a value from a cell, it returns the value passed as an argument.
+    </p>
+    <p>
+        Now that we know the construction of a scalar function, let's look at the implementation of the <code>eval(Row $row) : mixed</code> method.
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/power-eval.php' %}{% endapply %}</code></pre>
+    <p>
+        We can assume that the <code>eval</code> method consists of 3 parts:
+    </p>
+    <ul>
+        <li>Retrieving parameters</li>
+        <li>Validating parameters</li>
+        <li>Execution</li>
+    </ul>
+
+    <p>
+        Let's now analyze each of these parts.
+    </p>
+
+    <p>
+        <strong>Retrieving parameters</strong> - the purpose of this action is to reduce all scalar functions to specific values by calling them on the passed row.
+    </p>
+    <p>
+        <strong>Parameters validation</strong> - when we have all parameters reduced to simple values, we need to make sure they are correct. We check if something is not <code>null</code> or if the values are of the appropriate type. In case the values are incorrect, instead of throwing an exception, we should return <code>null</code>.
+    </p>
+    <p>
+        <strong>Execution</strong> - this part of the method contains the actual logic of the scalar function. In our case, it's raising a value to a power. A significant portion of scalar functions are nothing more than functions provided by PHP.
+    </p>
+    <p>
+        This construction allows for very easy addition of new scalar functions, and for their very simple testing. Let's look at the tests for the <code>power</code> function:
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/power-test.php' %}{% endapply %}</code></pre>
+
+    <p>
+        To improve developer experience, <code>EntryReference</code> inherits from the abstract class <code>ScalarFunctionChain</code>, which aggregates all functions in one place so that they can be referred to directly from <code>ref()</code>. Let's look at some examples:
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}ref('integer_value')->power(lit(2));{% endapply %}</code></pre>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}ref('integer_value')->power(ref('other_column'));{% endapply %}</code></pre>
+
+    <p>
+        The practical use of a scalar function will therefore look like this:
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}df()->withEntry('power_of_integer_value', ref('integer_value')->power(ref('other_column')));{% endapply %}</code></pre>
+
+    <p>
+        Some scalar functions are also available in the form of regular functions registered in the DSL. An example of such a function is <code>when</code> which takes 3 arguments:
+    </p>
+    <ul>
+        <li>condition</li>
+        <li>what if true</li>
+        <li>what if false</li>
+    </ul>
+    <p>
+        If we look at the implementation of this function, we'll notice that all its arguments are also scalar functions. This allows us to build very complicated nested conditions.
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/when-function.php' %}{% endapply %}</code></pre>
+
+</article>
+{% endblock %}
