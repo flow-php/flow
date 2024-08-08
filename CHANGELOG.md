@@ -63,6 +63,7 @@
 - [#1126](https://github.com/flow-php/flow/pull/1126) - **Typo “Discrod”** - [@alexislefebvre](https://github.com/alexislefebvre)
 
 ### Updated
+- [c5dbbd](https://github.com/flow-php/flow/commit/c5dbbd126d481407d433df4756f482bf39de800a) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [1390ef](https://github.com/flow-php/flow/commit/1390ef624af334ea3d5b2ca22bf8b637ab8aea87) - **introduction.md** - [@norberttech](https://github.com/norberttech)
 - [f5ad85](https://github.com/flow-php/flow/commit/f5ad85efac1d71255370a6ee8ba36b791dc14645) - **CONTRIBUTING.md** - [@norberttech](https://github.com/norberttech)
 
