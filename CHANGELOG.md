@@ -48,6 +48,7 @@
 - [#1120](https://github.com/flow-php/flow/pull/1120) - **Update Homebrew TAP formula: flow-php to version: 0.8.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [83f9be](https://github.com/flow-php/flow/commit/83f9be63a340356fd67bad6863ef283404a1d8ff) - **Posts provider for static content builder** - [@norberttech](https://github.com/norberttech)
 - [#1171](https://github.com/flow-php/flow/pull/1171) - **Fix docblock tag in FlowVersion** - [@szepeviktor](https://github.com/szepeviktor)
 - [#1172](https://github.com/flow-php/flow/pull/1172) - **Grammar in parquet.md** - [@szepeviktor](https://github.com/szepeviktor)
 - [#1165](https://github.com/flow-php/flow/pull/1165) - **Use basenamePrefix instead of suffix when creating temporary file in overwrite save mode** - [@norberttech](https://github.com/norberttech)
