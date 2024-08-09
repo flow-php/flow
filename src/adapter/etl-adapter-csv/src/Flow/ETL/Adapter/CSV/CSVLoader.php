@@ -18,7 +18,8 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         private string $separator = ',',
         private string $enclosure = '"',
         private string $escape = '\\',
-        private string $newLineSeparator = PHP_EOL
+        private string $newLineSeparator = PHP_EOL,
+        private string $dateTimeFormat = \DateTimeInterface::ATOM
     ) {
     }
 
@@ -38,7 +39,7 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
             return;
         }
 
-        $normalizer = new RowsNormalizer(new EntryNormalizer($context->config->caster()));
+        $normalizer = new RowsNormalizer(new EntryNormalizer($context->config->caster(), $this->dateTimeFormat));
 
         $headers = $rows->first()->entries()->map(fn (Entry $entry) => $entry->name());
 

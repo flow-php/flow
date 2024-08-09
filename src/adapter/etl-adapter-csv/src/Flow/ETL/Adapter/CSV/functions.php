@@ -60,7 +60,8 @@ function to_csv(
     string $separator = ',',
     string $enclosure = '"',
     string $escape = '\\',
-    string $new_line_separator = PHP_EOL
+    string $new_line_separator = PHP_EOL,
+    string $datetime_format = \DateTimeInterface::ATOM
 ) : Loader {
     return new CSVLoader(
         \is_string($uri) ? Path::realpath($uri) : $uri,
@@ -68,7 +69,8 @@ function to_csv(
         $separator,
         $enclosure,
         $escape,
-        $new_line_separator
+        $new_line_separator,
+        $datetime_format
     );
 }
 
