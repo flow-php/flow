@@ -47,7 +47,11 @@ function from_json(
  *
  * @return Loader
  */
-function to_json(string|Path $path, string $date_time_format = \DateTimeInterface::ATOM) : Loader
-{
-    return new JsonLoader(\is_string($path) ? Path::realpath($path) : $path, $date_time_format);
+function to_json(
+    string|Path $path,
+    int $flags = JSON_THROW_ON_ERROR,
+    string $date_time_format = \DateTimeInterface::ATOM,
+    bool $put_rows_in_new_lines = false
+) : Loader {
+    return new JsonLoader(\is_string($path) ? Path::realpath($path) : $path, $flags, $date_time_format, $put_rows_in_new_lines);
 }

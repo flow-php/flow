@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
-use function Flow\ETL\DSL\{df, overwrite};
+use function Flow\ETL\DSL\{df, from_array, overwrite};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
@@ -79,5 +79,55 @@ JSON,
         if (\file_exists($path)) {
             \unlink($path);
         }
+    }
+
+    public function test_putting_each_row_in_a_new_line() : void
+    {
+        df()
+            ->read(from_array([
+                ['name' => 'John', 'age' => 30],
+                ['name' => 'Jane', 'age' => 25],
+            ]))
+            ->saveMode(overwrite())
+            ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', put_rows_in_new_lines: true))
+            ->run();
+
+        self::assertStringContainsString(
+            <<<'JSON'
+[
+{"name":"John","age":30},
+{"name":"Jane","age":25}
+]
+JSON,
+            \file_get_contents($path)
+        );
+    }
+
+    public function test_putting_each_row_in_a_new_line_with_json_pretty_print_flag() : void
+    {
+        df()
+            ->read(from_array([
+                ['name' => 'John', 'age' => 30],
+                ['name' => 'Jane', 'age' => 25],
+            ]))
+            ->saveMode(overwrite())
+            ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', flags: JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, put_rows_in_new_lines: true))
+            ->run();
+
+        self::assertStringContainsString(
+            <<<'JSON'
+[
+{
+    "name": "John",
+    "age": 30
+},
+{
+    "name": "Jane",
+    "age": 25
+}
+]
+JSON,
+            \file_get_contents($path)
+        );
     }
 }
