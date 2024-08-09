@@ -12,15 +12,15 @@ final class Same extends ScalarFunctionChain
     use Comparable;
 
     public function __construct(
-        private readonly ScalarFunction $base,
-        private readonly ScalarFunction $next
+        private readonly mixed $left,
+        private readonly mixed $right
     ) {
     }
 
     public function eval(Row $row) : bool
     {
-        $base = $this->base->eval($row);
-        $next = $this->next->eval($row);
+        $base = (new Parameter($this->left))->eval($row);
+        $next = (new Parameter($this->right))->eval($row);
 
         $this->assertComparable($base, $next, '===');
 

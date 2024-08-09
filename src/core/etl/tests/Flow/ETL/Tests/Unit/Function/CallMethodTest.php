@@ -23,7 +23,7 @@ final class CallMethodTest extends TestCase
             call_method(
                 ref('object'),
                 ref('method'),
-                ref('method_param'),
+                [ref('method_param')],
             )->eval($row)
         );
     }

@@ -4,32 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row;
 
 final class StrReplace extends ScalarFunctionChain
 {
-    /**
-     * @param string|string[] $search
-     * @param string|string[] $replace
-     */
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly string|array $search,
-        private readonly string|array $replace
+        private readonly ScalarFunction|string $value,
+        private readonly ScalarFunction|string|array $search,
+        private readonly ScalarFunction|string|array $replace
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?string
     {
-        /** @var null|string $val */
-        $val = Caster::default()->to(type_string(true))->value($this->ref->eval($row));
+        $value = (new Parameter($this->value))->asString($row);
+        $search = Parameter::oneOf((new Parameter($this->search))->asString($row), (new Parameter($this->search))->asArray($row));
+        $replace = Parameter::oneOf((new Parameter($this->replace))->asString($row), (new Parameter($this->replace))->asArray($row));
 
-        if (!\is_string($val)) {
+        if ($value === null || $search === null || $replace === null) {
             return null;
         }
 
-        return \str_replace($this->search, $this->replace, $val);
+        return \str_replace($search, $replace, $value);
     }
 }

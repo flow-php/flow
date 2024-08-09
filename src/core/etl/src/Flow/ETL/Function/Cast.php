@@ -12,8 +12,8 @@ use Flow\ETL\Row;
 final class Cast extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly string|Type $type
+        private readonly mixed $value,
+        private readonly ScalarFunction|Type|string $type
     ) {
     }
 
@@ -23,9 +23,10 @@ final class Cast extends ScalarFunctionChain
      */
     public function eval(Row $row) : mixed
     {
-        $value = $this->ref->eval($row);
+        $value = (new Parameter($this->value))->eval($row);
+        $type = $this->type instanceof ScalarFunction ? (new Parameter($this->type))->asString($row) : $this->type;
 
-        if (null === $value) {
+        if (null === $value || $type === null) {
             return null;
         }
 
@@ -37,6 +38,7 @@ final class Cast extends ScalarFunctionChain
             return $caster->to($type)->value($value);
         }
 
+        /** @var string $type */
         try {
             return match (\mb_strtolower($type)) {
                 'datetime' => $caster->to(type_datetime())->value($value),

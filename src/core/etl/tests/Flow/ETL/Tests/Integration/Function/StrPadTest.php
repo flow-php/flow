@@ -32,26 +32,4 @@ final class StrPadTest extends TestCase
             $memory->dump()
         );
     }
-
-    public function test_strpad_on_non_string_key() : void
-    {
-        (new Flow())
-            ->read(
-                from_array(
-                    [
-                        ['id' => 1],
-                    ]
-                )
-            )
-            ->withEntry('strpad', ref('id')->strPad(10))
-            ->write(to_memory($memory = new ArrayMemory()))
-            ->run();
-
-        self::assertSame(
-            [
-                ['id' => 1, 'strpad' => '1         '],
-            ],
-            $memory->dump()
-        );
-    }
 }

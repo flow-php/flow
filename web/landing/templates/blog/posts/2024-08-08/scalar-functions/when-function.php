@@ -1,4 +1,4 @@
-function when(ScalarFunction $ref, ScalarFunction $then, ?ScalarFunction $else = null) : When
+function when(mixed $condition, mixed $then, mixed $else = null) : When
 {
-    return new When($ref, $then, $else);
+    return new When($condition, $then, $else);
 }

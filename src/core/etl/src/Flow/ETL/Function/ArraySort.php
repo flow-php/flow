@@ -11,24 +11,26 @@ final class ArraySort extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly Sort $function,
-        private readonly ?int $flags,
-        private readonly bool $recursive
+        private readonly ScalarFunction|Sort $sortFunction,
+        private readonly ScalarFunction|int|null $flags,
+        private readonly ScalarFunction|bool $recursive
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $val */
-        $val = $this->ref->eval($row);
+        $array = (new Parameter($this->ref))->asArray($row);
+        $flags = (new Parameter($this->flags))->asInt($row);
+        $recursive = (new Parameter($this->recursive))->asBoolean($row);
+        $sortFunction = (new Parameter($this->sortFunction))->asEnum($row, Sort::class);
 
-        if (!\is_array($val)) {
+        if ($array === null || $sortFunction === null) {
             return null;
         }
 
-        $this->recursiveSort($val, $this->function->value, $this->flags, $this->recursive);
+        $this->recursiveSort($array, $sortFunction->value, $flags, $recursive);
 
-        return $val;
+        return $array;
     }
 
     private function recursiveSort(array &$array, callable $function, ?int $flags, bool $recursive) : void

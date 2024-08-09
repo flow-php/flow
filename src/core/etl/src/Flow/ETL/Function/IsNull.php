@@ -9,12 +9,12 @@ use Flow\ETL\Row;
 final class IsNull extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref
+        private readonly mixed $value
     ) {
     }
 
     public function eval(Row $row) : bool
     {
-        return $this->ref->eval($row) === null;
+        return (new Parameter($this->value))->eval($row) === null;
     }
 }

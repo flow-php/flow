@@ -78,28 +78,6 @@ final class TrimTest extends TestCase
         );
     }
 
-    public function test_trim_on_non_string_key() : void
-    {
-        (new Flow())
-            ->read(
-                from_array(
-                    [
-                        ['id' => 1],
-                    ]
-                )
-            )
-            ->withEntry('trim', ref('id')->trim())
-            ->write(to_memory($memory = new ArrayMemory()))
-            ->run();
-
-        self::assertSame(
-            [
-                ['id' => 1, 'trim' => '1'],
-            ],
-            $memory->dump()
-        );
-    }
-
     public function test_trim_right() : void
     {
         (new Flow())

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, ref, str_entry};
+use function Flow\ETL\DSL\{ref, str_entry};
 use Flow\ETL\Function\Trim\Type;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -16,14 +16,6 @@ final class TrimTest extends TestCase
         self::assertSame(
             'value',
             ref('string')->trim()->eval(Row::create(str_entry('string', '   value')))
-        );
-    }
-
-    public function test_trim_integer() : void
-    {
-        self::assertSame(
-            '1',
-            ref('integer')->trim()->eval(Row::create(int_entry('integer', 1)))
         );
     }
 

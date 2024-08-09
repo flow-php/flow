@@ -9,23 +9,20 @@ use Flow\ETL\Row;
 final class ToTimeZone extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $function,
-        private readonly ScalarFunction $timezone
+        private readonly ScalarFunction|\DateTimeInterface $value,
+        private readonly ScalarFunction|\DateTimeZone|string $timezone
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        /**
-         * @var mixed $dateTime
-         */
-        $dateTime = $this->function->eval($row);
-        /**
-         * @var mixed $tz
-         */
-        $tz = $this->timezone->eval($row);
+        $dateTime = (new Parameter($this->value))->asInstanceOf($row, \DateTimeInterface::class);
+        $tz = Parameter::oneOf(
+            (new Parameter($this->timezone))->asString($row),
+            (new Parameter($this->timezone))->asInstanceOf($row, \DateTimeZone::class)
+        );
 
-        if (!$dateTime instanceof \DateTime && !$dateTime instanceof \DateTimeImmutable) {
+        if ($dateTime === null || $tz === null) {
             return null;
         }
 
@@ -39,6 +36,7 @@ final class ToTimeZone extends ScalarFunctionChain
             return null;
         }
 
+        /** @var \DateTime|\DateTimeImmutable $dateTime */
         return $dateTime->setTimezone($tz);
     }
 }

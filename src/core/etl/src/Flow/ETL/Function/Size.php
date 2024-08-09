@@ -8,14 +8,14 @@ use Flow\ETL\Row;
 
 final class Size extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $ref)
-    {
+    public function __construct(
+        private readonly mixed $value
+    ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $value */
-        $value = $this->ref->eval($row);
+        $value = (new Parameter($this->value))->eval($row);
 
         if (\is_string($value)) {
             return \mb_strlen($value);

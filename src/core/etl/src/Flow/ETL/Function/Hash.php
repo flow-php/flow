@@ -10,15 +10,14 @@ use Flow\ETL\Row;
 final class Hash extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
+        private readonly mixed $value,
         private readonly Algorithm $algorithm = new NativePHPHash(),
     ) {
     }
 
     public function eval(Row $row) : ?string
     {
-        /** @var mixed $value */
-        $value = $this->ref->eval($row);
+        $value = (new Parameter($this->value))->eval($row);
 
         return match ($value) {
             null => null,

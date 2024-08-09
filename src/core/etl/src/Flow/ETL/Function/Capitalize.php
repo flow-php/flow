@@ -8,22 +8,22 @@ use Flow\ETL\Row;
 
 final class Capitalize extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $ref)
+    public function __construct(private readonly ScalarFunction|string $string)
     {
     }
 
     public function eval(Row $row) : mixed
     {
-        $val = $this->ref->eval($row);
+        $string = (new Parameter($this->string))->eval($row);
 
-        if (!\is_string($val)) {
+        if ($string === null) {
             return null;
         }
 
         if (\function_exists('mb_convert_case')) {
-            return \mb_convert_case($val, \MB_CASE_TITLE);
+            return \mb_convert_case($string, \MB_CASE_TITLE);
         }
 
-        return \ucwords($val);
+        return \ucwords($string);
     }
 }

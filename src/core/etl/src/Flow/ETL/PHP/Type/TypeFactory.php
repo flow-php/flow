@@ -42,4 +42,18 @@ final class TypeFactory
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };
     }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function fromString(string $name) : Type
+    {
+        return match (\mb_strtolower($name)) {
+            'int','integer' => self::fromArray(['type' => 'scalar', 'scalar_type' => 'integer']),
+            'float' => self::fromArray(['type' => 'scalar', 'scalar_type' => 'float']),
+            'string' => self::fromArray(['type' => 'scalar', 'scalar_type' => 'string']),
+            'bool','boolean' => self::fromArray(['type' => 'scalar', 'scalar_type' => 'boolean']),
+            default => self::fromArray(['type' => $name]),
+        };
+    }
 }

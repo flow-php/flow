@@ -9,27 +9,27 @@ use Flow\ETL\Row;
 final class Regex extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $pattern,
-        private readonly ScalarFunction $subject,
-        private readonly ?ScalarFunction $flags = null,
-        private readonly ?ScalarFunction $offset = null,
+        private readonly ScalarFunction|string $pattern,
+        private readonly ScalarFunction|string|array $subject,
+        private readonly ScalarFunction|int $flags = 0,
+        private readonly ScalarFunction|int $offset = 0,
     ) {
     }
 
     public function eval(Row $row) : ?array
     {
-        /** @var array<array-key, non-empty-string>|non-empty-string $pattern */
-        $pattern = $this->pattern->eval($row);
-        $subject = $this->subject->eval($row);
-        $flags = $this->flags ? $this->flags->eval($row) : 0;
-        $offset = $this->offset ? $this->offset->eval($row) : 0;
+        $pattern = (new Parameter($this->pattern))->asString($row);
+        $subject = (new Parameter($this->subject))->asString($row);
+        $flags = (new Parameter($this->flags))->asInt($row);
+        $offset = (new Parameter($this->offset))->asInt($row);
 
-        if (!\is_string($pattern) || !\is_string($subject) || !\is_int($flags) || !\is_int($offset)) {
+        if ($pattern === null || $subject === null || $flags === null || $offset === null) {
             return null;
         }
 
         // preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or false on failure.
-        if (\preg_match($pattern, $subject, $matches) === 1) {
+        /* @phpstan-ignore-next-line */
+        if (\preg_match($pattern, $subject, $matches, $flags, $offset) === 1) {
             return $matches;
         }
 

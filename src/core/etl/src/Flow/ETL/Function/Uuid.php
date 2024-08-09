@@ -13,8 +13,10 @@ if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Componen
 
 final class Uuid extends ScalarFunctionChain
 {
-    private function __construct(private readonly string $uuidVersion, private readonly ?ScalarFunction $ref = null)
-    {
+    private function __construct(
+        private readonly ScalarFunction|string $uuidVersion,
+        private readonly ScalarFunction|\DateTimeInterface|null $value = null
+    ) {
     }
 
     public static function uuid4() : self
@@ -22,17 +24,21 @@ final class Uuid extends ScalarFunctionChain
         return new self('uuid4');
     }
 
-    public static function uuid7(?ScalarFunction $ref = null) : self
+    public static function uuid7(ScalarFunction|\DateTimeInterface|null $value = null) : self
     {
-        return new self('uuid7', $ref);
+        return new self('uuid7', $value);
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $param */
-        $param = $this->ref?->eval($row);
+        $param = Parameter::oneOf(
+            (new Parameter($this->value))->asString($row),
+            (new Parameter($this->value))->asInstanceOf($row, \DateTimeInterface::class)
+        );
 
-        return match ($this->uuidVersion) {
+        $uuidVersion = (new Parameter($this->uuidVersion))->asString($row);
+
+        return match ($uuidVersion) {
             'uuid4' => $this->generateV4(),
             'uuid7' => $param instanceof \DateTimeInterface ? $this->generateV7($param) : null,
             default => null

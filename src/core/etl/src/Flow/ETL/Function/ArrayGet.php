@@ -12,21 +12,21 @@ final class ArrayGet extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly string $path
+        private readonly ScalarFunction|string $path
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
         try {
-            /** @var mixed $value */
-            $value = $this->ref->eval($row);
+            $value = (new Parameter($this->ref))->asArray($row);
+            $path = (new Parameter($this->path))->asString($row);
 
-            if (!\is_array($value)) {
+            if ($value === null || $path === null) {
                 return null;
             }
 
-            return array_dot_get($value, $this->path);
+            return array_dot_get($value, $path);
         } catch (InvalidArgumentException $e) {
             return null;
         }

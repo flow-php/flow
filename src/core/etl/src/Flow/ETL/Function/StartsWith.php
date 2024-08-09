@@ -4,24 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row;
 
 final class StartsWith extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $haystack,
-        private readonly ScalarFunction $needle
+        private readonly ScalarFunction|string $haystack,
+        private readonly ScalarFunction|string $needle
     ) {
     }
 
     public function eval(Row $row) : bool
     {
-        $haystack = Caster::default()->to(type_string(true))->value($this->haystack->eval($row));
-        $needle = Caster::default()->to(type_string(true))->value($this->needle->eval($row));
+        $haystack = (new Parameter($this->haystack))->asString($row);
+        $needle = (new Parameter($this->needle))->asString($row);
 
-        if (!\is_string($needle) || !\is_string($haystack)) {
+        if ($haystack === null || $needle === null) {
             return false;
         }
 

@@ -93,26 +93,4 @@ final class NumberFormatTest extends TestCase
             )
         );
     }
-
-    public function test_number_format_on_numeric_entry() : void
-    {
-        $expression = new NumberFormat(
-            ref('value'),
-            ref('decimals'),
-            ref('decimal_separator'),
-            ref('thousands_separator')
-        );
-
-        self::assertSame(
-            '1,234.57',
-            $expression->eval(
-                Row::create(
-                    str_entry('value', '1234.5678'),
-                    int_entry('decimals', 2),
-                    str_entry('decimal_separator', '.'),
-                    str_entry('thousands_separator', ',')
-                )
-            )
-        );
-    }
 }

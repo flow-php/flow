@@ -10,19 +10,24 @@ use Flow\ETL\Row;
 final class Between extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly ScalarFunction $lowerBoundRef,
-        private readonly ScalarFunction $upperBoundRef,
-        private readonly Boundary $boundary = Boundary::LEFT_INCLUSIVE,
+        private readonly mixed $value,
+        private readonly mixed $lowerBoundRef,
+        private readonly mixed $upperBoundRef,
+        private readonly ScalarFunction|Boundary $boundary = Boundary::LEFT_INCLUSIVE,
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        $value = $this->ref->eval($row);
-        $lowerBound = $this->lowerBoundRef->eval($row);
-        $upperBound = $this->upperBoundRef->eval($row);
+        $value = (new Parameter($this->value))->eval($row);
+        $lowerBound = (new Parameter($this->lowerBoundRef))->eval($row);
+        $upperBound = (new Parameter($this->upperBoundRef))->eval($row);
+        $boundary = (new Parameter($this->boundary))->asEnum($row, Boundary::class);
 
-        return $this->boundary->compare($value, $lowerBound, $upperBound);
+        if (!$boundary instanceof Boundary) {
+            return null;
+        }
+
+        return $boundary->compare($value, $lowerBound, $upperBound);
     }
 }

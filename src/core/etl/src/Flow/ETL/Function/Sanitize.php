@@ -4,34 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_int, type_string};
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row;
 
 final class Sanitize extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly ScalarFunction $placeholder,
-        private readonly ScalarFunction $skipCharacters
+        private readonly ScalarFunction|string $value,
+        private readonly ScalarFunction|string $placeholder,
+        private readonly ScalarFunction|int|null $skipCharacters = null
     ) {
     }
 
     public function eval(Row $row) : ?string
     {
-        /** @var mixed $val */
-        $val = $this->ref->eval($row);
+        $val = (new Parameter($this->value))->asString($row);
+        $placeholder = (new Parameter($this->placeholder))->asString($row);
+        $skipCharacters = (new Parameter($this->skipCharacters))->asInt($row);
 
-        if (!\is_string($val)) {
+        if ($val === null || $placeholder === null) {
             return null;
         }
 
-        $placeholder = Caster::default()->to(type_string(true))->value($this->placeholder->eval($row));
-        $skipCharacters = Caster::default()->to(type_int(true))->value($this->skipCharacters->eval($row));
-
         $size = \mb_strlen($val);
 
-        if (0 !== $skipCharacters && $size > $skipCharacters) {
+        if ($skipCharacters !== null && $size > $skipCharacters) {
             return \mb_substr($val, 0, $skipCharacters) . \str_repeat($placeholder, $size - $skipCharacters);
         }
 

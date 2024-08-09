@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{array_entry, datetime_entry, int_entry, lit, ref, str_entry};
+use function Flow\ETL\DSL\{array_entry, datetime_entry, int_entry, lit, ref, str_entry, type_string};
 use Flow\ETL\Function\{Contains, EndsWith, Equals, GreaterThan, GreaterThanEqual, IsIn, IsNotNull, IsNotNumeric, IsNull, IsNumeric, IsType, LessThan, LessThanEqual, NotEquals, NotSame, Same, StartsWith};
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\{IntegerEntry, StringEntry};
 use PHPUnit\Framework\TestCase;
 
 final class BinaryComparisonsTest extends TestCase
@@ -91,13 +90,13 @@ final class BinaryComparisonsTest extends TestCase
             int_entry('b', null),
         );
 
-        self::assertTrue((new IsType(ref('a'), IntegerEntry::class, StringEntry::class))->eval($row));
-        self::assertFalse((new IsType(ref('a'), StringEntry::class))->eval($row));
+        self::assertTrue((new IsType(ref('a'), 'integer', 'string'))->eval($row));
+        self::assertFalse((new IsType(ref('a'), type_string()))->eval($row));
     }
 
     public function test_is_type_with_non_existing_type_class() : void
     {
-        $this->expectExceptionMessage('"aaa" is not valid Entry Type class');
+        $this->expectExceptionMessage('Unknown type \'aaa\'');
 
         $row = Row::create(
             int_entry('a', 100),

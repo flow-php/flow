@@ -8,28 +8,27 @@ use Flow\ETL\Row;
 
 final class Round extends ScalarFunctionChain
 {
-    /**
-     * @param ScalarFunction $entry
-     * @param ScalarFunction $precision
-     * @param int<0, max> $mode
-     */
     public function __construct(
-        private readonly ScalarFunction $entry,
-        private readonly ScalarFunction $precision,
-        private readonly int $mode = PHP_ROUND_HALF_UP,
+        private readonly ScalarFunction|int|float $value,
+        private readonly ScalarFunction|int $precision = 0,
+        private readonly ScalarFunction|int $mode = PHP_ROUND_HALF_UP,
     ) {
     }
 
     public function eval(Row $row) : ?float
     {
-        /** @var mixed $value */
-        $value = $this->entry->eval($row);
+        $value = (new Parameter($this->value))->asNumber($row);
+        $precision = (new Parameter($this->precision))->asInt($row);
+        $mode = (new Parameter($this->mode))->asInt($row);
 
-        if (!\is_float($value) && !\is_int($value)) {
+        if ($value === null || $precision === null || $mode === null) {
             return null;
         }
 
-        /** @phpstan-ignore-next-line */
-        return \round($value, (int) $this->precision->eval($row), $this->mode);
+        if ($mode < 1 || $mode > 4) {
+            $mode = 1;
+        }
+
+        return \round($value, $precision, $mode);
     }
 }

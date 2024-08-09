@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Integration\Function;
 
 use function Flow\ETL\DSL\{array_sort, from_array, optional, ref, to_memory};
 use Flow\ETL\Flow;
+use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 
@@ -23,7 +24,7 @@ final class ArraySortTest extends TestCase
                 )
             )
 
-            ->withEntry('array', optional(array_sort(ref('array'), 'ksort')))
+            ->withEntry('array', optional(array_sort(ref('array'), Sort::ksort)))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

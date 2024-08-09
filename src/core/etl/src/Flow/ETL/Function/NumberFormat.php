@@ -9,25 +9,21 @@ use Flow\ETL\Row;
 final class NumberFormat extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly ScalarFunction $decimals,
-        private readonly ScalarFunction $decimalSeparator,
-        private readonly ScalarFunction $thousandsSeparator
+        private readonly ScalarFunction|int|float $value,
+        private readonly ScalarFunction|int $decimals,
+        private readonly ScalarFunction|string $decimalSeparator = '.',
+        private readonly ScalarFunction|string $thousandsSeparator = ','
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?string
     {
-        $value = $this->ref->eval($row);
-        $decimals = $this->decimals->eval($row);
-        $decimalSeparator = $this->decimalSeparator->eval($row);
-        $thousandsSeparator = $this->thousandsSeparator->eval($row);
+        $value = (new Parameter($this->value))->asNumber($row);
+        $decimals = (new Parameter($this->decimals))->asInt($row);
+        $decimalSeparator = (new Parameter($this->decimalSeparator))->asString($row);
+        $thousandsSeparator = (new Parameter($this->thousandsSeparator))->asString($row);
 
-        if (!\is_numeric($value)) {
-            return null;
-        }
-
-        if (!\is_int($decimals)) {
+        if ($value === null || $decimals === null || $decimalSeparator === null || $thousandsSeparator === null) {
             return null;
         }
 

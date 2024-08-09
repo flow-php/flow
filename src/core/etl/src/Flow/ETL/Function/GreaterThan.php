@@ -12,22 +12,22 @@ final class GreaterThan extends ScalarFunctionChain
     use Comparable;
 
     public function __construct(
-        private readonly ScalarFunction $base,
-        private readonly ScalarFunction $next
+        private readonly mixed $left,
+        private readonly mixed $right
     ) {
     }
 
     public function eval(Row $row) : bool
     {
-        $base = $this->base->eval($row);
-        $next = $this->next->eval($row);
+        $left = (new Parameter($this->left))->eval($row);
+        $right = (new Parameter($this->right))->eval($row);
 
-        $this->assertComparable($base, $next, '>');
+        $this->assertComparable($left, $right, '>');
 
-        if ($base === null || $next === null) {
+        if ($left === null || $right === null) {
             return false;
         }
 
-        return $base > $next;
+        return $left > $right;
     }
 }

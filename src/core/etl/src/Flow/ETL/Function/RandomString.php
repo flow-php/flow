@@ -8,18 +8,20 @@ use Flow\ETL\{NativePHPRandomValueGenerator, RandomValueGenerator, Row};
 
 class RandomString implements ScalarFunction
 {
-    private RandomValueGenerator|NativePHPRandomValueGenerator $generator;
-
-    private int|ScalarFunction $length;
-
-    public function __construct(ScalarFunction|int $length, RandomValueGenerator $generator = new NativePHPRandomValueGenerator())
-    {
-        $this->length = $length;
-        $this->generator = $generator;
+    public function __construct(
+        private readonly ScalarFunction|int $length,
+        private readonly RandomValueGenerator $generator = new NativePHPRandomValueGenerator()
+    ) {
     }
 
-    public function eval(Row $row) : string
+    public function eval(Row $row) : ?string
     {
-        return $this->generator->string(is_int($this->length) ? $this->length : $this->length->eval($row));
+        $length = (new Parameter($this->length))->asInt($row);
+
+        if ($length === null) {
+            return null;
+        }
+
+        return $this->generator->string($length);
     }
 }

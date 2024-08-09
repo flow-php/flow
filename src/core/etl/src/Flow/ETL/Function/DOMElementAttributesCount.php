@@ -8,26 +8,22 @@ use Flow\ETL\Row;
 
 final class DOMElementAttributesCount extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $ref)
+    public function __construct(private readonly ScalarFunction|\DOMElement $domElement)
     {
     }
 
     public function eval(Row $row) : ?int
     {
-        $value = $this->ref->eval($row);
+        $domElement = (new Parameter($this->domElement))->asInstanceOf($row, \DOMElement::class);
 
-        if ($value instanceof \DOMAttr) {
+        if ($domElement === null) {
             return null;
         }
 
-        if (!$value instanceof \DOMElement) {
-            return null;
-        }
-
-        if (!$value->hasAttributes()) {
+        if (!$domElement->hasAttributes()) {
             return 0;
         }
 
-        return $value->attributes->length;
+        return $domElement->attributes->length;
     }
 }

@@ -11,20 +11,21 @@ final class ArrayKeyRename extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly string $path,
-        private readonly string $newName
+        private readonly ScalarFunction|string $path,
+        private readonly ScalarFunction|string $newName
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $value */
-        $value = $this->ref->eval($row);
+        $value = (new Parameter($this->ref))->asArray($row);
+        $path = (new Parameter($this->path))->asString($row);
+        $newName = (new Parameter($this->newName))->asString($row);
 
-        if (!\is_array($value)) {
+        if ($value === null || $path === null || $newName === null) {
             return null;
         }
 
-        return array_dot_rename($value, $this->path, $this->newName);
+        return array_dot_rename($value, $path, $newName);
     }
 }

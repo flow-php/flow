@@ -26,7 +26,7 @@ final class ArrayGetCollectionTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('result', ref('array')->arrayGetCollection('a', 'c'))
+            ->withEntry('result', ref('array')->arrayGetCollection(['a', 'c']))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

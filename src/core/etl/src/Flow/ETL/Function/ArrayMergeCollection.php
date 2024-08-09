@@ -8,25 +8,24 @@ use Flow\ETL\Row;
 
 final class ArrayMergeCollection extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $ref)
+    public function __construct(private readonly ScalarFunction|array $array)
     {
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $value */
-        $value = $this->ref->eval($row);
+        $array = (new Parameter($this->array))->asArray($row);
 
-        if (!\is_array($value)) {
+        if ($array === null) {
             return null;
         }
 
-        foreach ($value as $element) {
+        foreach ($array as $element) {
             if (!\is_array($element)) {
                 return null;
             }
         }
 
-        return \array_merge(...\array_values($value));
+        return \array_merge(...\array_values($array));
     }
 }

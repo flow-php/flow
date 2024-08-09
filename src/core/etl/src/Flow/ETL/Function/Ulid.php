@@ -13,20 +13,15 @@ if (!\class_exists(\Symfony\Component\Uid\Ulid::class)) {
 
 final class Ulid extends ScalarFunctionChain
 {
-    public function __construct(private readonly ?ScalarFunction $ref = null)
+    public function __construct(private readonly ScalarFunction|string|null $ref = null)
     {
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $param */
-        $param = $this->ref?->eval($row);
+        $param = (new Parameter($this->ref))->asString($row);
 
         if (null !== $param) {
-            if (!\is_string($param)) {
-                return null;
-            }
-
             try {
                 return \Symfony\Component\Uid\Ulid::fromString($param);
             } catch (\InvalidArgumentException) {

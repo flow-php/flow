@@ -9,17 +9,17 @@ use Flow\ETL\Row;
 final class Divide extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $leftRef,
-        private readonly ScalarFunction $rightRef
+        private readonly ScalarFunction|int|float|string $left,
+        private readonly ScalarFunction|int|float|string $right
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        $left = $this->leftRef->eval($row);
-        $right = $this->rightRef->eval($row);
+        $left = (new Parameter($this->left))->asNumber($row);
+        $right = (new Parameter($this->right))->asNumber($row);
 
-        if (!\is_numeric($left) || !\is_numeric($right)) {
+        if ($left === null || $right === null) {
             return null;
         }
 

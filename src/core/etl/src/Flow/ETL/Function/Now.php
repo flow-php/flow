@@ -8,12 +8,18 @@ use Flow\ETL\Row;
 
 final class Now extends ScalarFunctionChain
 {
-    public function __construct(private readonly \DateTimeZone $timeZone = new \DateTimeZone('UTC'))
+    public function __construct(private readonly ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'))
     {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?\DateTimeImmutable
     {
-        return new \DateTimeImmutable('now', $this->timeZone);
+        $tz = (new Parameter($this->timeZone))->asInstanceOf($row, \DateTimeZone::class);
+
+        if ($tz === null) {
+            return null;
+        }
+
+        return new \DateTimeImmutable('now', $tz);
     }
 }

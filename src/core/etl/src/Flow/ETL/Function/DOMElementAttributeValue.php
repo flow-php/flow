@@ -8,33 +8,26 @@ use Flow\ETL\Row;
 
 final class DOMElementAttributeValue extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $ref, private readonly ScalarFunction|string $attribute)
-    {
+    public function __construct(
+        private readonly ScalarFunction|\DOMElement $domElement,
+        private readonly ScalarFunction|string $attribute
+    ) {
     }
 
     public function eval(Row $row) : ?string
     {
-        $value = $this->ref->eval($row);
+        $domElement = (new Parameter($this->domElement))->asInstanceOf($row, \DOMElement::class);
+        $attributeName = (new Parameter($this->attribute))->asString($row);
 
-        if ($value instanceof \DOMAttr) {
-            return $value->nodeValue;
-        }
-
-        if (!$value instanceof \DOMElement) {
+        if ($domElement === null || $attributeName === null) {
             return null;
         }
 
-        if (!$value->hasAttributes()) {
+        if (!$domElement->hasAttributes()) {
             return null;
         }
 
-        $attributeName = \is_string($this->attribute) ? $this->attribute : $this->attribute->eval($row);
-
-        if (!\is_string($attributeName)) {
-            return null;
-        }
-
-        $attributes = $value->attributes;
+        $attributes = $domElement->attributes;
 
         if (!$namedItem = $attributes->getNamedItem($attributeName)) {
             return null;
