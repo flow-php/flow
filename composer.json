@@ -16,7 +16,6 @@
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "ext-writer": "*",
         "ext-xml": "*",
         "ext-xmlreader": "*",
         "ext-xmlwriter": "*",
