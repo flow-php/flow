@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\{Adapter\JSON\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
 use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class JsonLoader implements Closure, Loader, Loader\FileLoader
@@ -16,8 +16,10 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
      */
     private array $writes = [];
 
-    public function __construct(private readonly Path $path)
-    {
+    public function __construct(
+        private readonly Path $path,
+        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM
+    ) {
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("JsonLoader path can't be pattern, given: " . $this->path->path());
         }
@@ -54,6 +56,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
     public function write(Rows $nextRows, array $partitions, FlowContext $context) : void
     {
         $streams = $context->streams();
+        $normalizer = new RowsNormalizer(new EntryNormalizer($context->config->caster(), $this->dateTimeFormat));
 
         if (!$streams->isOpen($this->path, $partitions)) {
             $stream = $streams->writeTo($this->path, $partitions);
@@ -67,7 +70,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
             $stream = $streams->writeTo($this->path, $partitions);
         }
 
-        $this->writeJSON($nextRows, $stream);
+        $this->writeJSON($nextRows, $stream, $normalizer);
     }
 
     /**
@@ -77,16 +80,18 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
      * @throws RuntimeException
      * @throws \JsonException
      */
-    public function writeJSON(Rows $rows, DestinationStream $stream) : void
+    public function writeJSON(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer) : void
     {
         if (!\count($rows)) {
             return;
         }
 
-        $json = \substr(\substr(\json_encode($rows->toArray(), JSON_THROW_ON_ERROR), 0, -1), 1);
-        $json = ($this->writes[$stream->path()->path()] > 0) ? ',' . $json : $json;
+        foreach ($normalizer->normalize($rows) as $normalizedRow) {
+            $json = json_encode($normalizedRow, JSON_THROW_ON_ERROR);
+            $json = ($this->writes[$stream->path()->path()] > 0) ? ',' . $json : $json;
 
-        $stream->append($json);
+            $stream->append($json);
+        }
 
         $this->writes[$stream->path()->path()]++;
     }
