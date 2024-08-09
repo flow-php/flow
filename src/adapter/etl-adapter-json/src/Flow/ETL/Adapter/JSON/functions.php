@@ -47,9 +47,7 @@ function from_json(
  *
  * @return Loader
  */
-function to_json(string|Path $path) : Loader
+function to_json(string|Path $path, string $date_time_format = \DateTimeInterface::ATOM) : Loader
 {
-    return new JsonLoader(
-        \is_string($path) ? Path::realpath($path) : $path,
-    );
+    return new JsonLoader(\is_string($path) ? Path::realpath($path) : $path, $date_time_format);
 }
