@@ -1,6 +1,8 @@
 ## [Unreleased] - 2024-08-09
 
 ### Added
+- [#1183](https://github.com/flow-php/flow/pull/1183) - **JsonLoader parameter that defines if each row should be a single line in the output file** - [@norberttech](https://github.com/norberttech)
+- [#1183](https://github.com/flow-php/flow/pull/1183) - **JsonLoader int $flags parameter that is passed later to internal json_encode function** - [@norberttech](https://github.com/norberttech)
 - [#1181](https://github.com/flow-php/flow/pull/1181) - **CSV RowsNormalizer to automate writing deeply nested data structures to CSV without manual casting** - [@norberttech](https://github.com/norberttech)
 - [#1174](https://github.com/flow-php/flow/pull/1174) - **New blog post about scalar functions** - [@norberttech](https://github.com/norberttech)
 - [#1173](https://github.com/flow-php/flow/pull/1173) - **Added new page with a list of latest blog posts to landing page** - [@norberttech](https://github.com/norberttech)
