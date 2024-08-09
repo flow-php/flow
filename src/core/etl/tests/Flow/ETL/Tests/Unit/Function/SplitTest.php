@@ -12,8 +12,7 @@ final class SplitTest extends TestCase
 {
     public function test_split_not_string() : void
     {
-        self::assertSame(
-            123,
+        self::assertNull(
             split(lit(123), ',')->eval(Row::create())
         );
     }

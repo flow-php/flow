@@ -17,13 +17,13 @@ use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Function\{
     All,
     Any,
-    ArrayExists,
     ArrayGet,
     ArrayGetCollection,
     ArrayKeyRename,
     ArrayKeysStyleConvert,
     ArrayMerge,
     ArrayMergeCollection,
+    ArrayPathExists,
     ArrayReverse,
     ArraySort,
     ArrayUnpack,
@@ -70,7 +70,6 @@ use Flow\ETL\Function\{
     ToDate,
     ToDateTime,
     ToLower,
-    ToMoney,
     ToTimeZone,
     ToUpper,
     Ulid,
@@ -568,17 +567,17 @@ function exists(ScalarFunction $ref) : Exists
     return new Exists($ref);
 }
 
-function when(ScalarFunction $ref, ScalarFunction $then, ?ScalarFunction $else = null) : When
+function when(mixed $condition, mixed $then, mixed $else = null) : When
 {
-    return new When($ref, $then, $else);
+    return new When($condition, $then, $else);
 }
 
-function array_get(ScalarFunction $ref, string $path) : ArrayGet
+function array_get(ScalarFunction $ref, ScalarFunction|string $path) : ArrayGet
 {
     return new ArrayGet($ref, $path);
 }
 
-function array_get_collection(ScalarFunction $ref, string ...$keys) : ArrayGetCollection
+function array_get_collection(ScalarFunction $ref, ScalarFunction|array $keys) : ArrayGetCollection
 {
     return new ArrayGetCollection($ref, $keys);
 }
@@ -588,22 +587,22 @@ function array_get_collection_first(ScalarFunction $ref, string ...$keys) : Arra
     return ArrayGetCollection::fromFirst($ref, $keys);
 }
 
-function array_exists(ScalarFunction $ref, string $path) : ArrayExists
+function array_exists(ScalarFunction|array $ref, ScalarFunction|string $path) : ArrayPathExists
 {
-    return new ArrayExists($ref, $path);
+    return new ArrayPathExists($ref, $path);
 }
 
-function array_merge(ScalarFunction $left, ScalarFunction $right) : ArrayMerge
+function array_merge(ScalarFunction|array $left, ScalarFunction|array $right) : ArrayMerge
 {
     return new ArrayMerge($left, $right);
 }
 
-function array_merge_collection(ScalarFunction $ref) : ArrayMergeCollection
+function array_merge_collection(ScalarFunction|array $array) : ArrayMergeCollection
 {
-    return new ArrayMergeCollection($ref);
+    return new ArrayMergeCollection($array);
 }
 
-function array_key_rename(ScalarFunction $ref, string $path, string $newName) : ArrayKeyRename
+function array_key_rename(ScalarFunction $ref, ScalarFunction|string $path, ScalarFunction|string $newName) : ArrayKeyRename
 {
     return new ArrayKeyRename($ref, $path, $newName);
 }
@@ -613,12 +612,16 @@ function array_keys_style_convert(ScalarFunction $ref, StringStyles|string $styl
     return new ArrayKeysStyleConvert($ref, $style instanceof StringStyles ? $style : StringStyles::fromString($style));
 }
 
-function array_sort(ScalarFunction $function, ?string $sort_function = null, ?int $flags = null, bool $recursive = true) : ArraySort
+function array_sort(ScalarFunction $function, ScalarFunction|Sort|null $sort_function = null, ScalarFunction|int|null $flags = null, ScalarFunction|bool $recursive = true) : ArraySort
 {
-    return new ArraySort($function, $sort_function ? Sort::fromString($sort_function) : Sort::sort, $flags, $recursive);
+    if ($sort_function === null) {
+        $sort_function = Sort::sort;
+    }
+
+    return new ArraySort($function, $sort_function, $flags, $recursive);
 }
 
-function array_reverse(ScalarFunction $function, bool $preserveKeys = false) : ArrayReverse
+function array_reverse(ScalarFunction|array $function, ScalarFunction|bool $preserveKeys = false) : ArrayReverse
 {
     return new ArrayReverse($function, $preserveKeys);
 }
@@ -628,17 +631,17 @@ function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : Now
     return new Now($time_zone);
 }
 
-function between(ScalarFunction $ref, ScalarFunction $lowerBound, ScalarFunction $upperBound, Boundary $boundary = Boundary::LEFT_INCLUSIVE) : Between
+function between(mixed $value, mixed $lower_bound, mixed $upper_bound, ScalarFunction|Boundary $boundary = Boundary::LEFT_INCLUSIVE) : Between
 {
-    return new Between($ref, $lowerBound, $upperBound, $boundary);
+    return new Between($value, $lower_bound, $upper_bound, $boundary);
 }
 
-function to_date_time(ScalarFunction $ref, string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ToDateTime
+function to_date_time(mixed $ref, ScalarFunction|string $format = 'Y-m-d H:i:s', ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ToDateTime
 {
     return new ToDateTime($ref, $format, $timeZone);
 }
 
-function to_date(ScalarFunction $ref, string $format = 'Y-m-d', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ToDate
+function to_date(mixed $ref, ScalarFunction|string $format = 'Y-m-d', ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ToDate
 {
     return new ToDate($ref, $format, $timeZone);
 }
@@ -648,29 +651,29 @@ function date_time_format(ScalarFunction $ref, string $format) : DateTimeFormat
     return new DateTimeFormat($ref, $format);
 }
 
-function split(ScalarFunction $ref, ScalarFunction|string $separator, ScalarFunction|int $limit = PHP_INT_MAX) : Split
+function split(ScalarFunction|string $value, ScalarFunction|string $separator, ScalarFunction|int $limit = PHP_INT_MAX) : Split
 {
-    return new Split($ref, $separator, $limit);
+    return new Split($value, $separator, $limit);
 }
 
-function combine(ScalarFunction $keys, ScalarFunction $values) : Combine
+function combine(ScalarFunction|array $keys, ScalarFunction|array $values) : Combine
 {
     return new Combine($keys, $values);
 }
 
-function concat(ScalarFunction ...$functions) : Concat
+function concat(ScalarFunction|string ...$functions) : Concat
 {
     return new Concat(...$functions);
 }
 
-function hash(ScalarFunction $function, Algorithm $algorithm = new NativePHPHash()) : Hash
+function hash(mixed $value, Algorithm $algorithm = new NativePHPHash()) : Hash
 {
-    return new Hash($function, $algorithm);
+    return new Hash($value, $algorithm);
 }
 
-function cast(ScalarFunction $function, string|Type $type) : Cast
+function cast(mixed $value, ScalarFunction|string|Type $type) : Cast
 {
-    return new Cast($function, $type);
+    return new Cast($value, $type);
 }
 
 function count(Reference $function) : Count
@@ -697,9 +700,9 @@ function count(Reference $function) : Count
  * | 2|     |     |    4|    5|    6|
  * +--+-----+-----+-----+-----+-----+
  */
-function array_unpack(ScalarFunction $function, array $skip_keys = [], ?string $entry_prefix = null) : ArrayUnpack
+function array_unpack(ScalarFunction|array $array, ScalarFunction|array $skip_keys = [], ScalarFunction|string|null $entry_prefix = null) : ArrayUnpack
 {
-    return new ArrayUnpack($function, $skip_keys, $entry_prefix);
+    return new ArrayUnpack($array, $skip_keys, $entry_prefix);
 }
 
 /**
@@ -727,9 +730,9 @@ function array_expand(ScalarFunction $function, ArrayExpand $expand = ArrayExpan
     return new \Flow\ETL\Function\ArrayExpand($function, $expand);
 }
 
-function size(ScalarFunction $function) : Size
+function size(mixed $value) : Size
 {
-    return new Size($function);
+    return new Size($value);
 }
 
 function uuid_v4() : Uuid
@@ -737,34 +740,37 @@ function uuid_v4() : Uuid
     return Uuid::uuid4();
 }
 
-function uuid_v7(?ScalarFunction $function = null) : Uuid
+function uuid_v7(ScalarFunction|\DateTimeInterface|null $value = null) : Uuid
 {
-    return Uuid::uuid7($function);
+    return Uuid::uuid7($value);
 }
 
-function ulid(?ScalarFunction $function = null) : Ulid
+function ulid(ScalarFunction|string|null $value = null) : Ulid
 {
-    return new Ulid($function);
+    return new Ulid($value);
 }
 
-function lower(ScalarFunction $function) : ToLower
+function lower(ScalarFunction|string $value) : ToLower
 {
-    return new ToLower($function);
+    return new ToLower($value);
 }
 
-function capitalize(ScalarFunction $function) : Capitalize
+function capitalize(ScalarFunction|string $value) : Capitalize
 {
-    return new Capitalize($function);
+    return new Capitalize($value);
 }
 
-function upper(ScalarFunction $function) : ToUpper
+function upper(ScalarFunction|string $value) : ToUpper
 {
-    return new ToUpper($function);
+    return new ToUpper($value);
 }
 
-function call_method(ScalarFunction $object, ScalarFunction $method, ScalarFunction ...$params) : CallMethod
+/**
+ * @param array<mixed> $params
+ */
+function call_method(object $object, ScalarFunction|string $method, array $params = []) : CallMethod
 {
-    return new CallMethod($object, $method, ...$params);
+    return new CallMethod($object, $method, $params);
 }
 
 function all(ScalarFunction ...$functions) : All
@@ -772,19 +778,19 @@ function all(ScalarFunction ...$functions) : All
     return new All(...$functions);
 }
 
-function any(ScalarFunction ...$functions) : Any
+function any(ScalarFunction ...$values) : Any
 {
-    return new Any(...$functions);
+    return new Any(...$values);
 }
 
-function not(ScalarFunction $function) : Not
+function not(ScalarFunction $value) : Not
 {
-    return new Not($function);
+    return new Not($value);
 }
 
-function to_timezone(ScalarFunction $function, ScalarFunction $timeZone) : ToTimeZone
+function to_timezone(ScalarFunction|\DateTimeInterface $value, ScalarFunction|\DateTimeZone|string $timeZone) : ToTimeZone
 {
-    return new ToTimeZone($function, $timeZone);
+    return new ToTimeZone($value, $timeZone);
 }
 
 function ignore_error_handler() : IgnoreError
@@ -802,75 +808,49 @@ function throw_error_handler() : ThrowError
     return new ThrowError();
 }
 
-function to_money(ScalarFunction $amount, ScalarFunction $currency, ?\Money\MoneyParser $moneyParser = null) : ToMoney
-{
-    if (null !== $moneyParser) {
-        return new ToMoney($amount, $currency, $moneyParser);
-    }
-
-    return new ToMoney($amount, $currency);
-}
-
-function regex_replace(ScalarFunction $pattern, ScalarFunction $replacement, ScalarFunction $subject, ?ScalarFunction $limit = null) : RegexReplace
+function regex_replace(ScalarFunction|string $pattern, ScalarFunction|string $replacement, ScalarFunction|string $subject, ScalarFunction|int|null $limit = null) : RegexReplace
 {
     return new RegexReplace($pattern, $replacement, $subject, $limit);
 }
 
-function regex_match_all(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : RegexMatchAll
+function regex_match_all(ScalarFunction|string $pattern, ScalarFunction|string $subject, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : RegexMatchAll
 {
     return new RegexMatchAll($pattern, $subject, $flags, $offset);
 }
 
-function regex_match(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : RegexMatch
+function regex_match(ScalarFunction|string $pattern, ScalarFunction|string $subject, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : RegexMatch
 {
     return new RegexMatch($pattern, $subject, $flags, $offset);
 }
 
-function regex(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : Regex
+function regex(ScalarFunction|string $pattern, ScalarFunction|string $subject, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : Regex
 {
     return new Regex($pattern, $subject, $flags, $offset);
 }
 
-function regex_all(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null, ?ScalarFunction $offset = null) : RegexAll
+function regex_all(ScalarFunction|string $pattern, ScalarFunction|string $subject, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : RegexAll
 {
     return new RegexAll($pattern, $subject, $flags, $offset);
 }
 
-function sprintf(ScalarFunction $format, ScalarFunction ...$args) : Sprintf
+function sprintf(ScalarFunction|string $format, ScalarFunction|float|int|string|null ...$args) : Sprintf
 {
     return new Sprintf($format, ...$args);
 }
 
-function sanitize(ScalarFunction $function, ?ScalarFunction $placeholder = null, ?ScalarFunction $skipCharacters = null) : Sanitize
+function sanitize(ScalarFunction|string $value, ScalarFunction|string $placeholder = '*', ScalarFunction|int|null $skipCharacters = null) : Sanitize
 {
-    return new Sanitize($function, $placeholder ?: new Literal('*'), $skipCharacters ?: new Literal(0));
+    return new Sanitize($value, $placeholder, $skipCharacters);
 }
 
-/**
- * @param ScalarFunction $function
- * @param null|ScalarFunction $precision
- * @param int<0, max> $mode
- */
-function round(ScalarFunction $function, ?ScalarFunction $precision = null, int $mode = PHP_ROUND_HALF_UP) : Round
+function round(ScalarFunction|int|float $value, ScalarFunction|int $precision = 2, ScalarFunction|int $mode = PHP_ROUND_HALF_UP) : Round
 {
-    return new Round($function, $precision ?? lit(2), $mode);
+    return new Round($value, $precision, $mode);
 }
 
-function number_format(ScalarFunction $function, ?ScalarFunction $decimals = null, ?ScalarFunction $decimalSeparator = null, ?ScalarFunction $thousandsSeparator = null) : NumberFormat
+function number_format(ScalarFunction|int|float $value, ScalarFunction|int $decimals = 2, ScalarFunction|string $decimal_separator = '.', ScalarFunction|string $thousands_separator = ',') : NumberFormat
 {
-    if ($decimals === null) {
-        $decimals = lit(0);
-    }
-
-    if ($decimalSeparator === null) {
-        $decimalSeparator = lit('.');
-    }
-
-    if ($thousandsSeparator === null) {
-        $thousandsSeparator = lit(',');
-    }
-
-    return new NumberFormat($function, $decimals, $decimalSeparator, $thousandsSeparator);
+    return new NumberFormat($value, $decimals, $decimal_separator, $thousands_separator);
 }
 
 /**

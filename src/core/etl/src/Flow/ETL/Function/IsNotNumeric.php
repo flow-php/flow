@@ -9,12 +9,12 @@ use Flow\ETL\Row;
 final class IsNotNumeric extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref
+        private readonly mixed $value
     ) {
     }
 
     public function eval(Row $row) : bool
     {
-        return !\is_numeric($this->ref->eval($row));
+        return (new Parameter($this->value))->asNumber($row) === null;
     }
 }

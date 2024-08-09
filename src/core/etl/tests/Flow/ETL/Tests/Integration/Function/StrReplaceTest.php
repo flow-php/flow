@@ -32,26 +32,4 @@ final class StrReplaceTest extends TestCase
             $memory->dump()
         );
     }
-
-    public function test_str_replace_on_non_string_key() : void
-    {
-        (new Flow())
-            ->read(
-                from_array(
-                    [
-                        ['id' => 1],
-                    ]
-                )
-            )
-            ->withEntry('str_replace', ref('id')->strReplace('', ''))
-            ->write(to_memory($memory = new ArrayMemory()))
-            ->run();
-
-        self::assertSame(
-            [
-                ['id' => 1, 'str_replace' => '1'],
-            ],
-            $memory->dump()
-        );
-    }
 }

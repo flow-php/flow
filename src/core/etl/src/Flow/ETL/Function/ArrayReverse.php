@@ -8,18 +8,19 @@ use Flow\ETL\Row;
 
 final class ArrayReverse extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $left, private readonly bool $preserveKeys)
+    public function __construct(private readonly ScalarFunction|array $array, private readonly ScalarFunction|bool $preserveKeys)
     {
     }
 
     public function eval(Row $row) : mixed
     {
-        $left = $this->left->eval($row);
+        $array = (new Parameter($this->array))->asArray($row);
+        $preserveKeys = (new Parameter($this->preserveKeys))->asBoolean($row);
 
-        if (!\is_array($left)) {
+        if ($array === null) {
             return null;
         }
 
-        return \array_reverse($left, $this->preserveKeys);
+        return \array_reverse($array, $preserveKeys);
     }
 }

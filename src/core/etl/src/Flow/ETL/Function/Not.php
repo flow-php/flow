@@ -8,12 +8,12 @@ use Flow\ETL\Row;
 
 final class Not extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $function)
+    public function __construct(private readonly ScalarFunction $value)
     {
     }
 
     public function eval(Row $row) : mixed
     {
-        return !$this->function->eval($row);
+        return !$this->value->eval($row);
     }
 }

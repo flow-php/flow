@@ -9,17 +9,17 @@ use Flow\ETL\Row;
 final class Combine extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $keys,
-        private readonly ScalarFunction $values,
+        private readonly ScalarFunction|array $keys,
+        private readonly ScalarFunction|array $values,
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?array
     {
-        $keys = $this->keys->eval($row);
-        $values = $this->values->eval($row);
+        $keys = (new Parameter($this->keys))->asArray($row);
+        $values = (new Parameter($this->values))->asArray($row);
 
-        if (!\is_array($keys) || !\is_array($values)) {
+        if (null === $keys || null === $values) {
             return null;
         }
 

@@ -11,20 +11,20 @@ use Flow\ETL\Row;
 final class Concat extends ScalarFunctionChain
 {
     /**
-     * @var array<ScalarFunction>
+     * @var array<ScalarFunction|string>
      */
     private readonly array $refs;
 
     public function __construct(
-        ScalarFunction ...$refs,
+        ScalarFunction|string ...$refs,
     ) {
         $this->refs = $refs;
     }
 
     public function eval(Row $row) : mixed
     {
-        $values = \array_map(function (ScalarFunction $ref) use ($row) : mixed {
-            return Caster::default()->to(type_string(true))->value($ref->eval($row));
+        $values = \array_map(function (ScalarFunction|string $string) use ($row) : mixed {
+            return \is_string($string) ? $string : Caster::default()->to(type_string(true))->value($string->eval($row));
         }, $this->refs);
 
         foreach ($values as $value) {

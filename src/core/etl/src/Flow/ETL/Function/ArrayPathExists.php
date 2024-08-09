@@ -8,25 +8,25 @@ use function Flow\ArrayDot\array_dot_exists;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 
-final class ArrayExists extends ScalarFunctionChain
+final class ArrayPathExists extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly string $path
+        private readonly ScalarFunction|array $array,
+        private readonly ScalarFunction|string $path
     ) {
     }
 
     public function eval(Row $row) : bool
     {
         try {
-            /** @var mixed $value */
-            $value = $this->ref->eval($row);
+            $array = (new Parameter($this->array))->asArray($row);
+            $path = (new Parameter($this->path))->asString($row);
 
-            if (!\is_array($value)) {
+            if ($array === null || $path === null) {
                 return false;
             }
 
-            return array_dot_exists($value, $this->path);
+            return array_dot_exists($array, $path);
         } catch (InvalidArgumentException $e) {
             return false;
         }

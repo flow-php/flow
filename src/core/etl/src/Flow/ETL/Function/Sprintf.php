@@ -9,13 +9,13 @@ use Flow\ETL\Row;
 final class Sprintf extends ScalarFunctionChain
 {
     /**
-     * @var array<ScalarFunction>
+     * @var array<null|float|int|ScalarFunction|string>
      */
     private array $values;
 
     public function __construct(
-        private readonly ScalarFunction $format,
-        ScalarFunction ...$values
+        private readonly ScalarFunction|string $format,
+        ScalarFunction|float|int|string|null ...$values
     ) {
         $this->values = $values;
     }
@@ -25,13 +25,14 @@ final class Sprintf extends ScalarFunctionChain
      */
     public function eval(Row $row) : ?string
     {
-        $format = $this->format->eval($row);
+        $format = (new Parameter($this->format))->asString($row);
+
         /**
          * @var array<null|float|int|string> $values
          */
-        $values = \array_map(static fn (ScalarFunction $value) : mixed => $value->eval($row), $this->values);
+        $values = \array_map(static fn (ScalarFunction|float|int|string|null $value) : mixed => (new Parameter($value))->eval($row), $this->values);
 
-        if (!\is_string($format) || \in_array(null, $values, true)) {
+        if ($format === null || \in_array(null, $values, true)) {
             return null;
         }
 

@@ -8,19 +8,18 @@ use Flow\ETL\Row;
 
 final class DOMElementValue extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $ref)
+    public function __construct(private readonly ScalarFunction|\DOMElement $domElement)
     {
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $value */
-        $value = $this->ref->eval($row);
+        $domElement = (new Parameter($this->domElement))->asInstanceOf($row, \DOMElement::class);
 
-        if (!$value instanceof \DOMElement) {
+        if (!$domElement instanceof \DOMElement) {
             return null;
         }
 
-        return $value->nodeValue;
+        return $domElement->nodeValue;
     }
 }

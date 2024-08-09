@@ -16,7 +16,7 @@ final class ArrayGetCollectionTest extends TestCase
             int_entry('invalid_entry', 1),
         );
 
-        self::assertNull(array_get_collection(ref('invalid_entry'), 'id')->eval($row));
+        self::assertNull(array_get_collection(ref('invalid_entry'), ['id'])->eval($row));
     }
 
     public function test_getting_keys_from_simple_array() : void
@@ -33,7 +33,7 @@ final class ArrayGetCollectionTest extends TestCase
             ),
         );
 
-        self::assertNull(array_get_collection(ref('array_entry'), 'id', 'status')->eval($row));
+        self::assertNull(array_get_collection(ref('array_entry'), ['id'], 'status')->eval($row));
     }
 
     public function test_getting_specific_keys_from_collection_of_array() : void
@@ -63,7 +63,7 @@ final class ArrayGetCollectionTest extends TestCase
                 ['id' => 1, 'status' => 'PENDING'],
                 ['id' => 2, 'status' => 'NEW'],
             ],
-            array_get_collection(ref('array_entry'), 'id', 'status')->eval($row)
+            array_get_collection(ref('array_entry'), ['id', 'status'])->eval($row)
         );
     }
 

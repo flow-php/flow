@@ -11,16 +11,16 @@ use Flow\ETL\Row;
  */
 final class ArrayMerge extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction $left, private readonly ScalarFunction $right)
+    public function __construct(private readonly ScalarFunction|array $left, private readonly ScalarFunction|array $right)
     {
     }
 
     public function eval(Row $row) : mixed
     {
-        $left = $this->left->eval($row);
-        $right = $this->right->eval($row);
+        $left = (new Parameter($this->left))->asArray($row);
+        $right = (new Parameter($this->right))->asArray($row);
 
-        if (!\is_array($left) || !\is_array($right)) {
+        if ($left === null || $right === null) {
             return null;
         }
 

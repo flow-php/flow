@@ -13,15 +13,15 @@ final class ArrayGetCollection extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly array $keys,
-        private readonly string $index = '*',
+        private readonly ScalarFunction|array $keys,
+        private readonly ScalarFunction|string $index = '*',
     ) {
     }
 
     /**
      * @param array<string> $keys
      */
-    public static function fromFirst(ScalarFunction $ref, array $keys) : self
+    public static function fromFirst(ScalarFunction $ref, ScalarFunction|array $keys) : self
     {
         return new self($ref, $keys, '0');
     }
@@ -29,17 +29,18 @@ final class ArrayGetCollection extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         try {
-            /** @var mixed $value */
-            $value = $this->ref->eval($row);
+            $value = (new Parameter($this->ref))->asArray($row);
+            $index = (new Parameter($this->index))->asString($row);
+            $keys = (new Parameter($this->keys))->asArray($row);
 
-            if (!\is_array($value)) {
+            if ($value === null || $index === null || $keys === null) {
                 return null;
             }
 
-            $path = \sprintf("{$this->index}.{%s}", \implode(',', \array_map(fn (string $entryName) : string => '?' . $entryName, $this->keys)));
+            $path = \sprintf("{$index}.{%s}", \implode(',', \array_map(fn (string $entryName) : string => '?' . $entryName, $keys)));
 
             try {
-                $array = ($this->index === '0') ? \array_values($value) : $value;
+                $array = ($index === '0') ? \array_values($value) : $value;
 
                 $extractedValues = array_dot_get($array, $path);
             } catch (InvalidPathException) {

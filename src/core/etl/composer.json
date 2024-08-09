@@ -16,22 +16,16 @@
         "flow-php/rdsl": "^0.8 || 1.x-dev",
         "flow-php/filesystem": "^0.8 || 1.x-dev",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
-        "webmozart/glob": "^3.0 || ^4.0"
+        "webmozart/glob": "^3.0 || ^4.0",
+        "jawira/case-converter": "^3.4"
     },
     "require-dev": {
-        "jawira/case-converter": "^3.4",
-        "moneyphp/money": "^4",
         "ramsey/uuid": "^4.5",
         "symfony/uid": "^6.3 || ^7.0"
     },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
-    },
-    "suggest": {
-        "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
-        "moneyphp/money": "Provides MoneyParser that is required by ToMoney scalar function",
-        "ramsey/uuid": "Provides scalar function `uuid_v4` and `uuid_v7` that allow generate uuid entry"
     },
     "license": "MIT",
     "autoload": {

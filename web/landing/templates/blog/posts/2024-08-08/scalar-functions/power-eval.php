@@ -1,15 +1,15 @@
-public function eval(Row $row) : mixed
+public function eval(Row $row) : float|int|null
 {
     // Retrieving parameters
-    $left = $this->leftRef->eval($row);
-    $right = $this->rightRef->eval($row);
+    $left = (new Parameter($this->left))->asNumber($row);
+    $right = (new Parameter($this->right))->asNumber($row);
 
     // Validating parameters
-    if ($right === 0) {
+    if ($left === null || $right === null) {
         return null;
     }
 
-    if (!\is_numeric($left) || !\is_numeric($right)) {
+    if ($right === 0) {
         return null;
     }
 

@@ -48,7 +48,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
-          extensions: :psr
+          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
 
       - name: "Create cache directories"
         run: |

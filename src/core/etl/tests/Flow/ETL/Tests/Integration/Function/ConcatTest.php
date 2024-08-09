@@ -46,7 +46,7 @@ final class ConcatTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('concat', concat(ref('id'), lit('-'), array_get(ref('array'), 'field')))
+            ->withEntry('concat', concat(ref('id'), '-', array_get(ref('array'), 'field')))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

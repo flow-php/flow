@@ -11,7 +11,7 @@ use Flow\ETL\Row;
 final class OnEach extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
+        private readonly ScalarFunction|array $array,
         private readonly ScalarFunction $function,
         private readonly ScalarFunction|bool $preserveKeys = true
     ) {
@@ -19,13 +19,12 @@ final class OnEach extends ScalarFunctionChain
 
     public function eval(Row $row) : mixed
     {
-        $value = $this->ref->eval($row);
+        $value = (new Parameter($this->array))->asArray($row);
+        $preserveKeys = (new Parameter($this->preserveKeys))->asBoolean($row);
 
-        if (!\is_array($value)) {
+        if ($value === null) {
             return null;
         }
-
-        $preserveKeys = \is_bool($this->preserveKeys) ? $this->preserveKeys : (bool) $this->preserveKeys->eval($row);
 
         $output = [];
 

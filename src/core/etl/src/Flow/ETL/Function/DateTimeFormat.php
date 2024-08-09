@@ -9,19 +9,20 @@ use Flow\ETL\Row;
 final class DateTimeFormat extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly string $format
+        private readonly ScalarFunction|\DateTimeInterface $dateTime,
+        private readonly ScalarFunction|string $format
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        $value = $this->ref->eval($row);
+        $value = (new Parameter($this->dateTime))->asInstanceOf($row, \DateTimeInterface::class);
+        $format = (new Parameter($this->format))->asString($row);
 
-        if (!$value instanceof \DateTimeInterface) {
+        if ($value === null || $format === null) {
             return null;
         }
 
-        return $value->format($this->format);
+        return $value->format($format);
     }
 }

@@ -32,26 +32,4 @@ final class ToUpperTest extends TestCase
             $memory->dump()
         );
     }
-
-    public function test_to_upper_on_non_string_key() : void
-    {
-        (new Flow())
-            ->read(
-                from_array(
-                    [
-                        ['id' => 1],
-                    ]
-                )
-            )
-            ->withEntry('to_upper', ref('id')->upper())
-            ->write(to_memory($memory = new ArrayMemory()))
-            ->run();
-
-        self::assertSame(
-            [
-                ['id' => 1, 'to_upper' => 1],
-            ],
-            $memory->dump()
-        );
-    }
 }

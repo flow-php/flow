@@ -49,7 +49,7 @@ final class SplitTest extends TestCase
 
         self::assertSame(
             [
-                ['key' => 1, 'split' => 1],
+                ['key' => 1, 'split' => null],
             ],
             $memory->dump()
         );

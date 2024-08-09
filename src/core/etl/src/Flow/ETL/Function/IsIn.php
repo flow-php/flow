@@ -9,17 +9,17 @@ use Flow\ETL\Row;
 final class IsIn extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $haystack,
-        private readonly ScalarFunction $needle
+        private readonly ScalarFunction|array $haystack,
+        private readonly mixed $needle
     ) {
     }
 
     public function eval(Row $row) : bool
     {
-        $haystack = $this->haystack->eval($row);
-        $needle = $this->needle->eval($row);
+        $haystack = (new Parameter($this->haystack))->asArray($row);
+        $needle = (new Parameter($this->needle))->eval($row);
 
-        if (!\is_array($haystack)) {
+        if ($haystack === null) {
             return false;
         }
 

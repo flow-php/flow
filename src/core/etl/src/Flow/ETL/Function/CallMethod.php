@@ -9,25 +9,25 @@ use Flow\ETL\Row;
 final class CallMethod extends ScalarFunctionChain
 {
     /**
-     * @var ScalarFunction[]
+     * @param object $object
+     * @param ScalarFunction|string $method
+     * @param array<mixed> $params
      */
-    private readonly array $params;
-
-    public function __construct(private readonly ScalarFunction $object, private readonly ScalarFunction $method, ScalarFunction ...$params)
-    {
-        $this->params = $params;
+    public function __construct(
+        private readonly object $object,
+        private readonly ScalarFunction|string $method,
+        private readonly array $params = []
+    ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        /** @var ?object $object */
-        $object = $this->object->eval($row);
-        /** @var ?string $method */
-        $method = $this->method->eval($row);
+        $object = (new Parameter($this->object))->asObject($row);
+        $method = (new Parameter($this->method))->asString($row);
 
         if (\is_object($object) && \is_string($method) && \method_exists($object, $method)) {
             return $object->{$method}(...\array_map(
-                static fn (ScalarFunction $param) : mixed => $param->eval($row),
+                static fn (mixed $param) : mixed => (new Parameter($param))->eval($row),
                 $this->params
             ));
         }

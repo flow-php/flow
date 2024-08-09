@@ -10,14 +10,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ToLowerTest extends TestCase
 {
-    public function test_int_to_lower() : void
-    {
-        self::assertSame(
-            1,
-            lower(lit(1))->eval(Row::create())
-        );
-    }
-
     public function test_string_to_lower() : void
     {
         self::assertSame(

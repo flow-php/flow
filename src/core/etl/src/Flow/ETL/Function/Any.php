@@ -14,9 +14,9 @@ final class Any extends ScalarFunctionChain implements CompositeScalarFunction
     private readonly array $refs;
 
     public function __construct(
-        ScalarFunction ...$refs,
+        ScalarFunction ...$values,
     ) {
-        $this->refs = $refs;
+        $this->refs = $values;
     }
 
     public function eval(Row $row) : mixed

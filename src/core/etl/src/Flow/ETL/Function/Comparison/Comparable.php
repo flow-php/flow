@@ -9,11 +9,11 @@ use Flow\ETL\PHP\Type\TypeDetector;
 
 trait Comparable
 {
-    public function assertComparable(mixed $base, mixed $next, string $symbol) : void
+    public function assertComparable(mixed $left, mixed $right, string $symbol) : void
     {
         $detector = new TypeDetector();
-        $baseType = $detector->detectType($base);
-        $nextType = $detector->detectType($next);
+        $baseType = $detector->detectType($left);
+        $nextType = $detector->detectType($right);
 
         if (!$baseType->isComparableWith($nextType)) {
             throw new InvalidArgumentException(\sprintf("Can't compare '(%s %s %s)' due to data type mismatch.", $baseType->toString(), $symbol, $nextType->toString()));

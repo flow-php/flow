@@ -9,22 +9,24 @@ use Flow\ETL\Row;
 final class When extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $ref,
-        private readonly ScalarFunction $then,
-        private readonly ?ScalarFunction $else = null
+        private readonly mixed $condition,
+        private readonly mixed $then,
+        private readonly mixed $else = null
     ) {
     }
 
     public function eval(Row $row) : mixed
     {
-        if ($this->ref->eval($row)) {
-            return $this->then->eval($row);
+        $condition = (new Parameter($this->condition))->asBoolean($row);
+
+        if ($condition) {
+            return (new Parameter($this->then))->eval($row);
         }
 
         if ($this->else) {
-            return $this->else->eval($row);
+            return (new Parameter($this->else))->eval($row);
         }
 
-        return $this->ref->eval($row);
+        return null;
     }
 }

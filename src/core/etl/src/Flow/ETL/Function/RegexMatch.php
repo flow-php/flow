@@ -9,22 +9,21 @@ use Flow\ETL\Row;
 final class RegexMatch extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly ScalarFunction $pattern,
-        private readonly ScalarFunction $subject,
-        private readonly ?ScalarFunction $flags = null,
-        private readonly ?ScalarFunction $offset = null,
+        private readonly ScalarFunction|string $pattern,
+        private readonly ScalarFunction|string|array $subject,
+        private readonly ScalarFunction|int $flags = 0,
+        private readonly ScalarFunction|int $offset = 0,
     ) {
     }
 
     public function eval(Row $row) : ?bool
     {
-        /** @var non-empty-string $pattern */
-        $pattern = $this->pattern->eval($row);
-        $subject = $this->subject->eval($row);
-        $flags = $this->flags ? $this->flags->eval($row) : 0;
-        $offset = $this->offset ? $this->offset->eval($row) : 0;
+        $pattern = (new Parameter($this->pattern))->asString($row);
+        $subject = (new Parameter($this->subject))->asString($row);
+        $flags = (new Parameter($this->flags))->asInt($row);
+        $offset = (new Parameter($this->offset))->asInt($row);
 
-        if (!\is_string($pattern) || !\is_string($subject) || !\is_int($flags) || !\is_int($offset)) {
+        if ($pattern === null || $subject === null || $flags === null || $offset === null) {
             return null;
         }
 

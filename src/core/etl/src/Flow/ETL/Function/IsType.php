@@ -4,49 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
 use Flow\ETL\Row;
-use Flow\ETL\Row\{Entry, Reference};
 
 final class IsType extends ScalarFunctionChain
 {
     /**
-     * @var array<class-string<Entry>>
+     * @var array<string|Type>
      */
-    private array $typeClasses;
+    private array $types;
 
     /**
-     * @param class-string<Entry> ...$typeClasses
-     *
-     * @throws InvalidArgumentException
+     * @param string|Type ...$types
      */
     public function __construct(
-        private readonly ScalarFunction $ref,
-        string ...$typeClasses
+        private readonly mixed $value,
+        string|Type ...$types
     ) {
-        foreach ($typeClasses as $typeClass) {
-            if (!\class_exists($typeClass) || !\in_array(Entry::class, \class_implements($typeClass), true)) {
-                throw new InvalidArgumentException('"' . $typeClass . '" is not valid Entry Type class');
-            }
-        }
 
-        $this->typeClasses = $typeClasses;
+        $this->types = $types;
     }
 
     public function eval(Row $row) : bool
     {
-        if (!$this->ref instanceof Reference) {
-            return false;
-        }
+        $value = (new Parameter($this->value))->eval($row);
 
-        if (!$row->has($this->ref)) {
-            return false;
-        }
+        foreach ($this->types as $type) {
+            $type = \is_string($type) ? TypeFactory::fromString($type) : $type;
 
-        $entry = $row->get($this->ref);
-
-        foreach ($this->typeClasses as $typeClass) {
-            if (\is_a($entry, $typeClass, true)) {
+            if ($type->isValid($value)) {
                 return true;
             }
         }

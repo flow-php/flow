@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Integration\Function;
 use function Flow\ETL\DSL\{from_array, lit, ref, to_memory, when};
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row\Entry\StringEntry;
 use PHPUnit\Framework\TestCase;
 
 final class BinaryComparisonsTest extends TestCase
@@ -76,7 +75,7 @@ final class BinaryComparisonsTest extends TestCase
             )
             ->withEntry(
                 'type',
-                when(ref('a')->isType(StringEntry::class), lit(true), lit(false))
+                when(ref('a')->isType('string'), lit(true), lit(false))
             )
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))

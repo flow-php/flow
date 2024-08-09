@@ -8,18 +8,19 @@ use Flow\ETL\Row;
 
 final class ToLower extends ScalarFunctionChain
 {
-    public function __construct(private ScalarFunction $ref)
-    {
+    public function __construct(
+        private ScalarFunction|string $value
+    ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?string
     {
-        /** @var mixed $value */
-        $value = $this->ref->eval($row);
+        $value = (new Parameter($this->value))->asString($row);
 
-        return match (\gettype($value)) {
-            'string' => \mb_strtolower($value),
-            default => $value,
-        };
+        if ($value === null) {
+            return null;
+        }
+
+        return \strtolower($value);
     }
 }

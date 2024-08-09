@@ -49,7 +49,7 @@ final class StartsWithTest extends TestCase
 
         self::assertSame(
             [
-                ['id' => 1, 'starts_with' => true],
+                ['id' => 1, 'starts_with' => false],
             ],
             $memory->dump()
         );
@@ -71,7 +71,7 @@ final class StartsWithTest extends TestCase
 
         self::assertSame(
             [
-                ['id' => '1', 'starts_with' => true],
+                ['id' => '1', 'starts_with' => false],
             ],
             $memory->dump()
         );

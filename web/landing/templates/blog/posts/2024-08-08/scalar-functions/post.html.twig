@@ -31,7 +31,7 @@
     </p>
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/power.php' %}{% endapply %}</code></pre>
     <p>
-        Let's start by analyzing the function constructor. We can notice that the arguments passed to the constructor are two other scalar functions.
+        Let's start by analyzing the function constructor. We can notice that the arguments passed to the constructor are two other can also be scalar functions.
         This simple trick allows us to refer to values from different cells using the <code>ref</code> function.
     </p>
     <p>
@@ -93,9 +93,18 @@
         <li>what if false</li>
     </ul>
     <p>
-        If we look at the implementation of this function, we'll notice that all its arguments are also scalar functions. This allows us to build very complicated nested conditions.
+        If we look at the implementation of this function, we'll notice that all its arguments are mixed (so we can provide literal values or scalar functions). This allows us to build very complicated nested conditions.
     </p>
     <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/when-function.php' %}{% endapply %}</code></pre>
 
+    <h2>References</h2>
+    <ul>
+        <li><a href="https://github.com/flow-php/flow/tree/1.x/src/core/etl/src/Flow/ETL/Function" target="_blank">List of all Scalar Functions</a></li>
+        <li><a href="https://github.com/flow-php/flow/tree/1.x/src/core/etl/tests/Flow/ETL/Tests/Unit/Function" target="_blank">Scalar Functions unit tests</a></li>
+        <li><a href="https://github.com/flow-php/flow/tree/1.x/src/core/etl/tests/Flow/ETL/Tests/Integration/Function" target="_blank">Scalar Functions integration tests</a></li>
+        <li><a href="https://github.com/flow-php/flow/blob/1.x/src/core/etl/src/Flow/ETL/Function/ScalarFunctionChain.php" target="_blank">Scalar Functions Chain</a></li>
+        <li><a href="https://github.com/flow-php/flow/blob/1.x/src/core/etl/src/Flow/ETL/Row/EntryReference.php" target="_blank">Entry Reference (ref)</a></li>
+        <li><a href="https://github.com/flow-php/flow/blob/1.x/src/core/etl/src/Flow/ETL/Function/Literal.php" target="_blank">Literal (lit)</a></li>
+    </ul>
 </article>
 {% endblock %}

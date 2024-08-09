@@ -32,26 +32,4 @@ final class ToLowerTest extends TestCase
             $memory->dump()
         );
     }
-
-    public function test_to_lower_on_non_string_key() : void
-    {
-        (new Flow())
-            ->read(
-                from_array(
-                    [
-                        ['id' => 1],
-                    ]
-                )
-            )
-            ->withEntry('to_lower', ref('id')->lower())
-            ->write(to_memory($memory = new ArrayMemory()))
-            ->run();
-
-        self::assertSame(
-            [
-                ['id' => 1, 'to_lower' => 1],
-            ],
-            $memory->dump()
-        );
-    }
 }
