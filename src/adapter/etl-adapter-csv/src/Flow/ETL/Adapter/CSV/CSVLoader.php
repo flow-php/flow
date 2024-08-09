@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\CSV;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\{Adapter\CSV\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
 use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class CSVLoader implements Closure, Loader, Loader\FileLoader
@@ -18,11 +18,9 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         private string $separator = ',',
         private string $enclosure = '"',
         private string $escape = '\\',
-        private string $newLineSeparator = PHP_EOL
+        private string $newLineSeparator = PHP_EOL,
+        private string $dateTimeFormat = \DateTimeInterface::ATOM
     ) {
-        if ($this->path->isPattern()) {
-            throw new \InvalidArgumentException("CSVLoader path can't be pattern, given: " . $this->path->path());
-        }
     }
 
     public function closure(FlowContext $context) : void
@@ -41,19 +39,21 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
             return;
         }
 
+        $normalizer = new RowsNormalizer(new EntryNormalizer($context->config->caster(), $this->dateTimeFormat));
+
         $headers = $rows->first()->entries()->map(fn (Entry $entry) => $entry->name());
 
         if ($rows->partitions()->count()) {
-            $this->write($rows, $headers, $context, $rows->partitions()->toArray());
+            $this->write($rows, $headers, $context, $rows->partitions()->toArray(), $normalizer);
         } else {
-            $this->write($rows, $headers, $context, []);
+            $this->write($rows, $headers, $context, [], $normalizer);
         }
     }
 
     /**
      * @param array<Partition> $partitions
      */
-    public function write(Rows $nextRows, array $headers, FlowContext $context, array $partitions) : void
+    public function write(Rows $nextRows, array $headers, FlowContext $context, array $partitions, RowsNormalizer $normalizer) : void
     {
         if ($this->header && !$context->streams()->isOpen($this->path, $partitions)) {
             $this->writeCSV(
@@ -62,26 +62,13 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
             );
         }
 
-        foreach ($nextRows as $row) {
-            $this->writeCSV(
-                $row->toArray(),
-                $context->streams()->writeTo($this->path, $partitions)
-            );
+        foreach ($normalizer->normalize($nextRows) as $normalizedRow) {
+            $this->writeCSV($normalizedRow, $context->streams()->writeTo($this->path, $partitions));
         }
     }
 
     private function writeCSV(array $row, DestinationStream $stream) : void
     {
-        /**
-         * @var string $entry
-         * @var mixed $value
-         */
-        foreach ($row as $entry => $value) {
-            if (\is_array($value)) {
-                throw new RuntimeException("Entry \"{$entry}\" is an list|array, please cast to string before writing to CSV. Easiest way to cast arrays to string is to use Transform::to_json transformer.");
-            }
-        }
-
         $tmpHandle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');
 
         if ($tmpHandle === false) {
