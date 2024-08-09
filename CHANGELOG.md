@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-08-09
 
 ### Added
+- [#1181](https://github.com/flow-php/flow/pull/1181) - **CSV RowsNormalizer to automate writing deeply nested data structures to CSV without manual casting** - [@norberttech](https://github.com/norberttech)
 - [#1174](https://github.com/flow-php/flow/pull/1174) - **New blog post about scalar functions** - [@norberttech](https://github.com/norberttech)
 - [#1173](https://github.com/flow-php/flow/pull/1173) - **Added new page with a list of latest blog posts to landing page** - [@norberttech](https://github.com/norberttech)
 - [#1170](https://github.com/flow-php/flow/pull/1170) - **XMLParserExtractor implementation of XMLExtractor** - [@norberttech](https://github.com/norberttech)
