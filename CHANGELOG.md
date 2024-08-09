@@ -26,6 +26,7 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1182](https://github.com/flow-php/flow/pull/1182) - **Automate normalization of rows in JsonLoader** - [@norberttech](https://github.com/norberttech)
 - [#1177](https://github.com/flow-php/flow/pull/1177) - **All scalar functions will now expect parameters to be a scalar function or literal value** - [@norberttech](https://github.com/norberttech)
 - [#1174](https://github.com/flow-php/flow/pull/1174) - **Simplified posts HTML syntax** - [@norberttech](https://github.com/norberttech)
 - [#1174](https://github.com/flow-php/flow/pull/1174) - **Minor UX adjustments on landing page and blog** - [@norberttech](https://github.com/norberttech)
