@@ -18,7 +18,9 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function __construct(
         private readonly Path $path,
-        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM
+        private readonly int $flats = JSON_THROW_ON_ERROR,
+        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM,
+        private readonly bool $putRowsInNewLines = false
     ) {
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("JsonLoader path can't be pattern, given: " . $this->path->path());
@@ -29,7 +31,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
     {
         foreach ($context->streams() as $stream) {
             if ($stream->path()->extension() === 'json') {
-                $stream->append(']');
+                $stream->append($this->putRowsInNewLines ? "\n]" : ']');
             }
         }
 
@@ -65,7 +67,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $stream->append('[');
+            $stream->append($this->putRowsInNewLines ? "[\n" : '[');
         } else {
             $stream = $streams->writeTo($this->path, $partitions);
         }
@@ -86,9 +88,16 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
             return;
         }
 
+        $separator = $this->putRowsInNewLines ? ",\n" : ',';
+
         foreach ($normalizer->normalize($rows) as $normalizedRow) {
-            $json = json_encode($normalizedRow, JSON_THROW_ON_ERROR);
-            $json = ($this->writes[$stream->path()->path()] > 0) ? ',' . $json : $json;
+            $json = json_encode($normalizedRow, $this->flats);
+
+            if ($json === false) {
+                throw new RuntimeException('Failed to encode JSON: ' . json_last_error_msg());
+            }
+
+            $json = ($this->writes[$stream->path()->path()] > 0) ? ($separator . $json) : $json;
 
             $stream->append($json);
         }
