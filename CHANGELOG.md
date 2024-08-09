@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-08
+## [Unreleased] - 2024-08-09
 
 ### Added
 - [#1174](https://github.com/flow-php/flow/pull/1174) - **New blog post about scalar functions** - [@norberttech](https://github.com/norberttech)
@@ -26,6 +26,7 @@
 - [bd519c](https://github.com/flow-php/flow/commit/bd519c46794533f468f2c2bb8d1892cd10065647) - **discord server url** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1177](https://github.com/flow-php/flow/pull/1177) - **All scalar functions will now expect parameters to be a scalar function or literal value** - [@norberttech](https://github.com/norberttech)
 - [#1174](https://github.com/flow-php/flow/pull/1174) - **Simplified posts HTML syntax** - [@norberttech](https://github.com/norberttech)
 - [#1174](https://github.com/flow-php/flow/pull/1174) - **Minor UX adjustments on landing page and blog** - [@norberttech](https://github.com/norberttech)
 - [#1170](https://github.com/flow-php/flow/pull/1170) - **XMLReaderExtractor is now deprecated as it can't read from remote files** - [@norberttech](https://github.com/norberttech)
@@ -68,6 +69,7 @@
 - [f5ad85](https://github.com/flow-php/flow/commit/f5ad85efac1d71255370a6ee8ba36b791dc14645) - **CONTRIBUTING.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1177](https://github.com/flow-php/flow/pull/1177) - **ToMoney scalar function and money optional dependency** - [@norberttech](https://github.com/norberttech)
 - [#1147](https://github.com/flow-php/flow/pull/1147) - **NullCache implementation that wasn't used anywhere** - [@norberttech](https://github.com/norberttech)
 - [#1152](https://github.com/flow-php/flow/pull/1152) - **Leftovers in main `composer.json` related to AWS SDK** - [@stloyd](https://github.com/stloyd)
 
