@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-10
+## [0.9.0] - 2024-08-10
 
 ### Added
 - [#1183](https://github.com/flow-php/flow/pull/1183) - **JsonLoader parameter that defines if each row should be a single line in the output file** - [@norberttech](https://github.com/norberttech)
