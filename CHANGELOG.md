@@ -1,4 +1,7 @@
-## [Unreleased] - 2024-08-10
+## [Unreleased] - 2024-08-11
+
+### Added
+- [#1185](https://github.com/flow-php/flow/pull/1185) - **Description to landing page examples** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [#1184](https://github.com/flow-php/flow/pull/1184) - **Update Homebrew TAP formula: flow-php to version: 0.9.0** - [@norberttech](https://github.com/norberttech)
