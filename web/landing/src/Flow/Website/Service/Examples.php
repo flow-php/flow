@@ -21,6 +21,17 @@ final class Examples
         return \file_get_contents($path);
     }
 
+    public function description(string $topic, string $example) : ?string
+    {
+        $path = \sprintf('%s/topics/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example);
+
+        if (false === \file_exists($path)) {
+            return null;
+        }
+
+        return \file_get_contents($path);
+    }
+
     /**
      * @return string[]
      */

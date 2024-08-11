@@ -10,6 +10,7 @@
 
 {% block main %}
     <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
+        <h2 class="mb-4 text-2xl font-semibold tracking-wide">Examples:</h2>
         <nav class="font-medium text-center bg-orange-100 rounded">
             <ul class="flex whitespace-nowrap overflow-auto justify-between">
                 {% for topic in topics %}
@@ -37,7 +38,18 @@
             </nav>
 
             <div id="example" class="-mt-36 pt-36">
+                {% if description %}
+                    <h2 class="text-xl mt-5 mb-5">Description</h2>
+                    <article id="example-description"
+                             class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-10"
+                            {{ stimulus_controller('all_links_external') }}
+                    >
+                        {{ description|markdown_to_html }}
+                    </article>
+                {% endif %}
+
                 {% apply spaceless %}
+                    <h2 class="text-xl mt-5 mb-5">Code</h2>
                     <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative">
                         <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
