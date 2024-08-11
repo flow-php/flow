@@ -60,3 +60,27 @@ code {
 #blog-post hr {
     @apply text-blue-100 my-4 border-t-2 rounded;
 }
+
+#example-description h1 {
+    @apply font-bold text-2xl;
+}
+
+#example-description h2 {
+    @apply font-bold text-xl mt-4;
+}
+
+#example-description h1, h2, ul, hr, p {
+    @apply mb-3;
+}
+
+#example-description ul {
+    @apply list-disc pl-6;
+}
+
+#example-description hr {
+    @apply text-blue-100 my-4 border-t-2 rounded;
+}
+
+#example-description code {
+    @apply text-orange-100;
+}

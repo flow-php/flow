@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
-use Flow\Website\Service\{Examples};
+use Flow\Website\Service\Examples;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-final class DefaultController extends AbstractController
+final class ExamplesController extends AbstractController
 {
     public function __construct(
         private readonly Examples $examples,
@@ -30,16 +30,9 @@ final class DefaultController extends AbstractController
             'examples' => $examples,
             'currentTopic' => $topic,
             'currentExample' => $example,
+            'description' => $this->examples->description($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),
             'output' => $this->examples->output($currentTopic, $currentExample),
-        ]);
-    }
-
-    #[Route('/', name: 'main')]
-    public function main() : Response
-    {
-        return $this->render('main/index.html.twig', [
-            'topics' => $this->examples->topics(),
         ]);
     }
 
@@ -57,6 +50,7 @@ final class DefaultController extends AbstractController
             'examples' => $examples,
             'currentTopic' => $currentTopic,
             'currentExample' => $currentExample,
+            'description' => $this->examples->description($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),
             'output' => $this->examples->output($currentTopic, $currentExample),
         ]);

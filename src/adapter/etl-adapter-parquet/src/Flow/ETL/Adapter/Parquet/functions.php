@@ -13,26 +13,26 @@ use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\{ByteOrder, Options};
 
 /**
- * @param array<Path>|Path|string $uri
+ * @param array<Path>|Path|string $path
  * @param array<string> $columns
  *
  * @return Extractor
  */
 function from_parquet(
-    string|Path|array $uri,
+    string|Path|array $path,
     array $columns = [],
     Options $options = new Options(),
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ?int $offset = null,
 ) : Extractor {
-    if (\is_array($uri)) {
+    if (\is_array($path)) {
         $extractors = [];
 
         if ($offset !== null) {
             throw new InvalidArgumentException('Offset can be used only with single file path, not with pattern');
         }
 
-        foreach ($uri as $filePath) {
+        foreach ($path as $filePath) {
             $extractors[] = new ParquetExtractor(
                 $filePath,
                 $options,
@@ -45,7 +45,7 @@ function from_parquet(
     }
 
     return new ParquetExtractor(
-        \is_string($uri) ? Path::realpath($uri) : $uri,
+        \is_string($path) ? Path::realpath($path) : $path,
         $options,
         $byte_order,
         $columns,

@@ -1,0 +1,1 @@
+Read data directly from a php associative array.  Relays on `array_to_rows` DSL function.
