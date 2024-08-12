@@ -51,6 +51,8 @@ final class WholeChunkViewer implements ColumnChunkViewer
                 break;
             }
 
+            \fseek($pageStream, \ftell($pageStream) + $dataHeader->compressedPageSize());
+
             yield $dataHeader;
         }
 

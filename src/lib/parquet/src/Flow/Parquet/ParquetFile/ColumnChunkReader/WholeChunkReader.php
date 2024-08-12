@@ -90,6 +90,10 @@ final class WholeChunkReader implements ColumnChunkReader
                 $dictionary,
                 $pageStream
             ));
+
+            if ($dictionary === null) {
+                $header = $this->readHeader($pageStream);
+            }
         }
 
         \fclose($pageStream);
