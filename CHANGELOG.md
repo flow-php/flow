@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-12
+## [0.9.1] - 2024-08-12
 
 ### Added
 - [#1185](https://github.com/flow-php/flow/pull/1185) - **Description to landing page examples** - [@norberttech](https://github.com/norberttech)
