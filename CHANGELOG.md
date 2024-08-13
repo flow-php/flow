@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-13
+## [0.9.2] - 2024-08-13
 
 ### Added
 - [#1190](https://github.com/flow-php/flow/pull/1190) - **link to GitHub next to each dsl function documentation** - [@norberttech](https://github.com/norberttech)
