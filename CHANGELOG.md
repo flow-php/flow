@@ -10,6 +10,9 @@
 ### Changed
 - [#1187](https://github.com/flow-php/flow/pull/1187) - **Update Homebrew TAP formula: flow-php to version: 0.9.1** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [#1189](https://github.com/flow-php/flow/pull/1189) - **Fixed wrong saving multiple rows in `JsonLoader`** - [@stloyd](https://github.com/stloyd)
+
 ### Removed
 - [4473ae](https://github.com/flow-php/flow/commit/4473aefac465ab1d13d09de4f2b15d3187daf561) - **auto generating dsl** - [@norberttech](https://github.com/norberttech)
 
