@@ -27,6 +27,7 @@ $application->add(new class extends Command {
         $this
             ->setName('dsl:dump')
             ->setDescription('Dump DSL into json file.')
+            ->addOption('repository-root-path', null, InputArgument::OPTIONAL, 'Repository root path.', dirname(__DIR__) . '/')
             ->addArgument('output', InputArgument::REQUIRED, 'Where to dump dsl.');
     }
 
@@ -47,7 +48,10 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php',
         ];
 
-        $extractor = new FunctionsExtractor(new FunctionCollector());
+        $extractor = new FunctionsExtractor(
+            $input->getOption('repository-root-path'),
+            new FunctionCollector()
+        );
 
         $normalizedFunctions = [];
 
