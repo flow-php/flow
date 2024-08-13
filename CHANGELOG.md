@@ -1,3 +1,14 @@
+## [Unreleased] - 2024-08-13
+
+### Added
+- [#1188](https://github.com/flow-php/flow/pull/1188) - **Documentation tool that can extract function definitions from given paths** - [@norberttech](https://github.com/norberttech)
+- [#1188](https://github.com/flow-php/flow/pull/1188) - **bin/docs tool that dumps DSL definitions as json to a file** - [@norberttech](https://github.com/norberttech)
+- [#1188](https://github.com/flow-php/flow/pull/1188) - **Landing page documentation section** - [@norberttech](https://github.com/norberttech)
+- [#1188](https://github.com/flow-php/flow/pull/1188) - **Scroll up button on website at mobile devices** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#1187](https://github.com/flow-php/flow/pull/1187) - **Update Homebrew TAP formula: flow-php to version: 0.9.1** - [@norberttech](https://github.com/norberttech)
+
 ## [0.9.1] - 2024-08-12
 
 ### Added
