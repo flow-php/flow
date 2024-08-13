@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\Documentation;
 
 use Flow\Documentation\Models\FunctionModel;
-use PhpParser\{NodeTraverser, ParserFactory, PhpVersion};
+use PhpParser\{NodeTraverser, ParserFactory};
 
 final class FunctionsExtractor
 {
     public function __construct(
+        private readonly string $repositoryRootPath,
         private readonly FunctionCollector $functionCollector
     ) {
     }
@@ -19,7 +20,7 @@ final class FunctionsExtractor
      */
     public function extract(array $paths) : \Generator
     {
-        $parser = (new ParserFactory())->createForVersion(PhpVersion::fromString('8.1'));
+        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
 
         $includedFiles = get_included_files();
 
@@ -41,7 +42,13 @@ final class FunctionsExtractor
         }
 
         foreach ($this->functionCollector->functions as $functionName) {
-            yield FunctionModel::fromReflection(new \ReflectionFunction($functionName));
+            $reflectionFunction = new \ReflectionFunction($functionName);
+            $repositoryPath = \ltrim(\str_replace($this->repositoryRootPath, '', $reflectionFunction->getFileName()), '/');
+
+            yield FunctionModel::fromReflection(
+                $repositoryPath,
+                $reflectionFunction
+            );
         }
     }
 }

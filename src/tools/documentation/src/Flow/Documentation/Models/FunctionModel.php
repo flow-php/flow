@@ -7,6 +7,8 @@ namespace Flow\Documentation\Models;
 final class FunctionModel
 {
     public function __construct(
+        public readonly string $repositoryPath,
+        public readonly int|false $startLineInFile,
         public readonly string $name,
         public readonly string $namespace,
         public readonly ParametersModel $parameters,
@@ -20,6 +22,8 @@ final class FunctionModel
     public static function fromArray(array $data) : self
     {
         return new self(
+            $data['repository_path'],
+            $data['start_line_in_file'],
             $data['name'],
             $data['namespace'],
             ParametersModel::fromArray($data['parameters']),
@@ -29,9 +33,11 @@ final class FunctionModel
         );
     }
 
-    public static function fromReflection(\ReflectionFunction $reflectionFunction) : self
+    public static function fromReflection(string $relativePath, \ReflectionFunction $reflectionFunction) : self
     {
         return new self(
+            $relativePath,
+            $reflectionFunction->getStartLine(),
             $reflectionFunction->getShortName(),
             $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
@@ -44,6 +50,8 @@ final class FunctionModel
     public function normalize() : array
     {
         return [
+            'repository_path' => $this->repositoryPath,
+            'start_line_in_file' => $this->startLineInFile,
             'name' => $this->name,
             'namespace' => $this->namespace,
             'parameters' => $this->parameters->normalize(),

@@ -8,6 +8,8 @@ final class DSLDefinition
 {
     /**
      * @param array{
+     *      repository_path: string,
+     *      start_line_in_file: int|false,
      *      name: string,
      *      namespace: string,
      *      parameters: array<mixed>,
@@ -28,6 +30,13 @@ final class DSLDefinition
     public function docComment() : string
     {
         return \base64_decode($this->data['doc_comment'], true);
+    }
+
+    public function githubUrl(string $version = '1.x') : string
+    {
+        $startLine = $this->data['start_line_in_file'] ? '#L' . $this->data['start_line_in_file'] : '';
+
+        return 'https://github.com/flow-php/flow/blob/' . $version . '/' . \ltrim($this->data['repository_path'], '/') . $startLine;
     }
 
     public function hasDocComment() : bool
