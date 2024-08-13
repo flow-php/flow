@@ -1,0 +1,1 @@
+Simple example of reading from rows and writing to stdout.

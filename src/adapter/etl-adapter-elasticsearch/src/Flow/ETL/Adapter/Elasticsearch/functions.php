@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch;
 
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\{DocumentDataSource, ElasticsearchExtractor, ElasticsearchLoader, HitsIntoRowsTransformer};
-use Flow\ETL\Loader;
+use Flow\ETL\Attribute\{DSL, Module, Type};
 
 /**
  * https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.
@@ -26,9 +26,8 @@ use Flow\ETL\Loader;
  * @param string $index
  * @param IdFactory $id_factory
  * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
- *
- * @return ElasticsearchLoader
  */
+#[DSL(module: Module::ELASTICSEARCH, type: Type::LOADER)]
 function to_es_bulk_index(
     array $config,
     string $index,
@@ -57,15 +56,14 @@ function to_es_bulk_index(
  * @param string $index
  * @param IdFactory $id_factory
  * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
- *
- * @return Loader
  */
+#[DSL(module: Module::ELASTICSEARCH, type: Type::LOADER)]
 function to_es_bulk_update(
     array $config,
     string $index,
     IdFactory $id_factory,
     array $parameters = []
-) : Loader {
+) : ElasticsearchLoader {
     return ElasticsearchLoader::update($config, $index, $id_factory, $parameters);
 }
 
@@ -74,6 +72,7 @@ function to_es_bulk_update(
  *
  * @return HitsIntoRowsTransformer
  */
+#[DSL(module: Module::ELASTICSEARCH, type: Type::HELPER)]
 function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source) : HitsIntoRowsTransformer
 {
     return new HitsIntoRowsTransformer($source);
@@ -101,6 +100,7 @@ function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source
  * @param array<mixed> $params - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html
  * @param ?array<mixed> $pit_params - when used extractor will create point in time to stabilize search results. Point in time is automatically closed when last element is extracted. https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html
  */
+#[DSL(module: Module::ELASTICSEARCH, type: Type::EXTRACTOR)]
 function from_es(array $config, array $params, ?array $pit_params = null) : ElasticsearchExtractor
 {
     return new ElasticsearchExtractor(

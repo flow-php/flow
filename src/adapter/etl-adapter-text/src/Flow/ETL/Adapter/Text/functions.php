@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
-use Flow\ETL\{Extractor, Loader};
+use Flow\ETL\{Attribute\DSL, Attribute\Module, Attribute\Type, Extractor, Loader};
 use Flow\Filesystem\Path;
 
 /**
@@ -12,6 +12,7 @@ use Flow\Filesystem\Path;
  *
  * @return Extractor
  */
+#[DSL(module: Module::TEXT, type: Type::EXTRACTOR)]
 function from_text(
     string|Path|array $path,
 ) : Extractor {
@@ -38,6 +39,7 @@ function from_text(
  *
  * @return Loader
  */
+#[DSL(module: Module::TEXT, type: Type::LOADER)]
 function to_text(
     string|Path $path,
     string $new_line_separator = PHP_EOL

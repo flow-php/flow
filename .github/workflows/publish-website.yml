@@ -45,7 +45,13 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-composer-website-
 
-      - name: "Install dependencies"
+      - name: "Install project dependencies"
+        run: "composer install --no-interaction --no-progress --no-suggest"
+
+      - name: "Generate documentation"
+        run: "composer build:docs"
+
+      - name: "Install Landing dependencies"
         run: "composer install --no-interaction --no-progress --no-suggest"
         working-directory: "web/landing"
 

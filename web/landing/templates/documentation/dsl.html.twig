@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    DSL - Flow PHP
+{%- endblock -%}
+
+{%- block description -%}
+    Documentation - DSL
+{%- endblock -%}
+
+{% block main %}
+<div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
+    <div class="grid grid-cols-1 sm:grid-cols-6">
+        <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+        <h1 class="font-bold text-4xl mb-4">Modules</h1>
+            <ul class="mb-10 mr-6">
+                {% for module in modules %}
+                    <li class="mb-1">
+                        <a
+                            href="{{ path('documentation_dsl', {module: module|lower, _fragment:"dsl-functions"}) }}"
+                            class="{% if module| slugify |lower == module_name | slugify |lower  %}text-white {% endif %}"
+
+                        >{{ module }}</a>
+                        {% if module | slugify |lower == module_name | slugify |lower %}
+                        <ul class="list-disc pl-6 mt-2">
+                            {% for type in types %}
+                                {% if definitions.onlyType(type).count %}
+                                    <li class="text-sm">
+                                        <a href="#type-{{ type }}">{{ type|humanize }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="sm:col-span-5">
+            <h1 id="dsl-functions" class="font-bold text-4xl mb-4">DSL Functions</h1>
+            <hr class="text-blue-100 my-4 border-t-2 rounded" />
+            <p class="mb-2 text-sm italic">
+                DSL stands for Domain Specific Language. In the case of Flow, the DSL is used to define simple functions that can be used to transform data.
+                Most of those functions are initializing a new instance of a class under the hood since Flow is fully object-oriented.
+                Please look at the <a href="{{ path('example', {topic: "data_frame", example: "data_frame", _fragment: "example"}) }}">examples</a> below to get a better understanding of how to use the DSL functions.
+            </p>
+            {% for type in types %}
+                {% if definitions.onlyType(type).count %}
+                    <h2 id="type-{{ type }}" class="font-bold text-2xl mb-2">
+                        <a href="#type-{{ type }}" class="text-white">
+                            {{ type|humanize }}
+                        </a>
+                    </h2>
+                    <hr class="text-blue-100 my-4 border-t-2 rounded" />
+                    {% for definition in definitions.onlyType(type).all %}
+                        <h4 class="mb-2" id="dsl-{{ definition.name }}">
+                            <a href="#dsl-{{ definition.name }}" class="text-white">
+                                <img src="{{ asset('images/icons/link.svg') }}" width="16" height="16" alt="feature" class="inline">
+                                {{ definition.name }}
+                            </a>
+                        </h4>
+                        <article class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
+                            {% apply spaceless %}
+                            <pre class="overflow-auto m-0 p-2">
+                                <code id="code" class="language-php !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>
+                                    {{- definition.toString | escape('html') -}}
+                                </code>
+                            </pre>
+                            {% endapply %}
+                        </article>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

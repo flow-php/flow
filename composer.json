@@ -42,6 +42,7 @@
         "aeon-php/calendar": "^1.0",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
+        "nikic/php-parser": "^5.1",
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
@@ -100,7 +101,8 @@
                 "src/lib/parquet-viewer/src/Flow",
                 "src/lib/parquet/src/Flow",
                 "src/lib/rdsl/src/Flow",
-                "src/lib/snappy/src/Flow"
+                "src/lib/snappy/src/Flow",
+                "src/tools/documentation/src/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
                 "src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk"
@@ -137,7 +139,8 @@
                 "src/lib/parquet-viewer/tests/Flow",
                 "src/lib/parquet/tests/Flow",
                 "src/lib/rdsl/tests/Flow",
-                "src/lib/snappy/tests/Flow"
+                "src/lib/snappy/tests/Flow",
+                "src/tools/documentation/tests/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
                 "src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests"
@@ -239,6 +242,9 @@
         ],
         "build:phar": [
             "tools/box/vendor/bin/box compile"
+        ],
+        "build:docs": [
+            "bin/docs.php dsl:dump web/landing/resources/dsl.json"
         ],
         "pre-autoload-dump": [
             "Google\\Task\\Composer::cleanup"
