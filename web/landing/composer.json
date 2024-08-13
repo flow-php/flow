@@ -25,7 +25,8 @@
         "coduo/php-humanizer": "^4.0",
         "twig/markdown-extra": "^3.11",
         "twig/extra-bundle": "^3.8",
-        "league/commonmark": "^2.4"
+        "league/commonmark": "^2.4",
+        "cocur/slugify": "^4.5"
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "^6.4",

@@ -85,6 +85,12 @@
                         </a>
                     </li>
                     <li>
+                        <a class="p-3 flex items-center" href="{{ path('documentation_dsl') }}">
+                            Docs
+                            <img src="{{ asset('images/icons/checklist.svg') }}" alt="Flow PHP Blog" width="16" height="16" class="ml-1">
+                        </a>
+                    </li>
+                    <li>
                         <a class="p-3 flex items-center text-white" href="https://discord.gg/5dNXfQyACW" target="_blank">
                             Discord
                             <img src="{{ asset('images/icons/discord.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
@@ -95,14 +101,21 @@
         </div>
     </header>
 
-    <main>
-
+    <main id="main">
         {{ render(controller('Flow\\Website\\Controller\\LayoutController::hero')) }}
 
         {% block main %}{% endblock %}
 
         {{ render(controller('Flow\\Website\\Controller\\LayoutController::contributors')) }}
     </main>
+
+    <a
+        href="#main"
+        class="fixed bottom-4 right-4 bg-orange-200 text-white p-2 rounded-full shadow-lg hover:bg-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-100 focus:ring-opacity-50 sm:hidden opacity-0"
+        data-controller="scroll-to-top" data-action="click->scroll-to-top#scrollToTop"
+    >
+        <img src="{{ asset('images/icons/arrow-up.svg') }}" width="32" height="32" alt="scroll back to top" class="inline">
+    </a>
 
     <footer class="text-center bg-orange-100">
         <div class="py-4 mx-auto max-w-screen-xl">

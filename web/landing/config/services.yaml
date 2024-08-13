@@ -2,6 +2,7 @@
 parameters:
     flow_root_dir: '%kernel.project_dir%/../..'
     examples_path: '%flow_root_dir%/examples'
+    dsl_definitions_path: '%flow_root_dir%/web/landing/resources/dsl.json'
     scheme: '%env(SCHEME)%'
     domain: '%env(DOMAIN)%'
     router.request_context.base_url: '%env(SCHEME)%://%env(BASE_URL)%'
@@ -32,6 +33,11 @@ services:
     Flow\Website\Service\Examples:
         arguments:
             $examplesPath: '%examples_path%'
+
+    Flow\Website\Service\Documentation\DSLDefinitions:
+        factory: ['Flow\Website\Service\Documentation\DSLDefinitions', 'fromJson']
+        arguments:
+            $definitionsPath: '%dsl_definitions_path%'
 
     Flow\Website\Twig\:
         resource: '../src/Flow/Website/Twig/**/*Extension.php'

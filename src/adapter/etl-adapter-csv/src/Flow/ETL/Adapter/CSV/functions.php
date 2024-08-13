@@ -7,12 +7,13 @@ namespace Flow\ETL\Adapter\CSV;
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Extractor, Loader};
+use Flow\ETL\{Attribute\DSL, Attribute\Module, Attribute\Type as DSLType, Extractor, Loader};
 use Flow\Filesystem\{Path, SourceStream};
 
 /**
  * @param int<1, max> $characters_read_in_line
  */
+#[DSL(module: Module::CSV, type: DSLType::EXTRACTOR)]
 function from_csv(
     string|Path|array $path,
     bool $with_header = true,
@@ -54,6 +55,7 @@ function from_csv(
     );
 }
 
+#[DSL(module: Module::CSV, type: DSLType::LOADER)]
 function to_csv(
     string|Path $uri,
     bool $with_header = true,
@@ -80,6 +82,7 @@ function to_csv(
  * @param null|Option $fallback - fallback option to use when no best option can be detected, default is Option(',', '"', '\\')
  * @param null|Options $options - options to use for detection, default is Options::all()
  */
+#[DSL(module: Module::CSV, type: DSLType::HELPER)]
 function csv_detect_separator(SourceStream $stream, int $lines = 5, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null) : Option
 {
     return (new CSVDetector($stream, $fallback, $options))->detect($lines);
