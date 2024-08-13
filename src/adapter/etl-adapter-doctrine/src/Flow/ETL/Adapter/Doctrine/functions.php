@@ -11,7 +11,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Attribute\DSL,
     Attribute\Module,
     Attribute\Type as DSLType
-    };
+};
 
 /**
  * @param array<string, mixed>|Connection $connection

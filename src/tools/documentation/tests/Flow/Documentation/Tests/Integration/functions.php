@@ -9,4 +9,5 @@ use Flow\Documentation\Tests\Integration\Double\ParameterClass;
 #[TestAttribute(name: 'test', active: true)]
 function doSomething(string|int|float|\DateTimeInterface|ParameterClass $argument) : ?bool
 {
+    return false;
 }
