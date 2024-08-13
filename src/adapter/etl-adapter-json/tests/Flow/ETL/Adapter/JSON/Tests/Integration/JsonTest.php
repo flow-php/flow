@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
-use function Flow\ETL\DSL\{df, from_array, overwrite};
+use function Flow\ETL\DSL\{average, df, from_array, overwrite, ref};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
@@ -69,7 +69,7 @@ JSON,
             ->run();
 
         $content = \file_get_contents($path);
-        self::stringEndsWith(']', $content);
+        self::assertStringEndsWith(']', $content);
 
         self::assertEquals(
             100,
@@ -87,6 +87,8 @@ JSON,
             ->read(from_array([
                 ['name' => 'John', 'age' => 30],
                 ['name' => 'Jane', 'age' => 25],
+                ['name' => 'Jake', 'age' => 30],
+                ['name' => 'Joe', 'age' => 30],
             ]))
             ->saveMode(overwrite())
             ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', put_rows_in_new_lines: true))
@@ -96,7 +98,9 @@ JSON,
             <<<'JSON'
 [
 {"name":"John","age":30},
-{"name":"Jane","age":25}
+{"name":"Jane","age":25},
+{"name":"Jake","age":30},
+{"name":"Joe","age":30}
 ]
 JSON,
             \file_get_contents($path)
@@ -107,10 +111,14 @@ JSON,
     {
         df()
             ->read(from_array([
-                ['name' => 'John', 'age' => 30],
-                ['name' => 'Jane', 'age' => 25],
+                ['name' => 'John', 'age' => 30, 'pets' => 1],
+                ['name' => 'Jane', 'age' => 25, 'pets' => 3],
+                ['name' => 'Jake', 'age' => 30, 'pets' => 1],
+                ['name' => 'Joe', 'age' => 30, 'pets' => 0],
             ]))
             ->saveMode(overwrite())
+            ->groupBy('age')
+            ->aggregate(average(ref('pets')))
             ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', flags: JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, put_rows_in_new_lines: true))
             ->run();
 
@@ -118,12 +126,12 @@ JSON,
             <<<'JSON'
 [
 {
-    "name": "John",
-    "age": 30
+    "age": 30,
+    "pets_avg": 0.6666666666666666
 },
 {
-    "name": "Jane",
-    "age": 25
+    "age": 25,
+    "pets_avg": 3
 }
 ]
 JSON,
