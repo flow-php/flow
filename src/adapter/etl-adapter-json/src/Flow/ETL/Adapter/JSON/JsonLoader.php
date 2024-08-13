@@ -18,7 +18,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function __construct(
         private readonly Path $path,
-        private readonly int $flats = JSON_THROW_ON_ERROR,
+        private readonly int $flags = JSON_THROW_ON_ERROR,
         private readonly string $dateTimeFormat = \DateTimeInterface::ATOM,
         private readonly bool $putRowsInNewLines = false
     ) {
@@ -82,7 +82,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
      * @throws RuntimeException
      * @throws \JsonException
      */
-    public function writeJSON(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer) : void
+    private function writeJSON(Rows $rows, DestinationStream $stream, RowsNormalizer $normalizer) : void
     {
         if (!\count($rows)) {
             return;
@@ -91,17 +91,21 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         $separator = $this->putRowsInNewLines ? ",\n" : ',';
 
         foreach ($normalizer->normalize($rows) as $normalizedRow) {
-            $json = json_encode($normalizedRow, $this->flats);
+            try {
+                $json = json_encode($normalizedRow, $this->flags);
 
-            if ($json === false) {
-                throw new RuntimeException('Failed to encode JSON: ' . json_last_error_msg());
+                if ($json === false) {
+                    throw new RuntimeException('Failed to encode JSON: ' . json_last_error_msg());
+                }
+            } catch (\JsonException $e) {
+                throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
             }
 
             $json = ($this->writes[$stream->path()->path()] > 0) ? ($separator . $json) : $json;
 
             $stream->append($json);
-        }
 
-        $this->writes[$stream->path()->path()]++;
+            $this->writes[$stream->path()->path()]++;
+        }
     }
 }
