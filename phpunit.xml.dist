@@ -43,6 +43,7 @@
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
       <directory>src/lib/**/**/**/**/Tests/Integration</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
+      <directory>src/tools/**/**/**/**/Tests/Integration</directory>
     </testsuite>
   </testsuites>
   <source>
@@ -51,6 +52,7 @@
       <directory suffix=".php">src/bridge/**/src</directory>
       <directory suffix=".php">src/core/**/src</directory>
       <directory suffix=".php">src/lib/**/src</directory>
+      <directory suffix=".php">src/tools/**/src</directory>
     </include>
     <exclude>
       <directory suffix=".php">src/lib/parquet/src/Flow/Parquet/Thrift</directory>

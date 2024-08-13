@@ -19,7 +19,7 @@ final class FunctionsExtractor
      */
     public function extract(array $paths) : \Generator
     {
-        $parser = (new ParserFactory())->createForVersion(PhpVersion::fromComponents(8, 1));
+        $parser = (new ParserFactory())->createForVersion(PhpVersion::fromString('8.1'));
 
         $includedFiles = get_included_files();
 
