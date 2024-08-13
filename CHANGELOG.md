@@ -9,6 +9,9 @@
 ### Changed
 - [#1187](https://github.com/flow-php/flow/pull/1187) - **Update Homebrew TAP formula: flow-php to version: 0.9.1** - [@norberttech](https://github.com/norberttech)
 
+### Removed
+- [4473ae](https://github.com/flow-php/flow/commit/4473aefac465ab1d13d09de4f2b15d3187daf561) - **auto generating dsl** - [@norberttech](https://github.com/norberttech)
+
 ## [0.9.1] - 2024-08-12
 
 ### Added
