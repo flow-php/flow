@@ -12,6 +12,7 @@ final class FunctionsExtractorTest extends TestCase
     public function test_extract_functions_from_a_file() : void
     {
         $functionsExtractor = new FunctionsExtractor(
+            __DIR__,
             new FunctionCollector()
         );
 
@@ -81,6 +82,8 @@ final class FunctionsExtractorTest extends TestCase
                     ],
                 ],
                 'doc_comment' => null,
+                'repository_path' => 'functions.php',
+                'start_line_in_file' => 10,
             ],
             $functions[0]->normalize()
         );

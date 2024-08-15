@@ -28,4 +28,17 @@ final class DocumentationController extends AbstractController
             'types' => $this->dslDefinitions->types(),
         ]);
     }
+
+    #[Route('/documentation/dsl/{module}/{function}', name: 'documentation_dsl_function', priority: 100)]
+    public function dslFunction(string $module, string $function) : Response
+    {
+        $modules = $this->dslDefinitions->modules();
+
+        return $this->render('documentation/dsl/function.html.twig', [
+            'module_name' => $module,
+            'modules' => $modules,
+            'definition' => $this->dslDefinitions->fromModule($module)->get($function),
+            'types' => $this->dslDefinitions->types(),
+        ]);
+    }
 }

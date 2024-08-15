@@ -8,12 +8,16 @@ use function Flow\ETL\DSL\from_all;
 use Flow\ETL\{Adapter\XML\Loader\XMLLoader,
     Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer,
     Adapter\XML\XMLWriter\DOMDocumentWriter,
+    Attribute\DSL,
+    Attribute\Module,
+    Attribute\Type as DSLType,
     Extractor};
 use Flow\Filesystem\Path;
 
 /**
  * @param array<Path|string>|Path|string $path
  */
+#[DSL(module: Module::XML, type: DSLType::EXTRACTOR)]
 function from_xml(
     string|Path|array $path,
     string $xml_node_path = ''
@@ -38,6 +42,7 @@ function from_xml(
     );
 }
 
+#[DSL(module: Module::XML, type: DSLType::LOADER)]
 function to_xml(
     string|Path $path,
     string $root_element_name = 'rows',

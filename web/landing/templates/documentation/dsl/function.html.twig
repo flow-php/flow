@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    DSL - Flow PHP - {{ definition.name }} - function
+{%- endblock -%}
+
+{%- block description -%}
+    Documentation - DSL - {{ definition.name }} - function documentation
+{%- endblock -%}
+
+{% block main %}
+    <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
+        <div class="grid grid-cols-1 sm:grid-cols-6">
+            <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+                <h1 class="font-bold text-4xl mb-4">Modules</h1>
+                <ul class="mb-10 mr-6">
+                    {% for module in modules %}
+                        <li class="mb-1">
+                            <a
+                                    href="{{ path('documentation_dsl', {module: module|lower, _fragment:"dsl-functions"}) }}"
+                                    class="{% if module| slugify |lower == module_name | slugify |lower  %}text-white {% endif %}"
+
+                            >{{ module }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="sm:col-span-5">
+                <h1 id="dsl-function" class="font-bold text-4xl mb-4">Definition</h1>
+                    <hr class="text-blue-100 my-4 border-t-2 rounded" />
+                    <a href="{{ definition.githubUrl }}" target="_blank" class="text-blue-500 block mb-2" title="View on GitHub">
+                        <img src="{{ asset('images/icons/github.svg') }}" width="16" height="16" alt="feature" class="inline">
+                        source
+                    </a>
+                    <article class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
+                        {% apply spaceless %}
+                            <pre class="overflow-auto !m-0">
+                        <code id="code" class="language-php !bg-transparent" data-prismjs-no-auto-linker {{ stimulus_controller('syntax_highlight') }}>
+                            {{- definition.toString | escape('html') -}}
+                        </code>
+                    </pre>
+                        {% endapply %}
+                    </article>
+            </div>
+        </div>
+    </div>
+{% endblock %}

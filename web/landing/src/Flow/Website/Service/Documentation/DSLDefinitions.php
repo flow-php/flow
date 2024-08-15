@@ -55,6 +55,17 @@ final class DSLDefinitions
         return new self($definitions);
     }
 
+    public function get(string $name) : ?DSLDefinition
+    {
+        foreach ($this->all() as $definition) {
+            if ($definition->name() === $name) {
+                return $definition;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @return array<string>
      */
@@ -85,6 +96,9 @@ final class DSLDefinitions
             'Parquet',
             'Text',
             'XML',
+            'Filesystem',
+            'Azure Filesystem',
+            'Azure SDK',
         ];
 
         return \array_values(\array_intersect($sortedModules, $modules));
