@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS;
 
 use Flow\ETL\Adapter\ChartJS\Chart\{BarChart, LineChart, PieChart};
+use Flow\ETL\Attribute\{DSL, Module, Type};
 use Flow\ETL\Row\{EntryReference, References};
-use Flow\ETL\Attribute\DSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type;
 use Flow\Filesystem\Path;
 
 #[DSL(module: Module::CHARTJS, type: Type::HELPER)]
