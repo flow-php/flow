@@ -1,6 +1,12 @@
-## [Unreleased] - 2024-08-13
+## [Unreleased] - 2024-08-15
+
+### Added
+- [#1193](https://github.com/flow-php/flow/pull/1193) - **Links from code examples to DSL functions documentation** - [@norberttech](https://github.com/norberttech)
+- [#1193](https://github.com/flow-php/flow/pull/1193) - **each DSL function now gots her own page** - [@norberttech](https://github.com/norberttech)
+- [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1193](https://github.com/flow-php/flow/pull/1193) - **landing page code highlights are now handled by prismjs** - [@norberttech](https://github.com/norberttech)
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ## [0.9.2] - 2024-08-13
