@@ -1,22 +1,17 @@
 import {Controller} from '@hotwired/stimulus';
-import 'highlight.js/styles/github-dark.min.css';
-import php from 'highlight.js/lib/languages/php';
-import shell from 'highlight.js/lib/languages/shell';
-import json from 'highlight.js/lib/languages/json';
-import hljs from 'highlight.js/lib/core';
+import Prism from 'prismjs';
+import '../prismjs/themes/prism-flow.css';
+import '../prismjs/plugins/autolinker/autolinker.js';
+import 'prismjs/plugins/autoloader/prism-autoloader.js';
+import 'prismjs/components/prism-markup-templating.min.js';
+import 'prismjs/components/prism-php.min.js';
+import 'prismjs/components/prism-bash.min.js';
 
 /* stimulusFetch: 'lazy' */
 export default class extends Controller
 {
     initialize()
     {
-        hljs.registerLanguage('php', php);
-        hljs.registerLanguage('shell', shell);
-        hljs.registerLanguage('json', json);
-    }
-
-    connect()
-    {
-        hljs.highlightElement(this.element);
+        Prism.highlightElement(this.element);
     }
 }

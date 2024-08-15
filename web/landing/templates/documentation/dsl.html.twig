@@ -56,7 +56,7 @@
                         <div class="grid grid-cols-2 mb-2">
                             <div class="text-left">
                                 <h4 class="mb-2 inline" id="dsl-{{ definition.name }}">
-                                    <a href="#dsl-{{ definition.name }}" class="text-white">
+                                    <a href="{{ path('documentation_dsl_function', {module: definition.module|lower, function: definition.name|lower, _fragment: "dsl-function"}) }}" class="text-white">
                                         <img src="{{ asset('images/icons/link.svg') }}" width="16" height="16" alt="feature" class="inline">
                                         {{ definition.name }}
                                     </a>
@@ -71,8 +71,8 @@
                         </div>
                         <article class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
                             {% apply spaceless %}
-                            <pre class="overflow-auto m-0 p-2">
-                                <code id="code" class="language-php !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>
+                            <pre class="overflow-auto !m-0">
+                                <code id="code" class="language-php !bg-transparent" data-prismjs-no-auto-linker {{ stimulus_controller('syntax_highlight') }}>
                                     {{- definition.toString | escape('html') -}}
                                 </code>
                             </pre>

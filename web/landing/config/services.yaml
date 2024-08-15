@@ -42,3 +42,7 @@ services:
     Flow\Website\Twig\:
         resource: '../src/Flow/Website/Twig/**/*Extension.php'
         tags: [twig.extension]
+
+    Flow\Website\Twig\DSLExtension:
+        arguments:
+            $dslPath: '%dsl_definitions_path%'

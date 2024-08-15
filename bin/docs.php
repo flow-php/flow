@@ -46,6 +46,9 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php',
+            __DIR__ . '/../src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php',
+            __DIR__ . '/../src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php',
+            __DIR__ . '/../src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php',
         ];
 
         $extractor = new FunctionsExtractor(
