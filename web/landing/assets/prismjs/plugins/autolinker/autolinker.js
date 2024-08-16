@@ -8,7 +8,7 @@
         return {
             name: item.name,
             slug: item.slug,
-            module: item.attributes.find(attribute => attribute.name === 'DSL')?.arguments.module.toLowerCase()
+            module: item.attributes.find(attribute => attribute.name === 'DocumentationDSL')?.arguments.module.toLowerCase()
         };
     });
 
