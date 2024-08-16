@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Website\Service\Tests\Integration;
+namespace Flow\Website\Tests\Integration;
 
 use Flow\Website\Service\Examples;
 use PHPUnit\Framework\TestCase;

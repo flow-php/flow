@@ -16,10 +16,10 @@
         <h1 class="font-bold text-4xl mb-4">Modules</h1>
             <ul class="mb-10 mr-6">
                 {% for module in modules %}
-                    <li class="mb-1">
+                    <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
                         <a
                             href="{{ path('documentation_dsl', {module: module|lower, _fragment:"dsl-functions"}) }}"
-                            class="{% if module| slugify |lower == module_name | slugify |lower  %}text-white {% endif %}"
+                            class="{% if module | slugify | lower == module_name | slugify |lower  %}text-white {% endif %}"
 
                         >{{ module }}</a>
                         {% if module | slugify |lower == module_name | slugify |lower %}
@@ -47,37 +47,39 @@
             </p>
             {% for type in types %}
                 {% if definitions.onlyType(type).count %}
-                    <h2 id="type-{{ type }}" class="font-bold text-2xl mb-2">
+                    <h2 id="type-{{ type }}" class="font-bold text-2xl mb-2" data-dsl-type="{{ type }}">
                         <a href="#type-{{ type }}" class="text-white">
                             {{ type|humanize }}
                         </a>
                     </h2>
                     <hr class="text-blue-100 my-4 border-t-2 rounded" />
                     {% for definition in definitions.onlyType(type).all %}
-                        <div class="grid grid-cols-2 mb-2">
-                            <div class="text-left">
-                                <h4 class="mb-2 inline" id="dsl-{{ definition.name }}">
-                                    <a href="{{ path('documentation_dsl_function', {module: definition.module | slugify | lower, function: definition.name | slugify | lower, _fragment: "dsl-function"}) }}" class="text-white">
-                                        <img src="{{ asset('images/icons/link.svg') }}" width="16" height="16" alt="feature" class="inline">
-                                        {{ definition.name }}
+                        <article data-dsl-function>
+                            <div class="grid grid-cols-2 mb-2">
+                                <div class="text-left">
+                                    <h4 class="mb-2 inline" id="dsl-{{ definition.name }}">
+                                        <a href="{{ path('documentation_dsl_function', {module: definition.module | slugify | lower, function: definition.name | slugify | lower, _fragment: "dsl-function"}) }}" class="text-white">
+                                            <img src="{{ asset('images/icons/link.svg') }}" width="16" height="16" alt="feature" class="inline">
+                                            {{ definition.name }}
+                                        </a>
+                                    </h4>
+                                </div>
+                                <div class="text-right">
+                                    <a href="{{ definition.githubUrl }}" target="_blank" class="text-blue-500 ml-4 inline" title="View on GitHub" data-dsl-source-link>
+                                        <img src="{{ asset('images/icons/github.svg') }}" width="16" height="16" alt="feature" class="inline">
+                                        source
                                     </a>
-                                </h4>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <a href="{{ definition.githubUrl }}" target="_blank" class="text-blue-500 ml-4 inline" title="View on GitHub">
-                                    <img src="{{ asset('images/icons/github.svg') }}" width="16" height="16" alt="feature" class="inline">
-                                    source
-                                </a>
+                            <div class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
+                                {% apply spaceless %}
+                                <pre class="overflow-auto !m-0">
+                                    <code id="code" class="language-php" data-prismjs-no-auto-linker {{ stimulus_controller('syntax_highlight') }}>
+                                        {{- definition.toString | escape('html') -}}
+                                    </code>
+                                </pre>
+                                {% endapply %}
                             </div>
-                        </div>
-                        <article class="rounded shadow-2xl shadow-gray rounded border-gray border-2 mb-4">
-                            {% apply spaceless %}
-                            <pre class="overflow-auto !m-0">
-                                <code id="code" class="language-php !bg-transparent" data-prismjs-no-auto-linker {{ stimulus_controller('syntax_highlight') }}>
-                                    {{- definition.toString | escape('html') -}}
-                                </code>
-                            </pre>
-                            {% endapply %}
                         </article>
                     {% endfor %}
                 {% endif %}

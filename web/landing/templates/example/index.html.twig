@@ -54,7 +54,7 @@
                         <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
                         </button>
-                        <code id="code" class="!p-0 !bg-transparent language-php" data-controller="syntax-highlight" >
+                        <code id="code" class="language-php" data-controller="syntax-highlight" >
                             {{- code | escape('html') -}}
                         </code>
                     </pre>
@@ -69,7 +69,7 @@
                     <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#output" {{ stimulus_controller('clipboard') }}>
                         <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
                     </button>
-                    <code id="output" class="language-bash !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>
+                    <code id="output" class="language-bash" {{ stimulus_controller('syntax_highlight') }}>
                         {{- output | escape('html') -}}
                     </code>
                 </pre>

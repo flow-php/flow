@@ -105,7 +105,7 @@ final class DSLDefinition
     public function type() : ?string
     {
         foreach ($this->data['attributes'] as $attribute) {
-            if ($attribute['name'] === 'DSL') {
+            if ($attribute['name'] === 'DocumentationDSL') {
                 foreach ($attribute['arguments'] as $name => $argument) {
                     if ($name === 'type') {
                         return $argument;

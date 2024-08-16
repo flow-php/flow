@@ -25,6 +25,16 @@ final class Github
 
     public function contributors() : array
     {
+        if ($this->parameters->get('kernel.environment') === 'test') {
+            return [
+                [
+                    'login' => 'norberttech',
+                    'avatar_url' => 'https://avatars.githubusercontent.com/u/1921950?v=4&s=128',
+                    'html_url' => 'https://github.com/norberttech',
+                ],
+            ];
+        }
+
         $factory = new Psr17Factory();
         $client = new Client($factory, $factory);
 
@@ -63,6 +73,10 @@ final class Github
 
     public function version(string $project) : string
     {
+        if ($this->parameters->get('kernel.environment') === 'test') {
+            return 'v0.0.0';
+        }
+
         $cache = $this->cache('flow-github-version');
 
         if ($cache->has('version')) {

@@ -58,4 +58,7 @@ return [
     'prismjs/components/prism-php.min.js' => [
         'version' => '1.29.0',
     ],
+    'prismjs/components/prism-json.min.js' => [
+        'version' => '1.29.0',
+    ],
 ];
