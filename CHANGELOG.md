@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-08-16
 
 ### Added
+- [#1195](https://github.com/flow-php/flow/pull/1195) - **Functional tests for flow-php.com website** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **Links from code examples to DSL functions documentation** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **each DSL function now gots her own page** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
