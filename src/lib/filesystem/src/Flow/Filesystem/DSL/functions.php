@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\DSL;
 
-use Flow\ETL\Attribute\{DSL, Module, Type};
+use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Flow\Filesystem\{Filesystem, FilesystemTable, Partition, Partitions, Path, Protocol};
 
-#[DSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function protocol(string $protocol) : Protocol
 {
     return new Protocol($protocol);
 }
 
-#[DSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function partition(string $name, string $value) : Partition
 {
     return new Partition($name, $value);
 }
 
-#[DSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function partitions(Partition ...$partition) : Partitions
 {
     return new Partitions(...$partition);
@@ -39,7 +39,7 @@ function partitions(Partition ...$partition) : Partitions
  *
  * @param array<string, mixed> $options
  */
-#[DSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function path(string $path, array $options = []) : Path
 {
     return new Path($path, $options);
@@ -50,13 +50,13 @@ function path(string $path, array $options = []) : Path
  *
  * @param array<string, mixed> $options
  */
-#[DSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function path_real(string $path, array $options = []) : Path
 {
     return Path::realpath($path, $options);
 }
 
-#[DSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function native_local_filesystem() : NativeLocalFilesystem
 {
     return new NativeLocalFilesystem();
@@ -67,7 +67,7 @@ function native_local_filesystem() : NativeLocalFilesystem
  * Filesystems can be also mounted later.
  * If no filesystems are provided, local filesystem is mounted.
  */
-#[DSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function fstab(Filesystem ...$filesystems) : FilesystemTable
 {
     if (!\count($filesystems)) {

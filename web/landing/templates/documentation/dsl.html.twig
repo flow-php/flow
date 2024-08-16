@@ -57,7 +57,7 @@
                         <div class="grid grid-cols-2 mb-2">
                             <div class="text-left">
                                 <h4 class="mb-2 inline" id="dsl-{{ definition.name }}">
-                                    <a href="{{ path('documentation_dsl_function', {module: definition.module |lower, function: definition.name|lower, _fragment: "dsl-function"}) }}" class="text-white">
+                                    <a href="{{ path('documentation_dsl_function', {module: definition.module | slugify | lower, function: definition.name | slugify | lower, _fragment: "dsl-function"}) }}" class="text-white">
                                         <img src="{{ asset('images/icons/link.svg') }}" width="16" height="16" alt="feature" class="inline">
                                         {{ definition.name }}
                                     </a>

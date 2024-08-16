@@ -8,7 +8,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Doctrine\DBAL\{ArrayParameterType as DbalArrayType, Connection, ParameterType as DbalParameterType};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Attribute\DSL,
+use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\Module,
     Attribute\Type as DSLType
 };
@@ -18,7 +18,7 @@ use Flow\ETL\{Attribute\DSL,
  * @param string $query
  * @param QueryParameter ...$parameters
  */
-#[DSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function dbal_dataframe_factory(
     array|Connection $connection,
     string $query,
@@ -38,7 +38,7 @@ function dbal_dataframe_factory(
  *
  * @throws InvalidArgumentException
  */
-#[DSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function from_dbal_limit_offset(
     Connection $connection,
     string|Table $table,
@@ -60,7 +60,7 @@ function from_dbal_limit_offset(
  * @param int $page_size
  * @param null|int $maximum
  */
-#[DSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function from_dbal_limit_offset_qb(
     Connection $connection,
     QueryBuilder $queryBuilder,
@@ -79,7 +79,7 @@ function from_dbal_limit_offset_qb(
  * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
  * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
  */
-#[DSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function dbal_from_queries(
     Connection $connection,
     string $query,
@@ -98,7 +98,7 @@ function dbal_from_queries(
  * @param array<string, mixed>|list<mixed> $parameters
  * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
  */
-#[DSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function dbal_from_query(
     Connection $connection,
     string $query,
@@ -127,7 +127,7 @@ function dbal_from_query(
  *
  * @throws InvalidArgumentException
  */
-#[DSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
 function to_dbal_table_insert(
     array|Connection $connection,
     string $table,
@@ -152,7 +152,7 @@ function to_dbal_table_insert(
  *
  * @throws InvalidArgumentException
  */
-#[DSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
 function to_dbal_table_update(
     array|Connection $connection,
     string $table,

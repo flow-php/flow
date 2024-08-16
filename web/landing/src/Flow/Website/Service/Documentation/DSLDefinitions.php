@@ -55,10 +55,10 @@ final class DSLDefinitions
         return new self($definitions);
     }
 
-    public function get(string $name) : ?DSLDefinition
+    public function get(string $slug) : ?DSLDefinition
     {
         foreach ($this->all() as $definition) {
-            if ($definition->name() === $name) {
+            if ($definition->slug() === $slug) {
                 return $definition;
             }
         }
@@ -85,12 +85,12 @@ final class DSLDefinitions
         \sort($modules);
 
         $sortedModules = [
-            'ChartJS',
             'Core',
             'CSV',
             'Doctrine',
             'Elastic Search',
             'Google Sheet',
+            'ChartJS',
             'JSON',
             'MeiliSearch',
             'Parquet',

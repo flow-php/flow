@@ -8,43 +8,43 @@ use Flow\Azure\SDK\AuthorizationFactory\SharedKeyFactory;
 use Flow\Azure\SDK\BlobService\Configuration;
 use Flow\Azure\SDK\BlobService\URLFactory\{AzureURLFactory, AzuriteURLFactory};
 use Flow\Azure\SDK\{AuthorizationFactory, BlobService, BlobServiceInterface, HttpFactory, URLFactory};
-use Flow\ETL\Attribute\{DSL, Module, Type};
+use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Http\Discovery\{Psr17FactoryDiscovery, Psr18ClientDiscovery};
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\{RequestFactoryInterface, StreamFactoryInterface};
 use Psr\Log\{LoggerInterface, NullLogger};
 
-#[DSL(module: Module::AZURE_SDK, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azurite_url_factory(string $host = 'localhost', string $port = '10000', bool $secure = false) : AzuriteURLFactory
 {
     return new AzuriteURLFactory($host, $port, $secure);
 }
 
-#[DSL(module: Module::AZURE_SDK, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azure_shared_key_authorization_factory(#[\SensitiveParameter] string $account, #[\SensitiveParameter] string $key) : SharedKeyFactory
 {
     return new SharedKeyFactory($account, $key);
 }
 
-#[DSL(module: Module::AZURE_SDK, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azure_blob_service_config(string $account, string $container) : Configuration
 {
     return new Configuration($account, $container);
 }
 
-#[DSL(module: Module::AZURE_SDK, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azure_url_factory(string $host = 'blob.core.windows.net') : AzureURLFactory
 {
     return new AzureURLFactory($host);
 }
 
-#[DSL(module: Module::AZURE_SDK, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azure_http_factory(RequestFactoryInterface $request_factory, StreamFactoryInterface $stream_factory) : HttpFactory
 {
     return new HttpFactory($request_factory, $stream_factory);
 }
 
-#[DSL(module: Module::AZURE_SDK, type: Type::HELPER)]
+#[DocumentationDSL(module: Module::AZURE_SDK, type: Type::HELPER)]
 function azure_blob_service(
     Configuration $configuration,
     AuthorizationFactory $azure_authorization_factory,

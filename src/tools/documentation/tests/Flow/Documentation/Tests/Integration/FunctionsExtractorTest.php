@@ -84,6 +84,7 @@ final class FunctionsExtractorTest extends TestCase
                 'doc_comment' => null,
                 'repository_path' => 'functions.php',
                 'start_line_in_file' => 10,
+                'slug' => 'dosomething',
             ],
             $functions[0]->normalize()
         );

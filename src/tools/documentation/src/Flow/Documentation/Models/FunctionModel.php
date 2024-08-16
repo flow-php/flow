@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use Cocur\Slugify\Slugify;
+
 final class FunctionModel
 {
     public function __construct(
         public readonly string $repositoryPath,
         public readonly int|false $startLineInFile,
+        public readonly string $slug,
         public readonly string $name,
         public readonly string $namespace,
         public readonly ParametersModel $parameters,
@@ -24,6 +27,7 @@ final class FunctionModel
         return new self(
             $data['repository_path'],
             $data['start_line_in_file'],
+            $data['slug'],
             $data['name'],
             $data['namespace'],
             ParametersModel::fromArray($data['parameters']),
@@ -38,6 +42,7 @@ final class FunctionModel
         return new self(
             $relativePath,
             $reflectionFunction->getStartLine(),
+            (new Slugify())->slugify($reflectionFunction->getShortName()),
             $reflectionFunction->getShortName(),
             $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
@@ -52,6 +57,7 @@ final class FunctionModel
         return [
             'repository_path' => $this->repositoryPath,
             'start_line_in_file' => $this->startLineInFile,
+            'slug' => $this->slug,
             'name' => $this->name,
             'namespace' => $this->namespace,
             'parameters' => $this->parameters->normalize(),

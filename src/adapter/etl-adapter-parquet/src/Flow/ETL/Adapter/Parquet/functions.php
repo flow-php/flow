@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Parquet;
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Attribute\DSL, Attribute\Module, Attribute\Type as DSLType, Extractor, Loader};
+use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType, Extractor, Loader};
 use Flow\Filesystem\Path;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\{ByteOrder, Options};
@@ -18,7 +18,7 @@ use Flow\Parquet\{ByteOrder, Options};
  *
  * @return Extractor
  */
-#[DSL(module: Module::PARQUET, type: DSLType::EXTRACTOR)]
+#[DocumentationDSL(module: Module::PARQUET, type: DSLType::EXTRACTOR)]
 function from_parquet(
     string|Path|array $path,
     array $columns = [],
@@ -60,7 +60,7 @@ function from_parquet(
  *
  * @return Loader
  */
-#[DSL(module: Module::PARQUET, type: DSLType::LOADER)]
+#[DocumentationDSL(module: Module::PARQUET, type: DSLType::LOADER)]
 function to_parquet(
     string|Path $path,
     ?Options $options = null,

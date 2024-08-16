@@ -7,12 +7,13 @@
     const functions = window.flow.dsl.map(function (item) {
         return {
             name: item.name,
+            slug: item.slug,
             module: item.attributes.find(attribute => attribute.name === 'DSL')?.arguments.module.toLowerCase()
         };
     });
 
     // URL template
-    const urlTemplate = "/documentation/dsl/{module_name}/{function_name}#dsl-function";
+    const urlTemplate = "/documentation/dsl/{module_name}/{function_name}/#dsl-function";
 
     Prism.hooks.add('after-highlight', function(env) {
 
@@ -32,7 +33,7 @@
 
             if (definition) {
                 const link = document.createElement('a');
-                link.href = urlTemplate.replace('{module_name}', definition.module).replace('{function_name}', definition.name);
+                link.href = urlTemplate.replace('{module_name}', definition.module).replace('{function_name}', definition.slug).toLowerCase();
                 link.target = '_blank';
                 link.textContent = functionName;
                 link.className = token.className;
