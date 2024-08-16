@@ -7,6 +7,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1196](https://github.com/flow-php/flow/pull/1196) - **Duplicate Module/Type enums in website to avoid dependencies and keep boundaries clean** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **landing page code highlights are now handled by prismjs** - [@norberttech](https://github.com/norberttech)
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
