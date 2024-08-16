@@ -10,6 +10,8 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [443c48](https://github.com/flow-php/flow/commit/443c4828184a20ed355402679f4aefbc10b3e6b4) - **codding standards** - [@norberttech](https://github.com/norberttech)
+- [d66b2d](https://github.com/flow-php/flow/commit/d66b2d3d0784c0fc4e238a056bacfae28ca5bb31) - **building landing page documnetation** - [@norberttech](https://github.com/norberttech)
 - [#1194](https://github.com/flow-php/flow/pull/1194) - **Generating links to dsl functions** - [@norberttech](https://github.com/norberttech)
 
 ## [0.9.2] - 2024-08-13
