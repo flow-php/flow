@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
+use Flow\Website\Model\Documentation\Module;
 use Flow\Website\Service\Documentation\DSLDefinitions;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +25,7 @@ final class DocumentationController extends AbstractController
         return $this->render('documentation/dsl.html.twig', [
             'module_name' => $module,
             'modules' => $modules,
-            'definitions' => $this->dslDefinitions->fromModule($module),
+            'definitions' => $this->dslDefinitions->fromModule(Module::fromName($module)),
             'types' => $this->dslDefinitions->types(),
         ]);
     }
@@ -37,7 +38,7 @@ final class DocumentationController extends AbstractController
         return $this->render('documentation/dsl/function.html.twig', [
             'module_name' => $module,
             'modules' => $modules,
-            'definition' => $this->dslDefinitions->fromModule($module)->get($function),
+            'definition' => $this->dslDefinitions->fromModule(Module::fromName($module))->get($function),
             'types' => $this->dslDefinitions->types(),
         ]);
     }

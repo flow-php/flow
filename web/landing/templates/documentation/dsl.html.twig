@@ -18,16 +18,16 @@
                 {% for module in modules %}
                     <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
                         <a
-                            href="{{ path('documentation_dsl', {module: module|lower, _fragment:"dsl-functions"}) }}"
-                            class="{% if module | slugify | lower == module_name | slugify |lower  %}text-white {% endif %}"
+                            href="{{ path('documentation_dsl', {module: module.name | lower, _fragment:"dsl-functions"}) }}"
+                            class="{% if module.name | lower == module_name  %}text-white {% endif %}"
 
-                        >{{ module }}</a>
-                        {% if module | slugify |lower == module_name | slugify |lower %}
+                        >{{ module.value }}</a>
+                        {% if module.name | lower == module_name | lower %}
                         <ul class="list-disc pl-6 mt-2">
                             {% for type in types %}
                                 {% if definitions.onlyType(type).count %}
                                     <li class="text-sm">
-                                        <a href="#type-{{ type }}">{{ type|humanize }}</a>
+                                        <a href="#type-{{ type.name }}">{{ type.value }}</a>
                                     </li>
                                 {% endif %}
                             {% endfor %}
@@ -47,9 +47,9 @@
             </p>
             {% for type in types %}
                 {% if definitions.onlyType(type).count %}
-                    <h2 id="type-{{ type }}" class="font-bold text-2xl mb-2" data-dsl-type="{{ type }}">
-                        <a href="#type-{{ type }}" class="text-white">
-                            {{ type|humanize }}
+                    <h2 id="type-{{ type.value }}" class="font-bold text-2xl mb-2" data-dsl-type="{{ type.value }}">
+                        <a href="#type-{{ type.value }}" class="text-white">
+                            {{ type.name }}
                         </a>
                     </h2>
                     <hr class="text-blue-100 my-4 border-t-2 rounded" />
@@ -58,7 +58,7 @@
                             <div class="grid grid-cols-2 mb-2">
                                 <div class="text-left">
                                     <h4 class="mb-2 inline" id="dsl-{{ definition.name }}">
-                                        <a href="{{ path('documentation_dsl_function', {module: definition.module | slugify | lower, function: definition.name | slugify | lower, _fragment: "dsl-function"}) }}" class="text-white">
+                                        <a href="{{ path('documentation_dsl_function', {module: definition.module.name | lower, function: definition.name | slugify | lower, _fragment: "dsl-function"}) }}" class="text-white">
                                             <img src="{{ asset('images/icons/link.svg') }}" width="16" height="16" alt="feature" class="inline">
                                             {{ definition.name }}
                                         </a>

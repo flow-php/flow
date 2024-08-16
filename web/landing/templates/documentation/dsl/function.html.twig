@@ -17,10 +17,10 @@
                     {% for module in modules %}
                         <li class="mb-1">
                             <a
-                                href="{{ path('documentation_dsl', {module: module|lower, _fragment:"dsl-functions"}) }}"
-                                class="{% if module| slugify |lower == module_name | slugify |lower  %}text-white {% endif %}"
+                                href="{{ path('documentation_dsl', {module: module.name | lower, _fragment:"dsl-functions"}) }}"
+                                class="{% if module.name |lower == module_name |lower  %}text-white {% endif %}"
 
-                            >{{ module }}</a>
+                            >{{ module.value }}</a>
                         </li>
                     {% endfor %}
                 </ul>
