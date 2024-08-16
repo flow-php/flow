@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
-use Flow\ETL\Attribute\{DSL, Module, Type};
+use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Flow\ETL\Extractor;
 use Google\Client;
 use Google\Service\Sheets;
@@ -17,7 +17,7 @@ use Google\Service\Sheets;
  * @param int $rows_per_page - how many rows per page to fetch from Google Sheets API
  * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
  */
-#[DSL(module: Module::GOOGLE_SHEET, type: Type::EXTRACTOR)]
+#[DocumentationDSL(module: Module::GOOGLE_SHEET, type: Type::EXTRACTOR)]
 function from_google_sheet(
     array|Sheets $auth_config,
     string $spreadsheet_id,
@@ -55,7 +55,7 @@ function from_google_sheet(
  * @param int $rows_per_page - how many rows per page to fetch from Google Sheets API
  * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
  */
-#[DSL(module: Module::GOOGLE_SHEET, type: Type::EXTRACTOR)]
+#[DocumentationDSL(module: Module::GOOGLE_SHEET, type: Type::EXTRACTOR)]
 function from_google_sheet_columns(
     array|Sheets $auth_config,
     string $spreadsheet_id,

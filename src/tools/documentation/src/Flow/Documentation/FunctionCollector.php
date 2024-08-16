@@ -14,7 +14,7 @@ class FunctionCollector extends NodeVisitorAbstract
      */
     public array $functions = [];
 
-    private $currentNamespace = '';
+    private string $currentNamespace = '';
 
     public function enterNode(Node $node) : void
     {

@@ -10,6 +10,7 @@ final class DSLDefinition
      * @param array{
      *      repository_path: string,
      *      start_line_in_file: int|false,
+     *      slug: string,
      *      name: string,
      *      namespace: string,
      *      parameters: array<mixed>,
@@ -62,6 +63,11 @@ final class DSLDefinition
     public function name() : string
     {
         return $this->data['name'];
+    }
+
+    public function slug() : string
+    {
+        return $this->data['slug'];
     }
 
     public function toString() : string
