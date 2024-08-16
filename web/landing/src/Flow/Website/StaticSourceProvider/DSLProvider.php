@@ -24,8 +24,9 @@ final class DSLProvider implements SourceProvider
 
         foreach ($this->dslDefinitions->all() as $definition) {
             if ($definition->module() === null) {
-                dd($definition);
+                throw new \RuntimeException('Module is required for DSL definition, non given for: ' . $definition->path());
             }
+
             $sources[] = new Source('documentation_dsl_function', ['module' => (new Slugify())->slugify($definition->module()), 'function' => $definition->slug()]);
         }
 

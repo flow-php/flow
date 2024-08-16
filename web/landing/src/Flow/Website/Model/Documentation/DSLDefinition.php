@@ -23,6 +23,11 @@ final class DSLDefinition
     {
     }
 
+    public function path() : string
+    {
+        return $this->data['repository_path'] . '/' . $this->data['name'];
+    }
+
     public function data() : array
     {
         return $this->data;
@@ -48,7 +53,7 @@ final class DSLDefinition
     public function module() : ?string
     {
         foreach ($this->data['attributes'] as $attribute) {
-            if ($attribute['name'] === 'DSL') {
+            if ($attribute['name'] === 'DocumentationDSL') {
                 foreach ($attribute['arguments'] as $name => $argument) {
                     if ($name === 'module') {
                         return $argument;
