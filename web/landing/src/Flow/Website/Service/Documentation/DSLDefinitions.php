@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Documentation;
 
-use Cocur\Slugify\Slugify;
-use Flow\Website\Model\Documentation\DSLDefinition;
+use Flow\Website\Model\Documentation\{DSLDefinition, Module, Type};
 
 final class DSLDefinitions
 {
@@ -38,7 +37,7 @@ final class DSLDefinitions
         return \count($this->definitions);
     }
 
-    public function fromModule(string $module) : self
+    public function fromModule(Module $module) : self
     {
         $definitions = [];
 
@@ -47,7 +46,7 @@ final class DSLDefinitions
                 continue;
             }
 
-            if ((new Slugify())->slugify($definition->module()) === (new Slugify())->slugify($module)) {
+            if ($definition->module() === $module) {
                 $definitions[] = $definition->data();
             }
         }
@@ -76,35 +75,17 @@ final class DSLDefinitions
         foreach ($this->all() as $definition) {
             $module = $definition->module();
 
-            if ($module !== null) {
+            if ($module !== null && !\in_array($module, $modules, true)) {
                 $modules[] = $module;
             }
         }
 
-        $modules = \array_unique(\array_filter($modules));
-        \sort($modules);
+        uasort($modules, fn (Module $a, Module $b) => $a->priority() <=> $b->priority());
 
-        $sortedModules = [
-            'Core',
-            'CSV',
-            'Doctrine',
-            'Elastic Search',
-            'Google Sheet',
-            'ChartJS',
-            'JSON',
-            'MeiliSearch',
-            'Parquet',
-            'Text',
-            'XML',
-            'Filesystem',
-            'Azure Filesystem',
-            'Azure SDK',
-        ];
-
-        return \array_values(\array_intersect($sortedModules, $modules));
+        return $modules;
     }
 
-    public function onlyType(?string $type) : self
+    public function onlyType(?Type $type) : self
     {
         $definitions = [];
 
@@ -122,27 +103,14 @@ final class DSLDefinitions
         $types = [];
 
         foreach ($this->all() as $definition) {
-            $types[] = $definition->type();
+            $type = $definition->type();
+
+            if ($type !== null && !\in_array($type, $types, true)) {
+                $types[] = $type;
+            }
         }
 
-        $types = \array_unique(\array_filter($types));
-        \sort($types);
-        $sortedTypes = [
-            'data frame',
-            'extractors',
-            'loaders',
-            'helpers',
-            'entries',
-            'types',
-            'schema',
-            'aggregating functions',
-            'scalar functions',
-            'window functions',
-            'comparisons',
-            'transformers',
-        ];
-
-        $types = \array_values(\array_intersect($sortedTypes, $types));
+        uasort($types, fn (Type $a, Type $b) => $a->priority() <=> $b->priority());
 
         return $types;
     }

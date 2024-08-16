@@ -45,13 +45,13 @@ final class DSLDefinition
         return $this->data['doc_comment'] !== null;
     }
 
-    public function module() : ?string
+    public function module() : ?Module
     {
         foreach ($this->data['attributes'] as $attribute) {
             if ($attribute['name'] === 'DocumentationDSL') {
                 foreach ($attribute['arguments'] as $name => $argument) {
                     if ($name === 'module') {
-                        return $argument;
+                        return Module::fromName($argument);
                     }
                 }
             }
@@ -102,13 +102,13 @@ final class DSLDefinition
         return $output;
     }
 
-    public function type() : ?string
+    public function type() : ?Type
     {
         foreach ($this->data['attributes'] as $attribute) {
             if ($attribute['name'] === 'DocumentationDSL') {
                 foreach ($attribute['arguments'] as $name => $argument) {
                     if ($name === 'type') {
-                        return $argument;
+                        return Type::fromName($argument);
                     }
                 }
             }

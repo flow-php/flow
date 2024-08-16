@@ -6,18 +6,18 @@ namespace Flow\ETL\Attribute;
 
 enum Module : string
 {
-    case AZURE_FILESYSTEM = 'Azure Filesystem';
-    case AZURE_SDK = 'Azure SDK';
-    case CHARTJS = 'ChartJS';
-    case CORE = 'Core';
+    case AZURE_FILESYSTEM = 'AZURE_FILESYSTEM';
+    case AZURE_SDK = 'AZURE_SDK';
+    case CHART_JS = 'CHART_JS';
+    case CORE = 'CORE';
     case CSV = 'CSV';
-    case DOCTRINE = 'Doctrine';
-    case ELASTICSEARCH = 'Elastic Search';
-    case FILESYSTEM = 'Filesystem';
-    case GOOGLE_SHEET = 'Google Sheet';
+    case DOCTRINE = 'DOCTRINE';
+    case ELASTIC_SEARCH = 'ELASTIC_SEARCH';
+    case FILESYSTEM = 'FILESYSTEM';
+    case GOOGLE_SHEET = 'GOOGLE_SHEET';
     case JSON = 'JSON';
-    case MEILI_SEARCH = 'MeiliSearch';
-    case PARQUET = 'Parquet';
-    case TEXT = 'Text';
+    case MEILI_SEARCH = 'MEILI_SEARCH';
+    case PARQUET = 'PARQUET';
+    case TEXT = 'TEXT';
     case XML = 'XML';
 }
