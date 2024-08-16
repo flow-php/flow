@@ -23,11 +23,6 @@ final class DSLDefinition
     {
     }
 
-    public function path() : string
-    {
-        return $this->data['repository_path'] . '/' . $this->data['name'];
-    }
-
     public function data() : array
     {
         return $this->data;
@@ -68,6 +63,11 @@ final class DSLDefinition
     public function name() : string
     {
         return $this->data['name'];
+    }
+
+    public function path() : string
+    {
+        return $this->data['repository_path'] . '/' . $this->data['name'];
     }
 
     public function slug() : string
