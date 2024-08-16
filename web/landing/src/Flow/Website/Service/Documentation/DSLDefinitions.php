@@ -66,7 +66,7 @@ final class DSLDefinitions
     }
 
     /**
-     * @return array<string>
+     * @return array<Module>
      */
     public function modules() : array
     {
