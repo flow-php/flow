@@ -30,8 +30,8 @@ final class Github
                 [
                     'login' => 'norberttech',
                     'avatar_url' => 'https://avatars.githubusercontent.com/u/1921950?v=4&s=128',
-                    'html_url' => 'https://github.com/norberttech'
-                ]
+                    'html_url' => 'https://github.com/norberttech',
+                ],
             ];
         }
 

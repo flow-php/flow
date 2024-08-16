@@ -9,14 +9,23 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class DocumentationTest extends WebTestCase
 {
-    protected static function getKernelClass(): string
+    public function test_documentation_dsl_function_page() : void
     {
-        return Kernel::class;
+        $client = self::createClient();
+
+        $client->request('GET', '/documentation/dsl/core/df');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-dsl-function]');
+        self::assertSelectorExists('[data-dsl-source-link]');
+        self::assertStringContainsString('https://github.com', $client->getCrawler()->filter('[data-dsl-source-link]')->attr('href'));
+        self::assertSelectorExists('pre');
+        self::assertSelectorExists('code.language-php');
     }
 
     public function test_documentation_dsl_page() : void
     {
-        $client = static::createClient();
+        $client = self::createClient();
 
         $client->request('GET', '/documentation/dsl');
 
@@ -28,17 +37,8 @@ final class DocumentationTest extends WebTestCase
         self::assertEquals(10, $client->getCrawler()->filter('[data-dsl-type]')->count());
     }
 
-    public function test_documentation_dsl_function_page() : void
+    protected static function getKernelClass() : string
     {
-        $client = static::createClient();
-
-        $client->request('GET', '/documentation/dsl/core/df');
-
-        self::assertResponseIsSuccessful();
-        self::assertSelectorExists('[data-dsl-function]');
-        self::assertSelectorExists('[data-dsl-source-link]');
-        self::assertStringContainsString('https://github.com', $client->getCrawler()->filter('[data-dsl-source-link]')->attr('href'));
-        self::assertSelectorExists('pre');
-        self::assertSelectorExists('code.language-php');
+        return Kernel::class;
     }
 }
