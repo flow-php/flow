@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-15
+## [Unreleased] - 2024-08-16
 
 ### Added
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **Links from code examples to DSL functions documentation** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +8,9 @@
 ### Changed
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **landing page code highlights are now handled by prismjs** - [@norberttech](https://github.com/norberttech)
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1194](https://github.com/flow-php/flow/pull/1194) - **Generating links to dsl functions** - [@norberttech](https://github.com/norberttech)
 
 ## [0.9.2] - 2024-08-13
 
