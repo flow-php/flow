@@ -12,6 +12,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [eaa783](https://github.com/flow-php/flow/commit/eaa78340e9730fcd109d927a3f52e7a3f4e5ac2a) - **documentation homepage** - [@norberttech](https://github.com/norberttech)
 - [904b6a](https://github.com/flow-php/flow/commit/904b6a8cc199f76e1a8ecebbf679404ff30d34c2) - **lowercasing module names in dsl routes provider** - [@norberttech](https://github.com/norberttech)
 - [b1a9cd](https://github.com/flow-php/flow/commit/b1a9cd539511a12118d0ff7720378da49df3ebda) - **autolinker prism plugin** - [@norberttech](https://github.com/norberttech)
 - [443c48](https://github.com/flow-php/flow/commit/443c4828184a20ed355402679f4aefbc10b3e6b4) - **codding standards** - [@norberttech](https://github.com/norberttech)
