@@ -17,13 +17,13 @@ final class DocumentationController extends AbstractController
     ) {
     }
 
-    #[Route('/documentation/dsl/{module}', name: 'documentation_dsl', priority: 100)]
-    public function dsl(string $module = 'core') : Response
+    #[Route('/documentation/dsl', name: 'documentation', priority: 100)]
+    public function dsl() : Response
     {
         $modules = $this->dslDefinitions->modules();
 
         return $this->render('documentation/dsl.html.twig', [
-            'module_name' => $module,
+            'module_name' => $module = 'core',
             'modules' => $modules,
             'definitions' => $this->dslDefinitions->fromModule(Module::fromName($module)),
             'types' => $this->dslDefinitions->types(),
@@ -39,6 +39,19 @@ final class DocumentationController extends AbstractController
             'module_name' => $module,
             'modules' => $modules,
             'definition' => $this->dslDefinitions->fromModule(Module::fromName($module))->get($function),
+            'types' => $this->dslDefinitions->types(),
+        ]);
+    }
+
+    #[Route('/documentation/dsl/{module}', name: 'documentation_dsl', priority: 100)]
+    public function dslModule(string $module = 'core') : Response
+    {
+        $modules = $this->dslDefinitions->modules();
+
+        return $this->render('documentation/dsl.html.twig', [
+            'module_name' => $module,
+            'modules' => $modules,
+            'definitions' => $this->dslDefinitions->fromModule(Module::fromName($module)),
             'types' => $this->dslDefinitions->types(),
         ]);
     }

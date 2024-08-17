@@ -27,7 +27,7 @@
                             {% for type in types %}
                                 {% if definitions.onlyType(type).count %}
                                     <li class="text-sm">
-                                        <a href="#type-{{ type.name }}">{{ type.value }}</a>
+                                        <a href="#type-{{ type.name|lower }}">{{ type.value }}</a>
                                     </li>
                                 {% endif %}
                             {% endfor %}
@@ -47,8 +47,8 @@
             </p>
             {% for type in types %}
                 {% if definitions.onlyType(type).count %}
-                    <h2 id="type-{{ type.value }}" class="font-bold text-2xl mb-2" data-dsl-type="{{ type.value }}">
-                        <a href="#type-{{ type.value }}" class="text-white">
+                    <h2 id="type-{{ type.name|lower }}" class="font-bold text-2xl mb-2" data-dsl-type="{{ type.value }}">
+                        <a href="#type-{{ type.name|lower }}" class="text-white">
                             {{ type.name }}
                         </a>
                     </h2>

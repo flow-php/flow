@@ -18,7 +18,7 @@ final class DSLProvider implements SourceProvider
         $sources = [];
 
         foreach ($this->dslDefinitions->modules() as $module) {
-            $sources[] = new Source('documentation_dsl', ['module' => $module->name]);
+            $sources[] = new Source('documentation_dsl', ['module' => mb_strtolower($module->name)]);
         }
 
         foreach ($this->dslDefinitions->all() as $definition) {
