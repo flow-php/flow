@@ -26,7 +26,7 @@ final class DSLProvider implements SourceProvider
                 throw new \RuntimeException('Module is required for DSL definition, non given for: ' . $definition->path());
             }
 
-            $sources[] = new Source('documentation_dsl_function', ['module' => $definition->module()->name, 'function' => $definition->slug()]);
+            $sources[] = new Source('documentation_dsl_function', ['module' => mb_strtolower($definition->module()->name), 'function' => $definition->slug()]);
         }
 
         return $sources;
