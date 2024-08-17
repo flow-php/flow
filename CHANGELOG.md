@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-16
+## [Unreleased] - 2024-08-17
 
 ### Added
 - [#1195](https://github.com/flow-php/flow/pull/1195) - **Functional tests for flow-php.com website** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +12,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [904b6a](https://github.com/flow-php/flow/commit/904b6a8cc199f76e1a8ecebbf679404ff30d34c2) - **lowercasing module names in dsl routes provider** - [@norberttech](https://github.com/norberttech)
 - [b1a9cd](https://github.com/flow-php/flow/commit/b1a9cd539511a12118d0ff7720378da49df3ebda) - **autolinker prism plugin** - [@norberttech](https://github.com/norberttech)
 - [443c48](https://github.com/flow-php/flow/commit/443c4828184a20ed355402679f4aefbc10b3e6b4) - **codding standards** - [@norberttech](https://github.com/norberttech)
 - [d66b2d](https://github.com/flow-php/flow/commit/d66b2d3d0784c0fc4e238a056bacfae28ca5bb31) - **building landing page documnetation** - [@norberttech](https://github.com/norberttech)
