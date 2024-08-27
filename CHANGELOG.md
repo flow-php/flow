@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-17
+## [Unreleased] - 2024-08-27
 
 ### Added
 - [#1195](https://github.com/flow-php/flow/pull/1195) - **Functional tests for flow-php.com website** - [@norberttech](https://github.com/norberttech)
