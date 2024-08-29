@@ -16,16 +16,14 @@ final class EntryNormalizer
 {
     public function __construct(
         private readonly PHPValueNormalizer $valueNormalizer,
-        private readonly string $attributePrefix = '_',
-        private readonly string $dateTimeFormat = PHPValueNormalizer::DATE_TIME_FORMAT
     ) {
 
     }
 
     public function normalize(Entry $entry) : XMLNode|XMLAttribute
     {
-        if (\str_starts_with($entry->name(), $this->attributePrefix)) {
-            return new XMLAttribute(\substr($entry->name(), \strlen($this->attributePrefix)), $entry->toString());
+        if (\str_starts_with($entry->name(), $this->valueNormalizer->attributePrefix)) {
+            return new XMLAttribute(\substr($entry->name(), \strlen($this->valueNormalizer->attributePrefix)), $entry->toString());
         }
 
         if ($entry instanceof ListEntry) {
@@ -45,7 +43,7 @@ final class EntryNormalizer
             IntegerEntry::class => XMLNode::flatNode($entry->name(), (string) $entry->value()),
             FloatEntry::class => XMLNode::flatNode($entry->name(), (string) $entry->value()),
             BooleanEntry::class => XMLNode::flatNode($entry->name(), $entry->value() ? 'true' : 'false'),
-            DateTimeEntry::class => XMLNode::flatNode($entry->name(), $entry->value()?->format($this->dateTimeFormat)),
+            DateTimeEntry::class => XMLNode::flatNode($entry->name(), $entry->value()?->format($this->valueNormalizer->dateTimeFormat)),
             EnumEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             JsonEntry::class => XMLNode::flatNode($entry->name(), $entry->value()),
             UuidEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
@@ -74,7 +72,7 @@ final class EntryNormalizer
         }
 
         foreach ($listValue as $value) {
-            $node = $node->append($this->valueNormalizer->normalize('element', $type->element()->type(), $value));
+            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->listElementName, $type->element()->type(), $value));
         }
 
         return $node;
@@ -125,8 +123,8 @@ final class EntryNormalizer
         $type = $entry->type();
 
         foreach ($mapValue as $key => $value) {
-            $node = $node->append($this->valueNormalizer->normalize('key', $type->key()->type(), $key));
-            $node = $node->append($this->valueNormalizer->normalize('value', $type->value()->type(), $value));
+            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementKeyName, $type->key()->type(), $key));
+            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementValueName, $type->value()->type(), $value));
         }
 
         return $node;

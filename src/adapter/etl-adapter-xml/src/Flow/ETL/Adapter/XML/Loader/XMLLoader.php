@@ -13,6 +13,22 @@ use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class XMLLoader implements Closure, Loader, Loader\FileLoader
 {
+    private string $attributePrefix;
+
+    private string $dateTimeFormat;
+
+    private string $listElementName = 'element';
+
+    private string $mapElementKeyName = 'key';
+
+    private string $mapElementName = 'element';
+
+    private string $mapElementValueName = 'value';
+
+    private string $rootElementName;
+
+    private string $rowElementName;
+
     /**
      * @var array<string, int>
      */
@@ -20,12 +36,16 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
 
     public function __construct(
         private readonly Path $path,
-        private readonly string $rootElementName,
-        private readonly string $rowElementName,
-        private readonly string $attributePrefix,
-        private readonly string $dateTimeFormat,
+        string $rootElementName,
+        string $rowElementName,
+        string $attributePrefix,
+        string $dateTimeFormat,
         private readonly XMLWriter $xmlWriter
     ) {
+        $this->rootElementName = $rootElementName;
+        $this->rowElementName = $rowElementName;
+        $this->attributePrefix = $attributePrefix;
+        $this->dateTimeFormat = $dateTimeFormat;
     }
 
     public function closure(FlowContext $context) : void
@@ -48,14 +68,76 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
     {
         $normalizer = new RowsNormalizer(
             new EntryNormalizer(
-                new PHPValueNormalizer($context->config->caster(), $this->attributePrefix, $this->dateTimeFormat),
-                $this->attributePrefix,
-                $this->dateTimeFormat
+                new PHPValueNormalizer(
+                    $context->config->caster(),
+                    $this->attributePrefix,
+                    $this->dateTimeFormat,
+                    $this->listElementName,
+                    $this->mapElementName,
+                    $this->mapElementKeyName,
+                    $this->mapElementValueName
+                ),
             ),
             $this->rowElementName
         );
 
         $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
+    }
+
+    public function withAttributePrefix(string $attributePrefix) : self
+    {
+        $this->attributePrefix = $attributePrefix;
+
+        return $this;
+    }
+
+    public function withDateTimeFormat(string $dateTimeFormat) : self
+    {
+        $this->dateTimeFormat = $dateTimeFormat;
+
+        return $this;
+    }
+
+    public function withListElementName(string $listElementName) : self
+    {
+        $this->listElementName = $listElementName;
+
+        return $this;
+    }
+
+    public function withMapElementKeyName(string $mapElementKeyName) : self
+    {
+        $this->mapElementKeyName = $mapElementKeyName;
+
+        return $this;
+    }
+
+    public function withMapElementName(string $mapElementName) : self
+    {
+        $this->mapElementName = $mapElementName;
+
+        return $this;
+    }
+
+    public function withMapElementValueName(string $mapElementValueName) : self
+    {
+        $this->mapElementValueName = $mapElementValueName;
+
+        return $this;
+    }
+
+    public function withRootElementName(string $rootElementName) : self
+    {
+        $this->rootElementName = $rootElementName;
+
+        return $this;
+    }
+
+    public function withRowElementName(string $rowElementName) : self
+    {
+        $this->rowElementName = $rowElementName;
+
+        return $this;
     }
 
     /**
