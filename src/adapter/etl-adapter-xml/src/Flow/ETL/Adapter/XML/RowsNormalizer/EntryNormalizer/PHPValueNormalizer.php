@@ -14,12 +14,14 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class PHPValueNormalizer
 {
-    public const DATE_TIME_FORMAT = 'Y-m-d\TH:i:s.uP';
-
     public function __construct(
         private readonly Caster $caster,
-        private readonly string $attributePrefix = '_',
-        private readonly string $dateTimeFormat = self::DATE_TIME_FORMAT
+        public readonly string $attributePrefix = '_',
+        public readonly string $dateTimeFormat = 'Y-m-d\TH:i:s.uP',
+        public readonly string $listElementName = 'element',
+        public readonly string $mapElementName = 'element',
+        public readonly string $mapElementKeyName = 'key',
+        public readonly string $mapElementValueName = 'value',
     ) {
 
     }
@@ -42,7 +44,7 @@ final class PHPValueNormalizer
             }
 
             foreach ($value as $elementValue) {
-                $listNode = $listNode->append($this->normalize('element', $type->element()->type(), $elementValue));
+                $listNode = $listNode->append($this->normalize($this->listElementName, $type->element()->type(), $elementValue));
             }
 
             return $listNode;
@@ -57,9 +59,9 @@ final class PHPValueNormalizer
 
             foreach ($value as $key => $elementValue) {
                 $mapNode = $mapNode->append(
-                    XMLNode::nestedNode('element')
-                        ->append($this->normalize('key', $type->key()->type(), $key))
-                        ->append($this->normalize('value', $type->value()->type(), $elementValue))
+                    XMLNode::nestedNode($this->mapElementName)
+                        ->append($this->normalize($this->mapElementKeyName, $type->key()->type(), $key))
+                        ->append($this->normalize($this->mapElementValueName, $type->value()->type(), $elementValue))
                 );
             }
 

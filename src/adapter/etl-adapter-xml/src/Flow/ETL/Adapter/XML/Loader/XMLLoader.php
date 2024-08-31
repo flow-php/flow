@@ -13,17 +13,34 @@ use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class XMLLoader implements Closure, Loader, Loader\FileLoader
 {
+    private string $attributePrefix = '_';
+
+    private string $dateTimeFormat = 'Y-m-d\TH:i:s.uP';
+
+    private string $listElementName = 'element';
+
+    private string $mapElementKeyName = 'key';
+
+    private string $mapElementName = 'element';
+
+    private string $mapElementValueName = 'value';
+
+    private string $rootElementName = 'root';
+
+    private string $rowElementName = 'row';
+
     /**
      * @var array<string, int>
      */
     private array $writes = [];
 
+    /**
+     * @var array<string, string>
+     */
+    private array $xmlAttributes = ['version' => '1.0', 'encoding' => 'UTF-8'];
+
     public function __construct(
         private readonly Path $path,
-        private readonly string $rootElementName,
-        private readonly string $rowElementName,
-        private readonly string $attributePrefix,
-        private readonly string $dateTimeFormat,
         private readonly XMLWriter $xmlWriter
     ) {
     }
@@ -48,14 +65,86 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
     {
         $normalizer = new RowsNormalizer(
             new EntryNormalizer(
-                new PHPValueNormalizer($context->config->caster(), $this->attributePrefix, $this->dateTimeFormat),
-                $this->attributePrefix,
-                $this->dateTimeFormat
+                new PHPValueNormalizer(
+                    $context->config->caster(),
+                    $this->attributePrefix,
+                    $this->dateTimeFormat,
+                    $this->listElementName,
+                    $this->mapElementName,
+                    $this->mapElementKeyName,
+                    $this->mapElementValueName
+                ),
             ),
             $this->rowElementName
         );
 
         $this->write($rows, $rows->partitions()->toArray(), $context, $normalizer);
+    }
+
+    public function withAttributePrefix(string $attributePrefix) : self
+    {
+        $this->attributePrefix = $attributePrefix;
+
+        return $this;
+    }
+
+    public function withDateTimeFormat(string $dateTimeFormat) : self
+    {
+        $this->dateTimeFormat = $dateTimeFormat;
+
+        return $this;
+    }
+
+    public function withListElementName(string $listElementName) : self
+    {
+        $this->listElementName = $listElementName;
+
+        return $this;
+    }
+
+    public function withMapElementKeyName(string $mapElementKeyName) : self
+    {
+        $this->mapElementKeyName = $mapElementKeyName;
+
+        return $this;
+    }
+
+    public function withMapElementName(string $mapElementName) : self
+    {
+        $this->mapElementName = $mapElementName;
+
+        return $this;
+    }
+
+    public function withMapElementValueName(string $mapElementValueName) : self
+    {
+        $this->mapElementValueName = $mapElementValueName;
+
+        return $this;
+    }
+
+    public function withRootElementName(string $rootElementName) : self
+    {
+        $this->rootElementName = $rootElementName;
+
+        return $this;
+    }
+
+    public function withRowElementName(string $rowElementName) : self
+    {
+        $this->rowElementName = $rowElementName;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, string> $xmlAttributes
+     */
+    public function withXMLAttributes(array $xmlAttributes) : self
+    {
+        $this->xmlAttributes = $xmlAttributes;
+
+        return $this;
     }
 
     /**
@@ -72,7 +161,9 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $stream->append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<" . $this->rootElementName . ">\n");
+            $xmlAttributes = \implode(' ', \array_map(fn (string $key, string $value) => $key . '="' . $value . '"', \array_keys($this->xmlAttributes), \array_values($this->xmlAttributes)));
+
+            $stream->append('<?xml ' . $xmlAttributes . "?>\n<" . $this->rootElementName . ">\n");
         } else {
             $stream = $streams->writeTo($this->path, $partitions);
         }
