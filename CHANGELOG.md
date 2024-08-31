@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-08-27
+## [Unreleased] - 2024-08-31
 
 ### Added
 - [#1195](https://github.com/flow-php/flow/pull/1195) - **Functional tests for flow-php.com website** - [@norberttech](https://github.com/norberttech)
@@ -7,6 +7,8 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1203](https://github.com/flow-php/flow/pull/1203) - **Allow to rename XML nested structure elements on a loader level** - [@norberttech](https://github.com/norberttech)
+- [#1203](https://github.com/flow-php/flow/pull/1203) - **Move optional XMLLoader options to fluent interface** - [@norberttech](https://github.com/norberttech)
 - [#1196](https://github.com/flow-php/flow/pull/1196) - **Duplicate Module/Type enums in website to avoid dependencies and keep boundaries clean** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **landing page code highlights are now handled by prismjs** - [@norberttech](https://github.com/norberttech)
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
