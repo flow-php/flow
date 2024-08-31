@@ -14,12 +14,10 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class PHPValueNormalizer
 {
-    public const DATE_TIME_FORMAT = 'Y-m-d\TH:i:s.uP';
-
     public function __construct(
         private readonly Caster $caster,
         public readonly string $attributePrefix = '_',
-        public readonly string $dateTimeFormat = self::DATE_TIME_FORMAT,
+        public readonly string $dateTimeFormat = 'Y-m-d\TH:i:s.uP',
         public readonly string $listElementName = 'element',
         public readonly string $mapElementName = 'element',
         public readonly string $mapElementKeyName = 'key',

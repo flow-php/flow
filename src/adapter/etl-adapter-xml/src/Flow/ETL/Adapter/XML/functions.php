@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\{Adapter\XML\Loader\XMLLoader,
-    Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer,
     Adapter\XML\XMLWriter\DOMDocumentWriter,
     Attribute\DocumentationDSL,
     Attribute\Module,
@@ -42,21 +41,29 @@ function from_xml(
     );
 }
 
+/**
+ * @param Path|string $path
+ * @param string $root_element_name - @deprecated use `withRootElementName()` method instead
+ * @param string $row_element_name - @deprecated use `withRowElementName()` method instead
+ * @param string $attribute_prefix - @deprecated use `withAttributePrefix()` method instead
+ * @param string $date_time_format - @deprecated use `withDateTimeFormat()` method instead
+ * @param DOMDocumentWriter $xml_writer
+ */
 #[DocumentationDSL(module: Module::XML, type: DSLType::LOADER)]
 function to_xml(
     string|Path $path,
     string $root_element_name = 'rows',
     string $row_element_name = 'row',
     string $attribute_prefix = '_',
-    string $date_time_format = PHPValueNormalizer::DATE_TIME_FORMAT,
+    string $date_time_format = 'Y-m-d\TH:i:s.uP',
     XMLWriter $xml_writer = new DOMDocumentWriter()
 ) : XMLLoader {
-    return new XMLLoader(
+    return (new XMLLoader(
         \is_string($path) ? Path::realpath($path) : $path,
-        $root_element_name,
-        $row_element_name,
-        $attribute_prefix,
-        $date_time_format,
         $xml_writer
-    );
+    ))
+        ->withRootElementName($root_element_name)
+        ->withRowElementName($row_element_name)
+        ->withAttributePrefix($attribute_prefix)
+        ->withDateTimeFormat($date_time_format);
 }

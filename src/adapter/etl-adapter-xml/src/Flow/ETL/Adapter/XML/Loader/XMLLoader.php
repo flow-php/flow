@@ -13,9 +13,9 @@ use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class XMLLoader implements Closure, Loader, Loader\FileLoader
 {
-    private string $attributePrefix;
+    private string $attributePrefix = '_';
 
-    private string $dateTimeFormat;
+    private string $dateTimeFormat = 'Y-m-d\TH:i:s.uP';
 
     private string $listElementName = 'element';
 
@@ -25,27 +25,24 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
 
     private string $mapElementValueName = 'value';
 
-    private string $rootElementName;
+    private string $rootElementName = 'root';
 
-    private string $rowElementName;
+    private string $rowElementName = 'row';
 
     /**
      * @var array<string, int>
      */
     private array $writes = [];
 
+    /**
+     * @var array<string, string>
+     */
+    private array $xmlAttributes = ['version' => '1.0', 'encoding' => 'UTF-8'];
+
     public function __construct(
         private readonly Path $path,
-        string $rootElementName,
-        string $rowElementName,
-        string $attributePrefix,
-        string $dateTimeFormat,
         private readonly XMLWriter $xmlWriter
     ) {
-        $this->rootElementName = $rootElementName;
-        $this->rowElementName = $rowElementName;
-        $this->attributePrefix = $attributePrefix;
-        $this->dateTimeFormat = $dateTimeFormat;
     }
 
     public function closure(FlowContext $context) : void
@@ -141,6 +138,16 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
     }
 
     /**
+     * @param array<string, string> $xmlAttributes
+     */
+    public function withXMLAttributes(array $xmlAttributes) : self
+    {
+        $this->xmlAttributes = $xmlAttributes;
+
+        return $this;
+    }
+
+    /**
      * @param array<Partition> $partitions
      */
     public function write(Rows $nextRows, array $partitions, FlowContext $context, RowsNormalizer $normalizer) : void
@@ -154,7 +161,9 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $stream->append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<" . $this->rootElementName . ">\n");
+            $xmlAttributes = \implode(' ', \array_map(fn (string $key, string $value) => $key . '="' . $value . '"', \array_keys($this->xmlAttributes), \array_values($this->xmlAttributes)));
+
+            $stream->append('<?xml ' . $xmlAttributes . "?>\n<" . $this->rootElementName . ">\n");
         } else {
             $stream = $streams->writeTo($this->path, $partitions);
         }
