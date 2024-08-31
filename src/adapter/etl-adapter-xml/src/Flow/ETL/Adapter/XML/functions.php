@@ -4,22 +4,37 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\{Adapter\XML\Loader\XMLLoader,
     Adapter\XML\XMLWriter\DOMDocumentWriter,
     Attribute\DocumentationDSL,
     Attribute\Module,
-    Attribute\Type as DSLType};
+    Attribute\Type as DSLType
+};
 use Flow\Filesystem\Path;
 
+/**
+ *  In order to iterate only over <element> nodes use `from_xml($file)->withXMLNodePath('root/elements/element')`.
+ *
+ *  <root>
+ *    <elements>
+ *      <element></element>
+ *      <element></element>
+ *    <elements>
+ *  </root>
+ *
+ *  XML Node Path does not support attributes and it's not xpath, it is just a sequence
+ *  of node names separated with slash.
+ *
+ * @param Path|string $path
+ * @param string $xml_node_path - @deprecated use `from_xml($file)->withXMLNodePath($xmlNodePath)` method instead
+ */
 #[DocumentationDSL(module: Module::XML, type: DSLType::EXTRACTOR)]
 function from_xml(
-    string|Path $path,
+    Path|string $path,
     string $xml_node_path = ''
 ) : XMLParserExtractor {
-    return new XMLParserExtractor(
-        \is_string($path) ? Path::realpath($path) : $path,
-        $xml_node_path
-    );
+    return (new XMLParserExtractor(\is_string($path) ? path_real($path) : $path))->withXMLNodePath($xml_node_path);
 }
 
 /**

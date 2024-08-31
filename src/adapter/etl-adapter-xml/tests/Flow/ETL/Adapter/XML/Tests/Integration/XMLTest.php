@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
+use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\{datetime_schema, df, int_schema, ref, schema, type_int};
-use Flow\ETL\Adapter\XML\XMLParserExtractor;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
-use Flow\Filesystem\Path;
 
 final class XMLTest extends IntegrationTestCase
 {
     public function test_transforming_xml_into_a_tabular_dataset() : void
     {
         $rows = df()
-            ->read(new XMLParserExtractor(new Path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
+            ->read(from_xml(path(__DIR__ . '/../Fixtures/simple_items.xml'))->withXMLNodePath('root/items'))
             ->withEntry('parent_attribute_01', ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_int()))
             ->withEntry('parent_attribute_02', ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_int()))
             ->withEntry('items', ref('node')->xpath('/*/item'))
@@ -49,7 +49,7 @@ final class XMLTest extends IntegrationTestCase
     public function test_transforming_xml_into_a_tabular_dataset_from_partitioned_dataset() : void
     {
         $rows = df()
-            ->read(new XMLParserExtractor(new Path(__DIR__ . '/../Fixtures/partitioned/date=*/*.xml'), 'root/items'))
+            ->read(from_xml(path(__DIR__ . '/../Fixtures/partitioned/date=*/*.xml'))->withXMLNodePath('root/items'))
 
             ->withEntry('parent_attribute_01', ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_int()))
             ->withEntry('parent_attribute_02', ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_int()))

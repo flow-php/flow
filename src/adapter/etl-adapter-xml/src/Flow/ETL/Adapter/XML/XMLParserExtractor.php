@@ -7,13 +7,18 @@ namespace Flow\ETL\Adapter\XML;
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
-use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
+use Flow\ETL\{Extractor, FlowContext};
 use Flow\Filesystem\Path;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
     use PathFiltering;
+
+    /**
+     * @var int<1, max>
+     */
+    private int $bufferSize = 8096;
 
     private bool $capturing = false;
 
@@ -29,12 +34,12 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
 
     private ?\XMLParser $parser = null;
 
-    private readonly string $targetPath;
-
     private ?\XMLWriter $writer = null;
 
+    private string $xmlNodePath = '';
+
     /**
-     * In order to iterate only over <element> nodes us root/elements/element.
+     * In order to iterate only over <element> nodes use `$loader->withXMLNodePath('root/elements/element')`.
      *
      * <root>
      *   <elements>
@@ -43,20 +48,13 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
      *   <elements>
      * </root>
      *
-     * $xmlNodePath does not support attributes and it's not xpath, it is just a sequence
+     * XML Node Path does not support attributes and it's not xpath, it is just a sequence
      * of node names separated with slash.
      *
      * @param Path $path
-     * @param string $targetPath
-     * @param int<1, max> $bufferSize - size of the chunks to read from the xml file. Bigger chunks means faster reading but more memory usage.
      */
-    public function __construct(private readonly Path $path, string $targetPath = '', private readonly int $bufferSize = 8096)
+    public function __construct(private readonly Path $path)
     {
-        if ($this->bufferSize < 1) {
-            throw new InvalidArgumentException('Buffer size must be greater than 0');
-        }
-
-        $this->targetPath = \ltrim($targetPath, '/');
         $this->resetLimit();
     }
 
@@ -72,7 +70,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         if ($this->capturing) {
             $this->writer()->endElement();
 
-            if (implode('/', $this->currentPath) === $this->targetPath || ($this->targetPath === '' && \count($this->currentPath) === 1)) {
+            if (implode('/', $this->currentPath) === $this->xmlNodePath || ($this->xmlNodePath === '' && \count($this->currentPath) === 1)) {
                 $this->capturing = false;
                 $this->elements[] = $this->writer()->outputMemory();
             }
@@ -163,7 +161,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         $this->currentPath[] = $name;
         $currentPathString = implode('/', $this->currentPath);
 
-        if ($currentPathString === $this->targetPath || ($this->targetPath === '' && \count($this->currentPath) === 1)) {
+        if ($currentPathString === $this->xmlNodePath || ($this->xmlNodePath === '' && \count($this->currentPath) === 1)) {
             $this->capturing = true;
             $this->writer()->startElement($name);
 
@@ -177,6 +175,23 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                 $this->writer()->writeAttribute($key, $value);
             }
         }
+    }
+
+    /**
+     * @param int<1, max> $bufferSize $bufferSize - size of the chunks to read from the xml file. Bigger chunks means faster reading but more memory usage.
+     */
+    public function withBufferSize(int $bufferSize) : self
+    {
+        $this->bufferSize = $bufferSize;
+
+        return $this;
+    }
+
+    public function withXMLNodePath(string $xmlNodePath) : self
+    {
+        $this->xmlNodePath = $xmlNodePath;
+
+        return $this;
     }
 
     private function createDOMElement(string $xmlString) : \DOMElement
