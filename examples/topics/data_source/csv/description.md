@@ -2,7 +2,7 @@ Read data from a csv file.
 
 ```php
 function from_csv(
-    string|Path|array $path,
+    string|Path $path,
     bool $with_header = true,
     bool $empty_to_null = true,
     ?string $delimiter = null,

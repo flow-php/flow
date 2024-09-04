@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration;
 use function Flow\ETL\Adapter\Text\{from_text};
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
+use Flow\ETL\{Config, Flow, FlowContext, Row};
 use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
@@ -26,28 +26,6 @@ final class TextExtractorTest extends TestCase
         }
 
         self::assertSame(1024, $rows->count());
-    }
-
-    public function test_extracting_text_files_from_directory() : void
-    {
-        $extractor = from_text(
-            [
-                __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
-                __DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
-            ],
-        );
-
-        $total = 0;
-
-        /** @var Rows $rows */
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
-            $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\StringEntry::class, $row->get('text'));
-            });
-            $total += $rows->count();
-        }
-
-        self::assertSame(2048, $total);
     }
 
     public function test_limit() : void

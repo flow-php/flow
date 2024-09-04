@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType, Extractor, Loader};
+use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType, Loader};
 use Flow\Filesystem\{Path, SourceStream};
 
 /**
@@ -15,7 +14,7 @@ use Flow\Filesystem\{Path, SourceStream};
  */
 #[DocumentationDSL(module: Module::CSV, type: DSLType::EXTRACTOR)]
 function from_csv(
-    string|Path|array $path,
+    string|Path $path,
     bool $with_header = true,
     bool $empty_to_null = true,
     ?string $delimiter = null,
@@ -23,26 +22,7 @@ function from_csv(
     ?string $escape = null,
     int $characters_read_in_line = 1000,
     ?Schema $schema = null
-) : Extractor {
-    if (\is_array($path)) {
-        $extractors = [];
-
-        foreach ($path as $file_path) {
-            $extractors[] = new CSVExtractor(
-                \is_string($file_path) ? Path::realpath($file_path) : $file_path,
-                $with_header,
-                $empty_to_null,
-                $delimiter,
-                $enclosure,
-                $escape,
-                $characters_read_in_line,
-                $schema
-            );
-        }
-
-        return from_all(...$extractors);
-    }
-
+) : CSVExtractor {
     return new CSVExtractor(
         \is_string($path) ? Path::realpath($path) : $path,
         $with_header,

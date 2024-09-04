@@ -2,7 +2,7 @@ Read data from a json file.
 
 ```php
 function from_xml(
-    string|Path|array $path,
+    string|Path $path,
     string $xml_node_path = ''
 );
 ```

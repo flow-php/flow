@@ -99,32 +99,6 @@ final class CSVExtractorTest extends TestCase
         );
     }
 
-    public function test_extracting_csv_files_from_directory_recursively() : void
-    {
-        $extractor = from_csv(
-            [
-                Path::realpath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
-                Path::realpath(__DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
-            ],
-            false
-        );
-
-        $total = 0;
-
-        /** @var Rows $rows */
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
-            $rows->each(function (Row $row) : void {
-                $this->assertSame(
-                    ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
-                    \array_keys($row->toArray())
-                );
-            });
-            $total += $rows->count();
-        }
-
-        self::assertSame(1998, $total);
-    }
-
     public function test_extracting_csv_files_with_header() : void
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';

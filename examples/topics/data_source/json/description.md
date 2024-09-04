@@ -2,7 +2,7 @@ Read data from a json file.
 
 ```php
 function from_json(
-    string|Path|array $path,
+    string|Path $path,
     ?string $pointer = null,
     ?Schema $schema = null,
 );
