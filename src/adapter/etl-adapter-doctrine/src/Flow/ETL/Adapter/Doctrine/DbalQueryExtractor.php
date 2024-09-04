@@ -28,7 +28,17 @@ final class DbalQueryExtractor implements Extractor
      */
     public static function single(Connection $connection, string $query, array $parameters = [], array $types = []) : self
     {
-        return (new self($connection, $query))->withParameters(new ParametersSet([$parameters]))->withTypes($types);
+        $extractor = (new self($connection, $query));
+
+        if ($parameters !== []) {
+            $extractor->withParameters(new ParametersSet($parameters));
+        }
+
+        if ($types !== []) {
+            $extractor->withTypes($types);
+        }
+
+        return $extractor;
     }
 
     public function extract(FlowContext $context) : \Generator

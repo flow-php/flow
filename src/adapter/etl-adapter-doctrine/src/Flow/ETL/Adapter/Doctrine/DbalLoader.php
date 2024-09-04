@@ -47,7 +47,16 @@ final class DbalLoader implements Loader
         string $operation = 'insert'
     ) : self {
         /** @psalm-suppress InternalMethod */
-        $loader = (new self($tableName, $connection->getParams()))->withOperation($operation)->withOperationOptions($operationOptions);
+        $loader = (new self($tableName, $connection->getParams()));
+
+        if ($operation !== 'insert') {
+            $loader->withOperation($operation);
+        }
+
+        if ($operationOptions !== []) {
+            $loader->withOperationOptions($operationOptions);
+        }
+
         $loader->connection = $connection;
 
         return $loader;

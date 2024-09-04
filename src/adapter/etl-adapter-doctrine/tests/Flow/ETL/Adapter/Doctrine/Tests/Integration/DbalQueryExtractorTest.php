@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\{dbal_from_queries, dbal_from_query};
-use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\{df, from_array};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
@@ -36,7 +36,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table)
         )->run();
 
-        $rows = (new Flow())->extract(
+        $rows = df()->extract(
             dbal_from_query(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id"

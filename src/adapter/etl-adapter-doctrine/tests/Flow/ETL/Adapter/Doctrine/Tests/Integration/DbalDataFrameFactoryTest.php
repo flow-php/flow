@@ -10,7 +10,6 @@ use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Adapter\Doctrine\{LiteralParameter, Parameter};
-use Flow\ETL\{Row, Rows};
 
 final class DbalDataFrameFactoryTest extends IntegrationTestCase
 {
@@ -40,11 +39,11 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
                 new LiteralParameter('name', 'Name 1')
             )
         )
-        ->from(new Rows(
-            Row::with(int_entry('id', 1)),
-            Row::with(int_entry('id', 2)),
-            Row::with(int_entry('id', 3)),
-            Row::with(int_entry('id', 55)),
+        ->from(\Flow\ETL\DSL\rows(
+            \Flow\ETL\DSL\row(int_entry('id', 1)),
+            \Flow\ETL\DSL\row(int_entry('id', 2)),
+            \Flow\ETL\DSL\row(int_entry('id', 3)),
+            \Flow\ETL\DSL\row(int_entry('id', 55)),
         ))
         ->select('id')
         ->fetch();
