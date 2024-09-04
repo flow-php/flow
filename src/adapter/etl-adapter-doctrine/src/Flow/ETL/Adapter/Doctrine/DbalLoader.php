@@ -13,30 +13,17 @@ final class DbalLoader implements Loader
 {
     private ?Connection $connection = null;
 
-    private string $operation;
+    private string $operation = 'insert';
+
+    private array $operationOptions = [];
 
     /**
      * @param array<string, mixed> $connectionParams
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  constraint?: string,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>,
-     *  primary_key_columns?: array<string>
-     * } $operationOptions
-     *
-     * @throws InvalidArgumentException
      */
     public function __construct(
         private string $tableName,
-        private array $connectionParams,
-        private array $operationOptions = [],
-        string $operation = 'insert'
+        private readonly array $connectionParams,
     ) {
-        if (false === \in_array(\strtolower($operation), ['update', 'insert'], true)) {
-            throw new InvalidArgumentException("Operation can be insert or update, {$operation} given.");
-        }
-        $this->operation = \strtolower($operation);
     }
 
     /**
@@ -60,7 +47,7 @@ final class DbalLoader implements Loader
         string $operation = 'insert'
     ) : self {
         /** @psalm-suppress InternalMethod */
-        $loader = new self($tableName, $connection->getParams(), $operationOptions, $operation);
+        $loader = (new self($tableName, $connection->getParams()))->withOperation($operation)->withOperationOptions($operationOptions);
         $loader->connection = $connection;
 
         return $loader;
@@ -74,6 +61,36 @@ final class DbalLoader implements Loader
             new BulkData($rows->sortEntries()->toArray()),
             $this->operationOptions
         );
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function withOperation(string $operation) : self
+    {
+        if (false === \in_array(\strtolower($operation), ['update', 'insert'], true)) {
+            throw new InvalidArgumentException("Operation can be insert or update, {$operation} given.");
+        }
+
+        $this->operation = $operation;
+
+        return $this;
+    }
+
+    /**
+     * @param array{
+     *   skip_conflicts?: boolean,
+     *   constraint?: string,
+     *   conflict_columns?: array<string>,
+     *   update_columns?: array<string>,
+     *   primary_key_columns?: array<string>
+     *  } $operationOptions
+     */
+    public function withOperationOptions(array $operationOptions) : self
+    {
+        $this->operationOptions = $operationOptions;
+
+        return $this;
     }
 
     private function connection() : Connection

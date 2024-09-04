@@ -45,25 +45,18 @@ function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|stri
         $output = Path::realpath($output);
     }
 
-    if (null === $template) {
-        $loader = (new ChartJSLoader($type));
-
-        if ($output !== null) {
-            return $loader->withOutputPath($output);
-        }
-
-        return $loader;
-    }
-
     if (\is_string($template)) {
         $template = Path::realpath($template);
     }
 
-    $loader = (new ChartJSLoader($type))
-        ->withTemplate($template);
+    $loader = new ChartJSLoader($type);
+
+    if ($template) {
+        $loader->withTemplate($template);
+    }
 
     if ($output !== null) {
-        return $loader->withOutputPath($output);
+        $loader->withOutputPath($output);
     }
 
     return $loader;

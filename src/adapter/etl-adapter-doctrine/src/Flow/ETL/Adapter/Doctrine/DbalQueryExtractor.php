@@ -11,18 +11,15 @@ use Flow\ETL\{Extractor, FlowContext};
 
 final class DbalQueryExtractor implements Extractor
 {
-    private readonly ParametersSet $parametersSet;
+    private ParametersSet $parametersSet;
 
-    /**
-     * @param array<int|string, ArrayParameterType|int|ParameterType|string|Type> $types
-     */
+    private array $types = [];
+
     public function __construct(
         private readonly Connection $connection,
         private readonly string $query,
-        ?ParametersSet $parametersSet = null,
-        private readonly array $types = [],
     ) {
-        $this->parametersSet = $parametersSet ?: new ParametersSet([]);
+        $this->parametersSet = new ParametersSet([]);
     }
 
     /**
@@ -31,17 +28,12 @@ final class DbalQueryExtractor implements Extractor
      */
     public static function single(Connection $connection, string $query, array $parameters = [], array $types = []) : self
     {
-        return new self($connection, $query, new ParametersSet($parameters), $types);
+        return (new self($connection, $query))->withParameters(new ParametersSet([$parameters]))->withTypes($types);
     }
 
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {
-            /**
-             * @phpstan-ignore-next-line
-             *
-             * @psalm-suppress InvalidArgument
-             */
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory());
 
@@ -50,5 +42,22 @@ final class DbalQueryExtractor implements Extractor
                 }
             }
         }
+    }
+
+    public function withParameters(ParametersSet $parametersSet) : self
+    {
+        $this->parametersSet = $parametersSet;
+
+        return $this;
+    }
+
+    /**
+     * @param array<int|string, ArrayParameterType|int|ParameterType|string|Type> $types
+     */
+    public function withTypes(array $types) : self
+    {
+        $this->types = $types;
+
+        return $this;
     }
 }
