@@ -12,7 +12,7 @@ data_frame()
         __DIR__ . '/input/dataset.csv',
         with_header: true,
         empty_to_null: true,
-        delimiter: ',',
+        separator: ',',
         enclosure: '"',
         escape: '\\',
         characters_read_in_line: 1000

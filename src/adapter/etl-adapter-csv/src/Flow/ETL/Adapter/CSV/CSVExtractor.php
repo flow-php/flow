@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\CSV;
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
 use Flow\Filesystem\Path;
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
@@ -16,18 +16,24 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     use PathFiltering;
 
     /**
-     * @param ?int<1, max> $charactersReadInLine
+     * @var null|int<1, max>
      */
-    public function __construct(
-        private readonly Path $path,
-        private readonly bool $withHeader = true,
-        private readonly bool $emptyToNull = true,
-        private readonly ?string $separator = null,
-        private readonly ?string $enclosure = null,
-        private readonly ?string $escape = null,
-        private readonly ?int $charactersReadInLine = null,
-        private readonly ?Schema $schema = null
-    ) {
+    private ?int $charactersReadInLine = null;
+
+    private bool $emptyToNull = true;
+
+    private ?string $enclosure = null;
+
+    private ?string $escape = null;
+
+    private ?Schema $schema = null;
+
+    private ?string $separator = null;
+
+    private bool $withHeader = true;
+
+    public function __construct(private readonly Path $path)
+    {
         $this->resetLimit();
     }
 
@@ -114,5 +120,61 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     public function source() : Path
     {
         return $this->path;
+    }
+
+    /**
+     * @param int<1, max> $charactersReadInLine
+     */
+    public function withCharactersReadInLine(int $charactersReadInLine) : self
+    {
+        if ($charactersReadInLine < 1) {
+            throw new InvalidArgumentException('Characters read in line must be greater than 0');
+        }
+
+        $this->charactersReadInLine = $charactersReadInLine;
+
+        return $this;
+    }
+
+    public function withEmptyToNull(bool $emptyToNull) : self
+    {
+        $this->emptyToNull = $emptyToNull;
+
+        return $this;
+    }
+
+    public function withEnclosure(string $enclosure) : self
+    {
+        $this->enclosure = $enclosure;
+
+        return $this;
+    }
+
+    public function withEscape(string $escape) : self
+    {
+        $this->escape = $escape;
+
+        return $this;
+    }
+
+    public function withHeader(bool $withHeader) : self
+    {
+        $this->withHeader = $withHeader;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
+
+        return $this;
+    }
+
+    public function withSeparator(string $separator) : self
+    {
+        $this->separator = $separator;
+
+        return $this;
     }
 }
