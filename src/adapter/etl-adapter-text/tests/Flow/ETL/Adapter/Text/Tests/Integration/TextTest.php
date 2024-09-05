@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use function Flow\ETL\Adapter\Text\to_text;
 use Flow\ETL\{Flow, Row, Rows};
-use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class TextTest extends TestCase
@@ -38,12 +37,5 @@ TEXT,
         if (\file_exists($path)) {
             \unlink($path);
         }
-    }
-
-    public function test_using_pattern_path() : void
-    {
-        $this->expectExceptionMessage("TextLoader path can't be pattern, given: /path/*/pattern.csv");
-
-        to_text(new Path('/path/*/pattern.csv'));
     }
 }

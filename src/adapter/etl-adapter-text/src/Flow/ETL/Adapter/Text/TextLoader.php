@@ -11,13 +11,10 @@ use Flow\Filesystem\Path;
 
 final class TextLoader implements Closure, Loader, Loader\FileLoader
 {
-    public function __construct(
-        private readonly Path $path,
-        private string $newLineSeparator = PHP_EOL,
-    ) {
-        if ($this->path->isPattern()) {
-            throw new \InvalidArgumentException("TextLoader path can't be pattern, given: " . $this->path->path());
-        }
+    private string $newLineSeparator = PHP_EOL;
+
+    public function __construct(private readonly Path $path)
+    {
     }
 
     public function closure(FlowContext $context) : void
@@ -53,5 +50,12 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                 );
             }
         }
+    }
+
+    public function withNewLineSeparator(string $newLineSeparator) : self
+    {
+        $this->newLineSeparator = $newLineSeparator;
+
+        return $this;
     }
 }
