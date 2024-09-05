@@ -5,6 +5,51 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.8.x to 0.10.x
+
+### 1) Providing multiple paths to single extractor
+
+From now in order to read from multiple locations use `from_all(Extractor ...$extractors) : Exctractor` extractor. 
+
+Before:
+```php
+<?php
+
+from_parquet([
+    path(__DIR__ . '/data/1.parquet'),
+    path(__DIR__ . '/data/2.parquet'),
+]);
+```
+
+After:
+```php
+<?php
+
+from_all(
+    from_parquet(path(__DIR__ . '/data/1.parquet')),
+    from_parquet(path(__DIR__ . '/data/2.parquet')),
+);
+```
+
+### 2) Passing optional arguments to extractors/loaders
+
+From now all extractors/loaders are accepting only mandatory arguments, 
+all optional arguments should be passed through `with*` methods and fluent interface. 
+
+Before:
+```php
+<?php
+
+from_parquet(path(__DIR__ . '/data/1.parquet'), schema: $schema);
+```
+
+After:
+```php
+<?php
+
+from_parquet(path(__DIR__ . '/data/1.parquet'))->withSchema($schema);
+```
+
 ## Upgrading from 0.7.x to 0.8.x
 
 ### 1) Joins 
