@@ -30,7 +30,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Operation can be insert or update, delete given.');
 
-        new DbalLoader($table, $this->connectionParams(), [], 'delete');
+        (new DbalLoader($table, $this->connectionParams()))->withOperation('delete');
     }
 
     public function test_create_loader_with_invalid_operation_from_connection() : void

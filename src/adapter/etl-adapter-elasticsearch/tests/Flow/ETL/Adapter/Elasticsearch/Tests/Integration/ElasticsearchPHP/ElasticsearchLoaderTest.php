@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
-use function Flow\ETL\Adapter\Elasticsearch\{to_es_bulk_index, to_es_bulk_update};
+use function Flow\ETL\Adapter\Elasticsearch\{entry_id_factory, hash_id_factory, to_es_bulk_index, to_es_bulk_update};
 use function Flow\ETL\DSL\generate_random_string;
-use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\{EntryIdFactory, HashIdFactory};
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
 
@@ -30,7 +29,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
     public function test_empty_rows() : void
     {
-        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, entry_id_factory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(), new FlowContext(Config::default()));
 
@@ -50,7 +49,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
     public function test_integration_with_entry_factory() : void
     {
-        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, entry_id_factory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             Row::create(
@@ -58,15 +57,15 @@ final class ElasticsearchLoaderTest extends TestCase
                 new Row\Entry\StringEntry('name', 'Łukasz')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
+                new Row\Entry\StringEntry('id', \sha1('id' . generate_random_string())),
                 new Row\Entry\StringEntry('name', 'Norbert')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
+                new Row\Entry\StringEntry('id', \sha1('id' . generate_random_string())),
                 new Row\Entry\StringEntry('name', 'Dawid')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
+                new Row\Entry\StringEntry('id', \sha1('id' . generate_random_string())),
                 new Row\Entry\StringEntry('name', 'Tomek')
             ),
         ), new FlowContext(Config::default()));
@@ -92,7 +91,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
     public function test_integration_with_json_entry() : void
     {
-        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new HashIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             Row::create(
@@ -121,7 +120,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
     public function test_integration_with_partial_update_id_factory() : void
     {
-        $insertLoader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new HashIdFactory('id'), ['refresh' => true]);
+        $insertLoader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
         $insertLoader->load(new Rows(
             Row::create(
@@ -132,7 +131,7 @@ final class ElasticsearchLoaderTest extends TestCase
             ),
         ), new FlowContext(Config::default()));
 
-        $updateLoader = to_es_bulk_update($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new HashIdFactory('id'), ['refresh' => true]);
+        $updateLoader = to_es_bulk_update($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
         $updateLoader->load(new Rows(
             Row::create(
@@ -175,7 +174,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
     public function test_integration_with_sha1_id_factory() : void
     {
-        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new HashIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             Row::create(

@@ -19,7 +19,7 @@ final class XMLParserExtractorTest extends IntegrationTestCase
 {
     public function test_limit() : void
     {
-        $extractor = new XMLParserExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+        $extractor = (new XMLParserExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -116,7 +116,7 @@ XML,
 
     public function test_signal_stop() : void
     {
-        $extractor = new XMLParserExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+        $extractor = (new XMLParserExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 

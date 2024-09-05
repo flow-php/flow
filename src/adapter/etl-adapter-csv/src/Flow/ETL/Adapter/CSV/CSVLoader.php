@@ -12,14 +12,20 @@ use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class CSVLoader implements Closure, Loader, Loader\FileLoader
 {
+    private string $dateTimeFormat = \DateTimeInterface::ATOM;
+
+    private string $enclosure = '"';
+
+    private string $escape = '\\';
+
+    private bool $header = true;
+
+    private string $newLineSeparator = PHP_EOL;
+
+    private string $separator = ',';
+
     public function __construct(
         private readonly Path $path,
-        private bool $header = true,
-        private string $separator = ',',
-        private string $enclosure = '"',
-        private string $escape = '\\',
-        private string $newLineSeparator = PHP_EOL,
-        private string $dateTimeFormat = \DateTimeInterface::ATOM
     ) {
     }
 
@@ -48,6 +54,48 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         } else {
             $this->write($rows, $headers, $context, [], $normalizer);
         }
+    }
+
+    public function withDateTimeFormat(string $dateTimeFormat) : self
+    {
+        $this->dateTimeFormat = $dateTimeFormat;
+
+        return $this;
+    }
+
+    public function withEnclosure(string $enclosure) : self
+    {
+        $this->enclosure = $enclosure;
+
+        return $this;
+    }
+
+    public function withEscape(string $escape) : self
+    {
+        $this->escape = $escape;
+
+        return $this;
+    }
+
+    public function withHeader(bool $header) : self
+    {
+        $this->header = $header;
+
+        return $this;
+    }
+
+    public function withNewLineSeparator(string $newLineSeparator) : self
+    {
+        $this->newLineSeparator = $newLineSeparator;
+
+        return $this;
+    }
+
+    public function withSeparator(string $separator) : self
+    {
+        $this->separator = $separator;
+
+        return $this;
     }
 
     /**

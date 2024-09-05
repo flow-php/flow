@@ -16,20 +16,18 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
     /**
      * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
-     *
-     * @throws InvalidArgumentException
      */
+    private array $options = [];
+
+    private int $rowsPerPage = 1000;
+
+    private bool $withHeader = true;
+
     public function __construct(
         private readonly Sheets $service,
         private readonly string $spreadsheetId,
         private readonly Columns $columnRange,
-        private readonly bool $withHeader,
-        private readonly int $rowsPerPage,
-        private readonly array $options = [],
     ) {
-        if ($this->rowsPerPage < 1) {
-            throw new InvalidArgumentException('Rows per page must be greater than 0');
-        }
         $this->resetLimit();
     }
 
@@ -114,5 +112,33 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
              */
             $values = $response->getValues() ?? [];
         }
+    }
+
+    public function withHeader(bool $withHeader) : self
+    {
+        $this->withHeader = $withHeader;
+
+        return $this;
+    }
+
+    /**
+     * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
+     */
+    public function withOptions(array $options) : self
+    {
+        $this->options = $options;
+
+        return $this;
+    }
+
+    public function withRowsPerPage(int $rowsPerPage) : self
+    {
+        if ($rowsPerPage < 1) {
+            throw new InvalidArgumentException('Rows per page must be greater than 0');
+        }
+
+        $this->rowsPerPage = $rowsPerPage;
+
+        return $this;
     }
 }

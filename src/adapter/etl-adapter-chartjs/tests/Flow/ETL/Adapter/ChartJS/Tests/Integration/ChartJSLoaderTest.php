@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
-use function Flow\ETL\Adapter\ChartJS\{bar_chart, line_chart, pie_chart, to_chartjs_file, to_chartjs_var};
+use function Flow\ETL\Adapter\ChartJS\{bar_chart, line_chart, pie_chart, to_chartjs, to_chartjs_file, to_chartjs_var};
 use function Flow\ETL\DSL\{df, first, from_array, lit, ref, refs, sum};
+use function Flow\Filesystem\DSL\path;
 use PHPUnit\Framework\TestCase;
 
 final class ChartJSLoaderTest extends TestCase
@@ -25,7 +26,7 @@ final class ChartJSLoaderTest extends TestCase
             ->read(from_array($data))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->write(
-                to_chartjs_file(
+                to_chartjs(
                     $chart = bar_chart(
                         ref('Date'),
                         refs(
@@ -37,8 +38,7 @@ final class ChartJSLoaderTest extends TestCase
                             ref('Profit'),
                         )
                     ),
-                    $output = __DIR__ . '/Output/bar_chart.html'
-                )
+                )->withOutputPath(path($output = __DIR__ . '/Output/bar_chart.html'))
             )
             ->run();
 

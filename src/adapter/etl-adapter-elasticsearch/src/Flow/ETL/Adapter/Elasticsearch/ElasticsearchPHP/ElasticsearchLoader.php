@@ -18,14 +18,17 @@ final class ElasticsearchLoader implements Loader
     private string $method;
 
     /**
+     * @var array<mixed>
+     */
+    private array $parameters = [];
+
+    /**
      * @param array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: bool, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: (bool|string), elasticMetaHeader?: bool, includePortInHostHeader?: bool} $config
-     * @param array<mixed> $parameters
      */
     public function __construct(
         private array $config,
         private string $index,
         private IdFactory $idFactory,
-        private array $parameters = []
     ) {
         $this->client = null;
         $this->method = 'index';
@@ -43,11 +46,10 @@ final class ElasticsearchLoader implements Loader
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $clientConfig
-     * @param array<mixed> $parameters
      */
-    public static function update(array $clientConfig, string $index, IdFactory $idFactory, array $parameters = []) : self
+    public static function update(array $clientConfig, string $index, IdFactory $idFactory) : self
     {
-        $loader = new self($clientConfig, $index, $idFactory, $parameters);
+        $loader = new self($clientConfig, $index, $idFactory);
         $loader->method = 'update';
 
         return $loader;
@@ -103,6 +105,13 @@ final class ElasticsearchLoader implements Loader
          * @phpstan-ignore-next-line
          */
         $this->client()->bulk($parameters);
+    }
+
+    public function withParameters(array $parameters) : self
+    {
+        $this->parameters = $parameters;
+
+        return $this;
     }
 
     /**

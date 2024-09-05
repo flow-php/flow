@@ -26,14 +26,10 @@ final class PsrHttpClientDynamicExtractor implements Extractor
      */
     private $preRequest;
 
-    /**
-     * @psalm-param callable(RequestInterface) : void|null $preRequest
-     * @psalm-param callable(RequestInterface, ResponseInterface) : void|null $postRequest
-     */
-    public function __construct(private readonly ClientInterface $client, private readonly NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null)
-    {
-        $this->preRequest = $preRequest;
-        $this->postRequest = $postRequest;
+    public function __construct(
+        private readonly ClientInterface $client,
+        private readonly NextRequestFactory $requestFactory,
+    ) {
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -86,5 +82,25 @@ final class PsrHttpClientDynamicExtractor implements Extractor
 
             $nextRequest = $this->requestFactory->create($response);
         }
+    }
+
+    /**
+     * @psalm-param callable(RequestInterface, ResponseInterface) : void $postRequest
+     */
+    public function withPostRequest(callable $postRequest) : self
+    {
+        $this->postRequest = $postRequest;
+
+        return $this;
+    }
+
+    /**
+     * @psalm-param callable(RequestInterface) : void $preRequest
+     */
+    public function withPreRequest(callable $preRequest) : self
+    {
+        $this->preRequest = $preRequest;
+
+        return $this;
     }
 }

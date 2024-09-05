@@ -28,11 +28,9 @@ final class ParquetExtractorTest extends TestCase
     {
         $totalRows = (new Reader())->read(__DIR__ . '/../Fixtures/orders_flow.parquet')->metadata()->rowsNumber();
 
-        $extractor = new ParquetExtractor(
+        $extractor = (new ParquetExtractor(
             Path::realpath(__DIR__ . '/../Fixtures/orders_flow.parquet'),
-            Options::default(),
-            offset: $totalRows - 100
-        );
+        ))->withOffset($totalRows - 100);
 
         self::assertCount(
             100,

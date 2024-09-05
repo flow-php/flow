@@ -12,11 +12,13 @@ use Flow\ETL\{Extractor, FlowContext};
 
 final class DbalLimitOffsetExtractor implements Extractor
 {
+    private ?int $maximum = null;
+
+    private int $pageSize = 1000;
+
     public function __construct(
         private readonly Connection $connection,
         private readonly QueryBuilder $queryBuilder,
-        private readonly int $pageSize = 1000,
-        private readonly ?int $maximum = null,
     ) {
     }
 
@@ -27,8 +29,6 @@ final class DbalLimitOffsetExtractor implements Extractor
         Connection $connection,
         Table $table,
         array $orderBy,
-        int $pageSize = 1000,
-        ?int $maximum = null,
     ) : self {
         if (!\count($orderBy)) {
             throw new InvalidArgumentException('There must be at least one column to order by, zero given');
@@ -45,8 +45,6 @@ final class DbalLimitOffsetExtractor implements Extractor
         return new self(
             $connection,
             $queryBuilder,
-            $pageSize,
-            $maximum,
         );
     }
 
@@ -104,5 +102,27 @@ final class DbalLimitOffsetExtractor implements Extractor
                 }
             }
         }
+    }
+
+    public function withMaximum(int $maximum) : self
+    {
+        if ($maximum <= 0) {
+            throw new InvalidArgumentException('Maximum must be greater than 0, got ' . $maximum);
+        }
+
+        $this->maximum = $maximum;
+
+        return $this;
+    }
+
+    public function withPageSize(int $pageSize) : self
+    {
+        if ($pageSize <= 0) {
+            throw new InvalidArgumentException('Page size must be greater than 0, got ' . $pageSize);
+        }
+
+        $this->pageSize = $pageSize;
+
+        return $this;
     }
 }

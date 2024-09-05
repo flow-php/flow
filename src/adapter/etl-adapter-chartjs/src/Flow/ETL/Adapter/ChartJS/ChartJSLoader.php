@@ -10,12 +10,15 @@ use Flow\Filesystem\Path;
 
 final class ChartJSLoader implements Closure, Loader
 {
-    public function __construct(
-        private readonly Chart $type,
-        private readonly ?Path $output = null,
-        private readonly Path $template = new Path(__DIR__ . '/Resources/template/full_page.html'),
-        private ?array &$outputVar = null
-    ) {
+    private ?Path $output = null;
+
+    private ?array $outputVar = null;
+
+    private Path $template;
+
+    public function __construct(private readonly Chart $type)
+    {
+        $this->template = new Path(__DIR__ . '/Resources/template/full_page.html');
     }
 
     public function closure(FlowContext $context) : void
@@ -59,5 +62,26 @@ final class ChartJSLoader implements Closure, Loader
         }
 
         $this->type->collect($rows);
+    }
+
+    public function withOutputPath(Path $output) : self
+    {
+        $this->output = $output;
+
+        return $this;
+    }
+
+    public function withOutputVar(array &$outputVar) : self
+    {
+        $this->outputVar = &$outputVar;
+
+        return $this;
+    }
+
+    public function withTemplate(Path $template) : self
+    {
+        $this->template = $template;
+
+        return $this;
     }
 }

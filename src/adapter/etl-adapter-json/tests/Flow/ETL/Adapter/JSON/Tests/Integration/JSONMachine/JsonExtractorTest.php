@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
-use function Flow\ETL\Adapter\JSON\{from_json, to_json};
+use function Flow\ETL\Adapter\JSON\{from_json};
 use function Flow\ETL\DSL\{df, print_schema};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Extractor\Signal;
@@ -153,12 +153,5 @@ SCHEMA
         self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         self::assertFalse($generator->valid());
-    }
-
-    public function test_using_pattern_path() : void
-    {
-        $this->expectExceptionMessage("JsonLoader path can't be pattern, given: /path/*/pattern.json");
-
-        to_json(new Path('/path/*/pattern.json'));
     }
 }

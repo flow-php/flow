@@ -46,13 +46,17 @@ function from_dbal_limit_offset(
     int $page_size = 1000,
     ?int $maximum = null,
 ) : DbalLimitOffsetExtractor {
-    return DbalLimitOffsetExtractor::table(
+    $loader = (DbalLimitOffsetExtractor::table(
         $connection,
         \is_string($table) ? new Table($table) : $table,
         $order_by instanceof OrderBy ? [$order_by] : $order_by,
-        $page_size,
-        $maximum,
-    );
+    ))->withPageSize($page_size);
+
+    if ($maximum !== null) {
+        $loader->withMaximum($maximum);
+    }
+
+    return $loader;
 }
 
 /**
@@ -67,12 +71,16 @@ function from_dbal_limit_offset_qb(
     int $page_size = 1000,
     ?int $maximum = null,
 ) : DbalLimitOffsetExtractor {
-    return new DbalLimitOffsetExtractor(
+    $loader = (new DbalLimitOffsetExtractor(
         $connection,
         $queryBuilder,
-        $page_size,
-        $maximum,
-    );
+    ))->withPageSize($page_size);
+
+    if ($maximum !== null) {
+        $loader->withMaximum($maximum);
+    }
+
+    return $loader;
 }
 
 /**
@@ -86,17 +94,25 @@ function dbal_from_queries(
     ?ParametersSet $parameters_set = null,
     array $types = [],
 ) : DbalQueryExtractor {
-    return new DbalQueryExtractor(
+    $extractor = new DbalQueryExtractor(
         $connection,
-        $query,
-        $parameters_set,
-        $types,
+        $query
     );
+
+    if ($parameters_set !== null) {
+        $extractor->withParameters($parameters_set);
+    }
+
+    if ($types !== []) {
+        $extractor->withTypes($types);
+    }
+
+    return $extractor;
 }
 
 /**
- * @param array<string, mixed>|list<mixed> $parameters
- * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
+ * @param array<string, mixed>|list<mixed> $parameters - @deprecated use DbalQueryExtractor::withParameters() instead
+ * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types - @deprecated use DbalQueryExtractor::withTypes() instead
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function dbal_from_query(
@@ -123,7 +139,7 @@ function dbal_from_query(
  *  conflict_columns?: array<string>,
  *  update_columns?: array<string>,
  *  primary_key_columns?: array<string>
- * } $options
+ * } $options - @deprecated use DbalLoader::withOperationOptions() instead
  *
  * @throws InvalidArgumentException
  */
@@ -134,8 +150,8 @@ function to_dbal_table_insert(
     array $options = [],
 ) : DbalLoader {
     return \is_array($connection)
-        ? new DbalLoader($table, $connection, $options, 'insert')
-        : DbalLoader::fromConnection($connection, $table, $options, 'insert');
+        ? (new DbalLoader($table, $connection))->withOperationOptions($options)
+        : DbalLoader::fromConnection($connection, $table, $options);
 }
 
 /**
@@ -148,7 +164,7 @@ function to_dbal_table_insert(
  *  conflict_columns?: array<string>,
  *  update_columns?: array<string>,
  *  primary_key_columns?: array<string>
- * } $options
+ * } $options - @deprecated use DbalLoader::withOperationOptions() instead
  *
  * @throws InvalidArgumentException
  */
@@ -159,6 +175,6 @@ function to_dbal_table_update(
     array $options = [],
 ) : DbalLoader {
     return \is_array($connection)
-        ? new DbalLoader($table, $connection, $options, 'update')
+        ? (new DbalLoader($table, $connection))->withOperation('update')->withOperationOptions($options)
         : DbalLoader::fromConnection($connection, $table, $options, 'update');
 }

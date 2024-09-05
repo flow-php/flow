@@ -11,7 +11,8 @@ use Flow\Filesystem\Path;
 
 /**
  * @param Path|string $path - string is internally turned into stream
- * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree
+ * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree - @deprecate use withPointer method instead
+ * @param ?Schema $schema - enforce schema on the extracted data - @deprecate use withSchema method instead
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
 function from_json(
@@ -19,15 +20,24 @@ function from_json(
     ?string $pointer = null,
     ?Schema $schema = null,
 ) : JsonExtractor {
-    return new JsonExtractor(
-        \is_string($path) ? Path::realpath($path) : $path,
-        $pointer,
-        $schema
-    );
+    $loader = new JsonExtractor(\is_string($path) ? Path::realpath($path) : $path);
+
+    if ($pointer !== null) {
+        $loader->withPointer($pointer);
+    }
+
+    if ($schema !== null) {
+        $loader->withSchema($schema);
+    }
+
+    return $loader;
 }
 
 /**
  * @param Path|string $path
+ * @param int $flags - PHP JSON Flags - @deprecate use withFlags method instead
+ * @param string $date_time_format - format for DateTimeInterface::format() - @deprecate use withDateTimeFormat method instead
+ * @param bool $put_rows_in_new_lines - if you want to put each row in a new line - @deprecate use withRowsInNewLines method instead
  *
  * @return Loader
  */
@@ -38,5 +48,8 @@ function to_json(
     string $date_time_format = \DateTimeInterface::ATOM,
     bool $put_rows_in_new_lines = false
 ) : Loader {
-    return new JsonLoader(\is_string($path) ? Path::realpath($path) : $path, $flags, $date_time_format, $put_rows_in_new_lines);
+    return (new JsonLoader(\is_string($path) ? Path::realpath($path) : $path))
+        ->withFlags($flags)
+        ->withDateTimeFormat($date_time_format)
+        ->withRowsInNewLines($put_rows_in_new_lines);
 }

@@ -10,31 +10,60 @@ use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DS
 use Flow\Filesystem\{Path, SourceStream};
 
 /**
- * @param int<1, max> $characters_read_in_line
+ * @param Path|string $path
+ * @param bool $empty_to_null - @deprecated use $loader->withEmptyToNull() instead
+ * @param bool $with_header - @deprecated use $loader->withHeader() instead
+ * @param null|string $separator - @deprecated use $loader->withSeparator() instead
+ * @param null|string $enclosure - @deprecated use $loader->withEnclosure() instead
+ * @param null|string $escape - @deprecated use $loader->withEscape() instead
+ * @param int<1, max> $characters_read_in_line - @deprecated use $loader->withCharactersReadInLine() instead
+ * @param null|Schema $schema - @deprecated use $loader->withSchema() instead
  */
 #[DocumentationDSL(module: Module::CSV, type: DSLType::EXTRACTOR)]
 function from_csv(
     string|Path $path,
     bool $with_header = true,
     bool $empty_to_null = true,
-    ?string $delimiter = null,
+    ?string $separator = null,
     ?string $enclosure = null,
     ?string $escape = null,
     int $characters_read_in_line = 1000,
     ?Schema $schema = null
 ) : CSVExtractor {
-    return new CSVExtractor(
-        \is_string($path) ? Path::realpath($path) : $path,
-        $with_header,
-        $empty_to_null,
-        $delimiter,
-        $enclosure,
-        $escape,
-        $characters_read_in_line,
-        $schema
-    );
+
+    $loader = (new CSVExtractor(\is_string($path) ? Path::realpath($path) : $path))
+        ->withHeader($with_header)
+        ->withEmptyToNull($empty_to_null)
+        ->withCharactersReadInLine($characters_read_in_line);
+
+    if ($separator !== null) {
+        $loader->withSeparator($separator);
+    }
+
+    if ($enclosure !== null) {
+        $loader->withEnclosure($enclosure);
+    }
+
+    if ($escape !== null) {
+        $loader->withEscape($escape);
+    }
+
+    if ($schema !== null) {
+        $loader->withSchema($schema);
+    }
+
+    return $loader;
 }
 
+/**
+ * @param Path|string $uri
+ * @param bool $with_header - @deprecated use $loader->withHeader() instead
+ * @param string $separator - @deprecated use $loader->withSeparator() instead
+ * @param string $enclosure - @deprecated use $loader->withEnclosure() instead
+ * @param string $escape - @deprecated use $loader->withEscape() instead
+ * @param string $new_line_separator - @deprecated use $loader->withNewLineSeparator() instead
+ * @param string $datetime_format - @deprecated use $loader->withDateTimeFormat() instead
+ */
 #[DocumentationDSL(module: Module::CSV, type: DSLType::LOADER)]
 function to_csv(
     string|Path $uri,
@@ -45,15 +74,13 @@ function to_csv(
     string $new_line_separator = PHP_EOL,
     string $datetime_format = \DateTimeInterface::ATOM
 ) : Loader {
-    return new CSVLoader(
-        \is_string($uri) ? Path::realpath($uri) : $uri,
-        $with_header,
-        $separator,
-        $enclosure,
-        $escape,
-        $new_line_separator,
-        $datetime_format
-    );
+    return (new CSVLoader(\is_string($uri) ? Path::realpath($uri) : $uri))
+        ->withHeader($with_header)
+        ->withSeparator($separator)
+        ->withEnclosure($enclosure)
+        ->withEscape($escape)
+        ->withNewLineSeparator($new_line_separator)
+        ->withDateTimeFormat($datetime_format);
 }
 
 /**
