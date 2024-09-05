@@ -13,7 +13,7 @@ final class GreaterThanEqual extends ScalarFunctionChain
 
     public function __construct(
         private readonly mixed $left,
-        private readonly mixed $right
+        private readonly mixed $right,
     ) {
     }
 

@@ -10,7 +10,7 @@ final class Post
         public readonly string $title,
         public readonly string $description,
         public readonly \DateTimeImmutable $date,
-        public readonly string $slug
+        public readonly string $slug,
     ) {
     }
 

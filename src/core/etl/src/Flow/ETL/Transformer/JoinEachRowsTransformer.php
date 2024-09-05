@@ -12,7 +12,7 @@ final class JoinEachRowsTransformer implements Transformer
     private function __construct(
         private readonly DataFrameFactory $factory,
         private readonly Expression $condition,
-        private readonly Join $type
+        private readonly Join $type,
     ) {
     }
 

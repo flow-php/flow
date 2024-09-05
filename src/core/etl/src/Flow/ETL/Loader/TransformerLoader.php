@@ -10,7 +10,7 @@ final class TransformerLoader implements Loader, OverridingLoader
 {
     public function __construct(
         private readonly Transformer $transformer,
-        private readonly Loader $loader
+        private readonly Loader $loader,
     ) {
     }
 

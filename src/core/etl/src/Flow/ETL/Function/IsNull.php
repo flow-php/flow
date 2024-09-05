@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 final class IsNull extends ScalarFunctionChain
 {
     public function __construct(
-        private readonly mixed $value
+        private readonly mixed $value,
     ) {
     }
 

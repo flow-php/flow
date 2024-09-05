@@ -25,7 +25,7 @@ final class Blocks
     public function __construct(
         private readonly int $blockSize,
         private readonly BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
-        private readonly BlockLifecycle $blockLifecycle = new BlockVoidLifecycle()
+        private readonly BlockLifecycle $blockLifecycle = new BlockVoidLifecycle(),
     ) {
         $this->currentBlock = $this->blockFactory->create($this->blockSize);
     }

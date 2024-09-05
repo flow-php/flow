@@ -28,7 +28,7 @@ final class StructureEntry implements Entry
     public function __construct(
         private readonly string $name,
         private readonly ?array $value,
-        StructureType $type
+        StructureType $type,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');

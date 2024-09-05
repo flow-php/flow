@@ -11,7 +11,7 @@ final class ArrayUnpack extends ScalarFunctionChain implements ScalarFunction\Un
     public function __construct(
         private readonly ScalarFunction|array $array,
         private readonly ScalarFunction|array $skipKeys = [],
-        private readonly ScalarFunction|string|null $entryPrefix = null
+        private readonly ScalarFunction|string|null $entryPrefix = null,
     ) {
     }
 

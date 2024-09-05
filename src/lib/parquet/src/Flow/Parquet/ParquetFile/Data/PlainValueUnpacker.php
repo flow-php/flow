@@ -12,7 +12,7 @@ final class PlainValueUnpacker
 {
     public function __construct(
         private readonly BinaryReader $reader,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
 
     }
@@ -37,7 +37,7 @@ final class PlainValueUnpacker
                 LogicalType::STRING, LogicalType::JSON, LogicalType::UUID => $this->reader->readStrings($total),
                 default => $this->options->get(Option::BYTE_ARRAY_TO_STRING)
                     ? $this->reader->readStrings($total)
-                    : $this->reader->readByteArrays($total)
+                    : $this->reader->readByteArrays($total),
             },
             PhysicalType::FIXED_LEN_BYTE_ARRAY => match ($column->logicalType()?->name()) {
                 /** @phpstan-ignore-next-line */

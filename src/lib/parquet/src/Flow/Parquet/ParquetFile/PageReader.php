@@ -14,7 +14,7 @@ final class PageReader
 {
     public function __construct(
         private readonly ByteOrder $byteOrder,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
     }
 

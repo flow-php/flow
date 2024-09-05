@@ -13,7 +13,7 @@ final class Cast extends ScalarFunctionChain
 {
     public function __construct(
         private readonly mixed $value,
-        private readonly ScalarFunction|Type|string $type
+        private readonly ScalarFunction|Type|string $type,
     ) {
     }
 
@@ -60,7 +60,7 @@ final class Cast extends ScalarFunctionChain
                 'json' => $caster->to(type_json())->value($value),
                 'json_pretty' => \json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
                 'xml' => $caster->to(type_xml())->value($value),
-                default => null
+                default => null,
             };
         } catch (CastingException $e) {
             return null;

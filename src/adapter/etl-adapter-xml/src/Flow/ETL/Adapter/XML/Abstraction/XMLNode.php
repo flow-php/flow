@@ -20,7 +20,7 @@ final class XMLNode
         public readonly ?string $value,
         public readonly XMLNodeType $type,
         public readonly array $attributes = [],
-        public readonly array $children = []
+        public readonly array $children = [],
     ) {
         if (!\mb_strlen($name)) {
             throw new InvalidArgumentException('XMLNode name can not be empty');

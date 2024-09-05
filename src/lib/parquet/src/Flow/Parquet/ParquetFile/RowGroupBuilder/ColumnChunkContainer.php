@@ -10,7 +10,7 @@ final class ColumnChunkContainer
 {
     public function __construct(
         public readonly string $binaryBuffer,
-        public readonly ColumnChunk $columnChunk
+        public readonly ColumnChunk $columnChunk,
     ) {
     }
 }

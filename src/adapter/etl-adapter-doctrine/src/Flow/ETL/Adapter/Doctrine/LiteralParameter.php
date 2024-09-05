@@ -12,7 +12,7 @@ final class LiteralParameter implements QueryParameter
     public function __construct(
         private readonly string $queryParamName,
         private readonly mixed $value,
-        private readonly int|ArrayParameterType|null $type = null
+        private readonly int|ArrayParameterType|null $type = null,
     ) {
     }
 

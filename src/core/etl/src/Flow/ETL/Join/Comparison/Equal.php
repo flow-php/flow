@@ -12,7 +12,7 @@ final class Equal implements Comparison
 {
     public function __construct(
         private readonly string|Reference $entryLeft,
-        private readonly string|Reference $entryRight
+        private readonly string|Reference $entryRight,
     ) {
     }
 

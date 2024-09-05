@@ -10,7 +10,7 @@ final class IsIn extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|array $haystack,
-        private readonly mixed $needle
+        private readonly mixed $needle,
     ) {
     }
 

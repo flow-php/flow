@@ -40,7 +40,7 @@ final class BlobService implements BlobServiceInterface
         private readonly HttpFactory $httpFactory,
         private readonly URLFactory $urlFactory,
         private readonly AuthorizationFactory $authorizationFactory,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 

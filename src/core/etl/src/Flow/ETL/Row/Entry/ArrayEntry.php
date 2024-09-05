@@ -28,7 +28,7 @@ final class ArrayEntry implements Entry
      */
     public function __construct(
         private readonly string $name,
-        private readonly ?array $value
+        private readonly ?array $value,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');

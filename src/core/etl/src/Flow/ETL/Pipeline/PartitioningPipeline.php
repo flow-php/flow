@@ -32,7 +32,7 @@ final class PartitioningPipeline implements Pipeline
     public function __construct(
         private readonly Pipeline $pipeline,
         private readonly array $partitionBy = [],
-        private readonly array $orderBy = []
+        private readonly array $orderBy = [],
     ) {
         if (!\count($this->partitionBy)) {
             throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');

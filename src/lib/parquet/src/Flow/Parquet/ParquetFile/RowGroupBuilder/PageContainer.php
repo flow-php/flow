@@ -20,7 +20,7 @@ final class PageContainer
         public readonly string $pageBuffer,
         public readonly array $values,
         public readonly ?array $dictionary,
-        public readonly PageHeader $pageHeader
+        public readonly PageHeader $pageHeader,
     ) {
     }
 

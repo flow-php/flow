@@ -49,7 +49,7 @@ final class EntryNormalizer
             UuidEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             ObjectEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             ArrayEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
-            default => throw new InvalidArgumentException("Given entry type can't be converted to node, given entry type: " . $entry::class)
+            default => throw new InvalidArgumentException("Given entry type can't be converted to node, given entry type: " . $entry::class),
         };
     }
 

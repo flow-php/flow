@@ -10,7 +10,7 @@ final class BucketRow
 {
     public function __construct(
         public readonly Row $row,
-        public readonly string $bucketId
+        public readonly string $bucketId,
     ) {
     }
 }

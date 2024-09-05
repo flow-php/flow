@@ -9,7 +9,7 @@ final class DataShredded
     public function __construct(
         public readonly array $repetitions,
         public readonly array $definitions,
-        public readonly array $values
+        public readonly array $values,
     ) {
     }
 }

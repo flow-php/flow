@@ -12,7 +12,7 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
 {
     public function __construct(
         private readonly ScalarFunction $condition,
-        private readonly Loader $loader
+        private readonly Loader $loader,
     ) {
     }
 

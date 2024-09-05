@@ -21,7 +21,7 @@ final class Finder
     public function __construct(
         array $namespaces,
         private readonly AccessControl $entryPointACL,
-        private readonly AccessControl $methodACL
+        private readonly AccessControl $methodACL,
     ) {
         $namespaces = \array_map(static fn (DSLNamespace $n) : DSLNamespace => $n, $namespaces);
 

@@ -13,7 +13,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(
         private readonly Path $path,
-        private readonly ?Schema $schema = null
+        private readonly ?Schema $schema = null,
     ) {
         throw new RuntimeException('Avro integration was abandoned due to lack of availability of good Avro libraries.');
     }

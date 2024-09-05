@@ -13,7 +13,7 @@ final class ArraySort extends ScalarFunctionChain
         private readonly ScalarFunction $ref,
         private readonly ScalarFunction|Sort $sortFunction,
         private readonly ScalarFunction|int|null $flags,
-        private readonly ScalarFunction|bool $recursive
+        private readonly ScalarFunction|bool $recursive,
     ) {
     }
 

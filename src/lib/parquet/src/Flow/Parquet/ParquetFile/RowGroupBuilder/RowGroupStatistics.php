@@ -12,7 +12,7 @@ final class RowGroupStatistics
      * @param array<ColumnChunkStatistics> $statistics
      */
     public function __construct(
-        private readonly array $statistics
+        private readonly array $statistics,
     ) {
     }
 

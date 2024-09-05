@@ -10,7 +10,7 @@ final class Divide extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|int|float|string $left,
-        private readonly ScalarFunction|int|float|string $right
+        private readonly ScalarFunction|int|float|string $right,
     ) {
     }
 

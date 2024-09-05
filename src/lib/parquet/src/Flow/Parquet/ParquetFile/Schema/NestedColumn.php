@@ -22,7 +22,7 @@ final class NestedColumn implements Column
         private readonly array $children,
         private readonly ?ConvertedType $convertedType = null,
         private readonly ?LogicalType $logicalType = null,
-        public readonly bool $schemaRoot = false
+        public readonly bool $schemaRoot = false,
     ) {
         foreach ($children as $child) {
             $child->setParent($this);

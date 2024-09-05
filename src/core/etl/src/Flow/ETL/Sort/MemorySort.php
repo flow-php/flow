@@ -20,7 +20,7 @@ final class MemorySort implements SortingAlgorithm
 
     public function __construct(
         private readonly Pipeline $pipeline,
-        private Unit $maximumMemory
+        private Unit $maximumMemory,
     ) {
         $this->configuration = new Configuration(10);
 

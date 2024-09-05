@@ -12,7 +12,7 @@ final class Trim extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction|string $value,
         private readonly ScalarFunction|Type $type = Type::BOTH,
-        private readonly ScalarFunction|string $characters = " \t\n\r\0\x0B"
+        private readonly ScalarFunction|string $characters = " \t\n\r\0\x0B",
     ) {
     }
 

@@ -507,7 +507,7 @@ final class DataFrame
             Join::left_anti->value => JoinEachRowsTransformer::leftAnti($factory, $on),
             Join::right->value => JoinEachRowsTransformer::right($factory, $on),
             Join::inner->value => JoinEachRowsTransformer::inner($factory, $on),
-            default => throw new InvalidArgumentException('Unsupported join type')
+            default => throw new InvalidArgumentException('Unsupported join type'),
         };
         $this->pipeline->add($transformer);
 

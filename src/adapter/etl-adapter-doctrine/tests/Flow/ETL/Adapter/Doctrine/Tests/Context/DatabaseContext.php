@@ -11,7 +11,7 @@ final class DatabaseContext
 {
     public function __construct(
         private readonly Connection $connection,
-        private readonly InsertQueryCounter $logger
+        private readonly InsertQueryCounter $logger,
     ) {
     }
 

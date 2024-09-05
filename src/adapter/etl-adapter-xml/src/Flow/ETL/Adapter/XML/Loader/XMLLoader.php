@@ -41,7 +41,7 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
 
     public function __construct(
         private readonly Path $path,
-        private readonly XMLWriter $xmlWriter
+        private readonly XMLWriter $xmlWriter,
     ) {
     }
 

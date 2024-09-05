@@ -13,7 +13,7 @@ final class OnEach extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction|array $array,
         private readonly ScalarFunction $function,
-        private readonly ScalarFunction|bool $preserveKeys = true
+        private readonly ScalarFunction|bool $preserveKeys = true,
     ) {
     }
 

@@ -12,7 +12,7 @@ final class ArrayKeysStyleConvert extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly StringStyles $style
+        private readonly StringStyles $style,
     ) {
     }
 

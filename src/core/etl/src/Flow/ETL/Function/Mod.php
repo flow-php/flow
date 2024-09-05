@@ -10,7 +10,7 @@ final class Mod extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|int|float $left,
-        private readonly ScalarFunction|int|float $right
+        private readonly ScalarFunction|int|float $right,
     ) {
     }
 

@@ -10,7 +10,7 @@ use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
 final class RLEBitPackedPacker
 {
     public function __construct(
-        private readonly RLEBitPackedHybrid $bitPackedHybrid
+        private readonly RLEBitPackedHybrid $bitPackedHybrid,
     ) {
     }
 

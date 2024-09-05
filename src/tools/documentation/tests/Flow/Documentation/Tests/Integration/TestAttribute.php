@@ -9,7 +9,7 @@ final class TestAttribute
 {
     public function __construct(
         public string $name,
-        public bool $active
+        public bool $active,
     ) {
 
     }

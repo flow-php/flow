@@ -20,7 +20,7 @@ final class Option
     public function __construct(
         public string $separator,
         public string $enclosure,
-        public string $escape = '\\'
+        public string $escape = '\\',
     ) {
         if (\mb_strlen($this->separator) !== 1) {
             throw new InvalidArgumentException('Separator must be a single character');

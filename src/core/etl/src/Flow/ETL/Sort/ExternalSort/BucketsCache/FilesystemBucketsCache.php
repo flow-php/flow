@@ -21,7 +21,7 @@ final class FilesystemBucketsCache implements BucketsCache
         private readonly Filesystem $filesystem,
         private readonly Serializer $serializer = new NativePHPSerializer(),
         private readonly int $chunkSize = 100,
-        ?Path $cacheDir = null
+        ?Path $cacheDir = null,
     ) {
         if ($this->chunkSize < 1) {
             throw new InvalidArgumentException('Chunk size must be greater than 0');

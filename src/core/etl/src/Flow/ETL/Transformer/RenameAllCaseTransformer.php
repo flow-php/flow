@@ -12,7 +12,7 @@ final class RenameAllCaseTransformer implements Transformer
         private readonly bool $upper = false,
         private readonly bool $lower = false,
         private readonly bool $ucfirst = false,
-        private readonly bool $ucwords = false
+        private readonly bool $ucwords = false,
     ) {
     }
 

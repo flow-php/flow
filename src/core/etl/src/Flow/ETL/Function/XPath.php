@@ -10,7 +10,7 @@ final class XPath extends ScalarFunctionChain
 {
     public function __construct(
         private readonly mixed $value,
-        private readonly ScalarFunction|string $path
+        private readonly ScalarFunction|string $path,
     ) {
     }
 

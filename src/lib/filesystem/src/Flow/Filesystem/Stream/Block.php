@@ -23,7 +23,7 @@ class Block
     public function __construct(
         private readonly string $id,
         private readonly int $totalSize,
-        private readonly Path $path
+        private readonly Path $path,
     ) {
         if ($this->id === '') {
             throw new InvalidArgumentException('Block id cannot be empty.');

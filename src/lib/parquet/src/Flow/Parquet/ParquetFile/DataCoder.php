@@ -24,7 +24,7 @@ final class DataCoder
         string $buffer,
         FlatColumn $column,
         DataPageHeader $pageHeader,
-        ?Dictionary $dictionary = null
+        ?Dictionary $dictionary = null,
     ) : ColumnData {
 
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
@@ -100,7 +100,7 @@ final class DataCoder
         string $buffer,
         FlatColumn $column,
         DataPageHeaderV2 $pageHeader,
-        ?Dictionary $dictionary = null
+        ?Dictionary $dictionary = null,
     ) : ColumnData {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
@@ -172,7 +172,7 @@ final class DataCoder
     public function decodeDictionary(
         string $buffer,
         FlatColumn $column,
-        DictionaryPageHeader $pageHeader
+        DictionaryPageHeader $pageHeader,
     ) : Dictionary {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 

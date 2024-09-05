@@ -12,7 +12,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 final class DataBuilder
 {
     public function __construct(
-        private readonly DataConverter $dataConverter
+        private readonly DataConverter $dataConverter,
     ) {
     }
 

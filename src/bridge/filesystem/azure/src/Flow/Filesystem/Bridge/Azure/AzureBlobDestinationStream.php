@@ -21,7 +21,7 @@ final class AzureBlobDestinationStream implements DestinationStream
         private readonly BlobServiceInterface $blobService,
         private readonly Path $path,
         private readonly Blocks $blocks,
-        private readonly BlockList $blockList
+        private readonly BlockList $blockList,
     ) {
     }
 

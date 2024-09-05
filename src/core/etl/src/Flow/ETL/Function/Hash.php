@@ -24,7 +24,7 @@ final class Hash extends ScalarFunctionChain
             default => match (\gettype($value)) {
                 'array', 'object' => $this->algorithm->hash(\serialize($value)),
                 default => $this->algorithm->hash((string) $value),
-            }
+            },
         };
     }
 }

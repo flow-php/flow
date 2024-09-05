@@ -15,7 +15,7 @@ final class Sprintf extends ScalarFunctionChain
 
     public function __construct(
         private readonly ScalarFunction|string $format,
-        ScalarFunction|float|int|string|null ...$values
+        ScalarFunction|float|int|string|null ...$values,
     ) {
         $this->values = $values;
     }

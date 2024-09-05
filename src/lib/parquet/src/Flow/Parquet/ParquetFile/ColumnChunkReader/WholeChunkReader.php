@@ -21,7 +21,7 @@ final class WholeChunkReader implements ColumnChunkReader
     public function __construct(
         private readonly DataBuilder $dataBuilder,
         private readonly PageReader $pageReader,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
     }
 

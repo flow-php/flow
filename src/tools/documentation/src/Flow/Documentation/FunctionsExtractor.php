@@ -11,7 +11,7 @@ final class FunctionsExtractor
 {
     public function __construct(
         private readonly string $repositoryRootPath,
-        private readonly FunctionCollector $functionCollector
+        private readonly FunctionCollector $functionCollector,
     ) {
     }
 

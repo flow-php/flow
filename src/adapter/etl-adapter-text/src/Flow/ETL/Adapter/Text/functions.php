@@ -28,7 +28,7 @@ function from_text(
 #[DocumentationDSL(module: Module::TEXT, type: Type::LOADER)]
 function to_text(
     string|Path $path,
-    string $new_line_separator = PHP_EOL
+    string $new_line_separator = PHP_EOL,
 ) : Loader {
     return (new TextLoader(\is_string($path) ? Path::realpath($path) : $path))
         ->withNewLineSeparator($new_line_separator);

@@ -19,7 +19,7 @@ final class Github
 {
     public function __construct(
         private readonly ContributorsRequestFactory $requestFactory,
-        private readonly ContainerBagInterface $parameters
+        private readonly ContainerBagInterface $parameters,
     ) {
     }
 

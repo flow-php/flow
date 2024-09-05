@@ -12,7 +12,7 @@ final class Table
      */
     public function __construct(
         public readonly string $name,
-        public readonly ?array $columns = []
+        public readonly ?array $columns = [],
     ) {
     }
 }

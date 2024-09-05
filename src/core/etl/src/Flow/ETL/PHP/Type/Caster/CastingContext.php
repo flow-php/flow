@@ -12,7 +12,7 @@ final class CastingContext
     public function __construct(
         private readonly CastingHandler $handler,
         private readonly Type $type,
-        private readonly Caster $caster
+        private readonly Caster $caster,
     ) {
     }
 

@@ -9,7 +9,7 @@ use Flow\RDSL\Exception\InvalidArgumentException;
 final class Builder
 {
     public function __construct(
-        private readonly Finder $finder
+        private readonly Finder $finder,
     ) {
     }
 
