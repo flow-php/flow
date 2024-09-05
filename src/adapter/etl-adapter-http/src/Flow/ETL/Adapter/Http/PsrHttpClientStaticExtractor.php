@@ -23,13 +23,11 @@ final class PsrHttpClientStaticExtractor implements Extractor
 
     /**
      * @param iterable<RequestInterface> $requests
-     * @param null|callable(RequestInterface) : void $preRequest
-     * @param null|callable(RequestInterface, ResponseInterface) : void $postRequest
      */
-    public function __construct(private readonly ClientInterface $client, private readonly iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null)
-    {
-        $this->preRequest = $preRequest;
-        $this->postRequest = $postRequest;
+    public function __construct(
+        private readonly ClientInterface $client,
+        private readonly iterable $requests,
+    ) {
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -81,5 +79,25 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 }
             }
         }
+    }
+
+    /**
+     * @param callable(RequestInterface, ResponseInterface) : void $postRequest
+     */
+    public function withPostRequest(callable $postRequest) : self
+    {
+        $this->postRequest = $postRequest;
+
+        return $this;
+    }
+
+    /**
+     * @param callable(RequestInterface) : void $preRequest
+     */
+    public function withPreRequest(callable $preRequest) : self
+    {
+        $this->preRequest = $preRequest;
+
+        return $this;
     }
 }
