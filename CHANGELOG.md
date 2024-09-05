@@ -7,6 +7,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1209](https://github.com/flow-php/flow/pull/1209) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1208](https://github.com/flow-php/flow/pull/1208) - **Unify passing options to loaders/extractors through fluent interface** - [@norberttech](https://github.com/norberttech)
 - [#1207](https://github.com/flow-php/flow/pull/1207) - **from_csv, from_json, from_xml, from_parquet and from_text contract, removed support for passing path as array** - [@mleczakm](https://github.com/mleczakm)
 - [#1203](https://github.com/flow-php/flow/pull/1203) - **Allow to rename XML nested structure elements on a loader level** - [@norberttech](https://github.com/norberttech)
