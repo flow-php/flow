@@ -15,6 +15,8 @@ final class ElasticsearchExtractor implements Extractor
      */
     private \Elasticsearch\Client|\Elastic\Elasticsearch\Client|null $client;
 
+    private ?array $pointInTimeParams = null;
+
     /**
      * @param array{
      *  hosts?: array<string>,
@@ -27,13 +29,11 @@ final class ElasticsearchExtractor implements Extractor
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $config
-     * @param array<mixed> $params - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html
-     * @param ?array<mixed> $pointInTimeParams - https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html
+     * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html
      */
     public function __construct(
         private readonly array $config,
-        private readonly array $params,
-        private readonly ?array $pointInTimeParams = null,
+        private readonly array $parameters,
     ) {
         $this->client = null;
     }
@@ -52,8 +52,8 @@ final class ElasticsearchExtractor implements Extractor
             : null;
 
         $params = ($pit)
-            ? (new SearchParams($this->params))->setBody('pit', ['id' => $pit->id()])->remove('index')
-            : new SearchParams($this->params);
+            ? (new SearchParams($this->parameters))->setBody('pit', ['id' => $pit->id()])->remove('index')
+            : new SearchParams($this->parameters);
 
         /**
          * @psalm-suppress UndefinedClass
@@ -132,6 +132,16 @@ final class ElasticsearchExtractor implements Extractor
         }
 
         $this->closePointInTime($pit);
+    }
+
+    /**
+     * @param array<mixed> $pointInTimeParams - https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html
+     */
+    public function withPointInTime(array $pointInTimeParams) : self
+    {
+        $this->pointInTimeParams = $pointInTimeParams;
+
+        return $this;
     }
 
     /**

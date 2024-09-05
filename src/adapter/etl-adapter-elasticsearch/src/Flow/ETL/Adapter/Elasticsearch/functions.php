@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch;
 
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\{DocumentDataSource, ElasticsearchExtractor, ElasticsearchLoader, HitsIntoRowsTransformer};
+use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\{EntryIdFactory, HashIdFactory};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 
 /**
@@ -25,7 +26,7 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
  * } $config
  * @param string $index
  * @param IdFactory $id_factory
- * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
+ * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html - @deprecated use withParameters method instead
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::LOADER)]
 function to_es_bulk_index(
@@ -34,7 +35,19 @@ function to_es_bulk_index(
     IdFactory $id_factory,
     array $parameters = []
 ) : ElasticsearchLoader {
-    return new ElasticsearchLoader($config, $index, $id_factory, $parameters);
+    return (new ElasticsearchLoader($config, $index, $id_factory))->withParameters($parameters);
+}
+
+#[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::HELPER)]
+function entry_id_factory(string $entry_name) : IdFactory
+{
+    return new EntryIdFactory($entry_name);
+}
+
+#[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::HELPER)]
+function hash_id_factory(string ...$entry_names) : IdFactory
+{
+    return new HashIdFactory(...$entry_names);
 }
 
 /**
@@ -55,7 +68,7 @@ function to_es_bulk_index(
  * } $config
  * @param string $index
  * @param IdFactory $id_factory
- * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
+ * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html - @deprecated use withParameters method instead
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::LOADER)]
 function to_es_bulk_update(
@@ -64,7 +77,7 @@ function to_es_bulk_update(
     IdFactory $id_factory,
     array $parameters = []
 ) : ElasticsearchLoader {
-    return ElasticsearchLoader::update($config, $index, $id_factory, $parameters);
+    return ElasticsearchLoader::update($config, $index, $id_factory)->withParameters($parameters);
 }
 
 /**
@@ -97,15 +110,17 @@ function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source
  *  elasticMetaHeader?: boolean,
  *  includePortInHostHeader?: boolean
  * } $config
- * @param array<mixed> $params - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html
- * @param ?array<mixed> $pit_params - when used extractor will create point in time to stabilize search results. Point in time is automatically closed when last element is extracted. https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html
+ * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html
+ * @param ?array<mixed> $pit_params - when used extractor will create point in time to stabilize search results. Point in time is automatically closed when last element is extracted. https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html - @deprecated use withPointInTime method instead
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::EXTRACTOR)]
-function from_es(array $config, array $params, ?array $pit_params = null) : ElasticsearchExtractor
+function from_es(array $config, array $parameters, ?array $pit_params = null) : ElasticsearchExtractor
 {
-    return new ElasticsearchExtractor(
-        $config,
-        $params,
-        $pit_params,
-    );
+    $extractor = new ElasticsearchExtractor($config, $parameters);
+
+    if ($pit_params) {
+        $extractor->withPointInTime($pit_params);
+    }
+
+    return $extractor;
 }
