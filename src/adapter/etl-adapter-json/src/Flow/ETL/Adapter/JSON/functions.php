@@ -4,36 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
-use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type, Extractor, Loader};
+use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type, Loader};
 use Flow\Filesystem\Path;
 
 /**
- * @param array<Path|string>|Path|string $path - string is internally turned into stream
+ * @param Path|string $path - string is internally turned into stream
  * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
 function from_json(
-    string|Path|array $path,
+    string|Path $path,
     ?string $pointer = null,
     ?Schema $schema = null,
-) : Extractor {
-    if (\is_array($path)) {
-        $extractors = [];
-
-        foreach ($path as $file) {
-            $extractors[] = new JsonExtractor(
-                \is_string($file) ? Path::realpath($file) : $file,
-                $pointer,
-                $schema
-            );
-        }
-
-        return from_all(...$extractors);
-    }
-
+) : JsonExtractor {
     return new JsonExtractor(
         \is_string($path) ? Path::realpath($path) : $path,
         $pointer,
