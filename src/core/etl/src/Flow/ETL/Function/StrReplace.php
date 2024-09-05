@@ -11,7 +11,7 @@ final class StrReplace extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction|string $value,
         private readonly ScalarFunction|string|array $search,
-        private readonly ScalarFunction|string|array $replace
+        private readonly ScalarFunction|string|array $replace,
     ) {
     }
 

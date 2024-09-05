@@ -16,7 +16,7 @@ final class ScalarFunctionFilter implements Filter
     public function __construct(
         private readonly ScalarFunction $function,
         private readonly EntryFactory $entryFactory,
-        private readonly AutoCaster $caster
+        private readonly AutoCaster $caster,
     ) {
     }
 

@@ -10,7 +10,7 @@ final class Contains extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $haystack,
-        private readonly ScalarFunction|string $needle
+        private readonly ScalarFunction|string $needle,
     ) {
     }
 

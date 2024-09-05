@@ -11,7 +11,7 @@ final class RequestConfig
         private readonly bool $withUri = true,
         private readonly bool $withBody = false,
         private readonly int $bodySizeLimit = 1024 * 1024 * 32,
-        private readonly array $headers = ['host', 'accept', 'user-agent']
+        private readonly array $headers = ['host', 'accept', 'user-agent'],
     ) {
     }
 

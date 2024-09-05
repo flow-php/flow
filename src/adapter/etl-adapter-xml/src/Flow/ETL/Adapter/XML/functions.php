@@ -32,7 +32,7 @@ use Flow\Filesystem\Path;
 #[DocumentationDSL(module: Module::XML, type: DSLType::EXTRACTOR)]
 function from_xml(
     Path|string $path,
-    string $xml_node_path = ''
+    string $xml_node_path = '',
 ) : XMLParserExtractor {
     return (new XMLParserExtractor(\is_string($path) ? path_real($path) : $path))->withXMLNodePath($xml_node_path);
 }
@@ -52,7 +52,7 @@ function to_xml(
     string $row_element_name = 'row',
     string $attribute_prefix = '_',
     string $date_time_format = 'Y-m-d\TH:i:s.uP',
-    XMLWriter $xml_writer = new DOMDocumentWriter()
+    XMLWriter $xml_writer = new DOMDocumentWriter(),
 ) : XMLLoader {
     return (new XMLLoader(
         \is_string($path) ? Path::realpath($path) : $path,

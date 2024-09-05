@@ -27,7 +27,7 @@ final class ParquetFile
         private SourceStream $stream,
         private readonly ByteOrder $byteOrder,
         private readonly DataConverter $dataConverter,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
     }
 

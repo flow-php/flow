@@ -12,7 +12,7 @@ final class CrossJoinRowsTransformer implements Transformer
 
     public function __construct(
         private readonly DataFrame $dataFrame,
-        private readonly string $prefix = ''
+        private readonly string $prefix = '',
     ) {
     }
 

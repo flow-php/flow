@@ -11,7 +11,7 @@ final class HttpFactory
 {
     public function __construct(
         private readonly RequestFactoryInterface $requestFactory,
-        private readonly StreamFactoryInterface $streamFactory
+        private readonly StreamFactoryInterface $streamFactory,
     ) {
     }
 

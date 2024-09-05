@@ -11,7 +11,7 @@ final class When extends ScalarFunctionChain
     public function __construct(
         private readonly mixed $condition,
         private readonly mixed $then,
-        private readonly mixed $else = null
+        private readonly mixed $else = null,
     ) {
     }
 

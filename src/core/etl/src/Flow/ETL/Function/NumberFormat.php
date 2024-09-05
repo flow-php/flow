@@ -12,7 +12,7 @@ final class NumberFormat extends ScalarFunctionChain
         private readonly ScalarFunction|int|float $value,
         private readonly ScalarFunction|int $decimals,
         private readonly ScalarFunction|string $decimalSeparator = '.',
-        private readonly ScalarFunction|string $thousandsSeparator = ','
+        private readonly ScalarFunction|string $thousandsSeparator = ',',
     ) {
     }
 

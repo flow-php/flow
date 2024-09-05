@@ -22,7 +22,7 @@ use Flow\ETL\{Attribute\DocumentationDSL,
 function dbal_dataframe_factory(
     array|Connection $connection,
     string $query,
-    QueryParameter ...$parameters
+    QueryParameter ...$parameters,
 ) : DbalDataFrameFactory {
     return \is_array($connection)
         ? new DbalDataFrameFactory($connection, $query, ...$parameters)

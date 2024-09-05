@@ -33,7 +33,7 @@ final class ExternalSort implements SortingAlgorithm
     public function __construct(
         private readonly Pipeline $pipeline,
         private readonly BucketsCache $bucketsCache,
-        private readonly int $bucketsCount = 10
+        private readonly int $bucketsCount = 10,
     ) {
         if ($this->bucketsCount < 1) {
             throw new InvalidArgumentException('Buckets count must be greater than 0, given: ' . $this->bucketsCount);

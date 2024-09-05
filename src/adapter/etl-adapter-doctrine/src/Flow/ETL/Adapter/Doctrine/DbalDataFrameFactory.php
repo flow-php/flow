@@ -24,7 +24,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
     public function __construct(
         private readonly array $connectionParams,
         private readonly string $query,
-        QueryParameter ...$parameters
+        QueryParameter ...$parameters,
     ) {
         $this->parameters = $parameters;
     }

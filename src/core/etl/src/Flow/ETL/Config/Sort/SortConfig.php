@@ -13,7 +13,7 @@ final class SortConfig
 
     public function __construct(
         public readonly SortAlgorithms $algorithm,
-        public readonly Unit $memoryLimit
+        public readonly Unit $memoryLimit,
     ) {
     }
 }

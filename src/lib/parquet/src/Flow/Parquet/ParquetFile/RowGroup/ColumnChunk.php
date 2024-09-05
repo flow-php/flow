@@ -37,7 +37,7 @@ final class ColumnChunk
         private readonly ?int $dataPageOffset,
         private readonly ?int $indexPageOffset,
         private readonly ?Statistics $statistics,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
     }
 

@@ -14,7 +14,7 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function __construct(
         private array $bytes,
-        private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN
+        private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
     ) {
         $this->size = new DataSize(\count($this->bytes) * 8);
     }

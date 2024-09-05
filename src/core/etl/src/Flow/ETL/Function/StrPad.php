@@ -12,7 +12,7 @@ final class StrPad extends ScalarFunctionChain
         private readonly ScalarFunction|string $value,
         private readonly ScalarFunction|int $length,
         private readonly ScalarFunction|string $padString = ' ',
-        private readonly ScalarFunction|int $type = STR_PAD_RIGHT
+        private readonly ScalarFunction|int $type = STR_PAD_RIGHT,
     ) {
     }
 

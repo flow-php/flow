@@ -13,7 +13,7 @@ final class Expression
 {
     public function __construct(
         private readonly Comparison $comparison,
-        private readonly string $joinPrefix = ''
+        private readonly string $joinPrefix = '',
     ) {
     }
 

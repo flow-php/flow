@@ -11,7 +11,7 @@ final class ToDateTime extends ScalarFunctionChain
     public function __construct(
         private readonly mixed $value,
         private readonly ScalarFunction|string $format,
-        private readonly ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC')
+        private readonly ScalarFunction|\DateTimeZone $timeZone = new \DateTimeZone('UTC'),
     ) {
     }
 

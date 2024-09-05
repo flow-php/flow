@@ -16,7 +16,7 @@ final class PagesBuilder
         private readonly DataConverter $dataConverter,
         private readonly Compressions $compression,
         private readonly PageSizeCalculator $pageSizeCalculator,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
     }
 

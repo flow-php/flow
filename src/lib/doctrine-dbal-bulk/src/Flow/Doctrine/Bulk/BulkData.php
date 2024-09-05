@@ -127,9 +127,9 @@ final class BulkData
                         Types::DATE_MUTABLE,
                         Types::DATETIME_MUTABLE,
                         Types::DATETIMETZ_MUTABLE => new \DateTime($entry),
-                        default => $entry
+                        default => $entry,
                     },
-                    default => $entry
+                    default => $entry,
                 };
             }
         }

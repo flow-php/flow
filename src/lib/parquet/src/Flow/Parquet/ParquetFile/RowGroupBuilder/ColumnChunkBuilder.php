@@ -21,7 +21,7 @@ final class ColumnChunkBuilder
         private readonly Compressions $compression,
         private readonly DataConverter $dataConverter,
         private readonly PageSizeCalculator $calculator,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
         $this->statistics = new ColumnChunkStatistics($this->column);
     }

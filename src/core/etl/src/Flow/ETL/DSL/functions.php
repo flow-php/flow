@@ -1442,8 +1442,8 @@ function is_type(array $types, mixed $value) : bool
                 'list' => \is_array($value) && \array_is_list($value),
                 default => match (\class_exists($type) || \enum_exists($type)) {
                     true => $value instanceof $type,
-                    false => throw new RuntimeException('Unexpected type: ' . $type)
-                }
+                    false => throw new RuntimeException('Unexpected type: ' . $type),
+                },
             }) {
                 return true;
             }
@@ -1472,7 +1472,7 @@ function generate_random_int(int $start = PHP_INT_MIN, int $end = PHP_INT_MAX, N
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function random_string(
     int|ScalarFunction $length,
-    RandomValueGenerator $generator = new NativePHPRandomValueGenerator()
+    RandomValueGenerator $generator = new NativePHPRandomValueGenerator(),
 ) : RandomString {
     return new RandomString($length, $generator);
 }

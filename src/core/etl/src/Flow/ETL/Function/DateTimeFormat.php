@@ -10,7 +10,7 @@ final class DateTimeFormat extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|\DateTimeInterface $dateTime,
-        private readonly ScalarFunction|string $format
+        private readonly ScalarFunction|string $format,
     ) {
     }
 

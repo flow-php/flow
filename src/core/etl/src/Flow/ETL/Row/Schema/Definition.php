@@ -36,7 +36,7 @@ final class Definition
         string|Reference $ref,
         private readonly string $entryClass,
         private readonly Type $type,
-        ?Metadata $metadata = null
+        ?Metadata $metadata = null,
     ) {
         if (!\is_a($this->entryClass, Entry::class, true)) {
             throw new InvalidArgumentException(\sprintf('Entry class "%s" must implement "%s"', $this->entryClass, Entry::class));

@@ -28,7 +28,7 @@ function from_csv(
     ?string $enclosure = null,
     ?string $escape = null,
     int $characters_read_in_line = 1000,
-    ?Schema $schema = null
+    ?Schema $schema = null,
 ) : CSVExtractor {
 
     $loader = (new CSVExtractor(\is_string($path) ? Path::realpath($path) : $path))
@@ -72,7 +72,7 @@ function to_csv(
     string $enclosure = '"',
     string $escape = '\\',
     string $new_line_separator = PHP_EOL,
-    string $datetime_format = \DateTimeInterface::ATOM
+    string $datetime_format = \DateTimeInterface::ATOM,
 ) : Loader {
     return (new CSVLoader(\is_string($uri) ? Path::realpath($uri) : $uri))
         ->withHeader($with_header)

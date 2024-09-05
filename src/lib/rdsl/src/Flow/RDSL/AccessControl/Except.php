@@ -10,7 +10,7 @@ final class Except implements AccessControl
 {
     public function __construct(
         private readonly AccessControl $acl,
-        private readonly array $except = []
+        private readonly array $except = [],
     ) {
     }
 

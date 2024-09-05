@@ -20,7 +20,7 @@ final class EnumEntry implements Entry
 
     public function __construct(
         private readonly string $name,
-        private readonly ?\UnitEnum $value
+        private readonly ?\UnitEnum $value,
     ) {
         $this->type = EnumType::of($value === null ? \UnitEnum::class : $value::class, $value === null);
     }

@@ -23,7 +23,7 @@ final class DataPageHeaderV2
         private readonly int $repetitionsByteLength,
         private readonly ?bool $isCompressed,
         private readonly ?Statistics $statistics,
-        private readonly Options $options
+        private readonly Options $options,
     ) {
     }
 

@@ -15,7 +15,7 @@ final class Timestamp
         private readonly bool $isAdjustedToUTC,
         private readonly bool $millis,
         private readonly bool $micros,
-        private readonly bool $nanos
+        private readonly bool $nanos,
     ) {
     }
 

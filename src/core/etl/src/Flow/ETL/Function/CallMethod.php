@@ -16,7 +16,7 @@ final class CallMethod extends ScalarFunctionChain
     public function __construct(
         private readonly object $object,
         private readonly ScalarFunction|string $method,
-        private readonly array $params = []
+        private readonly array $params = [],
     ) {
     }
 

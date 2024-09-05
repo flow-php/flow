@@ -40,7 +40,7 @@ final class LogicalType
         private readonly string $name,
         private readonly ?Timestamp $timestamp = null,
         private readonly ?Time $time = null,
-        private readonly ?Decimal $decimal = null
+        private readonly ?Decimal $decimal = null,
     ) {
     }
 

@@ -12,7 +12,7 @@ final class ArrayKeyRename extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly ScalarFunction|string $path,
-        private readonly ScalarFunction|string $newName
+        private readonly ScalarFunction|string $newName,
     ) {
     }
 

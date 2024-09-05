@@ -13,7 +13,7 @@ final class DSLNamespace
 
     public function __construct(
         public readonly string $name,
-        private readonly AccessControl $acl = new AllowAll()
+        private readonly AccessControl $acl = new AllowAll(),
     ) {
         if ($name !== '\\' && !\preg_match(self::NAMESPACE_REGEX, $name)) {
             throw new InvalidArgumentException(\sprintf('Namespace name "%s" is invalid.', $name));

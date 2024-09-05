@@ -10,7 +10,7 @@ use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 final class ScalarFunctionFilterTransformer implements Transformer
 {
     public function __construct(
-        public readonly ScalarFunction $function
+        public readonly ScalarFunction $function,
     ) {
     }
 

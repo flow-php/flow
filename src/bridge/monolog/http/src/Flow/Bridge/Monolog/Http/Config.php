@@ -10,7 +10,7 @@ final class Config
 {
     public function __construct(
         public readonly RequestConfig $request = new RequestConfig(),
-        public readonly ResponseConfig $response = new ResponseConfig()
+        public readonly ResponseConfig $response = new ResponseConfig(),
     ) {
 
     }

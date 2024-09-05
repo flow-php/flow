@@ -65,7 +65,7 @@ final class StreamLoader implements Closure, Loader
             match ($this->output) {
                 Output::rows => $this->formatter->format($rows, $this->truncate),
                 Output::schema => $this->schemaFormatter->format($rows->schema()),
-                Output::rows_and_schema => $this->formatter->format($rows, $this->truncate) . "\n" . $this->schemaFormatter->format($rows->schema())
+                Output::rows_and_schema => $this->formatter->format($rows, $this->truncate) . "\n" . $this->schemaFormatter->format($rows->schema()),
             }
         );
 

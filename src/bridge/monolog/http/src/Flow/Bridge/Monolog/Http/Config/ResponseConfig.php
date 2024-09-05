@@ -20,7 +20,7 @@ final class ResponseConfig
         private readonly bool $withBody = false,
         private readonly int $bodySizeLimit = 1024 * 1024 * 32,
         private readonly array $withoutStatusCodes = [],
-        private readonly array $headers = ['cache-control', 'location', 'set-cookie', 'server', 'expires', 'content-type', 'content-length', 'last-modified', 'kee-alive', 'referrer-policy', 'etag']
+        private readonly array $headers = ['cache-control', 'location', 'set-cookie', 'server', 'expires', 'content-type', 'content-length', 'last-modified', 'kee-alive', 'referrer-policy', 'etag'],
     ) {
 
     }

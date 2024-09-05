@@ -28,7 +28,7 @@ final class RowGroupBuilder
         private readonly Compressions $compression,
         private readonly Options $options,
         private readonly DataConverter $dataConverter,
-        private readonly PageSizeCalculator $calculator
+        private readonly PageSizeCalculator $calculator,
     ) {
         $this->flattener = new Flattener(
             $this->options->getBool(Option::VALIDATE_DATA)

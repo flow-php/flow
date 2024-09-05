@@ -20,7 +20,7 @@ final class ColumnData
         public readonly ?LogicalType $logicalType,
         public readonly array $repetitions,
         public readonly array $definitions,
-        public readonly array $values
+        public readonly array $values,
     ) {
     }
 

@@ -10,7 +10,7 @@ final class ToTimeZone extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|\DateTimeInterface $value,
-        private readonly ScalarFunction|\DateTimeZone|string $timezone
+        private readonly ScalarFunction|\DateTimeZone|string $timezone,
     ) {
     }
 

@@ -10,7 +10,7 @@ use Flow\Parquet\{Option, Options};
 final class Codec
 {
     public function __construct(
-        private readonly Options $options
+        private readonly Options $options,
     ) {
     }
 
@@ -27,7 +27,7 @@ final class Codec
             Compressions::LZ4 => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
             Compressions::LZ4_RAW => \lz4_compress($data, $this->options->getInt(Option::LZ4_COMPRESSION_LEVEL)),
             Compressions::ZSTD => \zstd_compress($data, $this->options->getInt(Option::ZSTD_COMPRESSION_LEVEL)),
-            default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet')
+            default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet'),
         };
 
         if ($result === false) {
@@ -48,7 +48,7 @@ final class Codec
             Compressions::LZ4 => \lz4_uncompress($data),
             Compressions::LZ4_RAW => \lz4_uncompress($data),
             Compressions::ZSTD => \zstd_uncompress($data),
-            default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet')
+            default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet'),
         };
 
         if ($result === false) {

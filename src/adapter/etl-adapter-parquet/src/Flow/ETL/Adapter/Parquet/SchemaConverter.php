@@ -280,14 +280,14 @@ final class SchemaConverter
             return match ($column->type()) {
                 ParquetSchema\PhysicalType::INT32 => match ($column->convertedType()) {
                     ParquetSchema\ConvertedType::DATE => datetime_schema($column->name(), $nullable),
-                    default => int_schema($column->name(), $nullable)
+                    default => int_schema($column->name(), $nullable),
                 },
                 ParquetSchema\PhysicalType::INT64 => int_schema($column->name(), $nullable),
                 ParquetSchema\PhysicalType::BOOLEAN => bool_schema($column->name(), $nullable),
                 ParquetSchema\PhysicalType::DOUBLE => float_schema($column->name(), $nullable),
                 ParquetSchema\PhysicalType::FLOAT => float_schema($column->name(), $nullable),
                 ParquetSchema\PhysicalType::BYTE_ARRAY => str_schema($column->name(), $nullable),
-                default => throw new RuntimeException($column->type()->name . ' is not supported.')
+                default => throw new RuntimeException($column->type()->name . ' is not supported.'),
             };
         }
 
@@ -300,7 +300,7 @@ final class SchemaConverter
             ParquetSchema\LogicalType::JSON => json_schema($column->name(), $nullable),
             ParquetSchema\LogicalType::DECIMAL => float_schema($column->name(), $nullable),
             ParquetSchema\LogicalType::INTEGER => int_schema($column->name(), $nullable),
-            default => throw new RuntimeException($logicalType->name() . ' is not supported.')
+            default => throw new RuntimeException($logicalType->name() . ' is not supported.'),
         };
     }
 

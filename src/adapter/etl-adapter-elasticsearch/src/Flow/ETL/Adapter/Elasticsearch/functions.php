@@ -33,7 +33,7 @@ function to_es_bulk_index(
     array $config,
     string $index,
     IdFactory $id_factory,
-    array $parameters = []
+    array $parameters = [],
 ) : ElasticsearchLoader {
     return (new ElasticsearchLoader($config, $index, $id_factory))->withParameters($parameters);
 }
@@ -75,7 +75,7 @@ function to_es_bulk_update(
     array $config,
     string $index,
     IdFactory $id_factory,
-    array $parameters = []
+    array $parameters = [],
 ) : ElasticsearchLoader {
     return ElasticsearchLoader::update($config, $index, $id_factory)->withParameters($parameters);
 }

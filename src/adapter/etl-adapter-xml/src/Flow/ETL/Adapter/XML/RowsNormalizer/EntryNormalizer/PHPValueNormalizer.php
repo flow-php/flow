@@ -98,7 +98,7 @@ final class PHPValueNormalizer
             DateTimeType::class => XMLNode::flatNode($name, $this->caster->to(type_string())->value($value->format($this->dateTimeFormat))),
             JsonType::class => XMLNode::flatNode($name, $this->caster->to(type_json())->value($value)),
             UuidType::class => XMLNode::flatNode($name, (string) $value),
-            default => throw new InvalidArgumentException("Given type can't be converted to node, given type: {$type->toString()}")
+            default => throw new InvalidArgumentException("Given type can't be converted to node, given type: {$type->toString()}"),
         };
     }
 }

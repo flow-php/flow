@@ -19,7 +19,7 @@ final class IsType extends ScalarFunctionChain
      */
     public function __construct(
         private readonly mixed $value,
-        string|Type ...$types
+        string|Type ...$types,
     ) {
 
         $this->types = $types;

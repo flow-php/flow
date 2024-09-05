@@ -11,7 +11,7 @@ final class Reader
 {
     public function __construct(
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-        public readonly Options $options = new Options()
+        public readonly Options $options = new Options(),
     ) {
     }
 

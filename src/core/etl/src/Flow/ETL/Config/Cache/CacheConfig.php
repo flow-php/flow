@@ -19,7 +19,7 @@ final class CacheConfig
         public readonly Cache $cache,
         public readonly int $cacheBatchSize,
         public readonly Path $localFilesystemCacheDir,
-        public readonly int $externalSortBucketsCount
+        public readonly int $externalSortBucketsCount,
     ) {
     }
 }

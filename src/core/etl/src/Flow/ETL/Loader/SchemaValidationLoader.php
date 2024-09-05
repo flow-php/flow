@@ -12,7 +12,7 @@ final class SchemaValidationLoader implements Loader
 {
     public function __construct(
         private readonly Schema $schema,
-        private readonly SchemaValidator $validator
+        private readonly SchemaValidator $validator,
     ) {
     }
 

@@ -10,7 +10,7 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|\DOMElement $domElement,
-        private readonly ScalarFunction|string $attribute
+        private readonly ScalarFunction|string $attribute,
     ) {
     }
 

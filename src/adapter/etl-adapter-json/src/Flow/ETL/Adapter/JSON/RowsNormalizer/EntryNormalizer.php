@@ -12,7 +12,7 @@ final class EntryNormalizer
 {
     public function __construct(
         private readonly Caster $caster,
-        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM
+        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM,
     ) {
     }
 

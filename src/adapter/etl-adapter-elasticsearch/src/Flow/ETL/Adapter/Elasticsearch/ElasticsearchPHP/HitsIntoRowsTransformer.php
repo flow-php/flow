@@ -32,7 +32,7 @@ final class HitsIntoRowsTransformer implements Transformer
 
                 $source = match ($this->source) {
                     DocumentDataSource::source => '_source',
-                    DocumentDataSource::fields => 'fields'
+                    DocumentDataSource::fields => 'fields',
                 };
 
                 /**

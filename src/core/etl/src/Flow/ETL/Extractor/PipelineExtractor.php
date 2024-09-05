@@ -9,7 +9,7 @@ use Flow\ETL\{Extractor, FlowContext, Pipeline, Rows};
 final class PipelineExtractor implements Extractor
 {
     public function __construct(
-        private readonly Pipeline $pipeline
+        private readonly Pipeline $pipeline,
     ) {
     }
 

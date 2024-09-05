@@ -13,7 +13,7 @@ final class SharedKeyFactory implements AuthorizationFactory
         #[\SensitiveParameter]
         private readonly string $account,
         #[\SensitiveParameter]
-        private readonly string $accountKey
+        private readonly string $accountKey,
     ) {
     }
 

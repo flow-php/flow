@@ -12,7 +12,7 @@ final class Parameter
     private ScalarFunction $function;
 
     public function __construct(
-        mixed $function
+        mixed $function,
     ) {
         $this->function = $function instanceof ScalarFunction ? $function : lit($function);
     }

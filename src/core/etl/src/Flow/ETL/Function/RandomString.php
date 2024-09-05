@@ -10,7 +10,7 @@ class RandomString implements ScalarFunction
 {
     public function __construct(
         private readonly ScalarFunction|int $length,
-        private readonly RandomValueGenerator $generator = new NativePHPRandomValueGenerator()
+        private readonly RandomValueGenerator $generator = new NativePHPRandomValueGenerator(),
     ) {
     }
 

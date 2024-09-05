@@ -10,7 +10,7 @@ final class RowGroupContainer
 {
     public function __construct(
         public readonly string $binaryBuffer,
-        public readonly RowGroup $rowGroup
+        public readonly RowGroup $rowGroup,
     ) {
     }
 }

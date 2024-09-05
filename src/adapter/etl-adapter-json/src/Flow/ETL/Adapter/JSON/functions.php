@@ -46,7 +46,7 @@ function to_json(
     string|Path $path,
     int $flags = JSON_THROW_ON_ERROR,
     string $date_time_format = \DateTimeInterface::ATOM,
-    bool $put_rows_in_new_lines = false
+    bool $put_rows_in_new_lines = false,
 ) : Loader {
     return (new JsonLoader(\is_string($path) ? Path::realpath($path) : $path))
         ->withFlags($flags)

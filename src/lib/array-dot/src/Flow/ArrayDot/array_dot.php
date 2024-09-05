@@ -45,6 +45,7 @@ function array_dot_steps(string $path) : array
         $pathSteps[$index] = \str_replace('__ESCAPED_DOT__', '.', $step);
 
         if ($step === '__MULTIMATCH_PATH__') {
+            /** @phpstan-ignore-next-line */
             $pathSteps[$index] = $multiMatchPath[2];
         }
     }
@@ -184,7 +185,7 @@ function array_dot_get_enum(array $array, string $path, string $enumClass) : ?\B
     $result = match ((string) $reflection->getBackingType()) {
         'int' => array_dot_get_int($array, $path),
         'string' => array_dot_get_string($array, $path),
-        default => throw new Exception('Unsupported enum backing type: ' . $reflection->getBackingType())
+        default => throw new Exception('Unsupported enum backing type: ' . $reflection->getBackingType()),
     };
 
     if ($result === null) {

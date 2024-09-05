@@ -14,7 +14,7 @@ final class SortBucketsExtractor implements Extractor
     public function __construct(
         private readonly array $sortBuckets,
         private readonly int $batchSize,
-        private readonly BucketsCache $cache
+        private readonly BucketsCache $cache,
     ) {
 
     }

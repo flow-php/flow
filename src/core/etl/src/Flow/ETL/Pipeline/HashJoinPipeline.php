@@ -20,7 +20,7 @@ final class HashJoinPipeline implements Pipeline
         private Pipeline $left,
         private DataFrame $right,
         private Expression $expression,
-        private Join $join
+        private Join $join,
     ) {
 
         $this->extractor = from_rows(rows());

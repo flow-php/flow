@@ -8,7 +8,7 @@ final class Decimal
 {
     public function __construct(
         private readonly int $scale,
-        private readonly int $precision
+        private readonly int $precision,
     ) {
     }
 

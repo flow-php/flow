@@ -17,7 +17,7 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
     public function __construct(
         private readonly BlobServiceInterface $blobService,
         private readonly Path $path,
-        private readonly BlockList $blockList
+        private readonly BlockList $blockList,
     ) {
         if (\count($this->blockList->all())) {
             $this->initialized = true;

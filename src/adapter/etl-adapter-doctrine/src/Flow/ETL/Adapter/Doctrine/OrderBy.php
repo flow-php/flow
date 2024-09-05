@@ -8,7 +8,7 @@ final class OrderBy
 {
     public function __construct(
         public readonly string $column,
-        public readonly Order $order = Order::ASC
+        public readonly Order $order = Order::ASC,
     ) {
     }
 }

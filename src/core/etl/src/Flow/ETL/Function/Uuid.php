@@ -15,7 +15,7 @@ final class Uuid extends ScalarFunctionChain
 {
     private function __construct(
         private readonly ScalarFunction|string $uuidVersion,
-        private readonly ScalarFunction|\DateTimeInterface|null $value = null
+        private readonly ScalarFunction|\DateTimeInterface|null $value = null,
     ) {
     }
 
@@ -41,7 +41,7 @@ final class Uuid extends ScalarFunctionChain
         return match ($uuidVersion) {
             'uuid4' => $this->generateV4(),
             'uuid7' => $param instanceof \DateTimeInterface ? $this->generateV7($param) : null,
-            default => null
+            default => null,
         };
     }
 
