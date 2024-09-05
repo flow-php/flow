@@ -11,20 +11,19 @@ use Flow\Filesystem\{DestinationStream, Partition, Path};
 
 final class JsonLoader implements Closure, Loader, Loader\FileLoader
 {
+    private string $dateTimeFormat = \DateTimeInterface::ATOM;
+
+    private int $flags = JSON_THROW_ON_ERROR;
+
+    private bool $putRowsInNewLines = false;
+
     /**
      * @var array<string, int>
      */
     private array $writes = [];
 
-    public function __construct(
-        private readonly Path $path,
-        private readonly int $flags = JSON_THROW_ON_ERROR,
-        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM,
-        private readonly bool $putRowsInNewLines = false
-    ) {
-        if ($this->path->isPattern()) {
-            throw new \InvalidArgumentException("JsonLoader path can't be pattern, given: " . $this->path->path());
-        }
+    public function __construct(private readonly Path $path)
+    {
     }
 
     public function closure(FlowContext $context) : void
@@ -50,6 +49,27 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         } else {
             $this->write($rows, [], $context);
         }
+    }
+
+    public function withDateTimeFormat(string $dateTimeFormat) : self
+    {
+        $this->dateTimeFormat = $dateTimeFormat;
+
+        return $this;
+    }
+
+    public function withFlags(int $flags) : self
+    {
+        $this->flags = $flags;
+
+        return $this;
+    }
+
+    public function withRowsInNewLines(bool $putRowsInNewLines) : self
+    {
+        $this->putRowsInNewLines = $putRowsInNewLines;
+
+        return $this;
     }
 
     /**

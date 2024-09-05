@@ -17,10 +17,12 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     use Limitable;
     use PathFiltering;
 
+    private ?string $pointer = null;
+
+    private ?Schema $schema = null;
+
     public function __construct(
         private readonly Path $path,
-        private readonly ?string $pointer = null,
-        private readonly ?Schema $schema = null,
     ) {
         $this->resetLimit();
     }
@@ -58,6 +60,20 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     public function source() : Path
     {
         return $this->path;
+    }
+
+    public function withPointer(string $pointer) : self
+    {
+        $this->pointer = $pointer;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 
     /**
