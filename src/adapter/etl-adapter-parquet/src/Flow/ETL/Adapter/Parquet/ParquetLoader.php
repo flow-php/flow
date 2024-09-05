@@ -14,29 +14,28 @@ use Flow\Parquet\{Options, Writer};
 
 final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 {
+    private Compressions $compressions = Compressions::SNAPPY;
+
     private readonly SchemaConverter $converter;
 
     private ?Schema $inferredSchema = null;
 
     private readonly RowsNormalizer $normalizer;
 
+    private Options $options;
+
+    private ?Schema $schema = null;
+
     /**
      * @var array<string, Writer>
      */
     private array $writers = [];
 
-    public function __construct(
-        private readonly Path $path,
-        private readonly Options $options,
-        private readonly Compressions $compressions = Compressions::SNAPPY,
-        private readonly ?Schema $schema = null,
-    ) {
+    public function __construct(private readonly Path $path)
+    {
         $this->converter = new SchemaConverter();
         $this->normalizer = new RowsNormalizer(Caster::default());
-
-        if ($this->path->isPattern()) {
-            throw new \InvalidArgumentException("ParquetLoader path can't be pattern, given: " . $this->path->path());
-        }
+        $this->options = Options::default();
     }
 
     public function closure(FlowContext $context) : void
@@ -92,6 +91,27 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
             $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));
         }
+    }
+
+    public function withCompressions(Compressions $compressions) : self
+    {
+        $this->compressions = $compressions;
+
+        return $this;
+    }
+
+    public function withOptions(Options $options) : self
+    {
+        $this->options = $options;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 
     private function inferSchema(Rows $rows) : void

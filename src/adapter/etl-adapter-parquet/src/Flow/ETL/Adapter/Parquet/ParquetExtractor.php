@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
 use Flow\Filesystem\{Path, SourceStream};
 use Flow\Parquet\{ByteOrder, Options, ParquetFile, Reader};
 
@@ -15,21 +15,27 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     use Limitable;
     use PathFiltering;
 
+    private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN;
+
+    /**
+     * @param array<string> $columns
+     */
+    private array $columns = [];
+
+    private ?int $offset = null;
+
+    private Options $options;
+
     private SchemaConverter $schemaConverter;
 
     /**
      * @param Path $path
-     * @param array<string> $columns
      */
-    public function __construct(
-        private readonly Path $path,
-        private readonly Options $options,
-        private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-        private readonly array $columns = [],
-        private readonly ?int $offset = null
-    ) {
+    public function __construct(private readonly Path $path)
+    {
         $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
+        $this->options = Options::default();
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -73,6 +79,41 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     public function source() : Path
     {
         return $this->path;
+    }
+
+    public function withByteOrder(ByteOrder $byteOrder) : self
+    {
+        $this->byteOrder = $byteOrder;
+
+        return $this;
+    }
+
+    /**
+     * @param array<string> $columns
+     */
+    public function withColumns(array $columns) : self
+    {
+        $this->columns = $columns;
+
+        return $this;
+    }
+
+    public function withOffset(int $offset) : self
+    {
+        if ($offset < 0) {
+            throw new InvalidArgumentException('Offset must be greater or equal to 0');
+        }
+
+        $this->offset = $offset;
+
+        return $this;
+    }
+
+    public function withOptions(Options $options) : self
+    {
+        $this->options = $options;
+
+        return $this;
     }
 
     /**
