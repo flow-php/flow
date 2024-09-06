@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
-use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\{array_to_rows};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Extractor, FlowContext};
@@ -43,7 +43,15 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions(), $this->schema);
+                if ($this->pointer !== null) {
+                    $row = [$this->pointer => $row];
+                }
+
+                if (!\count($row)) {
+                    continue;
+                }
+
+                $signal = yield array_to_rows([$row], $context->entryFactory(), $stream->path()->partitions(), $this->schema);
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
