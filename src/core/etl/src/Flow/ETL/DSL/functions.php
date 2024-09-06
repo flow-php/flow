@@ -997,12 +997,6 @@ function number_format(ScalarFunction|int|float $value, ScalarFunction|int $deci
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function array_to_row(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|Partitions $partitions = [], ?Schema $schema = null) : Row
 {
-    //    foreach ($data as $key => $v) {
-    //        if (!\is_string($key)) {
-    //            throw new InvalidArgumentException('Passed array keys must be a string. Maybe consider using "array_to_rows()" function?');
-    //        }
-    //    }
-
     $entries = [];
 
     foreach ($data as $key => $value) {
