@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-09-06
 
 ### Added
+- [ee4e8a](https://github.com/flow-php/flow/commit/ee4e8af82175c3ca0b39a8835d367a8dd583e2ea) - **missing pointerToEntryName to JsonExtractor withPointer method** - [@norberttech](https://github.com/norberttech)
 - [#1211](https://github.com/flow-php/flow/pull/1211) - **Allow to use json pointer as an entry name for extracted records** - [@norberttech](https://github.com/norberttech)
 - [#1211](https://github.com/flow-php/flow/pull/1211) - **More tests to array_to_row and array_to_rows methods** - [@norberttech](https://github.com/norberttech)
 - [#1195](https://github.com/flow-php/flow/pull/1195) - **Functional tests for flow-php.com website** - [@norberttech](https://github.com/norberttech)
