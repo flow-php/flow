@@ -53,7 +53,7 @@ final class JsonExtractorTest extends TestCase
                     'capital',
 
                 ],
-                \array_keys($row->toArray())
+                \array_keys($row->get('/timezones')->value())
             );
         }
 
