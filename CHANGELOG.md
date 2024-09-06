@@ -1,12 +1,15 @@
-## [Unreleased] - 2024-09-05
+## [Unreleased] - 2024-09-06
 
 ### Added
+- [#1211](https://github.com/flow-php/flow/pull/1211) - **Allow to use json pointer as an entry name for extracted records** - [@norberttech](https://github.com/norberttech)
+- [#1211](https://github.com/flow-php/flow/pull/1211) - **More tests to array_to_row and array_to_rows methods** - [@norberttech](https://github.com/norberttech)
 - [#1195](https://github.com/flow-php/flow/pull/1195) - **Functional tests for flow-php.com website** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **Links from code examples to DSL functions documentation** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **each DSL function now gots her own page** - [@norberttech](https://github.com/norberttech)
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1211](https://github.com/flow-php/flow/pull/1211) - **When JsonExtractor is using a pointer, pointer becomes a key** - [@norberttech](https://github.com/norberttech)
 - [#1209](https://github.com/flow-php/flow/pull/1209) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1208](https://github.com/flow-php/flow/pull/1208) - **Unify passing options to loaders/extractors through fluent interface** - [@norberttech](https://github.com/norberttech)
 - [#1207](https://github.com/flow-php/flow/pull/1207) - **from_csv, from_json, from_xml, from_parquet and from_text contract, removed support for passing path as array** - [@mleczakm](https://github.com/mleczakm)
@@ -17,6 +20,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1211](https://github.com/flow-php/flow/pull/1211) - **Fixed Json extractor when pointer is used to extract flat arrays** - [@norberttech](https://github.com/norberttech)
 - [eaa783](https://github.com/flow-php/flow/commit/eaa78340e9730fcd109d927a3f52e7a3f4e5ac2a) - **documentation homepage** - [@norberttech](https://github.com/norberttech)
 - [904b6a](https://github.com/flow-php/flow/commit/904b6a8cc199f76e1a8ecebbf679404ff30d34c2) - **lowercasing module names in dsl routes provider** - [@norberttech](https://github.com/norberttech)
 - [b1a9cd](https://github.com/flow-php/flow/commit/b1a9cd539511a12118d0ff7720378da49df3ebda) - **autolinker prism plugin** - [@norberttech](https://github.com/norberttech)
