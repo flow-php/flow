@@ -40,7 +40,7 @@ final class JsonExtractorTest extends TestCase
     public function test_extracting_json_from_local_file_stream_using_pointer() : void
     {
         $rows = (new Flow())
-            ->read(from_json(__DIR__ . '/../../Fixtures/nested_timezones.json', pointer: '/timezones'))
+            ->read(from_json(__DIR__ . '/../../Fixtures/nested_timezones.json')->withPointer('/timezones', true))
             ->fetch();
 
         foreach ($rows as $row) {

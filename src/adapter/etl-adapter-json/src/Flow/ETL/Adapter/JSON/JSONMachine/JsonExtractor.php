@@ -19,6 +19,8 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
 
     private ?string $pointer = null;
 
+    private bool $pointerToEntryName = false;
+
     private ?Schema $schema = null;
 
     public function __construct(
@@ -43,7 +45,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                if ($this->pointer !== null) {
+                if ($this->pointer !== null && $this->pointerToEntryName) {
                     $row = [$this->pointer => $row];
                 }
 
@@ -70,9 +72,10 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         return $this->path;
     }
 
-    public function withPointer(string $pointer) : self
+    public function withPointer(string $pointer, bool $pointerToEntryName = false) : self
     {
         $this->pointer = $pointer;
+        $this->pointerToEntryName = $pointerToEntryName;
 
         return $this;
     }
