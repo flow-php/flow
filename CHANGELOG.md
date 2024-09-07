@@ -1,6 +1,10 @@
-## [Unreleased] - 2024-09-06
+## [Unreleased] - 2024-09-07
 
 ### Added
+- [#1215](https://github.com/flow-php/flow/pull/1215) - **Display DSL function usage examples at function doc page** - [@norberttech](https://github.com/norberttech)
+- [#1215](https://github.com/flow-php/flow/pull/1215) - **More DataFrame usage examples** - [@norberttech](https://github.com/norberttech)
+- [#1215](https://github.com/flow-php/flow/pull/1215) - **Priority parameter that defines in what order examples/topics are displayed** - [@norberttech](https://github.com/norberttech)
+- [#1215](https://github.com/flow-php/flow/pull/1215) - **Hidden parameter that allows to not display specific examples/topics but still let dsl docs link to them** - [@norberttech](https://github.com/norberttech)
 - [ee4e8a](https://github.com/flow-php/flow/commit/ee4e8af82175c3ca0b39a8835d367a8dd583e2ea) - **missing pointerToEntryName to JsonExtractor withPointer method** - [@norberttech](https://github.com/norberttech)
 - [#1211](https://github.com/flow-php/flow/pull/1211) - **Allow to use json pointer as an entry name for extracted records** - [@norberttech](https://github.com/norberttech)
 - [#1211](https://github.com/flow-php/flow/pull/1211) - **More tests to array_to_row and array_to_rows methods** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +14,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1215](https://github.com/flow-php/flow/pull/1215) - **Improved title/description at DSL documentation pages** - [@norberttech](https://github.com/norberttech)
 - [#1211](https://github.com/flow-php/flow/pull/1211) - **When JsonExtractor is using a pointer, pointer becomes a key** - [@norberttech](https://github.com/norberttech)
 - [#1209](https://github.com/flow-php/flow/pull/1209) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1208](https://github.com/flow-php/flow/pull/1208) - **Unify passing options to loaders/extractors through fluent interface** - [@norberttech](https://github.com/norberttech)
