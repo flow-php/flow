@@ -24,7 +24,7 @@ data_frame()
     ->read(from_array($users))
     ->join(
         data_frame()->read(from_array($emails)),
-        join_on(['id' => 'id']),
+        join_on(['id' => 'id'], join_prefix: 'joined_'),
         Join::left
     )
     ->collect()
