@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{array_entry, array_expand, data_frame, from_rows, int_entry, ref, row, rows, to_output, to_stream};
+use function Flow\ETL\DSL\{array_entry, array_expand, data_frame, from_rows, int_entry, ref, row, rows, to_stream};
 
 data_frame()
     ->read(
@@ -12,7 +12,6 @@ data_frame()
             )
         )
     )
-    ->write(to_output(false))
     ->withEntry('expanded', array_expand(ref('array')))
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

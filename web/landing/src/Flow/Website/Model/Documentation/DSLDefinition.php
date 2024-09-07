@@ -33,6 +33,25 @@ final class DSLDefinition
         return \base64_decode($this->data['doc_comment'], true);
     }
 
+    /**
+     * @return array<Example>
+     */
+    public function examples() : array
+    {
+        $examples = [];
+
+        foreach ($this->data['attributes'] as $attribute) {
+            if ($attribute['name'] === 'DocumentationExample') {
+                $examples[] = new Example(
+                    $attribute['arguments']['topic'],
+                    $attribute['arguments']['example'],
+                );
+            }
+        }
+
+        return $examples;
+    }
+
     public function githubUrl(string $version = '1.x') : string
     {
         $startLine = $this->data['start_line_in_file'] ? '#L' . $this->data['start_line_in_file'] : '';

@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType, Loader};
+use Flow\ETL\{Attribute\DocumentationDSL,
+    Attribute\DocumentationExample,
+    Attribute\Module,
+    Attribute\Type as DSLType,
+    Loader};
 use Flow\Filesystem\Path;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\{ByteOrder, Options};
@@ -18,6 +22,7 @@ use Flow\Parquet\{ByteOrder, Options};
  * @param null|int $offset - @deprecated use `withOffset` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::EXTRACTOR)]
+#[DocumentationExample(topic: 'data_source', example: 'parquet')]
 function from_parquet(
     string|Path $path,
     array $columns = [],

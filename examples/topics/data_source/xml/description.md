@@ -1,10 +1,10 @@
 Read data from a json file.
 
 ```php
-function from_xml(
-    string|Path $path,
-    string $xml_node_path = ''
-);
+function from_xml(string|Path $path);
 ```
 
-* `xml_node_path` - default '', the path to the node to read, when empty, the root node will be read. It's not xpath, it is just a sequence of node names separated with slash.
+Additional options:
+
+* `withXMLNodePath(string $xmlNodePath)` - XML Node Path doesn’t support attributes, and it's not xpath, it is just a sequence of node names separated with slash
+* `withBufferSize(int $size)` - default 8096, the size of the buffer used to iterate through stream

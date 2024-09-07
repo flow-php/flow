@@ -3,6 +3,4 @@ schema
 |-- name: string
 |-- active: boolean
 |-- tags: ?list<string>
-|-- address: structure
-|    |-- city: string
-|    |-- country: string
+|-- address: ?map<string, string>

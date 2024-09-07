@@ -9,10 +9,12 @@ use Flow\ETL\{Extractor, FlowContext, Row\Schema};
 
 final class ArrayExtractor implements Extractor
 {
+    private ?Schema $schema = null;
+
     /**
      * @param iterable<array<mixed>> $dataset
      */
-    public function __construct(private readonly iterable $dataset, private readonly ?Schema $schema = null)
+    public function __construct(private readonly iterable $dataset)
     {
     }
 
@@ -21,5 +23,12 @@ final class ArrayExtractor implements Extractor
         foreach ($this->dataset as $row) {
             yield array_to_rows([$row], $context->entryFactory(), [], $this->schema);
         }
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
+
+        return $this;
     }
 }

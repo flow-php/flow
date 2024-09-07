@@ -148,14 +148,18 @@ final class DataFrame
      * before passing them to the next pipeline element.
      * Similarly when Extractor is yielding batches of rows, this method will split them into smaller batches of given size.
      *
-     * In order to merge all Rows into a single batch use DataFrame::collect() method.
+     * In order to merge all Rows into a single batch use DataFrame::collect() method or set size to -1 or 0.
      *
-     * @param int<1, max> $size
+     * @param int<-1, max> $size
      *
      * @lazy
      */
     public function batchSize(int $size) : self
     {
+        if ($size === -1 || $size === 0) {
+            return $this->collect();
+        }
+
         $this->pipeline = new LinkedPipeline(new BatchingPipeline($this->pipeline, $size));
 
         return $this;

@@ -97,6 +97,7 @@ use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
 use Flow\ETL\Row\{Entry, EntryFactory, EntryReference, Reference, References, Schema};
 use Flow\ETL\{Attribute\DocumentationDSL,
+    Attribute\DocumentationExample,
     Attribute\Module,
     Attribute\Type as DSLType,
     Cache\Implementation\FilesystemCache,
@@ -104,6 +105,7 @@ use Flow\ETL\{Attribute\DocumentationDSL,
     Config\ConfigBuilder,
     DataFrame,
     Extractor,
+    Extractor\ArrayExtractor,
     Flow,
     FlowContext,
     Formatter,
@@ -129,39 +131,72 @@ use Flow\Serializer\{NativePHPSerializer, Serializer};
  * Alias for data_frame() : Flow.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
+#[DocumentationExample(topic: 'data_frame', example: 'overwrite')]
 function df(Config|ConfigBuilder|null $config = null) : Flow
 {
     return data_frame($config);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
+#[DocumentationExample(topic: 'data_frame', example: 'overwrite')]
 function data_frame(Config|ConfigBuilder|null $config = null) : Flow
 {
     return new Flow($config);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
+#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
+#[DocumentationExample(topic: 'data_frame', example: 'overwrite')]
 function from_rows(Rows ...$rows) : Extractor\RowsExtractor
 {
     return new Extractor\RowsExtractor(...$rows);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
+#[DocumentationExample(topic: 'partitioning', example: 'path_partitions')]
 function from_path_partitions(Path|string $path) : Extractor\PathPartitionsExtractor
 {
     return new Extractor\PathPartitionsExtractor(\is_string($path) ? \Flow\Filesystem\DSL\path($path) : $path);
 }
 
+/**
+ * @param iterable $array
+ * @param null|Schema $schema - @deprecated use withSchema() method instead
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_array(iterable $array, ?Schema $schema = null) : Extractor\ArrayExtractor
+#[DocumentationExample(topic: 'data_source', example: 'array')]
+function from_array(iterable $array, ?Schema $schema = null) : ArrayExtractor
 {
-    return new Extractor\ArrayExtractor($array, schema: $schema);
+    $extractor = new ArrayExtractor($array);
+
+    if ($schema !== null) {
+        $extractor->withSchema($schema);
+    }
+
+    return $extractor;
 }
 
+/**
+ * @param string $id - cache id from which data will be extracted
+ * @param null|Extractor $fallback_extractor - extractor that will be used when cache is empty - @deprecated use withFallbackExtractor() method instead
+ * @param bool $clear - clear cache after extraction - @deprecated use withClearOnFinish() method instead
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor\CacheExtractor
 {
-    return new Extractor\CacheExtractor($id, $fallback_extractor, $clear);
+    $extractor = new Extractor\CacheExtractor($id);
+
+    if ($fallback_extractor !== null) {
+        $extractor->withFallbackExtractor($fallback_extractor);
+    }
+
+    if ($clear) {
+        $extractor->withClearOnFinish($clear);
+    }
+
+    return $extractor;
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
@@ -609,12 +644,14 @@ function col(string $entry) : EntryReference
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+#[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
 function entry(string $entry) : EntryReference
 {
     return new EntryReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+#[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
 function ref(string $entry) : EntryReference
 {
     return new EntryReference($entry);
@@ -645,6 +682,7 @@ function optional(ScalarFunction $function) : Optional
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+#[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
 function lit(mixed $value) : Literal
 {
     return new Literal($value);
@@ -787,7 +825,7 @@ function cast(mixed $value, ScalarFunction|string|Type $type) : Cast
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function count(Reference $function) : Count
+function count(EntryReference $function) : Count
 {
     return new Count($function);
 }
@@ -1085,19 +1123,19 @@ function dense_rank() : DenseRank
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function average(Reference|string $ref) : Average
+function average(EntryReference|string $ref) : Average
 {
     return new Average(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect(Reference|string $ref) : Collect
+function collect(EntryReference|string $ref) : Collect
 {
     return new Collect(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect_unique(Reference|string $ref) : CollectUnique
+function collect_unique(EntryReference|string $ref) : CollectUnique
 {
     return new CollectUnique(is_string($ref) ? ref($ref) : $ref);
 }
@@ -1109,31 +1147,31 @@ function window() : Window
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function sum(Reference|string $ref) : Sum
+function sum(EntryReference|string $ref) : Sum
 {
     return new Sum(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function first(Reference|string $ref) : First
+function first(EntryReference|string $ref) : First
 {
     return new First(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function last(Reference|string $ref) : Last
+function last(EntryReference|string $ref) : Last
 {
     return new Last(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function max(Reference|string $ref) : Max
+function max(EntryReference|string $ref) : Max
 {
     return new Max(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function min(Reference|string $ref) : Min
+function min(EntryReference|string $ref) : Min
 {
     return new Min(is_string($ref) ? ref($ref) : $ref);
 }
@@ -1370,9 +1408,11 @@ function compare_any(Comparison ...$comparisons) : Comparison\Any
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function join_on(array|Comparison $comparisons, string $joinPrefix = '') : Expression
+#[DocumentationExample(topic: 'join', example: 'join')]
+#[DocumentationExample(topic: 'join', example: 'join_each')]
+function join_on(array|Comparison $comparisons, string $join_prefix = '') : Expression
 {
-    return Expression::on($comparisons, $joinPrefix);
+    return Expression::on($comparisons, $join_prefix);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
