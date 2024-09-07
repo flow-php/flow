@@ -3,3 +3,15 @@ controllers:
         path: ../src/Flow/Website/Controller/
         namespace: Flow\Website\Controller
     type: attribute
+
+PrestaSitemapBundle_index:
+    path:     "/%presta_sitemap.sitemap_file_prefix%.{_format}"
+    defaults: { _controller: Presta\SitemapBundle\Controller\SitemapController::indexAction }
+    requirements:
+        _format: xml
+
+PrestaSitemapBundle_section:
+    path:     "/%presta_sitemap.sitemap_file_prefix%.{name}.{_format}"
+    defaults: { _controller: Presta\SitemapBundle\Controller\SitemapController::sectionAction }
+    requirements:
+        _format: xml

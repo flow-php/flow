@@ -26,7 +26,8 @@
         "twig/markdown-extra": "^3.11",
         "twig/extra-bundle": "^3.8",
         "league/commonmark": "^2.4",
-        "cocur/slugify": "^4.5"
+        "cocur/slugify": "^4.5",
+        "presta/sitemap-bundle": "^4.1"
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "^6.4",
@@ -58,8 +59,7 @@
         ],
         "post-update-cmd": [
             "@importmap:install",
-            "@build:tailwind",
-            "@tools:update"
+            "@build:tailwind"
         ],
         "tools:install": [
             "composer install --working-dir=./tools/phpunit"
@@ -88,6 +88,7 @@
             "APP_ENV=prod bin/console importmap:install",
             "APP_ENV=prod bin/console tailwind:build --minify",
             "APP_ENV=prod bin/console asset-map:compile",
+            "APP_ENV=prod bin/console presta:sitemaps:dump",
             "APP_ENV=prod bin/console static-content-generator:generate:routes --clean",
             "APP_ENV=prod bin/console static-content-generator:copy:assets -d public"
         ]
