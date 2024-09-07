@@ -8,9 +8,9 @@ use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\{Adapter\XML\Loader\XMLLoader,
     Adapter\XML\XMLWriter\DOMDocumentWriter,
     Attribute\DocumentationDSL,
+    Attribute\DocumentationExample,
     Attribute\Module,
-    Attribute\Type as DSLType
-};
+    Attribute\Type as DSLType};
 use Flow\Filesystem\Path;
 
 /**
@@ -30,6 +30,7 @@ use Flow\Filesystem\Path;
  * @param string $xml_node_path - @deprecated use `from_xml($file)->withXMLNodePath($xmlNodePath)` method instead
  */
 #[DocumentationDSL(module: Module::XML, type: DSLType::EXTRACTOR)]
+#[DocumentationExample(topic: 'data_source', example: 'xml')]
 function from_xml(
     Path|string $path,
     string $xml_node_path = '',

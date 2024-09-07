@@ -6,6 +6,7 @@ namespace Flow\Website\Controller;
 
 use Flow\Website\Model\Documentation\Module;
 use Flow\Website\Service\Documentation\DSLDefinitions;
+use Flow\Website\Service\Examples;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,6 +15,7 @@ final class DocumentationController extends AbstractController
 {
     public function __construct(
         private readonly DSLDefinitions $dslDefinitions,
+        private readonly Examples $examples,
     ) {
     }
 
@@ -35,10 +37,22 @@ final class DocumentationController extends AbstractController
     {
         $modules = $this->dslDefinitions->modules();
 
+        $definition = $this->dslDefinitions->fromModule(Module::fromName($module))->get($function);
+        $examples = [];
+
+        foreach ($definition->examples() as $example) {
+            $examples[] = [
+                'code' => $this->examples->code($example->topic, $example->name),
+                'topic' => $example->topic,
+                'name' => $example->name,
+            ];
+        }
+
         return $this->render('documentation/dsl/function.html.twig', [
             'module_name' => $module,
             'modules' => $modules,
-            'definition' => $this->dslDefinitions->fromModule(Module::fromName($module))->get($function),
+            'definition' => $definition,
+            'examples' => $examples,
             'types' => $this->dslDefinitions->types(),
         ]);
     }

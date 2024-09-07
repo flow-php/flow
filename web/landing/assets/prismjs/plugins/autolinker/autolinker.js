@@ -24,7 +24,7 @@
         }
 
         // Find all tokens of type 'function' and 'function-method'
-        const functionTokens = env.element.querySelectorAll('.token.function, .token.function-method');
+        const functionTokens = env.element.querySelectorAll('.token.function');
 
         functionTokens.forEach(function(token) {
             const functionName = token.textContent;

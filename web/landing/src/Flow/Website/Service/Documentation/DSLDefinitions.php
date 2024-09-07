@@ -8,6 +8,9 @@ use Flow\Website\Model\Documentation\{DSLDefinition, Module, Type};
 
 final class DSLDefinitions
 {
+    /**
+     * @param array<DSLDefinition> $definitions
+     */
     private function __construct(private readonly array $definitions)
     {
     }

@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
 {%- block title -%}
-    DSL - Flow PHP - {{ definition.name }} - function
+    {{ definition.name }} - function - DSL - Flow PHP
 {%- endblock -%}
 
 {%- block description -%}
-    Documentation - DSL - {{ definition.name }} - function documentation
+    {{ definition.name }} - function documentation - Documentation - DSL
 {%- endblock -%}
 
 {% block main %}
@@ -43,6 +43,26 @@
                         {% endapply %}
                     </div>
                 </article>
+                {% if examples|length %}
+                <h3 class="font-bold text-2xl mb-4">Usage Examples</h3>
+                <hr class="text-blue-100 my-4 border-t-2 rounded" />
+
+                    {% for example in examples %}
+                        <article class="mb-8">
+                        {% apply spaceless %}
+                            <h4 class="text-bold mt-5 mb-5">Example: <a href="{{ path('example', { topic: example.topic, example: example.name, '_fragment': 'example' }) }}">{{ example.topic|humanize }} - {{ example.name|humanize }}</a></h4>
+                            <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative">
+                            <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
+                                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+                            </button>
+                            <code id="code" class="language-php" data-controller="syntax-highlight" >
+                                {{- example.code | escape('html') -}}
+                            </code>
+                        </pre>
+                        {% endapply %}
+                        </article>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
     </div>

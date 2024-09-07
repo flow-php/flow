@@ -8,10 +8,12 @@ use Flow\ETL\{Cache\CacheIndex, Extractor, FlowContext, Rows};
 
 final class CacheExtractor implements Extractor
 {
+    private bool $clear = false;
+
+    private ?Extractor $fallbackExtractor = null;
+
     public function __construct(
         private readonly string $id,
-        private readonly ?Extractor $fallbackExtractor = null,
-        private readonly bool $clear = false,
     ) {
     }
 
@@ -49,5 +51,19 @@ final class CacheExtractor implements Extractor
         if ($this->clear && $context->cache()->has($this->id)) {
             $context->cache()->delete($this->id);
         }
+    }
+
+    public function withClearOnFinish(bool $clear) : self
+    {
+        $this->clear = $clear;
+
+        return $this;
+    }
+
+    public function withFallbackExtractor(Extractor $fallbackExtractor) : self
+    {
+        $this->fallbackExtractor = $fallbackExtractor;
+
+        return $this;
     }
 }

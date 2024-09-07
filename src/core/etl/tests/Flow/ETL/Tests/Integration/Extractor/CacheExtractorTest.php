@@ -53,7 +53,7 @@ final class CacheExtractorTest extends IntegrationTestCase
 
         $cache->set('key', $index);
 
-        $extractor = new CacheExtractor($cacheKey, clear: true);
+        $extractor = (new CacheExtractor($cacheKey))->withClearOnFinish(true);
 
         $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
@@ -68,15 +68,13 @@ final class CacheExtractorTest extends IntegrationTestCase
     {
         $cache = new InMemoryCache();
 
-        $extractor = new CacheExtractor(
-            'non_existing_cache_key',
-            from_array([
+        $extractor = (new CacheExtractor('non_existing_cache_key'))
+            ->withClearOnFinish(true)
+            ->withFallbackExtractor(from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
-            ]),
-            clear: true
-        );
+            ]));
 
         $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 

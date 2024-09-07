@@ -43,13 +43,35 @@ final class Examples
             throw new \RuntimeException(\sprintf('Topic "%s" doesn\'t exists, it should be located in path: "%s".', $topic, $path));
         }
 
-        $examples = \array_diff(\scandir($path), ['..', '.', '.gitignore']);
+        $examples = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', 'priority.txt']));
 
         if (0 === \count($examples)) {
             throw new \RuntimeException(\sprintf('Topic "%s" doesn\'t have any example, there should be at least one example in path "%s".', $topic, $path));
         }
 
-        return $examples;
+        $priorities = [];
+
+        foreach ($examples as $example) {
+            $path = \sprintf('%s/topics/%s/%s/priority.txt', \realpath($this->examplesPath), $topic, $example);
+
+            if (false === \file_exists($path)) {
+                $priorities[$example] = 99;
+            } else {
+                $priorities[$example] = (int) \file_get_contents($path);
+            }
+        }
+
+        \asort($priorities);
+
+        foreach (\array_keys($priorities) as $example) {
+            $isHidden = \file_exists(\sprintf('%s/topics/%s/%s/hidden.txt', \realpath($this->examplesPath), $topic, $example));
+
+            if ($isHidden) {
+                unset($priorities[$example]);
+            }
+        }
+
+        return \array_keys($priorities);
     }
 
     public function output(string $topic, string $example) : ?string
@@ -74,12 +96,34 @@ final class Examples
             throw new \RuntimeException(\sprintf('Topics root directory doesn\'t exists, it should be located in path: "%s".', $path));
         }
 
-        $topics = \array_diff(\scandir($path), ['..', '.']);
+        $topics = \array_values(\array_diff(\scandir($path), ['..', '.']));
 
         if (0 === \count($topics)) {
             throw new \RuntimeException(\sprintf('Topics root directory doesn\'t have any topic, there should be at least one topic in path "%s".', $path));
         }
 
-        return $topics;
+        $priorities = [];
+
+        foreach ($topics as $topic) {
+            $path = \sprintf('%s/topics/%s/priority.txt', \realpath($this->examplesPath), $topic);
+
+            if (false === \file_exists($path)) {
+                $priorities[$topic] = 99;
+            } else {
+                $priorities[$topic] = (int) \file_get_contents($path);
+            }
+        }
+
+        \asort($priorities);
+
+        foreach (\array_keys($priorities) as $topic) {
+            $isHidden = \file_exists(\sprintf('%s/topics/%s/hidden.txt', \realpath($this->examplesPath), $topic));
+
+            if ($isHidden) {
+                unset($priorities[$topic]);
+            }
+        }
+
+        return \array_keys($priorities);
     }
 }

@@ -20,7 +20,6 @@ use function Flow\ETL\DSL\{array_entry,
     struct_element,
     struct_entry,
     struct_type,
-    to_output,
     to_stream,
     type_float,
     type_int,
@@ -81,6 +80,5 @@ data_frame()
         )
     )))
     ->reorderEntries(compare_entries_by_type_and_name())
-    ->write(to_output(false))
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

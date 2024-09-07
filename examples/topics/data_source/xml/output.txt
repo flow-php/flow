@@ -1,15 +1,15 @@
-+----+---------+--------+---------------------+
-| id |    name | active |               email |
-+----+---------+--------+---------------------+
-|  1 |   Alice |   true |   alice@example.com |
-|  2 |     Bob |  false |     bob@example.com |
-|  3 | Charlie |   true | charlie@example.com |
-|  4 |   David |  false |   david@example.com |
-|  5 |    Emma |   true |    emma@example.com |
-|  6 |   Frank |  false |   frank@example.com |
-|  7 |   Grace |   true |   grace@example.com |
-|  8 |   Harry |  false |   harry@example.com |
-|  9 |    Isla |   true |    isla@example.com |
-| 10 |   James |  false |   james@example.com |
-+----+---------+--------+---------------------+
++----+------+--------+-------+
+| id | name | active | email |
++----+------+--------+-------+
+|  1 |      |        |       |
+|  2 |      |        |       |
+|  3 |      |        |       |
+|  4 |      |        |       |
+|  5 |      |        |       |
+|  6 |      |        |       |
+|  7 |      |        |       |
+|  8 |      |        |       |
+|  9 |      |        |       |
+| 10 |      |        |       |
++----+------+--------+-------+
 10 rows

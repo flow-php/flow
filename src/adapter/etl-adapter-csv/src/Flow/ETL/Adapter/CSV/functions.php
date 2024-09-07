@@ -6,7 +6,11 @@ namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type as DSLType, Loader};
+use Flow\ETL\{Attribute\DocumentationDSL,
+    Attribute\DocumentationExample,
+    Attribute\Module,
+    Attribute\Type as DSLType,
+    Loader};
 use Flow\Filesystem\{Path, SourceStream};
 
 /**
@@ -20,6 +24,7 @@ use Flow\Filesystem\{Path, SourceStream};
  * @param null|Schema $schema - @deprecated use $loader->withSchema() instead
  */
 #[DocumentationDSL(module: Module::CSV, type: DSLType::EXTRACTOR)]
+#[DocumentationExample(topic: 'data_source', example: 'csv')]
 function from_csv(
     string|Path $path,
     bool $with_header = true,
