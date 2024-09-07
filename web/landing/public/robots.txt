@@ -1,0 +1,13 @@
+# robots.txt for https://flow-php.com
+
+# Allow all web crawlers to index the site
+User-agent: *
+Disallow:
+
+# Allow assets required for rendering the page, such as JavaScript and CSS
+Allow: /assets/controllers/
+Allow: /assets/styles/
+Allow: /assets/images/
+
+# Sitemap location
+Sitemap: https://flow-php.com/sitemap.xml

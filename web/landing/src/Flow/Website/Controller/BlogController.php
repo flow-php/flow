@@ -20,7 +20,7 @@ final class BlogController extends AbstractController
         ]);
     }
 
-    #[Route('/blog', name: 'blog', priority: 100)]
+    #[Route('/blog', name: 'blog', options: ['sitemap' => true])]
     public function posts() : Response
     {
         return $this->render('blog/posts.html.twig', [

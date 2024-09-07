@@ -14,7 +14,7 @@ final class FlowController extends AbstractController
     {
     }
 
-    #[Route('/changelog', name: 'changelog', priority: 100)]
+    #[Route('/changelog', name: 'changelog', options: ['sitemap' => true])]
     public function main() : Response
     {
         return $this->render('main/changelog.html.twig', [

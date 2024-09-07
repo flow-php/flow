@@ -17,7 +17,7 @@ final class DocumentationController extends AbstractController
     ) {
     }
 
-    #[Route('/documentation/dsl', name: 'documentation', priority: 100)]
+    #[Route('/documentation/dsl', name: 'documentation', options: ['sitemap' => true])]
     public function dsl() : Response
     {
         $modules = $this->dslDefinitions->modules();
@@ -30,7 +30,7 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    #[Route('/documentation/dsl/{module}/{function}', name: 'documentation_dsl_function', priority: 100)]
+    #[Route('/documentation/dsl/{module}/{function}', name: 'documentation_dsl_function')]
     public function dslFunction(string $module, string $function) : Response
     {
         $modules = $this->dslDefinitions->modules();
@@ -43,7 +43,7 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    #[Route('/documentation/dsl/{module}', name: 'documentation_dsl', priority: 100)]
+    #[Route('/documentation/dsl/{module}', name: 'documentation_dsl')]
     public function dslModule(string $module = 'core') : Response
     {
         $modules = $this->dslDefinitions->modules();
