@@ -1,6 +1,8 @@
 ## [Unreleased] - 2024-09-07
 
 ### Added
+- [#1216](https://github.com/flow-php/flow/pull/1216) - **Added auto generated sitemap to website** - [@norberttech](https://github.com/norberttech)
+- [#1216](https://github.com/flow-php/flow/pull/1216) - **Added robots.txt** - [@norberttech](https://github.com/norberttech)
 - [#1215](https://github.com/flow-php/flow/pull/1215) - **Display DSL function usage examples at function doc page** - [@norberttech](https://github.com/norberttech)
 - [#1215](https://github.com/flow-php/flow/pull/1215) - **More DataFrame usage examples** - [@norberttech](https://github.com/norberttech)
 - [#1215](https://github.com/flow-php/flow/pull/1215) - **Priority parameter that defines in what order examples/topics are displayed** - [@norberttech](https://github.com/norberttech)
@@ -26,6 +28,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1216](https://github.com/flow-php/flow/pull/1216) - **Routes priority to always check examples and topics at the end** - [@norberttech](https://github.com/norberttech)
 - [#1211](https://github.com/flow-php/flow/pull/1211) - **Fixed Json extractor when pointer is used to extract flat arrays** - [@norberttech](https://github.com/norberttech)
 - [eaa783](https://github.com/flow-php/flow/commit/eaa78340e9730fcd109d927a3f52e7a3f4e5ac2a) - **documentation homepage** - [@norberttech](https://github.com/norberttech)
 - [904b6a](https://github.com/flow-php/flow/commit/904b6a8cc199f76e1a8ecebbf679404ff30d34c2) - **lowercasing module names in dsl routes provider** - [@norberttech](https://github.com/norberttech)
