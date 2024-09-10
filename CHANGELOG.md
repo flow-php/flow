@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-09-07
+## [Unreleased] - 2024-09-10
 
 ### Added
 - [#1216](https://github.com/flow-php/flow/pull/1216) - **Added auto generated sitemap to website** - [@norberttech](https://github.com/norberttech)
