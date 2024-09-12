@@ -97,6 +97,23 @@ final class Parameter
         return \is_int($result) ? $result : null;
     }
 
+    public function asListOfObjects(Row $row, string $class) : ?array
+    {
+        $result = $this->function->eval($row);
+
+        if (!\is_array($result)) {
+            return null;
+        }
+
+        foreach ($result as $item) {
+            if (!\is_object($item) || !\is_a($item, $class)) {
+                return null;
+            }
+        }
+
+        return $result;
+    }
+
     /**
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement

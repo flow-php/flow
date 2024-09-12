@@ -16,7 +16,20 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
 
     public function eval(Row $row) : ?string
     {
-        $domElement = (new Parameter($this->domElement))->asInstanceOf($row, \DOMElement::class);
+        $domElement = Parameter::oneOf(
+            (new Parameter($this->domElement))->asInstanceOf($row, \DOMElement::class),
+            (new Parameter($this->domElement))->asInstanceOf($row, \DOMDocument::class),
+            (new Parameter($this->domElement))->asListOfObjects($row, \DOMElement::class),
+        );
+
+        if ($domElement instanceof \DOMDocument) {
+            $domElement = $domElement->documentElement;
+        }
+
+        if (\is_array($domElement) && \count($domElement)) {
+            $domElement = \reset($domElement);
+        }
+
         $attributeName = (new Parameter($this->attribute))->asString($row);
 
         if ($domElement === null || $attributeName === null) {
