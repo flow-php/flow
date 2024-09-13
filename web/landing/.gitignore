@@ -5,3 +5,4 @@ vendor/
 var/
 public/assets
 public/*.xml
+!public/BingSiteAuth.xml
