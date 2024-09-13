@@ -204,7 +204,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->filterPartitions(ref('year')->cast('int')->greaterThanEqual(lit(2023)))
             ->filterPartitions(ref('month')->cast('int')->greaterThanEqual(lit(1)))
             ->filterPartitions(ref('day')->cast('int')->lessThan(lit(3)))
-            ->filter(ref('text')->notEquals(lit('dupa')))
+            ->filter(ref('text')->notEquals(lit('something')))
             ->withEntry('day', ref('day')->cast('int'))
             ->collect()
             ->fetch();

@@ -6,19 +6,18 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\{FlowContext, Rows, Transformer};
+use Flow\ETL\{FlowContext, Row\Schema\Definition, Rows, Transformer};
 
 final class WindowFunctionTransformer implements Transformer
 {
     public function __construct(
-        private readonly string $entryName,
+        private readonly string|Definition $entry,
         private readonly WindowFunction $function,
     ) {
     }
 
     /**
      * @throws InvalidArgumentException
-     * @throws \JsonException
      * @throws RuntimeException
      */
     public function transform(Rows $rows, FlowContext $context) : Rows
@@ -27,7 +26,13 @@ final class WindowFunctionTransformer implements Transformer
 
         foreach ($rows as $row) {
             $newRows = $newRows->add(
-                $row->add($context->entryFactory()->create($this->entryName, $this->function->apply($row, $rows)))
+                $row->add(
+                    $context->entryFactory()->create(
+                        $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
+                        $this->function->apply($row, $rows),
+                        $this->entry instanceof Definition ? $this->entry : null
+                    )
+                )
             );
         }
 
