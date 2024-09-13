@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\{type_object, type_string};
 use Flow\ETL\Row;
 
 final class ToTimeZone extends ScalarFunctionChain
@@ -17,10 +18,7 @@ final class ToTimeZone extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         $dateTime = (new Parameter($this->value))->asInstanceOf($row, \DateTimeInterface::class);
-        $tz = Parameter::oneOf(
-            (new Parameter($this->timezone))->asString($row),
-            (new Parameter($this->timezone))->asInstanceOf($row, \DateTimeZone::class)
-        );
+        $tz = (new Parameter($this->timezone))->as($row, type_string(), type_object(\DateTimeZone::class));
 
         if ($dateTime === null || $tz === null) {
             return null;

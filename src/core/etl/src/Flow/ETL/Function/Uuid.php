@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\{type_object, type_string};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 
@@ -31,10 +32,7 @@ final class Uuid extends ScalarFunctionChain
 
     public function eval(Row $row) : mixed
     {
-        $param = Parameter::oneOf(
-            (new Parameter($this->value))->asString($row),
-            (new Parameter($this->value))->asInstanceOf($row, \DateTimeInterface::class)
-        );
+        $param = (new Parameter($this->value))->as($row, type_string(), type_object(\DateTimeInterface::class));
 
         $uuidVersion = (new Parameter($this->uuidVersion))->asString($row);
 
