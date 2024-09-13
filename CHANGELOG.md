@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-09-13
 
 ### Added
+- [#1221](https://github.com/flow-php/flow/pull/1221) - **DataFrame::filters(array $filters) : self** - [@norberttech](https://github.com/norberttech)
 - [78cefe](https://github.com/flow-php/flow/commit/78cefed4c56f5dc6ff099635b8feed4193cf5967) - **BigSiteAuth to submit flow-php.com to bing search** - [@norberttech](https://github.com/norberttech)
 - [#1216](https://github.com/flow-php/flow/pull/1216) - **Added auto generated sitemap to website** - [@norberttech](https://github.com/norberttech)
 - [#1216](https://github.com/flow-php/flow/pull/1216) - **Added robots.txt** - [@norberttech](https://github.com/norberttech)
@@ -17,6 +18,8 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1221](https://github.com/flow-php/flow/pull/1221) - **Optimized XPath Scalar Function by reusing DOMDocument instead of creating new one** - [@norberttech](https://github.com/norberttech)
+- [#1221](https://github.com/flow-php/flow/pull/1221) - **Allow to pass Schema\Definition to withEntry in order to avoid using NativeEntryFactory type detection** - [@norberttech](https://github.com/norberttech)
 - [#1215](https://github.com/flow-php/flow/pull/1215) - **Improved title/description at DSL documentation pages** - [@norberttech](https://github.com/norberttech)
 - [#1211](https://github.com/flow-php/flow/pull/1211) - **When JsonExtractor is using a pointer, pointer becomes a key** - [@norberttech](https://github.com/norberttech)
 - [#1209](https://github.com/flow-php/flow/pull/1209) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
