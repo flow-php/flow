@@ -98,11 +98,11 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                     foreach ($this->elements as $element) {
                         if ($shouldPutInputIntoRows) {
                             $rowData = [
-                                'node' => $this->createDOMElement($element),
+                                'node' => $this->createDOMNode($element),
                                 '_input_file_uri' => $stream->path()->uri(),
                             ];
                         } else {
-                            $rowData = ['node' => $this->createDOMElement($element)];
+                            $rowData = ['node' => $this->createDOMNode($element)];
                         }
 
                         $signal = yield array_to_rows($rowData, $context->entryFactory(), $stream->path()->partitions());
@@ -126,11 +126,11 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                 foreach ($this->elements as $element) {
                     if ($shouldPutInputIntoRows) {
                         $rowData = [
-                            'node' => $this->createDOMElement($element),
+                            'node' => $this->createDOMNode($element),
                             '_input_file_uri' => $stream->path()->uri(),
                         ];
                     } else {
-                        $rowData = ['node' => $this->createDOMElement($element)];
+                        $rowData = ['node' => $this->createDOMNode($element)];
                     }
 
                     $signal = yield array_to_rows([$rowData], $context->entryFactory(), $stream->path()->partitions());
@@ -194,18 +194,12 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         return $this;
     }
 
-    private function createDOMElement(string $xmlString) : \DOMElement
+    private function createDOMNode(string $xmlString) : \DOMNode
     {
         $doc = new \DOMDocument();
         $doc->loadXML($xmlString);
 
-        $element = $doc->documentElement;
-
-        if ($element === null) {
-            throw new RuntimeException('Cannot create DOMElement from XML string: ' . $xmlString);
-        }
-
-        return $element;
+        return $doc;
     }
 
     private function freeParser() : void
