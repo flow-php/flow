@@ -18,6 +18,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1222](https://github.com/flow-php/flow/pull/1222) - **Return DOMDocument instead of DOMElement from XMLParserExtractor** - [@norberttech](https://github.com/norberttech)
 - [#1221](https://github.com/flow-php/flow/pull/1221) - **Optimized XPath Scalar Function by reusing DOMDocument instead of creating new one** - [@norberttech](https://github.com/norberttech)
 - [#1221](https://github.com/flow-php/flow/pull/1221) - **Allow to pass Schema\Definition to withEntry in order to avoid using NativeEntryFactory type detection** - [@norberttech](https://github.com/norberttech)
 - [#1215](https://github.com/flow-php/flow/pull/1215) - **Improved title/description at DSL documentation pages** - [@norberttech](https://github.com/norberttech)
