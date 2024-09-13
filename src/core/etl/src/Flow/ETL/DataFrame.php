@@ -25,7 +25,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     PartitioningPipeline,
     SortingPipeline,
     VoidPipeline};
-use Flow\ETL\Row\{Reference, References, Schema};
+use Flow\ETL\Row\{Reference, References, Schema, Schema\Definition};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\{
     AutoCastTransformer,
@@ -385,6 +385,20 @@ final class DataFrame
                 new AutoCaster($this->context->config->caster())
             )
         );
+
+        return $this;
+    }
+
+    /**
+     * @lazy
+     *
+     * @param ScalarFunction[] $functions
+     */
+    public function filters(array $functions) : self
+    {
+        foreach ($functions as $function) {
+            $this->filter($function);
+        }
 
         return $this;
     }
@@ -858,11 +872,11 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, ScalarFunction> $refs
+     * @param array<string, ScalarFunction|WindowFunction> $references
      */
-    public function withEntries(array $refs) : self
+    public function withEntries(array $references) : self
     {
-        foreach ($refs as $entryName => $ref) {
+        foreach ($references as $entryName => $ref) {
             $this->withEntry($entryName, $ref);
         }
 
@@ -872,22 +886,22 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, ScalarFunction|WindowFunction $ref) : self
+    public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference) : self
     {
-        if ($ref instanceof WindowFunction) {
-            if (\count($ref->window()->partitions())) {
-                $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order()));
+        if ($reference instanceof WindowFunction) {
+            if (\count($reference->window()->partitions())) {
+                $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, $reference->window()->partitions(), $reference->window()->order()));
             } else {
                 $this->collect();
 
-                if (\count($ref->window()->order())) {
-                    $this->sortBy(...$ref->window()->order());
+                if (\count($reference->window()->order())) {
+                    $this->sortBy(...$reference->window()->order());
                 }
             }
 
-            $this->pipeline->add(new WindowFunctionTransformer($entryName, $ref));
+            $this->pipeline->add(new WindowFunctionTransformer($entry, $reference));
         } else {
-            $this->transform(new ScalarFunctionTransformer($entryName, $ref));
+            $this->transform(new ScalarFunctionTransformer($entry, $reference));
         }
 
         return $this;

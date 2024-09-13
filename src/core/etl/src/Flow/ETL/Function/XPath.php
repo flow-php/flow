@@ -24,9 +24,17 @@ final class XPath extends ScalarFunctionChain
         }
 
         if ($value instanceof \DOMNode && !$value instanceof \DOMDocument) {
-            $dom = new \DOMDocument();
+            /**
+             * @psalm-suppress RedundantCondition
+             * @psalm-suppress TypeDoesNotContainType
+             */
+            $dom = $value->ownerDocument ?? new \DOMDocument();
             $importedNode = $dom->importNode($value, true);
-            $dom->appendChild($importedNode);
+
+            if (!$importedNode->parentNode) {
+                $dom->appendChild($importedNode);
+            }
+
             $value = $dom;
         }
 

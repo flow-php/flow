@@ -7,12 +7,12 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\{FlowContext, Row, Rows, Transformer};
+use Flow\ETL\{FlowContext, Row, Row\Schema\Definition, Rows, Transformer};
 
 final class ScalarFunctionTransformer implements Transformer
 {
     public function __construct(
-        private readonly string $entryName,
+        private readonly string|Definition $entry,
         public readonly ScalarFunction $function,
     ) {
     }
@@ -24,7 +24,15 @@ final class ScalarFunctionTransformer implements Transformer
                 fn (Row $r) : array => \array_map(
                     fn ($val) : Row => new Row(
                         $r->entries()
-                            ->merge(new Entries($context->entryFactory()->create($this->entryName, $val)))
+                            ->merge(
+                                new Entries(
+                                    $context->entryFactory()->create(
+                                        $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
+                                        $val,
+                                        $this->entry instanceof Definition ? $this->entry : null
+                                    )
+                                )
+                            )
                     ),
                     (array) $this->function->eval($r)
                 )
@@ -43,14 +51,20 @@ final class ScalarFunctionTransformer implements Transformer
                          * @var mixed $val
                          */
                         foreach ($value as $key => $val) {
-                            $r = $r->set($context->entryFactory()->create($this->entryName . '.' . $key, $val));
+                            $r = $r->set($context->entryFactory()->create(($this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry) . '.' . $key, $val));
                         }
 
                         return $r;
                     }
                 }
 
-                return $r->set($context->entryFactory()->create($this->entryName, $this->function->eval($r)));
+                return $r->set(
+                    $context->entryFactory()->create(
+                        $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
+                        $this->function->eval($r),
+                        $this->entry instanceof Definition ? $this->entry : null
+                    )
+                );
             }
         );
     }
