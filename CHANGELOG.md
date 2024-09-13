@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-09-13
 
 ### Added
+- [#1224](https://github.com/flow-php/flow/pull/1224) - **Added comments to website blog/documentation** - [@norberttech](https://github.com/norberttech)
 - [#1221](https://github.com/flow-php/flow/pull/1221) - **DataFrame::filters(array $filters) : self** - [@norberttech](https://github.com/norberttech)
 - [78cefe](https://github.com/flow-php/flow/commit/78cefed4c56f5dc6ff099635b8feed4193cf5967) - **BigSiteAuth to submit flow-php.com to bing search** - [@norberttech](https://github.com/norberttech)
 - [#1216](https://github.com/flow-php/flow/pull/1216) - **Added auto generated sitemap to website** - [@norberttech](https://github.com/norberttech)
