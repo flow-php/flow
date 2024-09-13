@@ -5,22 +5,24 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\lit;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
 final class Parameter
 {
     private ScalarFunction $function;
 
-    public function __construct(
-        mixed $function,
-    ) {
+    public function __construct(mixed $function)
+    {
         $this->function = $function instanceof ScalarFunction ? $function : lit($function);
     }
 
-    public static function oneOf(mixed ...$values) : mixed
+    public function as(Row $row, Type $type, Type ...$types) : mixed
     {
-        foreach ($values as $value) {
-            if ($value !== null) {
+        $value = $this->function->eval($row);
+
+        foreach (\array_merge([$type], $types) as $nextType) {
+            if ($nextType->isValid($value)) {
                 return $value;
             }
         }
@@ -38,13 +40,6 @@ final class Parameter
     public function asBoolean(Row $row) : bool
     {
         return (bool) $this->function->eval($row);
-    }
-
-    public function asDateTime(Row $row) : ?\DateTimeInterface
-    {
-        $result = $this->function->eval($row);
-
-        return $result instanceof \DateTimeInterface ? $result : null;
     }
 
     /**

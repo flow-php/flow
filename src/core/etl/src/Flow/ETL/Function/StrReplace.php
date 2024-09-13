@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\{type_list, type_string};
 use Flow\ETL\Row;
 
 final class StrReplace extends ScalarFunctionChain
@@ -18,8 +19,8 @@ final class StrReplace extends ScalarFunctionChain
     public function eval(Row $row) : ?string
     {
         $value = (new Parameter($this->value))->asString($row);
-        $search = Parameter::oneOf((new Parameter($this->search))->asString($row), (new Parameter($this->search))->asArray($row));
-        $replace = Parameter::oneOf((new Parameter($this->replace))->asString($row), (new Parameter($this->replace))->asArray($row));
+        $search = (new Parameter($this->search))->as($row, type_string(), type_list(type_string()));
+        $replace = (new Parameter($this->replace))->as($row, type_string(), type_list(type_string()));
 
         if ($value === null || $search === null || $replace === null) {
             return null;
