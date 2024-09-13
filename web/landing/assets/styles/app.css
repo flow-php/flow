@@ -34,7 +34,7 @@ code {
 }
 
 #blog-post {
-    @apply py-10 px-2 sm:px-4 mx-auto max-w-screen-xl;
+    @apply pt-10 pb-5 px-2 sm:px-4 mx-auto max-w-screen-xl;
 }
 
 #blog-post hr, p, pre, ul, h2, h3 {
