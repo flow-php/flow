@@ -1,6 +1,8 @@
-## [Unreleased] - 2024-09-13
+## [Unreleased] - 2024-09-15
 
 ### Added
+- [#1225](https://github.com/flow-php/flow/pull/1225) - **Added breadcrumbs to blog posts** - [@norberttech](https://github.com/norberttech)
+- [#1225](https://github.com/flow-php/flow/pull/1225) - **Data Sink examples topic** - [@norberttech](https://github.com/norberttech)
 - [#1224](https://github.com/flow-php/flow/pull/1224) - **Added comments to website blog/documentation** - [@norberttech](https://github.com/norberttech)
 - [#1221](https://github.com/flow-php/flow/pull/1221) - **DataFrame::filters(array $filters) : self** - [@norberttech](https://github.com/norberttech)
 - [78cefe](https://github.com/flow-php/flow/commit/78cefed4c56f5dc6ff099635b8feed4193cf5967) - **BigSiteAuth to submit flow-php.com to bing search** - [@norberttech](https://github.com/norberttech)
