@@ -9,6 +9,19 @@
 {%- endblock -%}
 
 {% block main %}
+    <section class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-xl">
+        <ul class="inline">
+            <li class="inline mr-2">
+                <a href="{{ path('blog') }}" class="text-blue-500 hover:underline">Blog</a>
+            </li>
+            <li class="inline mr-2">
+                <span class="text-gray-500">/</span>
+            </li>
+            <li class="inline mr-2">
+                <span>{{ post.title }}</span>
+            </li>
+        </ul>
+    </section>
     {{ block('article') }}
     <section class="mb-10 px-2 sm:px-4 mx-auto max-w-screen-xl">
         <script src="https://giscus.app/client.js"

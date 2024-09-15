@@ -1,4 +1,4 @@
-Read data from a json file.
+Read data from a parquet file.
 
 ```php
 function from_parquet(string|Path $uri);

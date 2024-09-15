@@ -54,6 +54,7 @@ function from_parquet(
  * @return Loader
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::LOADER)]
+#[DocumentationExample(topic: 'data_sink', example: 'parquet')]
 function to_parquet(
     string|Path $path,
     ?Options $options = null,
