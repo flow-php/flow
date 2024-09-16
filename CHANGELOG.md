@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-09-15
+## [Unreleased] - 2024-09-16
 
 ### Added
+- [#1226](https://github.com/flow-php/flow/pull/1226) - **to_array() loader with usage example** - [@norberttech](https://github.com/norberttech)
 - [#1225](https://github.com/flow-php/flow/pull/1225) - **Added breadcrumbs to blog posts** - [@norberttech](https://github.com/norberttech)
 - [#1225](https://github.com/flow-php/flow/pull/1225) - **Data Sink examples topic** - [@norberttech](https://github.com/norberttech)
 - [#1224](https://github.com/flow-php/flow/pull/1224) - **Added comments to website blog/documentation** - [@norberttech](https://github.com/norberttech)
