@@ -35,6 +35,7 @@
     </projectFiles>
     <issueHandlers>
         <RedundantConditionGivenDocblockType errorLevel="suppress" />
+        <ReferenceConstraintViolation errorLevel="suppress" />
         <DocblockTypeContradiction errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
         <LessSpecificReturnStatement errorLevel="suppress" />

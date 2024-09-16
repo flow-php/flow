@@ -285,7 +285,7 @@ function to_memory(Memory $memory) : MemoryLoader
 /**
  * Convert rows to an array and store them in passed array variable.
  *
- * @param array<array<mixed>> $array
+ * @param-out array<array<mixed>> $array
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
 #[DocumentationExample(topic: 'data_sink', example: 'array')]
