@@ -77,7 +77,7 @@ use Flow\ETL\Function\{
     When
 };
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Loader\{CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
+use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
@@ -280,6 +280,18 @@ function to_callable(callable $callable) : CallbackLoader
 function to_memory(Memory $memory) : MemoryLoader
 {
     return new MemoryLoader($memory);
+}
+
+/**
+ * Convert rows to an array and store them in passed array variable.
+ *
+ * @param-out array<array<mixed>> $array
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
+#[DocumentationExample(topic: 'data_sink', example: 'array')]
+function to_array(array &$array) : ArrayLoader
+{
+    return new ArrayLoader($array);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
