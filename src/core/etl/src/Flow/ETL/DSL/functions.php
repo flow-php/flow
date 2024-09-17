@@ -95,7 +95,7 @@ use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
-use Flow\ETL\Row\{Entry, EntryFactory, EntryReference, Reference, References, Schema};
+use Flow\ETL\Row\{Entry, EntryFactory, Reference, References, Schema};
 use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
@@ -647,9 +647,9 @@ function rows_partitioned(array $rows, array|Partitions $partitions) : Rows
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function col(string $entry) : EntryReference
+function col(string $entry) : Reference
 {
-    return new EntryReference($entry);
+    return new Reference($entry);
 }
 
 /**
@@ -657,16 +657,16 @@ function col(string $entry) : EntryReference
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 #[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
-function entry(string $entry) : EntryReference
+function entry(string $entry) : Reference
 {
-    return new EntryReference($entry);
+    return new Reference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 #[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
-function ref(string $entry) : EntryReference
+function ref(string $entry) : Reference
 {
-    return new EntryReference($entry);
+    return new Reference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -837,7 +837,7 @@ function cast(mixed $value, ScalarFunction|string|Type $type) : Cast
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function count(EntryReference $function) : Count
+function count(Reference $function) : Count
 {
     return new Count($function);
 }
@@ -1135,19 +1135,19 @@ function dense_rank() : DenseRank
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function average(EntryReference|string $ref) : Average
+function average(Reference|string $ref) : Average
 {
     return new Average(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect(EntryReference|string $ref) : Collect
+function collect(Reference|string $ref) : Collect
 {
     return new Collect(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function collect_unique(EntryReference|string $ref) : CollectUnique
+function collect_unique(Reference|string $ref) : CollectUnique
 {
     return new CollectUnique(is_string($ref) ? ref($ref) : $ref);
 }
@@ -1159,31 +1159,31 @@ function window() : Window
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function sum(EntryReference|string $ref) : Sum
+function sum(Reference|string $ref) : Sum
 {
     return new Sum(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function first(EntryReference|string $ref) : First
+function first(Reference|string $ref) : First
 {
     return new First(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function last(EntryReference|string $ref) : Last
+function last(Reference|string $ref) : Last
 {
     return new Last(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function max(EntryReference|string $ref) : Max
+function max(Reference|string $ref) : Max
 {
     return new Max(is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function min(EntryReference|string $ref) : Min
+function min(Reference|string $ref) : Min
 {
     return new Min(is_string($ref) ? ref($ref) : $ref);
 }

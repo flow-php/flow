@@ -6,23 +6,23 @@ namespace Flow\ETL\Adapter\ChartJS;
 
 use Flow\ETL\Adapter\ChartJS\Chart\{BarChart, LineChart, PieChart};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
-use Flow\ETL\Row\{EntryReference, References};
+use Flow\ETL\Row\{Reference, References};
 use Flow\Filesystem\Path;
 
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::HELPER)]
-function bar_chart(EntryReference $label, References $datasets) : BarChart
+function bar_chart(Reference $label, References $datasets) : BarChart
 {
     return new BarChart($label, $datasets);
 }
 
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::HELPER)]
-function line_chart(EntryReference $label, References $datasets) : LineChart
+function line_chart(Reference $label, References $datasets) : LineChart
 {
     return new LineChart($label, $datasets);
 }
 
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::HELPER)]
-function pie_chart(EntryReference $label, References $datasets) : PieChart
+function pie_chart(Reference $label, References $datasets) : PieChart
 {
     return new PieChart($label, $datasets);
 }

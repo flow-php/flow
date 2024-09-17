@@ -55,9 +55,9 @@ final class Schema implements \Countable
     }
 
     /**
-     * @deprecated use references() : References instead
-     *
      * @return array<Reference>
+     *
+     *@deprecated use references() : References instead
      */
     public function entries() : array
     {
@@ -250,7 +250,7 @@ final class Schema implements \Countable
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+            if ($nextDefinition->entry()->is(Reference::init($entry))) {
                 $definitions[] = $nextDefinition->rename($newName);
             } else {
                 $definitions[] = $nextDefinition;
@@ -271,7 +271,7 @@ final class Schema implements \Countable
         }
 
         foreach ($this->definitions as $nextDefinition) {
-            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+            if ($nextDefinition->entry()->is(Reference::init($entry))) {
                 $definitions[] = $definition;
             } else {
                 $definitions[] = $nextDefinition;

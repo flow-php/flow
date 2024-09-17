@@ -21,7 +21,7 @@ use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, ObjectEntry, StringEntry, StructureEntry, UuidEntry, XMLEntry};
-use Flow\ETL\Row\{Entry, EntryReference, Reference};
+use Flow\ETL\Row\{Entry, Reference};
 
 final class Definition
 {
@@ -43,7 +43,7 @@ final class Definition
         }
 
         $this->metadata = $metadata ?? Metadata::empty();
-        $this->ref = EntryReference::init($ref);
+        $this->ref = Reference::init($ref);
     }
 
     public static function array(string|Reference $entry, bool $empty = false, bool $nullable = false, ?Metadata $metadata = null) : self

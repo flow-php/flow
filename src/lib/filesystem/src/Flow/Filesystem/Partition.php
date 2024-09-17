@@ -15,7 +15,7 @@ use Flow\ETL\Row\Entry\{ArrayEntry,
     StructureEntry,
     XMLElementEntry,
     XMLEntry};
-use Flow\ETL\Row\{EntryReference, Reference};
+use Flow\ETL\Row\Reference;
 
 final class Partition
 {
@@ -94,6 +94,6 @@ final class Partition
 
     public function reference() : Reference
     {
-        return new EntryReference($this->name);
+        return new Reference($this->name);
     }
 }
