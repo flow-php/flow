@@ -4,19 +4,91 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-interface Reference
+use Flow\ETL\Function\{ListFunctions, ScalarFunctionChain, StructureFunctions};
+use Flow\ETL\Row;
+
+final class Reference extends ScalarFunctionChain
 {
-    public function __toString() : string;
+    private ?string $alias = null;
 
-    public function as(string $alias) : self;
+    private SortOrder $sort = SortOrder::ASC;
 
-    public function hasAlias() : bool;
+    public function __construct(private readonly string $entry)
+    {
+    }
 
-    public function is(self $ref) : bool;
+    public static function init(string|self $ref) : self
+    {
+        if (\is_string($ref)) {
+            return new self($ref);
+        }
 
-    public function name() : string;
+        return $ref;
+    }
 
-    public function sort() : SortOrder;
+    public function __toString() : string
+    {
+        return $this->name();
+    }
 
-    public function to() : string;
+    public function as(string $alias) : self
+    {
+        $this->alias = $alias;
+
+        return $this;
+    }
+
+    public function asc() : self
+    {
+        $this->sort = SortOrder::ASC;
+
+        return $this;
+    }
+
+    public function desc() : self
+    {
+        $this->sort = SortOrder::DESC;
+
+        return $this;
+    }
+
+    public function eval(Row $row) : mixed
+    {
+        return $row->valueOf($this->entry);
+    }
+
+    public function hasAlias() : bool
+    {
+        return $this->alias !== null;
+    }
+
+    public function is(self $ref) : bool
+    {
+        return $this->name() === $ref->name();
+    }
+
+    public function list() : ListFunctions
+    {
+        return new ListFunctions($this);
+    }
+
+    public function name() : string
+    {
+        return $this->alias ?? $this->entry;
+    }
+
+    public function sort() : SortOrder
+    {
+        return $this->sort;
+    }
+
+    public function structure() : StructureFunctions
+    {
+        return new StructureFunctions($this);
+    }
+
+    public function to() : string
+    {
+        return $this->entry;
+    }
 }

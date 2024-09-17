@@ -25,7 +25,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     public function __construct(string|Reference ...$references)
     {
         foreach ($references as $ref) {
-            $ref = EntryReference::init($ref);
+            $ref = Reference::init($ref);
 
             $this->refs[$ref->name()] = $ref;
         }
@@ -38,7 +38,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function add(string|Reference $ref) : self
     {
-        $reference = EntryReference::init($ref);
+        $reference = Reference::init($ref);
 
         if (\array_key_exists($reference->name(), $this->without)) {
             return $this;
@@ -81,7 +81,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function has(string|Reference $reference) : bool
     {
-        $reference = EntryReference::init($reference);
+        $reference = Reference::init($reference);
 
         foreach ($this->refs as $ref) {
             if ($ref->is($reference)) {

@@ -6,7 +6,7 @@ namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
-use Flow\ETL\Row\{EntryReference, Reference};
+use Flow\ETL\Row\{Reference};
 
 final class Identical implements Comparison
 {
@@ -26,7 +26,7 @@ final class Identical implements Comparison
      */
     public function left() : array
     {
-        return [\is_string($this->entryLeft) ? EntryReference::init($this->entryLeft) : $this->entryLeft];
+        return [\is_string($this->entryLeft) ? Reference::init($this->entryLeft) : $this->entryLeft];
     }
 
     /**
@@ -34,6 +34,6 @@ final class Identical implements Comparison
      */
     public function right() : array
     {
-        return [\is_string($this->entryRight) ? EntryReference::init($this->entryRight) : $this->entryRight];
+        return [\is_string($this->entryRight) ? Reference::init($this->entryRight) : $this->entryRight];
     }
 }

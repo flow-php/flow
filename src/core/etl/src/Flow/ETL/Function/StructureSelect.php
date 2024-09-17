@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\{EntryReference, Reference, References};
+use Flow\ETL\Row\{Reference, References};
 
 final class StructureSelect implements ScalarFunction
 {
@@ -18,7 +18,7 @@ final class StructureSelect implements ScalarFunction
         Reference|string $ref,
         Reference|string ...$refs,
     ) {
-        $this->ref = EntryReference::init($ref);
+        $this->ref = Reference::init($ref);
         $this->refs = References::init(...$refs);
     }
 

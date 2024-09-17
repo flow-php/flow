@@ -24,7 +24,7 @@ use function Flow\ETL\DSL\{bool_schema,
     type_structure,
     uuid_schema};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
-use Flow\ETL\Row\{EntryReference, Schema};
+use Flow\ETL\Row\{Reference, Schema};
 use PHPUnit\Framework\TestCase;
 
 final class SchemaTest extends TestCase
@@ -73,7 +73,7 @@ final class SchemaTest extends TestCase
             Schema\Definition::integer('Id')
         );
 
-        self::assertEquals([EntryReference::init('id'), EntryReference::init('Id')], $schema->entries());
+        self::assertEquals([Reference::init('id'), Reference::init('Id')], $schema->entries());
     }
 
     public function test_creating_schema_from_corrupted_json() : void
