@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-09-16
+## [Unreleased] - 2024-09-18
 
 ### Added
 - [#1226](https://github.com/flow-php/flow/pull/1226) - **to_array() loader with usage example** - [@norberttech](https://github.com/norberttech)
@@ -38,6 +38,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [b5f70f](https://github.com/flow-php/flow/commit/b5f70f1273d6fd81ec8cf5872bd5b7398138eec9) - **SEO issue with duplicated example pages titles** - [@norberttech](https://github.com/norberttech)
 - [#1220](https://github.com/flow-php/flow/pull/1220) - **DOMElementValue behavior when used on a XPath scalar function result** - [@norberttech](https://github.com/norberttech)
 - [#1220](https://github.com/flow-php/flow/pull/1220) - **DOMElementAttributeValue behavior when used on a XPath scalar function result** - [@norberttech](https://github.com/norberttech)
 - [#1216](https://github.com/flow-php/flow/pull/1216) - **Routes priority to always check examples and topics at the end** - [@norberttech](https://github.com/norberttech)
