@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_table_update};
-use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\{from_array, ref};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
@@ -54,6 +54,34 @@ final class DbalLoaderTest extends IntegrationTestCase
             [],
             'delete'
         );
+    }
+
+    public function test_inserts_empty_rows() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+
+        (new Flow())
+            ->read(from_array([
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+            ]))
+            ->collect()
+            ->filter(ref('id')->equals(0))
+            ->load($loader)
+            ->run();
+
+        self::assertEquals(0, $this->pgsqlDatabaseContext->tableCount($table));
     }
 
     public function test_inserts_multiple_rows_at_once() : void

@@ -57,7 +57,13 @@ final class SynchronousPipeline implements Pipeline
                             $generator->send(Signal::STOP);
                         }
                     } elseif ($pipe instanceof Loader) {
-                        $pipe->load($rows, $context);
+                        if ($rows->count()) {
+                            /**
+                             * When there are no rows to load, we should not call the loader. This way we can avoid
+                             * checking rows count inside the loader implementation.
+                             */
+                            $pipe->load($rows, $context);
+                        }
                     }
                 } catch (\Throwable $exception) {
                     if ($context->errorHandler()->throw($exception, $rows)) {
