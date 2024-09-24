@@ -64,10 +64,6 @@ final class DbalLoader implements Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if (!$rows->count()) {
-            return;
-        }
-
         Bulk::create()->{$this->operation}(
             $this->connection(),
             $this->tableName,
