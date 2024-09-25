@@ -110,7 +110,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                         $this->incrementReturnedRows();
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
-                            $context->streams()->closeWriters($this->path);
+                            $context->streams()->closeStreams($this->path);
                             $this->freeParser();
 
                             return;
@@ -138,7 +138,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                     $this->incrementReturnedRows();
 
                     if ($signal === Signal::STOP || $this->reachedLimit()) {
-                        $context->streams()->closeWriters($this->path);
+                        $context->streams()->closeStreams($this->path);
                         $this->freeParser();
 
                         return;

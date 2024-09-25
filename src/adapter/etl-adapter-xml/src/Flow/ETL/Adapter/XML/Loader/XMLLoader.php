@@ -47,13 +47,11 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
 
     public function closure(FlowContext $context) : void
     {
-        foreach ($context->streams() as $stream) {
-            if ($stream->path()->extension() === 'xml') {
-                $stream->append('</' . $this->rootElementName . '>');
-            }
+        foreach ($context->streams()->listOpenStreams($this->path) as $stream) {
+            $stream->append('</' . $this->rootElementName . '>');
         }
 
-        $context->streams()->closeWriters($this->path);
+        $context->streams()->closeStreams($this->path);
     }
 
     public function destination() : Path

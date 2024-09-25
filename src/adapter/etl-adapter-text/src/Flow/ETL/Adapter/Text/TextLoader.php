@@ -19,7 +19,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
 
     public function closure(FlowContext $context) : void
     {
-        $context->streams()->closeWriters($this->path);
+        $context->streams()->closeStreams($this->path);
     }
 
     public function destination() : Path

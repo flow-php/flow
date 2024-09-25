@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type, Loader};
+use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type};
 use Flow\Filesystem\Path;
 
 /**
@@ -40,7 +40,7 @@ function from_json(
  * @param string $date_time_format - format for DateTimeInterface::format() - @deprecate use withDateTimeFormat method instead
  * @param bool $put_rows_in_new_lines - if you want to put each row in a new line - @deprecate use withRowsInNewLines method instead
  *
- * @return Loader
+ * @return JsonLoader
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::LOADER)]
 function to_json(
@@ -48,7 +48,7 @@ function to_json(
     int $flags = JSON_THROW_ON_ERROR,
     string $date_time_format = \DateTimeInterface::ATOM,
     bool $put_rows_in_new_lines = false,
-) : Loader {
+) : JsonLoader {
     return (new JsonLoader(\is_string($path) ? Path::realpath($path) : $path))
         ->withFlags($flags)
         ->withDateTimeFormat($date_time_format)

@@ -42,7 +42,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 
         $fileStream = $streams->writeTo($file);
         $fileStream->append('some content');
-        $streams->closeWriters($file);
+        $streams->closeStreams($file);
 
         self::assertFileExists($file->path());
         self::assertSame('some content', \file_get_contents($file->path()));

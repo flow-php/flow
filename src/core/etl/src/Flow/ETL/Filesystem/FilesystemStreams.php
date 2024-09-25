@@ -28,7 +28,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         $this->saveMode = SaveMode::ExceptionIfExists;
     }
 
-    public function closeWriters(Path $path) : void
+    public function closeStreams(Path $path) : void
     {
         $streams = [];
 
@@ -125,6 +125,21 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         }
     }
 
+    public function listOpenStreams(Path $path) : \Generator
+    {
+        $uri = $path->uri();
+
+        if (!\array_key_exists($uri, $this->writingStreams)) {
+            return [];
+        }
+
+        foreach ($this->writingStreams[$uri] as $stream) {
+            if ($stream->isOpen()) {
+                yield $stream;
+            }
+        }
+    }
+
     public function read(Path $path, array $partitions = []) : SourceStream
     {
         if ($path->isPattern()) {
@@ -188,6 +203,14 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         $destinationPathUri = $destination->uri();
 
         if (!\array_key_exists($destinationPathUri, $this->writingStreams[$pathUri])) {
+            if ($path->protocol()->is('stdout') && \count($this->writingStreams) > 0) {
+                foreach ($this->getIterator() as $writingStream) {
+                    if ($writingStream->path()->protocol()->is('stdout')) {
+                        throw new RuntimeException('Only one stdout filesystem stream can be open at the same time');
+                    }
+                }
+            }
+
             $fs = $this->fstab->for($path);
 
             $outputPath = $destination;

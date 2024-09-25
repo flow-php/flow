@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams;
 
+use function Flow\Filesystem\DSL\path_stdout;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\Filesystem\Partition;
 use Flow\Filesystem\Path\Filter\KeepAll;
@@ -26,8 +27,18 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         $streams->writeTo($this->getPath(__FUNCTION__ . '/file.txt'));
         self::assertTrue($streams->isOpen($this->getPath(__FUNCTION__ . '/file.txt')));
         self::assertCount(1, $streams);
-        $streams->closeWriters($this->getPath(__FUNCTION__ . '/file.txt'));
+        $streams->closeStreams($this->getPath(__FUNCTION__ . '/file.txt'));
         self::assertFalse($streams->isOpen($this->getPath(__FUNCTION__ . '/file.txt')));
+    }
+
+    public function test_open_two_write_streams_to_stdout() : void
+    {
+        $this->expectExceptionMessage('Only one stdout filesystem stream can be open at the same time');
+
+        $streams = $this->streams();
+        $streams->writeTo(path_stdout('json'));
+        $streams->writeTo(path_stdout('json'));
+
     }
 
     public function test_read() : void
@@ -113,6 +124,14 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
             4,
             \iterator_to_array($streams->list($this->getPath(__FUNCTION__ . '/**/*.txt'), new KeepAll()))
         );
+    }
+
+    public function test_write_to_stdout() : void
+    {
+        $streams = $this->streams();
+        $streams->writeTo(path_stdout('json'));
+
+        self::assertCount(1, $streams);
     }
 
     protected function streams() : FilesystemStreams

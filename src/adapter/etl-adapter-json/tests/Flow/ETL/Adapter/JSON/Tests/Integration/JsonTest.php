@@ -17,7 +17,6 @@ final class JsonTest extends TestCase
 {
     public function test_json_loader() : void
     {
-
         df()
             ->read(new FakeExtractor(100))
             ->write(to_json($path = __DIR__ . '/var/test_json_loader.json'))
@@ -79,6 +78,38 @@ JSON,
         if (\file_exists($path)) {
             \unlink($path);
         }
+    }
+
+    public function test_partitioning_json_file() : void
+    {
+        df()
+            ->read(from_array($dataset = [
+                ['id' => 1, 'color' => 'red', 'size' => 'small'],
+                ['id' => 2, 'color' => 'blue', 'size' => 'medium'],
+                ['id' => 3, 'color' => 'green', 'size' => 'large'],
+                ['id' => 4, 'color' => 'yellow', 'size' => 'small'],
+                ['id' => 5, 'color' => 'black', 'size' => 'medium'],
+                ['id' => 6, 'color' => 'white', 'size' => 'large'],
+                ['id' => 7, 'color' => 'red', 'size' => 'small'],
+                ['id' => 8, 'color' => 'blue', 'size' => 'medium'],
+                ['id' => 9, 'color' => 'green', 'size' => 'large'],
+                ['id' => 10, 'color' => 'yellow', 'size' => 'small'],
+                ['id' => 11, 'color' => 'black', 'size' => 'medium'],
+                ['id' => 12, 'color' => 'white', 'size' => 'large'],
+            ]))
+            ->saveMode(overwrite())
+            ->partitionBy('size', 'color')
+            ->write(to_json($path = __DIR__ . '/var/test_partitioning_json_file/products.json'))
+            ->run();
+
+        self::assertEquals(
+            $dataset,
+            df()
+                ->read(from_json(__DIR__ . '/var/test_partitioning_json_file/**/*.json'))
+                ->sortBy(ref('id')->asc())
+                ->fetch()
+                ->toArray()
+        );
     }
 
     public function test_putting_each_row_in_a_new_line() : void

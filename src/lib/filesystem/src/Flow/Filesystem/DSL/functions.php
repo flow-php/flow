@@ -6,7 +6,7 @@ namespace Flow\Filesystem\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\{Filesystem, FilesystemTable, Partition, Partitions, Path, Protocol};
+use Flow\Filesystem\{Filesystem, FilesystemTable, Local\StdOutFilesystem, Partition, Partitions, Path, Protocol};
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function protocol(string $protocol) : Protocol
@@ -46,6 +46,15 @@ function path(string $path, array $options = []) : Path
 }
 
 /**
+ * Create a path to php stdout stream.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function path_stdout() : Path
+{
+    return new Path('stdout://' . \bin2hex(random_bytes(16)) . '.stdout');
+}
+
+/**
  * Resolve real path from given path.
  *
  * @param array<string, mixed> $options
@@ -62,6 +71,12 @@ function native_local_filesystem() : NativeLocalFilesystem
     return new NativeLocalFilesystem();
 }
 
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function stdout_filesystem() : StdOutFilesystem
+{
+    return new StdOutFilesystem();
+}
+
 /**
  * Create a new filesystem table with given filesystems.
  * Filesystems can be also mounted later.
@@ -72,6 +87,7 @@ function fstab(Filesystem ...$filesystems) : FilesystemTable
 {
     if (!\count($filesystems)) {
         $filesystems[] = native_local_filesystem();
+        $filesystems[] = new StdOutFilesystem();
     }
 
     return new FilesystemTable(...$filesystems);

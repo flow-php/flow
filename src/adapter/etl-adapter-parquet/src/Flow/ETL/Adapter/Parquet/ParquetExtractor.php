@@ -65,7 +65,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeWriters($this->path);
+                    $context->streams()->closeStreams($this->path);
 
                     return;
                 }
