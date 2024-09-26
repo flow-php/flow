@@ -84,7 +84,7 @@
         "flow-php/parquet-viewer": "self.version",
         "flow-php/rdsl": "self.version",
         "flow-php/snappy": "self.version",
-        "flow-php/symfony-http-foundation": "self.version"
+        "flow-php/symfony-http-foundation-bridge": "self.version"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
