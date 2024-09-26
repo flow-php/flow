@@ -110,7 +110,9 @@ jobs:
 
       - name: Start Azurite blob endpoint
         shell: bash
-        run: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 &
+        run: |
+          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 &
+          sleep 5
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
