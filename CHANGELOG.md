@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-09-24
+## [Unreleased] - 2024-09-26
 
 ### Added
+- [#1233](https://github.com/flow-php/flow/pull/1233) - **Added StdOut Filesystem with stdout protocol** - [@norberttech](https://github.com/norberttech)
 - [#1226](https://github.com/flow-php/flow/pull/1226) - **to_array() loader with usage example** - [@norberttech](https://github.com/norberttech)
 - [#1225](https://github.com/flow-php/flow/pull/1225) - **Added breadcrumbs to blog posts** - [@norberttech](https://github.com/norberttech)
 - [#1225](https://github.com/flow-php/flow/pull/1225) - **Data Sink examples topic** - [@norberttech](https://github.com/norberttech)
@@ -22,6 +23,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1233](https://github.com/flow-php/flow/pull/1233) - **Loaders no longer need to relay on file extension to close streams in clousure** - [@norberttech](https://github.com/norberttech)
 - [#1223](https://github.com/flow-php/flow/pull/1223) - **Improved performance of Scalar Function Parameter** - [@norberttech](https://github.com/norberttech)
 - [#1222](https://github.com/flow-php/flow/pull/1222) - **Return DOMDocument instead of DOMElement from XMLParserExtractor** - [@norberttech](https://github.com/norberttech)
 - [#1221](https://github.com/flow-php/flow/pull/1221) - **Optimized XPath Scalar Function by reusing DOMDocument instead of creating new one** - [@norberttech](https://github.com/norberttech)
