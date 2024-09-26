@@ -10,7 +10,7 @@ use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
     Attribute\Type as DSLType
-    };
+};
 use Flow\Filesystem\{Path, SourceStream};
 
 /**
