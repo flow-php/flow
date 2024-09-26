@@ -23,6 +23,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1235](https://github.com/flow-php/flow/pull/1235) - **Improved DX on adding path filter to file extractors** - [@norberttech](https://github.com/norberttech)
 - [#1233](https://github.com/flow-php/flow/pull/1233) - **Loaders no longer need to relay on file extension to close streams in clousure** - [@norberttech](https://github.com/norberttech)
 - [#1223](https://github.com/flow-php/flow/pull/1223) - **Improved performance of Scalar Function Parameter** - [@norberttech](https://github.com/norberttech)
 - [#1222](https://github.com/flow-php/flow/pull/1222) - **Return DOMDocument instead of DOMElement from XMLParserExtractor** - [@norberttech](https://github.com/norberttech)
