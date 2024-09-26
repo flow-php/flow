@@ -44,6 +44,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [cb98b1](https://github.com/flow-php/flow/commit/cb98b185629d3bd0e74851ab99c40b36e044fda3) - **invalid repo name in symfony http foundation bridge repo** - [@norberttech](https://github.com/norberttech)
 - [#1234](https://github.com/flow-php/flow/pull/1234) - **Path to bridges unit/integration test cases in phpunit.xml** - [@norberttech](https://github.com/norberttech)
 - [#1232](https://github.com/flow-php/flow/pull/1232) - **Don't call loaders when rows are empty** - [@norberttech](https://github.com/norberttech)
 - [b5f70f](https://github.com/flow-php/flow/commit/b5f70f1273d6fd81ec8cf5872bd5b7398138eec9) - **SEO issue with duplicated example pages titles** - [@norberttech](https://github.com/norberttech)
