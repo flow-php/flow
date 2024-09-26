@@ -74,6 +74,8 @@ jobs:
             split_repository: 'filesystem-azure-bridge'
           - local_path: 'src/bridge/monolog/http'
             split_repository: 'monolog-http-bridge'
+          - local_path: 'src/bridge/symfony/http-foundation'
+            split_repository: 'symfony-http-foundation-bridge'
 
           - local_path: 'src/tools/homebrew'
             split_repository: 'homebrew-flow'

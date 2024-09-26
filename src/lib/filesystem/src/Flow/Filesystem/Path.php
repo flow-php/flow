@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem;
 
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Stream\ResourceContext;
 
 final class Path
@@ -17,6 +18,8 @@ final class Path
 
     private ?bool $isPattern = null;
 
+    private Options $options;
+
     private ?Partitions $partitions = null;
 
     private string $path;
@@ -24,9 +27,9 @@ final class Path
     private Protocol $protocol;
 
     /**
-     * @param array<string, mixed> $options
+     * @param array<string, mixed>|Options $options
      */
-    public function __construct(string $uri, private readonly array $options = [])
+    public function __construct(string $uri, array|Options $options = [])
     {
         $scheme = \preg_match('/^([a-zA-Z0-9+-]+):\/\//', $uri, $matches) ? $matches[1] : 'file';
 
@@ -40,20 +43,21 @@ final class Path
 
         $this->path = $path;
         $this->protocol = new Protocol($scheme);
-        $this->extension = \array_key_exists('extension', $pathInfo) ? $pathInfo['extension'] : false;
+        $this->extension = \array_key_exists('extension', $pathInfo) ? \strtolower($pathInfo['extension']) : false;
         $this->filename = $pathInfo['filename'];
         $this->basename = $pathInfo['basename'];
+        $this->options = \is_array($options) ? new Options($options) : $options;
     }
 
     /**
      * Turn relative path into absolute paths even when path does not exists or it's glob pattern.
      *
-     * @param array<string, mixed> $options
+     * @param array<string, mixed>|Options $options
      *
      * @throws InvalidArgumentException
      * @throws RuntimeException
      */
-    public static function realpath(string $path, array $options = []) : self
+    public static function realpath(string $path, array|Options $options = []) : self
     {
         // ""  - empty path is current, local directory
         if ('' === $path) {
@@ -179,7 +183,7 @@ final class Path
     public function isEqual(self $path) : bool
     {
         return $this->uri() === $path->uri()
-            && $this->options === $path->options();
+            && $this->options->toArray() === $path->options()->toArray();
     }
 
     public function isLocal() : bool
@@ -211,10 +215,7 @@ final class Path
         return $this->fnmatch($this->path, $path->path);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function options() : array
+    public function options() : Options
     {
         return $this->options;
     }

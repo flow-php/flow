@@ -36,8 +36,8 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         $this->expectExceptionMessage('Only one stdout filesystem stream can be open at the same time');
 
         $streams = $this->streams();
-        $streams->writeTo(path_stdout('json'));
-        $streams->writeTo(path_stdout('json'));
+        $streams->writeTo(path_stdout());
+        $streams->writeTo(path_stdout());
 
     }
 
@@ -129,7 +129,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
     public function test_write_to_stdout() : void
     {
         $streams = $this->streams();
-        $streams->writeTo(path_stdout('json'));
+        $streams->writeTo(path_stdout());
 
         self::assertCount(1, $streams);
     }

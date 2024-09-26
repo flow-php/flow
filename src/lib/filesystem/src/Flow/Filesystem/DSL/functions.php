@@ -47,11 +47,15 @@ function path(string $path, array $options = []) : Path
 
 /**
  * Create a path to php stdout stream.
+ *
+ * @param null|array{'stream': 'output'|'stderr'|'stdout'} $options
+ *
+ * @return Path
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function path_stdout() : Path
+function path_stdout(?array $options = null) : Path
 {
-    return new Path('stdout://' . \bin2hex(random_bytes(16)) . '.stdout');
+    return new Path('stdout://' . \bin2hex(\random_bytes(16)) . '.stdout', $options ?? []);
 }
 
 /**
@@ -87,7 +91,7 @@ function fstab(Filesystem ...$filesystems) : FilesystemTable
 {
     if (!\count($filesystems)) {
         $filesystems[] = native_local_filesystem();
-        $filesystems[] = new StdOutFilesystem();
+        $filesystems[] = stdout_filesystem();
     }
 
     return new FilesystemTable(...$filesystems);

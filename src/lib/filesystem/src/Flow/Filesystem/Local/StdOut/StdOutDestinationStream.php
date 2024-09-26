@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\StdOut;
 
-use Flow\Filesystem\{DestinationStream, Path};
+use Flow\Filesystem\{DestinationStream, Exception\InvalidArgumentException, Path};
 
 final class StdOutDestinationStream implements DestinationStream
 {
@@ -15,12 +15,26 @@ final class StdOutDestinationStream implements DestinationStream
 
     public function __construct(private readonly Path $path, ?\php_user_filter $filter = null)
     {
+        /**
+         * @psalm-suppress PossiblyNullArgument
+         *
+         * @phpstan-ignore-next-line
+         */
+        $outputStream = \mb_strtolower($this->path->options()->getAsString('stream', 'stdout'));
+
+        if (!\in_array($outputStream, ['stdout', 'stderr', 'output'], true)) {
+            throw new InvalidArgumentException('Invalid output stream, allowed values are "stdout", "stderr" and "output", given: ' . $outputStream);
+        }
+
         if ($filter !== null) {
-            stream_filter_register('stdout', $filter::class);
-            $this->handle = \STDOUT;
+            stream_filter_register($outputStream, $filter::class);
+            /** @phpstan-ignore-next-line */
+            $this->handle = fopen('php://' . $outputStream, 'wb');
+            /** @phpstan-ignore-next-line */
             stream_filter_append($this->handle, 'stdout');
         } else {
-            $this->handle = STDOUT;
+            /** @phpstan-ignore-next-line */
+            $this->handle = fopen('php://' . $outputStream, 'wb');
         }
     }
 

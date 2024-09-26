@@ -9,8 +9,8 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
-    Attribute\Type as DSLType,
-    Loader};
+    Attribute\Type as DSLType
+};
 use Flow\Filesystem\{Path, SourceStream};
 
 /**
@@ -78,7 +78,7 @@ function to_csv(
     string $escape = '\\',
     string $new_line_separator = PHP_EOL,
     string $datetime_format = \DateTimeInterface::ATOM,
-) : Loader {
+) : CSVLoader {
     return (new CSVLoader(\is_string($uri) ? Path::realpath($uri) : $uri))
         ->withHeader($with_header)
         ->withSeparator($separator)

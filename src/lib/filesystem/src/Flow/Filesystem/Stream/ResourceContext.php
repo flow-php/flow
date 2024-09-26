@@ -17,7 +17,7 @@ final class ResourceContext
 
     public static function from(Path $path) : self
     {
-        return new self($path->protocol()->scheme(), $path->options());
+        return new self($path->protocol()->scheme(), $path->options()->toArray());
     }
 
     /**

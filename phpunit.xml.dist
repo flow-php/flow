@@ -32,14 +32,14 @@
   <testsuites>
     <testsuite name="unit">
       <directory>src/adapter/**/**/**/**/**/**/Tests/Unit</directory>
-      <directory>src/bridge/**/**/**/**/**/**/Tests/Unit</directory>
+      <directory>src/bridge/**/**/**/**/**/**/**/Tests/Unit</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
       <directory>src/lib/**/**/**/**/Tests/Unit</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
     </testsuite>
     <testsuite name="integration-io">
       <directory>src/adapter/**/**/**/**/**/**/Tests/Integration</directory>
-      <directory>src/bridge/**/**/**/**/**/**/Tests/Integration</directory>
+      <directory>src/bridge/**/**/**/**/**/**/**/Tests/Integration</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
       <directory>src/lib/**/**/**/**/Tests/Integration</directory>
       <directory>src/tools/**/**/**/**/Tests/Integration</directory>
