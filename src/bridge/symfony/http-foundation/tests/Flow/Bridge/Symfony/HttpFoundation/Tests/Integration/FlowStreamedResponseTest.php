@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Integration;
 
+use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\from_array;
 use Flow\Bridge\Symfony\HttpFoundation\{FlowStreamedResponse,
     Output\CSVOutput,
@@ -70,6 +71,32 @@ JSON
 <row><id>3</id><size>S</size><color>green</color><ean>1234567890125</ean></row>
 </rows>
 XML
+            , $this->sendResponse($response));
+    }
+
+    public function test_streaming_partitioned_dataset() : void
+    {
+        $response = new FlowStreamedResponse(
+            from_json(__DIR__ . '/Fixtures/partitioned/**/*.json'),
+            new JsonOutput(putRowsInNewLines: true)
+        );
+
+        self::assertEquals(<<<'JSON'
+[
+{"id":3,"color":"green","size":"large"},
+{"id":9,"color":"green","size":"large"},
+{"id":6,"color":"white","size":"large"},
+{"id":12,"color":"white","size":"large"},
+{"id":5,"color":"black","size":"medium"},
+{"id":11,"color":"black","size":"medium"},
+{"id":2,"color":"blue","size":"medium"},
+{"id":8,"color":"blue","size":"medium"},
+{"id":1,"color":"red","size":"small"},
+{"id":7,"color":"red","size":"small"},
+{"id":4,"color":"yellow","size":"small"},
+{"id":10,"color":"yellow","size":"small"}
+]
+JSON
             , $this->sendResponse($response));
     }
 
