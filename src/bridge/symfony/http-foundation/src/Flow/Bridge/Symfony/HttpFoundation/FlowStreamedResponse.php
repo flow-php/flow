@@ -38,6 +38,7 @@ class FlowStreamedResponse extends StreamedResponse
         df($this->config)
             ->read($this->extractor)
             ->transform($this->transformations)
+            ->dropPartitions()
             ->write($this->output->loader())
             ->run();
     }
