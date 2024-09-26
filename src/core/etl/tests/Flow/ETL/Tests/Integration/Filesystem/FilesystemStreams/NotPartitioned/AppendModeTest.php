@@ -30,7 +30,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
 
         $appendFileStream = $streams->writeTo($file);
         $appendFileStream->append('new content');
-        $streams->closeWriters($file);
+        $streams->closeStreams($file);
 
         $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
 
@@ -53,7 +53,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
 
         $appendFileStream = $streams->writeTo($file);
         $appendFileStream->append('new content');
-        $streams->closeWriters($file);
+        $streams->closeStreams($file);
 
         $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
 

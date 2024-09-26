@@ -38,7 +38,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeWriters($this->path);
+                    $context->streams()->closeStreams($this->path);
 
                     return;
                 }

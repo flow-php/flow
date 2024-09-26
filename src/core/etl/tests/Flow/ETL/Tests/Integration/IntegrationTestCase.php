@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration;
 
 use Flow\ETL\{Config\Cache\CacheConfig};
 use Flow\Filesystem\{Filesystem, Path};
-use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem};
+use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem, Local\StdOutFilesystem};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 use PHPUnit\Framework\TestCase;
 
@@ -29,7 +29,7 @@ abstract class IntegrationTestCase extends TestCase
         $this->baseMemoryLimit = (\ini_get('memory_limit')) ?: '-1';
         $this->cacheDir = Path::realpath(\getenv(CacheConfig::CACHE_DIR_ENV));
         $this->fs = new NativeLocalFilesystem();
-        $this->fstab = new FilesystemTable($this->fs);
+        $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
         $this->serializer = new Base64Serializer(new NativePHPSerializer());
     }
 

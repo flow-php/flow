@@ -47,7 +47,7 @@ final class ChartJSLoader implements Closure, Loader
 
             $output->append($content);
 
-            $context->streams()->closeWriters($this->output);
+            $context->streams()->closeStreams($this->output);
         }
 
         if ($this->outputVar !== null) {

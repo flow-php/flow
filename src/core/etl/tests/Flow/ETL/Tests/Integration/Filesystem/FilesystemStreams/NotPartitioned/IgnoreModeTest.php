@@ -28,7 +28,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
 
         $fileStream = $streams->writeTo($path);
         $fileStream->append('different content');
-        $streams->closeWriters($path);
+        $streams->closeStreams($path);
 
         self::assertFileExists($path->path());
         self::assertSame('some content', \file_get_contents($path->path()));
@@ -44,7 +44,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
 
         $fileStream = $streams->writeTo($path);
         $fileStream->append('some content');
-        $streams->closeWriters($path);
+        $streams->closeStreams($path);
 
         self::assertFileExists($path->path());
         self::assertSame('some content', \file_get_contents($path->path()));

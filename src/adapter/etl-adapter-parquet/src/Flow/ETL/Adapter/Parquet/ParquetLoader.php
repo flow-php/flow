@@ -46,7 +46,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
             }
         }
 
-        $context->streams()->closeWriters($this->path);
+        $context->streams()->closeStreams($this->path);
         $this->writers = [];
     }
 

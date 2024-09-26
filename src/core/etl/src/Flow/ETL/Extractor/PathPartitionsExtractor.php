@@ -32,7 +32,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
             $this->incrementReturnedRows();
 
             if ($signal === Signal::STOP || $this->reachedLimit()) {
-                $context->streams()->closeWriters($this->path);
+                $context->streams()->closeStreams($this->path);
 
                 return;
             }

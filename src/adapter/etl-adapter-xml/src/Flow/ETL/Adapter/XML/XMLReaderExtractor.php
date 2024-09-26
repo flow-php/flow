@@ -89,7 +89,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
                             $xmlReader->close();
-                            $context->streams()->closeWriters($this->path);
+                            $context->streams()->closeStreams($this->path);
 
                             return;
                         }
