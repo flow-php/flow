@@ -9,9 +9,14 @@ use Flow\Filesystem\Path\Filter;
 
 interface FileExtractor
 {
-    public function addFilter(Filter $filter) : void;
+    /**
+     * @deprecated Use withPathFilter instead
+     */
+    public function addFilter(Filter $filter) : self;
 
     public function filter() : Filter;
 
     public function source() : Path;
+
+    public function withPathFilter(Filter $filter) : self;
 }

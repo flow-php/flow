@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\{Extractor, FlowContext};
 use Flow\Filesystem\Path;
 
-final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
+final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;

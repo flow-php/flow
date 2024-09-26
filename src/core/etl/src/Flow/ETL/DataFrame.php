@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
 use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, RuntimeException};
-use Flow\ETL\Extractor\{PartitionExtractor};
+use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, WindowFunction};
@@ -368,17 +368,17 @@ final class DataFrame
     {
         $extractor = $this->pipeline->source();
 
-        if (!$extractor instanceof PartitionExtractor) {
-            throw new RuntimeException('filterPartitions can be used only with extractors that implement PartitionsExtractor interface');
+        if (!$extractor instanceof FileExtractor) {
+            throw new RuntimeException('filterPartitions can be used only with extractors that implement FileExtractor interface');
         }
 
         if ($filter instanceof Filter) {
-            $extractor->addFilter($filter);
+            $extractor->withPathFilter($filter);
 
             return $this;
         }
 
-        $extractor->addFilter(
+        $extractor->withPathFilter(
             new ScalarFunctionFilter(
                 $filter,
                 $this->context->entryFactory(),
