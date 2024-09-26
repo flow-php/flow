@@ -125,6 +125,11 @@ final class PathTest extends TestCase
         self::assertFalse((new Path(__DIR__))->extension());
     }
 
+    public function test_extension_uppercase() : void
+    {
+        self::assertSame('php', (new Path('/var/file/code.PhP'))->extension());
+    }
+
     public function test_file_prefix() : void
     {
         $path = new Path('flow-file://var/dir/file.csv', []);

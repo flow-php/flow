@@ -8,8 +8,8 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
-    Attribute\Type as DSLType,
-    Loader};
+    Attribute\Type as DSLType
+    };
 use Flow\Filesystem\Path;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\{ByteOrder, Options};
@@ -50,8 +50,6 @@ function from_parquet(
  * @param null|Options $options - @deprecated use `withOptions` method instead
  * @param Compressions $compressions - @deprecated use `withCompressions` method instead
  * @param null|Schema $schema - @deprecated use `withSchema` method instead
- *
- * @return Loader
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::LOADER)]
 #[DocumentationExample(topic: 'data_sink', example: 'parquet')]
@@ -60,7 +58,7 @@ function to_parquet(
     ?Options $options = null,
     Compressions $compressions = Compressions::SNAPPY,
     ?Schema $schema = null,
-) : Loader {
+) : ParquetLoader {
     $loader = (new ParquetLoader(\is_string($path) ? Path::realpath($path) : $path))
         ->withCompressions($compressions);
 
