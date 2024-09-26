@@ -1,6 +1,8 @@
 ## [Unreleased] - 2024-09-26
 
 ### Added
+- [#1234](https://github.com/flow-php/flow/pull/1234) - **symfony streamed response** - [@norberttech](https://github.com/norberttech)
+- [#1234](https://github.com/flow-php/flow/pull/1234) - **Possibility to use different output streams in StdOutFilesystem** - [@norberttech](https://github.com/norberttech)
 - [#1233](https://github.com/flow-php/flow/pull/1233) - **Added StdOut Filesystem with stdout protocol** - [@norberttech](https://github.com/norberttech)
 - [#1226](https://github.com/flow-php/flow/pull/1226) - **to_array() loader with usage example** - [@norberttech](https://github.com/norberttech)
 - [#1225](https://github.com/flow-php/flow/pull/1225) - **Added breadcrumbs to blog posts** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +25,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1234](https://github.com/flow-php/flow/pull/1234) - **Path options are now available as a Options object instead of PHP associative array** - [@norberttech](https://github.com/norberttech)
 - [#1235](https://github.com/flow-php/flow/pull/1235) - **Improved DX on adding path filter to file extractors** - [@norberttech](https://github.com/norberttech)
 - [#1233](https://github.com/flow-php/flow/pull/1233) - **Loaders no longer need to relay on file extension to close streams in clousure** - [@norberttech](https://github.com/norberttech)
 - [#1223](https://github.com/flow-php/flow/pull/1223) - **Improved performance of Scalar Function Parameter** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +44,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1234](https://github.com/flow-php/flow/pull/1234) - **Path to bridges unit/integration test cases in phpunit.xml** - [@norberttech](https://github.com/norberttech)
 - [#1232](https://github.com/flow-php/flow/pull/1232) - **Don't call loaders when rows are empty** - [@norberttech](https://github.com/norberttech)
 - [b5f70f](https://github.com/flow-php/flow/commit/b5f70f1273d6fd81ec8cf5872bd5b7398138eec9) - **SEO issue with duplicated example pages titles** - [@norberttech](https://github.com/norberttech)
 - [#1220](https://github.com/flow-php/flow/pull/1220) - **DOMElementValue behavior when used on a XPath scalar function result** - [@norberttech](https://github.com/norberttech)
