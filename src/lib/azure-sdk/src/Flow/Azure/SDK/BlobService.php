@@ -148,7 +148,7 @@ final class BlobService implements BlobServiceInterface
 
         $this->logger->info('Azure - Blob Service - Delete Container', ['response' => $response]);
 
-        if ($response->getStatusCode() !== 202) {
+        if ($response->getStatusCode() !== 202 &&  $response->getStatusCode() !== 200) {
             $this->logger->critical('Azure - Blob Service - Delete Container', ['response' => $response]);
 
             throw new AzureException(__METHOD__, $request, $response);
