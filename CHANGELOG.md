@@ -44,6 +44,7 @@
 - [#1191](https://github.com/flow-php/flow/pull/1191) - **Update Homebrew TAP formula: flow-php to version: 0.9.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1236](https://github.com/flow-php/flow/pull/1236) - **FlowStreamedResponse - drop partitions to avoid opening multiple streams** - [@norberttech](https://github.com/norberttech)
 - [cb98b1](https://github.com/flow-php/flow/commit/cb98b185629d3bd0e74851ab99c40b36e044fda3) - **invalid repo name in symfony http foundation bridge repo** - [@norberttech](https://github.com/norberttech)
 - [#1234](https://github.com/flow-php/flow/pull/1234) - **Path to bridges unit/integration test cases in phpunit.xml** - [@norberttech](https://github.com/norberttech)
 - [#1232](https://github.com/flow-php/flow/pull/1232) - **Don't call loaders when rows are empty** - [@norberttech](https://github.com/norberttech)
