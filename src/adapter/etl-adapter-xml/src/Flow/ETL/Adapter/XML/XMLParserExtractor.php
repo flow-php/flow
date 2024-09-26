@@ -6,11 +6,11 @@ namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\{Extractor, FlowContext};
 use Flow\Filesystem\Path;
 
-final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
+final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
