@@ -21,7 +21,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ScalarType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType};
 
 final class TypeDetector
 {
@@ -62,17 +62,17 @@ final class TypeDetector
                 \array_is_list($value)
             );
 
-            /** @var Type $firstValue */
-            $firstValue = $detector->firstValueType();
-            /** @var ScalarType $firstKeyType */
-            $firstKeyType = $detector->firstKeyType();
-
             if ($detector->isList()) {
-                return new ListType(ListElement::fromType($firstValue->makeNullable($valueTypes->has(type_null()))));
+                return new ListType(ListElement::fromType($detector->valueType()->makeNullable($valueTypes->has(type_null()))));
             }
 
             if ($detector->isMap()) {
-                return type_map($firstKeyType, $firstValue->makeNullable($valueTypes->has(type_null())));
+                /**
+                 * @psalm-suppress PossiblyNullArgument
+                 *
+                 * @phpstan-ignore-next-line
+                 */
+                return type_map($detector->firstKeyType(), $detector->valueType()->makeNullable($valueTypes->has(type_null())));
             }
 
             if ($detector->isStructure()) {

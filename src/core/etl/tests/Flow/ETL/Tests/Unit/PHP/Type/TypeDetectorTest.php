@@ -120,6 +120,28 @@ final class TypeDetectorTest extends TestCase
             'list<structure{id: integer, name: string}>',
         ];
 
+        yield 'nullable list of integers' => [
+            [
+                null,
+                1,
+                2,
+                null,
+                3,
+            ],
+            ListType::class,
+            'list<?integer>',
+        ];
+
+        yield 'nullable map of string to int' => [
+            [
+                'one' => null,
+                'two' => null,
+                'three' => 3,
+            ],
+            MapType::class,
+            'map<string, ?integer>',
+        ];
+
         yield 'map with string key, of maps string with string' => [
             [
                 'one' => [
