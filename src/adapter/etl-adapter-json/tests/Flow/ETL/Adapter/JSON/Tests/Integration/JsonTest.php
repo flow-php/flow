@@ -17,9 +17,15 @@ final class JsonTest extends TestCase
 {
     public function test_json_loader() : void
     {
+        $path = __DIR__ . '/var/test_json_loader.json';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
         df()
             ->read(new FakeExtractor(100))
-            ->write(to_json($path = __DIR__ . '/var/test_json_loader.json'))
+            ->write(to_json($path))
             ->run();
 
         self::assertEquals(
@@ -55,16 +61,21 @@ JSON,
 
     public function test_json_loader_overwrite_mode() : void
     {
+        $path = __DIR__ . '/var/test_json_loader.json';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
 
         df()
             ->read(new FakeExtractor(100))
-            ->write(to_json($path = __DIR__ . '/var/test_json_loader.json'))
+            ->write(to_json($path))
             ->run();
 
         df()
             ->read(new FakeExtractor(100))
             ->mode(overwrite())
-            ->write(to_json($path = __DIR__ . '/var/test_json_loader.json'))
+            ->write(to_json($path))
             ->run();
 
         $content = \file_get_contents($path);

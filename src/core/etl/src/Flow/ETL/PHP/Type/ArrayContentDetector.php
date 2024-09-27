@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{type_array, type_null};
+use function Flow\ETL\DSL\{type_array, type_null, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Native\{NullType, ScalarType};
 
 final class ArrayContentDetector
 {
@@ -20,7 +20,7 @@ final class ArrayContentDetector
 
     private readonly int $uniqueValuesTypeCount;
 
-    public function __construct(Types $uniqueKeysType, Types $uniqueValuesType, bool $isList = false)
+    public function __construct(Types $uniqueKeysType, private readonly Types $uniqueValuesType, bool $isList = false)
     {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
@@ -62,5 +62,34 @@ final class ArrayContentDetector
         return 0 !== $this->uniqueValuesTypeCount
             && 1 === $this->uniqueKeysTypeCount
             && $this->firstKeyType()?->isString();
+    }
+
+    public function valueType() : Type
+    {
+        $type = null;
+
+        foreach ($this->uniqueValuesType->all() as $nextType) {
+            if (null === $type) {
+                $type = $nextType;
+
+                continue;
+            }
+
+            if ($type instanceof NullType) {
+                $type = $nextType->makeNullable(true);
+
+                continue;
+            }
+
+            if ($nextType instanceof NullType) {
+                $type = $type->makeNullable(true);
+            }
+        }
+
+        if ($type === null) {
+            return type_string(true);
+        }
+
+        return $type;
     }
 }
