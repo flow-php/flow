@@ -142,6 +142,17 @@ final class TypeDetectorTest extends TestCase
             'map<string, ?integer>',
         ];
 
+        yield 'structure with first null element and then mixed int and string' => [
+            [
+                'one' => null,
+                'two' => null,
+                'three' => 3,
+                'four' => '4',
+            ],
+            StructureType::class,
+            'structure{one: null, two: null, three: integer, four: string}',
+        ];
+
         yield 'map with string key, of maps string with string' => [
             [
                 'one' => [
