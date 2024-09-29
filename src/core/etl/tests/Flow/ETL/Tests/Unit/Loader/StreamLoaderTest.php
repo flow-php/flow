@@ -13,6 +13,32 @@ use PHPUnit\Framework\TestCase;
 
 final class StreamLoaderTest extends TestCase
 {
+    public function test_columns_count_to_php_output_stream() : void
+    {
+        $loader = to_output(false, StreamLoader\Output::column_count);
+
+        \ob_start();
+
+        $loader->load(
+            rows(
+                row(int_entry('id', 1), str_entry('name', 'id_1')),
+                row(int_entry('id', 2), str_entry('name', 'id_2')),
+                row(int_entry('id', 3), str_entry('name', 'id_3'))
+            ),
+            new FlowContext(Config::default())
+        );
+        $output = \ob_get_contents();
+        \ob_end_clean();
+
+        self::assertSame(
+            <<<'ASCII'
+Columns: 2
+
+ASCII,
+            $output
+        );
+    }
+
     public function test_loading_data_into_invalid_stream() : void
     {
         $this->expectExceptionMessage("Can't open stream for url: php://qweqweqw in mode: w");
@@ -30,7 +56,7 @@ final class StreamLoaderTest extends TestCase
         );
     }
 
-    public function test_loading_partitioned_rows_into_php_memory_stream() : void
+    public function test_loading_partitioned_rows_into_php_output_stream() : void
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0);
 
@@ -64,7 +90,7 @@ TABLE,
         );
     }
 
-    public function test_loading_rows_and_schema_into_php_memory_stream() : void
+    public function test_loading_rows_and_schema_into_output_stream() : void
     {
         $loader = to_output(false, StreamLoader\Output::rows_and_schema);
 
@@ -101,7 +127,7 @@ ASCII,
         );
     }
 
-    public function test_loading_rows_into_php_memory_stream() : void
+    public function test_loading_rows_into_php_output_stream() : void
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0);
 
@@ -133,7 +159,7 @@ TABLE,
         );
     }
 
-    public function test_loading_schema_into_php_memory_stream() : void
+    public function test_loading_schema_into_php_output_stream() : void
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0, StreamLoader\Output::schema);
 
@@ -155,6 +181,58 @@ TABLE,
 schema
 |-- id: integer
 |-- name: string
+
+ASCII,
+            $output
+        );
+    }
+
+    public function test_rows_and_columns_count_to_php_output_stream() : void
+    {
+        $loader = to_output(false, StreamLoader\Output::rows_and_column_count);
+
+        \ob_start();
+
+        $loader->load(
+            rows(
+                row(int_entry('id', 1), str_entry('name', 'id_1')),
+                row(int_entry('id', 2), str_entry('name', 'id_2')),
+                row(int_entry('id', 3), str_entry('name', 'id_3'))
+            ),
+            new FlowContext(Config::default())
+        );
+        $output = \ob_get_contents();
+        \ob_end_clean();
+
+        self::assertSame(
+            <<<'ASCII'
+Rows: 3, Columns: 2
+
+ASCII,
+            $output
+        );
+    }
+
+    public function test_rows_count_to_php_output_stream() : void
+    {
+        $loader = to_output(false, StreamLoader\Output::rows_count);
+
+        \ob_start();
+
+        $loader->load(
+            rows(
+                row(int_entry('id', 1), str_entry('name', 'id_1')),
+                row(int_entry('id', 2), str_entry('name', 'id_2')),
+                row(int_entry('id', 3), str_entry('name', 'id_3'))
+            ),
+            new FlowContext(Config::default())
+        );
+        $output = \ob_get_contents();
+        \ob_end_clean();
+
+        self::assertSame(
+            <<<'ASCII'
+Rows: 3
 
 ASCII,
             $output
