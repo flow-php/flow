@@ -26,6 +26,7 @@
 - [#1193](https://github.com/flow-php/flow/pull/1193) - **missing DSL's definitions - filesystem, azure filesystem, azure sdk** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1239](https://github.com/flow-php/flow/pull/1239) - **CachingPipeline will relay only on previously set batch size without modifying it** - [@norberttech](https://github.com/norberttech)
 - [#1234](https://github.com/flow-php/flow/pull/1234) - **Path options are now available as a Options object instead of PHP associative array** - [@norberttech](https://github.com/norberttech)
 - [#1235](https://github.com/flow-php/flow/pull/1235) - **Improved DX on adding path filter to file extractors** - [@norberttech](https://github.com/norberttech)
 - [#1233](https://github.com/flow-php/flow/pull/1233) - **Loaders no longer need to relay on file extension to close streams in clousure** - [@norberttech](https://github.com/norberttech)
@@ -61,6 +62,9 @@
 - [443c48](https://github.com/flow-php/flow/commit/443c4828184a20ed355402679f4aefbc10b3e6b4) - **codding standards** - [@norberttech](https://github.com/norberttech)
 - [d66b2d](https://github.com/flow-php/flow/commit/d66b2d3d0784c0fc4e238a056bacfae28ca5bb31) - **building landing page documnetation** - [@norberttech](https://github.com/norberttech)
 - [#1194](https://github.com/flow-php/flow/pull/1194) - **Generating links to dsl functions** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#1239](https://github.com/flow-php/flow/pull/1239) - **Default global CachingPipeline batch size** - [@norberttech](https://github.com/norberttech)
 
 ## [0.9.2] - 2024-08-13
 
