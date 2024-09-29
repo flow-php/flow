@@ -63,6 +63,9 @@ final class StreamLoader implements Closure, Loader
         \fwrite(
             $stream,
             match ($this->output) {
+                Output::rows_count => 'Rows: ' . $rows->count() . "\n",
+                Output::column_count => 'Columns: ' . $rows->schema()->count() . "\n",
+                Output::rows_and_column_count => 'Rows: ' . $rows->count() . ', Columns: ' . $rows->schema()->count() . "\n",
                 Output::rows => $this->formatter->format($rows, $this->truncate),
                 Output::schema => $this->schemaFormatter->format($rows->schema()),
                 Output::rows_and_schema => $this->formatter->format($rows, $this->truncate) . "\n" . $this->schemaFormatter->format($rows->schema()),
