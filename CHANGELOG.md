@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-09-27
+## [Unreleased] - 2024-09-29
 
 ### Added
+- [#1238](https://github.com/flow-php/flow/pull/1238) - **Added more output styles for to_output() loader** - [@norberttech](https://github.com/norberttech)
 - [#1234](https://github.com/flow-php/flow/pull/1234) - **symfony streamed response** - [@norberttech](https://github.com/norberttech)
 - [#1234](https://github.com/flow-php/flow/pull/1234) - **Possibility to use different output streams in StdOutFilesystem** - [@norberttech](https://github.com/norberttech)
 - [#1233](https://github.com/flow-php/flow/pull/1233) - **Added StdOut Filesystem with stdout protocol** - [@norberttech](https://github.com/norberttech)
