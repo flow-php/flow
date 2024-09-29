@@ -7,7 +7,6 @@ namespace Flow\ETL\Config;
 use function Flow\Filesystem\DSL\fstab;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\PHP\Type\Caster;
@@ -80,18 +79,6 @@ final class ConfigBuilder
     public function cache(Cache $cache) : self
     {
         $this->cache->cache($cache);
-
-        return $this;
-    }
-
-    /**
-     * @param int<1, max> $cacheBatchSize
-     *
-     * @throws InvalidArgumentException
-     */
-    public function cacheBatchSize(int $cacheBatchSize) : self
-    {
-        $this->cache->cacheBatchSize($cacheBatchSize);
 
         return $this;
     }

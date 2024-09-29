@@ -171,6 +171,10 @@ final class DataFrame
      * Cache type can be set through ConfigBuilder.
      * By default everything is cached in system tmp dir.
      *
+     * Important: cache batch size might significantly improve performance when processing large amount of rows.
+     * Larger batch size will increase memory consumption but will reduce number of IO operations.
+     * When not set, the batch size is taken from the last DataFrame::batchSize() call.
+     *
      * @lazy
      *
      * @param null|string $id
@@ -183,8 +187,11 @@ final class DataFrame
             throw new InvalidArgumentException('Cache batch size must be greater than 0');
         }
 
-        $this->batchSize($cacheBatchSize ?? $this->context->config->cache->cacheBatchSize);
-        $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id));
+        if ($cacheBatchSize) {
+            $this->pipeline = new LinkedPipeline(new CachingPipeline(new BatchingPipeline($this->pipeline, $cacheBatchSize), $id));
+        } else {
+            $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id));
+        }
 
         return $this;
     }
