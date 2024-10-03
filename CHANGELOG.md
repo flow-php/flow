@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-09-29
+## [Unreleased] - 2024-10-03
 
 ### Added
 - [#1238](https://github.com/flow-php/flow/pull/1238) - **Added more output styles for to_output() loader** - [@norberttech](https://github.com/norberttech)
@@ -62,6 +62,9 @@
 - [443c48](https://github.com/flow-php/flow/commit/443c4828184a20ed355402679f4aefbc10b3e6b4) - **codding standards** - [@norberttech](https://github.com/norberttech)
 - [d66b2d](https://github.com/flow-php/flow/commit/d66b2d3d0784c0fc4e238a056bacfae28ca5bb31) - **building landing page documnetation** - [@norberttech](https://github.com/norberttech)
 - [#1194](https://github.com/flow-php/flow/pull/1194) - **Generating links to dsl functions** - [@norberttech](https://github.com/norberttech)
+
+### Updated
+- [d962b5](https://github.com/flow-php/flow/commit/d962b50a2a70f68aabf0e7029d26835dc5f35361) - **project dependencies before 0.10.0 release** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [#1239](https://github.com/flow-php/flow/pull/1239) - **Default global CachingPipeline batch size** - [@norberttech](https://github.com/norberttech)
