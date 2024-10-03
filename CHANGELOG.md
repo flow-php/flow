@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-10-03
+## [0.10.0] - 2024-10-03
 
 ### Added
 - [#1238](https://github.com/flow-php/flow/pull/1238) - **Added more output styles for to_output() loader** - [@norberttech](https://github.com/norberttech)
