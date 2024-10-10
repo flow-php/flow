@@ -13,6 +13,7 @@
         <directory name="src/adapter/**/src" />
         <directory name="src/bridge/**/**/src" />
         <directory name="src/core/**/src" />
+        <directory name="src/cli/src" />
         <directory name="src/lib/**/src" />
         <ignoreFiles>
             <directory name="vendor"/>

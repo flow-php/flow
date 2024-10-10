@@ -40,6 +40,7 @@
     <testsuite name="integration-io">
       <directory>src/adapter/**/**/**/**/**/**/Tests/Integration</directory>
       <directory>src/bridge/**/**/**/**/**/**/**/Tests/Integration</directory>
+      <directory>src/cli/tests/Flow/CLI/Tests/Integration</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
       <directory>src/lib/**/**/**/**/Tests/Integration</directory>
       <directory>src/tools/**/**/**/**/Tests/Integration</directory>
