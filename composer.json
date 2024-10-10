@@ -35,7 +35,7 @@
         "psr/http-message": "^1.0 || ^2.0",
         "psr/log": "^2.0 || ^3.0",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
-        "symfony/console": "^6.3 || ^7.0",
+        "symfony/console": "^5.4 || ^6.4 || ^7.0",
         "symfony/http-foundation": "~5.4.0 || ~6.4.0 || ~7",
         "webmozart/glob": "^3.0 || ^4.0"
     },
@@ -107,6 +107,7 @@
                 "src/bridge/filesystem/azure/src/Flow",
                 "src/bridge/monolog/http/src/Flow",
                 "src/bridge/symfony/http-foundation/src/Flow",
+                "src/cli/src/Flow",
                 "src/core/etl/src/Flow",
                 "src/lib/array-dot/src/Flow",
                 "src/lib/azure-sdk/src/Flow",
@@ -168,6 +169,7 @@
                 "src/bridge/filesystem/azure/tests/Flow",
                 "src/bridge/monolog/http/tests/Flow",
                 "src/bridge/symfony/http-foundation/tests/Flow",
+                "src/cli/tests/Flow",
                 "src/core/etl/tests/Flow",
                 "src/lib/array-dot/tests/Flow",
                 "src/lib/azure-sdk/tests/Flow",
@@ -253,7 +255,8 @@
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix"
         ],
         "build:phar": [
-            "tools/box/vendor/bin/box compile"
+            "composer update --working-dir=./src/cli",
+            "tools/box/vendor/bin/box compile --config ./src/cli/box.json"
         ],
         "build:docs": [
             "bin/docs.php dsl:dump web/landing/resources/dsl.json"

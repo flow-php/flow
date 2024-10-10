@@ -15,13 +15,12 @@
   ],
   "compression": "GZ",
   "directories": [
-    "build",
     "src",
     "vendor"
   ],
   "exclude-dev-files": false,
   "git-version": "git_version",
-  "main": "bin/flow.php",
+  "main": "flow",
   "metadata": "FlowVersion::getVersion",
-  "output": "build/flow.phar"
+  "output": "./../../build/flow.phar"
 }

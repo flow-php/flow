@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL;
+namespace Flow\CLI;
 
 /**
  * @internal
