@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-10-10
 
 ### Changed
+- [f30a31](https://github.com/flow-php/flow/commit/f30a310db1e4e1047055e65cc796fd4f2ba36f6f) - **Second attempt to fix flow cli autoloading** - [@norberttech](https://github.com/norberttech)
 - [#1242](https://github.com/flow-php/flow/pull/1242) - **Moved flow phar to dedicated cli repository** - [@norberttech](https://github.com/norberttech)
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
