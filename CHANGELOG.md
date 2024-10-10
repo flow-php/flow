@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-10-03
+## [Unreleased] - 2024-10-10
 
 ### Changed
+- [#1242](https://github.com/flow-php/flow/pull/1242) - **Moved flow phar to dedicated cli repository** - [@norberttech](https://github.com/norberttech)
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ## [0.10.0] - 2024-10-03
