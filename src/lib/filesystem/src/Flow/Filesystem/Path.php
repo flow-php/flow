@@ -294,6 +294,14 @@ final class Path
         );
     }
 
+    public function setExtension(string $extension) : self
+    {
+        return new self(
+            $this->protocol->scheme() . $this->parentDirectory()->uri() . DIRECTORY_SEPARATOR . $this->filename . '.' . $extension,
+            $this->options
+        );
+    }
+
     public function staticPart() : self
     {
         if (!$this->isPathPattern($this->path)) {

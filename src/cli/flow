@@ -1,13 +1,17 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
+use Flow\CLI\Command\ConvertCommand;
 use Flow\CLI\Command\RunCommand;
+use Flow\CLI\Command\FileSchemaCommand;
 use Flow\CLI\FlowVersion;
 use Flow\ParquetViewer\Command\ReadDataCommand;
 use Flow\ParquetViewer\Command\ReadMetadataCommand;
 use Symfony\Component\Console\Application;
 
-if ('' !== Phar::running(false)) {
+$pharRuntime = ('' !== Phar::running(false));
+
+if ($pharRuntime) {
     require 'phar://flow.phar/vendor/autoload.php';
 } else {
     if (\is_file(__DIR__ . '/vendor/autoload.php')) {
@@ -35,10 +39,11 @@ $_ENV['FLOW_PHAR_APP'] = 1;
 
 \ini_set('memory_limit', -1);
 
-$application = new Application('Flow-PHP - Extract Transform Load - Data processing framework', FlowVersion::getVersion());
+$application = new Application('Flow PHP - Data processing framework', $pharRuntime ? FlowVersion::getVersion() : 'UNKNOWN');
 
-$application->add((new ReadDataCommand())->setName('parquet:read:data'));
+$application->add((new ReadDataCommand())->setName('parquet:read')->setAliases(['parquet:read:data']));
 $application->add((new ReadMetadataCommand())->setName('parquet:read:metadata'));
 $application->add((new RunCommand())->setName('run'));
+$application->add((new FileSchemaCommand())->setName('file:schema')->setAliases(['schema']));
 
 $application->run();

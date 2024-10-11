@@ -238,6 +238,36 @@ final class PathTest extends TestCase
         );
     }
 
+    public function test_set_extension() : void
+    {
+        $path = new Path('flow-file://var/dir/file.csv', []);
+
+        self::assertSame(
+            'flow-file://var/dir/file.parquet',
+            $path->setExtension('parquet')->uri()
+        );
+    }
+
+    public function test_set_extension_on_directory() : void
+    {
+        $path = new Path('flow-file://var/dir/', []);
+
+        self::assertSame(
+            'flow-file://var/dir.parquet',
+            $path->setExtension('parquet')->uri()
+        );
+    }
+
+    public function test_set_extension_on_file_without_extension() : void
+    {
+        $path = new Path('flow-file://var/dir/file', []);
+
+        self::assertSame(
+            'flow-file://var/dir/file.parquet',
+            $path->setExtension('parquet')->uri()
+        );
+    }
+
     public function test_suffix() : void
     {
         $path = new Path('flow-file://var/dir', []);

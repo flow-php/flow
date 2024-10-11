@@ -18,6 +18,23 @@ final class RunCommand extends Command
         $this
             ->setName('run')
             ->setDescription('Execute ETL pipeline from a php/json file.')
+            ->setHelp(
+                <<<'HELP'
+<info>input-file</info> argument must point to a valid php file that returns DataFrame instance.
+<comment>Make sure to not execute run() or any other trigger function.</comment>
+
+<fg=blue>Example of pipeline.php:</>
+<?php
+return df()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'User 01', 'active' => true],
+        ['id' => 2, 'name' => 'User 02', 'active' => false],
+        ['id' => 3, 'name' => 'User 03', 'active' => true],
+    ]))
+    ->collect()
+    ->write(to_output());
+HELP
+            )
             ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a php/json with DataFrame definition.');
     }
 
