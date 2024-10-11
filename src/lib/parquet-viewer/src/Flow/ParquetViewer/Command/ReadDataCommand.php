@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ParquetViewer\Command;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\DSL\to_output;
-use Flow\ETL\Flow;
+use function Flow\ETL\DSL\{df, to_output};
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Reader;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -25,7 +24,7 @@ final class ReadDataCommand extends Command
             ->addOption('columns', 'c', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'columns to read')
             ->addOption('limit', 'l', InputOption::VALUE_OPTIONAL, 'limit number of rows to read', 10)
             ->addOption('batch-size', 'b', InputOption::VALUE_OPTIONAL, 'batch size', 1000)
-            ->addOption('truncate', 't', InputOption::VALUE_OPTIONAL, 'Truncate values in cells to given length');
+            ->addOption('truncate', 't', InputOption::VALUE_OPTIONAL, 'Truncate values in cells to given length, use empty to not truncate the output', 20);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) : int
@@ -63,7 +62,7 @@ final class ReadDataCommand extends Command
 
         \ob_start();
 
-        (new Flow())
+        df()
             ->read(from_parquet($filePath, $columns))
             ->limit($limit)
             ->batchSize($batchSize)
