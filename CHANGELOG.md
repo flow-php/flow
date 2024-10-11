@@ -9,6 +9,7 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1245](https://github.com/flow-php/flow/pull/1245) - **Fixed writing column statistics when there is only one row that is null** - [@norberttech](https://github.com/norberttech)
 - [#1243](https://github.com/flow-php/flow/pull/1243) - **Fixed flow cli autoloading** - [@norberttech](https://github.com/norberttech)
 
 ## [0.10.0] - 2024-10-03
