@@ -20,7 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class FileSchemaCommand extends Command
 {
-    private ?Config $flowConfig;
+    private ?Config $flowConfig = null;
 
     private ?string $inputFormat = null;
 

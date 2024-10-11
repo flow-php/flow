@@ -1203,6 +1203,9 @@ function schema(Definition ...$definitions) : Schema
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function schema_to_json(Schema $schema, int $json_flags = JSON_THROW_ON_ERROR) : string
 {
+    /**
+     * @phpstan-ignore-next-line
+     */
     return \json_encode($schema->normalize(), $json_flags);
 }
 

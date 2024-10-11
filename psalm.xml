@@ -28,6 +28,7 @@
 
             <file name="src/lib/parquet-viewer/src/Flow/ParquetViewer/Command/ReadMetadataCommand.php" />
 
+            <directory name="src/cli/src/Flow/CLI/Command" />
             <directory name="src/lib/parquet/src/Flow/Parquet/ThriftStream/" />
             <directory name="src/lib/parquet/src/Flow/Parquet/Thrift/" />
             <directory name="src/lib/parquet/src/Flow/Parquet/BinaryReader/" />

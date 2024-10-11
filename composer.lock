@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9e01e3b0f63760fde287c5fa820aa8b4",
+    "content-hash": "f372799424b2de7b0e31607bcf7b95b6",
     "packages": [
         {
             "name": "aeon-php/calendar",
@@ -116,16 +116,16 @@
         },
         {
             "name": "doctrine/dbal",
-            "version": "4.1.1",
+            "version": "4.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "7a8252418689feb860ea8dfeab66d64a56a64df8"
+                "reference": "dadd35300837a3a2184bd47d403333b15d0a9bd0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/7a8252418689feb860ea8dfeab66d64a56a64df8",
-                "reference": "7a8252418689feb860ea8dfeab66d64a56a64df8",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/dadd35300837a3a2184bd47d403333b15d0a9bd0",
+                "reference": "dadd35300837a3a2184bd47d403333b15d0a9bd0",
                 "shasum": ""
             },
             "require": {
@@ -138,7 +138,7 @@
                 "doctrine/coding-standard": "12.0.0",
                 "fig/log-test": "^1",
                 "jetbrains/phpstorm-stubs": "2023.2",
-                "phpstan/phpstan": "1.12.0",
+                "phpstan/phpstan": "1.12.6",
                 "phpstan/phpstan-phpunit": "1.4.0",
                 "phpstan/phpstan-strict-rules": "^1.6",
                 "phpunit/phpunit": "10.5.30",
@@ -204,7 +204,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/4.1.1"
+                "source": "https://github.com/doctrine/dbal/tree/4.2.1"
             },
             "funding": [
                 {
@@ -220,7 +220,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-03T08:58:39+00:00"
+            "time": "2024-10-10T18:01:27+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -519,16 +519,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.375.0",
+            "version": "v0.376.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "ad8c4fcf925fd10198c20e2d7a3390183dc24bf1"
+                "reference": "013c4fcdda03c804e96c6aad332456e05916c665"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/ad8c4fcf925fd10198c20e2d7a3390183dc24bf1",
-                "reference": "ad8c4fcf925fd10198c20e2d7a3390183dc24bf1",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/013c4fcdda03c804e96c6aad332456e05916c665",
+                "reference": "013c4fcdda03c804e96c6aad332456e05916c665",
                 "shasum": ""
             },
             "require": {
@@ -557,9 +557,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.375.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.376.0"
             },
-            "time": "2024-09-29T01:10:26+00:00"
+            "time": "2024-10-06T01:06:23+00:00"
         },
         {
             "name": "google/auth",
