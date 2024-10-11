@@ -1,4 +1,7 @@
-## [Unreleased] - 2024-10-10
+## [Unreleased] - 2024-10-11
+
+### Added
+- [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [f30a31](https://github.com/flow-php/flow/commit/f30a310db1e4e1047055e65cc796fd4f2ba36f6f) - **Second attempt to fix flow cli autoloading** - [@norberttech](https://github.com/norberttech)
