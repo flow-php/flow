@@ -26,12 +26,12 @@ final class StatisticsBuilder
         (new PlainValuesPacker(new BinaryBufferWriter($maxBuffer), $this->dataConverter))->packValues($column, [$chunkStatistics->max()]);
 
         return new Statistics(
-            max: $maxBuffer,
-            min: $minBuffer,
+            max: $maxBuffer !== '' ? $maxBuffer : null,
+            min: $minBuffer !== '' ? $minBuffer : null,
             nullCount: $chunkStatistics->nullCount(),
             distinctCount: $chunkStatistics->distinctCount(),
-            maxValue: $maxBuffer,
-            minValue: $minBuffer,
+            maxValue: $maxBuffer !== '' ? $maxBuffer : null,
+            minValue: $minBuffer !== '' ? $minBuffer : null,
         );
     }
 }
