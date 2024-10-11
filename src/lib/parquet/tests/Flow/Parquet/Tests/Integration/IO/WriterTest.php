@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use function Flow\ETL\DSL\generate_random_int;
+use function Flow\ETL\DSL\{generate_random_int, generate_random_string};
 use Composer\InstalledVersions;
 use Faker\Factory;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
@@ -37,7 +37,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
         $writer->open($path, $schema);
@@ -52,7 +52,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -81,7 +81,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 1)
         );
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -110,7 +110,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with($column = FlatColumn::int32('int32'));
 
@@ -137,7 +137,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -164,7 +164,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -190,7 +190,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
 
@@ -214,6 +214,40 @@ final class WriterTest extends TestCase
         \unlink($path);
     }
 
+    public function test_writing_one_row_that_is_nullable() : void
+    {
+        $writer = new Writer();
+
+        $schema = Schema::with(
+            $column = FlatColumn::int32('id'),
+        );
+
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+
+        $writer->write(
+            $path,
+            $schema,
+            [
+                [
+                    'id' => null,
+                ],
+            ]
+        );
+
+        $max = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->max($column);
+        $min = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->min($column);
+        $maxValue = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->max($column);
+        $minValue = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics()->min($column);
+
+        self::assertNull($max);
+        self::assertNull($min);
+        self::assertNull($maxValue);
+        self::assertNull($minValue);
+
+        self::assertFileExists($path);
+        \unlink($path);
+    }
+
     public function test_writing_row_to_not_open_stream() : void
     {
         $writer = new Writer();
@@ -228,7 +262,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -250,7 +284,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-v2-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -270,7 +304,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = $this->createSchema();
         $row = $this->createRow();
