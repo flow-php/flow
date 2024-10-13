@@ -7,7 +7,7 @@
 composer require flow-php/cli
 ```
 
-In some cases it might make sense to install the CLI globally:
+In some cases, it might make sense to install the CLI globally:
 
 ```
 composer global require flow-php/cli
@@ -16,6 +16,25 @@ composer global require flow-php/cli
 Now you can run the CLI using the `flow` command.
 
 ## Commands
+
+### Config 
+
+All Flow CLI Commands can be configured using `--config` option. The option accepts a path to a configuration file in php that returns an Config or ConfigBuilder instance.
+
+`.flow.php`
+
+```php
+<?php
+
+use function Flow\ETL\DSL\config_builder;
+
+return config_builder()
+    ->id('execution-id');
+```
+
+`flow read --config .flow.php orders.csv`
+
+One of the most common use cases is to mount custom filesystem into Flow fstab to access remote files through CLI.
 
 ```shell
 $ flow
@@ -64,6 +83,7 @@ Arguments:
 Options:
       --file-format=FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
       --file-limit=FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --config=CONFIG.                         Path to a local php file that MUST return instance of: Flow\ETL\Config
       --output-pretty                          Pretty print schema
       --output-table                           Pretty schema as ascii table
       --schema-auto-cast[=SCHEMA-AUTO-CAST]    When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type [default: false]
@@ -122,6 +142,7 @@ Options:
       --file-format=FILE-FORMAT                File format. When not set file format is guessed from source file path extension
       --file-batch-size=FILE-BATCH-SIZE        Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 100]
       --file-limit=FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --config=CONFIG.                         Path to a local php file that MUST return instance of: Flow\ETL\Config      
       --output-truncate=OUTPUT-TRUNCATE        Truncate output to given number of characters, when set to -1 output is not truncated at all [default: 20]
       --schema-auto-cast[=SCHEMA-AUTO-CAST]    When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type [default: false]
       --json-pointer=JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
@@ -160,6 +181,7 @@ Arguments:
 Options:
       --file-format=FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
       --file-limit=FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --config=CONFIG.                         Path to a local php file that MUST return instance of: Flow\ETL\Config
       --json-pointer=JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
       --json-pointer-entry-name                When set, JSON Pointer will be used as an entry name in the schema
       --csv-header[=CSV-HEADER]                When set, CSV header will be used as a schema
@@ -222,6 +244,7 @@ Arguments:
 
 Options:
       --analyze=ANALYZE  Collect processing statistics and print them. [default: false]
+      --config=CONFIG Path to a local php file that MUST return instance of: Flow\ETL\Config      
   -h, --help             Display help for the given command. When no command is given display help for the list command
   -q, --quiet            Do not output any message
   -V, --version          Display this application version

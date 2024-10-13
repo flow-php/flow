@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
-use Flow\Filesystem\{Partition, Path};
-use Flow\Filesystem\{Partitions};
+use function Flow\Filesystem\DSL\{partition, partitions, path, path_real};
+use Flow\Filesystem\Partitions;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -47,11 +47,11 @@ final class PathTest extends TestCase
 
     public static function paths_with_partitions() : \Generator
     {
-        yield '/' => ['/', new Partitions()];
-        yield 'file://path/without/partitions/file.csv' => ['file://path/without/partitions/file.csv', new Partitions()];
-        yield 'file://path/country=US/file.csv' => ['file://path/country=US/file.csv', new Partitions(new Partition('country', 'US'))];
-        yield 'file://path/country=US/region=america/file.csv' => ['file://path/country=US/region=america/file.csv', new Partitions(new Partition('country', 'US'), new Partition('region', 'america'))];
-        yield 'file://path/country=*/file.csv' => ['file://path/country=*/file.csv', new Partitions()];
+        yield '/' => ['/', partitions()];
+        yield 'file://path/without/partitions/file.csv' => ['file://path/without/partitions/file.csv', partitions()];
+        yield 'file://path/country=US/file.csv' => ['file://path/country=US/file.csv', partitions(partition('country', 'US'))];
+        yield 'file://path/country=US/region=america/file.csv' => ['file://path/country=US/region=america/file.csv', partitions(partition('country', 'US'), partition('region', 'america'))];
+        yield 'file://path/country=*/file.csv' => ['file://path/country=*/file.csv', partitions()];
     }
 
     public static function paths_with_static_parts() : \Generator
@@ -78,61 +78,61 @@ final class PathTest extends TestCase
     {
         $this->expectExceptionMessage("Can't add partitions to path pattern.");
 
-        (new Path('/path/to/group=*/file.txt'))->addPartitions(new Partition('group', 'a'));
+        (path('/path/to/group=*/file.txt'))->addPartitions(partition('group', 'a'));
     }
 
     public function test_add_partitions_to_path_with_extension() : void
     {
         self::assertEquals(
-            new Path('/path/to/group=a/file.txt'),
-            (new Path('/path/to/file.txt'))->addPartitions(new Partition('group', 'a'))
+            path('/path/to/group=a/file.txt'),
+            (path('/path/to/file.txt'))->addPartitions(partition('group', 'a'))
         );
     }
 
     public function test_add_partitions_to_path_without_extension() : void
     {
         self::assertEquals(
-            new Path('/path/to/group=a/folder'),
-            (new Path('/path/to/folder'))->addPartitions(new Partition('group', 'a'))
+            path('/path/to/group=a/folder'),
+            (path('/path/to/folder'))->addPartitions(partition('group', 'a'))
         );
     }
 
     public function test_add_partitions_to_root_path_with_extension() : void
     {
         self::assertEquals(
-            new Path('/group=a/file.txt'),
-            (new Path('/file.txt'))->addPartitions(new Partition('group', 'a'))
+            path('/group=a/file.txt'),
+            (path('/file.txt'))->addPartitions(partition('group', 'a'))
         );
     }
 
     public function test_add_partitions_to_root_path_without_extension() : void
     {
         self::assertEquals(
-            new Path('/group=a/folder'),
-            (new Path('/folder'))->addPartitions(new Partition('group', 'a'))
+            path('/group=a/folder'),
+            (path('/folder'))->addPartitions(partition('group', 'a'))
         );
     }
 
     #[DataProvider('directories')]
     public function test_directories(string $uri, string $dirPath) : void
     {
-        self::assertSame($dirPath, (new Path($uri))->parentDirectory()->path());
+        self::assertSame($dirPath, (path($uri))->parentDirectory()->path());
     }
 
     public function test_extension() : void
     {
-        self::assertSame('php', (new Path(__FILE__))->extension());
-        self::assertFalse((new Path(__DIR__))->extension());
+        self::assertSame('php', (path(__FILE__))->extension());
+        self::assertFalse((path(__DIR__))->extension());
     }
 
     public function test_extension_uppercase() : void
     {
-        self::assertSame('php', (new Path('/var/file/code.PhP'))->extension());
+        self::assertSame('php', (path('/var/file/code.PhP'))->extension());
     }
 
     public function test_file_prefix() : void
     {
-        $path = new Path('flow-file://var/dir/file.csv', []);
+        $path = path('flow-file://var/dir/file.csv', []);
 
         self::assertSame(
             'flow-file://var/dir/._flow_tmp.file.csv',
@@ -143,7 +143,7 @@ final class PathTest extends TestCase
 
     public function test_file_prefix_on_directory() : void
     {
-        $path = new Path('flow-file://var/dir/', []);
+        $path = path('flow-file://var/dir/', []);
 
         self::assertSame(
             'flow-file://var/._flow_tmp.dir',
@@ -154,7 +154,7 @@ final class PathTest extends TestCase
 
     public function test_file_prefix_on_root_directory() : void
     {
-        $path = new Path('flow-file://', []);
+        $path = path('flow-file://', []);
 
         self::assertSame(
             'flow-file://._flow_tmp.',
@@ -166,49 +166,49 @@ final class PathTest extends TestCase
     #[DataProvider('paths_with_static_parts')]
     public function test_finding_static_part_of_the_path(string $staticPart, string $uri) : void
     {
-        self::assertEquals(new Path($staticPart), (new Path($uri))->staticPart());
+        self::assertEquals(path($staticPart), (path($uri))->staticPart());
     }
 
     public function test_local_file() : void
     {
-        self::assertNull((new Path(__FILE__))->context()->resource());
+        self::assertNull((path(__FILE__))->context()->resource());
     }
 
     #[DataProvider('paths_pattern_matching')]
     public function test_matching_pattern_with_path(string $path, string $pattern, bool $result) : void
     {
-        self::assertSame($result, (new Path($path))->matches(new Path($pattern)));
+        self::assertSame($result, (path($path))->matches(path($pattern)));
     }
 
     public function test_not_matching_items_under_directory_that_matches_pattern() : void
     {
-        $path = new Path('flow-file://var/file/partition=*');
+        $path = path('flow-file://var/file/partition=*');
 
-        self::assertTrue($path->matches(new Path('flow-file://var/file/partition=1')));
-        self::assertFalse($path->matches(new Path('flow-file://var/file/partition=1/file.csv')));
+        self::assertTrue($path->matches(path('flow-file://var/file/partition=1')));
+        self::assertFalse($path->matches(path('flow-file://var/file/partition=1/file.csv')));
     }
 
     #[DataProvider('paths')]
     public function test_parsing_path(string $uri, string $schema, string $parsedUri) : void
     {
-        self::assertEquals($schema, (new Path($uri))->protocol()->name);
-        self::assertEquals($parsedUri, (new Path($uri))->uri());
+        self::assertEquals($schema, (path($uri))->protocol()->name);
+        self::assertEquals($parsedUri, (path($uri))->uri());
     }
 
     #[DataProvider('paths_with_partitions')]
     public function test_partitions_in_path(string $uri, Partitions $partitions) : void
     {
-        self::assertEquals($partitions, (new Path($uri))->partitions());
+        self::assertEquals($partitions, (path($uri))->partitions());
     }
 
     public function test_partitions_paths() : void
     {
-        $path = new Path('/var/path/partition_1=A/partition_2=B/file.csv', ['option' => true]);
+        $path = path('/var/path/partition_1=A/partition_2=B/file.csv', ['option' => true]);
 
         self::assertEquals(
             [
-                new Path('/var/path/partition_1=A', ['option' => true]),
-                new Path('/var/path/partition_1=A/partition_2=B', ['option' => true]),
+                path('/var/path/partition_1=A', ['option' => true]),
+                path('/var/path/partition_1=A/partition_2=B', ['option' => true]),
             ],
             $path->partitionsPaths()
         );
@@ -216,7 +216,7 @@ final class PathTest extends TestCase
 
     public function test_randomization_file_path() : void
     {
-        $path = new Path('flow-file://var/file/test.csv', []);
+        $path = path('flow-file://var/file/test.csv', []);
 
         self::assertStringStartsWith(
             'flow-file://var/file/test_',
@@ -230,7 +230,7 @@ final class PathTest extends TestCase
 
     public function test_randomization_folder_path() : void
     {
-        $path = new Path('flow-file://var/file/folder/', []);
+        $path = path('flow-file://var/file/folder/', []);
 
         self::assertStringStartsWith(
             'flow-file://var/file/folder_',
@@ -238,9 +238,16 @@ final class PathTest extends TestCase
         );
     }
 
+    public function test_real_path_on_custom_schema() : void
+    {
+        $path = path_real('azure-blob://var/dir/file.php');
+
+        self::assertSame('azure-blob://var/dir/file.php', $path->uri());
+    }
+
     public function test_set_extension() : void
     {
-        $path = new Path('flow-file://var/dir/file.csv', []);
+        $path = path('flow-file://var/dir/file.csv', []);
 
         self::assertSame(
             'flow-file://var/dir/file.parquet',
@@ -250,7 +257,7 @@ final class PathTest extends TestCase
 
     public function test_set_extension_on_directory() : void
     {
-        $path = new Path('flow-file://var/dir/', []);
+        $path = path('flow-file://var/dir/', []);
 
         self::assertSame(
             'flow-file://var/dir.parquet',
@@ -260,7 +267,7 @@ final class PathTest extends TestCase
 
     public function test_set_extension_on_file_without_extension() : void
     {
-        $path = new Path('flow-file://var/dir/file', []);
+        $path = path('flow-file://var/dir/file', []);
 
         self::assertSame(
             'flow-file://var/dir/file.parquet',
@@ -270,7 +277,7 @@ final class PathTest extends TestCase
 
     public function test_suffix() : void
     {
-        $path = new Path('flow-file://var/dir', []);
+        $path = path('flow-file://var/dir', []);
 
         self::assertSame(
             'flow-file://var/dir/test.csv',

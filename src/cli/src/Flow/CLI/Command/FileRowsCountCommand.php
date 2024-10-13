@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use function Flow\CLI\{option_int_nullable};
-use function Flow\ETL\DSL\{config_builder, df};
+use function Flow\ETL\DSL\{df};
 use Flow\CLI\Arguments\{FilePathArgument};
-use Flow\CLI\Command\Traits\{CSVExtractorOptions, JSONExtractorOptions, ParquetExtractorOptions, XMLExtractorOptions};
+use Flow\CLI\Command\Traits\{
+    CSVExtractorOptions,
+    ConfigOptions,
+    JSONExtractorOptions,
+    ParquetExtractorOptions,
+    XMLExtractorOptions
+};
 use Flow\CLI\Factory\ExtractorFactory;
-use Flow\CLI\Options\{FileFormat, FileFormatOption};
+use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
@@ -19,6 +25,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class FileRowsCountCommand extends Command
 {
+    use ConfigOptions;
     use CSVExtractorOptions;
     use JSONExtractorOptions;
     use ParquetExtractorOptions;
@@ -39,6 +46,7 @@ final class FileRowsCountCommand extends Command
             ->addOption('file-format', null, InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
             ->addOption('file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null);
 
+        $this->addConfigOptions($this);
         $this->addJSONOptions($this);
         $this->addCSVOptions($this);
         $this->addXMLOptions($this);
@@ -64,8 +72,7 @@ final class FileRowsCountCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
-        $this->flowConfig = config_builder()->build();
-
+        $this->flowConfig = (new ConfigOption('config'))->get($input);
         $this->sourcePath = (new FilePathArgument('file'))->getExisting($input, $this->flowConfig);
         $this->fileFormat = (new FileFormatOption($this->sourcePath, 'file-format'))->get($input);
     }

@@ -18,7 +18,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN;
 
     /**
-     * @param array<string> $columns
+     * @var array<string>
      */
     private array $columns = [];
 
@@ -47,6 +47,10 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         foreach ($this->readers($context) as $fileData) {
             $fileRows = $fileData['file']->metadata()->rowsNumber();
             $flowSchema = $this->schemaConverter->fromParquet($fileData['file']->schema());
+
+            if (count($this->columns)) {
+                $flowSchema = $flowSchema->keep(...$this->columns);
+            }
 
             if ($fileOffset > $fileRows) {
                 $fileData['stream']->close();

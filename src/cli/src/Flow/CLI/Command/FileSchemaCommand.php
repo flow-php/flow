@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use function Flow\CLI\{option_bool, option_int_nullable};
-use function Flow\ETL\DSL\{config_builder, df, from_array, ref, schema_to_json, to_output};
+use function Flow\ETL\DSL\{df, from_array, ref, schema_to_json, to_output};
 use Flow\CLI\Arguments\{FilePathArgument};
-use Flow\CLI\Command\Traits\{CSVExtractorOptions, JSONExtractorOptions, ParquetExtractorOptions, XMLExtractorOptions};
+use Flow\CLI\Command\Traits\{
+    CSVExtractorOptions,
+    ConfigOptions,
+    JSONExtractorOptions,
+    ParquetExtractorOptions,
+    XMLExtractorOptions
+};
 use Flow\CLI\Factory\ExtractorFactory;
-use Flow\CLI\Options\{FileFormat, FileFormatOption};
+use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
@@ -19,6 +25,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class FileSchemaCommand extends Command
 {
+    use ConfigOptions;
     use CSVExtractorOptions;
     use JSONExtractorOptions;
     use ParquetExtractorOptions;
@@ -42,6 +49,7 @@ final class FileSchemaCommand extends Command
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Pretty schema as ascii table')
             ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
 
+        $this->addConfigOptions($this);
         $this->addJSONOptions($this);
         $this->addCSVOptions($this);
         $this->addXMLOptions($this);
@@ -90,8 +98,7 @@ final class FileSchemaCommand extends Command
 
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
-        $this->flowConfig = config_builder()->build();
-
+        $this->flowConfig = (new ConfigOption('config'))->get($input);
         $this->sourcePath = (new FilePathArgument('file'))->getExisting($input, $this->flowConfig);
         $this->fileFormat = (new FileFormatOption($this->sourcePath, 'file-format'))->get($input);
     }

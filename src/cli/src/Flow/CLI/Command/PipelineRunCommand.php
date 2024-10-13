@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use function Flow\CLI\option_bool;
-use function Flow\ETL\DSL\config_builder;
 use Flow\CLI\Arguments\FilePathArgument;
+use Flow\CLI\Command\Traits\ConfigOptions;
+use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\PipelineFactory;
 use Flow\ETL\Exception\{Exception};
 use Flow\ETL\{Config};
@@ -18,6 +19,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class PipelineRunCommand extends Command
 {
+    use ConfigOptions;
+
     private ?Config $flowConfig = null;
 
     private ?Path $pipelinePath = null;
@@ -46,6 +49,8 @@ HELP
             )
             ->addArgument('pipeline-file', InputArgument::REQUIRED, 'Path to a php/json with DataFrame definition.')
             ->addOption('analyze', null, InputArgument::OPTIONAL, 'Collect processing statistics and print them.', false);
+
+        $this->addConfigOptions($this);
     }
 
     public function execute(InputInterface $input, OutputInterface $output) : int
@@ -77,7 +82,7 @@ HELP
 
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
-        $this->flowConfig = config_builder()->build();
+        $this->flowConfig = (new ConfigOption('config'))->get($input);
         $this->pipelinePath = (new FilePathArgument('pipeline-file'))->getExisting($input, $this->flowConfig);
     }
 }
