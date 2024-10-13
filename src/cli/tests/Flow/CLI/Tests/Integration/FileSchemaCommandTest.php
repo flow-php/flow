@@ -14,7 +14,7 @@ final class FileSchemaCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['source' => __DIR__ . '/Fixtures/orders.csv']);
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv']);
 
         $tester->assertCommandIsSuccessful();
 
@@ -31,7 +31,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['source' => __DIR__ . '/Fixtures/orders.csv', '--pretty' => true]);
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-pretty' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -108,7 +108,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['source' => __DIR__ . '/Fixtures/orders.csv', '--table' => true]);
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -132,11 +132,11 @@ OUTPUT,
         );
     }
 
-    public function test_run_schema_with_table_output_and_autocast() : void
+    public function test_run_schema_with_table_output_and_auto_cast() : void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['source' => __DIR__ . '/Fixtures/orders.csv', '--table' => true, '--auto-cast' => true]);
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -154,6 +154,138 @@ OUTPUT,
 |      items |     json |    false |             |       [] |
 +------------+----------+----------+-------------+----------+
 7 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_table_output_and_limit_5() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'OUTPUT'
++------------+----------+----------+-------------+----------+
+|       name |     type | nullable | scalar_type | metadata |
++------------+----------+----------+-------------+----------+
+|   order_id |     uuid |    false |             |       [] |
+| created_at | datetime |    false |             |       [] |
+| updated_at | datetime |    false |             |       [] |
+|   discount |   scalar |     true |      string |       [] |
+|    address |     json |    false |             |       [] |
+|      notes |     json |    false |             |       [] |
+|      items |     json |    false |             |       [] |
++------------+----------+----------+-------------+----------+
+7 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_table_output_on_json() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.json', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'OUTPUT'
++--------------+-----------+----------+-------------+----------+
+|         name |      type | nullable | scalar_type | metadata |
++--------------+-----------+----------+-------------+----------+
+|     order_id |     array |    false |             |       [] |
+|   created_at |  datetime |    false |             |       [] |
+|   updated_at |  datetime |    false |             |       [] |
+| cancelled_at |    scalar |     true |      string |       [] |
+|  total_price |    scalar |    false |       float |       [] |
+|     discount |    scalar |    false |       float |       [] |
+|     customer | structure |    false |             |       [] |
+|      address | structure |    false |             |       [] |
+|        notes |      list |    false |             |       [] |
++--------------+-----------+----------+-------------+----------+
+9 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_table_output_on_parquet() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.parquet', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'OUTPUT'
++--------------+-----------+----------+-------------+----------+
+|         name |      type | nullable | scalar_type | metadata |
++--------------+-----------+----------+-------------+----------+
+|     order_id |      uuid |    false |             |       [] |
+|   created_at |  datetime |    false |             |       [] |
+|   updated_at |  datetime |    false |             |       [] |
+| cancelled_at |    scalar |     true |      string |       [] |
+|  total_price |    scalar |    false |       float |       [] |
+|     discount |    scalar |    false |       float |       [] |
+|     customer | structure |    false |             |       [] |
+|      address | structure |    false |             |       [] |
+|        notes |      json |    false |             |       [] |
++--------------+-----------+----------+-------------+----------+
+9 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_table_output_on_txt() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.txt', '--output-table' => true, '--schema-auto-cast' => true]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'OUTPUT'
++------+--------+----------+-------------+----------+
+| name |   type | nullable | scalar_type | metadata |
++------+--------+----------+-------------+----------+
+| text | scalar |    false |      string |       [] |
++------+--------+----------+-------------+----------+
+1 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_table_output_on_xml() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.xml', '--xml-node-path' => 'root/row', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'OUTPUT'
++------+------+----------+-------------+----------+
+| name | type | nullable | scalar_type | metadata |
++------+------+----------+-------------+----------+
+| node |  xml |    false |             |       [] |
++------+------+----------+-------------+----------+
+1 rows
 
 OUTPUT,
             $tester->getDisplay()

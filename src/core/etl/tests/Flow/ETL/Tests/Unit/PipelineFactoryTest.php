@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\config;
+use function Flow\Filesystem\DSL\path;
+use Flow\CLI\PipelineFactory;
 use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException};
-use Flow\ETL\PipelineFactory;
 use PHPUnit\Framework\TestCase;
 
 final class PipelineFactoryTest extends TestCase
 {
     public function test_empty_php_file() : void
     {
-        $this->expectExceptionMessage('Input file must be a valid PHP one!');
         $this->expectException(InvalidArgumentException::class);
 
-        $factory = new PipelineFactory(__DIR__ . '/../Fixtures/empty.php');
-        $factory->run();
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/empty.php'), config());
+        $factory->fromPHP();
     }
 
     public function test_non_existing_file() : void
     {
-        $this->expectExceptionMessage("Input file (fake) doesn't exists!");
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidFileFormatException::class);
 
-        $factory = new PipelineFactory('fake');
-        $factory->run();
+        $factory = new PipelineFactory(path('fake'), config());
+        $factory->fromPHP();
     }
 
     public function test_non_php_file() : void
@@ -33,14 +33,14 @@ final class PipelineFactoryTest extends TestCase
         $this->expectExceptionMessage('Expected "php" file format, "txt" given.');
         $this->expectException(InvalidFileFormatException::class);
 
-        $factory = new PipelineFactory(__DIR__ . '/../Fixtures/empty.txt');
-        $factory->run();
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/empty.txt'), config());
+        $factory->fromPHP();
     }
 
     public function test_with_data_frame_in_file() : void
     {
-        $factory = new PipelineFactory(__DIR__ . '/../Fixtures/with-dataframe.php');
-        $factory->run();
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/with-dataframe.php'), config());
+        $factory->fromPHP();
 
         $this->addToAssertionCount(1);
     }
@@ -50,7 +50,7 @@ final class PipelineFactoryTest extends TestCase
         $this->expectExceptionMessage('Expecting Flow-PHP DataFrame, received: ');
         $this->expectException(InvalidArgumentException::class);
 
-        $factory = new PipelineFactory(__DIR__ . '/../Fixtures/without-dataframe.php');
-        $factory->run();
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/without-dataframe.php'), config());
+        $factory->fromPHP();
     }
 }
