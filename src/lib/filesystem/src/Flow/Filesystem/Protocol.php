@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Exception\InvalidSchemeException;
 
 final class Protocol
 {
     public function __construct(public readonly string $name)
     {
+        if (!\preg_match('/^[a-zA-Z][a-zA-Z0-9+.-]+$/', $name)) {
+            throw new InvalidArgumentException("Invalid protocol name: '{$name}'. Only alphanumeric characters, dots, hyphens and plus signs are allowed.");
+        }
     }
 
     public function is(string $name) : bool
