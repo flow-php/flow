@@ -4,25 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Command;
 
-use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\Adapter\XML\from_xml;
-use function Flow\ETL\DSL\{config_builder, df, from_array, ref, schema_to_json, to_output};
-use function Flow\Filesystem\DSL\path_real;
+use function Flow\CLI\{option_bool, option_int_nullable};
+use function Flow\ETL\DSL\{df, from_array, ref, schema_to_json, to_output};
+use Flow\CLI\Arguments\{FilePathArgument};
+use Flow\CLI\Command\Traits\{
+    CSVExtractorOptions,
+    ConfigOptions,
+    JSONExtractorOptions,
+    ParquetExtractorOptions,
+    XMLExtractorOptions
+};
+use Flow\CLI\Factory\ExtractorFactory;
+use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\ETL\Config;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class FileSchemaCommand extends Command
 {
-    private ?Config $flowConfig = null;
+    use ConfigOptions;
+    use CSVExtractorOptions;
+    use JSONExtractorOptions;
+    use ParquetExtractorOptions;
+    use XMLExtractorOptions;
 
-    private ?string $inputFormat = null;
+    private ?FileFormat $fileFormat = null;
+
+    private ?Config $flowConfig = null;
 
     private ?Path $sourcePath = null;
 
@@ -31,40 +42,39 @@ final class FileSchemaCommand extends Command
         $this
             ->setName('file:schema')
             ->setDescription('Read data schema from a file.')
-            ->addArgument('source', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
-            ->addOption('input-format', 'if', InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
-            ->addOption('pretty', null, InputOption::VALUE_OPTIONAL, 'Pretty print schema', false)
-            ->addOption('table', null, InputOption::VALUE_OPTIONAL, 'Pretty schema as ascii table', false)
-            ->addOption('auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
+            ->addArgument('file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
+            ->addOption('file-format', null, InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
+            ->addOption('file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
+            ->addOption('output-pretty', null, InputOption::VALUE_NONE, 'Pretty print schema')
+            ->addOption('output-table', null, InputOption::VALUE_NONE, 'Pretty schema as ascii table')
+            ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
+
+        $this->addConfigOptions($this);
+        $this->addJSONOptions($this);
+        $this->addCSVOptions($this);
+        $this->addXMLOptions($this);
+        $this->addParquetOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);
 
-        $autoCast = ($input->getOption('auto-cast') !== false);
+        $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
 
-        $df = df($this->flowConfig)
-            ->read(match ($this->inputFormat) {
-                'csv' => from_csv($this->sourcePath),
-                'json' => from_json($this->sourcePath),
-                'xml' => from_xml($this->sourcePath),
-                'parquet' => from_parquet($this->sourcePath),
-            });
-
-        if ($autoCast) {
+        if (option_bool('schema-auto-cast', $input)) {
             $df->autoCast();
+        }
+
+        $limit = option_int_nullable('file-limit', $input);
+
+        if ($limit !== null && $limit > 0) {
+            $df->limit($limit);
         }
 
         $schema = $df->schema();
 
-        $prettyValue = $input->getOption('pretty');
-        $prettyPrint = ($prettyValue !== false);
-
-        $tableValue = $input->getOption('table');
-        $tablePrint = ($tableValue !== false);
-
-        if ($tablePrint) {
+        if (option_bool('output-table', $input)) {
             ob_start();
             df()
                 ->read(from_array($schema->normalize()))
@@ -81,34 +91,15 @@ final class FileSchemaCommand extends Command
             return Command::SUCCESS;
         }
 
-        $style->writeln(schema_to_json($schema, $prettyPrint ? JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR : JSON_THROW_ON_ERROR));
+        $style->writeln(schema_to_json($schema, option_bool('output-pretty', $input) ? JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR : JSON_THROW_ON_ERROR));
 
         return Command::SUCCESS;
     }
 
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
-        $this->flowConfig = config_builder()->build();
-
-        $source = (string) $input->getArgument('source');
-
-        $sourcePath = path_real($source);
-
-        $fs = $this->flowConfig->fstab()->for($sourcePath);
-
-        if (!$fs->status($sourcePath)) {
-            throw new InvalidArgumentException(\sprintf('File "%s" does not exist.', $sourcePath->path()));
-        }
-
-        $supportedFormats = ['csv', 'json', 'xml', 'parquet', 'txt'];
-
-        $inputFormat = \mb_strtolower($input->getOption('input-format') ?: $sourcePath->extension());
-
-        if (!\in_array($inputFormat, $supportedFormats, true)) {
-            throw new InvalidArgumentException(\sprintf('File format "%s" is not supported. Input file format can be set with --input-format option', $inputFormat));
-        }
-
-        $this->sourcePath = $sourcePath;
-        $this->inputFormat = $inputFormat;
+        $this->flowConfig = (new ConfigOption('config'))->get($input);
+        $this->sourcePath = (new FilePathArgument('file'))->getExisting($input, $this->flowConfig);
+        $this->fileFormat = (new FileFormatOption($this->sourcePath, 'file-format'))->get($input);
     }
 }

@@ -72,6 +72,10 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         return $this->path;
     }
 
+    /**
+     * @param string $pointer
+     * @param bool $pointerToEntryName - when true pointer will be used as entry name for extracted data
+     */
     public function withPointer(string $pointer, bool $pointerToEntryName = false) : self
     {
         $this->pointer = $pointer;

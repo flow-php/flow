@@ -70,6 +70,7 @@ final class Path
         if (\is_array($urlParts) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
             return new self($path, $options);
         }
+
         $realPath = $path;
 
         if ($realPath[0] === '~') {

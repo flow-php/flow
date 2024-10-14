@@ -28,7 +28,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+            "src/Flow/CLI/DSL/functions.php"
+        ]
     },
     "bin": [
         "flow"
