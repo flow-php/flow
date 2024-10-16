@@ -15,6 +15,7 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 # Table of contents 
 
 - [ETL](components/core/core.md)
+- [CLI](components/cli/docs.md)
 - Adapters
     - [chartjs](components/adapters/chartjs.md)
     - [csv](components/adapters/csv.md)
