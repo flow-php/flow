@@ -201,7 +201,7 @@ OUTPUT,
 +--------------+-----------+----------+-------------+----------+
 |         name |      type | nullable | scalar_type | metadata |
 +--------------+-----------+----------+-------------+----------+
-|     order_id |     array |    false |             |       [] |
+|     order_id |      uuid |    false |             |       [] |
 |   created_at |  datetime |    false |             |       [] |
 |   updated_at |  datetime |    false |             |       [] |
 | cancelled_at |    scalar |     true |      string |       [] |
