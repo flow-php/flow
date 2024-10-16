@@ -8,11 +8,11 @@ use function Flow\CLI\{option_bool, option_int, option_int_nullable};
 use function Flow\ETL\DSL\{df};
 use Flow\CLI\Arguments\{FilePathArgument};
 use Flow\CLI\Command\Traits\{
-    CSVExtractorOptions,
+    CSVOptions,
     ConfigOptions,
-    JSONExtractorOptions,
-    ParquetExtractorOptions,
-    XMLExtractorOptions
+    JSONOptions,
+    ParquetOptions,
+    XMLOptions
 };
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
@@ -27,10 +27,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class FileReadCommand extends Command
 {
     use ConfigOptions;
-    use CSVExtractorOptions;
-    use JSONExtractorOptions;
-    use ParquetExtractorOptions;
-    use XMLExtractorOptions;
+    use CSVOptions;
+    use JSONOptions;
+    use ParquetOptions;
+    use XMLOptions;
 
     private const DEFAULT_BATCH_SIZE = 100;
 
@@ -45,18 +45,18 @@ final class FileReadCommand extends Command
         $this
             ->setName('file:read')
             ->setDescription('Read data from a file.')
-            ->addArgument('file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
-            ->addOption('file-format', null, InputArgument::OPTIONAL, 'File format. When not set file format is guessed from source file path extension', null)
-            ->addOption('file-batch-size', null, InputOption::VALUE_REQUIRED, 'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once', self::DEFAULT_BATCH_SIZE)
-            ->addOption('file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
+            ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
+            ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'File format. When not set file format is guessed from source file path extension', null)
+            ->addOption('input-file-batch-size', null, InputOption::VALUE_REQUIRED, 'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once', self::DEFAULT_BATCH_SIZE)
+            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
             ->addOption('output-truncate', null, InputOption::VALUE_REQUIRED, 'Truncate output to given number of characters, when set to -1 output is not truncated at all', 20)
             ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
 
         $this->addConfigOptions($this);
-        $this->addJSONOptions($this);
-        $this->addCSVOptions($this);
-        $this->addXMLOptions($this);
-        $this->addParquetOptions($this);
+        $this->addJSONInputOptions($this);
+        $this->addCSVInputOptions($this);
+        $this->addXMLInputOptions($this);
+        $this->addParquetInputOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) : int
@@ -65,7 +65,7 @@ final class FileReadCommand extends Command
 
         $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
 
-        $batchSize = option_int('file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
+        $batchSize = option_int('input-file-batch-size', $input, self::DEFAULT_BATCH_SIZE);
         $outputTruncate = option_int('output-truncate', $input, 20);
 
         if ($batchSize <= 0) {
@@ -80,7 +80,7 @@ final class FileReadCommand extends Command
             $df->autoCast();
         }
 
-        $limit = option_int_nullable('file-limit', $input);
+        $limit = option_int_nullable('input-file-limit', $input);
 
         if ($limit !== null && $limit > 0) {
             $df->limit($limit);
@@ -98,7 +98,7 @@ final class FileReadCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('file'))->getExisting($input, $this->flowConfig);
-        $this->fileFormat = (new FileFormatOption($this->sourcePath, 'file-format'))->get($input);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }

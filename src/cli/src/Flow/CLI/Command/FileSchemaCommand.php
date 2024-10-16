@@ -8,11 +8,11 @@ use function Flow\CLI\{option_bool, option_int_nullable};
 use function Flow\ETL\DSL\{df, from_array, ref, schema_to_json, to_output};
 use Flow\CLI\Arguments\{FilePathArgument};
 use Flow\CLI\Command\Traits\{
-    CSVExtractorOptions,
+    CSVOptions,
     ConfigOptions,
-    JSONExtractorOptions,
-    ParquetExtractorOptions,
-    XMLExtractorOptions
+    JSONOptions,
+    ParquetOptions,
+    XMLOptions
 };
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
@@ -26,10 +26,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class FileSchemaCommand extends Command
 {
     use ConfigOptions;
-    use CSVExtractorOptions;
-    use JSONExtractorOptions;
-    use ParquetExtractorOptions;
-    use XMLExtractorOptions;
+    use CSVOptions;
+    use JSONOptions;
+    use ParquetOptions;
+    use XMLOptions;
 
     private ?FileFormat $fileFormat = null;
 
@@ -42,18 +42,18 @@ final class FileSchemaCommand extends Command
         $this
             ->setName('file:schema')
             ->setDescription('Read data schema from a file.')
-            ->addArgument('file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
-            ->addOption('file-format', null, InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
-            ->addOption('file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
+            ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
+            ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
+            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
             ->addOption('output-pretty', null, InputOption::VALUE_NONE, 'Pretty print schema')
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Pretty schema as ascii table')
             ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
 
         $this->addConfigOptions($this);
-        $this->addJSONOptions($this);
-        $this->addCSVOptions($this);
-        $this->addXMLOptions($this);
-        $this->addParquetOptions($this);
+        $this->addJSONInputOptions($this);
+        $this->addCSVInputOptions($this);
+        $this->addXMLInputOptions($this);
+        $this->addParquetInputOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) : int
@@ -66,7 +66,7 @@ final class FileSchemaCommand extends Command
             $df->autoCast();
         }
 
-        $limit = option_int_nullable('file-limit', $input);
+        $limit = option_int_nullable('input-file-limit', $input);
 
         if ($limit !== null && $limit > 0) {
             $df->limit($limit);
@@ -99,7 +99,7 @@ final class FileSchemaCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('file'))->getExisting($input, $this->flowConfig);
-        $this->fileFormat = (new FileFormatOption($this->sourcePath, 'file-format'))->get($input);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }

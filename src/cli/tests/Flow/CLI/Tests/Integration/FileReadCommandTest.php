@@ -14,7 +14,7 @@ final class FileReadCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileReadCommand('read'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -39,7 +39,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileReadCommand('read'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.json', '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.json', '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -64,7 +64,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileReadCommand('read'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.parquet', '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.parquet', '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -89,7 +89,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileReadCommand('read'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.txt', '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.txt', '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -114,7 +114,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileReadCommand('read'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.xml', '--file-limit' => 5, '--xml-node-path' => 'root/row']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xml', '--input-file-limit' => 5, '--input-xml-node-path' => 'root/row']);
 
         $tester->assertCommandIsSuccessful();
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Factory;
 
-use Flow\CLI\Options\TypedOption;
+use function Flow\CLI\{option_bool, option_string_nullable};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,8 +13,8 @@ final class JsonExtractorFactory
 {
     public function __construct(
         private readonly Path $path,
-        private readonly string $pointerOption = 'json-pointer',
-        private readonly string $pointerAsEntryNameOption = 'json-pointer-entry-name',
+        private readonly string $pointerOption = 'input-json-pointer',
+        private readonly string $pointerAsEntryNameOption = 'input-json-pointer-entry-name',
     ) {
     }
 
@@ -22,10 +22,10 @@ final class JsonExtractorFactory
     {
         $extractor = new JsonExtractor($this->path);
 
-        $pointer = (new TypedOption($this->pointerOption))->asStringNullable($input);
+        $pointer = option_string_nullable($this->pointerOption, $input);
 
         if ($pointer !== null) {
-            $extractor->withPointer($pointer, (new TypedOption($this->pointerAsEntryNameOption))->asBool($input));
+            $extractor->withPointer($pointer, option_bool($this->pointerAsEntryNameOption, $input));
         }
 
         return $extractor;

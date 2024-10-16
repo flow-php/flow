@@ -10,9 +10,9 @@ use Symfony\Component\Console\Input\InputOption;
 
 trait ConfigOptions
 {
-    private function addConfigOptions(Command $command) : void
+    private function addConfigOptions(Command $command, string $prefix = '') : void
     {
         $command
-            ->addOption('config', null, InputOption::VALUE_REQUIRED, 'Path to a local php file that MUST return instance of: ' . Config::class);
+            ->addOption($prefix . 'config', null, InputOption::VALUE_REQUIRED, 'Path to a local php file that MUST return instance of: ' . Config::class);
     }
 }

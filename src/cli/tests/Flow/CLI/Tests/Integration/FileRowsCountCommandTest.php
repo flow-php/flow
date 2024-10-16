@@ -14,7 +14,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv']);
 
         $tester->assertCommandIsSuccessful();
 
@@ -25,7 +25,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.json']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.json']);
 
         $tester->assertCommandIsSuccessful();
 
@@ -36,7 +36,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.parquet']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.parquet']);
 
         $tester->assertCommandIsSuccessful();
 
@@ -47,7 +47,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.txt']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.txt']);
 
         $tester->assertCommandIsSuccessful();
 
@@ -58,7 +58,7 @@ final class FileRowsCountCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.xml', '--xml-node-path' => 'root/row']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xml', '--input-xml-node-path' => 'root/row']);
 
         $tester->assertCommandIsSuccessful();
 

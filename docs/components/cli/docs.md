@@ -56,6 +56,7 @@ Available commands:
   help                   Display help for a command
   list                   List commands
  file
+  file:convert           [convert] Read data from a file.
   file:read              [read] Read data from a file.
   file:rows:count        [count] Read data schema from a file.
   file:schema            [schema] Read data schema from a file.
@@ -66,7 +67,55 @@ Available commands:
   pipeline:run           [run] Execute ETL pipeline from a php/json file.
 ```
 
-### `file:schema`
+### `file:convert` alias `convert`
+
+```shell
+Description:
+  Read data from a file.
+
+Usage:
+  file:convert [options] [--] <input-file> <output-file>
+  convert
+
+Arguments:
+  input-file                                                         Path to a file that should be converted to another format.
+  output-file                                                        Path where converted file should be saved.
+
+Options:
+      --input-file-format=INPUT-FILE-FORMAT                          File format. When not set file format is guessed from input file path extension
+      --input-file-batch-size=INPUT-FILE-BATCH-SIZE                  Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 100]
+      --input-file-limit=INPUT-FILE-LIMIT                            Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --output-file-format=OUTPUT-FILE-FORMAT                        File format. When not set file format is guessed from output file path extension
+      --output-overwrite[=OUTPUT-OVERWRITE]                          When set output file will be overwritten if exists
+      --schema-auto-cast[=SCHEMA-AUTO-CAST]                          When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type [default: false]
+      --analyze[=ANALYZE]                                            Collect processing statistics and print them. [default: false]
+      --config=CONFIG                                                Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --input-json-pointer=INPUT-JSON-POINTER                        JSON Pointer to a subtree from which schema should be extracted
+      --input-json-pointer-entry-name                                When set, JSON Pointer will be used as an entry name in the schema
+      --input-csv-header[=INPUT-CSV-HEADER]                          When set, CSV header will be used as a schema
+      --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]            When set, empty CSV values will be treated as NULL values
+      --input-csv-separator=INPUT-CSV-SEPARATOR                      CSV separator character
+      --input-csv-enclosure=INPUT-CSV-ENCLOSURE                      CSV enclosure character
+      --input-csv-escape=INPUT-CSV-ESCAPE                            CSV escape character
+      --output-csv-header[=OUTPUT-CSV-HEADER]                        When set, CSV header will be used as a schema
+      --output-csv-new-line-separator=OUTPUT-CSV-NEW-LINE-SEPARATOR  When set, empty CSV values will be treated as NULL values
+      --output-csv-separator=OUTPUT-CSV-SEPARATOR                    CSV separator character
+      --output-csv-enclosure=OUTPUT-CSV-ENCLOSURE                    CSV enclosure character
+      --output-csv-escape=OUTPUT-CSV-ESCAPE                          CSV escape character
+      --output-csv-date-time-format=OUTPUT-CSV-DATE-TIME-FORMAT      DateTime format for CSV output
+      --input-xml-node-path=INPUT-XML-NODE-PATH                      XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
+      --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE                  XML buffer size in bytes
+      --input-parquet-columns=INPUT-PARQUET-COLUMNS                  Columns to read from parquet file (multiple values allowed)
+      --input-parquet-offset=INPUT-PARQUET-OFFSET                    Offset to start reading from
+  -h, --help                                                         Display help for the given command. When no command is given display help for the list command
+  -q, --quiet                                                        Do not output any message
+  -V, --version                                                      Display this application version
+      --ansi|--no-ansi                                               Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                                               Do not ask any interactive question
+  -v|vv|vvv, --verbose                                               Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+```
+
+### `file:schema` alias `schema`
 
 ```shell
 $ flow file:schema --help
@@ -74,36 +123,36 @@ Description:
   Read data schema from a file.
 
 Usage:
-  file:schema [options] [--] <file>
+  file:schema [options] [--] <input-file>
   schema
 
 Arguments:
-  file                                         Path to a file from which schema should be extracted.
+  input-file                                               Path to a file from which schema should be extracted.
 
 Options:
-      --file-format=FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
-      --file-limit=FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
-      --config=CONFIG.                         Path to a local php file that MUST return instance of: Flow\ETL\Config
-      --output-pretty                          Pretty print schema
-      --output-table                           Pretty schema as ascii table
-      --schema-auto-cast[=SCHEMA-AUTO-CAST]    When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type [default: false]
-      --json-pointer=JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
-      --json-pointer-entry-name                When set, JSON Pointer will be used as an entry name in the schema
-      --csv-header[=CSV-HEADER]                When set, CSV header will be used as a schema
-      --csv-empty-to-null[=CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
-      --csv-separator[=CSV-SEPARATOR]          CSV separator character
-      --csv-enclosure[=CSV-ENCLOSURE]          CSV enclosure character
-      --csv-escape[=CSV-ESCAPE]                CSV escape character
-      --xml-node-path=XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
-      --xml-buffer-size=XML-BUFFER-SIZE        XML buffer size in bytes
-      --parquet-columns=PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
-      --parquet-offset=PARQUET-OFFSET          Offset to start reading from
-  -h, --help                                   Display help for the given command. When no command is given display help for the list command
-  -q, --quiet                                  Do not output any message
-  -V, --version                                Display this application version
-      --ansi|--no-ansi                         Force (or disable --no-ansi) ANSI output
-  -n, --no-interaction                         Do not ask any interactive question
-  -v|vv|vvv, --verbose                         Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+      --input-file-format=INPUT-FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
+      --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --output-pretty                                      Pretty print schema
+      --output-table                                       Pretty schema as ascii table
+      --schema-auto-cast[=SCHEMA-AUTO-CAST]                When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type [default: false]
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
+      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
+      --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
+      --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
+      --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
+      --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
+      --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
+      --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
+      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
+  -h, --help                                               Display help for the given command. When no command is given display help for the list command
+  -q, --quiet                                              Do not output any message
+  -V, --version                                            Display this application version
+      --ansi|--no-ansi                                     Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                                     Do not ask any interactive question
+  -v|vv|vvv, --verbose                                     Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
 
 Example: 
@@ -124,7 +173,7 @@ $ flow schema orders.csv --table --auto-cast
 7 rows
 ```
 
-### `file:read` 
+### `file:read` alias `read`
 
 ```shell
 $ flow read --help
@@ -132,73 +181,73 @@ Description:
   Read data from a file.
 
 Usage:
-  file:read [options] [--] <file>
+  file:read [options] [--] <input-file>
   read
 
 Arguments:
-  file                                         Path to a file from which schema should be extracted.
+  input-file                                               Path to a file from which schema should be extracted.
 
 Options:
-      --file-format=FILE-FORMAT                File format. When not set file format is guessed from source file path extension
-      --file-batch-size=FILE-BATCH-SIZE        Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 100]
-      --file-limit=FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
-      --config=CONFIG.                         Path to a local php file that MUST return instance of: Flow\ETL\Config      
-      --output-truncate=OUTPUT-TRUNCATE        Truncate output to given number of characters, when set to -1 output is not truncated at all [default: 20]
-      --schema-auto-cast[=SCHEMA-AUTO-CAST]    When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type [default: false]
-      --json-pointer=JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
-      --json-pointer-entry-name                When set, JSON Pointer will be used as an entry name in the schema
-      --csv-header[=CSV-HEADER]                When set, CSV header will be used as a schema
-      --csv-empty-to-null[=CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
-      --csv-separator[=CSV-SEPARATOR]          CSV separator character
-      --csv-enclosure[=CSV-ENCLOSURE]          CSV enclosure character
-      --csv-escape[=CSV-ESCAPE]                CSV escape character
-      --xml-node-path=XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
-      --xml-buffer-size=XML-BUFFER-SIZE        XML buffer size in bytes
-      --parquet-columns=PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
-      --parquet-offset=PARQUET-OFFSET          Offset to start reading from
-  -h, --help                                   Display help for the given command. When no command is given display help for the list command
-  -q, --quiet                                  Do not output any message
-  -V, --version                                Display this application version
-      --ansi|--no-ansi                         Force (or disable --no-ansi) ANSI output
-  -n, --no-interaction                         Do not ask any interactive question
-  -v|vv|vvv, --verbose                         Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+      --input-file-format=INPUT-FILE-FORMAT                File format. When not set file format is guessed from source file path extension
+      --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 100]
+      --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --output-truncate=OUTPUT-TRUNCATE                    Truncate output to given number of characters, when set to -1 output is not truncated at all [default: 20]
+      --schema-auto-cast[=SCHEMA-AUTO-CAST]                When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type [default: false]
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
+      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
+      --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
+      --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
+      --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
+      --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
+      --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
+      --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
+      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
+  -h, --help                                               Display help for the given command. When no command is given display help for the list command
+  -q, --quiet                                              Do not output any message
+  -V, --version                                            Display this application version
+      --ansi|--no-ansi                                     Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                                     Do not ask any interactive question
+  -v|vv|vvv, --verbose                                     Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
 
-### `file:rows:count`
+### `file:rows:count` alis `count`
 
 ```php
-$ flow file:rows:count --help
+$ flow count --help
 Description:
   Read data schema from a file.
 
 Usage:
-  file:rows:count [options] [--] <file>
+  file:rows:count [options] [--] <input-file>
   count
 
 Arguments:
-  file                                         Path to a file from which schema should be extracted.
+  input-file                                               Path to a file from which schema should be extracted.
 
 Options:
-      --file-format=FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
-      --file-limit=FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
-      --config=CONFIG.                         Path to a local php file that MUST return instance of: Flow\ETL\Config
-      --json-pointer=JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
-      --json-pointer-entry-name                When set, JSON Pointer will be used as an entry name in the schema
-      --csv-header[=CSV-HEADER]                When set, CSV header will be used as a schema
-      --csv-empty-to-null[=CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
-      --csv-separator[=CSV-SEPARATOR]          CSV separator character
-      --csv-enclosure[=CSV-ENCLOSURE]          CSV enclosure character
-      --csv-escape[=CSV-ESCAPE]                CSV escape character
-      --xml-node-path=XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
-      --xml-buffer-size=XML-BUFFER-SIZE        XML buffer size in bytes
-      --parquet-columns=PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
-      --parquet-offset=PARQUET-OFFSET          Offset to start reading from
-  -h, --help                                   Display help for the given command. When no command is given display help for the list command
-  -q, --quiet                                  Do not output any message
-  -V, --version                                Display this application version
-      --ansi|--no-ansi                         Force (or disable --no-ansi) ANSI output
-  -n, --no-interaction                         Do not ask any interactive question
-  -v|vv|vvv, --verbose                         Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+      --input-file-format=INPUT-FILE-FORMAT                Source file format. When not set file format is guessed from source file path extension
+      --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
+      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
+      --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
+      --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
+      --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
+      --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
+      --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
+      --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
+      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
+  -h, --help                                               Display help for the given command. When no command is given display help for the list command
+  -q, --quiet                                              Do not output any message
+  -V, --version                                            Display this application version
+      --ansi|--no-ansi                                     Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                                     Do not ask any interactive question
+  -v|vv|vvv, --verbose                                     Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
 
 ### `parquet:read:metadata`

@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
+use Flow\CLI\Command\FileConvertCommand;
 use Flow\CLI\Command\FileReadCommand;
 use Flow\CLI\Command\FileRowsCountCommand;
 use Flow\CLI\Command\PipelineRunCommand;
@@ -48,5 +49,6 @@ $application->add((new PipelineRunCommand())->setName('pipeline:run')->setAliase
 $application->add((new FileReadCommand())->setName('file:read')->setAliases(['read']));
 $application->add((new FileSchemaCommand())->setName('file:schema')->setAliases(['schema']));
 $application->add((new FileRowsCountCommand())->setName('file:rows:count')->setAliases(['count']));
+$application->add((new FileConvertCommand())->setName('file:convert')->setAliases(['convert']));
 
 $application->run();
