@@ -54,9 +54,11 @@ final class FileConvertCommand extends Command
 
         $this->addConfigOptions($this);
         $this->addJSONInputOptions($this);
+        $this->addJSONOutputOptions($this);
         $this->addCSVInputOptions($this);
         $this->addCSOutputOptions($this);
         $this->addXMLInputOptions($this);
+        $this->addXMLOutputOptions($this);
         $this->addParquetInputOptions($this);
     }
 
