@@ -1,12 +1,14 @@
-## [Unreleased] - 2024-10-14
+## [Unreleased] - 2024-10-16
 
 ### Added
+- [#1247](https://github.com/flow-php/flow/pull/1247) - **command to convert files through cli** - [@norberttech](https://github.com/norberttech)
 - [#1246](https://github.com/flow-php/flow/pull/1246) - **file:read - cli command** - [@norberttech](https://github.com/norberttech)
 - [#1246](https://github.com/flow-php/flow/pull/1246) - **file:schema- cli command** - [@norberttech](https://github.com/norberttech)
 - [#1246](https://github.com/flow-php/flow/pull/1246) - **file:rows:command- cli command** - [@norberttech](https://github.com/norberttech)
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1247](https://github.com/flow-php/flow/pull/1247) - **CLI command options now comes with a --output / --input prefix** - [@norberttech](https://github.com/norberttech)
 - [#1246](https://github.com/flow-php/flow/pull/1246) - **Unified options/arguments handling across all commands** - [@norberttech](https://github.com/norberttech)
 - [#1246](https://github.com/flow-php/flow/pull/1246) - **run cli command was renamed into pipeline:run with alias run** - [@norberttech](https://github.com/norberttech)
 - [f30a31](https://github.com/flow-php/flow/commit/f30a310db1e4e1047055e65cc796fd4f2ba36f6f) - **Second attempt to fix flow cli autoloading** - [@norberttech](https://github.com/norberttech)
