@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI;
 
 use Flow\CLI\Arguments\TypedArgument;
-use Flow\CLI\Options\TypedOption;
+use Flow\CLI\Options\{TypedOption};
 use Symfony\Component\Console\Input\InputInterface;
 
 function option_bool(string $name, InputInterface $input) : bool

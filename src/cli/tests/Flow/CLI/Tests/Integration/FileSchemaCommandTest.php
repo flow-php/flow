@@ -14,7 +14,7 @@ final class FileSchemaCommandTest extends TestCase
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv']);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv']);
 
         $tester->assertCommandIsSuccessful();
 
@@ -31,7 +31,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-pretty' => true]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-pretty' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -108,7 +108,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -136,7 +136,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -164,7 +164,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -192,7 +192,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.json', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.json', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -201,7 +201,7 @@ OUTPUT,
 +--------------+-----------+----------+-------------+----------+
 |         name |      type | nullable | scalar_type | metadata |
 +--------------+-----------+----------+-------------+----------+
-|     order_id |     array |    false |             |       [] |
+|     order_id |      uuid |    false |             |       [] |
 |   created_at |  datetime |    false |             |       [] |
 |   updated_at |  datetime |    false |             |       [] |
 | cancelled_at |    scalar |     true |      string |       [] |
@@ -222,7 +222,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.parquet', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.parquet', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -252,7 +252,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.txt', '--output-table' => true, '--schema-auto-cast' => true]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.txt', '--output-table' => true, '--schema-auto-cast' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -274,7 +274,7 @@ OUTPUT,
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
 
-        $tester->execute(['file' => __DIR__ . '/Fixtures/orders.xml', '--xml-node-path' => 'root/row', '--output-table' => true, '--schema-auto-cast' => true, '--file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xml', '--input-xml-node-path' => 'root/row', '--output-table' => true, '--schema-auto-cast' => true, '--input-file-limit' => 5]);
 
         $tester->assertCommandIsSuccessful();
 

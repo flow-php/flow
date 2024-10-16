@@ -13,7 +13,7 @@ use Flow\ETL\Exception\{Exception};
 use Flow\ETL\{Config};
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\{InputArgument, InputInterface};
+use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -48,7 +48,7 @@ return df()
 HELP
             )
             ->addArgument('pipeline-file', InputArgument::REQUIRED, 'Path to a php/json with DataFrame definition.')
-            ->addOption('analyze', null, InputArgument::OPTIONAL, 'Collect processing statistics and print them.', false);
+            ->addOption('analyze', null, InputOption::VALUE_OPTIONAL, 'Collect processing statistics and print them.', false);
 
         $this->addConfigOptions($this);
     }

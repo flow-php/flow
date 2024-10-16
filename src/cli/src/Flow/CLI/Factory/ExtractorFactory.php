@@ -16,7 +16,6 @@ final class ExtractorFactory
         private readonly Path $path,
         private readonly FileFormat $format,
     ) {
-
     }
 
     public function get(InputInterface $input) : Extractor

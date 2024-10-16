@@ -14,11 +14,11 @@ final class CSVExtractorFactory
 {
     public function __construct(
         private readonly Path $path,
-        private readonly string $withHeaderOption = 'csv-header',
-        private readonly string $emptyToNullOption = 'csv-empty-to-null',
-        private readonly string $separatorOption = 'csv-separator',
-        private readonly string $enclosureOption = 'csv-enclosure',
-        private readonly string $escapeOption = 'csv-escape',
+        private readonly string $withHeaderOption = 'input-csv-header',
+        private readonly string $emptyToNullOption = 'input-csv-empty-to-null',
+        private readonly string $separatorOption = 'input-csv-separator',
+        private readonly string $enclosureOption = 'input-csv-enclosure',
+        private readonly string $escapeOption = 'input-csv-escape',
     ) {
     }
 

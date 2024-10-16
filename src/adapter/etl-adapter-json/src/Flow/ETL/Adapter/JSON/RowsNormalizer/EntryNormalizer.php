@@ -28,6 +28,8 @@ final class EntryNormalizer
             Entry\StructureEntry::class,
             Entry\JsonEntry::class,
             Entry\ObjectEntry::class => $this->caster->to(type_array())->value($entry->value()),
+            Entry\XMLElementEntry::class => $entry->toString(),
+            Entry\XMLEntry::class => $entry->toString(),
             default => $entry->value(),
         };
     }

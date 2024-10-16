@@ -8,11 +8,11 @@ use function Flow\CLI\{option_int_nullable};
 use function Flow\ETL\DSL\{df};
 use Flow\CLI\Arguments\{FilePathArgument};
 use Flow\CLI\Command\Traits\{
-    CSVExtractorOptions,
+    CSVOptions,
     ConfigOptions,
-    JSONExtractorOptions,
-    ParquetExtractorOptions,
-    XMLExtractorOptions
+    JSONOptions,
+    ParquetOptions,
+    XMLOptions
 };
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
@@ -26,10 +26,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class FileRowsCountCommand extends Command
 {
     use ConfigOptions;
-    use CSVExtractorOptions;
-    use JSONExtractorOptions;
-    use ParquetExtractorOptions;
-    use XMLExtractorOptions;
+    use CSVOptions;
+    use JSONOptions;
+    use ParquetOptions;
+    use XMLOptions;
 
     private ?FileFormat $fileFormat = null;
 
@@ -42,15 +42,15 @@ final class FileRowsCountCommand extends Command
         $this
             ->setName('file:schema')
             ->setDescription('Read data schema from a file.')
-            ->addArgument('file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
-            ->addOption('file-format', null, InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
-            ->addOption('file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null);
+            ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
+            ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
+            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null);
 
         $this->addConfigOptions($this);
-        $this->addJSONOptions($this);
-        $this->addCSVOptions($this);
-        $this->addXMLOptions($this);
-        $this->addParquetOptions($this);
+        $this->addJSONInputOptions($this);
+        $this->addCSVInputOptions($this);
+        $this->addXMLInputOptions($this);
+        $this->addParquetInputOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) : int
@@ -59,7 +59,7 @@ final class FileRowsCountCommand extends Command
 
         $df = df($this->flowConfig)->read((new ExtractorFactory($this->sourcePath, $this->fileFormat))->get($input));
 
-        $limit = option_int_nullable('file-limit', $input);
+        $limit = option_int_nullable('input-file-limit', $input);
 
         if ($limit !== null && $limit > 0) {
             $df->limit($limit);
@@ -73,7 +73,7 @@ final class FileRowsCountCommand extends Command
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);
-        $this->sourcePath = (new FilePathArgument('file'))->getExisting($input, $this->flowConfig);
-        $this->fileFormat = (new FileFormatOption($this->sourcePath, 'file-format'))->get($input);
+        $this->sourcePath = (new FilePathArgument('input-file'))->getExisting($input, $this->flowConfig);
+        $this->fileFormat = (new FileFormatOption($this->sourcePath, 'input-file-format'))->get($input);
     }
 }
