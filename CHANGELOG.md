@@ -19,6 +19,9 @@
 - [#1245](https://github.com/flow-php/flow/pull/1245) - **Fixed writing column statistics when there is only one row that is null** - [@norberttech](https://github.com/norberttech)
 - [#1243](https://github.com/flow-php/flow/pull/1243) - **Fixed flow cli autoloading** - [@norberttech](https://github.com/norberttech)
 
+### Updated
+- [afb55b](https://github.com/flow-php/flow/commit/afb55b8a8d8f7678257b29cbd34737fbbb9f0fce) - **introduction.md** - [@norberttech](https://github.com/norberttech)
+
 ## [0.10.0] - 2024-10-03
 
 ### Added
