@@ -260,6 +260,7 @@
                 "issues": "https://github.com/phpbench/dom/issues",
                 "source": "https://github.com/phpbench/dom/tree/0.3.3"
             },
+            "abandoned": true,
             "time": "2023-03-06T23:46:57+00:00"
         },
         {
@@ -1535,10 +1536,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
-    "platform-dev": [],
+    "platform": {},
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

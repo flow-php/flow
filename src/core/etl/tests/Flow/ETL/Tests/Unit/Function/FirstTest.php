@@ -31,7 +31,7 @@ final class FirstTest extends TestCase
         $aggregator = first(ref('int'));
 
         self::assertEquals(
-            new Row\Entry\StringEntry('int', null),
+            new Row\Entry\StringEntry('int_first', null),
             $aggregator->result()
         );
     }

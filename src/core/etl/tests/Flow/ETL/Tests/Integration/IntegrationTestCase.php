@@ -27,6 +27,7 @@ abstract class IntegrationTestCase extends TestCase
         parent::__construct($name);
 
         $this->baseMemoryLimit = (\ini_get('memory_limit')) ?: '-1';
+
         $this->cacheDir = Path::realpath(\getenv(CacheConfig::CACHE_DIR_ENV));
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
