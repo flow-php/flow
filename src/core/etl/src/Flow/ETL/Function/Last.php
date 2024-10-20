@@ -28,6 +28,12 @@ final class Last implements AggregatingFunction
 
     public function result() : Entry
     {
-        return $this->last ?? new Entry\StringEntry($this->ref->name(), null);
+        $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_last';
+
+        if ($this->last) {
+            return $this->last->rename($name);
+        }
+
+        return new Entry\StringEntry($name, null);
     }
 }

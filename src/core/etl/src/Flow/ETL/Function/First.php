@@ -30,6 +30,12 @@ final class First implements AggregatingFunction
 
     public function result() : Entry
     {
-        return $this->first ?? new Entry\StringEntry($this->ref->name(), null);
+        $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_first';
+
+        if ($this->first) {
+            return $this->first->rename($name);
+        }
+
+        return new Entry\StringEntry($name, null);
     }
 }
