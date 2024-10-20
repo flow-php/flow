@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-10-16
+## [Unreleased] - 2024-10-20
 
 ### Added
 - [#1247](https://github.com/flow-php/flow/pull/1247) - **command to convert files through cli** - [@norberttech](https://github.com/norberttech)
@@ -16,6 +16,7 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1248](https://github.com/flow-php/flow/pull/1248) - **Unified behavior of first/last aggregations to prevent columns conflicts when doing aggregation and grouping by the same column** - [@norberttech](https://github.com/norberttech)
 - [#1245](https://github.com/flow-php/flow/pull/1245) - **Fixed writing column statistics when there is only one row that is null** - [@norberttech](https://github.com/norberttech)
 - [#1243](https://github.com/flow-php/flow/pull/1243) - **Fixed flow cli autoloading** - [@norberttech](https://github.com/norberttech)
 
