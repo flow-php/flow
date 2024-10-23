@@ -35,7 +35,8 @@ final class Path
 
         $path = \str_replace($scheme . '://', '', $uri);
 
-        if (!\str_starts_with($path, DIRECTORY_SEPARATOR)) {
+        // NOT WIN
+        if (DIRECTORY_SEPARATOR !='\\' && !\str_starts_with($path, DIRECTORY_SEPARATOR)) {
             $path = DIRECTORY_SEPARATOR . $path;
         }
 
