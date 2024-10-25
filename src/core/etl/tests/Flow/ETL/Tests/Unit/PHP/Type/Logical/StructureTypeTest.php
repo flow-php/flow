@@ -107,7 +107,7 @@ final class StructureTypeTest extends TestCase
                         struct_element('id', type_string()),
                         struct_element('name', type_float()),
                     ],
-                    true
+                    nullable: true
                 )),
             ]),
             struct_type([

@@ -32,22 +32,23 @@ final class FlowToParquetSchemaTest extends TestCase
     {
         self::assertEquals(
             ParquetSchema::with(
-                FlatColumn::int64('integer'),
-                FlatColumn::boolean('boolean'),
-                FlatColumn::string('string'),
-                FlatColumn::float('float'),
-                FlatColumn::dateTime('datetime'),
-                FlatColumn::json('json'),
-                NestedColumn::list('list', ParquetSchema\ListElement::string()),
+                FlatColumn::int64('integer', ParquetSchema\Repetition::REQUIRED),
+                FlatColumn::boolean('boolean', ParquetSchema\Repetition::REQUIRED),
+                FlatColumn::string('string', ParquetSchema\Repetition::REQUIRED),
+                FlatColumn::float('float', ParquetSchema\Repetition::REQUIRED),
+                FlatColumn::dateTime('datetime', ParquetSchema\Repetition::REQUIRED),
+                FlatColumn::json('json', ParquetSchema\Repetition::REQUIRED),
+                NestedColumn::list('list', ParquetSchema\ListElement::string(true), ParquetSchema\Repetition::REQUIRED),
                 NestedColumn::list('list_of_structs', ParquetSchema\ListElement::structure(
                     [
-                        FlatColumn::int64('integer'),
-                        FlatColumn::boolean('boolean'),
-                    ]
-                )),
-                NestedColumn::struct('structure', [FlatColumn::string('a')]),
-                NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64()),
-                FlatColumn::time('time')
+                        FlatColumn::int64('integer', ParquetSchema\Repetition::REQUIRED),
+                        FlatColumn::boolean('boolean', ParquetSchema\Repetition::REQUIRED),
+                    ],
+                    true
+                ), ParquetSchema\Repetition::REQUIRED),
+                NestedColumn::struct('structure', [FlatColumn::string('a', ParquetSchema\Repetition::REQUIRED)], ParquetSchema\Repetition::REQUIRED),
+                NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64(true), ParquetSchema\Repetition::REQUIRED),
+                FlatColumn::time('time', ParquetSchema\Repetition::REQUIRED)
             ),
             (new SchemaConverter())->toParquet(new Schema(
                 Schema\Definition::integer('integer'),
@@ -65,7 +66,7 @@ final class FlowToParquetSchemaTest extends TestCase
                 ))),
                 Schema\Definition::structure('structure', new StructureType([new StructureElement('a', type_string())])),
                 Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer())),
-                Schema\Definition::object('time', type_object(\DateInterval::class, false))
+                Schema\Definition::object('time', type_object(\DateInterval::class))
             ))
         );
     }
@@ -76,7 +77,7 @@ final class FlowToParquetSchemaTest extends TestCase
         $this->expectExceptionMessage("object<stdClass> can't be converted to any parquet columns.");
 
         (new SchemaConverter())->toParquet(new Schema(
-            Schema\Definition::object('object', type_object(\stdClass::class, false))
+            Schema\Definition::object('object', type_object(\stdClass::class))
         ));
     }
 }

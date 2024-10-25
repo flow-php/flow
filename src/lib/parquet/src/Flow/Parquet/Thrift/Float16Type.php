@@ -12,12 +12,7 @@ namespace Flow\Parquet\Thrift;
  */
 use Thrift\Type\{TType};
 
-/**
- * Embedded JSON logical type annotation.
- *
- * Allowed for physical types: BYTE_ARRAY
- */
-class JsonType
+class Float16Type
 {
     public static $_TSPEC = [
     ];
@@ -30,7 +25,7 @@ class JsonType
 
     public function getName()
     {
-        return 'JsonType';
+        return 'Float16Type';
     }
 
     public function read($input)
@@ -64,7 +59,7 @@ class JsonType
     public function write($output)
     {
         $xfer = 0;
-        $xfer += $output->writeStructBegin('JsonType');
+        $xfer += $output->writeStructBegin('Float16Type');
         $xfer += $output->writeFieldStop();
         $xfer += $output->writeStructEnd();
 

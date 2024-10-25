@@ -78,13 +78,13 @@ final class ReadMetadataCommand extends Command
         if ($displayColumns) {
             $columnsTable = $style->createTable();
             $columnsTable->setStyle('box');
-            $columnsTable->setHeaderTitle('Flat Columns');
+            $columnsTable->setHeaderTitle('Columns');
             $columnsTable->setHeaders(['path', 'type', 'logical type', 'repetition', 'max repetition', 'max definition']);
 
             foreach ($parquetFile->schema()->columnsFlat() as $column) {
                 $columnsTable->addRow([
                     $column->flatPath(),
-                    $column->type() ? $column->type()->name : 'group',
+                    ($column->type() ? $column->type()->name : 'group') . ($column->typeLength() ? '(' . $column->typeLength() . ')' : ''),
                     $column->logicalType() ? $column->logicalType()->name() : '-',
                     $column->repetition()?->name ?? 'N/A',
                     $column->maxRepetitionsLevel(),

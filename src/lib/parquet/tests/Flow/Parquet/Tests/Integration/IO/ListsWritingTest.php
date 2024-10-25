@@ -264,4 +264,26 @@ final class ListsWritingTest extends TestCase
             \iterator_to_array((new Reader())->read($path)->values())
         );
     }
+
+    public function test_writing_repeated_lists() : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32(), Schema\Repetition::REPEATED));
+
+        $writer->write($path, $schema, $inputData = [
+            [
+                'list_of_ints' => [[1, 2, 3], [1, 2, 3]],
+            ],
+            [
+                'list_of_ints' => [[4, 5, 6], [4, 5, 6]],
+            ],
+        ]);
+
+        self::assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
 }

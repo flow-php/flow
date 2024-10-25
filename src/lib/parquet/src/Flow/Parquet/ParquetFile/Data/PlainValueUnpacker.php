@@ -42,6 +42,7 @@ final class PlainValueUnpacker
             PhysicalType::FIXED_LEN_BYTE_ARRAY => match ($column->logicalType()?->name()) {
                 /** @phpstan-ignore-next-line */
                 LogicalType::DECIMAL => $this->reader->readDecimals($total, $column->typeLength(), $column->logicalType()?->decimalData()?->precision(), $column->logicalType()?->decimalData()?->scale()),
+                LogicalType::UUID => $this->reader->readStrings($total),
                 default => throw new RuntimeException('Unsupported logical type ' . ($column->logicalType()?->name() ?: 'null') . ' for FIXED_LEN_BYTE_ARRAY'),
             },
             PhysicalType::BOOLEAN => $this->reader->readBooleans($total),

@@ -26,6 +26,7 @@ use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLElementType, XMLType};
 use Flow\ETL\PHP\Type\Native\{ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\{Schema};
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
@@ -65,42 +66,43 @@ final class SchemaConverter
             case ScalarType::class:
                 switch ($element->type()) {
                     case ScalarType::FLOAT:
-                        return ListElement::float();
+                        return ListElement::float(!$type->nullable());
                     case ScalarType::INTEGER:
-                        return ListElement::int64();
+                        return ListElement::int64(!$type->nullable());
                     case ScalarType::STRING:
-                        return ListElement::string();
+                        return ListElement::string(!$type->nullable());
                     case ScalarType::BOOLEAN:
-                        return ListElement::boolean();
+                        return ListElement::boolean(!$type->nullable());
                 }
 
                 break;
             case DateTimeType::class:
-                return ListElement::datetime();
+                return ListElement::datetime(!$type->nullable());
             case UuidType::class:
-                return ListElement::uuid();
+                return ListElement::uuid(!$type->nullable());
             case JsonType::class:
-                return ListElement::json();
+                return ListElement::json(!$type->nullable());
             case XMLType::class:
             case XMLElementType::class:
-                return ListElement::string();
+                return ListElement::string(!$type->nullable());
             case ObjectType::class:
                 $class = $element->class;
 
                 if ($class === \DateInterval::class) {
-                    return ListElement::time();
+                    return ListElement::time(!$type->nullable());
                 }
 
                 throw new \Flow\Parquet\Exception\RuntimeException($class . ' can\'t be converted to any parquet columns.');
             case ListType::class:
-                return ListElement::list($this->flowListToParquetList($element));
+                return ListElement::list($this->flowListToParquetList($element), !$type->nullable());
             case MapType::class:
                 return ListElement::map(
                     $this->flowMapKeyToParquetMapKey($element->key()),
-                    $this->flowMapValueToParquetMapValue($element->value())
+                    $this->flowMapValueToParquetMapValue($element->value()),
+                    !$type->nullable()
                 );
             case StructureType::class:
-                return ListElement::structure($this->flowStructureToParquetStructureElements($element));
+                return ListElement::structure($this->flowStructureToParquetStructureElements($element), !$type->nullable());
         }
 
         throw new RuntimeException($element::class . ' is not supported.');
@@ -141,50 +143,51 @@ final class SchemaConverter
             case ScalarType::class:
                 switch ($mapValueType->type()) {
                     case ScalarType::FLOAT:
-                        return ParquetSchema\MapValue::float();
+                        return ParquetSchema\MapValue::float(!$mapValueType->nullable());
                     case ScalarType::INTEGER:
-                        return ParquetSchema\MapValue::int64();
+                        return ParquetSchema\MapValue::int64(!$mapValueType->nullable());
                     case ScalarType::STRING:
-                        return ParquetSchema\MapValue::string();
+                        return ParquetSchema\MapValue::string(!$mapValueType->nullable());
                     case ScalarType::BOOLEAN:
-                        return ParquetSchema\MapValue::boolean();
+                        return ParquetSchema\MapValue::boolean(!$mapValueType->nullable());
                 }
 
                 break;
             case UuidType::class:
-                return ParquetSchema\MapValue::uuid();
+                return ParquetSchema\MapValue::uuid(!$mapValueType->nullable());
             case DateTimeType::class:
-                return ParquetSchema\MapValue::datetime();
+                return ParquetSchema\MapValue::datetime(!$mapValueType->nullable());
             case JsonType::class:
-                return ParquetSchema\MapValue::json();
+                return ParquetSchema\MapValue::json(!$mapValueType->nullable());
             case XMLType::class:
             case XMLElementType::class:
-                return ParquetSchema\MapValue::string();
+                return ParquetSchema\MapValue::string(!$mapValueType->nullable());
             case ObjectType::class:
                 $class = $mapValueType->class;
 
                 if (\is_a($class, \DateTimeInterface::class, true)) {
-                    return ParquetSchema\MapValue::datetime();
+                    return ParquetSchema\MapValue::datetime(!$mapValueType->nullable());
                 }
 
-                if ($class === \Flow\ETL\PHP\Value\Uuid::class) {
-                    return ParquetSchema\MapValue::string();
+                if ($class === Uuid::class) {
+                    return ParquetSchema\MapValue::string(!$mapValueType->nullable());
                 }
 
                 if ($class === \DateInterval::class) {
-                    return ParquetSchema\MapValue::time();
+                    return ParquetSchema\MapValue::time(!$mapValueType->nullable());
                 }
 
                 throw new \Flow\Parquet\Exception\RuntimeException($class . ' can\'t be converted to any parquet columns.');
             case ListType::class:
-                return ParquetSchema\MapValue::list($this->flowListToParquetList($mapValueType));
+                return ParquetSchema\MapValue::list($this->flowListToParquetList($mapValueType), !$mapValueType->nullable());
             case MapType::class:
                 return ParquetSchema\MapValue::map(
                     $this->flowMapKeyToParquetMapKey($mapValueType->key()),
-                    $this->flowMapValueToParquetMapValue($mapValueType->value())
+                    $this->flowMapValueToParquetMapValue($mapValueType->value()),
+                    !$mapValueType->nullable()
                 );
             case StructureType::class:
-                return ParquetSchema\MapValue::structure(...$this->flowStructureToParquetStructureElements($mapValueType));
+                return ParquetSchema\MapValue::structure($this->flowStructureToParquetStructureElements($mapValueType), !$mapValueType->nullable());
         }
 
         throw new RuntimeException($mapValueType::class . ' is not supported.');
@@ -195,7 +198,7 @@ final class SchemaConverter
         $class = $type->class;
 
         if ($class === \DateInterval::class) {
-            return FlatColumn::time($name);
+            return FlatColumn::time($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
         }
 
         throw new RuntimeException($type->toString() . ' can\'t be converted to any parquet columns.');
@@ -205,13 +208,13 @@ final class SchemaConverter
     {
         switch ($type->type()) {
             case ScalarType::FLOAT:
-                return FlatColumn::float($name);
+                return FlatColumn::float($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case ScalarType::INTEGER:
-                return FlatColumn::int64($name);
+                return FlatColumn::int64($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case ScalarType::STRING:
-                return FlatColumn::string($name);
+                return FlatColumn::string($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case ScalarType::BOOLEAN:
-                return FlatColumn::boolean($name);
+                return FlatColumn::boolean($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
 
             default:
                 throw new RuntimeException($type->type() . ' is not supported.');
@@ -235,26 +238,27 @@ final class SchemaConverter
             case ScalarType::class:
                 return $this->flowScalarToParquetFlat($type, $name);
             case DateTimeType::class:
-                return FlatColumn::datetime($name);
+                return FlatColumn::datetime($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case UuidType::class:
-                return FlatColumn::uuid($name);
+                return FlatColumn::uuid($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case JsonType::class:
-                return FlatColumn::json($name);
+                return FlatColumn::json($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case XMLType::class:
             case XMLElementType::class:
-                return FlatColumn::string($name);
+                return FlatColumn::string($name, $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case ObjectType::class:
                 return $this->flowObjectToParquetFlat($type, $name);
             case ListType::class:
-                return NestedColumn::list($name, $this->flowListToParquetList($type));
+                return NestedColumn::list($name, $this->flowListToParquetList($type), $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case MapType::class:
                 return NestedColumn::map(
                     $name,
                     $this->flowMapKeyToParquetMapKey($type->key()),
-                    $this->flowMapValueToParquetMapValue($type->value())
+                    $this->flowMapValueToParquetMapValue($type->value()),
+                    $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED
                 );
             case StructureType::class:
-                return NestedColumn::struct($name, $this->flowStructureToParquetStructureElements($type));
+                return NestedColumn::struct($name, $this->flowStructureToParquetStructureElements($type), $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
         }
 
         throw new RuntimeException($type::class . ' is not supported.');

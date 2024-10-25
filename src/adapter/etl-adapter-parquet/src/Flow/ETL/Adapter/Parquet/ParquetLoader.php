@@ -117,9 +117,9 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
     private function inferSchema(Rows $rows) : void
     {
         if ($this->inferredSchema === null) {
-            $this->inferredSchema = $rows->schema();
+            $this->inferredSchema = $rows->schema()->makeNullable();
         } else {
-            $this->inferredSchema = $this->inferredSchema->merge($rows->schema());
+            $this->inferredSchema = $this->inferredSchema->merge($rows->schema())->makeNullable();
         }
     }
 

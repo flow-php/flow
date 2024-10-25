@@ -54,7 +54,11 @@ final class ParquetFile
         $metadata = $this->stream->read($metadataLength, -($metadataLength + 8));
 
         $thriftMetadata = new FileMetaData();
-        $thriftMetadata->read(new TCompactProtocol(new TMemoryBuffer($metadata)));
+        $thriftMetadata->read(
+            new TCompactProtocol(
+                new TMemoryBuffer($metadata)
+            )
+        );
 
         $this->metadata = Metadata::fromThrift($thriftMetadata, $this->options);
 

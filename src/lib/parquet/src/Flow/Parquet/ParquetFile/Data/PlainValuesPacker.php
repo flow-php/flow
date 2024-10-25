@@ -70,6 +70,10 @@ final class PlainValuesPacker
                 break;
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
                 switch ($column->logicalType()?->name()) {
+                    case LogicalType::UUID:
+                        $this->writer->writeStrings($parquetValues);
+
+                        break;
                     case LogicalType::DECIMAL:
                         /**
                          * @phpstan-ignore-next-line
@@ -87,7 +91,6 @@ final class PlainValuesPacker
                 break;
             case PhysicalType::BYTE_ARRAY:
                 switch ($column->logicalType()?->name()) {
-                    case LogicalType::UUID:
                     case LogicalType::JSON:
                     case LogicalType::STRING:
                         $this->writer->writeStrings($parquetValues);
