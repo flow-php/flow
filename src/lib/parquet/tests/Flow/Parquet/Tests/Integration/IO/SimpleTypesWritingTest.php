@@ -20,6 +20,26 @@ final class SimpleTypesWritingTest extends TestCase
         }
     }
 
+    public function test_writing_array_of_ints() : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(FlatColumn::int32('array_of_ints', Schema\Repetition::REPEATED));
+
+        $writer->write($path, $schema, $inputData = [
+            ['array_of_ints' => [1, 2, 3]],
+            ['array_of_ints' => [4, 5, 6]],
+        ]);
+
+        self::assertEquals(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+        self::assertTrue(\file_exists($path));
+        \unlink($path);
+    }
+
     public function test_writing_bool_column() : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';

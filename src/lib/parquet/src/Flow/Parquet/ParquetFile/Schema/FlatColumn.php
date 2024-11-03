@@ -137,9 +137,9 @@ final class FlatColumn implements Column
         return new self($name, PhysicalType::INT64, ConvertedType::TIME_MICROS, LogicalType::time(), $repetition);
     }
 
-    public static function uuid(string $string, Repetition $repetition = Repetition::OPTIONAL) : self
+    public static function uuid(string $uuid, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::uuid(), $repetition);
+        return new self($uuid, PhysicalType::FIXED_LEN_BYTE_ARRAY, null, LogicalType::uuid(), $repetition, typeLength: 16);
     }
 
     public function __debugInfo() : ?array
