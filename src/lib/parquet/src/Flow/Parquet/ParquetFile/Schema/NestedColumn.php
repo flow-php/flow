@@ -250,23 +250,6 @@ final class NestedColumn implements Column
         return $this->logicalType()?->name() === 'LIST' || $this->convertedType() === ConvertedType::LIST;
     }
 
-    public function isListElement() : bool
-    {
-        if ($this->parent !== null) {
-            // element
-            if ($this->parent->logicalType()?->name() === 'LIST' || $this->parent->convertedType() === ConvertedType::LIST) {
-                return true;
-            }
-
-            // list.element
-            if ($this->parent->parent()?->logicalType()?->name() === 'LIST' || $this->parent->parent()?->convertedType() === ConvertedType::LIST) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public function isMap() : bool
     {
         return $this->logicalType()?->name() === 'MAP' || $this->convertedType() === ConvertedType::MAP;
@@ -289,11 +272,6 @@ final class NestedColumn implements Column
         return false;
     }
 
-    public function isRequired() : bool
-    {
-        return $this->repetition !== Repetition::OPTIONAL;
-    }
-
     public function isStruct() : bool
     {
         if ($this->isMap()) {
@@ -301,19 +279,6 @@ final class NestedColumn implements Column
         }
 
         if ($this->isList()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function isStructElement() : bool
-    {
-        if ($this->isMapElement()) {
-            return false;
-        }
-
-        if ($this->isListElement()) {
             return false;
         }
 

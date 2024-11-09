@@ -87,4 +87,9 @@ final class NestedColumnTest extends TestCase
             \array_keys($column->childrenFlat())
         );
     }
+
+    public function test_is_map_on_a_map_column() : void
+    {
+        self::assertTrue(NestedColumn::map('map', MapKey::int32(), MapValue::string())->isMap());
+    }
 }

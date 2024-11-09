@@ -33,7 +33,7 @@ final class DremelStructsTest extends TestCase
 
         self::assertEquals($expectedOutput, $assembled->rows);
         self::assertEquals($repetitionLevels, $shredded->repetitionLevels);
-        // self::assertEquals($definitionLevels, $shredded->definitionLevels);
+        self::assertEquals($definitionLevels, $shredded->definitionLevels);
         self::assertEquals($values, $shredded->values);
     }
 

@@ -16,17 +16,9 @@ interface Column
 
     public function isList() : bool;
 
-    public function isListElement() : bool;
-
     public function isMap() : bool;
 
-    public function isMapElement() : bool;
-
-    public function isRequired() : bool;
-
     public function isStruct() : bool;
-
-    public function isStructElement() : bool;
 
     public function logicalType() : ?LogicalType;
 

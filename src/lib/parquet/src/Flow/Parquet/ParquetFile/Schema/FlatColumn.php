@@ -217,82 +217,14 @@ final class FlatColumn implements Column
         return false;
     }
 
-    public function isListElement() : bool
-    {
-        if ($this->parent !== null) {
-            // element
-            if ($this->parent->logicalType()?->name() === 'LIST') {
-                return true;
-            }
-
-            // list.element
-            if ($this->parent->parent()?->logicalType()?->name() === 'LIST') {
-                return true;
-            }
-
-            // list.element.{column}
-            if ($this->parent->parent()?->parent()?->logicalType()?->name() === 'LIST') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public function isMap() : bool
     {
         return false;
     }
 
-    public function isMapElement() : bool
-    {
-        if ($this->parent === null) {
-            return false;
-        }
-
-        if ($this->parent()?->logicalType()?->name() === 'MAP') {
-            return true;
-        }
-
-        if ($this->parent()?->parent()?->logicalType()?->name() === 'MAP') {
-            return true;
-        }
-
-        if ($this->parent()?->parent()?->parent()?->logicalType()?->name() === 'MAP') {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function isRequired() : bool
-    {
-        return $this->repetition !== Repetition::OPTIONAL;
-    }
-
     public function isStruct() : bool
     {
         return false;
-    }
-
-    public function isStructElement() : bool
-    {
-        $parent = $this->parent();
-
-        if ($parent === null) {
-            return false;
-        }
-
-        /** @var NestedColumn $parent */
-        if ($parent->isList()) {
-            return false;
-        }
-
-        if ($parent->isMap()) {
-            return false;
-        }
-
-        return true;
     }
 
     public function logicalType() : ?LogicalType

@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Flattener;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
+use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use PHPUnit\Framework\TestCase;
 
