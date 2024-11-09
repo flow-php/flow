@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\{array_to_row, rows};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
 use Flow\Filesystem\{Path, SourceStream};
@@ -64,7 +64,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                     $row['_input_file_uri'] = $fileData['stream']->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['stream']->path()->partitions(), $flowSchema);
+                $signal = yield rows(array_to_row($row, $context->entryFactory(), $fileData['stream']->path()->partitions(), $flowSchema));
 
                 $this->incrementReturnedRows();
 

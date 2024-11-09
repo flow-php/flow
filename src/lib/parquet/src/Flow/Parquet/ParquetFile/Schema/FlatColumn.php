@@ -155,7 +155,7 @@ final class FlatColumn implements Column
             'physical_type' => $this->type,
             'logical_type' => $this->logicalType,
             'converted_type' => $this->convertedType,
-            'repetition' => $this->repetition,
+            'repetition' => $this->repetition?->name,
             'precision' => $this->precision,
             'scale' => $this->scale,
             'type_length' => $this->typeLength,

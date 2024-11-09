@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\ColumnChunkReader;
 
+use Flow\Dremel\{DataAssembled, DataShredded};
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
-use Flow\Parquet\ParquetFile\Page\{ColumnData, PageHeader};
+use Flow\Parquet\ParquetFile\Page\{PageHeader};
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\{ColumnChunkReader, PageReader};
@@ -26,7 +27,7 @@ final class WholeChunkReader implements ColumnChunkReader
     }
 
     /**
-     * @return \Generator<array<mixed>>
+     * @return \Generator<array-key, DataAssembled>
      */
     public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
@@ -57,7 +58,7 @@ final class WholeChunkReader implements ColumnChunkReader
             $dictionary = null;
         }
 
-        $columnData = ColumnData::initialize($column);
+        $data = new DataShredded();
 
         $rowsToRead = $columnChunk->valuesCount();
 
@@ -65,25 +66,24 @@ final class WholeChunkReader implements ColumnChunkReader
             $dataHeader = $dictionary ? $this->readHeader($pageStream) : $header;
 
             /** There are no more pages in given column chunk */
-            if ($dataHeader === null || $columnData->size() >= $rowsToRead || $dataHeader->type()->isDataPage() === false) {
+            if ($dataHeader === null || $data->size() >= $rowsToRead || $dataHeader->type()->isDataPage() === false) {
                 $yieldedRows = 0;
 
-                /** @var array $row */
-                foreach ($this->dataBuilder->build($columnData, $column) as $row) {
-                    yield $row;
-                    $yieldedRows++;
+                $assembled = $this->dataBuilder->build($data, $column);
 
-                    if ($yieldedRows >= $rowsToRead) {
-                        \fclose($pageStream);
+                yield $assembled;
+                $yieldedRows += $assembled->size();
 
-                        return;
-                    }
+                if ($yieldedRows >= $rowsToRead) {
+                    \fclose($pageStream);
+
+                    return;
                 }
 
                 break;
             }
 
-            $columnData = $columnData->merge($this->pageReader->readData(
+            $data = $data->merge($this->pageReader->readData(
                 $column,
                 $dataHeader,
                 $columnChunk->codec(),

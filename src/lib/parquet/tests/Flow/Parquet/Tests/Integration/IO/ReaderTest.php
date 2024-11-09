@@ -44,7 +44,7 @@ final class ReaderTest extends TestCase
 
         foreach ($file->values() as $row) {
             foreach ($row as $column => $value) {
-                self::assertNotNull($value);
+                self::assertNotNull($value, "Column {$column} is null");
             }
             $rows++;
         }

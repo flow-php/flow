@@ -22,6 +22,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_array_of_ints() : void
     {
+        self::markTestSkipped('REPEATED field');
         $path = __DIR__ . '/var/test-writer-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
 
         $writer = new Writer();

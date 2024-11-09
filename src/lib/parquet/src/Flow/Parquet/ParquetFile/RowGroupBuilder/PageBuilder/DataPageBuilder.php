@@ -41,7 +41,16 @@ final class DataPageBuilder
 
     private function buildDataPage(array $rows, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
     {
-        $shredded = (new Dremel())->shred($rows, $column->maxDefinitionsLevel());
+        $columnIterator = $column;
+
+        while ($columnIterator->parent()) {
+            $repetitions[] = $columnIterator->repetition()->name;
+            $columnIterator = $columnIterator->parent();
+        }
+
+        $repetitions = \array_values(\array_reverse($repetitions));
+
+        $shredded = (new Dremel())->shred($rows, $repetitions);
 
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
 
@@ -49,11 +58,11 @@ final class DataPageBuilder
         $pageWriter = new BinaryBufferWriter($pageBuffer);
 
         if ($column->maxRepetitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($column->maxRepetitionsLevel()), $shredded->repetitions));
+            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($column->maxRepetitionsLevel()), $shredded->repetitionLevels));
         }
 
         if ($column->maxDefinitionsLevel() > 0) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($column->maxDefinitionsLevel()), $shredded->definitions));
+            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($column->maxDefinitionsLevel()), $shredded->definitionLevels));
         }
 
         if ($dictionary && $indices) {
@@ -72,7 +81,7 @@ final class DataPageBuilder
                 encoding: (\is_array($dictionary) && \is_array($indices)) ? Encodings::RLE_DICTIONARY : Encodings::PLAIN,
                 repetitionLevelEncoding: Encodings::RLE,
                 definitionLevelEncoding: Encodings::RLE,
-                valuesCount: \count($shredded->definitions)
+                valuesCount: \count($shredded->definitionLevels)
             ),
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
@@ -98,7 +107,16 @@ final class DataPageBuilder
 
         $statistics = (new StatisticsBuilder($this->dataConverter))->build($column, $statistics);
 
-        $shredded = (new Dremel())->shred($rows, $column->maxDefinitionsLevel());
+        $columnIterator = $column;
+
+        while ($columnIterator->parent()) {
+            $repetitions[] = $columnIterator->repetition()->name;
+            $columnIterator = $columnIterator->parent();
+        }
+
+        $repetitions = \array_values(\array_reverse($repetitions));
+
+        $shredded = (new Dremel())->shred($rows, $repetitions);
 
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
 
@@ -106,7 +124,7 @@ final class DataPageBuilder
         $pageWriter = new BinaryBufferWriter($pageBuffer);
 
         if ($column->maxRepetitionsLevel() > 0) {
-            $repetitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($column->maxRepetitionsLevel()), $shredded->repetitions);
+            $repetitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($column->maxRepetitionsLevel()), $shredded->repetitionLevels);
             $repetitionsLength = \strlen($repetitionsBuffer);
         } else {
             $repetitionsBuffer = '';
@@ -114,7 +132,7 @@ final class DataPageBuilder
         }
 
         if ($column->maxDefinitionsLevel() > 0) {
-            $definitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($column->maxDefinitionsLevel()), $shredded->definitions);
+            $definitionsBuffer = (new RLEBitPackedPacker($rleBitPackedHybrid))->pack(BitWidth::calculate($column->maxDefinitionsLevel()), $shredded->definitionLevels);
             $definitionsLength = \strlen($definitionsBuffer);
         } else {
             $definitionsBuffer = '';
@@ -135,8 +153,8 @@ final class DataPageBuilder
             \strlen($pageBuffer) + $repetitionsLength + $definitionsLength,
             dataPageHeader: null,
             dataPageHeaderV2: new DataPageHeaderV2(
-                valuesCount: \count($shredded->definitions),
-                nullsCount: \count(\array_filter($shredded->definitions, fn (int $definition) : bool => $definition === 0)),
+                valuesCount: \count($shredded->definitionLevels),
+                nullsCount: \count(\array_filter($shredded->definitionLevels, fn (int $definition) : bool => $definition === 0)),
                 rowsCount: \count($rows),
                 encoding: (\is_array($dictionary) && \is_array($indices)) ? Encodings::RLE_DICTIONARY : Encodings::PLAIN,
                 definitionsByteLength: $definitionsLength,

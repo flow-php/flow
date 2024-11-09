@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Flow\Dremel\{DataAssembled};
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
@@ -93,18 +94,20 @@ final class ParquetFile
             $skipRows = $offset - $columnChunk->rowsOffset;
 
             /** @var array $row */
-            foreach ($reader->read($columnChunk->chunk, $column, $this->stream) as $row) {
-                if ($skipRows >= 0 && $skipRows > $skippedRows) {
-                    $skippedRows++;
+            foreach ($reader->read($columnChunk->chunk, $column, $this->stream) as $assembled) {
+                foreach ($assembled->rows as $row) {
+                    if ($skipRows >= 0 && $skipRows > $skippedRows) {
+                        $skippedRows++;
 
-                    continue;
-                }
+                        continue;
+                    }
 
-                yield $row;
-                $yieldedRows++;
+                    yield $row;
+                    $yieldedRows++;
 
-                if ($limit !== null && $yieldedRows >= $limit) {
-                    return;
+                    if ($limit !== null && $yieldedRows >= $limit) {
+                        return;
+                    }
                 }
             }
         }
@@ -201,13 +204,20 @@ final class ParquetFile
         throw new RuntimeException('Unknown column type');
     }
 
+    /**
+     * @return \Generator<array-key, DataAssembled>
+     */
     private function readFlat(FlatColumn $column, ?int $limit = null, ?int $offset = null) : \Generator
     {
         return $this->readChunks($column, $limit, $offset);
     }
 
+    /**
+     * @return \Generator<array-key, DataAssembled>
+     */
     private function readList(NestedColumn $listColumn, ?int $limit = null, ?int $offset = null) : \Generator
     {
+
         $elementColumn = $listColumn->getListElement();
 
         if ($elementColumn instanceof FlatColumn) {
@@ -325,11 +335,20 @@ final class ParquetFile
                 $structs = null;
 
                 foreach ($structsCollection as $structData) {
+                    if (!\is_array($structs)) {
+                        $structs = [];
+                    }
+
                     $structs[] = $structData;
                 }
 
-                yield $structs;
+                if ($structColumn->repetition() === Schema\Repetition::REQUIRED && $structs === null) {
+                    yield [];
+                } else {
+                    yield $structs;
+                }
             } else {
+
                 $row = [];
 
                 $isNull = true;

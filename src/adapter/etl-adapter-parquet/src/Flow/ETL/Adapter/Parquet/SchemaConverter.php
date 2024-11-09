@@ -66,35 +66,35 @@ final class SchemaConverter
             case ScalarType::class:
                 switch ($element->type()) {
                     case ScalarType::FLOAT:
-                        return ListElement::float(!$type->nullable());
+                        return ListElement::float(!$element->nullable());
                     case ScalarType::INTEGER:
-                        return ListElement::int64(!$type->nullable());
+                        return ListElement::int64(!$element->nullable());
                     case ScalarType::STRING:
-                        return ListElement::string(!$type->nullable());
+                        return ListElement::string(!$element->nullable());
                     case ScalarType::BOOLEAN:
-                        return ListElement::boolean(!$type->nullable());
+                        return ListElement::boolean(!$element->nullable());
                 }
 
                 break;
             case DateTimeType::class:
-                return ListElement::datetime(!$type->nullable());
+                return ListElement::datetime(!$element->nullable());
             case UuidType::class:
-                return ListElement::uuid(!$type->nullable());
+                return ListElement::uuid(!$element->nullable());
             case JsonType::class:
-                return ListElement::json(!$type->nullable());
+                return ListElement::json(!$element->nullable());
             case XMLType::class:
             case XMLElementType::class:
-                return ListElement::string(!$type->nullable());
+                return ListElement::string(!$element->nullable());
             case ObjectType::class:
                 $class = $element->class;
 
                 if ($class === \DateInterval::class) {
-                    return ListElement::time(!$type->nullable());
+                    return ListElement::time(!$element->nullable());
                 }
 
                 throw new \Flow\Parquet\Exception\RuntimeException($class . ' can\'t be converted to any parquet columns.');
             case ListType::class:
-                return ListElement::list($this->flowListToParquetList($element), !$type->nullable());
+                return ListElement::list($this->flowListToParquetList($element), !$element->nullable());
             case MapType::class:
                 return ListElement::map(
                     $this->flowMapKeyToParquetMapKey($element->key()),
@@ -102,7 +102,7 @@ final class SchemaConverter
                     !$type->nullable()
                 );
             case StructureType::class:
-                return ListElement::structure($this->flowStructureToParquetStructureElements($element), !$type->nullable());
+                return ListElement::structure($this->flowStructureToParquetStructureElements($element), !$element->nullable());
         }
 
         throw new RuntimeException($element::class . ' is not supported.');

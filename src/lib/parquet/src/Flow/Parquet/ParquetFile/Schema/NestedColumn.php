@@ -44,10 +44,10 @@ final class NestedColumn implements Column
     {
         return new self(
             $schemaElement->name,
-            $schemaElement->repetition_type ? Repetition::from($schemaElement->repetition_type) : null,
+            $schemaElement->repetition_type !== null ? Repetition::from($schemaElement->repetition_type) : null,
             $children,
-            $schemaElement->converted_type ? ConvertedType::from($schemaElement->converted_type) : null,
-            $schemaElement->logicalType ? LogicalType::fromThrift($schemaElement->logicalType) : null
+            $schemaElement->converted_type !== null ? ConvertedType::from($schemaElement->converted_type) : null,
+            $schemaElement->logicalType !== null ? LogicalType::fromThrift($schemaElement->logicalType) : null
         );
     }
 
@@ -122,7 +122,7 @@ final class NestedColumn implements Column
             'physical_type' => $this->type(),
             'logical_type' => $this->logicalType,
             'converted_type' => $this->convertedType,
-            'repetition' => $this->repetition,
+            'repetition' => $this->repetition?->name,
             'max_definitions_level' => $this->maxDefinitionsLevel(),
             'max_repetitions_level' => $this->maxRepetitionsLevel(),
         ];
@@ -337,7 +337,7 @@ final class NestedColumn implements Column
         if ($this->repetition === null) {
             $level = 0;
         } else {
-            $level = $this->repetition() === Repetition::REQUIRED ? 0 : 1;
+            $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
         }
 
         return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;

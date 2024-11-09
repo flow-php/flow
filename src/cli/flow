@@ -8,6 +8,7 @@ use Flow\CLI\Command\PipelineRunCommand;
 use Flow\CLI\Command\FileSchemaCommand;
 use Flow\CLI\FlowVersion;
 use Flow\ParquetViewer\Command\ReadDataCommand;
+use Flow\ParquetViewer\Command\ReadDDLCommand;
 use Flow\ParquetViewer\Command\ReadMetadataCommand;
 use Symfony\Component\Console\Application;
 
@@ -45,6 +46,7 @@ $application = new Application('Flow PHP - Data processing framework', $pharRunt
 
 $application->add((new ReadDataCommand())->setName('parquet:read')->setAliases(['parquet:read:data']));
 $application->add((new ReadMetadataCommand())->setName('parquet:read:metadata'));
+$application->add((new ReadDDLCommand())->setName('parquet:read:ddl'));
 $application->add((new PipelineRunCommand())->setName('pipeline:run')->setAliases(['run']));
 $application->add((new FileReadCommand())->setName('file:read')->setAliases(['read']));
 $application->add((new FileSchemaCommand())->setName('file:schema')->setAliases(['schema']));

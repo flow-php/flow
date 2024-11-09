@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer;
 
-use Flow\ParquetViewer\Command\{ReadDataCommand, ReadMetadataCommand};
+use Flow\ParquetViewer\Command\{ReadDDLCommand, ReadDataCommand, ReadMetadataCommand};
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\{CompleteCommand, DumpCompletionCommand, HelpCommand, ListCommand};
 
@@ -19,6 +19,7 @@ final class Parquet extends Application
             new DumpCompletionCommand(),
             new ReadMetadataCommand(),
             new ReadDataCommand(),
+            new ReadDDLCommand(),
         ];
     }
 }

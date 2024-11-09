@@ -24,6 +24,10 @@ final class PlainValueUnpacker
      */
     public function unpack(FlatColumn $column, int $total) : array
     {
+        if ($total === 0) {
+            return [];
+        }
+
         return match ($column->type()) {
             PhysicalType::INT32 => match ($column->convertedType()) {
                 ConvertedType::INT_16 => $this->reader->readInts16($total),

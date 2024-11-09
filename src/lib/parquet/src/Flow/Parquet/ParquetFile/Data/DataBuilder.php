@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data;
 
-use Flow\Dremel\Dremel;
+use Flow\Dremel\{DataAssembled, DataShredded, Dremel};
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class DataBuilder
@@ -16,31 +15,63 @@ final class DataBuilder
     ) {
     }
 
-    public function build(ColumnData $columnData, FlatColumn $column) : \Generator
+    public function build(DataShredded $data, FlatColumn $column) : DataAssembled
     {
+        $repetitions = [];
+
+        $columnIterator = $column;
+
+        while ($columnIterator->parent()) {
+            $repetitions[] = $columnIterator->repetition()->name;
+            $columnIterator = $columnIterator->parent();
+        }
+
+        $repetitions = \array_values(\array_reverse($repetitions));
+
         $dremel = new Dremel();
 
-        foreach ($dremel->assemble($columnData->repetitions, $columnData->definitions, $columnData->values, $column->maxDefinitionsLevel(), $column->maxRepetitionsLevel()) as $value) {
-            yield $this->enrichData($value, $column);
-        }
+        //        if ($column->name() === 'f') {
+        //            ddj([
+        //               'flat_path' => $column->flatPath(),
+        //               'repetition levels' => $data->repetitionLevels,
+        //               'definition levels' => $data->definitionLevels,
+        //               'values' => $data->values,
+        //               'max definition level' => $column->maxDefinitionsLevel(),
+        //               'max repetition level' => $column->maxRepetitionsLevel(),
+        //               'repetitions' => $repetitions,
+        //                'data' => $this->enrichData($dremel->assemble($data, $repetitions, $column->maxDefinitionsLevel()), $column)
+        //            ]);
+        //        }
+
+        return $this->enrichData($dremel->assemble($data, $repetitions, $column->maxDefinitionsLevel()), $column);
     }
 
-    private function enrichData(mixed $value, FlatColumn $column) : mixed
+    private function enrichData(DataAssembled $assembled, FlatColumn $column) : DataAssembled
     {
-        if ($value === null) {
-            return null;
-        }
+        $enriched = [];
 
-        if (\is_array($value)) {
-            $enriched = [];
+        foreach ($assembled->rows as $value) {
+            if ($value === null) {
+                $enriched[] = null;
 
-            foreach ($value as $val) {
-                $enriched[] = $this->dataConverter->fromParquetType($column, $val);
+                continue;
             }
 
-            return $enriched;
+            if (\is_array($value)) {
+                $enrichedRow = [];
+
+                foreach ($value as $val) {
+                    $enrichedRow[] = $this->dataConverter->fromParquetType($column, $val);
+                }
+
+                $enriched[] = $enrichedRow;
+
+                continue;
+            }
+
+            $enriched[] = $this->dataConverter->fromParquetType($column, $value);
         }
 
-        return $this->dataConverter->fromParquetType($column, $value);
+        return new DataAssembled($enriched, $assembled->shredded);
     }
 }

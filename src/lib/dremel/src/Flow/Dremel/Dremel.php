@@ -4,164 +4,222 @@ declare(strict_types=1);
 
 namespace Flow\Dremel;
 
-use function Flow\Parquet\array_flatten;
-use Flow\Dremel\Exception\InvalidArgumentException;
-
 final class Dremel
 {
     public function __construct()
     {
     }
 
-    /**
-     * @param array<int> $repetitions
-     * @param array<int> $definitions
-     * @param array<mixed> $values
-     *
-     * @psalm-suppress UndefinedInterfaceMethod
-     */
-    public function assemble(array $repetitions, array $definitions, array $values, int $maxDefinitionLevel, int $maxRepetitionLevel) : array
+    public function assemble(DataShredded $data, array $repetitions, int $maxDefinitionLevel) : DataAssembled
     {
-        $this->assertInput($repetitions, $definitions);
-
-        $output = [];
+        $totalIterations = $data->size();
         $valueIndex = 0;
 
-        if ($maxRepetitionLevel === 0) {
-            foreach ($definitions as $definition) {
-                if ($definition === 0) {
-                    $output[] = null;
-                } else {
-                    $output[] = $values[$valueIndex] ?? null;
-                    $valueIndex++;
-                }
-            }
+        $rows = [];
 
-            return $output;
+        for ($iteration = 0; $iteration < $totalIterations; $iteration++) {
+            $definitionLevel = $data->definitionLevels[$iteration];
+            $repetitionLevel = $data->repetitionLevels[$iteration];
+
+            $this->buildValue($element, $repetitions, $maxDefinitionLevel, $definitionLevel, $data->values, $valueIndex);
+
+            $this->updateStack($repetitionLevel, $rows, $element);
+            unset($element);
         }
 
-        $stack = new Stack();
-
-        foreach ($definitions as $definitionIndex => $definition) {
-            $repetition = $repetitions[$definitionIndex];
-
-            if ($repetition === 0 && $definition !== 0) {
-                $stack->push(new ListNode($maxRepetitionLevel));
-            }
-
-            if ($repetition === 0 && $definition === 0) {
-                $stack->push(new NullNode());
-
-                continue;
-            }
-
-            if ($definition + 1 >= $maxDefinitionLevel) {
-                /** @phpstan-ignore-next-line  */
-                $stack->last()->push(
-                    $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
-                    $repetition === 0 ? $maxRepetitionLevel : $repetition
-                );
-            }
-        }
-
-        return $stack->dropFlat();
+        return new DataAssembled($rows, $data);
     }
 
     /**
      * @param array<mixed> $data
      */
-    public function shred(array $data, int $maxDefinitionLevel) : DataShredded
+    public function shred(array $data, array $repetitions) : DataShredded
     {
-        $definitions = [];
-        $this->buildDefinitions($data, $definitions, $maxDefinitionLevel);
-        $repetitions = [];
-        $this->buildRepetitions($data, 0, 0, $repetitions);
+        $repetitionLevels = [];
+        $definitionLevels = [];
+        $values = [];
+
+        $this->recurseShred($data, $repetitionLevels, $definitionLevels, $values, $repetitions, 0, 0);
 
         return new DataShredded(
-            $repetitions,
-            $definitions,
-            \array_values(\array_filter(array_flatten($data), static fn ($item) => $item !== null))
+            $repetitionLevels,
+            $definitionLevels,
+            $values,
         );
     }
 
-    private function assertInput(array $repetitions, array $definitions) : void
+    private function buildValue(?array &$element, array $repetitions, int $maxDefinitionLevel, int $definitionLevel, array $values, int &$valueIndex, int $level = 0) : void
     {
-        if (\count($repetitions) !== 0) {
-            if (\count(\array_unique([\count($repetitions), \count($definitions)])) !== 1) {
-                throw new InvalidArgumentException('repetitions, definitions and values count must be exactly the same, repetitions: ' . \count($repetitions) . ', definitions: ' . \count($definitions));
+        $repetition = array_shift($repetitions);
+
+        if ($level === $maxDefinitionLevel) {
+            $element = $values[$valueIndex];
+            $valueIndex++;
+
+            return;
+        }
+
+        if ($level === $definitionLevel) {
+            if ($repetition === 'REPEATED') {
+                $element = [];
+
+                return;
+            }
+
+            if ($repetition === 'OPTIONAL') {
+                $element = null;
+
+                return;
             }
         }
 
-        if (\count($repetitions)) {
-            if ($repetitions[0] !== 0) {
-                throw new InvalidArgumentException('Repetitions must start with zero, otherwise it probably means that your data was split into multiple pages in which case proper reconstruction of rows is impossible.');
-            }
+        if ($repetition === 'REQUIRED') {
+            $this->buildValue($element, $repetitions, $maxDefinitionLevel, $definitionLevel, $values, $valueIndex, $level);
+
+            return;
+        }
+
+        if ($repetition === 'REPEATED') {
+            $element = [];
+            $this->buildValue($element[], $repetitions, $maxDefinitionLevel, $definitionLevel, $values, $valueIndex, $level + 1);
+
+            return;
+        }
+
+        if ($repetition === 'OPTIONAL') {
+            $this->buildValue($element, $repetitions, $maxDefinitionLevel, $definitionLevel, $values, $valueIndex, $level + 1);
+
+            return;
         }
     }
 
-    private function buildDefinitions(array $data, array &$definitions, int $maxDefinitionLevel, int $level = 1) : void
-    {
-        $previousElementType = null;
+    private function recurseShred(
+        array $data,
+        array &$repetitionLevels,
+        array &$definitionLevels,
+        array &$values,
+        array $repetitions,
+        int $currentRepetitionLevel,
+        int $currentDefinitionLevel,
+        int $level = 0,
+    ) : void {
 
-        foreach ($data as $key => $value) {
-            if (\is_array($value)) {
-                if (!\count($value)) {
-                    $definitions[] = $level;
+        foreach ($data as $rowIndex => $element) {
+            if ($element === null) {
+                $definitionLevels[] = $currentDefinitionLevel;
+
+                if (\count($repetitionLevels) === 0 || $rowIndex === 0) {
+                    $repetitionLevels[] = $currentRepetitionLevel;
                 } else {
-                    $this->buildDefinitions($value, $definitions, $maxDefinitionLevel, $level + 1);
+                    $repetitionLevels[] = $currentRepetitionLevel + $level;
                 }
-            } else {
-                if ($value === null) {
-                    if ($level === 1 || $previousElementType === 'array') {
-                        $definitions[] = 0;
+
+                // dj([
+                //    'position' => '$element === null',
+                //    'row_index' => $rowIndex,
+                //    'level' => $level,
+                //    'element' => $element,
+                //    'values' => $values,
+                //    'repetition_levels' => $repetitionLevels,
+                //    'definition_levels' => $definitionLevels,
+                //    'repetition' => $repetitions[$currentDefinitionLevel],
+                //    'repetitions' => $repetitions,
+                //    'current_repetitionLevel' => $currentRepetitionLevel,
+                //    'current_definitionLevel' => $currentDefinitionLevel,
+                // ]);
+
+                continue;
+            }
+
+            if (\is_array($element)) {
+                if (!\count($element)) {
+                    $definitionLevels[] = $repetitions[$currentDefinitionLevel] !== 'REQUIRED' ? $currentDefinitionLevel + 1 : $currentDefinitionLevel;
+
+                    if (\count($repetitionLevels) === 0 || $rowIndex === 0) {
+                        $repetitionLevels[] = $currentRepetitionLevel;
                     } else {
-                        $definitions[] = $level;
+                        $repetitionLevels[] = $currentRepetitionLevel + $level;
                     }
-                } else {
-                    $definitions[] = $maxDefinitionLevel;
-                }
-            }
 
-            $previousElementType = \gettype($value);
-        }
-    }
-
-    private function buildRepetitions(array $data, int $currentLevel, int $topIndex, array &$output) : void
-    {
-        foreach ($data as $index => $item) {
-            if (\is_array($item)) {
-
-                if (!\count($item)) {
-                    $output[] = 0;
+                    // dj([
+                    //    'position' => 'is_array($element) && !count(element)',
+                    //    'row_index' => $rowIndex,
+                    //    'level' => $level,
+                    //    'element' => $element,
+                    //    'values' => $values,
+                    //    'repetition_levels' => $repetitionLevels,
+                    //    'definition_levels' => $definitionLevels,
+                    //    'repetition' => $repetitions[$currentDefinitionLevel],
+                    //    'repetitions' => $repetitions,
+                    //    'current_repetitionLevel' => $currentRepetitionLevel,
+                    //    'current_definitionLevel' => $currentDefinitionLevel,
+                    // ]);
 
                     continue;
                 }
 
-                $childRepetitions = [];
-                $this->buildRepetitions($item, $currentLevel + 1, $index, $childRepetitions);
+                $this->recurseShred(
+                    $element,
+                    $repetitionLevels,
+                    $definitionLevels,
+                    $values,
+                    $repetitions,
+                    $currentRepetitionLevel,
+                    $repetitions[$currentDefinitionLevel] !== 'REQUIRED' ? $currentDefinitionLevel + 2 : $currentDefinitionLevel + 1,
+                    $level + 1
+                );
 
-                foreach ($childRepetitions as $repetition) {
-                    $output[] = $repetition;
-                }
-            } else {
-                if (!\count($output)) {
-                    $output[] = $topIndex === 0 ? 0 : $currentLevel - 1;
-                } else {
-                    $output[] = $currentLevel;
-                }
+                continue;
             }
+
+            if ($element === null) {
+                $definitionLevels[] = $repetitions[$currentDefinitionLevel] !== 'REQUIRED' ? $currentDefinitionLevel + 1 : $currentDefinitionLevel;
+            } else {
+                $definitionLevels[] = \array_reduce($repetitions, fn ($carry, $item) => $carry + ($item !== 'REQUIRED' ? 1 : 0), 0);
+            }
+
+            if (\count($repetitionLevels) === 0 || $rowIndex === 0) {
+                $repetitionLevels[] = $currentRepetitionLevel;
+            } else {
+                $repetitionLevels[] = $currentRepetitionLevel + $level;
+            }
+
+            $values[] = $element;
+
+            // dj([
+            //    'position' => 'end of rows loop',
+            //    'row_index' => $rowIndex,
+            //    'level' => $level,
+            //    'element' => $element,
+            //    'values' => $values,
+            //    'repetition_levels' => $repetitionLevels,
+            //    'definition_levels' => $definitionLevels,
+            //    'repetition' => $repetitions[$currentDefinitionLevel],
+            //    'repetitions' => $repetitions,
+            //    'current_repetitionLevel' => $currentRepetitionLevel,
+            //    'current_definitionLevel' => $currentDefinitionLevel,
+            // ]);
         }
     }
 
-    private function value(int $definition, int $maxDefinitionLevel, array $values, int &$valueIndex) : mixed
+    private function updateStack(int $repetition, array &$stack, mixed $element) : void
     {
-        if ($definition < $maxDefinitionLevel) {
-            return null;
+        // if repetition is 0, add element as a new entry in stack
+        if ($repetition === 0) {
+            $stack[] = $element;
+
+            return;
         }
 
-        $value = $values[$valueIndex];
-        $valueIndex++;
+        // take the last element from the stack
+        $stackLastElement = &$stack[count($stack) - 1];
+        $currentElement = &$element;
 
-        return $value;
+        for ($i = 1; $i < $repetition; $i++) {
+            $stackLastElement = &$stackLastElement[count($stackLastElement) - 1];
+            $currentElement = &$currentElement[count($currentElement) - 1];
+        }
+
+        $stackLastElement = \array_merge($stackLastElement, $currentElement);
     }
 }

@@ -17,21 +17,6 @@ final class WriterValidatorTest extends TestCase
         }
     }
 
-    public function test_skipping_required_row() : void
-    {
-        $this->expectExceptionMessage('Column "string" is required');
-
-        $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
-
-        $schema = Schema::with(
-            Schema\FlatColumn::int32('id'),
-            Schema\FlatColumn::string('string')->makeRequired()
-        );
-
-        $writer->write($path, $schema, [['id' => 123]]);
-    }
-
     public function test_writing_int_value_to_string_column() : void
     {
         $this->expectExceptionMessage('Column "string" is not string, got "integer" instead');
@@ -171,5 +156,20 @@ final class WriterValidatorTest extends TestCase
         );
 
         unlink($path);
+    }
+
+    public function test_writing_row_without_required_column() : void
+    {
+        $this->expectExceptionMessage('Column "string" is required');
+
+        $writer = new Writer();
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+
+        $schema = Schema::with(
+            Schema\FlatColumn::int32('id'),
+            Schema\FlatColumn::string('string')->makeRequired()
+        );
+
+        $writer->write($path, $schema, [['id' => 123]]);
     }
 }

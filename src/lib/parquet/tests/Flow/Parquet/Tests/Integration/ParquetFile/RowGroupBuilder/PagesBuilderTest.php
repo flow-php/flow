@@ -11,7 +11,7 @@ use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DictionaryPageHeader, 
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkStatistics, PageSizeCalculator, PagesBuilder};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\{Compressions, Encodings};
+use Flow\Parquet\ParquetFile\{Compressions, Encodings, Schema};
 use Flow\Parquet\{Option, Options};
 use PHPUnit\Framework\TestCase;
 
@@ -19,18 +19,18 @@ final class PagesBuilderTest extends TestCase
 {
     public function test_building_multiple_pages_for_large_int32_column() : void
     {
-        $column = FlatColumn::int32('int32');
+        $schema = Schema::with(FlatColumn::int32('int32'));
         $values = \array_map(static fn ($i) => $i, \range(1, 1024));
 
         $options = new Options();
         $options->set(Option::PAGE_SIZE_BYTES, 1024); // 1024 / 4 = 256 - this is the total number of integers we want to keep in a single page
-        $statistics = new ColumnChunkStatistics($column);
+        $statistics = new ColumnChunkStatistics($schema->get('int32'));
 
         foreach ($values as $value) {
             $statistics->add($value);
         }
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($column, $values, $statistics);
+            ->build($schema->get('int32'), $values, $statistics);
 
         self::assertCount(4, $pages->dataPageContainers());
         self::assertEquals(
@@ -53,14 +53,14 @@ final class PagesBuilderTest extends TestCase
 
     public function test_building_pages_for_enum_columns() : void
     {
-        $column = FlatColumn::enum('enum');
+        $schema = Schema::with(FlatColumn::enum('enum'));
         $enum = [
             0 => 'RED',
             1 => 'GREEN',
             2 => 'BLUE',
         ];
         $values = \array_map(static fn ($i) => $enum[generate_random_int(0, 2)], \range(0, 99));
-        $statistics = new ColumnChunkStatistics($column);
+        $statistics = new ColumnChunkStatistics($schema->get('enum'));
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -68,7 +68,7 @@ final class PagesBuilderTest extends TestCase
 
         $options = new Options();
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($column, $values, $statistics);
+            ->build($schema->get('enum'), $values, $statistics);
 
         self::assertEquals(
             new PageHeader(
@@ -104,10 +104,10 @@ final class PagesBuilderTest extends TestCase
 
     public function test_building_pages_for_integer_column() : void
     {
-        $column = FlatColumn::int32('int32');
+        $schema = Schema::with(FlatColumn::int32('int32'));
         $values = \array_map(static fn ($i) => $i, \range(0, 99));
 
-        $statistics = new ColumnChunkStatistics($column);
+        $statistics = new ColumnChunkStatistics($schema->get('int32'));
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -115,7 +115,7 @@ final class PagesBuilderTest extends TestCase
 
         $options = new Options();
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($column, $values, $statistics);
+            ->build($schema->get('int32'), $values, $statistics);
 
         self::assertCount(1, $pages->dataPageContainers());
         self::assertEquals(
@@ -138,10 +138,10 @@ final class PagesBuilderTest extends TestCase
 
     public function test_building_pages_for_json_columns() : void
     {
-        $column = FlatColumn::json('json');
+        $schema = Schema::with(FlatColumn::json('json'));
         $faker = Factory::create();
         $values = \array_map(static fn ($i) => \json_encode(['id' => $faker->uuid], JSON_THROW_ON_ERROR), \range(0, 99));
-        $statistics = new ColumnChunkStatistics($column);
+        $statistics = new ColumnChunkStatistics($schema->get('json'));
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -149,7 +149,7 @@ final class PagesBuilderTest extends TestCase
 
         $options = new Options();
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($column, $values, $statistics);
+            ->build($schema->get('json'), $values, $statistics);
 
         self::assertNull($pages->dictionaryPageContainer());
         self::assertEquals(
@@ -172,17 +172,17 @@ final class PagesBuilderTest extends TestCase
 
     public function test_building_pages_for_string_columns_with_very_low_cardinality() : void
     {
-        $column = FlatColumn::string('string');
+        $schema = Schema::with(FlatColumn::string('string'));
         $values = \array_map(static fn ($i) => 'abcdefghij', \range(0, 99));
         $options = Options::default()->set(Option::PAGE_SIZE_BYTES, 50);
-        $statistics = new ColumnChunkStatistics($column);
+        $statistics = new ColumnChunkStatistics($schema->get('string'));
 
         foreach ($values as $value) {
             $statistics->add($value);
         }
 
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($column, $values, $statistics);
+            ->build($schema->get('string'), $values, $statistics);
 
         self::assertCount(1, $pages->dataPageContainers());
         self::assertEquals(
@@ -219,17 +219,17 @@ final class PagesBuilderTest extends TestCase
 
     public function test_building_pages_for_uuid_columns() : void
     {
-        $column = FlatColumn::string('uuid');
+        $schema = Schema::with(FlatColumn::string('uuid'));
         $faker = Factory::create();
         $values = \array_map(static fn ($i) => $faker->uuid, \range(0, 99));
-        $statistics = new ColumnChunkStatistics($column);
+        $statistics = new ColumnChunkStatistics($schema->get('uuid'));
 
         foreach ($values as $value) {
             $statistics->add($value);
         }
         $options = new Options();
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($column, $values, $statistics);
+            ->build($schema->get('uuid'), $values, $statistics);
 
         self::assertNull($pages->dictionaryPageContainer());
         self::assertEquals(
