@@ -28,7 +28,7 @@ final class ColumnChunkBuilder
 
     public function addRow(mixed $row) : void
     {
-        $this->statistics->add($row);
+        //        $this->statistics->add($row);
         $this->rows[] = $row;
     }
 
@@ -59,6 +59,16 @@ final class ColumnChunkBuilder
                 options: $this->options
             )
         );
+    }
+
+    /**
+     * Flatten rows collected by chunk builder.
+     *
+     * @return array<mixed>
+     */
+    public function rows() : array
+    {
+        return $this->rows;
     }
 
     public function statistics() : ColumnChunkStatistics

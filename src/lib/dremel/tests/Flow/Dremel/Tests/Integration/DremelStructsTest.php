@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Dremel\Tests\Integration;
 
-use Flow\Dremel\{DataShredded, Dremel, NullableRow};
+use Flow\Dremel\{DataShredded, Dremel, Repetition};
 use PHPUnit\Framework\TestCase;
 
 final class DremelStructsTest extends TestCase
@@ -17,8 +17,8 @@ final class DremelStructsTest extends TestCase
         $values = ['Alice'];
         $maxDefinitionLevel = 2;
         $repetitions = [
-            'OPTIONAL', // 0 === NullableRow
-            'OPTIONAL', // 1 === null
+            Repetition::OPTIONAL, // 0 === NullableRow
+            Repetition::OPTIONAL, // 1 === null
             // 2 === "Alice"
         ];
 
@@ -44,9 +44,9 @@ final class DremelStructsTest extends TestCase
         $values = ['Bob'];
         $maxDefinitionLevel = 3;
         $repetitions = [
-            'OPTIONAL',
-            'OPTIONAL',
-            'OPTIONAL',
+            Repetition::OPTIONAL,
+            Repetition::OPTIONAL,
+            Repetition::OPTIONAL,
         ];
 
         $expectedOutput = [
@@ -61,7 +61,7 @@ final class DremelStructsTest extends TestCase
 
         self::assertEquals($expectedOutput, $assembled->rows);
         self::assertEquals($repetitionLevels, $shredded->repetitionLevels);
-        //        self::assertEquals($definitionLevels, $shredded->definitions);
+        self::assertEquals($definitionLevels, $shredded->definitionLevels);
         self::assertEquals($values, $shredded->values);
     }
 
@@ -73,8 +73,8 @@ final class DremelStructsTest extends TestCase
         $values = ['Alice', 'Bob', 'John'];
         $maxDefinitionLevel = 1;
         $repetitions = [
-            'REQUIRED',
-            'OPTIONAL', // 0 === null / 1 === "Alice"
+            Repetition::REQUIRED,
+            Repetition::OPTIONAL, // 0 === null / 1 === "Alice"
         ];
 
         $expectedOutput = [
@@ -100,15 +100,15 @@ final class DremelStructsTest extends TestCase
         $values = ['Bob'];
         $maxDefinitionLevel = 2;
         $repetitions = [
-            'REQUIRED',
-            'OPTIONAL',
-            'OPTIONAL',
+            Repetition::REQUIRED,
+            Repetition::OPTIONAL,
+            Repetition::OPTIONAL,
         ];
 
         $expectedOutput = [
-            null,
-            null,
-            'Bob',
+            [],
+            [[]],
+            [['Bob']],
         ];
 
         $assembled = (new Dremel())->assemble(new DataShredded($repetitionLevels, $definitionLevels, $values), $repetitions, $maxDefinitionLevel);
@@ -127,9 +127,9 @@ final class DremelStructsTest extends TestCase
         $values = ['Bob'];
         $maxDefinitionLevel = 1;
         $repetitions = [
-            'REQUIRED',
-            'REQUIRED',
-            'OPTIONAL',
+            Repetition::REQUIRED,
+            Repetition::REQUIRED,
+            Repetition::OPTIONAL,
         ];
 
         $expectedOutput = [
@@ -153,9 +153,9 @@ final class DremelStructsTest extends TestCase
         $values = ['Alice', 'Bob', 'John'];
         $maxDefinitionLevel = 0;
         $repetitions = [
-            'REQUIRED',
-            'REQUIRED',
-            'REQUIRED',
+            Repetition::REQUIRED,
+            Repetition::REQUIRED,
+            Repetition::REQUIRED,
         ];
 
         $expectedOutput = [
@@ -180,8 +180,8 @@ final class DremelStructsTest extends TestCase
         $values = ['Alice'];
         $maxDefinitionLevel = 0;
         $repetitions = [
-            'REQUIRED',
-            'REQUIRED',
+            Repetition::REQUIRED,
+            Repetition::REQUIRED,
         ];
 
         $expectedOutput = [

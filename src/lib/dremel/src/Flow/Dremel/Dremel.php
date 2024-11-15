@@ -60,33 +60,33 @@ final class Dremel
         }
 
         if ($level === $definitionLevel) {
-            if ($repetition === 'REPEATED') {
+            if ($repetition === Repetition::REPEATED) {
                 $element = [];
 
                 return;
             }
 
-            if ($repetition === 'OPTIONAL') {
+            if ($repetition === Repetition::OPTIONAL) {
                 $element = null;
 
                 return;
             }
         }
 
-        if ($repetition === 'REQUIRED') {
+        if ($repetition === Repetition::REQUIRED) {
             $this->buildValue($element, $repetitions, $maxDefinitionLevel, $definitionLevel, $values, $valueIndex, $level);
 
             return;
         }
 
-        if ($repetition === 'REPEATED') {
+        if ($repetition === Repetition::REPEATED) {
             $element = [];
             $this->buildValue($element[], $repetitions, $maxDefinitionLevel, $definitionLevel, $values, $valueIndex, $level + 1);
 
             return;
         }
 
-        if ($repetition === 'OPTIONAL') {
+        if ($repetition === Repetition::OPTIONAL) {
             $this->buildValue($element, $repetitions, $maxDefinitionLevel, $definitionLevel, $values, $valueIndex, $level + 1);
 
             return;
@@ -133,7 +133,7 @@ final class Dremel
 
             if (\is_array($element)) {
                 if (!\count($element)) {
-                    $definitionLevels[] = $repetitions[$currentDefinitionLevel] !== 'REQUIRED' ? $currentDefinitionLevel + 1 : $currentDefinitionLevel;
+                    $definitionLevels[] = $repetitions[$currentDefinitionLevel] !== Repetition::REQUIRED ? $currentDefinitionLevel + 1 : $currentDefinitionLevel;
 
                     if (\count($repetitionLevels) === 0 || $rowIndex === 0) {
                         $repetitionLevels[] = $currentRepetitionLevel;
@@ -165,7 +165,7 @@ final class Dremel
                     $values,
                     $repetitions,
                     $currentRepetitionLevel,
-                    $repetitions[$currentDefinitionLevel] !== 'REQUIRED' ? $currentDefinitionLevel + 2 : $currentDefinitionLevel + 1,
+                    $repetitions[$currentDefinitionLevel] !== Repetition::REQUIRED ? $currentDefinitionLevel + 2 : $currentDefinitionLevel + 1,
                     $level + 1
                 );
 
@@ -173,9 +173,9 @@ final class Dremel
             }
 
             if ($element === null) {
-                $definitionLevels[] = $repetitions[$currentDefinitionLevel] !== 'REQUIRED' ? $currentDefinitionLevel + 1 : $currentDefinitionLevel;
+                $definitionLevels[] = $repetitions[$currentDefinitionLevel] !== Repetition::REQUIRED ? $currentDefinitionLevel + 1 : $currentDefinitionLevel;
             } else {
-                $definitionLevels[] = \array_reduce($repetitions, fn ($carry, $item) => $carry + ($item !== 'REQUIRED' ? 1 : 0), 0);
+                $definitionLevels[] = \array_reduce($repetitions, fn ($carry, $item) => $carry + ($item !== Repetition::REQUIRED ? 1 : 0), 0);
             }
 
             if (\count($repetitionLevels) === 0 || $rowIndex === 0) {

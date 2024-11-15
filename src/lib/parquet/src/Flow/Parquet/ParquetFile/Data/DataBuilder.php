@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Dremel\{DataAssembled, DataShredded, Dremel};
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, Repetition};
 
 final class DataBuilder
 {
@@ -17,33 +17,24 @@ final class DataBuilder
 
     public function build(DataShredded $data, FlatColumn $column) : DataAssembled
     {
-        $repetitions = [];
-
-        $columnIterator = $column;
-
-        while ($columnIterator->parent()) {
-            $repetitions[] = $columnIterator->repetition()->name;
-            $columnIterator = $columnIterator->parent();
-        }
-
-        $repetitions = \array_values(\array_reverse($repetitions));
+        //        $repetitions = \array_map(
+        //            static fn (Repetition $repetition) => $repetition->toDremel(),
+        //            $column->repetitions()
+        //        );
 
         $dremel = new Dremel();
 
-        //        if ($column->name() === 'f') {
-        //            ddj([
-        //               'flat_path' => $column->flatPath(),
-        //               'repetition levels' => $data->repetitionLevels,
-        //               'definition levels' => $data->definitionLevels,
-        //               'values' => $data->values,
-        //               'max definition level' => $column->maxDefinitionsLevel(),
-        //               'max repetition level' => $column->maxRepetitionsLevel(),
-        //               'repetitions' => $repetitions,
-        //                'data' => $this->enrichData($dremel->assemble($data, $repetitions, $column->maxDefinitionsLevel()), $column)
-        //            ]);
-        //        }
+        dj([
+            'flat_path' => $column->flatPath(),
+            'repetition levels' => $data->repetitionLevels,
+            'definition levels' => $data->definitionLevels,
+            'values' => $data->values,
+            //            'max definition level' => $column->maxDefinitionsLevel(),
+            //            'max repetition level' => $column->maxRepetitionsLevel(),
+            'repetitions' => $column->repetitions()->__toString(),
+        ]);
 
-        return $this->enrichData($dremel->assemble($data, $repetitions, $column->maxDefinitionsLevel()), $column);
+        return new DataAssembled([], $data); // $this->enrichData($dremel->assemble($data, $repetitions, $column->maxDefinitionsLevel()), $column);
     }
 
     private function enrichData(DataAssembled $assembled, FlatColumn $column) : DataAssembled

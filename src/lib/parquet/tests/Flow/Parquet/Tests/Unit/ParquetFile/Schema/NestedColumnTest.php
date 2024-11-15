@@ -92,4 +92,26 @@ final class NestedColumnTest extends TestCase
     {
         self::assertTrue(NestedColumn::map('map', MapKey::int32(), MapValue::string())->isMap());
     }
+
+    public function test_nested_repetitions() : void
+    {
+        $schema = Schema::with(
+            NestedColumn::struct('struct', [
+                FlatColumn::int32('int32'),
+                FlatColumn::string('string'),
+                NestedColumn::list('list', ListElement::structure([
+                    NestedColumn::map(
+                        'map',
+                        MapKey::string(),
+                        MapValue::int32()
+                    ),
+                ])),
+            ]),
+        );
+
+        self::assertEquals(
+            [Schema\Repetition::OPTIONAL, Schema\Repetition::OPTIONAL, Schema\Repetition::REPEATED, Schema\Repetition::OPTIONAL, Schema\Repetition::OPTIONAL, Schema\Repetition::REPEATED],
+            $schema->get('struct.list.list.element.map.key_value')->repetitions()
+        );
+    }
 }

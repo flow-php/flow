@@ -12,7 +12,7 @@ use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageContainer;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings};
+use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings, Schema\Repetition};
 use Flow\Parquet\{Option, Options};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
@@ -41,14 +41,10 @@ final class DataPageBuilder
 
     private function buildDataPage(array $rows, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
     {
-        $columnIterator = $column;
-
-        while ($columnIterator->parent()) {
-            $repetitions[] = $columnIterator->repetition()->name;
-            $columnIterator = $columnIterator->parent();
-        }
-
-        $repetitions = \array_values(\array_reverse($repetitions));
+        $repetitions = \array_map(
+            static fn (Repetition $repetition) => $repetition->toDremel(),
+            $column->repetitions()
+        );
 
         $shredded = (new Dremel())->shred($rows, $repetitions);
 
@@ -107,14 +103,10 @@ final class DataPageBuilder
 
         $statistics = (new StatisticsBuilder($this->dataConverter))->build($column, $statistics);
 
-        $columnIterator = $column;
-
-        while ($columnIterator->parent()) {
-            $repetitions[] = $columnIterator->repetition()->name;
-            $columnIterator = $columnIterator->parent();
-        }
-
-        $repetitions = \array_values(\array_reverse($repetitions));
+        $repetitions = \array_map(
+            static fn (Repetition $repetition) => $repetition->toDremel(),
+            $column->repetitions()
+        );
 
         $shredded = (new Dremel())->shred($rows, $repetitions);
 

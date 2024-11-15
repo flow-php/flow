@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\ParquetFile;
 
 use Flow\Dremel\{DataShredded, Dremel};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Dremel;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
@@ -17,8 +17,8 @@ final class SchemaTest extends TestCase
     {
         self::markTestSkipped();
         $data = [
-            $this->flattener()->flattenColumn($this->dremelPaperDataSchema()->get('DocId'), $this->dremelPaperDataStructure()[0]),
-            $this->flattener()->flattenColumn($this->dremelPaperDataSchema()->get('DocId'), $this->dremelPaperDataStructure()[1]),
+            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('DocId'), $this->dremelPaperDataStructure()[0]),
+            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('DocId'), $this->dremelPaperDataStructure()[1]),
         ];
 
         self::assertSame([['DocId' => 10], ['DocId' => 20]], $data);
@@ -48,8 +48,8 @@ final class SchemaTest extends TestCase
     {
         self::markTestSkipped();
         $data = [
-            $this->flattener()->flattenColumn($this->dremelPaperDataSchema()->get('Links'), $this->dremelPaperDataStructure()[0]),
-            $this->flattener()->flattenColumn($this->dremelPaperDataSchema()->get('Links'), $this->dremelPaperDataStructure()[1]),
+            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('Links'), $this->dremelPaperDataStructure()[0]),
+            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('Links'), $this->dremelPaperDataStructure()[1]),
         ];
 
         self::assertSame([['Backward' => null], ['Backward' => [10, 30]]], $data);
@@ -149,8 +149,8 @@ final class SchemaTest extends TestCase
         ];
     }
 
-    private function flattener() : Flattener
+    private function flattener() : Dremel
     {
-        return new Flattener(new DisabledValidator());
+        return new Dremel(new DisabledValidator());
     }
 }

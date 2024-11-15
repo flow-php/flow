@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Dremel\Tests\Integration;
 
-use Flow\Dremel\{DataShredded, Dremel};
+use Flow\Dremel\{DataShredded, Dremel, Repetition};
 use PHPUnit\Framework\TestCase;
 
 final class DremelListsTest extends TestCase
@@ -15,7 +15,11 @@ final class DremelListsTest extends TestCase
         $definitionLevels = [3, 2, 3, 0, 1, 3, 3, 3];
         $values = [1, 3, 4, 5, 6];
         $maxDefinitionLevel = 3;
-        $repetitions = ['OPTIONAL', 'REPEATED', 'OPTIONAL'];
+        $repetitions = [
+            Repetition::OPTIONAL,
+            Repetition::REPEATED,
+            Repetition::OPTIONAL,
+        ];
 
         $expectedOutput = [
             [1, null, 3],
@@ -39,13 +43,13 @@ final class DremelListsTest extends TestCase
         $definitionLevels = [0, 1, 2, 3, 4, 5, 6, 7];
         $values = [1];
         $repetitions = [
-            'OPTIONAL', // 1 - 1
-            'REPEATED', // 1 - 2
-            'OPTIONAL', // 1 - 3
-            'REPEATED', // 1 - 4
-            'OPTIONAL', // 1 - 5
-            'REPEATED', // 1 - 6
-            'OPTIONAL',  // 1 - 7
+            Repetition::OPTIONAL, // 1 - 1
+            Repetition::REPEATED, // 1 - 2
+            Repetition::OPTIONAL, // 1 - 3
+            Repetition::REPEATED, // 1 - 4
+            Repetition::OPTIONAL, // 1 - 5
+            Repetition::REPEATED, // 1 - 6
+            Repetition::OPTIONAL,  // 1 - 7
         ];
         $maxDefinitionLevel = 7;
 
@@ -78,13 +82,13 @@ final class DremelListsTest extends TestCase
         $definitionLevels = [0, 1, 2, 3, 4, 5, 6];
         $values = [1];
         $repetitions = [
-            'OPTIONAL', // 1 - d0 === null
-            'REPEATED', // 1 - d1 === []
-            'REQUIRED', // 0 - d1 === []
-            'REPEATED', // 1 - d2 === [[]]
-            'OPTIONAL', // 1 - d3 === [[null]]
-            'REPEATED', // 1 - d4 === [[[]]]
-            'OPTIONAL',  // 1 - d5 === [[[null]]]
+            Repetition::OPTIONAL, // 1 - d0 === null
+            Repetition::REPEATED, // 1 - d1 === []
+            Repetition::REQUIRED, // 0 - d1 === []
+            Repetition::REPEATED, // 1 - d2 === [[]]
+            Repetition::OPTIONAL, // 1 - d3 === [[null]]
+            Repetition::REPEATED, // 1 - d4 === [[[]]]
+            Repetition::OPTIONAL,  // 1 - d5 === [[[null]]]
             //   - d6 === [[[1]]]
         ];
         $maxDefinitionLevel = 6;
@@ -115,13 +119,13 @@ final class DremelListsTest extends TestCase
         $definitionLevels = [0, 1, 2, 3, 4, 5, 6];
         $values = [1];
         $repetitions = [
-            'REQUIRED', // 0
-            'REPEATED', // 1 - 1
-            'OPTIONAL', // 1 - 2
-            'REPEATED', // 1 - 3
-            'OPTIONAL', // 1 - 4
-            'REPEATED', // 1 - 5
-            'OPTIONAL', // 1 - 6
+            Repetition::REQUIRED, // 0
+            Repetition::REPEATED, // 1 - 1
+            Repetition::OPTIONAL, // 1 - 2
+            Repetition::REPEATED, // 1 - 3
+            Repetition::OPTIONAL, // 1 - 4
+            Repetition::REPEATED, // 1 - 5
+            Repetition::OPTIONAL, // 1 - 6
         ];
         $maxDefinitionLevel = 6;
 

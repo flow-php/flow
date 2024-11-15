@@ -277,6 +277,24 @@ final class FlatColumn implements Column
         return $this->repetition;
     }
 
+    public function repetitions() : Repetitions
+    {
+        $repetitions = [$this->repetition];
+
+        $parent = $this->parent();
+
+        while ($parent) {
+            // Skip schema root
+            if ($parent->parent() === null) {
+                break;
+            }
+            $repetitions[] = $parent->repetition();
+            $parent = $parent->parent();
+        }
+
+        return new Repetitions(\array_values(\array_reverse($repetitions)));
+    }
+
     public function scale() : ?int
     {
         return $this->scale;

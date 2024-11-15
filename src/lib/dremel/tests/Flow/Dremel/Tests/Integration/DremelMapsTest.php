@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Dremel\Tests\Integration;
 
-use Flow\Dremel\{DataShredded, Dremel};
+use Flow\Dremel\{DataShredded, Dremel, Repetition};
 use PHPUnit\Framework\TestCase;
 
 final class DremelMapsTest extends TestCase
@@ -16,9 +16,9 @@ final class DremelMapsTest extends TestCase
         $values = ['a', 'b', 'c'];
         $maxDefinitionLevel = 1;
         $repetitions = [
-            'REQUIRED',
-            'REPEATED',
-            'REQUIRED',
+            Repetition::REQUIRED,
+            Repetition::REPEATED,
+            Repetition::REQUIRED,
         ];
 
         $expectedOutput = [
@@ -41,9 +41,9 @@ final class DremelMapsTest extends TestCase
         $values = [1, 2, 3];
         $maxDefinitionLevel = 1;
         $repetitions = [
-            'REQUIRED',
-            'REPEATED',
-            'REQUIRED',
+            Repetition::REQUIRED,
+            Repetition::REPEATED,
+            Repetition::REQUIRED,
         ];
 
         $expectedOutput = [

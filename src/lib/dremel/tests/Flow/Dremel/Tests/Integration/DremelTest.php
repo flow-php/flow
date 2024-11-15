@@ -4,18 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\Dremel\Tests\Integration;
 
-use Flow\Dremel\{DataShredded, Dremel};
+use Flow\Dremel\{DataShredded, Dremel, Repetition};
 use PHPUnit\Framework\TestCase;
 
-final class DremelFlatColumnsTest extends TestCase
+final class DremelTest extends TestCase
 {
+    public function test_flat_01() : void
+    {
+        $repetitions = [Repetition::OPTIONAL, Repetition::REPEATED, Repetition::REQUIRED];
+
+        self::assertNull(
+            (new Dremel())->flatten($repetitions, 0, null)
+        );
+    }
+
     public function test_optional_int32() : void
     {
         $repetitionLevels = [0, 0, 0, 0, 0];
         $definitionLevels = [1, 1, 0, 1, 0];
         $values = [1, 2, 3];
         $maxDefinitionLevel = 1;
-        $repetitions = ['OPTIONAL'];
+        $repetitions = [Repetition::OPTIONAL];
 
         $expectedOutput = [1, 2, null, 3, null];
 
@@ -35,7 +44,7 @@ final class DremelFlatColumnsTest extends TestCase
         $values = [1, 2, 3];
         $maxDefinitionLevel = 0;
         $repetitions = [
-            'REQUIRED',
+            Repetition::REQUIRED,
         ];
 
         $expectedOutput = [

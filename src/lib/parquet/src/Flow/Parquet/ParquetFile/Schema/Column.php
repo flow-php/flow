@@ -37,6 +37,8 @@ interface Column
 
     public function repetition() : ?Repetition;
 
+    public function repetitions() : Repetitions;
+
     public function setParent(NestedColumn $parent) : void;
 
     public function toThrift() : SchemaElement|array;
