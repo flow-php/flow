@@ -32,7 +32,7 @@ final class GetBlobOptions implements EndpointOptions
 
     private ?int $timeoutSeconds = null;
 
-    private ?string $version = BlobService::VERSION;
+    private string $version = BlobService::VERSION;
 
     private ?string $versionId = null;
 
@@ -41,13 +41,10 @@ final class GetBlobOptions implements EndpointOptions
         $headers = [];
 
         $headers['user-agent'] = $this->userAgentHeader();
+        $headers['x-ms-version'] = $this->version;
 
         if ($this->range !== null) {
             $headers['x-ms-range'] = $this->range->toString();
-        }
-
-        if ($this->version !== null) {
-            $headers['x-ms-version'] = $this->version;
         }
 
         if ($this->requestId !== null) {

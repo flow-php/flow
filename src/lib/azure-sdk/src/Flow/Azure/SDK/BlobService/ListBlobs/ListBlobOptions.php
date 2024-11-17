@@ -29,7 +29,7 @@ final class ListBlobOptions implements EndpointOptions
 
     private ?int $timeoutSeconds = null;
 
-    private ?string $version = BlobService::VERSION;
+    private string $version = BlobService::VERSION;
 
     public function __construct()
     {
@@ -40,10 +40,7 @@ final class ListBlobOptions implements EndpointOptions
         $headers = [];
 
         $headers['user-agent'] = $this->userAgentHeader();
-
-        if ($this->version !== null) {
-            $headers['x-ms-version'] = $this->version;
-        }
+        $headers['x-ms-version'] = $this->version;
 
         if ($this->requestId !== null) {
             $headers['x-ms-client-request-id'] = $this->requestId;

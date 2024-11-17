@@ -142,7 +142,7 @@ final class FlatColumn implements Column
         return new self($uuid, PhysicalType::FIXED_LEN_BYTE_ARRAY, null, LogicalType::uuid(), $repetition, typeLength: 16);
     }
 
-    public function __debugInfo() : ?array
+    public function __debugInfo() : array
     {
         return [
             'name' => $this->name,

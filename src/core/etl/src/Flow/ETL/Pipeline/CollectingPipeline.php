@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
 /**
@@ -12,11 +11,6 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
  */
 final class CollectingPipeline implements Pipeline
 {
-    /**
-     * @param Pipeline $pipeline
-     *
-     * @throws InvalidArgumentException
-     */
     public function __construct(private readonly Pipeline $pipeline)
     {
     }

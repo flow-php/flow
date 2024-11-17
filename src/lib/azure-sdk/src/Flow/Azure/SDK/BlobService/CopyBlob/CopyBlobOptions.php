@@ -28,18 +28,14 @@ final class CopyBlobOptions implements EndpointOptions
 
     private ?int $timeoutSeconds = null;
 
-    private ?string $version = BlobService::VERSION;
+    private string $version = BlobService::VERSION;
 
     private ?string $versionId = null;
 
     public function toHeaders() : array
     {
         $headers = [];
-
-        if ($this->version !== null) {
-            $headers['x-ms-version'] = $this->version;
-        }
-
+        $headers['x-ms-version'] = $this->version;
         $headers['User-Agent'] = $this->userAgentHeader();
 
         if ($this->requestId !== null) {
@@ -80,6 +76,20 @@ final class CopyBlobOptions implements EndpointOptions
         }
 
         return $uriParameters;
+    }
+
+    public function withDeleteSnapshots(DeleteSnapshots $deleteSnapshots) : self
+    {
+        $this->deleteSnapshots = $deleteSnapshots;
+
+        return $this;
+    }
+
+    public function withDeleteType(DeleteType $deleteType) : self
+    {
+        $this->deleteType = $deleteType;
+
+        return $this;
     }
 
     public function withLeaseId(string $leaseId) : self

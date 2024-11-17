@@ -110,7 +110,6 @@ final class DataFrame
     }
 
     /**
-     * @throws \JsonException
      * @throws InvalidArgumentException
      */
     public static function fromJson(string $json) : self
@@ -118,7 +117,7 @@ final class DataFrame
         try {
             return self::fromArray(\json_decode($json, true, 512, JSON_THROW_ON_ERROR));
         } catch (\JsonException $exception) {
-            throw new InvalidFileFormatException('json', 'unknown');
+            throw new InvalidFileFormatException('json', 'unknown', $exception);
         }
     }
 

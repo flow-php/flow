@@ -71,6 +71,13 @@ final class GetBlockBlobBlockListOptions implements EndpointOptions
         return $this;
     }
 
+    public function withLeaseId(string $leaseId) : self
+    {
+        $this->leaseId = $leaseId;
+
+        return $this;
+    }
+
     public function withRequestId(string $requestId) : self
     {
         $this->requestId = $requestId;
@@ -88,6 +95,13 @@ final class GetBlockBlobBlockListOptions implements EndpointOptions
     public function withTimeoutSeconds(int $timeoutSeconds) : self
     {
         $this->timeoutSeconds = $timeoutSeconds;
+
+        return $this;
+    }
+
+    public function withVersionId(string $versionId) : self
+    {
+        $this->versionId = $versionId;
 
         return $this;
     }

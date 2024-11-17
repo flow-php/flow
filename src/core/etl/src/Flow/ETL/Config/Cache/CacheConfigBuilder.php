@@ -22,13 +22,8 @@ final class CacheConfigBuilder
 
     public function build(FilesystemTable $fstab, Serializer $serializer) : CacheConfig
     {
-        $cachePath = \is_string(\getenv(CacheConfig::CACHE_DIR_ENV)) && \getenv(CacheConfig::CACHE_DIR_ENV) !== ''
-            ? \getenv(CacheConfig::CACHE_DIR_ENV)
-            : \sys_get_temp_dir() . '/flow_php/cache';
-
-        if (!\is_string($cachePath)) {
-            throw new RuntimeException('Cache directory must be a string, got ' . \gettype($cachePath));
-        }
+        $cachePath = \getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
+        $cachePath = $cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache';
 
         if (!\file_exists($cachePath)) {
             if (!mkdir($cachePath, 0777, true) && !is_dir($cachePath)) {

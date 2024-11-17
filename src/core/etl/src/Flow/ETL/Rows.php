@@ -674,8 +674,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     /**
      * @throws InvalidArgumentException
-     *
-     * @return $this
      */
     public function sortAscending(string|Reference $ref) : self
     {
@@ -687,8 +685,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     /**
      * @throws InvalidArgumentException
-     *
-     * @return $this
      */
     public function sortBy(Reference ...$refs) : self
     {
@@ -703,8 +699,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     /**
      * @throws InvalidArgumentException
-     *
-     * @return $this
      */
     public function sortDescending(string|Reference $ref) : self
     {

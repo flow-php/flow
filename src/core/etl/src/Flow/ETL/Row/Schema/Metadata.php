@@ -41,8 +41,6 @@ final class Metadata
     /**
      * @param string $key
      * @param array<bool|float|int|string>|bool|float|int|string $value
-     *
-     * @return $this
      */
     public static function with(string $key, int|string|bool|float|array $value) : self
     {
@@ -52,8 +50,6 @@ final class Metadata
     /**
      * @param string $key
      * @param array<bool|float|int|string>|bool|float|int|string $value
-     *
-     * @return $this
      */
     public function add(string $key, int|string|bool|float|array $value) : self
     {

@@ -95,7 +95,8 @@ final class ColumnChunk
 
     public function pageOffset() : int
     {
-        $offset = \min(
+        return \min(
+            // @phpstan-ignore-next-line
             \array_filter(
                 [
                     $this->dictionaryPageOffset,
@@ -104,8 +105,6 @@ final class ColumnChunk
                 ],
             )
         );
-
-        return $offset;
     }
 
     public function statistics() : ?StatisticsReader

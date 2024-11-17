@@ -9,7 +9,7 @@ use Flow\ETL\{FlowContext, Loader, Rows};
 final class ArrayLoader implements Loader
 {
     /**
-     * @param-out array<array<mixed>> $array
+     * @param array<array<mixed>> $array
      */
     public function __construct(private array &$array)
     {

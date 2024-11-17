@@ -9,9 +9,9 @@ use Flow\ETL\{FlowContext, Loader, Rows};
 final class CallbackLoader implements Loader
 {
     /**
-     * @phpstan-ignore-next-line
-     *
      * @param callable(Rows $row, FlowContext $context) : void $callback
+     *
+     * @phpstan-ignore-next-line
      */
     private $callback;
 

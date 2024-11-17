@@ -59,7 +59,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     continue;
                 }
 
-                /** @var array<mixed> $rowData */
+                /** @var non-empty-list<null|string> $rowData */
                 $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
 
                 if (!\count($headers)) {

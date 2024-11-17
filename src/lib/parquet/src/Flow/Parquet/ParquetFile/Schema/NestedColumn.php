@@ -109,7 +109,7 @@ final class NestedColumn implements Column
         return new self($name, $repetition, $children);
     }
 
-    public function __debugInfo() : ?array
+    public function __debugInfo() : array
     {
         return [
             'name' => $this->name,

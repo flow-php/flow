@@ -76,7 +76,7 @@ final class ColumnData
         $definitions = [];
         $values = [];
 
-        $maxDefinition = \max($this->definitions);
+        $maxDefinition = $this->definitions ? \max($this->definitions) : 0;
 
         $lastRowRepetitions = [];
         $lastRowDefinitions = [];

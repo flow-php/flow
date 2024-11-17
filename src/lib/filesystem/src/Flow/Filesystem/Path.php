@@ -176,7 +176,7 @@ final class Path
         return $this->extension;
     }
 
-    public function filename() : bool|string
+    public function filename() : string
     {
         return $this->filename;
     }

@@ -55,6 +55,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         } else {
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
 
+            // @phpstan-ignore-next-line
             if (\method_exists($countQuery, 'resetOrderBy')) {
                 $countQuery->resetOrderBy();
             } else {

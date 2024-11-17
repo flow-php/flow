@@ -29,8 +29,6 @@ final class Row
 
     /**
      * @throws InvalidArgumentException
-     *
-     * @return $this
      */
     public function add(Entry ...$entries) : self
     {
@@ -151,10 +149,8 @@ final class Row
 
     /**
      * @throws InvalidArgumentException
-     *
-     * @return mixed
      */
-    public function valueOf(string|Reference $name)
+    public function valueOf(string|Reference $name) : mixed
     {
         return $this->get($name)->value();
     }

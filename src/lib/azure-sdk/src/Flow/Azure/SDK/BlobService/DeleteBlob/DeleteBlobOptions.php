@@ -22,7 +22,7 @@ final class DeleteBlobOptions implements EndpointOptions
 
     private ?int $timeoutSeconds = null;
 
-    private ?string $version = BlobService::VERSION;
+    private string $version = BlobService::VERSION;
 
     private ?string $versionId = null;
 
@@ -31,10 +31,7 @@ final class DeleteBlobOptions implements EndpointOptions
         $headers = [];
 
         $headers['user-agent'] = $this->userAgentHeader();
-
-        if ($this->version !== null) {
-            $headers['x-ms-version'] = $this->version;
-        }
+        $headers['x-ms-version'] = $this->version;
 
         if ($this->requestId !== null) {
             $headers['x-ms-client-request-id'] = $this->requestId;
@@ -74,6 +71,20 @@ final class DeleteBlobOptions implements EndpointOptions
         }
 
         return $uriParameters;
+    }
+
+    public function withDeleteSnapshots(DeleteSnapshots $deleteSnapshots) : self
+    {
+        $this->deleteSnapshots = $deleteSnapshots;
+
+        return $this;
+    }
+
+    public function withDeleteType(DeleteType $deleteType) : self
+    {
+        $this->deleteType = $deleteType;
+
+        return $this;
     }
 
     public function withLeaseId(string $leaseId) : self

@@ -37,12 +37,15 @@ final class Parameter implements QueryParameter
         return $this->queryParamName;
     }
 
-    public function toQueryParam(Rows $rows) : mixed
+    /**
+     * @return array<array-key, null|bool|float|int|string>
+     */
+    public function toQueryParam(Rows $rows) : array
     {
         return $rows->reduceToArray($this->ref);
     }
 
-    public function type() : int|ArrayParameterType|null
+    public function type() : int|ArrayParameterType
     {
         return $this->type;
     }

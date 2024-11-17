@@ -37,8 +37,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
 
     /**
      * @throws InvalidArgumentException
-     *
-     * @return $this
      */
     public function add(Entry ...$entries) : self
     {
@@ -222,7 +220,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @param array-key $offset
      *
-     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function offsetUnset(mixed $offset) : void
     {
@@ -312,9 +310,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::recreate($entries);
     }
 
-    /**
-     * @return $this
-     */
     public function set(Entry ...$entries) : self
     {
         $newEntries = $this->entries;

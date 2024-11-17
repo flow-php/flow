@@ -9,9 +9,9 @@ use Flow\ETL\{Extractor, FlowContext};
 final class ElasticsearchExtractor implements Extractor
 {
     /**
-     * @phpstan-ignore-next-line
-     *
      * @psalm-suppress UndefinedClass
+     *
+     * @phpstan-ignore-next-line
      */
     private \Elasticsearch\Client|\Elastic\Elasticsearch\Client|null $client;
 

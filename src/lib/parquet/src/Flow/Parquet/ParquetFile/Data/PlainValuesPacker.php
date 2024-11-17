@@ -76,8 +76,6 @@ final class PlainValuesPacker
                         break;
                     case LogicalType::DECIMAL:
                         /**
-                         * @phpstan-ignore-next-line
-                         *
                          * @psalm-suppress PossiblyNullArgument
                          */
                         $this->writer->writeDecimals($parquetValues, $column->typeLength(), $column->precision(), $column->scale());
