@@ -52,4 +52,12 @@ final class Repetitions
 
         return $maxRepetitionLevel;
     }
+
+    /**
+     * @param array<Repetition> $repetitions
+     */
+    public function toArray() : array
+    {
+        return $this->repetitions;
+    }
 }

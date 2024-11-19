@@ -48,7 +48,7 @@ final class RowGroupBuilder
         $rowFlatColumns = [];
 
         foreach ($this->schema->columns() as $column) {
-            $rowFlatColumns[] = $this->flattener->shredRow($column, $row);
+            $rowFlatColumns[] = $this->flattener->shred($column, $row);
         }
 
         foreach ($rowFlatColumns as $flatColumnValues) {

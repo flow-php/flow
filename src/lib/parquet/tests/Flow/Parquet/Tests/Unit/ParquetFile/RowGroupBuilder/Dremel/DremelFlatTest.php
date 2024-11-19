@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel\Shred;
+namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Dremel;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
@@ -11,7 +11,7 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn};
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
-final class DremelShreddingFlatTest extends TestCase
+final class DremelFlatTest extends TestCase
 {
     #[TestWith([
         ['int32' => null],
@@ -45,7 +45,14 @@ final class DremelShreddingFlatTest extends TestCase
 
         self::assertEquals(
             $flatData,
-            $dremel->shredRow($schema->get('int32'), $row)->normalize()
+            $dremel->shred($schema->get('int32'), $row)->normalize()
+        );
+
+        self::assertEquals(
+            [
+                $row,
+            ],
+            $dremel->assembly($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
         );
     }
 
@@ -71,11 +78,18 @@ final class DremelShreddingFlatTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('int32'), $row);
+            $dremel->shred($schema->get('int32'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('int32'), $row)->normalize()
+                $dremel->shred($schema->get('int32'), $row)->normalize()
+            );
+
+            self::assertEquals(
+                [
+                    $row,
+                ],
+                $dremel->assembly($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
             );
         }
     }

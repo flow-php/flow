@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\FlatData\FlatValue;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatValue};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final class Dremel
@@ -13,12 +13,36 @@ final class Dremel
     {
     }
 
+    public function assembly(Column $column, ColumnData $flatData) : array
+    {
+        if ($column instanceof FlatColumn) {
+            $rows = [];
+
+            foreach ($this->assemblyFlat($column, $flatData) as $value) {
+                $rows[] = [$column->name() => $value];
+            }
+
+            return $rows;
+        }
+
+        /**
+         * @var NestedColumn $column
+         */
+        if ($column->isList()) {
+            return $this->assemblyList($column, $flatData);
+        }
+
+        return [$column->name() => null];
+    }
+
     /**
      * @param array<array<string,mixed>> $row
      */
-    public function shredRow(Column $column, array $row, int $definitionLevel = 0, int $repetitionLevel = 0) : FlatData
+    public function shred(Column $column, array $row) : ColumnData
     {
-        $flatData = new FlatData($column);
+        $flatData = ColumnData::initialize($column);
+        $definitionLevel = 0;
+        $repetitionLevel = 0;
 
         if ($column instanceof FlatColumn) {
             $this->flattenFlat($column, $row[$column->name()] ?? null, $definitionLevel, $repetitionLevel, $flatData);
@@ -44,7 +68,55 @@ final class Dremel
         return $flatData;
     }
 
-    private function flattenFlat(FlatColumn $column, mixed $value, int $definitionLevel, int $repetitionLevel, FlatData $data) : void
+    /**
+     * @param iterable<FlatValue> $values
+     */
+    private function assemblyFlat(FlatColumn $column, ColumnData $flatData) : array
+    {
+        $rows = [];
+
+        foreach ($flatData->iterator() as $values) {
+            $rows[] = $values[0]->value;
+        }
+
+        return $rows;
+    }
+
+    private function assemblyList(NestedColumn|Column $column, ColumnData $flatData) : array
+    {
+        $rows = [];
+        $listElementColumn = $column->getListElement();
+
+        foreach ($flatData->iterator() as $listValues) {
+            if (\count($listValues) === 1 && $listValues[0]->repetitionLevel === 0 && $listValues[0]->definitionLevel === 0) {
+                $row[$column->name()] = null;
+
+                continue;
+            }
+
+            if (\count($listValues) === 1 && $listValues[0]->repetitionLevel === 0 && $listValues[0]->definitionLevel === 1) {
+                $row[$column->name()] = [];
+
+                continue;
+            }
+
+            if ($listElementColumn instanceof FlatColumn) {
+                $row[$column->name()][] = $listValues[0]->value;
+
+                continue;
+            }
+
+            if ($listElementColumn->isList()) {
+                $list = [];
+            }
+
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    private function flattenFlat(FlatColumn $column, mixed $value, int $definitionLevel, int $repetitionLevel, ColumnData $data) : void
     {
         $this->validator->validate($column, $value);
 
@@ -55,26 +127,21 @@ final class Dremel
         $data->add(
             new FlatValue(
                 $column,
-                [$data->isEmpty($column) ? 0 : $repetitionLevel],
-                [$definitionLevel],
-                $value === null ? [] : [$value]
+                $data->isEmpty($column) ? 0 : $repetitionLevel,
+                $definitionLevel,
+                $value
             )
         );
     }
 
-    /**
-     * @return array<FlatData>
-     */
-    private function flattenList(NestedColumn $column, ?array $listValue, int $definitionLevel, int $repetitionLevel, FlatData $data) : void
+    private function flattenList(NestedColumn $column, ?array $listValue, int $definitionLevel, int $repetitionLevel, ColumnData $data) : void
     {
         $this->validator->validate($column, $listValue);
         $listElementColumn = $column->getListElement();
 
         if ($listElementColumn instanceof FlatColumn) {
             if ($listValue === null) {
-                $data->add(
-                    new FlatValue($listElementColumn, [$data->isEmpty($listElementColumn) ? 0 : $repetitionLevel], [$definitionLevel], [])
-                );
+                $data->add(new FlatValue($listElementColumn, $data->isEmpty($listElementColumn) ? 0 : $repetitionLevel, $definitionLevel));
 
                 return;
             }
@@ -84,9 +151,7 @@ final class Dremel
             }
 
             if (!\count($listValue)) {
-                $data->add(
-                    new FlatValue($listElementColumn, [$data->isEmpty($listElementColumn) ? 0 : $repetitionLevel], [$definitionLevel], [])
-                );
+                $data->add(new FlatValue($listElementColumn, $data->isEmpty($listElementColumn) ? 0 : $repetitionLevel, $definitionLevel));
 
                 return;
             }
@@ -106,9 +171,7 @@ final class Dremel
         /** @var NestedColumn $listElementColumn */
         if ($listElementColumn->isList()) {
             if ($listValue === null) {
-                $data->add(
-                    new FlatValue($listElementColumn->getListElement(), [$data->isEmpty($listElementColumn->getListElement()) ? 0 : $repetitionLevel], [$definitionLevel], [])
-                );
+                $data->add(new FlatValue($listElementColumn->getListElement(), $data->isEmpty($listElementColumn->getListElement()) ? 0 : $repetitionLevel, $definitionLevel));
 
                 return;
             }
@@ -118,9 +181,7 @@ final class Dremel
             }
 
             if (!\count($listValue)) {
-                $data->add(
-                    new FlatValue($listElementColumn->getListElement(), [$data->isEmpty($listElementColumn->getListElement()) ? 0 : $repetitionLevel], [$definitionLevel], [])
-                );
+                $data->add(new FlatValue($listElementColumn->getListElement(), $data->isEmpty($listElementColumn->getListElement()) ? 0 : $repetitionLevel, $definitionLevel));
 
                 return;
             }
@@ -137,8 +198,8 @@ final class Dremel
         if ($listElementColumn->isMap()) {
             if ($listValue === null) {
                 $data->add(
-                    new FlatValue($listElementColumn->getMapKeyColumn(), [$data->isEmpty($listElementColumn->getMapKeyColumn()) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($listElementColumn->getMapValueColumn(), [$data->isEmpty($listElementColumn->getMapValueColumn()) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($listElementColumn->getMapKeyColumn(), $data->isEmpty($listElementColumn->getMapKeyColumn()) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($listElementColumn->getMapValueColumn(), $data->isEmpty($listElementColumn->getMapValueColumn()) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -150,8 +211,8 @@ final class Dremel
 
             if (!\count($listValue)) {
                 $data->add(
-                    new FlatValue($listElementColumn->getMapKeyColumn(), [$data->isEmpty($listElementColumn->getMapKeyColumn()) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($listElementColumn->getMapValueColumn(), [$data->isEmpty($listElementColumn->getMapValueColumn()) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($listElementColumn->getMapKeyColumn(), $data->isEmpty($listElementColumn->getMapKeyColumn()) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($listElementColumn->getMapValueColumn(), $data->isEmpty($listElementColumn->getMapValueColumn()) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -235,13 +296,7 @@ final class Dremel
         }
     }
 
-    /**
-     * @psalm-suppress PossiblyNullArgument
-     * @psalm-suppress NamedArgumentNotAllowed
-     *
-     * @return array<mixed>
-     */
-    private function flattenMap(NestedColumn $column, ?array $mapValue, int $definitionLevel, int $repetitionLevel, FlatData $data) : void
+    private function flattenMap(NestedColumn $column, ?array $mapValue, int $definitionLevel, int $repetitionLevel, ColumnData $data) : void
     {
         $this->validator->validate($column, $mapValue);
 
@@ -251,8 +306,8 @@ final class Dremel
         if ($valueColumn instanceof FlatColumn) {
             if ($mapValue === null) {
                 $data->add(
-                    new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn, [$data->isEmpty($valueColumn) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn, $data->isEmpty($valueColumn) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -264,8 +319,8 @@ final class Dremel
 
             if (!\count($mapValue)) {
                 $data->add(
-                    new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn, [$data->isEmpty($valueColumn) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn, $data->isEmpty($valueColumn) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -288,8 +343,8 @@ final class Dremel
         if ($valueColumn->isList()) {
             if ($mapValue === null) {
                 $data->add(
-                    new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn->getListElement(), [$data->isEmpty($valueColumn->getListElement()) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn->getListElement(), $data->isEmpty($valueColumn->getListElement()) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -301,8 +356,8 @@ final class Dremel
 
             if (!\count($mapValue)) {
                 $data->add(
-                    new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn->getListElement(), [$data->isEmpty($valueColumn->getListElement()) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn->getListElement(), $data->isEmpty($valueColumn->getListElement()) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -321,9 +376,9 @@ final class Dremel
         if ($valueColumn->isMap()) {
             if ($mapValue === null) {
                 $data->add(
-                    new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn->getMapKeyColumn(), [$data->isEmpty($valueColumn->getMapKeyColumn()) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn->getMapValueColumn(), [$data->isEmpty($valueColumn->getMapValueColumn()) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn->getMapKeyColumn(), $data->isEmpty($valueColumn->getMapKeyColumn()) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn->getMapValueColumn(), $data->isEmpty($valueColumn->getMapValueColumn()) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -335,9 +390,9 @@ final class Dremel
 
             if (!\count($mapValue)) {
                 $data->add(
-                    new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn->getMapKeyColumn(), [$data->isEmpty($valueColumn->getMapKeyColumn()) ? 0 : $repetitionLevel], [$definitionLevel], []),
-                    new FlatValue($valueColumn->getMapValueColumn(), [$data->isEmpty($valueColumn->getMapValueColumn()) ? 0 : $repetitionLevel], [$definitionLevel], [])
+                    new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn->getMapKeyColumn(), $data->isEmpty($valueColumn->getMapKeyColumn()) ? 0 : $repetitionLevel, $definitionLevel),
+                    new FlatValue($valueColumn->getMapValueColumn(), $data->isEmpty($valueColumn->getMapValueColumn()) ? 0 : $repetitionLevel, $definitionLevel)
                 );
 
                 return;
@@ -354,7 +409,7 @@ final class Dremel
         }
 
         if ($mapValue === null) {
-            $data->add(new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []));
+            $data->add(new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel));
 
             foreach ($valueColumn->children() as $child) {
                 if ($child instanceof FlatColumn) {
@@ -389,7 +444,7 @@ final class Dremel
         }
 
         if (!\count($mapValue)) {
-            $data->add(new FlatValue($keyColumn, [$data->isEmpty($keyColumn) ? 0 : $repetitionLevel], [$definitionLevel], []));
+            $data->add(new FlatValue($keyColumn, $data->isEmpty($keyColumn) ? 0 : $repetitionLevel, $definitionLevel));
 
             foreach ($valueColumn->children() as $child) {
                 if ($child instanceof FlatColumn) {
@@ -427,7 +482,7 @@ final class Dremel
         }
     }
 
-    private function flattenStructure(NestedColumn $column, mixed $structureData, int $definitionLevel, int $repetitionLevel, FlatData $data) : void
+    private function flattenStructure(NestedColumn $column, mixed $structureData, int $definitionLevel, int $repetitionLevel, ColumnData $data) : void
     {
         $this->validator->validate($column, $structureData);
 

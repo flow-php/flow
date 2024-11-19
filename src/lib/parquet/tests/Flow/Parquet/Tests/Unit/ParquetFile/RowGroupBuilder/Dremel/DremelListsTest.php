@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel\Shred;
+namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Dremel;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
@@ -11,7 +11,7 @@ use Flow\Parquet\ParquetFile\Schema\{ListElement, MapKey, MapValue, NestedColumn
 use PHPUnit\Framework\Attributes\{TestWith};
 use PHPUnit\Framework\TestCase;
 
-final class DremelShreddingListsTest extends TestCase
+final class DremelListsTest extends TestCase
 {
     #[TestWith([
         ['l' => null],
@@ -65,8 +65,15 @@ final class DremelShreddingListsTest extends TestCase
 
         self::assertEquals(
             $flatData,
-            $dremel->shredRow($schema->get('l'), $row)->normalize()
+            $dremel->shred($schema->get('l'), $row)->normalize()
         );
+
+        //        self::assertEquals(
+        //            [
+        //                $row,
+        //            ],
+        //            $dremel->assembly($schema->get('l'), $dremel->shred($schema->get('l'), $row))
+        //        );
     }
 
     #[TestWith([
@@ -178,7 +185,158 @@ final class DremelShreddingListsTest extends TestCase
 
         self::assertEquals(
             $flatData,
-            $dremel->shredRow($schema->get('l'), $row)->normalize()
+            $dremel->shred($schema->get('l'), $row)->normalize()
+        );
+
+        //        self::assertEquals(
+        //            [
+        //                $row,
+        //            ],
+        //            $dremel->assembly($schema->get('l'), $dremel->shred($schema->get('l'), $row))
+        //        );
+    }
+
+    #[TestWith([
+        [
+            'l' => [
+                [['a' => ['int32' => 1, 'string' => 'A', 'list' => [1, 2, 3], 'map' => ['AA' => 'value01']]]],
+                [['b' => ['int32' => 2, 'string' => 'B', 'list' => [4, 5, 6], 'map' => ['BB' => 'value02']]]],
+                [['c' => ['int32' => 3, 'string' => 'C', 'list' => [7, 8, 9], 'map' => ['CC' => 'value03']]]],
+            ],
+        ],
+        [
+            'l.list.element.list.element.key_value.key' => [
+                'repetition_levels' => [0, 3, 3],
+                'definition_levels' => [6, 6, 6],
+                'values' => ['a', 'b', 'c'],
+            ],
+            'l.list.element.list.element.key_value.value.int32' => [
+                'repetition_levels' => [0, 3, 3],
+                'definition_levels' => [8, 8, 8],
+                'values' => [1, 2, 3],
+            ],
+            'l.list.element.list.element.key_value.value.string' => [
+                'repetition_levels' => [0, 3, 3],
+                'definition_levels' => [8, 8, 8],
+                'values' => ['A', 'B', 'C'],
+            ],
+            'l.list.element.list.element.key_value.value.list.list.element' => [
+                'repetition_levels' => [0, 4, 4, 3, 4, 4, 3, 4, 4],
+                'definition_levels' => [10, 10, 10, 10, 10, 10, 10, 10, 10],
+                'values' => [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            ],
+            'l.list.element.list.element.key_value.value.map.key_value.key' => [
+                'repetition_levels' => [0, 3, 3],
+                'definition_levels' => [9, 9, 9],
+                'values' => ['AA', 'BB', 'CC'],
+            ],
+            'l.list.element.list.element.key_value.value.map.key_value.value' => [
+                'repetition_levels' => [0, 3, 3],
+                'definition_levels' => [10, 10, 10],
+                'values' => ['value01', 'value02', 'value03'],
+            ],
+        ],
+    ])]
+    #[TestWith(data: [
+        [
+            'l' => [
+                [
+                    ['a' => ['int32' => 1, 'string' => 'A', 'list' => [1, 2, 3], 'map' => ['AA' => 'value01']]],
+                    ['b' => ['int32' => 2, 'string' => 'B', 'list' => [4, 5, 6], 'map' => ['BB' => 'value02']]],
+                ],
+            ],
+        ],
+        [
+            'l.list.element.list.element.key_value.key' => [
+                'repetition_levels' => [0, 3],
+                'definition_levels' => [6, 6],
+                'values' => ['a', 'b'],
+            ],
+            'l.list.element.list.element.key_value.value.int32' => [
+                'repetition_levels' => [0, 3],
+                'definition_levels' => [8, 8],
+                'values' => [1, 2],
+            ],
+            'l.list.element.list.element.key_value.value.string' => [
+                'repetition_levels' => [0, 3],
+                'definition_levels' => [8, 8],
+                'values' => ['A', 'B'],
+            ],
+            'l.list.element.list.element.key_value.value.list.list.element' => [
+                'repetition_levels' => [0, 4, 4, 3, 4, 4],
+                'definition_levels' => [10, 10, 10, 10, 10, 10],
+                'values' => [1, 2, 3, 4, 5, 6],
+            ],
+            'l.list.element.list.element.key_value.value.map.key_value.key' => [
+                'repetition_levels' => [0, 3],
+                'definition_levels' => [9, 9],
+                'values' => ['AA', 'BB'],
+            ],
+            'l.list.element.list.element.key_value.value.map.key_value.value' => [
+                'repetition_levels' => [0, 3],
+                'definition_levels' => [10, 10],
+                'values' => ['value01', 'value02'],
+            ],
+        ],
+    ])]
+    public function test_optional_list_optional_list_optional_map_string_optional_struct_optional_int32_optional_list_optional_int32_optional_map_string_optional_string(array $row, array $flatData) : void
+    {
+        $schema = Schema::with(
+            NestedColumn::list(
+                'l',
+                ListElement::list(
+                    ListElement::map(
+                        MapKey::string(),
+                        MapValue::structure(
+                            [
+                                Schema\FlatColumn::int32('int32'),
+                                Schema\FlatColumn::string('string'),
+                                NestedColumn::list(
+                                    'list',
+                                    ListElement::int32(),
+                                ),
+                                NestedColumn::map(
+                                    'map',
+                                    MapKey::string(),
+                                    MapValue::string()
+                                ),
+                            ],
+                        ),
+                    ),
+                )
+            )
+        );
+
+        $dremel = new Dremel(new ColumnDataValidator());
+
+        self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,REPEATED,REQUIRED', $schema->get('l.list.element.list.element.key_value.key')->repetitions());
+        self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,OPTIONAL', $schema->get('l.list.element.list.element.key_value.value.int32')->repetitions());
+        self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,OPTIONAL', $schema->get('l.list.element.list.element.key_value.value.string')->repetitions());
+        self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('l.list.element.list.element.key_value.value.list.list.element')->repetitions());
+        self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,OPTIONAL,REPEATED,REQUIRED', $schema->get('l.list.element.list.element.key_value.value.map.key_value.key')->repetitions());
+        self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('l.list.element.list.element.key_value.value.map.key_value.value')->repetitions());
+
+        self::assertEquals(6, $schema->get('l.list.element.list.element.key_value.key')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(3, $schema->get('l.list.element.list.element.key_value.key')->repetitions()->maxRepetitionLevel());
+
+        self::assertEquals(8, $schema->get('l.list.element.list.element.key_value.value.int32')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(3, $schema->get('l.list.element.list.element.key_value.value.int32')->repetitions()->maxRepetitionLevel());
+
+        self::assertEquals(8, $schema->get('l.list.element.list.element.key_value.value.string')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(3, $schema->get('l.list.element.list.element.key_value.value.string')->repetitions()->maxRepetitionLevel());
+
+        self::assertEquals(10, $schema->get('l.list.element.list.element.key_value.value.list.list.element')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(4, $schema->get('l.list.element.list.element.key_value.value.list.list.element')->repetitions()->maxRepetitionLevel());
+
+        self::assertEquals(9, $schema->get('l.list.element.list.element.key_value.value.map.key_value.key')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(4, $schema->get('l.list.element.list.element.key_value.value.map.key_value.key')->repetitions()->maxRepetitionLevel());
+
+        self::assertEquals(10, $schema->get('l.list.element.list.element.key_value.value.map.key_value.value')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(4, $schema->get('l.list.element.list.element.key_value.value.map.key_value.value')->repetitions()->maxRepetitionLevel());
+
+        self::assertEquals(
+            $flatData,
+            $dremel->shred($schema->get('l'), $row)->normalize()
         );
     }
 
@@ -360,11 +518,11 @@ final class DremelShreddingListsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('l'), $row);
+            $dremel->shred($schema->get('l'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('l'), $row)->normalize()
+                $dremel->shred($schema->get('l'), $row)->normalize()
             );
         }
     }
@@ -476,7 +634,7 @@ final class DremelShreddingListsTest extends TestCase
 
         self::assertEquals(
             $flatData,
-            $dremel->shredRow($schema->get('l'), $row)->normalize()
+            $dremel->shred($schema->get('l'), $row)->normalize()
         );
     }
 
@@ -502,7 +660,7 @@ final class DremelShreddingListsTest extends TestCase
 
         self::assertEquals(
             $flatData,
-            $dremel->shredRow($schema->get('l'), $row)->normalize()
+            $dremel->shred($schema->get('l'), $row)->normalize()
         );
     }
 
@@ -537,7 +695,7 @@ final class DremelShreddingListsTest extends TestCase
 
         self::assertEquals(
             $flatData,
-            $flattener->shredRow($schema->get('l'), $row)->normalize()
+            $flattener->shred($schema->get('l'), $row)->normalize()
         );
     }
 
@@ -605,11 +763,11 @@ final class DremelShreddingListsTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $flattener->shredRow($schema->get('l'), $row);
+            $flattener->shred($schema->get('l'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $flattener->shredRow($schema->get('l'), $row)->normalize()
+                $flattener->shred($schema->get('l'), $row)->normalize()
             );
         }
     }
@@ -692,11 +850,11 @@ final class DremelShreddingListsTest extends TestCase
 
         if ($exceptMessage) {
             $this->expectExceptionMessage($exceptMessage);
-            $flattener->shredRow($schema->get('l'), $row);
+            $flattener->shred($schema->get('l'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $flattener->shredRow($schema->get('l'), $row)->normalize()
+                $flattener->shred($schema->get('l'), $row)->normalize()
             );
         }
     }

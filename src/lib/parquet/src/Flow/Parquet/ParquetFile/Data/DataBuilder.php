@@ -29,8 +29,8 @@ final class DataBuilder
             'repetition levels' => $data->repetitionLevels,
             'definition levels' => $data->definitionLevels,
             'values' => $data->values,
-            //            'max definition level' => $column->maxDefinitionsLevel(),
-            //            'max repetition level' => $column->maxRepetitionsLevel(),
+            'max definition level' => $column->maxDefinitionsLevel(),
+            'max repetition level' => $column->maxRepetitionsLevel(),
             'repetitions' => $column->repetitions()->__toString(),
         ]);
 

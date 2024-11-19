@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel\Shred;
+namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Dremel;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
@@ -11,7 +11,7 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
-final class DremelShreddingStructuresTest extends TestCase
+final class DremelStructuresTest extends TestCase
 {
     #[TestWith([
         [
@@ -139,11 +139,11 @@ final class DremelShreddingStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
@@ -246,14 +246,13 @@ final class DremelShreddingStructuresTest extends TestCase
         self::assertEquals(4, $schema->get('s.l.list.element')->repetitions()->maxDefinitionLevel());
         self::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxRepetitionLevel());
 
-
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
@@ -390,14 +389,13 @@ final class DremelShreddingStructuresTest extends TestCase
         self::assertEquals(4, $schema->get('s.m.key_value.value')->repetitions()->maxDefinitionLevel());
         self::assertEquals(1, $schema->get('s.m.key_value.value')->repetitions()->maxRepetitionLevel());
 
-
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
@@ -540,14 +538,13 @@ final class DremelShreddingStructuresTest extends TestCase
         self::assertEquals(3, $schema->get('s.s1.string')->repetitions()->maxDefinitionLevel());
         self::assertEquals(0, $schema->get('s.s1.string')->repetitions()->maxRepetitionLevel());
 
-
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
@@ -640,11 +637,11 @@ final class DremelShreddingStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
@@ -708,17 +705,16 @@ final class DremelShreddingStructuresTest extends TestCase
 
         self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.l.list.element')->repetitions());
 
-
         self::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxDefinitionLevel());
         self::assertEquals(1, $schema->get('s.l.list.element')->repetitions()->maxRepetitionLevel());
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
@@ -757,7 +753,13 @@ final class DremelShreddingStructuresTest extends TestCase
     ])]
     #[TestWith([
         [
-            's' => ['m' => ['a' => 1, 'b' => 2, 'c' => 3]],
+            's' => [
+                'm' => [
+                    'a' => 1,
+                    'b' => 2,
+                    'c' => 3,
+                ],
+            ],
         ],
         [
             's.m.key_value.key' => [
@@ -788,7 +790,6 @@ final class DremelShreddingStructuresTest extends TestCase
         self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.key')->repetitions());
         self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.value')->repetitions());
 
-
         self::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxDefinitionLevel());
         self::assertEquals(1, $schema->get('s.m.key_value.key')->repetitions()->maxRepetitionLevel());
 
@@ -797,11 +798,11 @@ final class DremelShreddingStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
@@ -893,11 +894,11 @@ final class DremelShreddingStructuresTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            $dremel->shredRow($schema->get('s'), $row);
+            $dremel->shred($schema->get('s'), $row);
         } else {
             self::assertEquals(
                 $flatData,
-                $dremel->shredRow($schema->get('s'), $row)->normalize()
+                $dremel->shred($schema->get('s'), $row)->normalize()
             );
         }
     }
