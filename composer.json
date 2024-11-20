@@ -10,7 +10,7 @@
         "load"
     ],
     "require": {
-        "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0",
         "ext-bcmath": "*",
         "ext-dom": "*",
         "ext-hash": "*",
@@ -25,7 +25,7 @@
         "doctrine/dbal": "^3.6 || ^4.0",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "google/apiclient": "^2.13",
-        "halaxa/json-machine": "^1.0",
+        "halaxa/json-machine": "^1.1",
         "jawira/case-converter": "^3.4",
         "meilisearch/meilisearch-php": "^1.1",
         "monolog/monolog": "^2.0||^3.0",
