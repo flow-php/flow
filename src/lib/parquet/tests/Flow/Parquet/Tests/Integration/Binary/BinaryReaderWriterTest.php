@@ -32,7 +32,7 @@ final class BinaryReaderWriterTest extends TestCase
             ['decimals' => [12345.67890, 98765.43210], 'precision' => 12, 'scale' => 5],
             ['decimals' => [0.0000000123456, 0.0000000987654], 'precision' => 16, 'scale' => 16],
             ['decimals' => [1234567890.12, 9876543210.98], 'precision' => 12, 'scale' => 2],
-            ['decimals' => [1.234567890123456, 9.876543210987654], 'precision' => 17, 'scale' => 15],
+            ['decimals' => [1.234567890123456, 9.876543210987654], 'precision' => 17, 'scale' => 16],
             ['decimals' => [123456789012.345, 987654321098.765], 'precision' => 15, 'scale' => 3],
         ];
     }
