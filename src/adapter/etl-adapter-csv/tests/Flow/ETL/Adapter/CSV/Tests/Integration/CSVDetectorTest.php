@@ -85,7 +85,7 @@ final class CSVDetectorTest extends TestCase
         $resource = \fopen('php://memory', 'rb+');
 
         foreach ($data as $line) {
-            \fputcsv($resource, $line, $separator, $enclosure);
+            \fputcsv($resource, $line, $separator, $enclosure, '\\');
         }
 
         $csv = \stream_get_contents($resource, offset: 0);

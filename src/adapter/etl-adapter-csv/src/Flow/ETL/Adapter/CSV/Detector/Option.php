@@ -58,7 +58,7 @@ final class Option
 
     public function parse(string $line) : void
     {
-        $this->rows[] = \str_getcsv($line, $this->separator, $this->enclosure);
+        $this->rows[] = \str_getcsv($line, $this->separator, $this->enclosure, '\\');
     }
 
     public function reset() : self
