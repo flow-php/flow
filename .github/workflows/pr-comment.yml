@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Download pull request id artifact
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v7
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: pr
@@ -30,7 +30,7 @@ jobs:
           echo "id=$(<./var/phpbench/pr/pr-id.txt)" >> $GITHUB_OUTPUT
 
       - name: Download phpbench benchmarks artifact
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v7
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: phpbench
