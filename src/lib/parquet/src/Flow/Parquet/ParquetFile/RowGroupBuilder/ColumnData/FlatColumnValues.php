@@ -68,13 +68,15 @@ final class FlatColumnValues
                 $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null
             );
 
-            $valueIndex++;
+            if ($definitionLevel === $maxDefinitionLevel) {
+                $valueIndex++;
+            }
         }
 
         return new \ArrayIterator($values);
     }
 
-    public function merge(self $flatData) : void
+    public function merge(self $flatData) : self
     {
         if ($flatData->column->flatPath() !== $this->column->flatPath()) {
             throw new RuntimeException('Cannot merge different column, attempt to merge: ' . $this->column->flatPath() . ' with ' . $flatData->column->flatPath());
@@ -83,6 +85,8 @@ final class FlatColumnValues
         $this->repetitionLevels = array_merge($this->repetitionLevels, $flatData->repetitionLevels);
         $this->definitionLevels = array_merge($this->definitionLevels, $flatData->definitionLevels);
         $this->values = array_merge($this->values, $flatData->values);
+
+        return $this;
     }
 
     /**

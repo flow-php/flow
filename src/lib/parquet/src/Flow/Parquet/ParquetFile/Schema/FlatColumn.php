@@ -232,6 +232,15 @@ final class FlatColumn implements Column
         return $this->logicalType;
     }
 
+    public function makeOptional() : self
+    {
+        $column = new self($this->name, $this->type, $this->convertedType, $this->logicalType, Repetition::OPTIONAL, $this->precision, $this->scale, $this->typeLength);
+        $column->parent = $this->parent;
+        $column->flatPath = $this->flatPath;
+
+        return $column;
+    }
+
     public function makeRequired() : self
     {
         return new self($this->name, $this->type, $this->convertedType, $this->logicalType, Repetition::REQUIRED, $this->precision, $this->scale, $this->typeLength);
@@ -292,7 +301,7 @@ final class FlatColumn implements Column
             $parent = $parent->parent();
         }
 
-        return new Repetitions(\array_values(\array_reverse($repetitions)));
+        return new Repetitions(...\array_values(\array_reverse($repetitions)));
     }
 
     public function scale() : ?int

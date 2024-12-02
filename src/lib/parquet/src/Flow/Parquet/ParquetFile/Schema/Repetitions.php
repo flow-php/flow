@@ -6,11 +6,18 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 
-final class Repetitions
+final class Repetitions implements \Countable
 {
+    private array $repetitions;
+
     public function __construct(
-        private readonly array $repetitions,
+        Repetition ...$repetitions,
     ) {
+        if (!\count($repetitions)) {
+            throw new InvalidArgumentException('Repetitions cannot be empty');
+        }
+
+        $this->repetitions = $repetitions;
     }
 
     public function __toString() : string
@@ -18,13 +25,49 @@ final class Repetitions
         return \implode(',', \array_map(static fn (Repetition $r) => $r->name, $this->repetitions));
     }
 
-    public function get(int $level) : Repetition
+    public function count() : int
     {
-        if (!\array_key_exists($level, $this->repetitions)) {
-            throw new InvalidArgumentException(\sprintf('Repetition level %d does not exist: %s', $level, $this->__toString()));
+        return \count($this->repetitions);
+    }
+
+    public function first() : Repetition
+    {
+        return $this->repetitions[0];
+    }
+
+    public function get(int $index) : Repetition
+    {
+        if (!\array_key_exists($index, $this->repetitions)) {
+            throw new InvalidArgumentException(\sprintf('Repetition index %d does not exist: %s', $index, $this->__toString()));
         }
 
-        return $this->repetitions[$level];
+        return $this->repetitions[$index];
+    }
+
+    public function last() : Repetition
+    {
+        return $this->repetitions[\count($this->repetitions) - 1];
+    }
+
+    public function left(int $index) : self
+    {
+        $repetitions = [];
+
+        $currentLevel = 0;
+
+        foreach ($this->repetitions as $repetition) {
+            if (!$repetition->isRequired()) {
+                $currentLevel++;
+            }
+
+            $repetitions[] = $repetition;
+
+            if ($currentLevel === $index) {
+                break;
+            }
+        }
+
+        return new self(...$repetitions);
     }
 
     public function maxDefinitionLevel() : int

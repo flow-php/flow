@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, DisabledValidator};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkBuilder, Dremel, PageSizeCalculator, RowGroupContainer, RowGroupStatistics};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkBuilder, DremelShredder, PageSizeCalculator, RowGroupContainer, RowGroupStatistics};
 use Flow\Parquet\{Option, Options};
 
 /**
@@ -19,7 +19,7 @@ final class RowGroupBuilder
      */
     private array $chunkBuilders;
 
-    private Dremel $flattener;
+    private DremelShredder $flattener;
 
     private RowGroupStatistics $statistics;
 
@@ -30,7 +30,7 @@ final class RowGroupBuilder
         private readonly DataConverter $dataConverter,
         private readonly PageSizeCalculator $calculator,
     ) {
-        $this->flattener = new Dremel(
+        $this->flattener = new DremelShredder(
             $this->options->getBool(Option::VALIDATE_DATA)
                 ? new ColumnDataValidator()
                 : new DisabledValidator()

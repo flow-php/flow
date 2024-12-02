@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\ParquetFile;
 
 use Flow\Dremel\{DataShredded, Dremel};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Dremel;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};

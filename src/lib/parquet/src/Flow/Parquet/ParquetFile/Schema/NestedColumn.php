@@ -355,7 +355,7 @@ final class NestedColumn implements Column
             $parent = $parent->parent();
         }
 
-        return new Repetitions(\array_values(\array_reverse($repetitions)));
+        return new Repetitions(...\array_values(\array_reverse($repetitions)));
     }
 
     public function setParent(self $parent) : void

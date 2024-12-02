@@ -63,7 +63,7 @@ final class ColumnDataValidator implements Validator
         }
 
         foreach ($column->children() as $key => $child) {
-            $this->validate($child, $data[$child->name()]);
+            $this->validate($child, $data[$child->name()] ?? null);
         }
     }
 

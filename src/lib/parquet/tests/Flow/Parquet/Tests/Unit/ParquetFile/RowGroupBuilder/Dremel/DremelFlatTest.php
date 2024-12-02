@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Dremel;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn};
 use PHPUnit\Framework\Attributes\TestWith;
@@ -41,7 +41,7 @@ final class DremelFlatTest extends TestCase
         self::assertEquals(1, $schema->get('int32')->repetitions()->maxDefinitionLevel());
         self::assertEquals(0, $schema->get('int32')->repetitions()->maxRepetitionLevel());
 
-        $dremel = new Dremel(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator());
 
         self::assertEquals(
             $flatData,
@@ -52,7 +52,7 @@ final class DremelFlatTest extends TestCase
             [
                 $row,
             ],
-            $dremel->assembly($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
+            (new DremelAssembler())->assembly($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
         );
     }
 
@@ -70,7 +70,7 @@ final class DremelFlatTest extends TestCase
     public function test_required_int32(array $row, array $flatData, ?string $exceptionMessage = null) : void
     {
         $schema = Schema::with(FlatColumn::int32('int32')->makeRequired());
-        $dremel = new Dremel(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator());
 
         self::assertEquals('REQUIRED', $schema->get('int32')->repetitions());
         self::assertEquals(0, $schema->get('int32')->repetitions()->maxDefinitionLevel());
@@ -89,7 +89,7 @@ final class DremelFlatTest extends TestCase
                 [
                     $row,
                 ],
-                $dremel->assembly($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
+                (new DremelAssembler())->assembly($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
             );
         }
     }

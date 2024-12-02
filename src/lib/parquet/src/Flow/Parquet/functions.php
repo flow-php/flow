@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\NullLevel;
+
 function array_merge_recursive(array $array1, array $array2) : array
 {
     $merged = $array1;
@@ -24,11 +26,27 @@ function array_combine_recursive(array $keys, array $values) : array
     $result = [];
 
     foreach ($keys as $keyIndex => $keyValue) {
-        if ($keyValue === null) {
+        $value = $values[$keyIndex] ?? null;
+
+        if ($keyValue === null && $value !== null) {
             continue;
         }
 
-        $value = $values[$keyIndex] ?? null;
+        if ($keyValue instanceof NullLevel && !$value instanceof NullLevel) {
+            continue;
+        }
+
+        if ($keyValue === null && $value === null) {
+            $result[] = null;
+
+            continue;
+        }
+
+        if ($keyValue instanceof NullLevel && $value instanceof NullLevel) {
+            $result[] = $value;
+
+            continue;
+        }
 
         if (\is_array($keyValue) && \is_array($value)) {
             $result[] = array_combine_recursive($keyValue, $value);
@@ -38,6 +56,24 @@ function array_combine_recursive(array $keys, array $values) : array
     }
 
     return $result;
+}
+
+/**
+ * Iterate over array at given level.
+ */
+function array_iterate_at_level(array &$array, int $targetLevel, callable $callback, int $currentLevel = 1) : void
+{
+    if ($currentLevel === $targetLevel) {
+        foreach ($array as &$value) {
+            $callback($value);
+        }
+    } else {
+        foreach ($array as &$value) {
+            if (is_array($value)) {
+                array_iterate_at_level($value, $targetLevel, $callback, $currentLevel + 1);
+            }
+        }
+    }
 }
 
 /**

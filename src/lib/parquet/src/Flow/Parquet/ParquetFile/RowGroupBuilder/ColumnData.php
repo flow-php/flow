@@ -18,40 +18,6 @@ final class ColumnData
     {
     }
 
-    /**
-     * @param Column $column
-     * @param array<array-key, FlatColumnValues> $children
-     */
-    public static function from(Column $column, array $children) : self
-    {
-        $childrenPaths = [];
-
-        foreach ($children as $child) {
-            $childrenPaths[] = $child->column->flatPath();
-        }
-
-        $columnPaths = [];
-
-        if ($column instanceof FlatColumn) {
-            $columnPaths[] = $column->flatPath();
-        }
-
-        if ($column instanceof NestedColumn) {
-            foreach ($column->childrenFlat() as $columnChild) {
-                $columnPaths[] = $columnChild->flatPath();
-            }
-        }
-
-        \sort($childrenPaths);
-        \sort($columnPaths);
-
-        if ($childrenPaths !== $columnPaths) {
-            throw new RuntimeException('ColumnData children must have the same paths as the column');
-        }
-
-        return new self($column, $children);
-    }
-
     public static function initialize(Column $column) : self
     {
         $children = [];
@@ -87,34 +53,18 @@ final class ColumnData
         throw new RuntimeException('Column ' . $column->flatPath() . ' not found in FlatData');
     }
 
-    /**
-     * @return \ArrayIterator<array-key, FlatValue>
-     */
-    public function iterator() : \ArrayIterator
+    public function iterator(FlatColumn $column) : \Iterator
     {
-        $iterator = new \MultipleIterator(\MultipleIterator::MIT_NEED_ALL);
-
-        foreach ($this->children as $child) {
-            $iterator->attachIterator($child->iterator());
-        }
-
-        /**
-         * @var array<FlatValue> $values
-         */
-        $values = [];
-
-        foreach ($iterator as $val) {
-            $values[] = $val;
-        }
-
-        return new \ArrayIterator($values);
+        return $this->children[$column->flatPath()]->iterator();
     }
 
-    public function merge(FlatColumnValues ...$flatData) : void
+    public function merge(self $columnData) : self
     {
-        foreach ($flatData as $data) {
+        foreach ($columnData->children as $data) {
             $this->children[$data->column->flatPath()]->merge($data);
         }
+
+        return $this;
     }
 
     /**
@@ -133,5 +83,10 @@ final class ColumnData
         }
 
         return $normalized;
+    }
+
+    public function values(string $flatPath) : FlatColumnValues
+    {
+        return $this->children[$flatPath];
     }
 }
