@@ -4,74 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile;
 
-use Flow\Dremel\{DataShredded, Dremel};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
+use Flow\Dremel\{Dremel};
+use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, DisabledValidator};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
 use PHPUnit\Framework\TestCase;
 
 final class SchemaTest extends TestCase
 {
-    public function test_shredding_and_assembling_doc_id() : void
+    public function test_dremel_paper_data_schema() : void
     {
-        self::markTestSkipped();
-        $data = [
-            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('DocId'), $this->dremelPaperDataStructure()[0]),
-            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('DocId'), $this->dremelPaperDataStructure()[1]),
-        ];
+        $schema = $this->dremelPaperDataSchema();
 
-        self::assertSame([['DocId' => 10], ['DocId' => 20]], $data);
+        $data = $this->dremelPaperDataStructure();
+        $shredder = new DremelShredder(new ColumnDataValidator(), $converter = DataConverter::initialize(Options::default()));
+        $assembler = new DremelAssembler($converter);
 
-        self::assertEquals(
-            new DataShredded(
-                repetitionLevels: [0, 0],
-                definitionLevels: [0, 0],
-                values: [10, 20]
-            ),
-            $shredded = (new Dremel())->shred([$data[0]['DocId'], $data[1]['DocId']], $this->dremelPaperDataSchema()->get('DocId')->maxDefinitionsLevel())
-        );
-        self::assertEquals(
-            [$data[0]['DocId'], $data[1]['DocId']],
-            (new Dremel())->assemble(
-                $shredded->repetitionLevels,
-                $shredded->definitionLevels,
-                $shredded->values,
-                $this->dremelPaperDataSchema()->get('DocId')->maxDefinitionsLevel(),
-                $this->dremelPaperDataSchema()->get('DocId')->maxRepetitionsLevel(),
-                $this->dremelPaperDataSchema()->get('DocId')->repetition() === Repetition::REQUIRED
-            )
-        );
-    }
-
-    public function test_shredding_and_assembling_links_backward() : void
-    {
-        self::markTestSkipped();
-        $data = [
-            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('Links'), $this->dremelPaperDataStructure()[0]),
-            $this->flattener()->flattenRow($this->dremelPaperDataSchema()->get('Links'), $this->dremelPaperDataStructure()[1]),
-        ];
-
-        self::assertSame([['Backward' => null], ['Backward' => [10, 30]]], $data);
-
-        //        self::assertEquals(
-        //            new DataShredded(
-        //                repetitions: [0, 0],
-        //                definitions: [0, 0],
-        //                values: [10, 30]
-        //            ),
-        //            $shredded = (new Dremel())->shred([$data[0]['DocId'], $data[1]['DocId']], $this->dremelPaperDataSchema()->get('DocId')->maxDefinitionsLevel())
-        //        );
-        //        self::assertEquals(
-        //            [$data[0]['DocId'], $data[1]['DocId']],
-        //            (new Dremel())->assemble(
-        //                $shredded->repetitions,
-        //                $shredded->definitions,
-        //                $shredded->values,
-        //                $this->dremelPaperDataSchema()->get('DocId')->maxDefinitionsLevel(),
-        //                $this->dremelPaperDataSchema()->get('DocId')->maxRepetitionsLevel(),
-        //                $this->dremelPaperDataSchema()->get('DocId')->repetition() === Repetition::REQUIRED
-        //            )
-        //        );
+        foreach ($data as $row) {
+            foreach ($schema->columns() as $column) {
+                $data = $shredder->shred($column, $row);
+                self::assertEquals($row[$column->name()], $assembler->assemble($column, $data)[0][$column->name()]);
+            }
+        }
     }
 
     private function dremelPaperDataSchema() : Schema
@@ -81,8 +38,8 @@ final class SchemaTest extends TestCase
             NestedColumn::list(
                 'Links',
                 ListElement::structure([
-                    FlatColumn::int32('Backward', Repetition::REQUIRED),
-                    FlatColumn::int32('Forward', Repetition::REQUIRED),
+                    NestedColumn::list('Backward', ListElement::int32()),
+                    NestedColumn::list('Forward', ListElement::int32()),
                 ])
             ),
             NestedColumn::list(
@@ -91,7 +48,7 @@ final class SchemaTest extends TestCase
                     NestedColumn::list(
                         'Language',
                         ListElement::structure([
-                            FlatColumn::string('Code'),
+                            FlatColumn::string('Code', Repetition::REQUIRED),
                             FlatColumn::string('Country'),
                         ]),
                         Repetition::OPTIONAL
@@ -111,20 +68,23 @@ final class SchemaTest extends TestCase
                 'Links' => [
                     [
                         'Forward' => [20, 40, 60],
+                        'Backward' => null,
                     ],
                 ],
                 'Name' => [
                     [
+                        'Url' => 'http://A',
                         'Language' => [
                             ['Code' => 'en-us', 'Country' => 'us'],
-                            ['Code' => 'en'],
+                            ['Code' => 'en', 'Country' => null],
                         ],
-                        'Url' => 'http://A',
                     ],
                     [
                         'Url' => 'http://B',
+                        'Language' => null,
                     ],
                     [
+                        'Url' => null,
                         'Language' => [
                             ['Code' => 'en-gb', 'Country' => 'gb'],
                         ],
@@ -142,6 +102,7 @@ final class SchemaTest extends TestCase
                 'Name' => [
                     [
                         'Url' => 'http://C',
+                        'Language' => null,
                     ],
                 ],
             ],

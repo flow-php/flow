@@ -19,6 +19,8 @@ final class FlatColumn implements Column
 
     private ?NestedColumn $parent = null;
 
+    private ?Repetitions $repetitions = null;
+
     public function __construct(
         private readonly string $name,
         private readonly PhysicalType $type,
@@ -288,6 +290,10 @@ final class FlatColumn implements Column
 
     public function repetitions() : Repetitions
     {
+        if ($this->repetitions !== null) {
+            return $this->repetitions;
+        }
+
         $repetitions = [$this->repetition];
 
         $parent = $this->parent();
@@ -301,7 +307,9 @@ final class FlatColumn implements Column
             $parent = $parent->parent();
         }
 
-        return new Repetitions(...\array_values(\array_reverse($repetitions)));
+        $this->repetitions = new Repetitions(...\array_reverse($repetitions));
+
+        return $this->repetitions;
     }
 
     public function scale() : ?int

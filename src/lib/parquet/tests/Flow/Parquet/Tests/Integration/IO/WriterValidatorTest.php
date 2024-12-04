@@ -43,7 +43,7 @@ final class WriterValidatorTest extends TestCase
 
     public function test_writing_null_to_list_with_element_is_required() : void
     {
-        $this->expectExceptionMessage('Column "list.list.element" is not string, got "NULL" instead');
+        $this->expectExceptionMessage('Column "list.list.element" is required');
 
         $writer = new Writer();
         $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
@@ -55,7 +55,7 @@ final class WriterValidatorTest extends TestCase
 
     public function test_writing_null_to_map_with_value_required() : void
     {
-        $this->expectExceptionMessage('Column "map.key_value.value" is not string, got "NULL" instead');
+        $this->expectExceptionMessage('Column "map.key_value.value" is required');
 
         $writer = new Writer();
         $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';

@@ -59,6 +59,8 @@ final class RowGroupBuilderStructuresTest extends TestCase
             ],
         ]);
 
-        dd($builder->chunkBuilders()['struct.struct_01.name']->rows());
+        $flatColumnName = $builder->chunkBuilders()['struct.struct_01.name']->rows();
+        self::assertEquals(4, $flatColumnName->rowsCount());
+        self::assertEquals(3, $flatColumnName->nullCount());
     }
 }

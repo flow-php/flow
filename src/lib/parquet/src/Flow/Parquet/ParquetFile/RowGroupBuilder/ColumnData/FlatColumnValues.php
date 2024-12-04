@@ -45,13 +45,23 @@ final class FlatColumnValues
         return $this->definitionLevels;
     }
 
+    public function definitionLevelsCount() : int
+    {
+        return \count($this->definitionLevels);
+    }
+
+    public function flatPath() : string
+    {
+        return $this->column->flatPath();
+    }
+
     public function isEmpty() : bool
     {
         return !\count($this->values) && !\count($this->repetitionLevels) && !\count($this->definitionLevels);
     }
 
     /**
-     * @return \ArrayIterator<array-key, FlatValue>
+     * @return \ArrayIterator<int<0, max>, FlatValue>
      */
     public function iterator() : \ArrayIterator
     {
@@ -89,12 +99,65 @@ final class FlatColumnValues
         return $this;
     }
 
+    public function nullCount() : int
+    {
+        $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
+
+        return \count(\array_filter($this->definitionLevels, fn (int $d) => $d !== $maxDefinitionLevel));
+    }
+
     /**
      * @return array<int>
      */
     public function repetitionLevels() : array
     {
         return $this->repetitionLevels;
+    }
+
+    public function rowsCount() : int
+    {
+        // rows count is count of repetitions equal to 0
+        return \count(\array_filter($this->repetitionLevels, static fn (int $r) => $r === 0));
+    }
+
+    /**
+     * @param int $rowsInChunk
+     *
+     * @return array<FlatColumnValues>
+     */
+    public function splitByRows(int $rowsInChunk) : array
+    {
+        $rows = [];
+
+        $iterator = new \MultipleIterator(\MultipleIterator::MIT_NEED_ALL | \MultipleIterator::MIT_KEYS_ASSOC);
+
+        $iterator->attachIterator(new \ArrayIterator($this->repetitionLevels), 'r');
+        $iterator->attachIterator(new \ArrayIterator($this->definitionLevels), 'd');
+
+        $row = new self($this->column);
+
+        $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
+        $valueIndex = 0;
+
+        foreach ($iterator as $value) {
+            if ($value['r'] === 0 && $row->rowsCount() === $rowsInChunk) {
+                $rows[] = $row;
+                $row = new self($this->column);
+            }
+
+            if ($value['d'] === $maxDefinitionLevel) {
+                $row->add(new FlatValue($this->column, $value['r'], $value['d'], $this->values[$valueIndex]));
+                $valueIndex++;
+            } else {
+                $row->add(new FlatValue($this->column, $value['r'], $value['d'], null));
+            }
+        }
+
+        if ($row->isEmpty() === false) {
+            $rows[] = $row;
+        }
+
+        return $rows;
     }
 
     /**

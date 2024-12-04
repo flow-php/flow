@@ -9,7 +9,12 @@ use Faker\Factory;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkStatistics, PageSizeCalculator, PagesBuilder};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkStatistics,
+    DremelShredder,
+    FlatColumnData,
+    PageSizeCalculator,
+    PagesBuilder,
+    Validator\ColumnDataValidator};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\{Compressions, Encodings, Schema};
 use Flow\Parquet\{Option, Options};
@@ -24,13 +29,21 @@ final class PagesBuilderTest extends TestCase
 
         $options = new Options();
         $options->set(Option::PAGE_SIZE_BYTES, 1024); // 1024 / 4 = 256 - this is the total number of integers we want to keep in a single page
-        $statistics = new ColumnChunkStatistics($schema->get('int32'));
+        $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('int32'));
+
+        $data = FlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
+            $data->merge($this->dremelShredder()->shred($flatColumn, ['int32' => $value]));
         }
-        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($schema->get('int32'), $values, $statistics);
+
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+            ->build(
+                $flatColumn,
+                $data->values('int32'),
+                $statistics
+            );
 
         self::assertCount(4, $pages->dataPageContainers());
         self::assertEquals(
@@ -60,15 +73,22 @@ final class PagesBuilderTest extends TestCase
             2 => 'BLUE',
         ];
         $values = \array_map(static fn ($i) => $enum[generate_random_int(0, 2)], \range(0, 99));
-        $statistics = new ColumnChunkStatistics($schema->get('enum'));
+        $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('enum'));
+
+        $data = FlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
+            $data->merge($this->dremelShredder()->shred($flatColumn, ['enum' => $value]));
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($schema->get('enum'), $values, $statistics);
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+            ->build(
+                $flatColumn,
+                $data->values('enum'),
+                $statistics
+            );
 
         self::assertEquals(
             new PageHeader(
@@ -107,15 +127,22 @@ final class PagesBuilderTest extends TestCase
         $schema = Schema::with(FlatColumn::int32('int32'));
         $values = \array_map(static fn ($i) => $i, \range(0, 99));
 
-        $statistics = new ColumnChunkStatistics($schema->get('int32'));
+        $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('int32'));
+
+        $data = FlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
+            $data->merge($this->dremelShredder()->shred($flatColumn, ['int32' => $value]));
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($schema->get('int32'), $values, $statistics);
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+            ->build(
+                $flatColumn,
+                $data->values('int32'),
+                $statistics
+            );
 
         self::assertCount(1, $pages->dataPageContainers());
         self::assertEquals(
@@ -141,15 +168,22 @@ final class PagesBuilderTest extends TestCase
         $schema = Schema::with(FlatColumn::json('json'));
         $faker = Factory::create();
         $values = \array_map(static fn ($i) => \json_encode(['id' => $faker->uuid], JSON_THROW_ON_ERROR), \range(0, 99));
-        $statistics = new ColumnChunkStatistics($schema->get('json'));
+        $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('json'));
+
+        $data = FlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
+            $data->merge($this->dremelShredder()->shred($flatColumn, ['json' => $value]));
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($schema->get('json'), $values, $statistics);
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+            ->build(
+                $flatColumn,
+                $data->values('json'),
+                $statistics
+            );
 
         self::assertNull($pages->dictionaryPageContainer());
         self::assertEquals(
@@ -175,14 +209,21 @@ final class PagesBuilderTest extends TestCase
         $schema = Schema::with(FlatColumn::string('string'));
         $values = \array_map(static fn ($i) => 'abcdefghij', \range(0, 99));
         $options = Options::default()->set(Option::PAGE_SIZE_BYTES, 50);
-        $statistics = new ColumnChunkStatistics($schema->get('string'));
+        $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('string'));
+
+        $data = FlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
+            $data->merge($this->dremelShredder()->shred($flatColumn, ['string' => $value]));
         }
 
-        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($schema->get('string'), $values, $statistics);
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+            ->build(
+                $flatColumn,
+                $data->values('string'),
+                $statistics
+            );
 
         self::assertCount(1, $pages->dataPageContainers());
         self::assertEquals(
@@ -222,14 +263,23 @@ final class PagesBuilderTest extends TestCase
         $schema = Schema::with(FlatColumn::string('uuid'));
         $faker = Factory::create();
         $values = \array_map(static fn ($i) => $faker->uuid, \range(0, 99));
-        $statistics = new ColumnChunkStatistics($schema->get('uuid'));
+        /** @var FlatColumn $flatColumn */
+        $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('uuid'));
+
+        $data = FlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
+            $data->merge($this->dremelShredder()->shred($flatColumn, ['uuid' => $value]));
         }
+
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
-            ->build($schema->get('uuid'), $values, $statistics);
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+            ->build(
+                $schema->getFlat('uuid'),
+                $data->values('uuid'),
+                $statistics
+            );
 
         self::assertNull($pages->dictionaryPageContainer());
         self::assertEquals(
@@ -248,5 +298,10 @@ final class PagesBuilderTest extends TestCase
             ),
             $pages->dataPageContainers()[0]->pageHeader
         );
+    }
+
+    private function dremelShredder() : DremelShredder
+    {
+        return new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
     }
 }

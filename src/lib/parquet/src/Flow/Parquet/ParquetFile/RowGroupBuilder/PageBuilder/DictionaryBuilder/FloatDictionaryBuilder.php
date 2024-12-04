@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryBuilder;
 
-use function Flow\Parquet\array_flatten;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\Dictionary;
 
 final class FloatDictionaryBuilder
 {
-    public function build(array $rows) : Dictionary
+    public function build(FlatColumnValues $data) : Dictionary
     {
         $dictionary = [];
         $indices = [];
         $valueToIndex = [];
         $dictionarySize = 0;
 
-        foreach (array_flatten($rows) as $value) {
+        foreach ($data->values() as $value) {
             if ($value === null) {
                 continue;
             }

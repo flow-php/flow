@@ -21,6 +21,9 @@ final class Stack
         return $this->stack;
     }
 
+    /**
+     * @psalm-suppress UnsupportedReferenceUsage
+     */
     public function push(int $level, mixed $value) : void
     {
         if ($level > $this->maxRepetitionLevel) {

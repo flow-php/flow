@@ -74,7 +74,22 @@ final class Schema
         return $columns;
     }
 
-    public function get(string $flatPath) : Column
+    public function get(string $name) : Column
+    {
+        if (!\count($this->cache)) {
+            foreach ($this->columns() as $column) {
+                $this->cache($column);
+            }
+        }
+
+        if (\array_key_exists($name, $this->cache)) {
+            return $this->cache[$name];
+        }
+
+        throw new InvalidArgumentException("Column \"{$name}\" does not exist");
+    }
+
+    public function getFlat(string $flatPath) : FlatColumn
     {
         if (!\count($this->cache)) {
             foreach ($this->columns() as $column) {
@@ -83,7 +98,13 @@ final class Schema
         }
 
         if (\array_key_exists($flatPath, $this->cache)) {
-            return $this->cache[$flatPath];
+            $column = $this->cache[$flatPath];
+
+            if (!$column instanceof FlatColumn) {
+                throw new InvalidArgumentException("Column \"{$flatPath}\" is not a FlatColumn");
+            }
+
+            return $column;
         }
 
         throw new InvalidArgumentException("Column \"{$flatPath}\" does not exist");

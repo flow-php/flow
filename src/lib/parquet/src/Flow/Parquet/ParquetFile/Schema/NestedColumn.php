@@ -13,6 +13,8 @@ final class NestedColumn implements Column
 
     private ?self $parent = null;
 
+    private ?Repetitions $repetitions = null;
+
     /**
      * @param array<Column> $children
      */
@@ -341,6 +343,10 @@ final class NestedColumn implements Column
 
     public function repetitions() : Repetitions
     {
+        if ($this->repetitions !== null) {
+            return $this->repetitions;
+        }
+
         $repetitions = [$this->repetition];
 
         $parent = $this->parent();
@@ -355,7 +361,9 @@ final class NestedColumn implements Column
             $parent = $parent->parent();
         }
 
-        return new Repetitions(...\array_values(\array_reverse($repetitions)));
+        $this->repetitions = new Repetitions(...\array_reverse($repetitions));
+
+        return $this->repetitions;
     }
 
     public function setParent(self $parent) : void

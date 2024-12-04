@@ -4,40 +4,43 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class ColumnChunkBuilder
 {
-    private array $rows = [];
+    private FlatColumnValues $columnData;
 
     private ColumnChunkStatistics $statistics;
 
     public function __construct(
         private readonly FlatColumn $column,
         private readonly Compressions $compression,
-        private readonly DataConverter $dataConverter,
         private readonly PageSizeCalculator $calculator,
         private readonly Options $options,
     ) {
         $this->statistics = new ColumnChunkStatistics($this->column);
+        $this->columnData = new FlatColumnValues($this->column);
     }
 
-    public function addRow(mixed $row) : void
+    public function addRow(FlatColumnValues $row) : void
     {
-        //        $this->statistics->add($row);
-        $this->rows[] = $row;
+        $this->columnData->merge($row);
+
+        foreach ($row->values() as $value) {
+            $this->statistics->add($value);
+        }
     }
 
     public function flush(int $fileOffset) : ColumnChunkContainer
     {
-        $pageContainers = (new PagesBuilder($this->dataConverter, $this->compression, $this->calculator, $this->options))
-            ->build($this->column, $this->rows, $this->statistics);
+        $pageContainers = (new PagesBuilder($this->compression, $this->calculator, $this->options))
+            ->build($this->column, $this->columnData, $this->statistics);
 
-        $statistics = (new StatisticsBuilder($this->dataConverter))->build($this->column, $this->statistics);
+        $statistics = (new StatisticsBuilder())->build($this->column, $this->statistics);
 
         $this->statistics->reset();
 
@@ -61,14 +64,9 @@ final class ColumnChunkBuilder
         );
     }
 
-    /**
-     * Flatten rows collected by chunk builder.
-     *
-     * @return array<mixed>
-     */
-    public function rows() : array
+    public function rows() : FlatColumnValues
     {
-        return $this->rows;
+        return $this->columnData;
     }
 
     public function statistics() : ColumnChunkStatistics

@@ -228,19 +228,19 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+--------------+-----------+----------+-------------+----------+
-|         name |      type | nullable | scalar_type | metadata |
-+--------------+-----------+----------+-------------+----------+
-|     order_id |      uuid |    false |             |       [] |
-|   created_at |  datetime |    false |             |       [] |
-|   updated_at |  datetime |    false |             |       [] |
-| cancelled_at |    scalar |     true |      string |       [] |
-|  total_price |    scalar |    false |       float |       [] |
-|     discount |    scalar |    false |       float |       [] |
-|     customer | structure |    false |             |       [] |
-|      address | structure |    false |             |       [] |
-|        notes |      json |    false |             |       [] |
-+--------------+-----------+----------+-------------+----------+
++------------+----------+----------+-------------+----------+
+|       name |     type | nullable | scalar_type | metadata |
++------------+----------+----------+-------------+----------+
+|   order_id |     uuid |    false |             |       [] |
+| created_at | datetime |    false |             |       [] |
+| updated_at | datetime |    false |             |       [] |
+|   discount |   scalar |     true |      string |       [] |
+|      email |   scalar |    false |      string |       [] |
+|   customer |   scalar |    false |      string |       [] |
+|    address |      map |    false |             |       [] |
+|      notes |     list |    false |             |       [] |
+|      items |     list |    false |             |       [] |
++------------+----------+----------+-------------+----------+
 9 rows
 
 OUTPUT,

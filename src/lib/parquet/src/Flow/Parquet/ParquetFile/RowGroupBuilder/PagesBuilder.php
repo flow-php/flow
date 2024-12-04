@@ -4,35 +4,34 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\{DataPageBuilder, DictionaryPageBuilder};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
-use Flow\Parquet\{Option, Options};
+use Flow\Parquet\{Option, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
 
 final class PagesBuilder
 {
     public function __construct(
-        private readonly DataConverter $dataConverter,
         private readonly Compressions $compression,
         private readonly PageSizeCalculator $pageSizeCalculator,
         private readonly Options $options,
     ) {
     }
 
-    public function build(FlatColumn $column, array $rows, ColumnChunkStatistics $statistics) : PageContainers
+    public function build(FlatColumn $column, FlatColumnValues $data, ColumnChunkStatistics $statistics) : PageContainers
     {
         $containers = new PageContainers();
 
         if ($column->type() !== PhysicalType::BOOLEAN) {
             if ($statistics->cardinalityRation() <= $this->options->get(Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION)) {
-                $dictionaryPageContainer = (new DictionaryPageBuilder($this->dataConverter, $this->compression, $this->options))->build($column, $rows);
+                $dictionaryPageContainer = (new DictionaryPageBuilder($this->compression, $this->options))->build($column, $data);
 
                 if ($dictionaryPageContainer->dataSize() <= $this->options->get(Option::DICTIONARY_PAGE_SIZE)) {
                     $containers->add($dictionaryPageContainer);
 
                     $containers->add(
-                        (new DataPageBuilder($this->dataConverter, $this->compression, $this->options))->build($column, $rows, $dictionaryPageContainer->dictionary, $dictionaryPageContainer->values)
+                        (new DataPageBuilder($this->compression, $this->options))
+                            ->build($column, $data, $dictionaryPageContainer->dictionary, $dictionaryPageContainer->values)
                     );
 
                     return $containers;
@@ -42,8 +41,8 @@ final class PagesBuilder
         }
 
         /* @phpstan-ignore-next-line */
-        foreach (\array_chunk($rows, $this->pageSizeCalculator->rowsPerPage($column, $statistics)) as $rowsChunk) {
-            $containers->add((new DataPageBuilder($this->dataConverter, $this->compression, $this->options))->build($column, $rowsChunk));
+        foreach ($data->splitByRows($this->pageSizeCalculator->rowsPerPage($column, $statistics)) as $rowsChunk) {
+            $containers->add((new DataPageBuilder($this->compression, $this->options))->build($column, $rowsChunk));
         }
 
         return $containers;

@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use function Flow\Parquet\{array_combine_recursive, array_iterate_at_level};
+use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{DefinitionToValue, NullLevel, Stack};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final class DremelAssembler
 {
-    public function assembly(Column $column, ColumnData $flatData) : array
+    public function __construct(private readonly DataConverter $dataConverter)
+    {
+    }
+
+    public function assemble(Column $column, FlatColumnData $flatData) : array
     {
         $depth = 0;
 
@@ -64,7 +69,7 @@ final class DremelAssembler
         return $rows;
     }
 
-    private function assemblyFlat(FlatColumn $column, ColumnData $flatData) : array
+    private function assemblyFlat(FlatColumn $column, FlatColumnData $flatData) : array
     {
         $stack = new Stack($column->repetitions()->maxRepetitionLevel());
 
@@ -74,7 +79,7 @@ final class DremelAssembler
                 (new DefinitionToValue())(
                     $column->repetitions(),
                     $value->definitionLevel,
-                    $value->value
+                    $this->dataConverter->fromParquetType($column, $value->value)
                 )
             );
         }
@@ -82,7 +87,7 @@ final class DremelAssembler
         return $stack->dump();
     }
 
-    private function assemblyList(NestedColumn $column, ColumnData $flatData, int $depth) : array
+    private function assemblyList(NestedColumn $column, FlatColumnData $flatData, int $depth) : array
     {
         $depth++;
 
@@ -107,7 +112,7 @@ final class DremelAssembler
         return \array_merge($rows, $this->assemblyStructure($listElementColumn, $flatData, $depth, repeated: true));
     }
 
-    private function assemblyMap(NestedColumn|Column $column, ColumnData $flatData, int $depth) : array
+    private function assemblyMap(NestedColumn $column, FlatColumnData $flatData, int $depth) : array
     {
         $depth++;
         $rows = [];
@@ -191,7 +196,7 @@ final class DremelAssembler
         return $rows;
     }
 
-    private function assemblyStructure(NestedColumn $column, ColumnData $flatData, int $depth, bool $repeated = false) : array
+    private function assemblyStructure(NestedColumn $column, FlatColumnData $flatData, int $depth, bool $repeated = false) : array
     {
         $depth++;
         $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
@@ -260,7 +265,7 @@ final class DremelAssembler
                 array_iterate_at_level(
                     $propertyValues,
                     $column->repetitions()->maxRepetitionLevel(),
-                    static function (&$value) use ($propertyName, $column) : void {
+                    static function (mixed &$value) use ($propertyName, $column) : void {
 
                         if ($value instanceof NullLevel && $value->level + 1 === $column->repetitions()->maxDefinitionLevel()) {
                             return;

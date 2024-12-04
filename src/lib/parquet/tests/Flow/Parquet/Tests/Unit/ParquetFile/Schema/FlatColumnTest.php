@@ -17,6 +17,6 @@ final class FlatColumnTest extends TestCase
 
     public function test_repetitions() : void
     {
-        self::assertSame([Repetition::OPTIONAL], Schema::with(FlatColumn::int32('int32'))->get('int32')->repetitions());
+        self::assertSame([Repetition::OPTIONAL], Schema::with(FlatColumn::int32('int32'))->get('int32')->repetitions()->toArray());
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
+use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder};
 use Flow\Parquet\ParquetFile\Schema;
@@ -100,7 +102,7 @@ final class DremelStructuresTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.int32')->repetitions());
         self::assertEquals('OPTIONAL,OPTIONAL', $schema->get('s.string')->repetitions());
@@ -127,7 +129,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }
@@ -211,7 +213,7 @@ final class DremelStructuresTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('s.l.list.element')->repetitions());
 
@@ -230,7 +232,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }
@@ -339,7 +341,7 @@ final class DremelStructuresTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,OPTIONAL,REPEATED,REQUIRED', $schema->get('s.m.key_value.key')->repetitions());
         self::assertEquals('OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('s.m.key_value.value')->repetitions());
@@ -362,7 +364,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }
@@ -458,7 +460,7 @@ final class DremelStructuresTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,OPTIONAL,OPTIONAL', $schema->get('s.s1.int32')->repetitions());
         self::assertEquals('OPTIONAL,OPTIONAL,OPTIONAL', $schema->get('s.s1.string')->repetitions());
@@ -481,7 +483,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }
@@ -500,7 +502,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "int32" is required',
+        'Column "s.int32" is required',
     ])]
     #[TestWith([
         [
@@ -508,7 +510,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "string" is required',
+        'Column "s.string" is required',
     ])]
     #[TestWith([
         [
@@ -516,7 +518,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "bool" is required',
+        'Column "s.bool" is required',
     ])]
     #[TestWith([
         [
@@ -557,7 +559,7 @@ final class DremelStructuresTest extends TestCase
             )->makeRequired()
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED,REQUIRED', $schema->get('s.int32')->repetitions());
         self::assertEquals('REQUIRED,REQUIRED', $schema->get('s.string')->repetitions());
@@ -584,7 +586,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }
@@ -603,7 +605,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "l" is required',
+        'Column "s.l" is required',
     ])]
     #[TestWith([
         [
@@ -611,7 +613,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "l" is required',
+        'Column "s.l" is required',
     ])]
     #[TestWith([
         [
@@ -619,7 +621,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "element" is required',
+        'Column "s.l.list.element" is required',
     ])]
     #[TestWith([
         [
@@ -644,7 +646,7 @@ final class DremelStructuresTest extends TestCase
             )->makeRequired()
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.l.list.element')->repetitions());
 
@@ -663,7 +665,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }
@@ -682,7 +684,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "m" is required',
+        'Column "s.m" is required',
     ])]
     #[TestWith([
         [
@@ -690,7 +692,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "m" is required',
+        'Column "s.m" is required',
     ])]
     #[TestWith([
         [
@@ -698,7 +700,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "value" is required',
+        'Column "s.m.key_value.value" is required',
     ])]
     #[TestWith([
         [
@@ -734,7 +736,7 @@ final class DremelStructuresTest extends TestCase
             )->makeRequired()
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.key')->repetitions());
         self::assertEquals('REQUIRED,REQUIRED,REPEATED,REQUIRED', $schema->get('s.m.key_value.value')->repetitions());
@@ -757,7 +759,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }
@@ -776,7 +778,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "s1" is required',
+        'Column "s.s1" is required',
     ])]
     #[TestWith([
         [
@@ -784,7 +786,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "s1" is required',
+        'Column "s.s1" is required',
     ])]
     #[TestWith([
         [
@@ -792,7 +794,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "int32" is required',
+        'Column "s.s1.int32" is required',
     ])]
     #[TestWith([
         [
@@ -800,7 +802,7 @@ final class DremelStructuresTest extends TestCase
         ],
         [
         ],
-        'Column "string" is required',
+        'Column "s.s1.string" is required',
     ])]
     #[TestWith([
         [
@@ -836,7 +838,7 @@ final class DremelStructuresTest extends TestCase
             )->makeRequired()
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED,REQUIRED,REQUIRED', $schema->get('s.s1.int32')->repetitions());
         self::assertEquals('REQUIRED,REQUIRED,REQUIRED', $schema->get('s.s1.string')->repetitions());
@@ -859,7 +861,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler())->assembly($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
             );
         }
     }

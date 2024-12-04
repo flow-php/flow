@@ -111,7 +111,7 @@ final class NestedColumnTest extends TestCase
 
         self::assertEquals(
             [Schema\Repetition::OPTIONAL, Schema\Repetition::OPTIONAL, Schema\Repetition::REPEATED, Schema\Repetition::OPTIONAL, Schema\Repetition::OPTIONAL, Schema\Repetition::REPEATED],
-            $schema->get('struct.list.list.element.map.key_value')->repetitions()
+            $schema->get('struct.list.list.element.map.key_value')->repetitions()->toArray()
         );
     }
 }

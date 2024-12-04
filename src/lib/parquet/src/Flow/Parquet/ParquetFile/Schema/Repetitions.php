@@ -8,6 +8,10 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 
 final class Repetitions implements \Countable
 {
+    private ?int $maxDefinitionLevel = null;
+
+    private ?int $maxRepetitionLevel = null;
+
     private array $repetitions;
 
     public function __construct(
@@ -72,6 +76,10 @@ final class Repetitions implements \Countable
 
     public function maxDefinitionLevel() : int
     {
+        if ($this->maxDefinitionLevel !== null) {
+            return $this->maxDefinitionLevel;
+        }
+
         $maxDefinitionLevel = 0;
 
         foreach ($this->repetitions as $repetition) {
@@ -80,11 +88,17 @@ final class Repetitions implements \Countable
             }
         }
 
-        return $maxDefinitionLevel;
+        $this->maxDefinitionLevel = $maxDefinitionLevel;
+
+        return $this->maxDefinitionLevel;
     }
 
     public function maxRepetitionLevel() : int
     {
+        if ($this->maxRepetitionLevel !== null) {
+            return $this->maxRepetitionLevel;
+        }
+
         $maxRepetitionLevel = 0;
 
         foreach ($this->repetitions as $repetition) {
@@ -93,7 +107,9 @@ final class Repetitions implements \Countable
             }
         }
 
-        return $maxRepetitionLevel;
+        $this->maxRepetitionLevel = $maxRepetitionLevel;
+
+        return $this->maxRepetitionLevel;
     }
 
     /**

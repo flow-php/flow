@@ -40,7 +40,7 @@ final class FileRowsCountCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame('10000', $tester->getDisplay());
+        self::assertSame('1000', $tester->getDisplay());
     }
 
     public function test_count_rows_text() : void

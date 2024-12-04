@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-use Flow\Dremel\Repetition as DremelRepetition;
-
 enum Repetition : int
 {
     case OPTIONAL = 1;
@@ -25,14 +23,5 @@ enum Repetition : int
     public function isRequired() : bool
     {
         return $this === self::REQUIRED;
-    }
-
-    public function toDremel() : DremelRepetition
-    {
-        return match ($this) {
-            self::REQUIRED => DremelRepetition::REQUIRED,
-            self::OPTIONAL => DremelRepetition::OPTIONAL,
-            self::REPEATED => DremelRepetition::REPEATED,
-        };
     }
 }

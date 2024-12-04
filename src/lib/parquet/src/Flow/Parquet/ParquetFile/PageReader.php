@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
-use Flow\Dremel\DataShredded;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
 use Flow\Parquet\ParquetFile\Page\{Dictionary, PageHeader};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\{ByteOrder, Options};
+use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
 
 final class PageReader
 {
@@ -25,7 +24,7 @@ final class PageReader
      * @psalm-suppress PossiblyNullReference
      * @psalm-suppress PossiblyNullArgument
      */
-    public function readData(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : DataShredded
+    public function readData(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : FlatColumnValues
     {
         switch ($pageHeader->type()) {
             case Type::DATA_PAGE:

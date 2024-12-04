@@ -64,9 +64,9 @@ final class MapsReadingTest extends TestCase
         foreach ($file->values(['map_of_complex_lists']) as $row) {
             self::assertIsArray($row['map_of_complex_lists']);
             self::assertIsArray($row['map_of_complex_lists']['key_0']);
-            self::assertIsString($row['map_of_complex_lists']['key_0']['string'][0]);
-            self::assertIsInt($row['map_of_complex_lists']['key_0']['int'][0]);
-            self::assertIsBool($row['map_of_complex_lists']['key_0']['bool'][0]);
+            self::assertIsString($row['map_of_complex_lists']['key_0'][0]['string']);
+            self::assertIsInt($row['map_of_complex_lists']['key_0'][0]['int']);
+            self::assertIsBool($row['map_of_complex_lists']['key_0'][0]['bool']);
             $count++;
         }
         self::assertSame(100, $count);

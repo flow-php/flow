@@ -12,10 +12,14 @@ final class ColumnDataValidator implements Validator
 {
     public function validate(Column $column, mixed $data) : void
     {
-        if ($column->repetition() === Repetition::REQUIRED) {
+        if ($column->repetition()?->isRequired()) {
             if ($data === null) {
-                throw new ValidationException(\sprintf('Column "%s" is required', $column->name()));
+                throw new ValidationException(\sprintf('Column "%s" is required', $column->flatPath()));
             }
+        }
+
+        if ($column->repetition()?->isRepeated() && !\is_array($data)) {
+            throw new ValidationException(\sprintf('Column "%s" is not array, got %s', $column->flatPath(), \gettype($data)));
         }
 
         if ($column->repetition() === Repetition::OPTIONAL) {
@@ -77,7 +81,7 @@ final class ColumnDataValidator implements Validator
             return;
         }
 
-        if ($column->repetition() !== Repetition::REQUIRED) {
+        if ($column->repetition()?->isOptional()) {
             if ($data === null) {
                 return;
             }

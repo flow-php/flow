@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
+use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnData, DremelAssembler, DremelShredder};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder, FlatColumnData};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use PHPUnit\Framework\Attributes\TestWith;
@@ -121,7 +123,7 @@ final class DremelMapsTest extends TestCase
     {
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32()));
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('OPTIONAL,REPEATED,OPTIONAL', $schema->get('m.key_value.value')->repetitions());
@@ -136,23 +138,23 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -327,7 +329,7 @@ final class DremelMapsTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL', $schema->get('m.key_value.value.list.element')->repetitions());
@@ -342,22 +344,22 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -560,7 +562,7 @@ final class DremelMapsTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
         self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.value.key_value.key')->repetitions());
         self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,REPEATED,OPTIONAL', $schema->get('m.key_value.value.key_value.value')->repetitions());
@@ -578,23 +580,23 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -760,7 +762,7 @@ final class DremelMapsTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,OPTIONAL', $schema->get('m.key_value.value.int32')->repetitions());
@@ -779,22 +781,22 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -858,7 +860,7 @@ final class DremelMapsTest extends TestCase
             )
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('OPTIONAL,REPEATED,OPTIONAL,OPTIONAL,REPEATED,OPTIONAL', $schema->get('m.key_value.value.l.list.element')->repetitions());
@@ -873,22 +875,22 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -906,7 +908,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "value" is required',
+        'Column "m.key_value.value" is required',
     ])]
     #[TestWith([
         [
@@ -929,7 +931,7 @@ final class DremelMapsTest extends TestCase
     {
         $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32(true))->makeRequired());
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.value')->repetitions());
@@ -944,22 +946,22 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -977,7 +979,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "value" is required',
+        'Column "m.key_value.value" is required',
     ])]
     #[TestWith([
         [
@@ -1009,7 +1011,7 @@ final class DremelMapsTest extends TestCase
             )->makeRequired()
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('REQUIRED,REPEATED,REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.value.list.element')->repetitions());
@@ -1024,22 +1026,22 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -1061,7 +1063,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "value" is required',
+        'Column "m.key_value.value" is required',
     ])]
     #[TestWith([
         [
@@ -1071,7 +1073,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "value" is required',
+        'Column "m.key_value.value.key_value.value" is required',
     ])]
     #[TestWith([
         [
@@ -1111,7 +1113,7 @@ final class DremelMapsTest extends TestCase
             )->makeRequired()
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
         self::assertEquals('REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('REQUIRED,REPEATED,REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.value.key_value.key')->repetitions());
         self::assertEquals('REQUIRED,REPEATED,REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.value.key_value.value')->repetitions());
@@ -1129,23 +1131,23 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
 
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 
@@ -1163,7 +1165,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "value" is required',
+        'Column "m.key_value.value" is required',
     ])]
     #[TestWith([
         [
@@ -1171,7 +1173,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "int32" is required',
+        'Column "m.key_value.value.int32" is required',
     ])]
     #[TestWith([
         [
@@ -1179,7 +1181,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "int32" is required',
+        'Column "m.key_value.value.int32" is required',
     ])]
     #[TestWith([
         [
@@ -1187,7 +1189,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "string" is required',
+        'Column "m.key_value.value.string" is required',
     ])]
     #[TestWith([
         [
@@ -1195,7 +1197,7 @@ final class DremelMapsTest extends TestCase
         ],
         [
         ],
-        'Column "string" is required',
+        'Column "m.key_value.value.string" is required',
     ])]
     #[TestWith([
         [
@@ -1240,7 +1242,7 @@ final class DremelMapsTest extends TestCase
             )->makeRequired()
         );
 
-        $dremel = new DremelShredder(new ColumnDataValidator());
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
 
         self::assertEquals('REQUIRED,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
         self::assertEquals('REQUIRED,REPEATED,REQUIRED,REQUIRED', $schema->get('m.key_value.value.int32')->repetitions());
@@ -1259,22 +1261,22 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?ColumnData $flatData
+             * @var ?FlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?ColumnData $flatData, array $row) => $flatData === null
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler())->assembly($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
         }
     }
 }

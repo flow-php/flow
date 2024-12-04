@@ -1,7 +1,14 @@
 # Dremel
 
-Dremel is a library that provides pure PHP implementation of two algorithms described in the paper "Dremel: Interactive Analysis of Web-Scale Datasets". 
-The algorithms are used to shred and assemble nested data structures in a columnar format.
+> [!WARNING]  
+> This library is not ready yet. Currently, the implementation of the algorithms described in [this document](http://www-cs-students.stanford.edu/~adityagp/courses/cs598/papers/dremel.pdf) is located directly in the flow-php/parquet repository.
+> To be able to extract the algorithms that allow flattening and rebuilding nested data structures, we will need to move several elements from the parquet library to the dremel library. 
+> Here are some of them:
+> 
+> - Schema
+> - Repetitions
+> - DremelShredder 
+> - DremelAssembler
 
 > [!IMPORTANT]  
 > This repository is a subtree split from our monorepo. If you'd like to contribute, please visit our main monorepo [flow-php/flow](https://github.com/flow-php/flow).

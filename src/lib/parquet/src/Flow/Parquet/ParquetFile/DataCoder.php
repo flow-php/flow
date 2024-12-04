@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
-use Flow\Dremel\DataShredded;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValueUnpacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
 use Flow\Parquet\ParquetFile\Page\{Dictionary};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\{ByteOrder, Options};
+use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
 
 final class DataCoder
 {
@@ -26,7 +25,7 @@ final class DataCoder
         FlatColumn $column,
         DataPageHeader $pageHeader,
         ?Dictionary $dictionary = null,
-    ) : DataShredded {
+    ) : FlatColumnValues {
 
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
@@ -59,7 +58,8 @@ final class DataCoder
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
 
         if ($pageHeader->encoding() === Encodings::PLAIN) {
-            return new DataShredded(
+            return new FlatColumnValues(
+                $column,
                 $repetitionLevels,
                 $definitionLevels,
                 (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount)
@@ -89,7 +89,7 @@ final class DataCoder
                 $values = [];
             }
 
-            return new DataShredded($repetitionLevels, $definitionLevels, $values);
+            return new FlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');
@@ -100,7 +100,7 @@ final class DataCoder
         FlatColumn $column,
         DataPageHeaderV2 $pageHeader,
         ?Dictionary $dictionary = null,
-    ) : DataShredded {
+    ) : FlatColumnValues {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
@@ -130,7 +130,8 @@ final class DataCoder
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
 
         if ($pageHeader->encoding() === Encodings::PLAIN) {
-            return new DataShredded(
+            return new FlatColumnValues(
+                $column,
                 $repetitionLevels,
                 $definitionLevels,
                 (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount)
@@ -160,7 +161,7 @@ final class DataCoder
                 $values = [];
             }
 
-            return new DataShredded($repetitionLevels, $definitionLevels, $values);
+            return new FlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Dremel\Tests\Integration;
+namespace Flow\Dremel\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 

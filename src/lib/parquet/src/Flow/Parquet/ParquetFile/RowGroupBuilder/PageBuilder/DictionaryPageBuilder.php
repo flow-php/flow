@@ -5,33 +5,31 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\PlainValuesPacker;
 use Flow\Parquet\ParquetFile\Page\Header\{DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageContainer;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings};
+use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings, RowGroupBuilder\ColumnData\FlatColumnValues};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 
 final class DictionaryPageBuilder
 {
     public function __construct(
-        private readonly DataConverter $dataConverter,
         private readonly Compressions $compression,
         private readonly Options $options,
     ) {
     }
 
-    public function build(FlatColumn $column, array $rows) : PageContainer
+    public function build(FlatColumn $column, FlatColumnValues $data) : PageContainer
     {
-        $dictionary = (new DictionaryBuilder())->build($column, $rows);
+        $dictionary = (new DictionaryBuilder())->build($column, $data);
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
-        (new PlainValuesPacker($pageWriter, $this->dataConverter))->packValues($column, $dictionary->dictionary);
+        (new PlainValuesPacker($pageWriter))->packValues($column, $dictionary->dictionary);
 
         $compressedBuffer = (new Codec($this->options))->compress($pageBuffer, $this->compression);
 

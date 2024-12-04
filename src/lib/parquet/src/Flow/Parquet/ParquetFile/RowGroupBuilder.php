@@ -19,7 +19,7 @@ final class RowGroupBuilder
      */
     private array $chunkBuilders;
 
-    private DremelShredder $flattener;
+    private DremelShredder $shredder;
 
     private RowGroupStatistics $statistics;
 
@@ -30,10 +30,11 @@ final class RowGroupBuilder
         private readonly DataConverter $dataConverter,
         private readonly PageSizeCalculator $calculator,
     ) {
-        $this->flattener = new DremelShredder(
+        $this->shredder = new DremelShredder(
             $this->options->getBool(Option::VALIDATE_DATA)
                 ? new ColumnDataValidator()
-                : new DisabledValidator()
+                : new DisabledValidator(),
+            $this->dataConverter
         );
 
         $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema, $this->compression);
@@ -45,15 +46,9 @@ final class RowGroupBuilder
      */
     public function addRow(array $row) : void
     {
-        $rowFlatColumns = [];
-
         foreach ($this->schema->columns() as $column) {
-            $rowFlatColumns[] = $this->flattener->shred($column, $row);
-        }
-
-        foreach ($rowFlatColumns as $flatColumnValues) {
-            foreach ($flatColumnValues as $columnPath => $columnValues) {
-                $this->chunkBuilders[$columnPath]->addRow($columnValues);
+            foreach ($this->shredder->shred($column, $row)->flatValues() as $flatValue) {
+                $this->chunkBuilders[$flatValue->flatPath()]->addRow($flatValue);
             }
         }
 
@@ -122,7 +117,7 @@ final class RowGroupBuilder
         $builders = [];
 
         foreach ($schema->columnsFlat() as $column) {
-            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $compression, $this->dataConverter, $this->calculator, $this->options);
+            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $compression, $this->calculator, $this->options);
         }
 
         return $builders;
