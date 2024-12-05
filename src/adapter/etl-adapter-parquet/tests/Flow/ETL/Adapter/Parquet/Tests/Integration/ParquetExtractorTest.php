@@ -15,7 +15,7 @@ final class ParquetExtractorTest extends TestCase
 {
     public function test_limit() : void
     {
-        $extractor = new ParquetExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../Fixtures/orders_flow.parquet'), Options::default());
+        $extractor = new ParquetExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/Fixtures/orders_1k.parquet'), Options::default());
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -26,10 +26,10 @@ final class ParquetExtractorTest extends TestCase
 
     public function test_reading_file_from_given_offset() : void
     {
-        $totalRows = (new Reader())->read(__DIR__ . '/../Fixtures/orders_flow.parquet')->metadata()->rowsNumber();
+        $totalRows = (new Reader())->read(__DIR__ . '/Fixtures/orders_1k.parquet')->metadata()->rowsNumber();
 
         $extractor = (new ParquetExtractor(
-            Path::realpath(__DIR__ . '/../Fixtures/orders_flow.parquet'),
+            Path::realpath(__DIR__ . '/Fixtures/orders_1k.parquet'),
         ))->withOffset($totalRows - 100);
 
         self::assertCount(
@@ -40,7 +40,7 @@ final class ParquetExtractorTest extends TestCase
 
     public function test_signal_stop() : void
     {
-        $extractor = new ParquetExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../Fixtures/orders_flow.parquet'), Options::default());
+        $extractor = new ParquetExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/Fixtures/orders_1k.parquet'), Options::default());
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 

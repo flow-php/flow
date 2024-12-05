@@ -23,7 +23,7 @@ final class ParquetLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_parquet_loader_bench') . '.parquet';
         $this->rows = new Rows();
 
-        foreach (from_parquet(__DIR__ . '/../Fixtures/orders_flow.parquet')->extract($this->context) as $rows) {
+        foreach (from_parquet(__DIR__ . '/Fixtures/orders_10k.parquet')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }

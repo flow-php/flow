@@ -86,10 +86,10 @@ final class PaginationTest extends TestCase
 
     public function test_reading_file_from_given_offset() : void
     {
-        $totalRows = (new Reader())->read(__DIR__ . '/../Fixtures/orders_flow.parquet')->metadata()->rowsNumber();
+        $totalRows = (new Reader())->read(__DIR__ . '/Fixtures/orders_1k.parquet')->metadata()->rowsNumber();
 
         $extractor = (new ParquetExtractor(
-            Path::realpath(__DIR__ . '/../Fixtures/orders_flow.parquet'),
+            Path::realpath(__DIR__ . '/Fixtures/orders_1k.parquet'),
         ))->withOffset($totalRows - 100);
 
         self::assertCount(

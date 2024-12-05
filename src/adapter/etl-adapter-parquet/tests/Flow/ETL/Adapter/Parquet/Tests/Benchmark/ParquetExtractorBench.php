@@ -20,7 +20,7 @@ final class ParquetExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (from_parquet(__DIR__ . '/../Fixtures/orders_flow.parquet')->extract($this->context) as $rows) {
+        foreach (from_parquet(__DIR__ . '/Fixtures/orders_10k.parquet')->extract($this->context) as $rows) {
         }
     }
 }
