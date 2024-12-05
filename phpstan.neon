@@ -43,5 +43,6 @@ parameters:
         - src/lib/parquet/src/Flow/Parquet/ThriftStream/*
         - src/lib/parquet/src/Flow/Parquet/Thrift/*
         - src/lib/parquet/src/Flow/Parquet/BinaryReader/*
+        - src/lib/parquet/src/Flow/Parquet/ParquetFile/RowGroupBuilder/ColumnData/DefinitionConverter.php
 
     tmpDir: var/phpstan/cache

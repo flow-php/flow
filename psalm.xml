@@ -27,6 +27,7 @@
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php"/>
 
             <file name="src/lib/parquet-viewer/src/Flow/ParquetViewer/Command/ReadMetadataCommand.php" />
+            <file name="src/lib/parquet/src/Flow/Parquet/ParquetFile/RowGroupBuilder/ColumnData/DefinitionConverter.php" />
 
             <directory name="src/cli/src/Flow/CLI/Command" />
             <directory name="src/lib/parquet/src/Flow/Parquet/ThriftStream/" />

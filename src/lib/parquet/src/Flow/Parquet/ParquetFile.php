@@ -10,7 +10,7 @@ use Flow\Parquet\Exception\{InvalidArgumentException};
 use Flow\Parquet\ParquetFile\ColumnChunkReader\WholeChunkReader;
 use Flow\Parquet\ParquetFile\ColumnChunkViewer\WholeChunkViewer;
 use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     Metadata,
     PageReader,
@@ -91,28 +91,15 @@ final class ParquetFile
             $this->options
         );
 
-        $yieldedRows = 0;
-        $skippedRows = 0;
-
         /** @var FlowColumnChunk $columnChunk */
         foreach ($this->getColumnChunks($column, offset: $offset) as $columnChunk) {
             $skipRows = $offset - $columnChunk->rowsOffset;
 
-            /** @var array $row */
             foreach ($reader->read($columnChunk->chunk, $column, $this->stream) as $data) {
-                foreach ($data->splitByRows(1) as $row) {
-                    if ($skipRows >= 0 && $skipRows > $skippedRows) {
-                        $skippedRows++;
-
-                        continue;
-                    }
-
-                    yield $row;
-                    $yieldedRows++;
-
-                    if ($limit !== null && $yieldedRows >= $limit) {
-                        return;
-                    }
+                if ($skipRows > 0) {
+                    yield $data->skipRows($skipRows);
+                } else {
+                    yield $data;
                 }
             }
         }
@@ -148,15 +135,36 @@ final class ParquetFile
             }
         }
 
-        $rows = new \MultipleIterator();
+        $totalRows = $this->metadata()->rowsNumber();
 
-        foreach ($columns as $columnName) {
-            $rows->attachIterator($this->read($this->schema()->get($columnName), $limit, $offset), $columnName);
+        if ($offset > $totalRows) {
+            return;
         }
 
-        /** @var array<string, mixed> $row */
-        foreach ($rows as $row) {
-            yield \array_merge(...$row);
+        if ($offset !== null) {
+            if ($totalRows > $offset) {
+                $totalRows -= $offset;
+            } else {
+                $totalRows = 0;
+            }
+        }
+
+        $totalRows = min($totalRows, $limit ?? $totalRows);
+
+        $columnsData = [];
+
+        foreach ($columns as $columnName) {
+            $columnsData[$columnName] = $this->read($this->schema()->get($columnName), $limit, $offset);
+        }
+
+        for ($i = 0; $i < $totalRows; $i++) {
+            $row = [];
+
+            foreach ($columnsData as $columnData) {
+                $row = \array_merge($row, $columnData[$i]);
+            }
+
+            yield $row;
         }
     }
 
@@ -188,34 +196,41 @@ final class ParquetFile
         }
     }
 
-    private function read(Column $column, ?int $limit = null, ?int $offset = null) : \Generator
+    private function read(Column $column, ?int $limit = null, ?int $offset = null) : array
     {
         $columnData = FlatColumnData::initialize($column);
 
         if ($column instanceof FlatColumn) {
+            $rows = [];
+
             foreach ($this->readChunks($column, $limit, $offset) as $data) {
-                $columnData->addValue(...$data->iterator());
+                $columnData->addValues($data);
             }
 
             foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-                yield $row;
+                $rows[] = $row;
             }
 
-            return;
+            return $rows;
         }
 
-        /**
-         * @var NestedColumn $column
-         */
+        if (!$column instanceof Schema\NestedColumn) {
+            throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
+        }
+
         foreach ($column->childrenFlat() as $child) {
             foreach ($this->readChunks($child, $limit, $offset) as $data) {
                 $columnData->addValues($data);
             }
         }
 
+        $rows = [];
+
         foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-            yield $row;
+            $rows[] = $row;
         }
+
+        return $rows;
     }
 
     /**

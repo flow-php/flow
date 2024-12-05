@@ -67,7 +67,7 @@ final class FlatColumnData
     }
 
     /**
-     * @return \Iterator<int, FlatValue>
+     * @return \Iterator<array-key, FlatValue>
      */
     public function iterator(FlatColumn $column) : \Iterator
     {

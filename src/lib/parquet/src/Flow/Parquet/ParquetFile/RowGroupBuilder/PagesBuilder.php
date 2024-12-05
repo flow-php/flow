@@ -40,7 +40,6 @@ final class PagesBuilder
             }
         }
 
-        /* @phpstan-ignore-next-line */
         foreach ($data->splitByRows($this->pageSizeCalculator->rowsPerPage($column, $statistics)) as $rowsChunk) {
             $containers->add((new DataPageBuilder($this->compression, $this->options))->build($column, $rowsChunk));
         }

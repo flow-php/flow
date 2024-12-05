@@ -13,6 +13,25 @@ use PHPUnit\Framework\TestCase;
 
 final class PaginationTest extends TestCase
 {
+    public function test_reading_last_100_rows() : void
+    {
+        $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
+
+        $totalRows = (new Reader())->read($path)->metadata()->rowsNumber();
+
+        self::assertEquals(
+            \array_merge(
+                ...\array_map(
+                    static function (int $i) : array {
+                        return [['id' => $i]];
+                    },
+                    \range($totalRows - 100, $totalRows - 1)
+                )
+            ),
+            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: $totalRows - 100))
+        );
+    }
+
     public function test_setting_offset_larger_than_file() : void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';

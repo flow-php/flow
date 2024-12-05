@@ -121,7 +121,7 @@ final class ReadMetadataCommand extends Command
             $chunksTable = $style->createTable();
             $chunksTable->setStyle('box');
             $chunksTable->setHeaderTitle('Column Chunks');
-            $chunksTable->setHeaders(['path', 'encodings', 'compression', 'file offset', 'num values', 'dictionary page offset', 'data page offset']);
+            $chunksTable->setHeaders(['path', 'encodings', 'compression', 'file offset', 'num values', 'rows_count', 'dictionary page offset', 'data page offset']);
             $totalChunks = 0;
 
             foreach ($metadata->rowGroups()->all() as $rowGroup) {

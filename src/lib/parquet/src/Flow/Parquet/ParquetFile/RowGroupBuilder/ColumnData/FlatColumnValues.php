@@ -61,7 +61,10 @@ final class FlatColumnValues
     }
 
     /**
-     * @return \ArrayIterator<int<0, max>, FlatValue>
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
+     *
+     * @return \ArrayIterator<array-key, FlatValue>
      */
     public function iterator() : \ArrayIterator
     {
@@ -92,9 +95,9 @@ final class FlatColumnValues
             throw new RuntimeException('Cannot merge different column, attempt to merge: ' . $this->column->flatPath() . ' with ' . $flatData->column->flatPath());
         }
 
-        $this->repetitionLevels = array_merge($this->repetitionLevels, $flatData->repetitionLevels);
-        $this->definitionLevels = array_merge($this->definitionLevels, $flatData->definitionLevels);
-        $this->values = array_merge($this->values, $flatData->values);
+        $this->repetitionLevels = [...$this->repetitionLevels, ...$flatData->repetitionLevels];
+        $this->definitionLevels = [...$this->definitionLevels, ...$flatData->definitionLevels];
+        $this->values = [...$this->values, ...$flatData->values];
 
         return $this;
     }
@@ -120,6 +123,54 @@ final class FlatColumnValues
         return \count(\array_filter($this->repetitionLevels, static fn (int $r) => $r === 0));
     }
 
+    public function skipRows(?int $skipRows) : self
+    {
+        $chunk = [
+            'repetitions' => [],
+            'definitions' => [],
+            'values' => [],
+        ];
+
+        $valueIndex = 0;
+        $maxDefinitionsLevel = $this->column->maxDefinitionsLevel();
+
+        $skippedRows = 0;
+
+        $collect = false;
+
+        foreach ($this->definitionLevels as $index => $definitionLevel) {
+            if ($definitionLevel === $maxDefinitionsLevel) {
+                $value = $this->values[$valueIndex];
+                $valueIndex++;
+            } else {
+                $value = null;
+            }
+
+            $repetitionLevel = $this->repetitionLevels[$index];
+
+            if ($skippedRows >= $skipRows && $repetitionLevel === 0) {
+                $collect = true;
+            }
+
+            if ($repetitionLevel === 0 && $collect === false) {
+                $skippedRows++;
+
+                continue;
+            }
+
+            if ($collect) {
+                $chunk['repetitions'][] = $repetitionLevel;
+                $chunk['definitions'][] = $definitionLevel;
+
+                if ($value !== null) {
+                    $chunk['values'][] = $value;
+                }
+            }
+        }
+
+        return new self($this->column, $chunk['repetitions'], $chunk['definitions'], $chunk['values']);
+    }
+
     /**
      * @param int $rowsInChunk
      *
@@ -128,33 +179,42 @@ final class FlatColumnValues
     public function splitByRows(int $rowsInChunk) : array
     {
         $rows = [];
+        $rowsChunkData = [
+            'repetitions' => [],
+            'definitions' => [],
+            'values' => [],
+        ];
 
-        $iterator = new \MultipleIterator(\MultipleIterator::MIT_NEED_ALL | \MultipleIterator::MIT_KEYS_ASSOC);
-
-        $iterator->attachIterator(new \ArrayIterator($this->repetitionLevels), 'r');
-        $iterator->attachIterator(new \ArrayIterator($this->definitionLevels), 'd');
-
-        $row = new self($this->column);
-
-        $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
         $valueIndex = 0;
+        $maxDefinitionsLevel = $this->column->maxDefinitionsLevel();
 
-        foreach ($iterator as $value) {
-            if ($value['r'] === 0 && $row->rowsCount() === $rowsInChunk) {
-                $rows[] = $row;
-                $row = new self($this->column);
-            }
-
-            if ($value['d'] === $maxDefinitionLevel) {
-                $row->add(new FlatValue($this->column, $value['r'], $value['d'], $this->values[$valueIndex]));
+        foreach ($this->definitionLevels as $index => $definitionLevel) {
+            if ($definitionLevel === $maxDefinitionsLevel) {
+                $value = $this->values[$valueIndex];
                 $valueIndex++;
             } else {
-                $row->add(new FlatValue($this->column, $value['r'], $value['d'], null));
+                $value = null;
+            }
+
+            $repetitionLevel = $this->repetitionLevels[$index];
+
+            if ($repetitionLevel === 0 && \count($rowsChunkData['repetitions']) >= $rowsInChunk) {
+                $rows[] = new self($this->column, $rowsChunkData['repetitions'], $rowsChunkData['definitions'], $rowsChunkData['values']);
+                $rowsChunkData['repetitions'] = [];
+                $rowsChunkData['definitions'] = [];
+                $rowsChunkData['values'] = [];
+            }
+
+            $rowsChunkData['repetitions'][] = $repetitionLevel;
+            $rowsChunkData['definitions'][] = $definitionLevel;
+
+            if ($value !== null) {
+                $rowsChunkData['values'][] = $value;
             }
         }
 
-        if ($row->isEmpty() === false) {
-            $rows[] = $row;
+        if (\count($rowsChunkData['repetitions']) > 0) {
+            $rows[] = new self($this->column, $rowsChunkData['repetitions'], $rowsChunkData['definitions'], $rowsChunkData['values']);
         }
 
         return $rows;

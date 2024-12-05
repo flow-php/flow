@@ -8,9 +8,16 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 
 final class Repetitions implements \Countable
 {
+    public readonly string $id;
+
     private ?int $maxDefinitionLevel = null;
 
     private ?int $maxRepetitionLevel = null;
+
+    /**
+     * Total count of REPEATED repetitions.
+     */
+    private int $repeatedCount;
 
     private array $repetitions;
 
@@ -21,12 +28,25 @@ final class Repetitions implements \Countable
             throw new InvalidArgumentException('Repetitions cannot be empty');
         }
 
+        $idParts = [];
+        $repeatedCount = 0;
+
+        foreach ($repetitions as $repetition) {
+            $idParts[] = $repetition->name;
+
+            if ($repetition === Repetition::REPEATED) {
+                $repeatedCount++;
+            }
+        }
+
         $this->repetitions = $repetitions;
+        $this->id = \implode(',', $idParts);
+        $this->repeatedCount = $repeatedCount;
     }
 
     public function __toString() : string
     {
-        return \implode(',', \array_map(static fn (Repetition $r) => $r->name, $this->repetitions));
+        return $this->id;
     }
 
     public function count() : int
@@ -112,8 +132,13 @@ final class Repetitions implements \Countable
         return $this->maxRepetitionLevel;
     }
 
+    public function repeatedCount() : int
+    {
+        return $this->repeatedCount;
+    }
+
     /**
-     * @param array<Repetition> $repetitions
+     * @return array<Repetition> $repetitions
      */
     public function toArray() : array
     {

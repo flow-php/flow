@@ -6,13 +6,15 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use function Flow\Parquet\{array_combine_recursive, array_iterate_at_level};
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{DefinitionToValue, NullLevel, Stack};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{DefinitionConverter, NullLevel, Stack};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final class DremelAssembler
 {
-    public function __construct(private readonly DataConverter $dataConverter)
-    {
+    public function __construct(
+        private readonly DataConverter $dataConverter,
+        private readonly DefinitionConverter $definitionConverter = new DefinitionConverter(),
+    ) {
     }
 
     public function assemble(Column $column, FlatColumnData $flatData) : array
@@ -73,15 +75,30 @@ final class DremelAssembler
     {
         $stack = new Stack($column->repetitions()->maxRepetitionLevel());
 
-        foreach ($flatData->iterator($column) as $value) {
-            $stack->push(
-                $value->repetitionLevel,
-                (new DefinitionToValue())(
-                    $column->repetitions(),
-                    $value->definitionLevel,
-                    $this->dataConverter->fromParquetType($column, $value->value)
-                )
-            );
+        foreach ($flatData->iterator($column) as $i => $value) {
+            try {
+                $stack->push(
+                    $value->repetitionLevel,
+                    $this->definitionConverter->toValue(
+                        $column->repetitions(),
+                        $value->definitionLevel,
+                        $this->dataConverter->fromParquetType($column, $value->value)
+                    )
+                );
+            } catch (\Throwable $e) {
+                dd(
+                    $i,
+                    $value,
+                    $column->flatPath(),
+                    $column,
+                    $stack,
+                    $this->definitionConverter->toValue(
+                        $column->repetitions(),
+                        $value->definitionLevel,
+                        $this->dataConverter->fromParquetType($column, $value->value)
+                    )
+                );
+            }
         }
 
         return $stack->dump();

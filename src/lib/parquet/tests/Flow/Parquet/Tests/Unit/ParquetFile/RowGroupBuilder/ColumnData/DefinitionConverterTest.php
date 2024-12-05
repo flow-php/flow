@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\ColumnData;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{DefinitionToValue, NullLevel};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{DefinitionConverter, NullLevel};
 use Flow\Parquet\ParquetFile\Schema\{Repetition, Repetitions};
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
-final class DefinitionToValueTest extends TestCase
+final class DefinitionConverterTest extends TestCase
 {
+    private ?DefinitionConverter $definitionConverter = null;
+
     #[TestWith([0, null, new NullLevel(0)])]
     #[TestWith([1, null, new NullLevel(1), 'Value cannot be null for level "1" and max definition level "1"'])]
     #[TestWith([1, 'value', 'value'])]
@@ -22,11 +24,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -44,11 +46,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                $output = (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value),
+                $output = $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value),
                 'Expected ' . \json_encode($result) . ' got ' . \json_encode($output)
             );
         }
@@ -66,11 +68,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -89,11 +91,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -114,11 +116,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -135,11 +137,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -155,11 +157,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -175,11 +177,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -194,11 +196,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -214,11 +216,11 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
     }
@@ -233,12 +235,22 @@ final class DefinitionToValueTest extends TestCase
 
         if ($exceptionMessage) {
             $this->expectExceptionMessage($exceptionMessage);
-            (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value);
+            $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value);
         } else {
             self::assertEquals(
                 $result,
-                (new DefinitionToValue())($repetitions, definitionLevel: $level, value: $value)
+                $this->definitionConverter()->toValue($repetitions, definitionLevel: $level, value: $value)
             );
         }
+    }
+
+    private function definitionConverter() : DefinitionConverter
+    {
+        if ($this->definitionConverter) {
+            return $this->definitionConverter;
+        }
+        $this->definitionConverter = new DefinitionConverter();
+
+        return $this->definitionConverter;
     }
 }

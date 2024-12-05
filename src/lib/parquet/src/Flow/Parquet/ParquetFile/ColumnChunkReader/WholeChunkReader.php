@@ -23,9 +23,6 @@ final class WholeChunkReader implements ColumnChunkReader
     ) {
     }
 
-    /**
-     * @return \Generator<int<0, max>, FlatColumnValues>
-     */
     public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');

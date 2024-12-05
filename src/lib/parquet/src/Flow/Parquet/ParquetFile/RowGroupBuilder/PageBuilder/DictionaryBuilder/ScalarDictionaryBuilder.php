@@ -9,6 +9,9 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\Dictionary;
 
 final class ScalarDictionaryBuilder
 {
+    /**
+     * @psalm-suppress InvalidArrayOffset
+     */
     public function build(FlatColumnValues $data) : Dictionary
     {
         $dictionary = [];

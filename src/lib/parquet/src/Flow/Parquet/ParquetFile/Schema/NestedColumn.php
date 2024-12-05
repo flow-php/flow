@@ -361,7 +361,7 @@ final class NestedColumn implements Column
             $parent = $parent->parent();
         }
 
-        $this->repetitions = new Repetitions(...\array_reverse($repetitions));
+        $this->repetitions = new Repetitions(...\array_reverse(\array_values(\array_filter($repetitions))));
 
         return $this->repetitions;
     }
