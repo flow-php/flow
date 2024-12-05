@@ -1398,6 +1398,54 @@ final class DremelListsTest extends TestCase
 
     #[TestWith([
         [
+            ['l' => []],
+        ],
+        [
+            'l.list.element' => [
+                'repetition_levels' => [0],
+                'definition_levels' => [1],
+                'values' => [],
+            ],
+        ],
+    ])]
+    #[TestWith([
+        [
+            ['l' => [1, 2]],
+        ],
+        [
+            'l.list.element' => [
+                'repetition_levels' => [0, 1],
+                'definition_levels' => [2, 2],
+                'values' => [1, 2],
+            ],
+        ],
+    ])]
+    public function test_optional_list_required_int32(array $rows, array $expectedColumnData) : void
+    {
+        $schema = Schema::with(NestedColumn::list('l', ListElement::int32(true)));
+
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+
+        self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('l.list.element')->repetitions());
+        self::assertEquals(2, $schema->get('l.list.element')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
+
+        /**
+         * @var ?FlatColumnData $flatData
+         */
+        $flatData = \array_reduce(
+            $rows,
+            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                ? $dremel->shred($schema->get('l'), $row)
+                : $flatData->merge($dremel->shred($schema->get('l'), $row))
+        );
+
+        self::assertEquals($expectedColumnData, $flatData->normalize());
+        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData));
+    }
+
+    #[TestWith([
+        [
             ['l' => [1, 2, 3]],
         ],
         [

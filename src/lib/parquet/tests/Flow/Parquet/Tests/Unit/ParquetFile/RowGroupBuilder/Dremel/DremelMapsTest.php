@@ -894,6 +894,83 @@ final class DremelMapsTest extends TestCase
         }
     }
 
+    #[TestWith(
+        [
+            [
+                ['m' => []],
+            ],
+            [
+                'm.key_value.key' => [
+                    'repetition_levels' => [0],
+                    'definition_levels' => [1],
+                    'values' => [],
+                ],
+                'm.key_value.value' => [
+                    'repetition_levels' => [0],
+                    'definition_levels' => [1],
+                    'values' => [],
+                ],
+            ],
+        ]
+    )]
+    #[TestWith(
+        [
+            [
+                ['m' => ['a' => 1, 'b' => 2]],
+            ],
+            [
+                'm.key_value.key' => [
+                    'repetition_levels' => [0, 1],
+                    'definition_levels' => [2, 2],
+                    'values' => ['a', 'b'],
+                ],
+                'm.key_value.value' => [
+                    'repetition_levels' => [0, 1],
+                    'definition_levels' => [2, 2],
+                    'values' => [1, 2],
+                ],
+            ],
+        ]
+    )]
+    public function test_optional_map_string_required_int32(array $rows, array $expectedFlatData, ?string $exceptionMessage = null) : void
+    {
+        $schema = Schema::with(NestedColumn::map('m', MapKey::string(), MapValue::int32(true)));
+
+        $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
+
+        self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.key')->repetitions());
+        self::assertEquals('OPTIONAL,REPEATED,REQUIRED', $schema->get('m.key_value.value')->repetitions());
+
+        self::assertEquals(2, $schema->get('m.key_value.key')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(1, $schema->get('m.key_value.key')->repetitions()->maxRepetitionLevel());
+
+        self::assertEquals(2, $schema->get('m.key_value.value')->repetitions()->maxDefinitionLevel());
+        self::assertEquals(1, $schema->get('m.key_value.value')->repetitions()->maxRepetitionLevel());
+
+        if ($exceptionMessage) {
+            $this->expectExceptionMessage($exceptionMessage);
+            \array_reduce(
+                $rows,
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                    ? $dremel->shred($schema->get('m'), $row)
+                    : $flatData->merge($dremel->shred($schema->get('m'), $row))
+            );
+        } else {
+            /**
+             * @var ?FlatColumnData $flatData
+             */
+            $flatData = \array_reduce(
+                $rows,
+                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                    ? $dremel->shred($schema->get('m'), $row)
+                    : $flatData->merge($dremel->shred($schema->get('m'), $row))
+            );
+
+            self::assertEquals($expectedFlatData, $flatData->normalize());
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+        }
+    }
+
     #[TestWith([
         [
             ['m' => null],
