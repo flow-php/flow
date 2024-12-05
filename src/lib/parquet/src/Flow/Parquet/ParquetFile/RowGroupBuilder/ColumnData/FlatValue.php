@@ -16,7 +16,7 @@ final class FlatValue
     ) {
     }
 
-    public function __debugInfo() : ?array
+    public function __debugInfo() : array
     {
         return [
             'column' => [
