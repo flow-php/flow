@@ -223,14 +223,12 @@ function filesystem_cache(Path|string|null $cache_dir = null, Filesystem $filesy
     return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? Path::realpath($cache_dir) : $cache_dir);
 }
 
-/**
- * @param int<1, max> $chunk_size
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function chunks_from(Extractor $extractor, int $chunk_size) : Extractor\ChunkExtractor
 {
     return new Extractor\ChunkExtractor($extractor, $chunk_size);
 }
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 function from_pipeline(Pipeline $pipeline) : Extractor\PipelineExtractor
 {

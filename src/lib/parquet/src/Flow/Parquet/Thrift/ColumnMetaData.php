@@ -170,7 +170,7 @@ class ColumnMetaData
      * This information can be used to determine if all data pages are
      * dictionary encoded for example *.
      *
-     * @var \Flow\Parquet\Thrift\PageEncodingStats[]
+     * @var PageEncodingStats[]
      */
     public $encoding_stats;
 
@@ -192,7 +192,7 @@ class ColumnMetaData
     /**
      * Optional key/value metadata *.
      *
-     * @var \Flow\Parquet\Thrift\KeyValue[]
+     * @var KeyValue[]
      */
     public $key_value_metadata;
 
