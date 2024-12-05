@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * Dump die.
- */
 if (!\function_exists('dd')) {
     function dd(...$args) : void
     {
@@ -23,9 +20,6 @@ if (!\function_exists('dd')) {
     }
 }
 
-/**
- * Dump json.
- */
 if (!\function_exists('dj')) {
     function dj(mixed $args, int $indention = 0, ?string $header = null) : void
     {
@@ -90,9 +84,6 @@ if (!\function_exists('dj')) {
     }
 }
 
-/**
- * Dump die json.
- */
 if (!\function_exists('ddj')) {
     function ddj(mixed $args, int $indention = 0) : void
     {

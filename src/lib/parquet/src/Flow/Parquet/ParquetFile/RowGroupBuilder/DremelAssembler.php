@@ -76,29 +76,14 @@ final class DremelAssembler
         $stack = new Stack($column->repetitions()->maxRepetitionLevel());
 
         foreach ($flatData->iterator($column) as $i => $value) {
-            try {
-                $stack->push(
-                    $value->repetitionLevel,
-                    $this->definitionConverter->toValue(
-                        $column->repetitions(),
-                        $value->definitionLevel,
-                        $this->dataConverter->fromParquetType($column, $value->value)
-                    )
-                );
-            } catch (\Throwable $e) {
-                dd(
-                    $i,
-                    $value,
-                    $column->flatPath(),
-                    $column,
-                    $stack,
-                    $this->definitionConverter->toValue(
-                        $column->repetitions(),
-                        $value->definitionLevel,
-                        $this->dataConverter->fromParquetType($column, $value->value)
-                    )
-                );
-            }
+            $stack->push(
+                $value->repetitionLevel,
+                $this->definitionConverter->toValue(
+                    $column->repetitions(),
+                    $value->definitionLevel,
+                    $this->dataConverter->fromParquetType($column, $value->value)
+                )
+            );
         }
 
         return $stack->dump();

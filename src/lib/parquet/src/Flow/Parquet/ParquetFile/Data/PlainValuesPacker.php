@@ -38,7 +38,6 @@ final class PlainValuesPacker
                     case LogicalType::TIMESTAMP:
                     case null:
                         $this->writer->writeInts64($values);
-                        $this->writer->writeInts64($values);
 
                         break;
                 }

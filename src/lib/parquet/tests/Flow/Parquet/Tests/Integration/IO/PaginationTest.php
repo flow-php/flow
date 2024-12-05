@@ -9,6 +9,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
 use Flow\Parquet\{Option, Options, Reader, Writer};
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class PaginationTest extends TestCase
@@ -32,33 +33,18 @@ final class PaginationTest extends TestCase
         );
     }
 
-    public function test_setting_offset_larger_than_file() : void
-    {
-        $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
-
-        self::assertEquals(
-            [],
-            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 6000, limit: 10))
-        );
-    }
-
-    public function test_setting_reading_last_100_results() : void
+    #[TestWith([6000, 10, 0])]
+    #[TestWith([4900, 100, 100])]
+    #[TestWith([0, null, 5000])]
+    #[TestWith([4999, 2, 1])]
+    #[TestWith([0, 2, 2])]
+    public function test_setting_offset_larger_than_file(int $offset, ?int $limit, int $results) : void
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
         self::assertCount(
-            100,
-            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 4900, limit: 100))
-        );
-    }
-
-    public function test_setting_setting_limit_greater_than_remaining_rows() : void
-    {
-        $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
-
-        self::assertCount(
-            1,
-            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 4999, limit: 2))
+            $results,
+            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: $offset, limit: $limit))
         );
     }
 
@@ -70,16 +56,6 @@ final class PaginationTest extends TestCase
         $this->expectExceptionMessage('Limit must be greater than 0');
 
         \iterator_to_array((new Reader())->read($path)->values(['id'], limit: -2));
-    }
-
-    public function test_setting_setting_offset_to_0() : void
-    {
-        $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
-
-        self::assertCount(
-            2,
-            \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 0, limit: 2))
-        );
     }
 
     public function test_setting_setting_offset_to_negative() : void

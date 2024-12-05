@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile;
 
-use Flow\Dremel\{Dremel};
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, DisabledValidator};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
@@ -107,10 +106,5 @@ final class SchemaTest extends TestCase
                 ],
             ],
         ];
-    }
-
-    private function flattener() : Dremel
-    {
-        return new Dremel(new DisabledValidator());
     }
 }
