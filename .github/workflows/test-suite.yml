@@ -82,6 +82,7 @@ jobs:
           - "8.4"
         operating-system:
           - "ubuntu-latest"
+          - "windows-latest"
 
     steps:
       - name: "Checkout"
