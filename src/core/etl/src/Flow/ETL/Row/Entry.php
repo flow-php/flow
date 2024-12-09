@@ -39,4 +39,9 @@ interface Entry extends \Stringable
      * @return TValue
      */
     public function value();
+
+    /**
+     * @param TValue $value
+     */
+    public function withValue(mixed $value) : self;
 }

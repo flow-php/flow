@@ -162,4 +162,9 @@ final class JsonEntry implements Entry
 
         return \json_encode($this->value, JSON_THROW_ON_ERROR);
     }
+
+    public function withValue(mixed $value) : Entry
+    {
+        return new self($this->name, $value);
+    }
 }
