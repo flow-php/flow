@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{int_entry, ref, str_entry, sum};
+use function Flow\ETL\DSL\{int_entry, ref, row, rows, str_entry, sum};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\{Config, FlowContext, GroupBy, Row, Rows};
+use Flow\ETL\{Config, FlowContext, GroupBy};
 use PHPUnit\Framework\TestCase;
 
 final class GroupByTest extends TestCase
@@ -15,17 +15,17 @@ final class GroupByTest extends TestCase
     {
         $groupBy = new GroupBy('type');
 
-        $groupBy->group(new Rows(
-            Row::create(str_entry('type', 'a')),
-            Row::create(str_entry('not-type', 'b')),
-            Row::create(str_entry('type', 'c'))
+        $groupBy->group(rows(
+            row(str_entry('type', 'a')),
+            row(str_entry('not-type', 'b')),
+            row(str_entry('type', 'c'))
         ));
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('type', 'a')),
-                Row::create(str_entry('type', null)),
-                Row::create(str_entry('type', 'c'))
+            rows(
+                row(str_entry('type', 'a')),
+                row(str_entry('type', null)),
+                row(str_entry('type', 'c'))
             ),
             $groupBy->result(new FlowContext(Config::default()))
         );
@@ -36,20 +36,20 @@ final class GroupByTest extends TestCase
         $group = (new GroupBy('type'));
 
         $group->aggregate(sum(ref('id')));
-        $group->group(new Rows(
-            Row::create(int_entry('id', 1), str_entry('type', 'a')),
-            Row::create(int_entry('id', 2), str_entry('type', 'b')),
-            Row::create(int_entry('id', 3), str_entry('type', 'c')),
-            Row::create(int_entry('id', 4), str_entry('type', 'a')),
-            Row::create(int_entry('id', 5), str_entry('type', 'd'))
+        $group->group(rows(
+            row(int_entry('id', 1), str_entry('type', 'a')),
+            row(int_entry('id', 2), str_entry('type', 'b')),
+            row(int_entry('id', 3), str_entry('type', 'c')),
+            row(int_entry('id', 4), str_entry('type', 'a')),
+            row(int_entry('id', 5), str_entry('type', 'd'))
         ));
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id_sum', 5), str_entry('type', 'a')),
-                Row::create(int_entry('id_sum', 2), str_entry('type', 'b')),
-                Row::create(int_entry('id_sum', 3), str_entry('type', 'c')),
-                Row::create(int_entry('id_sum', 5), str_entry('type', 'd')),
+            rows(
+                row(int_entry('id_sum', 5), str_entry('type', 'a')),
+                row(int_entry('id_sum', 2), str_entry('type', 'b')),
+                row(int_entry('id_sum', 3), str_entry('type', 'c')),
+                row(int_entry('id_sum', 5), str_entry('type', 'd')),
             ),
             $group->result(new FlowContext(Config::default()))
         );
@@ -65,19 +65,19 @@ final class GroupByTest extends TestCase
 
     public function test_group_by_with_pivoting() : void
     {
-        $rows = new Rows(
-            Row::create(str_entry('product', 'Banana'), int_entry('amount', 1000), str_entry('country', 'USA')),
-            Row::create(str_entry('product', 'Carrots'), int_entry('amount', 1500), str_entry('country', 'USA')),
-            Row::create(str_entry('product', 'Beans'), int_entry('amount', 1600), str_entry('country', 'USA')),
-            Row::create(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
-            Row::create(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
-            Row::create(str_entry('product', 'Banana'), int_entry('amount', 400), str_entry('country', 'China')),
-            Row::create(str_entry('product', 'Carrots'), int_entry('amount', 1200), str_entry('country', 'China')),
-            Row::create(str_entry('product', 'Beans'), int_entry('amount', 1500), str_entry('country', 'China')),
-            Row::create(str_entry('product', 'Orange'), int_entry('amount', 4000), str_entry('country', 'China')),
-            Row::create(str_entry('product', 'Banana'), int_entry('amount', 2000), str_entry('country', 'Canada')),
-            Row::create(str_entry('product', 'Carrots'), int_entry('amount', 2000), str_entry('country', 'Canada')),
-            Row::create(str_entry('product', 'Beans'), int_entry('amount', 2000), str_entry('country', 'Mexico')),
+        $rows = rows(
+            row(str_entry('product', 'Banana'), int_entry('amount', 1000), str_entry('country', 'USA')),
+            row(str_entry('product', 'Carrots'), int_entry('amount', 1500), str_entry('country', 'USA')),
+            row(str_entry('product', 'Beans'), int_entry('amount', 1600), str_entry('country', 'USA')),
+            row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
+            row(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
+            row(str_entry('product', 'Banana'), int_entry('amount', 400), str_entry('country', 'China')),
+            row(str_entry('product', 'Carrots'), int_entry('amount', 1200), str_entry('country', 'China')),
+            row(str_entry('product', 'Beans'), int_entry('amount', 1500), str_entry('country', 'China')),
+            row(str_entry('product', 'Orange'), int_entry('amount', 4000), str_entry('country', 'China')),
+            row(str_entry('product', 'Banana'), int_entry('amount', 2000), str_entry('country', 'Canada')),
+            row(str_entry('product', 'Carrots'), int_entry('amount', 2000), str_entry('country', 'Canada')),
+            row(str_entry('product', 'Beans'), int_entry('amount', 2000), str_entry('country', 'Mexico')),
         );
 
         $group = new GroupBy(ref('product'));
@@ -87,11 +87,33 @@ final class GroupByTest extends TestCase
         $group->group($rows);
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('product', 'Banana'), int_entry('Canada', 2000), int_entry('China', 400), str_entry('Mexico', null), int_entry('USA', 1000)),
-                Row::create(str_entry('product', 'Beans'), str_entry('Canada', null), int_entry('China', 1500), int_entry('Mexico', 2000), int_entry('USA', 1600)),
-                Row::create(str_entry('product', 'Carrots'), int_entry('Canada', 2000), int_entry('China', 1200), str_entry('Mexico', null), int_entry('USA', 1500)),
-                Row::create(str_entry('product', 'Orange'), str_entry('Canada', null), int_entry('China', 4000), str_entry('Mexico', null), int_entry('USA', 4000)),
+            rows(
+                row(str_entry('product', 'Banana'), int_entry('Canada', 2000), int_entry('China', 400), str_entry('Mexico', null), int_entry('USA', 1000)),
+                row(str_entry('product', 'Beans'), str_entry('Canada', null), int_entry('China', 1500), int_entry('Mexico', 2000), int_entry('USA', 1600)),
+                row(str_entry('product', 'Carrots'), int_entry('Canada', 2000), int_entry('China', 1200), str_entry('Mexico', null), int_entry('USA', 1500)),
+                row(str_entry('product', 'Orange'), str_entry('Canada', null), int_entry('China', 4000), str_entry('Mexico', null), int_entry('USA', 4000)),
+            ),
+            $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))
+        );
+    }
+
+    public function test_group_by_with_pivoting_with_null_pivot_column() : void
+    {
+        $rows = rows(
+            row(str_entry('product', 'Banana'), str_entry('country', 'USA'), int_entry('amount', 1000)),
+            row(str_entry('product', 'Apple'), str_entry('country', null), int_entry('amount', 400)),
+        );
+
+        $group = new GroupBy(ref('product'));
+        $group->aggregate(sum(ref('amount')));
+        $group->pivot(ref('country'));
+
+        $group->group($rows);
+
+        self::assertEquals(
+            rows(
+                row(str_entry('product', 'Apple'), str_entry('USA', null)),
+                row(str_entry('product', 'Banana'), int_entry('USA', 1000)),
             ),
             $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))
         );

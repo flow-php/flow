@@ -64,7 +64,7 @@ final class GroupBy
                 }
             }
 
-            $this->pivotColumns = \array_values(\array_unique($this->pivotColumns));
+            $this->pivotColumns = \array_values(\array_filter(\array_unique($this->pivotColumns)));
 
             $indexRef = $this->refs->first();
 
@@ -74,6 +74,10 @@ final class GroupBy
 
                 if (!\array_key_exists($indexValue, $this->pivotedTable)) {
                     $this->pivotedTable[$indexValue] = [];
+                }
+
+                if ($pivotValue === null) {
+                    continue;
                 }
 
                 if (!\array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
