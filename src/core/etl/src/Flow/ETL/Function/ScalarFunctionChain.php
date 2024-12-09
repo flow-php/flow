@@ -76,6 +76,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Cast($this, $type);
     }
 
+    public function coalesce(ScalarFunction ...$params) : self
+    {
+        return new Coalesce($this, ...$params);
+    }
+
     public function concat(ScalarFunction|string ...$params) : self
     {
         return new Concat($this, ...$params);

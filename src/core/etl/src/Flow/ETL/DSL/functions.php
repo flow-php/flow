@@ -14,8 +14,7 @@ use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\StyleConverter\StringStyles;
-use Flow\ETL\Function\{
-    All,
+use Flow\ETL\Function\{All,
     Any,
     ArrayGet,
     ArrayGetCollection,
@@ -32,6 +31,7 @@ use Flow\ETL\Function\{
     CallMethod,
     Capitalize,
     Cast,
+    Coalesce,
     Collect,
     CollectUnique,
     Combine,
@@ -74,8 +74,7 @@ use Flow\ETL\Function\{
     ToUpper,
     Ulid,
     Uuid,
-    When
-};
+    When};
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Memory\Memory;
@@ -832,6 +831,12 @@ function hash(mixed $value, Algorithm $algorithm = new NativePHPHash()) : Hash
 function cast(mixed $value, ScalarFunction|string|Type $type) : Cast
 {
     return new Cast($value, $type);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function coalesce(ScalarFunction ...$values) : Coalesce
+{
+    return new Coalesce(...$values);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
