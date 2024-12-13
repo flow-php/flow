@@ -659,14 +659,14 @@ function col(string $entry) : EntryReference
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
+#[DocumentationExample(topic: 'data_frame', example: 'create_columns')]
 function entry(string $entry) : EntryReference
 {
     return new EntryReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
+#[DocumentationExample(topic: 'data_frame', example: 'create_columns')]
 function ref(string $entry) : EntryReference
 {
     return new EntryReference($entry);
@@ -697,7 +697,7 @@ function optional(ScalarFunction $function) : Optional
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'create_entries')]
+#[DocumentationExample(topic: 'data_frame', example: 'create_columns')]
 function lit(mixed $value) : Literal
 {
     return new Literal($value);
