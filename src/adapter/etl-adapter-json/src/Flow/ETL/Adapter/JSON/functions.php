@@ -15,7 +15,7 @@ use Flow\Filesystem\Path;
  * @param ?Schema $schema - enforce schema on the extracted data - @deprecate use withSchema method instead
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_source', example: 'json')]
+#[DocumentationExample(topic: 'data_reading', example: 'json')]
 function from_json(
     string|Path $path,
     ?string $pointer = null,

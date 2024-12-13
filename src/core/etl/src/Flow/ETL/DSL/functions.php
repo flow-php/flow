@@ -167,7 +167,8 @@ function from_path_partitions(Path|string $path) : Extractor\PathPartitionsExtra
  * @param null|Schema $schema - @deprecated use withSchema() method instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_source', example: 'array')]
+#[DocumentationExample(topic: 'data_reading', example: 'array')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
 function from_array(iterable $array, ?Schema $schema = null) : ArrayExtractor
 {
     $extractor = new ArrayExtractor($array);
@@ -287,7 +288,7 @@ function to_memory(Memory $memory) : MemoryLoader
  * @param-out array<array<mixed>> $array
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_sink', example: 'array')]
+#[DocumentationExample(topic: 'data_writing', example: 'array')]
 function to_array(array &$array) : ArrayLoader
 {
     return new ArrayLoader($array);

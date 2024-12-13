@@ -3,24 +3,20 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\{
-    array_expand,
     data_frame,
-    from_rows,
-    int_entry,
-    json_entry,
-    ref,
-    row,
-    rows,
+    from_array,
     to_stream};
 
 data_frame()
     ->read(
-        from_rows(
-            rows(
-                row(int_entry('id', 1), json_entry('array', ['a' => 1, 'b' => 2, 'c' => 3])),
-            )
+        from_array(
+            [
+                ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
+                ['id' => 2, 'array' => ['a' => 4, 'b' => 5, 'c' => 6]],
+                ['id' => 3, 'array' => ['a' => 7, 'b' => 8, 'c' => 9]],
+            ],
         )
     )
-    ->withEntry('expanded', array_expand(ref('array')))
+    ->collect()
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

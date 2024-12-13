@@ -22,7 +22,7 @@ use Flow\Parquet\{ByteOrder, Options};
  * @param null|int $offset - @deprecated use `withOffset` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_source', example: 'parquet')]
+#[DocumentationExample(topic: 'data_reading', example: 'parquet')]
 function from_parquet(
     string|Path $path,
     array $columns = [],
@@ -52,7 +52,7 @@ function from_parquet(
  * @param null|Schema $schema - @deprecated use `withSchema` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_sink', example: 'parquet')]
+#[DocumentationExample(topic: 'data_writing', example: 'parquet')]
 function to_parquet(
     string|Path $path,
     ?Options $options = null,

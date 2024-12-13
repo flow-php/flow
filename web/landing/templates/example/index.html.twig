@@ -9,7 +9,7 @@
 {%- endblock -%}
 
 {% block main %}
-    <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
+    <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl">
         <h2 class="mb-4 text-2xl font-semibold tracking-wide">Examples:</h2>
         <nav class="font-medium text-center bg-orange-100 rounded">
             <ul class="flex whitespace-nowrap overflow-auto justify-between">
@@ -49,27 +49,29 @@
                 {% endif %}
 
                 {% apply spaceless %}
-                    <h2 class="text-xl mt-5 mb-5">Code</h2>
-                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative">
-                        <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
-                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
-                        </button>
+                <h2 class="text-xl mt-5 mb-5">Code</h2>
+                <div id="code" class="relative">
+                    <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
+                        <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+                    </button>
+                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
                         <code id="code" class="language-php" data-controller="syntax-highlight" >
                             {{- code | escape('html') -}}
                         </code>
                     </pre>
+                </div>
                 {% endapply %}
             </div>
 
             {% if output %}
             <h2 class="text-xl mt-5 mb-5">Output</h2>
-            <div id="output">
+            <div id="output" class="relative">
                 {% apply spaceless %}
-                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative">
-                    <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#output" {{ stimulus_controller('clipboard') }}>
-                        <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
-                    </button>
-                    <code id="output" class="language-bash" {{ stimulus_controller('syntax_highlight') }}>
+                <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#output" {{ stimulus_controller('clipboard') }}>
+                    <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+                </button>
+                <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2">
+                    <code id="output" class="language-bash overflow-auto" {{ stimulus_controller('syntax_highlight') }}>
                         {{- output | escape('html') -}}
                     </code>
                 </pre>

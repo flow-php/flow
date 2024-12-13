@@ -1,4 +1,4 @@
-to create new columns (row entries) we always use `DataFrame::withEntry(string $entryName, ScalarFunction|WindowFunction $ref)` method.  
+To create new columns (row entries) we always use `DataFrame::withEntry(string $entryName, ScalarFunction|WindowFunction $ref)` method.  
 We can create new entry by providing a unique `$entryName`, if the entry already exists it will be replaced.
 
 As a second argument we can provide a static value or a function that will be evaluated for each row. 
