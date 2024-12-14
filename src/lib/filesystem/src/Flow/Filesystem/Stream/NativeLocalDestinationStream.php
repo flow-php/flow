@@ -112,14 +112,4 @@ final class NativeLocalDestinationStream implements DestinationStream
     {
         return $this->path;
     }
-
-    public function write(string $data) : void
-    {
-        if (!$this->isOpen()) {
-            throw new RuntimeException('Cannot write to closed stream');
-        }
-
-        \fseek($this->handle, 0);
-        \fwrite($this->handle, $data);
-    }
 }

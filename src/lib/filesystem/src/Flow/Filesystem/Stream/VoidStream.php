@@ -67,8 +67,4 @@ final class VoidStream implements DestinationStream, SourceStream
     {
         return 0;
     }
-
-    public function write(string $data) : void
-    {
-    }
 }
