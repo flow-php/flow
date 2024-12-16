@@ -21,6 +21,7 @@
         "ext-xmlwriter": "*",
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
+        "async-aws/s3": "^2.6",
         "coduo/php-humanizer": "^5.0",
         "doctrine/dbal": "^3.6 || ^4.0",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
