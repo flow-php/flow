@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\{bool_schema,
     json_schema,
     list_schema,
     map_schema,
+    refs,
     schema,
     schema_evolving_matcher,
     schema_from_json,
@@ -73,7 +74,7 @@ final class SchemaTest extends TestCase
             Schema\Definition::integer('Id')
         );
 
-        self::assertEquals([EntryReference::init('id'), EntryReference::init('Id')], $schema->references());
+        self::assertEquals(refs(EntryReference::init('id'), EntryReference::init('Id')), $schema->references());
     }
 
     public function test_creating_schema_from_corrupted_json() : void
