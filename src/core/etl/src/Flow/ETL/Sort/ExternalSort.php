@@ -26,12 +26,10 @@ final class ExternalSort implements SortingAlgorithm
     private int $batchSize = -1;
 
     /**
-     * @param Pipeline $pipeline
      * @param BucketsCache $bucketsCache
      * @param int<1,max> $bucketsCount - Buckets counts defines how many rows are compared at time. Higher number can reduce IO but increase memory consumption
      */
     public function __construct(
-        private readonly Pipeline $pipeline,
         private readonly BucketsCache $bucketsCache,
         private readonly int $bucketsCount = 10,
     ) {
@@ -40,11 +38,11 @@ final class ExternalSort implements SortingAlgorithm
         }
     }
 
-    public function sortBy(FlowContext $context, References $refs) : Extractor
+    public function sortBy(Pipeline $pipeline, FlowContext $context, References $refs) : Extractor
     {
         $sortedBuckets = [];
 
-        foreach ($this->createBuckets($context, $refs) as $buckets) {
+        foreach ($this->createBuckets($pipeline, $context, $refs) as $buckets) {
             $sortedBuckets[] = $this->sortBuckets($buckets, $refs);
         }
 
@@ -54,14 +52,14 @@ final class ExternalSort implements SortingAlgorithm
     /**
      * @return \Generator<int, Buckets>
      */
-    private function createBuckets(FlowContext $context, References $refs) : \Generator
+    private function createBuckets(Pipeline $pipeline, FlowContext $context, References $refs) : \Generator
     {
         /**
          * @var array<string, Bucket> $buckets
          */
         $buckets = [];
 
-        $generator = $this->pipeline->process($context);
+        $generator = $pipeline->process($context);
 
         generator:
         foreach ($generator as $rows) {
@@ -73,7 +71,7 @@ final class ExternalSort implements SortingAlgorithm
                  */
                 if ($this->batchSize < 500) {
                     $generator->rewind();
-                    $generator = (new BatchingPipeline($this->pipeline, 500))->process($context);
+                    $generator = (new BatchingPipeline($pipeline, 500))->process($context);
 
                     goto generator;
                 }

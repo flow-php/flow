@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{
-    average,
+use function Flow\ETL\DSL\{average,
     bool_entry,
     compare_entries_by_name_desc,
     df,
@@ -19,9 +18,10 @@ use function Flow\ETL\DSL\{
     ref,
     refs,
     str_entry,
+    string_entry,
     to_callable};
 use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, StringEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\{DataFrame, Extractor, Flow, FlowContext, Loader, Row, Rows, Transformation, Transformer};
@@ -398,7 +398,7 @@ final class DataFrameTest extends TestCase
                         new IntegerEntry('id', 101),
                         new BooleanEntry('deleted', false),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
 
@@ -407,7 +407,7 @@ final class DataFrameTest extends TestCase
                         new IntegerEntry('id', 102),
                         new BooleanEntry('deleted', true),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
             }
@@ -417,7 +417,7 @@ final class DataFrameTest extends TestCase
             public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 return $rows->map(
-                    fn (Row $row) : Row => $row->set(new StringEntry('stamp', 'zero'))
+                    fn (Row $row) : Row => $row->set(string_entry('stamp', 'zero'))
                 );
             }
         };
@@ -475,7 +475,7 @@ final class DataFrameTest extends TestCase
                     new IntegerEntry('id', 101),
                     new BooleanEntry('deleted', false),
                     new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                    new StringEntry('phase', null)
+                    string_entry('phase', null)
                 )
             )
         )

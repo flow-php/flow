@@ -148,7 +148,7 @@ OUTPUT,
 |   order_id |     uuid |    false |             |       [] |
 | created_at | datetime |    false |             |       [] |
 | updated_at | datetime |    false |             |       [] |
-|   discount |   scalar |     true |      string |       [] |
+|   discount |   scalar |     true |       float |       [] |
 |    address |      map |    false |             |       [] |
 |      notes |     list |    false |             |       [] |
 |      items |     list |    false |             |       [] |
@@ -176,7 +176,7 @@ OUTPUT,
 |   order_id |     uuid |    false |             |       [] |
 | created_at | datetime |    false |             |       [] |
 | updated_at | datetime |    false |             |       [] |
-|   discount |   scalar |     true |      string |       [] |
+|   discount |   scalar |     true |       float |       [] |
 |    address |      map |    false |             |       [] |
 |      notes |     list |    false |             |       [] |
 |      items |     list |    false |             |       [] |
@@ -234,7 +234,7 @@ OUTPUT,
 |   order_id |     uuid |    false |             |       [] |
 | created_at | datetime |    false |             |       [] |
 | updated_at | datetime |    false |             |       [] |
-|   discount |   scalar |     true |      string |       [] |
+|   discount |   scalar |     true |       float |       [] |
 |      email |   scalar |    false |      string |       [] |
 |   customer |   scalar |    false |      string |       [] |
 |    address |      map |    false |             |       [] |

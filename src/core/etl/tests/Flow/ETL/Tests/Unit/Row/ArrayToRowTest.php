@@ -10,6 +10,7 @@ use function Flow\ETL\DSL\{array_to_row,
     int_entry,
     int_schema,
     list_entry,
+    null_entry,
     row,
     str_entry,
     str_schema,
@@ -120,7 +121,7 @@ final class ArrayToRowTest extends TestCase
             row(
                 int_entry('id', 1234),
                 bool_entry('deleted', false),
-                str_entry('phase', null),
+                null_entry('phase'),
             ),
             $row
         );

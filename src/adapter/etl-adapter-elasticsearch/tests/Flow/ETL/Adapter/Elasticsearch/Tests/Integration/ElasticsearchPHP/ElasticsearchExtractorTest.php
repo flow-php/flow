@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
 use function Flow\ETL\Adapter\Elasticsearch\{es_hits_to_rows, from_es, to_es_bulk_index};
-use function Flow\ETL\DSL\{df, generate_random_int};
+use function Flow\ETL\DSL\{bool_entry, df, generate_random_int, int_entry, string_entry};
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
@@ -37,10 +37,10 @@ final class ElasticsearchExtractorTest extends TestCase
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
-                    new Row\Entry\StringEntry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
+                    string_entry('id', \sha1((string) $i)),
+                    int_entry('position', $i),
+                    string_entry('name', 'id_' . $i),
+                    bool_entry('active', (bool) generate_random_int(0, 1))
                 ),
                 \range(1, 100)
             ),
@@ -77,10 +77,10 @@ final class ElasticsearchExtractorTest extends TestCase
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
-                    new Row\Entry\StringEntry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
+                    string_entry('id', \sha1((string) $i)),
+                    int_entry('position', $i),
+                    string_entry('name', 'id_' . $i),
+                    bool_entry('active', (bool) generate_random_int(0, 1))
                 ),
                 \range(1, 2000)
             ),
@@ -120,10 +120,10 @@ final class ElasticsearchExtractorTest extends TestCase
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
-                    new Row\Entry\StringEntry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
+                    string_entry('id', \sha1((string) $i)),
+                    int_entry('position', $i),
+                    string_entry('name', 'id_' . $i),
+                    bool_entry('active', (bool) generate_random_int(0, 1))
                 ),
                 \range(1, 2005)
             ),
@@ -156,10 +156,10 @@ final class ElasticsearchExtractorTest extends TestCase
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
-                    new Row\Entry\StringEntry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
+                    string_entry('id', \sha1((string) $i)),
+                    int_entry('position', $i),
+                    string_entry('name', 'id_' . $i),
+                    bool_entry('active', (bool) generate_random_int(0, 1))
                 ),
                 \range(1, 2005)
             ),
@@ -197,10 +197,10 @@ final class ElasticsearchExtractorTest extends TestCase
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
-                    new Row\Entry\StringEntry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    new Row\Entry\StringEntry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
+                    string_entry('id', \sha1((string) $i)),
+                    int_entry('position', $i),
+                    string_entry('name', 'id_' . $i),
+                    bool_entry('active', (bool) generate_random_int(0, 1))
                 ),
                 \range(1, 2005)
             ),

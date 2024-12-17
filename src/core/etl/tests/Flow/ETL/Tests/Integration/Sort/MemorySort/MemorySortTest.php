@@ -26,12 +26,12 @@ final class MemorySortTest extends TestCase
         \shuffle($randomizedInput);
 
         $sort = new MemorySort(
-            new SynchronousPipeline(from_array($randomizedInput)),
             Unit::fromMb(1024)
         );
 
         $sortedOutput = \iterator_to_array(
             $sort->sortBy(
+                new SynchronousPipeline(from_array($randomizedInput)),
                 flow_context(),
                 refs(ref('id')->desc())
             )->extract(flow_context())

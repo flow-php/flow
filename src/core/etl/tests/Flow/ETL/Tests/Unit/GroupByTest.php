@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{int_entry, ref, row, rows, str_entry, sum};
+use function Flow\ETL\DSL\{int_entry, null_entry, ref, row, rows, str_entry, sum};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\{Config, FlowContext, GroupBy};
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,7 @@ final class GroupByTest extends TestCase
         self::assertEquals(
             rows(
                 row(str_entry('type', 'a')),
-                row(str_entry('type', null)),
+                row(null_entry('type')),
                 row(str_entry('type', 'c'))
             ),
             $groupBy->result(new FlowContext(Config::default()))
@@ -88,10 +88,10 @@ final class GroupByTest extends TestCase
 
         self::assertEquals(
             rows(
-                row(str_entry('product', 'Banana'), int_entry('Canada', 2000), int_entry('China', 400), str_entry('Mexico', null), int_entry('USA', 1000)),
-                row(str_entry('product', 'Beans'), str_entry('Canada', null), int_entry('China', 1500), int_entry('Mexico', 2000), int_entry('USA', 1600)),
-                row(str_entry('product', 'Carrots'), int_entry('Canada', 2000), int_entry('China', 1200), str_entry('Mexico', null), int_entry('USA', 1500)),
-                row(str_entry('product', 'Orange'), str_entry('Canada', null), int_entry('China', 4000), str_entry('Mexico', null), int_entry('USA', 4000)),
+                row(str_entry('product', 'Banana'), int_entry('Canada', 2000), int_entry('China', 400), null_entry('Mexico'), int_entry('USA', 1000)),
+                row(str_entry('product', 'Beans'), null_entry('Canada', null), int_entry('China', 1500), int_entry('Mexico', 2000), int_entry('USA', 1600)),
+                row(str_entry('product', 'Carrots'), int_entry('Canada', 2000), int_entry('China', 1200), null_entry('Mexico'), int_entry('USA', 1500)),
+                row(str_entry('product', 'Orange'), null_entry('Canada'), int_entry('China', 4000), null_entry('Mexico'), int_entry('USA', 4000)),
             ),
             $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))
         );
@@ -112,7 +112,7 @@ final class GroupByTest extends TestCase
 
         self::assertEquals(
             rows(
-                row(str_entry('product', 'Apple'), str_entry('USA', null)),
+                row(str_entry('product', 'Apple'), null_entry('USA')),
                 row(str_entry('product', 'Banana'), int_entry('USA', 1000)),
             ),
             $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))

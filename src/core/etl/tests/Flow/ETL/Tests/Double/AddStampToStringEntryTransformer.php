@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Row\Entry\StringEntry;
+use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
 final class AddStampToStringEntryTransformer implements Transformer
@@ -22,7 +22,7 @@ final class AddStampToStringEntryTransformer implements Transformer
     {
         return $rows->map(
             fn (Row $row) : Row => $row->set(
-                new StringEntry(
+                string_entry(
                     $this->entryName,
                     \sprintf('%s%s%s', $row->get($this->entryName)->value(), $this->divider, $this->stamp)
                 )

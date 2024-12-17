@@ -89,6 +89,26 @@ final class DefinitionTest extends TestCase
         );
     }
 
+    public function test_merging_anything_and_assumed_string() : void
+    {
+        self::assertEquals(
+            Definition::integer('id', true),
+            Definition::integer('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+        );
+        self::assertEquals(
+            Definition::float('id', true),
+            Definition::float('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+        );
+        self::assertEquals(
+            Definition::boolean('id', true),
+            Definition::boolean('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+        );
+        self::assertEquals(
+            Definition::dateTime('id', true),
+            Definition::dateTime('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+        );
+    }
+
     public function test_merging_anything_and_string() : void
     {
         self::assertEquals(

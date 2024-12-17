@@ -409,6 +409,22 @@ function str_entry(string $name, ?string $value) : Entry\StringEntry
     return new Entry\StringEntry($name, $value);
 }
 
+/**
+ * This functions is an alias for creating string entry from null.
+ * The main difference between using this function an simply str_entry with second argument null
+ * is that this function will also keep a note in the metadata that type might not be final.
+ * For example when we need to guess column type from rows because schema was not provided,
+ * and given column in the first row is null, it might still change once we get to the second row.
+ * That metadata is used to determine if string_entry was created from null or not.
+ *
+ * By design flow assumes when guessing column type that null would be a string (the most flexible type).
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
+function null_entry(string $name) : Entry\StringEntry
+{
+    return Entry\StringEntry::fromNull($name);
+}
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function string_entry(string $name, ?string $value) : Entry\StringEntry
 {

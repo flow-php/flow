@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Transformer\GroupToArrayTransformer;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
@@ -15,24 +16,24 @@ final class GroupToArrayTransformerTest extends TestCase
         $rows = new Rows(
             Row::create(
                 new Row\Entry\IntegerEntry('order_id', 1),
-                new Row\Entry\StringEntry('sku', 'SKU-01'),
+                string_entry('sku', 'SKU-01'),
                 new Row\Entry\IntegerEntry('quantity', 1),
                 new Row\Entry\FloatEntry('price', 10.00),
-                new Row\Entry\StringEntry('currency', 'PLN'),
+                string_entry('currency', 'PLN'),
             ),
             Row::create(
                 new Row\Entry\IntegerEntry('order_id', 1),
-                new Row\Entry\StringEntry('sku', 'SKU-02'),
+                string_entry('sku', 'SKU-02'),
                 new Row\Entry\IntegerEntry('quantity', 1),
                 new Row\Entry\FloatEntry('price', 5.00),
-                new Row\Entry\StringEntry('currency', 'PLN'),
+                string_entry('currency', 'PLN'),
             ),
             Row::create(
                 new Row\Entry\IntegerEntry('order_id', 2),
-                new Row\Entry\StringEntry('sku', 'SKU-01'),
+                string_entry('sku', 'SKU-01'),
                 new Row\Entry\IntegerEntry('quantity', 1),
                 new Row\Entry\FloatEntry('price', 10.00),
-                new Row\Entry\StringEntry('currency', 'PLN'),
+                string_entry('currency', 'PLN'),
             )
         );
 

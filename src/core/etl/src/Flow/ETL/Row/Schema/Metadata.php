@@ -72,6 +72,11 @@ final class Metadata
         return $this->map[$key];
     }
 
+    public function has(string $key) : bool
+    {
+        return \array_key_exists($key, $this->map);
+    }
+
     public function isEqual(self $metadata) : bool
     {
         return (new ArrayComparison())->equals($this->map, $metadata->map);

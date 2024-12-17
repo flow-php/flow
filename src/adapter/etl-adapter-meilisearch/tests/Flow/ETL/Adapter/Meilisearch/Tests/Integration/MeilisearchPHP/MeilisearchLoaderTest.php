@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\Adapter\Meilisearch\{to_meilisearch_bulk_index, to_meilisearch_bulk_update};
+use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
@@ -43,20 +44,20 @@ final class MeilisearchLoaderTest extends TestCase
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                new Row\Entry\StringEntry('name', 'Łukasz')
+                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
+                string_entry('name', 'Łukasz')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                new Row\Entry\StringEntry('name', 'Norbert')
+                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
+                string_entry('name', 'Norbert')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                new Row\Entry\StringEntry('name', 'Dawid')
+                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
+                string_entry('name', 'Dawid')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                new Row\Entry\StringEntry('name', 'Tomek')
+                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
+                string_entry('name', 'Tomek')
             ),
         ), new FlowContext(Config::default()));
 
@@ -95,8 +96,8 @@ final class MeilisearchLoaderTest extends TestCase
         $insertLoader->load(new Rows(
             Row::create(
                 new Row\Entry\IntegerEntry('id', 1),
-                new Row\Entry\StringEntry('name', 'Some Name'),
-                new Row\Entry\StringEntry('status', 'NEW'),
+                string_entry('name', 'Some Name'),
+                string_entry('status', 'NEW'),
                 new Row\Entry\DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00'))
             ),
         ), new FlowContext(Config::default()));
@@ -105,7 +106,7 @@ final class MeilisearchLoaderTest extends TestCase
         $updateLoader->load(new Rows(
             Row::create(
                 new Row\Entry\IntegerEntry('id', 1),
-                new Row\Entry\StringEntry('name', 'Other Name'),
+                string_entry('name', 'Other Name'),
             ),
         ), new FlowContext(Config::default()));
 

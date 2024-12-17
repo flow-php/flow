@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{ignore_error_handler, skip_rows_handler, throw_error_handler};
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, StringEntry};
+use function Flow\ETL\DSL\{ignore_error_handler, skip_rows_handler, string_entry, throw_error_handler};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry};
 use Flow\ETL\{Extractor, Flow, FlowContext, Loader, Row, Rows, Transformer};
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +26,7 @@ final class ETLErrorHandlingTest extends TestCase
                         new IntegerEntry('id', 101),
                         new BooleanEntry('deleted', false),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
 
@@ -35,7 +35,7 @@ final class ETLErrorHandlingTest extends TestCase
                         new IntegerEntry('id', 102),
                         new BooleanEntry('deleted', true),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
             }
@@ -83,7 +83,7 @@ final class ETLErrorHandlingTest extends TestCase
                         new IntegerEntry('id', 101),
                         new BooleanEntry('deleted', false),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
 
@@ -92,7 +92,7 @@ final class ETLErrorHandlingTest extends TestCase
                         new IntegerEntry('id', 102),
                         new BooleanEntry('deleted', true),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
             }
@@ -155,7 +155,7 @@ final class ETLErrorHandlingTest extends TestCase
                         new IntegerEntry('id', 101),
                         new BooleanEntry('deleted', false),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
 
@@ -164,7 +164,7 @@ final class ETLErrorHandlingTest extends TestCase
                         new IntegerEntry('id', 102),
                         new BooleanEntry('deleted', true),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        new StringEntry('phase', null)
+                        string_entry('phase', null)
                     )
                 );
             }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\Adapter\Meilisearch\{from_meilisearch, meilisearch_hits_to_rows, to_meilisearch_bulk_index};
-use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\{from_array, string_entry};
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Adapter\Meilisearch\Tests\Double\Spy\HttpClientSpy;
 use Flow\ETL\{Flow, Row, Rows};
@@ -70,9 +70,9 @@ final class MailiSearchTest extends TestCase
             new Rows(
                 ...\array_map(
                     static fn (int $i) : Row => Row::create(
-                        new Row\Entry\StringEntry('id', \sha1((string) $i)),
+                        string_entry('id', \sha1((string) $i)),
                         new Row\Entry\IntegerEntry('position', $i),
-                        new Row\Entry\StringEntry('name', 'id_' . $i),
+                        string_entry('name', 'id_' . $i),
                         new Row\Entry\BooleanEntry('active', false)
                     ),
                     \range(1, 500)

@@ -40,6 +40,12 @@ final class MetadataTest extends TestCase
         );
     }
 
+    public function test_metadata_has() : void
+    {
+        self::assertTrue(Metadata::empty()->add('name', 'test')->has('name'));
+        self::assertFalse(Metadata::empty()->has('name'));
+    }
+
     public function test_remove_metadata_with_the_same_keys() : void
     {
         self::assertEquals(

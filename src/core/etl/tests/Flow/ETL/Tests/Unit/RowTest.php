@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{
-    bool_entry,
+use function Flow\ETL\DSL\{bool_entry,
     datetime_entry,
     float_entry,
     generate_random_int,
@@ -15,6 +14,7 @@ use function Flow\ETL\DSL\{
     map_entry,
     row,
     str_entry,
+    string_entry,
     struct_element,
     struct_entry,
     struct_type,
@@ -32,7 +32,6 @@ use Flow\ETL\Row\Entry\{
     IntegerEntry,
     JsonEntry,
     MapEntry,
-    StringEntry,
     StructureEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
@@ -281,7 +280,7 @@ final class RowTest extends TestCase
     public function test_renames_entry() : void
     {
         $row = row(
-            new StringEntry('name', 'just a string'),
+            string_entry('name', 'just a string'),
             new BooleanEntry('active', true)
         );
         $newRow = $row->rename('name', 'new-name');
@@ -289,7 +288,7 @@ final class RowTest extends TestCase
         self::assertEquals(
             row(
                 new BooleanEntry('active', true),
-                new StringEntry('new-name', 'just a string')
+                string_entry('new-name', 'just a string')
             ),
             $newRow
         );
@@ -301,7 +300,7 @@ final class RowTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new StringEntry('phase', null),
+            string_entry('phase', null),
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],

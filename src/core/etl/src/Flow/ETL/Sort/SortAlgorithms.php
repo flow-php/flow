@@ -9,6 +9,7 @@ enum SortAlgorithms
     case EXTERNAL_SORT;
     case MEMORY_FALLBACK_EXTERNAL_SORT;
     case MEMORY_SORT;
+    case SQLITE_SORT;
 
     public function useMemory() : bool
     {

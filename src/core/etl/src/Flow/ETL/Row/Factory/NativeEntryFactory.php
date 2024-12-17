@@ -67,7 +67,7 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if (null === $value) {
-            return new Entry\StringEntry($entryName, null);
+            return Entry\StringEntry::fromNull($entryName);
         }
 
         $valueType = (new TypeDetector())->detectType($value);

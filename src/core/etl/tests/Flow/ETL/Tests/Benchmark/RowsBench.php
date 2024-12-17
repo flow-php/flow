@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark;
 
-use function Flow\ETL\DSL\ref;
-use Flow\ETL\Row\Entry\StringEntry;
+use function Flow\ETL\DSL\{ref, string_entry};
 use Flow\ETL\{Row, Rows};
 use PhpBench\Attributes\{BeforeMethods, Groups, Revs};
 
@@ -100,8 +99,8 @@ final class RowsBench
     public function bench_flat_map_on_1k() : void
     {
         $this->reducedRows->flatMap(fn (Row $row) : array => [
-            $row->add(new StringEntry('name', $row->valueOf('id') . '-name-01')),
-            $row->add(new StringEntry('name', $row->valueOf('id') . '-name-02')),
+            $row->add(string_entry('name', $row->valueOf('id') . '-name-01')),
+            $row->add(string_entry('name', $row->valueOf('id') . '-name-02')),
         ]);
     }
 

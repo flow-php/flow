@@ -31,7 +31,6 @@ final class ExternalSortTest extends IntegrationTestCase
         \shuffle($randomizedInput);
 
         $sort = new ExternalSort(
-            new SynchronousPipeline(from_array($randomizedInput)),
             new FilesystemBucketsCache(
                 $this->fs(),
                 $this->serializer(),
@@ -42,6 +41,7 @@ final class ExternalSortTest extends IntegrationTestCase
 
         $sortedOutput = \iterator_to_array(
             $sort->sortBy(
+                new SynchronousPipeline(from_array($randomizedInput)),
                 flow_context(),
                 refs(ref('id')->desc())
             )->extract(

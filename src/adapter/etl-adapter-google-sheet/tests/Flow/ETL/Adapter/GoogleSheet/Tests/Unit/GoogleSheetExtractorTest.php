@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet_columns;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{str_entry, string_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\{Config\ConfigBuilder, FlowContext, Row, Rows};
 use Google\Service\Sheets;
 use Google\Service\Sheets\Resource\SpreadsheetsValues;
@@ -26,8 +25,8 @@ final class GoogleSheetExtractorTest extends TestCase
             true,
             2,
         );
-        $spreadSheetIdEntry = new StringEntry('_spread_sheet_id', $spreadSheetId);
-        $sheetNameEntry = new StringEntry('_sheet_name', $sheetName);
+        $spreadSheetIdEntry = string_entry('_spread_sheet_id', $spreadSheetId);
+        $sheetNameEntry = string_entry('_sheet_name', $sheetName);
         $firstValueRangeMock = $this->createMock(Sheets\ValueRange::class);
         $firstValueRangeMock->method('getValues')->willReturn([
             ['header'],

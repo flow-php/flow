@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
+use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Psr\Http\Message\RequestInterface;
@@ -38,7 +39,7 @@ final class RequestEntriesFactory
             }
         }
 
-        $requestBodyEntry = new Row\Entry\StringEntry('request_body', null);
+        $requestBodyEntry = string_entry('request_body', null);
         $requestBody = $request->getBody();
 
         if ($requestBody->isReadable()) {
@@ -58,13 +59,13 @@ final class RequestEntriesFactory
                         if (\class_exists(Row\Entry\JsonEntry::class)) {
                             $requestBodyEntry = new Row\Entry\JsonEntry('request_body', (array) \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
                         } else {
-                            $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
+                            $requestBodyEntry = string_entry('request_body', $requestBodyContent);
                         }
 
                         break;
 
                     default:
-                        $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
+                        $requestBodyEntry = string_entry('request_body', $requestBodyContent);
 
                         break;
                 }
@@ -73,10 +74,10 @@ final class RequestEntriesFactory
 
         return new Row\Entries(
             $requestBodyEntry,
-            new Row\Entry\StringEntry('request_uri', (string) $request->getUri()),
+            string_entry('request_uri', (string) $request->getUri()),
             new Row\Entry\JsonEntry('request_headers', $request->getHeaders()),
-            new Row\Entry\StringEntry('request_protocol_version', $request->getProtocolVersion()),
-            new Row\Entry\StringEntry('request_method', $request->getMethod()),
+            string_entry('request_protocol_version', $request->getProtocolVersion()),
+            string_entry('request_method', $request->getMethod()),
         );
     }
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{
-    average,
+use function Flow\ETL\DSL\{average,
     count,
     datetime_entry,
     datetime_schema,
@@ -22,6 +21,7 @@ use function Flow\ETL\DSL\{
     list_schema,
     lit,
     max,
+    null_entry,
     rank,
     ref,
     row,
@@ -196,7 +196,7 @@ final class GroupByTest extends IntegrationTestCase
                 row(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
                 row(str_entry('country', 'US'), str_entry('gender', 'female'), int_entry('age_avg', 40)),
                 row(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
-                row(str_entry('country', 'US'), str_entry('gender', null), int_entry('age_avg', 45)),
+                row(str_entry('country', 'US'), null_entry('gender'), int_entry('age_avg', 45)),
             ),
             $rows
         );

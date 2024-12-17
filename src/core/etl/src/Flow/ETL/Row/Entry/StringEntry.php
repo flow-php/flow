@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?string>
@@ -17,6 +17,8 @@ use Flow\ETL\Row\{Entry, Reference};
 final class StringEntry implements Entry
 {
     use EntryRef;
+
+    private bool $fromNull = false;
 
     private readonly ScalarType $type;
 
@@ -30,6 +32,14 @@ final class StringEntry implements Entry
         }
 
         $this->type = type_string($this->value === null);
+    }
+
+    public static function fromNull(string $name) : self
+    {
+        $entry = new self($name, null);
+        $entry->fromNull = true;
+
+        return $entry;
     }
 
     /**
@@ -55,7 +65,11 @@ final class StringEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::string($this->name, $this->type->nullable());
+        return Definition::string(
+            $this->name,
+            $this->type->nullable(),
+            $this->fromNull ? Metadata::fromArray(['from_null' => true]) : null
+        );
     }
 
     public function is(string|Reference $name) : bool
@@ -90,6 +104,11 @@ final class StringEntry implements Entry
         return new self($name, $this->value);
     }
 
+    public function toLowercase() : self
+    {
+        return new self($this->name, $this->value ? \mb_strtolower($this->value) : null);
+    }
+
     public function toString() : string
     {
         $value = $this->value();
@@ -99,6 +118,11 @@ final class StringEntry implements Entry
         }
 
         return $value;
+    }
+
+    public function toUppercase() : self
+    {
+        return new self($this->name, $this->value ? \mb_strtoupper($this->value) : null);
     }
 
     public function type() : Type

@@ -19,7 +19,6 @@ final class MemorySort implements SortingAlgorithm
     private Configuration $configuration;
 
     public function __construct(
-        private readonly Pipeline $pipeline,
         private Unit $maximumMemory,
     ) {
         $this->configuration = new Configuration(10);
@@ -34,13 +33,13 @@ final class MemorySort implements SortingAlgorithm
         }
     }
 
-    public function sortBy(FlowContext $context, References $refs) : Extractor
+    public function sortBy(Pipeline $pipeline, FlowContext $context, References $refs) : Extractor
     {
         $memoryConsumption = new Consumption();
         $mergedRows = new Rows();
         $maxSize = 1;
 
-        foreach ($this->pipeline->process($context) as $rows) {
+        foreach ($pipeline->process($context) as $rows) {
             $maxSize = \max($rows->count(), $maxSize);
             $mergedRows = $mergedRows->merge($rows);
 

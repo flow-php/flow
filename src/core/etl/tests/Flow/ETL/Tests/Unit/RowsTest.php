@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\{bool_entry,
     rows,
     rows_partitioned,
     str_entry,
+    string_entry,
     type_int,
     type_list,
     type_string};
@@ -21,7 +22,7 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row\Comparator\{NativeComparator};
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, StringEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry};
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Comparator, Schema};
 use Flow\ETL\{Row, Rows};
@@ -110,8 +111,8 @@ final class RowsTest extends TestCase
 
     public function test_adding_multiple_rows() : void
     {
-        $one = row(int_entry('number', 1), new StringEntry('name', 'one'));
-        $two = row(int_entry('number', 2), new StringEntry('name', 'two'));
+        $one = row(int_entry('number', 1), string_entry('name', 'one'));
+        $two = row(int_entry('number', 2), string_entry('name', 'two'));
         $rows = (rows())->add($one, $two);
 
         self::assertEquals(rows($one, $two), $rows);
@@ -302,11 +303,11 @@ final class RowsTest extends TestCase
     public function test_filters_out_rows() : void
     {
         $rows = rows(
-            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
-            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
-            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
-            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
-            $five = row(int_entry('number', 5), new StringEntry('name', 'five'))
+            $one = row(int_entry('number', 1), string_entry('name', 'one')),
+            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            $three = row(int_entry('number', 3), string_entry('name', 'three')),
+            $four = row(int_entry('number', 4), string_entry('name', 'four')),
+            $five = row(int_entry('number', 5), string_entry('name', 'five'))
         );
 
         $evenRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 0;
@@ -319,11 +320,11 @@ final class RowsTest extends TestCase
     public function test_find() : void
     {
         $rows = rows(
-            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
-            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
-            $three = row(int_entry('number', 3), new StringEntry('name', 'one')),
-            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
-            $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $one = row(int_entry('number', 1), string_entry('name', 'one')),
+            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            $three = row(int_entry('number', 3), string_entry('name', 'one')),
+            $four = row(int_entry('number', 4), string_entry('name', 'four')),
+            $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
         self::assertEquals(
@@ -343,11 +344,11 @@ final class RowsTest extends TestCase
     public function test_find_one() : void
     {
         $rows = rows(
-            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
-            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
-            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
-            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
-            $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $one = row(int_entry('number', 1), string_entry('name', 'one')),
+            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            $three = row(int_entry('number', 3), string_entry('name', 'three')),
+            $four = row(int_entry('number', 4), string_entry('name', 'four')),
+            $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
         self::assertSame($three, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
@@ -362,11 +363,11 @@ final class RowsTest extends TestCase
     public function test_find_without_results() : void
     {
         $rows = rows(
-            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
-            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
-            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
-            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
-            $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $one = row(int_entry('number', 1), string_entry('name', 'one')),
+            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            $three = row(int_entry('number', 3), string_entry('name', 'three')),
+            $four = row(int_entry('number', 4), string_entry('name', 'four')),
+            $three1 = row(int_entry('number', 3), string_entry('name', 'three')),
         );
 
         self::assertNull($rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 5));
@@ -391,8 +392,8 @@ final class RowsTest extends TestCase
         );
 
         $rows = $rows->flatMap(fn (Row $row) : array => [
-            $row->add(new StringEntry('name', $row->valueOf('id') . '-name-01')),
-            $row->add(new StringEntry('name', $row->valueOf('id') . '-name-02')),
+            $row->add(string_entry('name', $row->valueOf('id') . '-name-01')),
+            $row->add(string_entry('name', $row->valueOf('id') . '-name-02')),
         ]);
 
         self::assertSame(
@@ -777,9 +778,9 @@ final class RowsTest extends TestCase
     public function test_returns_first_row() : void
     {
         $rows = rows(
-            $first = row(int_entry('number', 3), new StringEntry('name', 'three')),
-            row(int_entry('number', 1), new StringEntry('name', 'one')),
-            row(int_entry('number', 2), new StringEntry('name', 'two')),
+            $first = row(int_entry('number', 3), string_entry('name', 'three')),
+            row(int_entry('number', 1), string_entry('name', 'one')),
+            row(int_entry('number', 2), string_entry('name', 'two')),
         );
 
         self::assertEquals($first, $rows->first());
@@ -873,11 +874,11 @@ final class RowsTest extends TestCase
     public function test_sort() : void
     {
         $rows = rows(
-            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
-            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
-            $five = row(int_entry('number', 5), new StringEntry('name', 'five')),
-            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
-            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
+            $three = row(int_entry('number', 3), string_entry('name', 'three')),
+            $one = row(int_entry('number', 1), string_entry('name', 'one')),
+            $five = row(int_entry('number', 5), string_entry('name', 'five')),
+            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            $four = row(int_entry('number', 4), string_entry('name', 'four')),
         );
 
         $sort = $rows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('number') <=> $nextRow->valueOf('number'));
@@ -934,11 +935,11 @@ final class RowsTest extends TestCase
     public function test_sort_rows_without_changing_original_collection() : void
     {
         $rows = rows(
-            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
-            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
-            $five = row(int_entry('number', 5), new StringEntry('name', 'five')),
-            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
-            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
+            $three = row(int_entry('number', 3), string_entry('name', 'three')),
+            $one = row(int_entry('number', 1), string_entry('name', 'one')),
+            $five = row(int_entry('number', 5), string_entry('name', 'five')),
+            $two = row(int_entry('number', 2), string_entry('name', 'two')),
+            $four = row(int_entry('number', 4), string_entry('name', 'four')),
         );
 
         $ascending = $rows->sortAscending(ref('number'));
@@ -956,14 +957,14 @@ final class RowsTest extends TestCase
             row(
                 $rowOneId = int_entry('id', 1),
                 $rowOneDeleted = new BooleanEntry('deleted', true),
-                $rowOnePhase = new StringEntry('phase', null),
+                $rowOnePhase = string_entry('phase', null),
                 $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
             ),
             row(
                 $rowTwoDeleted = new BooleanEntry('deleted', true),
                 $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                 $rowTwoId = int_entry('id', 1),
-                $rowTwoPhase = new StringEntry('phase', null),
+                $rowTwoPhase = string_entry('phase', null),
             ),
         );
 
@@ -975,13 +976,13 @@ final class RowsTest extends TestCase
                     $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                     $rowOneDeleted = new BooleanEntry('deleted', true),
                     $rowOneId = int_entry('id', 1),
-                    $rowOnePhase = new StringEntry('phase', null),
+                    $rowOnePhase = string_entry('phase', null),
                 ),
                 row(
                     $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                     $rowTwoDeleted = new BooleanEntry('deleted', true),
                     $rowTwoId = int_entry('id', 1),
-                    $rowTwoPhase = new StringEntry('phase', null),
+                    $rowTwoPhase = string_entry('phase', null),
                 )
             ),
             $sorted
@@ -1086,12 +1087,12 @@ final class RowsTest extends TestCase
             row(
                 int_entry('id', 1234),
                 new BooleanEntry('deleted', false),
-                new StringEntry('phase', null),
+                string_entry('phase', null),
             ),
             row(
                 int_entry('id', 4321),
                 new BooleanEntry('deleted', true),
-                new StringEntry('phase', 'launch'),
+                string_entry('phase', 'launch'),
             )
         );
 
@@ -1110,12 +1111,12 @@ final class RowsTest extends TestCase
             row(
                 int_entry('id', 1234),
                 new BooleanEntry('deleted', false),
-                new StringEntry('phase', null),
+                string_entry('phase', null),
             ),
             row(
                 int_entry('id', 4321),
                 new BooleanEntry('deleted', true),
-                new StringEntry('phase', 'launch'),
+                string_entry('phase', 'launch'),
             )
         );
 

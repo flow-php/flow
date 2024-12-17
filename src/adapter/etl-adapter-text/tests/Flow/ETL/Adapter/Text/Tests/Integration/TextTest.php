@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\{Flow, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
@@ -17,9 +18,9 @@ final class TextTest extends TestCase
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(new Row\Entry\StringEntry('name', 'Norbert')),
-                    Row::create(new Row\Entry\StringEntry('name', 'Tomek')),
-                    Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
+                    Row::create(string_entry('name', 'Norbert')),
+                    Row::create(string_entry('name', 'Tomek')),
+                    Row::create(string_entry('name', 'Dawid')),
                 )
             )
             ->write(to_text($path))

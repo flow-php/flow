@@ -250,6 +250,24 @@ final class Definition
             throw new RuntimeException(\sprintf('Cannot merge different definitions, %s and %s', $this->ref->name(), $definition->ref->name()));
         }
 
+        if ($this->metadata->has('from_null')) {
+            return new self(
+                $this->ref,
+                $definition->entryClass,
+                $definition->type()->makeNullable($this->isNullable() || $definition->isNullable()),
+                $definition->metadata->remove('from_null')->merge($this->metadata->remove('from_null'))
+            );
+        }
+
+        if ($definition->metadata()->has('from_null')) {
+            return new self(
+                $this->ref,
+                $this->entryClass,
+                $this->type()->makeNullable($this->isNullable() || $definition->isNullable()),
+                $this->metadata->remove('from_null')->merge($definition->metadata->remove('from_null'))
+            );
+        }
+
         if ($this->type instanceof ListType && $definition->type instanceof ListType && !$this->type->isEqual($definition->type)) {
             $thisTypeString = $this->type->element()->toString();
             $definitionTypeString = $definition->type->element()->toString();

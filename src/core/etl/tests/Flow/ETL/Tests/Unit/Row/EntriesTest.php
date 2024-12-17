@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\{bool_entry, int_entry, type_int, type_string};
+use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry, type_int, type_string};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, IntegerEntry, StringEntry, StructureEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, IntegerEntry, StructureEntry};
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +17,7 @@ final class EntriesTest extends TestCase
 {
     public function test_add_entry() : void
     {
-        $newEntry = new StringEntry('entry-name', 'new string entry');
+        $newEntry = string_entry('entry-name', 'new string entry');
         $entries = new Entries(
             new IntegerEntry('integer-entry', 100)
         );
@@ -31,8 +31,8 @@ final class EntriesTest extends TestCase
 
     public function test_add_multiple_duplicated_entries() : void
     {
-        $stringEntry = new StringEntry('string-name', 'new string entry');
-        $booleanEntry = new StringEntry('string-name', 'new string entry');
+        $stringEntry = string_entry('string-name', 'new string entry');
+        $booleanEntry = string_entry('string-name', 'new string entry');
 
         $entries = new Entries(new IntegerEntry('integer-entry', 100));
 
@@ -44,7 +44,7 @@ final class EntriesTest extends TestCase
 
     public function test_add_multiple_entries() : void
     {
-        $stringEntry = new StringEntry('string-name', 'new string entry');
+        $stringEntry = string_entry('string-name', 'new string entry');
         $booleanEntry = new BooleanEntry('boolean-name', true);
 
         $entries = new Entries(new IntegerEntry('integer-entry', 100));
@@ -62,7 +62,7 @@ final class EntriesTest extends TestCase
 
     public function test_adds_entry_when_it_does_not_exist() : void
     {
-        $stringEntry = new StringEntry('string-entry', 'just a string');
+        $stringEntry = string_entry('string-entry', 'just a string');
         $entries = new Entries(
             $integerEntry = new IntegerEntry('integer-entry', 100),
             $booleanEntry = new BooleanEntry('boolean-entry', true)
@@ -75,7 +75,7 @@ final class EntriesTest extends TestCase
 
     public function test_array_access_exists() : void
     {
-        $entries = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'John'));
+        $entries = new Entries(new IntegerEntry('id', 1), string_entry('name', 'John'));
 
         self::assertTrue(isset($entries['id']));
         self::assertFalse(isset($entries['test']));
@@ -83,7 +83,7 @@ final class EntriesTest extends TestCase
 
     public function test_array_access_get() : void
     {
-        $entries = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'John'));
+        $entries = new Entries(new IntegerEntry('id', 1), string_entry('name', 'John'));
 
         self::assertSame(1, $entries['id']->value());
         self::assertSame('John', $entries['name']->value());
@@ -109,7 +109,7 @@ final class EntriesTest extends TestCase
     {
         $entries = new Entries(
             new IntegerEntry('integer-entry', 100),
-            new StringEntry('string-entry', 'just a string'),
+            string_entry('string-entry', 'just a string'),
         );
 
         $this->expectExceptionMessage('Entry "non-existing-entry" does not exist');
@@ -120,7 +120,7 @@ final class EntriesTest extends TestCase
     public function test_case_sensitive_entry_names() : void
     {
         $entries = new Entries(
-            new StringEntry('entry-Name', 'just a string'),
+            string_entry('entry-Name', 'just a string'),
         );
 
         self::assertFalse($entries->has('entry-name'));
@@ -184,8 +184,8 @@ final class EntriesTest extends TestCase
 
     public function test_merge_duplicated_entries() : void
     {
-        $entries1 = new Entries(new StringEntry('string-name', 'new string entry'));
-        $entries2 = new Entries(new StringEntry('string-name', 'new string entry'));
+        $entries1 = new Entries(string_entry('string-name', 'new string entry'));
+        $entries2 = new Entries(string_entry('string-name', 'new string entry'));
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Merged entries names must be unique, given: [string-name] + [string-name]');
@@ -195,8 +195,8 @@ final class EntriesTest extends TestCase
 
     public function test_merge_duplicated_entries_case_insensitive_() : void
     {
-        $entries1 = new Entries(new StringEntry('string-name', 'new string entry'));
-        $entries2 = new Entries(new StringEntry('string-Name', 'new string entry'));
+        $entries1 = new Entries(string_entry('string-name', 'new string entry'));
+        $entries2 = new Entries(string_entry('string-Name', 'new string entry'));
 
         $merged = $entries1->merge($entries2);
 
@@ -205,13 +205,13 @@ final class EntriesTest extends TestCase
 
     public function test_merge_entries() : void
     {
-        $entries1 = new Entries(new StringEntry('string-name', 'new string entry'));
+        $entries1 = new Entries(string_entry('string-name', 'new string entry'));
         $entries2 = new Entries(new IntegerEntry('integer-entry', 100));
 
         $entries = $entries1->merge($entries2);
 
         self::assertEquals(
-            new Entries(new StringEntry('string-name', 'new string entry'), new IntegerEntry('integer-entry', 100)),
+            new Entries(string_entry('string-name', 'new string entry'), new IntegerEntry('integer-entry', 100)),
             $entries
         );
     }
@@ -220,7 +220,7 @@ final class EntriesTest extends TestCase
     {
         $entries = new Entries(
             new IntegerEntry('integer', 100),
-            new StringEntry('string', 'new string entry'),
+            string_entry('string', 'new string entry'),
             new BooleanEntry('bool', true),
         );
 
@@ -243,7 +243,7 @@ final class EntriesTest extends TestCase
 
         $entries = new Entries(
             new IntegerEntry('integer', 100),
-            new StringEntry('string', 'new string entry'),
+            string_entry('string', 'new string entry'),
             new BooleanEntry('bool', true),
         );
 
@@ -252,7 +252,7 @@ final class EntriesTest extends TestCase
 
     public function test_overwrites_entry_when_it_exists() : void
     {
-        $stringEntry = new StringEntry('entry-name', 'just a string');
+        $stringEntry = string_entry('entry-name', 'just a string');
         $entries = new Entries(
             new IntegerEntry('entry-name', 100),
             $booleanEntry = new BooleanEntry('boolean-entry', true)
@@ -272,7 +272,7 @@ final class EntriesTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Added entries names must be unique, given: [entry-name] + [entry-name]');
 
-        $entries->add(new StringEntry('entry-name', 'just a string'));
+        $entries->add(string_entry('entry-name', 'just a string'));
     }
 
     public function test_prevents_from_adding_entry_with_the_same_name_case_insensitive() : void
@@ -281,7 +281,7 @@ final class EntriesTest extends TestCase
             new IntegerEntry('entry-Name', 100)
         );
 
-        $newEntries = $entries->add(new StringEntry('entry-name', 'just a string'));
+        $newEntries = $entries->add(string_entry('entry-name', 'just a string'));
 
         self::assertCount(2, $newEntries);
     }
@@ -291,7 +291,7 @@ final class EntriesTest extends TestCase
         $this->expectExceptionMessage('Entry names must be unique');
 
         new Entries(
-            new StringEntry('entry-name', 'just a string'),
+            string_entry('entry-name', 'just a string'),
             new IntegerEntry('entry-name', 100)
         );
     }
@@ -309,7 +309,7 @@ final class EntriesTest extends TestCase
     {
         $entries = new Entries(
             $integerEntry = new IntegerEntry('integer-entry', 100),
-            new StringEntry('string-entry', 'just a string'),
+            string_entry('string-entry', 'just a string'),
             $booleanEntry = new BooleanEntry('boolean-entry', true)
         );
 
@@ -320,7 +320,7 @@ final class EntriesTest extends TestCase
     {
         $entries = new Entries(
             new IntegerEntry('integer-entry', 100),
-            new StringEntry('string-entry', 'just a string'),
+            string_entry('string-entry', 'just a string'),
             $booleanEntry = new BooleanEntry('boolean-entry', true)
         );
 
@@ -329,30 +329,30 @@ final class EntriesTest extends TestCase
 
     public function test_rename() : void
     {
-        $entries = new Entries(new StringEntry('string-name', 'new string entry'));
+        $entries = new Entries(string_entry('string-name', 'new string entry'));
 
         $entries = $entries->rename('string-name', 'new-string-name');
 
         self::assertEquals(
-            new Entries(new StringEntry('new-string-name', 'new string entry')),
+            new Entries(string_entry('new-string-name', 'new string entry')),
             $entries
         );
     }
 
     public function test_set_entry() : void
     {
-        $entries = new Entries(new StringEntry('string-entry', 'just a string'));
-        $entries = $entries->set(new StringEntry('string-entry', 'new string'));
+        $entries = new Entries(string_entry('string-entry', 'just a string'));
+        $entries = $entries->set(string_entry('string-entry', 'new string'));
 
-        self::assertEquals(new Entries(new StringEntry('string-entry', 'new string')), $entries);
+        self::assertEquals(new Entries(string_entry('string-entry', 'new string')), $entries);
     }
 
     public function test_set_multiple_entries() : void
     {
-        $entries = new Entries(new StringEntry('string-entry', 'just a string'));
-        $entries = $entries->set(new StringEntry('string-entry', 'new string'), new IntegerEntry('integer-entry', 100));
+        $entries = new Entries(string_entry('string-entry', 'just a string'));
+        $entries = $entries->set(string_entry('string-entry', 'new string'), new IntegerEntry('integer-entry', 100));
 
-        self::assertEquals(new Entries(new StringEntry('string-entry', 'new string'), new IntegerEntry('integer-entry', 100)), $entries);
+        self::assertEquals(new Entries(string_entry('string-entry', 'new string'), new IntegerEntry('integer-entry', 100)), $entries);
     }
 
     public function test_sorts_entries_by_name() : void
@@ -361,7 +361,7 @@ final class EntriesTest extends TestCase
             $id = new IntegerEntry('id', 1234),
             $deleted = new BooleanEntry('deleted', false),
             $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
-            $phase = new StringEntry('phase', null),
+            $phase = string_entry('phase', null),
             $items = new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
@@ -381,7 +381,7 @@ final class EntriesTest extends TestCase
                     ['item-id' => 1, 'name' => 'one'],
                     new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
                 ),
-                $phase = new StringEntry('phase', null)
+                $phase = string_entry('phase', null)
             ),
             $sorted
         );
@@ -393,7 +393,7 @@ final class EntriesTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new StringEntry('phase', null),
+            string_entry('phase', null),
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
@@ -424,7 +424,7 @@ final class EntriesTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new StringEntry('phase', null),
+            string_entry('phase', null),
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],

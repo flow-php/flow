@@ -73,7 +73,7 @@ final class SchemaTest extends TestCase
             Schema\Definition::integer('Id')
         );
 
-        self::assertEquals([EntryReference::init('id'), EntryReference::init('Id')], $schema->entries());
+        self::assertEquals([EntryReference::init('id'), EntryReference::init('Id')], $schema->references());
     }
 
     public function test_creating_schema_from_corrupted_json() : void

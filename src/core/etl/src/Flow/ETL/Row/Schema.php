@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline;
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
 use Flow\ETL\Row\Schema\{Definition, Matcher\StrictSchemaMatcher, SchemaMatcher};
+use function Flow\ETL\DSL\schema;
 
 final class Schema implements \Countable
 {
@@ -32,6 +35,53 @@ final class Schema implements \Countable
         }
 
         return new self(...$schema);
+    }
+
+    /**
+     * Detecting schema from the pipeline has several disadvantages.
+     * First of all, it's expensive, it needs to iterate through the pipeline until it detects
+     * types of all columns.
+     * In some cases, when a given column is null in the first 1k rows it will anyway return incorrect
+     * schema since row 1001 might have an actual value.
+     * When dealing with schemaless file formats like CSV or JSON even when first 1k rows will
+     * carry value of one type, there is zero guarantee that following rows will do the same.
+     *
+     * Whenever it's possible, it's recommended to define schema upfront and pass it to the extractor.
+     * This way, whatever process would need to use this method, will do just one iteration.
+     */
+    public static function fromPipeline(Pipeline $pipeline, FlowContext $context, int $maxRows = 1000) : self
+    {
+        if ($maxRows <= 0) {
+            throw new InvalidArgumentException("Total numbers of rows to scan must be a positive number");
+        }
+
+        $extractor = $pipeline->process($context);
+        $schema = schema();
+        $totalRows = 0;
+        foreach ($extractor as $rows) {
+            foreach ($rows as $row) {
+                $schema = $schema->merge($row->schema());
+                $totalRows++;
+
+                if ($totalRows >= $maxRows) {
+                    return $schema;
+                }
+
+                $allDetected = true;
+                foreach ($schema->definitions() as $definition) {
+                    if ($definition->metadata()->has('from_null')) {
+                        $allDetected = false;
+                        break;
+                    }
+                }
+
+                if ($allDetected) {
+                    return $schema;
+                }
+            }
+        }
+
+        return $schema;
     }
 
     public function add(Definition ...$definitions) : self

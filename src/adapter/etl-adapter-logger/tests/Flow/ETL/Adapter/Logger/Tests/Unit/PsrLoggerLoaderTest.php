@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Logger\Tests\Unit;
 
+use function Flow\ETL\DSL\{int_entry, string_entry};
 use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
@@ -20,8 +21,8 @@ final class PsrLoggerLoaderTest extends TestCase
 
         $loader->load(new Rows(
             Row::create(
-                new Row\Entry\IntegerEntry('id', 12345),
-                Row\Entry\StringEntry::lowercase('name', 'Norbert')
+                int_entry('id', 12345),
+                string_entry('name', 'Norbert')->toLowercase()
             )
         ), new FlowContext(Config::default()));
 
