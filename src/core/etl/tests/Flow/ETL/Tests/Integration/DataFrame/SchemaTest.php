@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Row\Schema;
 use function Flow\ETL\DSL\{array_to_rows,
     bool_entry,
     bool_schema,
@@ -23,6 +21,8 @@ use function Flow\ETL\DSL\{array_to_rows,
     schema,
     str_schema,
     string_entry};
+use Flow\ETL\Pipeline\SynchronousPipeline;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SchemaTest extends IntegrationTestCase

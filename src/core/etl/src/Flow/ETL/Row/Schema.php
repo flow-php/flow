@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline;
+use function Flow\ETL\DSL\schema;
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
 use Flow\ETL\Row\Schema\{Definition, Matcher\StrictSchemaMatcher, SchemaMatcher};
-use function Flow\ETL\DSL\schema;
+use Flow\ETL\{FlowContext, Pipeline};
 
 final class Schema implements \Countable
 {
@@ -52,12 +51,13 @@ final class Schema implements \Countable
     public static function fromPipeline(Pipeline $pipeline, FlowContext $context, int $maxRows = 1000) : self
     {
         if ($maxRows <= 0) {
-            throw new InvalidArgumentException("Total numbers of rows to scan must be a positive number");
+            throw new InvalidArgumentException('Total numbers of rows to scan must be a positive number');
         }
 
         $extractor = $pipeline->process($context);
         $schema = schema();
         $totalRows = 0;
+
         foreach ($extractor as $rows) {
             foreach ($rows as $row) {
                 $schema = $schema->merge($row->schema());
@@ -68,9 +68,11 @@ final class Schema implements \Countable
                 }
 
                 $allDetected = true;
+
                 foreach ($schema->definitions() as $definition) {
                     if ($definition->metadata()->has('from_null')) {
                         $allDetected = false;
+
                         break;
                     }
                 }
