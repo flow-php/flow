@@ -7,6 +7,7 @@ namespace Flow\Website\Service\Markdown;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
 
 final class LeagueCommonMarkConverterFactory
@@ -24,7 +25,8 @@ final class LeagueCommonMarkConverterFactory
 
         $converter->getEnvironment()
             ->addExtension(new ExternalLinkExtension())
-            ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0);
+            ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
+            ->addRenderer(Link::class, new FlowLinkRenderer(), 0);
         //        $converter->getEnvironment()->addExtension(new CommonMarkCoreExtension());
         //        foreach ($this->extensions as $extension) {
         //            $converter->getEnvironment()->addRenderer(new FlowCodeRenderer());

@@ -34,6 +34,8 @@ final class Pages
                 continue;
             }
 
+            $relativePath = str_replace('.md', '', $relativePath);
+
             $pages[] = new Page($relativePath, \file_get_contents($file->path->path()));
         }
 
