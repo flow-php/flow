@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\EventListener;
 
 use Flow\Website\Blog\Posts;
-use Flow\Website\Service\Documentation\DSLDefinitions;
+use Flow\Website\Service\Documentation\{DSLDefinitions, Pages};
 use Flow\Website\Service\Examples;
 use Presta\SitemapBundle\Event\SitemapPopulateEvent;
 use Presta\SitemapBundle\Sitemap\Url\UrlConcrete;
@@ -18,6 +18,7 @@ final class SitemapSubscriber implements EventSubscriberInterface
         private readonly Examples $examples,
         private readonly Posts $posts,
         private readonly DSLDefinitions $dslDefinitions,
+        private readonly Pages $pages,
     ) {
     }
 
@@ -84,6 +85,20 @@ final class SitemapSubscriber implements EventSubscriberInterface
                     'documentation'
                 );
             }
+        }
+
+        foreach ($this->pages->all() as $page) {
+            $event->getUrlContainer()->addUrl(
+                new UrlConcrete(
+                    $event->getUrlGenerator()->generate(
+                        'documentation_page',
+                        ['path' => $page->path],
+                        UrlGeneratorInterface::ABSOLUTE_URL
+                    ),
+                    changefreq: 'weekly'
+                ),
+                'documentation'
+            );
         }
     }
 
