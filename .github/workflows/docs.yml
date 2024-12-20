@@ -32,4 +32,4 @@ jobs:
         uses: "docker://norberttech/md-link-linter:latest"
         with:
           entrypoint: "/composer/vendor/bin/mdlinklint"
-          args: "--exclude=vendor --exclude=tests --exclude=examples ."
+          args: "--exclude=vendor --exclude=tests --exclude=examples --exclude=documentation ."
