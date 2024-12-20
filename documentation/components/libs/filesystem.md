@@ -20,7 +20,7 @@ When reading, instead of iterating through the whole file to find the data you n
 # Available Filesystems
 
 - Native Local Filesystem 
-- [Azure Blob Filesystem](https://github.com/flow-php/flow/blob/1.x/docs/components/bridges/filesystem-azure-bridge.md)
+- [Azure Blob Filesystem](https://github.com/flow-php/flow/blob/1.x/documentation/components/bridges/filesystem-azure-bridge.md)
 
 # Building Blocks
 

@@ -24,7 +24,7 @@ composer require flow-php/etl-adapter-meilisearch
 ### Extractor
 
 Meilisearch extractor will try to extract entire index, but Meilisearch by [default limits the window
-to 1k of hits](https://www.meilisearch.com/docs/reference/api/settings#pagination), this can be changed by update
+to 1k of hits](https://www.meilisearch.com/documentation/reference/api/settings#pagination), this can be changed by update
 of index settings:
 ```php
 $this->meilisearchContext->client()->index(self::INDEX_NAME)->updateSettings(['pagination' => ['maxTotalHits' => 10000]]);

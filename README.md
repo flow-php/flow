@@ -1,4 +1,4 @@
-![img](docs/assets/img/flow_php_banner_02_2022.png)
+![img](documentation/assets/img/flow_php_banner_02_2022.png)
 
 Flow is a PHP-based, strongly typed data processing framework with a low memory footprint.
 
@@ -8,7 +8,7 @@ Flow is a PHP-based, strongly typed data processing framework with a low memory 
 [![Test Suite](https://github.com/flow-php/flow/actions/workflows/test-suite.yml/badge.svg?branch=1.x)](https://github.com/flow-php/flow/actions/workflows/test-suite.yml)
 
 - 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)
-- 📜 [Documentation](docs/introduction.md)
+- 📜 [Documentation](documentation/introduction.md)
 - 🛠️ [Contributing](CONTRIBUTING.md)
 - 🚧 [Upgrading](UPGRADE.md)
 - <img src="https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a69f118df70ad7828d4_icon_clyde_blurple_RGB.svg" width="16px" height="16px" alt="Discord"> [Discord Server](https://discord.gg/5dNXfQyACW)

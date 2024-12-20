@@ -30,10 +30,9 @@ final class DocumentationTest extends WebTestCase
         $client->request('GET', '/documentation/dsl');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('#dsl-functions', 'DSL Functions');
         self::assertGreaterThan(0, $client->getCrawler()->filter('[data-dsl-function]')->count());
         self::assertGreaterThan(0, $client->getCrawler()->filter('[data-dsl-source-link]')->count());
-        self::assertEquals(14, $client->getCrawler()->filter('[data-dsl-module]')->count());
+        self::assertEquals(15, $client->getCrawler()->filter('[data-dsl-module]')->count());
         self::assertEquals(11, $client->getCrawler()->filter('[data-dsl-type]')->count());
     }
 

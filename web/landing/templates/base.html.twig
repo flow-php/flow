@@ -86,7 +86,7 @@
                         </a>
                     </li>
                     <li>
-                        <a class="p-3 flex items-center" href="{{ path('documentation_dsl') }}">
+                        <a class="p-3 flex items-center" href="{{ path('documentation') }}">
                             Docs
                             <img src="{{ asset('images/icons/checklist.svg') }}" alt="Flow PHP Blog" width="16" height="16" class="ml-1">
                         </a>
@@ -115,7 +115,9 @@
     </header>
 
     <main id="main">
-        {{ render(controller('Flow\\Website\\Controller\\LayoutController::hero')) }}
+        {% block hero %}
+            {{ render(controller('Flow\\Website\\Controller\\LayoutController::hero')) }}
+        {% endblock %}
 
         {% block main %}{% endblock %}
 

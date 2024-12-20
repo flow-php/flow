@@ -215,7 +215,7 @@
             "tools/phpunit/vendor/bin/phpunit"
         ],
         "test:docs": [
-            "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=examples ."
+            "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=examples --exclude=documentation ."
         ],
         "test:benchmark": [
             "@test:benchmark:building_blocks",

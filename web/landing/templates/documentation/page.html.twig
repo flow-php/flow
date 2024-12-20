@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Documentation - Flow PHP - Data Processing Framework
+{%- endblock -%}
+
+{%- block description -%}
+{%- endblock -%}
+
+{%- block hero -%}
+{% endblock %}
+
+{% block main %}
+<section id="documentation-page" class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-xl">
+    <div class="grid grid-cols-1 sm:grid-cols-6">
+        <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+            {{ navigation.content|markdown_to_html }}
+        </div>
+        <div class="sm:col-span-5">
+            {{ page.content|markdown_to_html }}
+
+            <hr class="!mt-8 !mb-8"/>
+            <script src="https://giscus.app/client.js"
+                    data-repo="flow-php/flow-php.com"
+                    data-repo-id="R_kgDOHja2Yg"
+                    data-category="Documentation"
+                    data-category-id="DIC_kwDOHja2Ys4Cidc1"
+                    data-mapping="url"
+                    data-strict="0"
+                    data-reactions-enabled="0"
+                    data-emit-metadata="0"
+                    data-input-position="bottom"
+                    data-theme="dark"
+                    data-lang="en"
+                    crossorigin="anonymous"
+                    async>
+            </script>
+        </div>
+    </div>
+</section>
+{% endblock %}

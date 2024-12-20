@@ -4,19 +4,19 @@
 
 To install Flow-PHP using [Homebrew](https://brew.sh), you need to [tap](https://docs.brew.sh/Taps) the formula first:
 
-```bash
+```shell
 brew tap flow-php/flow
 ```
 
 Now you can install Flow using the following command:
 
-```bash
+```shell
 brew install flow-php
 ```
 
 The `flow` command is now available to run from anywhere in the system:
 
-```console
+```shell
 $ flow -v
 Flow-PHP - Extract Transform Load - Data processing framework 0.5.1
 
@@ -41,7 +41,7 @@ Available commands:
   parquet:read:metadata  Read metadata from parquet file
 ```
 
-To upgrade Flow-PHP binary use the following command:
+To upgrade Flow-PHP binary, use the following command:
 
 ```shell
 brew upgrade flow-php

@@ -2,8 +2,22 @@
 
 - [⬅️️ Back](introduction.md)
 
-Flow is developed as a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/) in order
-to reduce maintenance overhead and to make it easier to manage dependencies between components. 
+## Installation Methods 
+
+- [Docker](installation/docker.md)
+- [PHAR with PHIVE](installation/phive.md)
+- [Homebrew](installation/homebrew.md)
+- [Quick Start](quick-start.md)
+
+## Composer
+
+If you want to work with JSON/CSV files here are the dependencies you will need to install:
+
+```bash
+composer require flow-php/etl flow-php/etl-adapter-csv flow-php/etl-adapter-json
+```
+
+Flow is developed as a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/) to reduce maintenance overhead and to make it easier to manage dependencies between components. 
 
 Instead of installing whole repository with all dependencies, it's recommended to install only the components you need.
 
@@ -34,14 +48,3 @@ Instead of installing whole repository with all dependencies, it's recommended t
     - [filesystem-azure](components/bridges/filesystem-azure-bridge.md)
     - [monolog-http](components/bridges/monolog-http-bridge.md) 
 
-For example, if you want to work with JSON/CSV files here are the dependencies you will need to install:
-
-- ➡️ Composer
-```bash
-composer require flow-php/etl flow-php/etl-adapter-csv flow-php/etl-adapter-json
-```
-
-- [➡️ Docker](installation/docker.md)
-- [➡️ PHAR with PHIVE](installation/phive.md)
-- [➡️ Homebrew](installation/homebrew.md)
-- [➡️ Quick Start](quick-start.md)

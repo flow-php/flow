@@ -1,46 +1,11 @@
-![img](assets/img/flow_php_banner_02_2022.png)
-
 Flow is a PHP based, strongly typed data processing framework with low memory footprint.
 
-Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/) [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/) [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/)
+Supported PHP versions: 
 
-- ➡️ [Installation](installation.md)
-- 📜 [Documentation](introduction.md)
-- 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)
-- 🛠️ [Contributing](../CONTRIBUTING.md)
-
-> [!TIP]
-> In case of any questions, feel free to join our <img src="https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a69f118df70ad7828d4_icon_clyde_blurple_RGB.svg" width="16px" height="16px" alt="Discord"> [Discord Server](https://discord.gg/5dNXfQyACW)
-
-# Table of contents 
-
-- [ETL](components/core/core.md)
-- [CLI](components/cli/docs.md)
-- Adapters
-    - [chartjs](components/adapters/chartjs.md)
-    - [csv](components/adapters/csv.md)
-    - [doctrine](components/adapters/doctrine.md)
-    - [elasticsearch](components/adapters/elasticsearch.md)
-    - [google sheet](components/adapters/google-sheet.md)
-    - [http](components/adapters/http.md)
-    - [json](components/adapters/json.md)
-    - [logger](components/adapters/logger.md)
-    - [meilisearch](components/adapters/meilisearch.md)
-    - [parquet](components/adapters/parquet.md)
-    - [text](components/adapters/text.md)
-    - [xml](components/adapters/xml.md)
-- Libraries
-    - [array-dot](components/libs/array-dot.md)
-    - [azure-sdk](components/libs/azure-sdk.md)
-    - [doctrine-dbal-bulk](components/libs/doctrine-dbal-bulk.md)
-    - [dremel](components/libs/dremel.md)
-    - [filesystem](components/libs/filesystem.md)
-    - [parquet](components/libs/parquet.md)
-    - [parquet-viewer](components/libs/parquet-viewer.md)
-    - [snappy](components/libs/snappy.md)
-- Bridges
-    - [filesystem-azure](components/bridges/filesystem-azure-bridge.md)
-    - [monolog-http](components/bridges/monolog-http-bridge.md) 
+- 8.1 - going to be removed soon 
+- 8.2 
+- 8.3
+- 8.4
 
 # Key Features
 
@@ -57,5 +22,3 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 - **Schema Validation**: Ensure data quality and consistency by validating your datasets against predefined schemas.
 - **Window Functions**: Utilize window functions for advanced data analysis, allowing you to perform calculations across sets of rows that are related to the current row.
 - **Built-In Caching Mechanism**: Improve performance with built-in caching, reducing processing time and enhancing overall efficiency, especially in repetitive data processing tasks.
-
-[⬅️️ Back](../README.md)

@@ -12,8 +12,11 @@
     <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
         <div class="grid grid-cols-1 sm:grid-cols-6">
             <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
-                <h1 class="font-bold text-4xl mb-4">Modules</h1>
+                <h1 class="font-bold text-2xl mb-4">DSL</h1>
                 <ul class="mb-10 mr-6">
+                    <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
+                        <a href="{{ path('documentation_dsl', {module: module_name | lower, _fragment:"dsl-functions"}) }}">⬅️️ Back</a>
+                    </li>
                     {% for module in modules %}
                         <li class="mb-1">
                             <a

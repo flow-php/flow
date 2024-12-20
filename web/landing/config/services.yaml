@@ -3,6 +3,7 @@ parameters:
     flow_root_dir: '%kernel.project_dir%/../..'
     examples_path: '%flow_root_dir%/examples'
     dsl_definitions_path: '%flow_root_dir%/web/landing/resources/dsl.json'
+    documentation_base_path: '%flow_root_dir%/documentation'
     scheme: '%env(SCHEME)%'
     domain: '%env(DOMAIN)%'
     router.request_context.base_url: '%env(SCHEME)%://%env(BASE_URL)%'
@@ -39,6 +40,10 @@ services:
         arguments:
             $definitionsPath: '%dsl_definitions_path%'
 
+    Flow\Website\Service\Documentation\Pages:
+        arguments:
+            $basePath: '%documentation_base_path%'
+
     Flow\Website\Twig\:
         resource: '../src/Flow/Website/Twig/**/*Extension.php'
         tags: [twig.extension]
@@ -46,3 +51,6 @@ services:
     Flow\Website\Twig\DSLExtension:
         arguments:
             $dslPath: '%dsl_definitions_path%'
+
+    twig.markdown.league_common_mark_converter_factory:
+        class: Flow\Website\Service\Markdown\LeagueCommonMarkConverterFactory

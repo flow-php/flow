@@ -9,12 +9,18 @@
     Most of those functions are initializing a new instance of a class under the hood since Flow is fully object-oriented.
 {%- endblock -%}
 
+{%- block hero -%}
+{% endblock %}
+
 {% block main %}
 <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
     <div class="grid grid-cols-1 sm:grid-cols-6">
         <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
-        <h1 class="font-bold text-4xl mb-4">Modules</h1>
+        <h1 class="font-bold text-2xl mb-4">DSL</h1>
             <ul class="mb-10 mr-6">
+                <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
+                    <a href="{{ path('documentation') }}">⬅️️ Back</a>
+                </li>
                 {% for module in modules %}
                     <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
                         <a
@@ -38,7 +44,6 @@
             </ul>
         </div>
         <div class="sm:col-span-5">
-            <h1 id="dsl-functions" class="font-bold text-4xl mb-4">DSL Functions</h1>
             <hr class="text-blue-100 my-4 border-t-2 rounded" />
             <p class="mb-2 text-sm italic">
                 DSL stands for Domain Specific Language. In the case of Flow, the DSL is used to define simple functions that can be used to transform data.

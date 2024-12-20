@@ -139,31 +139,3 @@ Flow ETL is using lazy execution, which means that the pipeline will not be exec
 There are few more triggering functions, like `fetch()`, you can find which functions are `@lazy` or `@trigger` looking at
 the [DataFrame](../src/core/etl/src/Flow/ETL/DataFrame.php) source code.
       
-## Keep Reading
-                     
-To find out more about please continue reading about components and the ETL itself.
-
-- [➡️ ETL Core](components/core/core.md)
-- Adapters
-  - [➡️ avro](components/adapters/avro.md)
-  - [➡️ chartjs](components/adapters/chartjs.md)
-  - [➡️ csv](components/adapters/csv.md)
-  - [➡️ doctrine](components/adapters/doctrine.md)
-  - [➡️ elasticsearch](components/adapters/elasticsearch.md)
-  - [➡️ filesystem](components/adapters/filesystem.md)
-  - [➡️ google-sheet](components/adapters/google-sheet.md)
-  - [➡️ http](components/adapters/http.md)
-  - [➡️ json](components/adapters/json.md)
-  - [➡️ logger](components/adapters/logger.md)
-  - [➡️ meilisearch](components/adapters/meilisearch.md)
-  - [➡️ parquet](components/adapters/parquet.md)
-  - [➡️ text](components/adapters/text.md)
-  - [➡️ xml](components/adapters/xml.md)
-- Libraries
-  - [➡️ array-dot.md](components/libs/array-dot.md)
-  - [➡️ doctrine-dbal-bulk.md](components/libs/doctrine-dbal-bulk.md)
-  - [➡️ dremel.md](components/libs/dremel.md)
-  - [➡️ parquet.md](components/libs/parquet.md)
-  - [➡️ parquet-viewer.md](components/libs/parquet-viewer.md)
-  - [➡️ rdsl.md](components/libs/rdsl.md)
-  - [➡️ snappy.md](components/libs/snappy.md)

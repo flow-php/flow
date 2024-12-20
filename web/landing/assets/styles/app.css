@@ -88,3 +88,64 @@ code {
 #example-description code {
     @apply text-orange-100;
 }
+
+
+#documentation-page {
+    @apply pb-5 px-2 sm:px-4 mx-auto max-w-screen-xl;
+}
+
+#documentation-page a {
+    @apply inline;
+}
+
+#documentation-page hr, p, pre, ul, h2, h3 {
+    @apply mb-3;
+}
+
+#documentation-page pre {
+    @apply rounded my-6 p-4 overflow-auto rounded border-gray border-2 relative shadow-2xl shadow-gray;
+}
+
+#documentation-page pre code {
+    @apply !p-0 !bg-transparent
+}
+
+#documentation-page h1 {
+    @apply font-bold text-4xl;
+}
+
+#documentation-page ul {
+    @apply list-disc pl-6;
+}
+
+#documentation-page h2 {
+    @apply font-bold text-2xl mt-4;
+}
+
+#documentation-page hr {
+    @apply text-blue-100 my-4 border-t-2 rounded;
+}
+
+#documentation-page h1 {
+    @apply font-bold text-2xl;
+}
+
+#documentation-page h2 {
+    @apply font-bold text-xl mt-4;
+}
+
+#documentation-page h1, h2, ul, hr, p {
+    @apply mb-3;
+}
+
+#documentation-page ul {
+    @apply list-disc pl-6;
+}
+
+#documentation-page hr {
+    @apply text-blue-100 my-4 border-t-2 rounded;
+}
+
+#documentation-page code {
+    @apply text-orange-100;
+}
