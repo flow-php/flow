@@ -48,9 +48,9 @@ Config::default()
 
 The following implementations are available out of the box:
 
-* [InMemory](../../../src/core/etl/src/Flow/ETL/Cache/Implementation/InMemoryCache.php)
-* [LocalFilesystem](../../../src/core/etl/src/Flow/ETL/Cache/Implementation/FilesystemCache.php)
-* [PSRSimpleCache](../../../src/core/etl/src/Flow/ETL/Cache/Implementation/PSRSimpleCache.php)
+* [InMemory](/src/core/etl/src/Flow/ETL/Cache/Implementation/InMemoryCache.php)
+* [LocalFilesystem](/src/core/etl/src/Flow/ETL/Cache/Implementation/FilesystemCache.php)
+* [PSRSimpleCache](/src/core/etl/src/Flow/ETL/Cache/Implementation/PSRSimpleCache.php)
 
 PSRSimpleCache makes possible to use any of the [psr/simple-cache-implementation](https://packagist.org/providers/psr/simple-cache-implementation)
 but it does not come with any out of the box.

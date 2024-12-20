@@ -28,7 +28,7 @@
                     {% endfor %}
                 </ul>
             </div>
-            <div class="sm:col-span-5">
+            <div class="sm:col-span-4 p-2">
                 <article data-dsl-function>
                 <h1 id="dsl-function" class="font-bold text-4xl mb-4">Definition</h1>
                     <hr class="text-blue-100 my-4 border-t-2 rounded" />
@@ -84,6 +84,9 @@
                         crossorigin="anonymous"
                         async>
                 </script>
+            </div>
+            <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+                {{ render(controller('Flow\\Website\\Controller\\DocumentationController::examples')) }}
             </div>
         </div>
     </div>

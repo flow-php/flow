@@ -3,7 +3,7 @@
 - [⬅️️ Back](core.md)
 
 In case of any exception in transform/load steps, an ETL process will break, 
-to change that behavior, please set custom [ErrorHandler](../../../src/core/etl/src/Flow/ETL/ErrorHandler.php).
+to change that behavior, please set custom [ErrorHandler](/src/core/etl/src/Flow/ETL/ErrorHandler.php).
 
 Error Handler defines 3 behavior using 2 methods.
 
@@ -16,9 +16,9 @@ If both methods return false, ETL will continue processing Rows using next trans
 
 There are 3 build-in ErrorHandlers (look for more in adapters):
 
-* [ignore error](../../../src/core/etl/src/Flow/ETL/ErrorHandler/IgnoreError.php)
-* [skip rows](../../../src/core/etl/src/Flow/ETL/ErrorHandler/SkipRows.php)
-* [throw error](../../../src/core/etl/src/Flow/ETL/ErrorHandler/ThrowError.php)
+* [ignore error](/src/core/etl/src/Flow/ETL/ErrorHandler/IgnoreError.php)
+* [skip rows](/src/core/etl/src/Flow/ETL/ErrorHandler/SkipRows.php)
+* [throw error](/src/core/etl/src/Flow/ETL/ErrorHandler/ThrowError.php)
 
 Error Handling can be set directly at ETL:
 

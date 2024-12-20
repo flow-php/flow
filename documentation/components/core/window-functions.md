@@ -11,15 +11,15 @@ Window is used to partition dataset into smaller partitions on which later windo
 
 ### Window Functions:
 
-- [`ROW_NUMBER()`](../../../src/core/etl/src/Flow/ETL/Function/RowNumber.php)
-- [`RANK()`](../../../src/core/etl/src/Flow/ETL/Function/Rank.php)
-- [`DENSE_RANK()`](../../../src/core/etl/src/Flow/ETL/Function/DenseRank.php)
-- [`SUM`](../../../src/core/etl/src/Flow/ETL/Function/Sum.php)
-- [`AVERAGE`](../../../src/core/etl/src/Flow/ETL/Function/Average.php)
-- [`COUNT`](../../../src/core/etl/src/Flow/ETL/Function/Count.php)
+- [`ROW_NUMBER()`](/src/core/etl/src/Flow/ETL/Function/RowNumber.php)
+- [`RANK()`](/src/core/etl/src/Flow/ETL/Function/Rank.php)
+- [`DENSE_RANK()`](/src/core/etl/src/Flow/ETL/Function/DenseRank.php)
+- [`SUM`](/src/core/etl/src/Flow/ETL/Function/Sum.php)
+- [`AVERAGE`](/src/core/etl/src/Flow/ETL/Function/Average.php)
+- [`COUNT`](/src/core/etl/src/Flow/ETL/Function/Count.php)
 
 
-All window functions are implementing [`WindowFunction`](../../../src/core/etl/src/Flow/ETL/Function/WindowFunction.php) interface.
+All window functions are implementing [`WindowFunction`](/src/core/etl/src/Flow/ETL/Function/WindowFunction.php) interface.
 
 ### Example
 

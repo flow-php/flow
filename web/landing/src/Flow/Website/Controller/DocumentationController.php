@@ -58,6 +58,38 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
+    #[Route('/documentation/example/{topic}/{example}/', name: 'documentation_example', priority: -90)]
+    public function example(string $topic, string $example) : Response
+    {
+        $topics = $this->examples->topics();
+        $currentTopic = $topic;
+
+        $examples = $this->examples->examples($currentTopic);
+        $currentExample = $example;
+
+        return $this->render('documentation/example.html.twig', [
+            'navigation' => $this->pages->get('_navigation.md'),
+            'topics' => $topics,
+            'examples' => $examples,
+            'currentTopic' => $topic,
+            'currentExample' => $example,
+            'description' => $this->examples->description($currentTopic, $currentExample),
+            'code' => $this->examples->code($currentTopic, $currentExample),
+            'output' => $this->examples->output($currentTopic, $currentExample),
+        ]);
+    }
+
+    public function examples() : Response
+    {
+        $modules = $this->dslDefinitions->modules();
+
+        return $this->render('documentation/examples.html.twig', [
+            'examples' => $this->examples,
+            'modules' => $modules,
+            'types' => $this->dslDefinitions->types(),
+        ]);
+    }
+
     #[Route('/documentation', name: 'documentation', options: ['sitemap' => true])]
     public function index() : Response
     {
@@ -67,7 +99,18 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    #[Route('/documentation/{path}', name: 'documentation_page', requirements: ['path' => '.*'], priority: -1)]
+    public function navigation() : Response
+    {
+        $modules = $this->dslDefinitions->modules();
+
+        return $this->render('documentation/navigation.html.twig', [
+            'examples' => $this->examples,
+            'modules' => $modules,
+            'types' => $this->dslDefinitions->types(),
+        ]);
+    }
+
+    #[Route('/documentation/{path}', name: 'documentation_page', requirements: ['path' => '.*'], priority: -100)]
     public function page(string $path) : Response
     {
         return $this->render('documentation/page.html.twig', [

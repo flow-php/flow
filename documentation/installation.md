@@ -1,3 +1,10 @@
+---
+seo_title: Installation
+seo_description: >
+  Flow is developed as a monorepo in order to reduce maintenance overhead and to make it easier to manage dependencies between components.
+  Please follow the installation methods to get started with Flow.
+---
+
 # Installation
 
 - [⬅️️ Back](introduction.md)

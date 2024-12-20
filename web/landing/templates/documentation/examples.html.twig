@@ -1,0 +1,22 @@
+<div id="examples">
+    <h1>Examples</h1>
+    <ul>
+    {% for topic in examples.topics %}
+        <li>
+            <button class="link" aria-controls="dropdown-example" data-collapse-toggle="dropdown-example-{{ topic }}">
+                {{ topic|humanize }}
+                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                </svg>
+            </button>
+            <ul id="dropdown-example-{{ topic }}" class="hidden">
+                {% for example in examples.examples(topic) %}
+                    <li>
+                        <a href="{{ path('documentation_example', {topic: topic, example: example}) }}#example">{{ example|humanize }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+    </ul>
+</div>

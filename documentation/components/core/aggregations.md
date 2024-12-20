@@ -6,17 +6,17 @@ Each group created by `groupBy` function can be aggregated using one of the aggr
 
 ## Aggregation functions
 
-- [`COUNT()`](../../../src/core/etl/src/Flow/ETL/Function/Count.php)
-- [`AVERAGE()`](../../../src/core/etl/src/Flow/ETL/Function/Average.php)
-- [`SUM()`](../../../src/core/etl/src/Flow/ETL/Function/Sum.php)
-- [`MIN()`](../../../src/core/etl/src/Flow/ETL/Function/Min.php)
-- [`MAX()`](../../../src/core/etl/src/Flow/ETL/Function/Max.php)
-- [`COLLECT()`](../../../src/core/etl/src/Flow/ETL/Function/Collect.php)
-- [`COLLECT_UNIQUE()`](../../../src/core/etl/src/Flow/ETL/Function/CollectUnique.php)
-- [`FIRST`](../../../src/core/etl/src/Flow/ETL/Function/First.php)
-- [`LAST`](../../../src/core/etl/src/Flow/ETL/Function/Last.php)
+- [`COUNT()`](/src/core/etl/src/Flow/ETL/Function/Count.php)
+- [`AVERAGE()`](/src/core/etl/src/Flow/ETL/Function/Average.php)
+- [`SUM()`](/src/core/etl/src/Flow/ETL/Function/Sum.php)
+- [`MIN()`](/src/core/etl/src/Flow/ETL/Function/Min.php)
+- [`MAX()`](/src/core/etl/src/Flow/ETL/Function/Max.php)
+- [`COLLECT()`](/src/core/etl/src/Flow/ETL/Function/Collect.php)
+- [`COLLECT_UNIQUE()`](/src/core/etl/src/Flow/ETL/Function/CollectUnique.php)
+- [`FIRST`](/src/core/etl/src/Flow/ETL/Function/First.php)
+- [`LAST`](/src/core/etl/src/Flow/ETL/Function/Last.php)
 
-All aggregation functions are implementing [`AggregatingFunction`](../../../src/core/etl/src/Flow/ETL/Function/AggregatingFunction.php) interface.
+All aggregation functions are implementing [`AggregatingFunction`](/src/core/etl/src/Flow/ETL/Function/AggregatingFunction.php) interface.
 
 ## Example
 

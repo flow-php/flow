@@ -2,9 +2,9 @@
 
 - [⬅️️ Back](core.md)
 
-Entries are the columns of the data frame, they are represented by the [Entry](../../../src/core/etl/src/Flow/ETL/Row/Entry.php) interface.
-Group of Entries is called `Row`, it is represented by the [Row](../../../src/core/etl/src/Flow/ETL/Row.php) class.
-Group of Rows is called `Rows`, it is represented by the [Rows](../../../src/core/etl/src/Flow/ETL/Rows.php) class.
+Entries are the columns of the data frame, they are represented by the [Entry](/src/core/etl/src/Flow/ETL/Row/Entry.php) interface.
+Group of Entries is called `Row`, it is represented by the [Row](/src/core/etl/src/Flow/ETL/Row.php) class.
+Group of Rows is called `Rows`, it is represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php) class.
 
 Let's look at the following example: 
 
@@ -45,26 +45,26 @@ $rows = array_to_rows([
 
 ## Entry Types
 
-- [Boolean](../../../src/core/etl/src/Flow/ETL/Row/Entry/BooleanEntry.php)
-- [Time](../../../src/core/etl/src/Flow/ETL/Row/Entry/TimeEntry.php)
-- [Date](../../../src/core/etl/src/Flow/ETL/Row/Entry/DateEntry.php)
-- [DateTime](../../../src/core/etl/src/Flow/ETL/Row/Entry/DateTimeEntry.php)
-- [Enum](../../../src/core/etl/src/Flow/ETL/Row/Entry/EnumEntry.php)
-- [Float](../../../src/core/etl/src/Flow/ETL/Row/Entry/FloatEntry.php)
-- [Integer](../../../src/core/etl/src/Flow/ETL/Row/Entry/IntegerEntry.php)
-- [Json](../../../src/core/etl/src/Flow/ETL/Row/Entry/JsonEntry.php)
-- [List](../../../src/core/etl/src/Flow/ETL/Row/Entry/ListEntry.php)
-- [Map](../../../src/core/etl/src/Flow/ETL/Row/Entry/MapEntry.php)
-- [String](../../../src/core/etl/src/Flow/ETL/Row/Entry/StringEntry.php)
-- [Structure](../../../src/core/etl/src/Flow/ETL/Row/Entry/StructureEntry.php)
-- [Uuid](../../../src/core/etl/src/Flow/ETL/Row/Entry/UuidEntry.php)
-- [XML](../../../src/core/etl/src/Flow/ETL/Row/Entry/XMLEntry.php)
-- [XMLElement](../../../src/core/etl/src/Flow/ETL/Row/Entry/XMLElementEntry.php)
+- [Boolean](/src/core/etl/src/Flow/ETL/Row/Entry/BooleanEntry.php)
+- [Time](/src/core/etl/src/Flow/ETL/Row/Entry/TimeEntry.php)
+- [Date](/src/core/etl/src/Flow/ETL/Row/Entry/DateEntry.php)
+- [DateTime](/src/core/etl/src/Flow/ETL/Row/Entry/DateTimeEntry.php)
+- [Enum](/src/core/etl/src/Flow/ETL/Row/Entry/EnumEntry.php)
+- [Float](/src/core/etl/src/Flow/ETL/Row/Entry/FloatEntry.php)
+- [Integer](/src/core/etl/src/Flow/ETL/Row/Entry/IntegerEntry.php)
+- [Json](/src/core/etl/src/Flow/ETL/Row/Entry/JsonEntry.php)
+- [List](/src/core/etl/src/Flow/ETL/Row/Entry/ListEntry.php)
+- [Map](/src/core/etl/src/Flow/ETL/Row/Entry/MapEntry.php)
+- [String](/src/core/etl/src/Flow/ETL/Row/Entry/StringEntry.php)
+- [Structure](/src/core/etl/src/Flow/ETL/Row/Entry/StructureEntry.php)
+- [Uuid](/src/core/etl/src/Flow/ETL/Row/Entry/UuidEntry.php)
+- [XML](/src/core/etl/src/Flow/ETL/Row/Entry/XMLEntry.php)
+- [XMLElement](/src/core/etl/src/Flow/ETL/Row/Entry/XMLElementEntry.php)
 
-Internally flow is using [EntryFactory](../../../src/core/etl/src/Flow/ETL/Row/Factory/NativeEntryFactory.php) to create entries. 
+Internally flow is using [EntryFactory](/src/core/etl/src/Flow/ETL/Row/Factory/NativeEntryFactory.php) to create entries. 
 It will try to detect and create the most appropriate entry type based on the value.
 
-Flow Entries are based on [PHP Types](../../../src/core/etl/src/Flow/ETL/PHP/Type/Type.php), which are divided into two groups:
+Flow Entries are based on [PHP Types](/src/core/etl/src/Flow/ETL/PHP/Type/Type.php), which are divided into two groups:
 
 - Native
   - Array

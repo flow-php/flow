@@ -1,3 +1,10 @@
+---
+seo_title: Introduction
+seo_description: Flow is a PHP based, strongly typed data processing framework with low memory footprint.
+---
+
+![Flow PHP](https://raw.githubusercontent.com/flow-php/flow-php.com/refs/heads/main/assets/images/banner-a491e037b6fca6069571c39eb216acc9.png)
+
 Flow is a PHP based, strongly typed data processing framework with low memory footprint.
 
 Supported PHP versions: 

@@ -16,25 +16,9 @@ final class ExamplesController extends AbstractController
     ) {
     }
 
-    #[Route('/{topic}/{example}/', name: 'example', priority: -2)]
+    #[Route('/{topic}/{example}/', name: 'example', priority: -140)]
     public function example(string $topic, string $example) : Response
     {
-        switch (\mb_strtolower($topic)) {
-            case 'data_sink':
-                return $this->redirectToRoute('example', ['topic' => 'data_writing', 'example' => $example], 301);
-            case 'data_source':
-                return $this->redirectToRoute('example', ['topic' => 'data_reading', 'example' => $example], 301);
-            case 'data_frame':
-                switch (\mb_strtolower($example)) {
-                    case 'create_entries':
-                        return $this->redirectToRoute('example', ['topic' => 'data_frame', 'example' => 'create_columns'], 301);
-                    case 'rename_entries':
-                        return $this->redirectToRoute('example', ['topic' => 'data_frame', 'example' => 'rename_columns'], 301);
-                    case 'reorder_entries':
-                        return $this->redirectToRoute('example', ['topic' => 'data_frame', 'example' => 'reorder_columns'], 301);
-                }
-        }
-
         $topics = $this->examples->topics();
         $currentTopic = $topic;
 
@@ -52,7 +36,7 @@ final class ExamplesController extends AbstractController
         ]);
     }
 
-    #[Route('/{topic}/', name: 'topic', priority: -1)]
+    #[Route('/{topic}/', name: 'topic', priority: -120)]
     public function topic(string $topic) : Response
     {
         switch (\mb_strtolower($topic)) {

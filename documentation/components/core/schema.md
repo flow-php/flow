@@ -16,8 +16,8 @@ Row Schema is built from Entry Definitions, each definition is created from:
 
 There is more than one way to validate the schema, built in strategies are defined below:
 
-* [StrictValidator](../../../src/core/etl/src/Flow/ETL/Row/Schema/StrictValidator.php) - each row must exactly match the schema, extra entries will fail validation
-* [SelectiveValidator](../../../src/core/etl/src/Flow/ETL/Row/Schema/SelectiveValidator.php) - only rows defined in the schema must match, any extra entry in row will be ignored
+* [StrictValidator](/src/core/etl/src/Flow/ETL/Row/Schema/StrictValidator.php) - each row must exactly match the schema, extra entries will fail validation
+* [SelectiveValidator](/src/core/etl/src/Flow/ETL/Row/Schema/SelectiveValidator.php) - only rows defined in the schema must match, any extra entry in row will be ignored
 
 By default, ETL is initializing `StrictValidator`, but it's possible to override it by passing second argument to `DataFrame::validate()` method.
 

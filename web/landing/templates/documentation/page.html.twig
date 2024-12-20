@@ -1,10 +1,11 @@
 {% extends 'base.html.twig' %}
 
 {%- block title -%}
-    Documentation - Flow PHP - Data Processing Framework
+    {{ page.title }} - Flow PHP - Data Processing Framework
 {%- endblock -%}
 
 {%- block description -%}
+    {{ page.description }}
 {%- endblock -%}
 
 {%- block hero -%}
@@ -14,9 +15,9 @@
 <section id="documentation-page" class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-xl">
     <div class="grid grid-cols-1 sm:grid-cols-6">
         <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
-            {{ navigation.content|markdown_to_html }}
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigation')) }}
         </div>
-        <div class="sm:col-span-5">
+        <div class="sm:col-span-4 p-2">
             {{ page.content|markdown_to_html }}
 
             <hr class="!mt-8 !mb-8"/>
@@ -35,6 +36,9 @@
                     crossorigin="anonymous"
                     async>
             </script>
+        </div>
+        <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::examples')) }}
         </div>
     </div>
 </section>

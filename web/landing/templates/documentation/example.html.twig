@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Flow PHP - {{ currentTopic|humanize }} - {{ currentExample|humanize }} - Example
+{%- endblock -%}
+
+{%- block description -%}
+    Code example showing {{ currentExample|humanize|lower }} {{ currentTopic|humanize|lower }}.
+{%- endblock -%}
+
+{%- block hero -%}
+{% endblock %}
+
+{% block main %}
+<section id="documentation-page" class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-xl">
+    <div class="grid grid-cols-1 sm:grid-cols-6">
+        <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::navigation')) }}
+        </div>
+        <div class="sm:col-span-4 p-2">
+
+            <div class="-mt-20 pt-20">
+                <div id="example" class="-mt-36 pt-36">
+                    <h1>Example: {{ currentExample|humanize }}</h1>
+                    <h3>Topic: {{ currentTopic|humanize }}</h3>
+                    <hr/>
+                    {% if description %}
+                        <h2 class="text-xl mt-5 mb-5">Description</h2>
+                        <article id="example-description"
+                                 class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-10"
+                                {{ stimulus_controller('all_links_external') }}
+                        >
+                            {{ description|markdown_to_html }}
+                        </article>
+                    {% endif %}
+
+                    {% apply spaceless %}
+                        <h2 class="text-xl mt-5 mb-5">Code</h2>
+                        <div id="code" class="relative">
+                            <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
+                                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+                            </button>
+                            <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
+                        <code id="code" class="language-php" data-controller="syntax-highlight" >
+                            {{- code | escape('html') -}}
+                        </code>
+                    </pre>
+                        </div>
+                    {% endapply %}
+                </div>
+
+                {% if output %}
+                    <h2 class="text-xl mt-5 mb-5">Output</h2>
+                    <div id="output" class="relative">
+                        {% apply spaceless %}
+                            <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#output" {{ stimulus_controller('clipboard') }}>
+                                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+                            </button>
+                            <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2">
+                    <code id="output" class="language-bash overflow-auto" {{ stimulus_controller('syntax_highlight') }}>
+                        {{- output | escape('html') -}}
+                    </code>
+                </pre>
+                        {% endapply %}
+                    </div>
+                {% endif %}
+
+                <div class="mt-5">
+                    <script src="https://giscus.app/client.js"
+                            data-repo="flow-php/flow-php.com"
+                            data-repo-id="R_kgDOHja2Yg"
+                            data-category="Examples"
+                            data-category-id="DIC_kwDOHja2Ys4CieC7"
+                            data-mapping="url"
+                            data-strict="0"
+                            data-reactions-enabled="0"
+                            data-emit-metadata="0"
+                            data-input-position="bottom"
+                            data-theme="dark"
+                            data-lang="en"
+                            crossorigin="anonymous"
+                            async>
+                    </script>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+            {{ render(controller('Flow\\Website\\Controller\\DocumentationController::examples')) }}
+        </div>
+    </div>
+</section>
+{% endblock %}

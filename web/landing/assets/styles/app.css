@@ -16,6 +16,11 @@ html {
     inset: unset;
 }
 
+#examples ul {
+    @apply list-disc pl-6;
+}
+
+
 nav a {
     @apply font-medium text-white dark:text-white hover:underline;
 }
@@ -25,6 +30,11 @@ footer a {
 }
 
 a {
+    font-weight: normal;
+    @apply font-medium text-blue-600 dark:text-blue-500 hover:underline;
+}
+
+.link {
     font-weight: normal;
     @apply font-medium text-blue-600 dark:text-blue-500 hover:underline;
 }

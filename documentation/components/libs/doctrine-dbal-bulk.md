@@ -63,9 +63,9 @@ $bulk->update(
 
 ### Adding new Dialects
 
-[Dialect](../../../src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/Dialect/Dialect.php) is basic abstraction of this library.  
+[Dialect](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/Dialect/Dialect.php) is basic abstraction of this library.  
 The main role of Dialect is to prepare SQL insert/update statement based
-on [BulkData](../../../src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/BulkData.php)
+on [BulkData](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/BulkData.php)
 and provided `options`.
 
 * `$insertOptions`
@@ -75,12 +75,12 @@ Options are key => value maps without predefined structure that allows to manipu
 Each dialect should define it own structure for options in order to support db engine features, including those
 that are specific for given engine.
 
-[QueryFactory](../../../src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory.php) is abstraction for creating queries, there is currently only one
+[QueryFactory](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/QueryFactory.php) is abstraction for creating queries, there is currently only one
 implementation, DbalPlatform. QueryFactory `insertOptions` and `updateOptions` is combination of all options provided
 by supported Dialects where each entry must be optional.
 
 example:
 `dialect_option?: string`
 
-[DbalPlatform](../../../src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/DbalPlatform.php) is a factory that detects which Dialect should be used for given
+[DbalPlatform](/src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk/DbalPlatform.php) is a factory that detects which Dialect should be used for given
 Doctrine DBAL Platform. 
