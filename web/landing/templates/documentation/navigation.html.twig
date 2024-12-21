@@ -1,156 +1,169 @@
 <div>
-    <h1>Documentation</h1>
-    <ul>
-        <li>
-            <a href="/documentation">Introduction</a>
-        </li>
-        <li>
-            <a href="/documentation/installation">Installation</a>
-        </li>
-        <li>
-            <a href="/documentation/quick-start">Quick Start</a>
-        </li>
-        <li>
-            <a href="/documentation/dsl#dsl-functions">DSL References</a>
-        </li>
-        <li>
-            <a rel="noopener noreferrer" target="_blank" href="https://github.com/orgs/flow-php/projects/1">Project Roadmap</a>
-        </li>
-        <li>
-            <a href="/documentation/contributing">Contributing</a>
-        </li>
-        <li>
-            <a rel="noopener noreferrer" target="_blank" href="https://discord.gg/5dNXfQyACW">Discord Server</a>
-        </li>
-    </ul>
-    <h2>Core</h2>
-    <ul>
-        <li>
-            <a href="/documentation/components/core/core">Data Frame</a>
-            <ul>
-                <li>
-                    <a href="/documentation/components/core/building-blocks">Building Blocks</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/select-drop">Select/Drop</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/rename">Rename</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/map">Map</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/filter">Filter</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/error-handling">Error Handling</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/join">Join</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/until">Until</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/sort">Sort</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/display">Display</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/limit">Limit</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/schema">Schema</a>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/group-by">Group By</a>
-                    <ul>
-                        <li>
-                            <a href="/documentation/components/core/aggregations">Aggregations</a>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="/documentation/components/core/window-functions">Window Functions</a>
-                </li>
-            </ul>
-        </li>
-        <li>
-            <a href="/documentation/components/cli/docs">CLI</a>
-        </li>
-    </ul>
-    <h2>Adapters</h2>
-    <ul>
-        <li>
-            <a href="/documentation/components/adapters/chartjs">ChartJS</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/csv">CSV</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/doctrine">Doctrine</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/elasticsearch">Elastic Search</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/google-sheet">Google Sheets</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/http">HTTP</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/json">Json</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/logger">Logger</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/meilisearch">MeiliSearch</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/parquet">Parquet</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/text">Text</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/xml">XML</a>
-        </li>
-    </ul>
-    <h2>Libraries</h2>
-    <ul>
-        <li>
-            <a href="/documentation/components/libs/filesystem">Filesystem</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/array-dot">Array Dot</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/azure-sdk">Azure SDK</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/doctrine-dbal-bulk">Doctrine DBAL Bulk</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/parquet">Parquet</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/parquet-viewer">Parquet Viewer</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/snappy">Snappy</a>
-        </li>
-    </ul>
-    <h2>Bridges</h2>
-    <ul class="mb-10">
-        <li>
-            <a href="/documentation/components/bridges/filesystem-azure-bridge">Filesystem Azure</a>
-        </li>
-        <li>
-            <a href="/documentation/components/bridges/monolog-http-bridge">Monolog Http</a>
-        </li>
-    </ul>
+    <h1 class="hidden lg:block">
+        Documentation
+    </h1>
+    <div class="lg:hidden p-2 text-center">
+        <button class="font-bold text-xl" aria-controls="documentation-navigation" data-collapse-toggle="documentation-navigation">
+            Documentation
+
+            <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+            </svg>
+        </button>
+    </div>
+    <div id="documentation-navigation" class="hidden lg:block">
+        <ul>
+            <li>
+                <a href="/documentation">Introduction</a>
+            </li>
+            <li>
+                <a href="/documentation/installation">Installation</a>
+            </li>
+            <li>
+                <a href="/documentation/quick-start">Quick Start</a>
+            </li>
+            <li>
+                <a href="/documentation/dsl#dsl-functions">DSL References</a>
+            </li>
+            <li>
+                <a rel="noopener noreferrer" target="_blank" href="https://github.com/orgs/flow-php/projects/1">Project Roadmap</a>
+            </li>
+            <li>
+                <a href="/documentation/contributing">Contributing</a>
+            </li>
+            <li>
+                <a rel="noopener noreferrer" target="_blank" href="https://discord.gg/5dNXfQyACW">Discord Server</a>
+            </li>
+        </ul>
+        <h2>Core</h2>
+        <ul>
+            <li>
+                <a href="/documentation/components/core/core">Data Frame</a>
+                <ul>
+                    <li>
+                        <a href="/documentation/components/core/building-blocks">Building Blocks</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/select-drop">Select/Drop</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/rename">Rename</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/map">Map</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/filter">Filter</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/error-handling">Error Handling</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/join">Join</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/until">Until</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/sort">Sort</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/display">Display</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/limit">Limit</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/schema">Schema</a>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/group-by">Group By</a>
+                        <ul>
+                            <li>
+                                <a href="/documentation/components/core/aggregations">Aggregations</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="/documentation/components/core/window-functions">Window Functions</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="/documentation/components/cli/docs">CLI</a>
+            </li>
+        </ul>
+        <h2>Adapters</h2>
+        <ul>
+            <li>
+                <a href="/documentation/components/adapters/chartjs">ChartJS</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/csv">CSV</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/doctrine">Doctrine</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/elasticsearch">Elastic Search</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/google-sheet">Google Sheets</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/http">HTTP</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/json">Json</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/logger">Logger</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/meilisearch">MeiliSearch</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/parquet">Parquet</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/text">Text</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/xml">XML</a>
+            </li>
+        </ul>
+        <h2>Libraries</h2>
+        <ul>
+            <li>
+                <a href="/documentation/components/libs/filesystem">Filesystem</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/array-dot">Array Dot</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/azure-sdk">Azure SDK</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/doctrine-dbal-bulk">Doctrine DBAL Bulk</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/parquet">Parquet</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/parquet-viewer">Parquet Viewer</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/snappy">Snappy</a>
+            </li>
+        </ul>
+        <h2>Bridges</h2>
+        <ul class="mb-10">
+            <li>
+                <a href="/documentation/components/bridges/filesystem-azure-bridge">Filesystem Azure</a>
+            </li>
+            <li>
+                <a href="/documentation/components/bridges/monolog-http-bridge">Monolog Http</a>
+            </li>
+        </ul>
+    </div>
 </div>

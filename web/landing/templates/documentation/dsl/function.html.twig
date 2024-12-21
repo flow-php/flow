@@ -10,8 +10,8 @@
 
 {% block main %}
     <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
-        <div class="grid grid-cols-1 sm:grid-cols-6">
-            <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-6">
+            <div class="order-1 lg:order-0 col-span-1 lg:col-span-1 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto">
                 <h1 class="font-bold text-2xl mb-4">DSL</h1>
                 <ul class="mb-10 mr-6">
                     <li class="mb-1" data-dsl-module="{{ module_name | slugify | lower }}">
@@ -28,7 +28,8 @@
                     {% endfor %}
                 </ul>
             </div>
-            <div class="sm:col-span-4 p-2">
+            <div class="order-3 lg:order-1 lg:col-span-4 p-2">
+                <hr class="lg:hidden"/>
                 <article data-dsl-function>
                 <h1 id="dsl-function" class="font-bold text-4xl mb-4">Definition</h1>
                     <hr class="text-blue-100 my-4 border-t-2 rounded" />
@@ -85,7 +86,7 @@
                         async>
                 </script>
             </div>
-            <div class="col-span-1 sm:sticky sm:top-0 sm:max-h-screen sm:overflow-y-auto">
+            <div class="order-2 lg:order-2 col-span-1 lg:col-span-1 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto">
                 {{ render(controller('Flow\\Website\\Controller\\DocumentationController::examples')) }}
             </div>
         </div>

@@ -16,7 +16,7 @@ html {
     inset: unset;
 }
 
-#examples ul {
+#documentation-examples ul {
     @apply list-disc pl-6;
 }
 
