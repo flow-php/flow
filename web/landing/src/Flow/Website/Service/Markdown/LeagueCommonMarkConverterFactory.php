@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
-use Flow\Website\Service\Github;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
@@ -13,10 +12,6 @@ use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
 
 final class LeagueCommonMarkConverterFactory
 {
-    public function __construct(private readonly Github $github)
-    {
-    }
-
     public function __invoke() : CommonMarkConverter
     {
         $config = [
@@ -32,7 +27,7 @@ final class LeagueCommonMarkConverterFactory
             ->addExtension(new ExternalLinkExtension())
             ->addExtension(new FrontMatterExtension())
             ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
-            ->addRenderer(Link::class, new FlowLinkRenderer($this->github), 0);
+            ->addRenderer(Link::class, new FlowLinkRenderer(), 0);
 
         return $converter;
     }
