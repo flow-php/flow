@@ -53,4 +53,16 @@ services:
         container_name: flow-php-redis
         ports:
             - "6379:6379"
+    localstack:
+        image: localstack/localstack:latest
+        container_name: flow-php-localstack
+        ports:
+            - "4566:4566"
+        environment:
+            - SERVICES=s3
+            - DEBUG=1
+            - DATA_DIR=/tmp/localstack/data
+        volumes:
+            - "./var/localstack:/tmp/localstack"
+
 

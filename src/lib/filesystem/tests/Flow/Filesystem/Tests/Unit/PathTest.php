@@ -6,7 +6,7 @@ namespace Flow\Filesystem\Tests\Unit;
 
 use function Flow\Filesystem\DSL\{partition, partitions, path, path_real};
 use Flow\Filesystem\Partitions;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
 use PHPUnit\Framework\TestCase;
 
 final class PathTest extends TestCase
@@ -245,6 +245,18 @@ final class PathTest extends TestCase
         self::assertSame('azure-blob://var/dir/file.php', $path->uri());
     }
 
+    #[TestWith(['file://var/www/index.html', 'var'])]
+    #[TestWith(['file://index.html', null])]
+    #[TestWith(['file://index', null])]
+    #[TestWith(['file://var/www', 'var'])]
+    #[TestWith(['/var/www', 'var'])]
+    #[TestWith(['var/www', 'var'])]
+    #[TestWith(['www', null])]
+    public function test_root_directory_name(string $path, ?string $rootDirectory) : void
+    {
+        self::assertEquals($rootDirectory, path($path)->rootDirectoryName());
+    }
+
     public function test_set_extension() : void
     {
         $path = path('flow-file://var/dir/file.csv', []);
@@ -273,6 +285,19 @@ final class PathTest extends TestCase
             'flow-file://var/dir/file.parquet',
             $path->setExtension('parquet')->uri()
         );
+    }
+
+    #[TestWith(['file://var/www/index.html', 1,  'file://www/index.html'])]
+    #[TestWith(['file://var/www/index.html', 2,  'file://index.html'])]
+    #[TestWith(['file://var/www/index.html', 3,  null])]
+    #[TestWith(['file://index.html', 1,  null])]
+    public function test_skip_directories(string $path, int $count, ?string $newPath) : void
+    {
+        if ($newPath === null) {
+            self::assertNull(path($path)->skipDirectories($count));
+        } else {
+            self::assertEquals(path($newPath), path($path)->skipDirectories($count));
+        }
     }
 
     public function test_suffix() : void

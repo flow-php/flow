@@ -329,6 +329,7 @@ TXT
         for ($i = 0; $i < 10; $i++) {
             $stream->append(\str_repeat('a', 1024) . "\n");
         }
+
         $stream->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://block_blob.csv'))->isFile());
