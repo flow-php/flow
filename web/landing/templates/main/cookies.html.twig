@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Flow PHP - Data Processing Framework
+{%- endblock -%}
+
+{%- block description -%}
+    Flow is a PHP-based, strongly typed data processing framework with low memory footprint that can process various data sources consistently.
+    It offers a unified API for all data sources, including CSV, JSON, XML, Text, Parquet, Avro, Rest API, RDBMS, Elasticsearch / Meilisearch.
+    Flow not only enables you to process various data sources consistently, but also strives to accurately detect data types and cast them to the appropriate PHP types.
+{%- endblock -%}
+
+{#{% block tracking %}#}
+{#{% endblock %}#}
+
+{% block hero %}
+{% endblock %}
+
+{% block main %}
+    <div class="max-w-screen-xl mx-auto" data-controller="cookie-fallback">
+        <section class="rounded max-w-4xl p-8 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 mx-auto my-10">
+            <h1 class="font-bold text-4xl">Too bad... But your Privacy is our Motivation</h1>
+            <p class="mt-4">
+                We completely respect your decision to reject cookies. However, before you go,
+                we’d like to share why these cookies are so vital for our open-source project’s
+                progress.
+            </p>
+
+            <h2 class="font-bold text-2xl">1. Showing Us What Matters</h2>
+            <p class="mt-2">
+                Cookies let us see which features people use the most and where improvements
+                are truly needed. We don’t track personal information—only anonymized statistics
+                that reveal which parts of our project spark the most interest.
+            </p>
+
+            <h2 class="font-bold text-2xl">2. Fueling Our Motivation</h2>
+            <p class="mt-2">
+                We’re a team of open-source enthusiasts, and seeing active engagement gives us
+                a real morale boost. When we notice spikes in traffic or a rise in feature usage,
+                it affirms that the community finds our work valuable, and it inspires us to
+                keep innovating.
+            </p>
+
+            <h2 class="font-bold text-2xl">3. Free & Always Improving</h2>
+            <p class="mt-2">
+                By understanding usage trends, we can direct our time and limited resources
+                toward the features that matter most. This ensures our project remains free,
+                relevant, and beneficial for everyone who relies on it.
+            </p>
+
+            <h2 class="font-bold text-2xl">4. Respecting Your Data</h2>
+            <p class="mt-2">
+                We take privacy seriously. Any information gathered remains anonymous and
+                helps us enhance functionality based on collective interests rather than
+                individual profiles.
+            </p>
+
+            <p class="mt-4">
+                Thank you for considering how essential cookies are to our open-source efforts!
+            </p>
+            <!-- This button can redirect or open a small dialog to change cookie preferences -->
+
+            <div class="text-center mt-8">
+                <button data-action="click->cookie-fallback#accept"
+                        type="button"
+                        class="bg-blue-100 hover:bg-blue-200 text-white px-4 py-2 rounded ml-4"
+                >
+                    Return &amp; Re-enable Cookies
+                </button>
+            </div>
+        </section>
+    </div>
+{% endblock %}

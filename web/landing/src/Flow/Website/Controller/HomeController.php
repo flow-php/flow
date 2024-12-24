@@ -16,6 +16,13 @@ final class HomeController extends AbstractController
     ) {
     }
 
+    #[Route('/cookies', name: 'cookies', options: ['sitemap' => false])]
+    public function cookies() : Response
+    {
+        return $this->render('main/cookies.html.twig', [
+        ]);
+    }
+
     #[Route('/', name: 'home', options: ['sitemap' => true])]
     public function home() : Response
     {

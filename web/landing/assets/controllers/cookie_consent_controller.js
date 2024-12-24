@@ -14,6 +14,7 @@ export default class extends Controller {
             // If accepted previously, inject GA
             if (consentStatus === "accepted") {
                 this.consentGranted();
+            } else {
                 this.showButton();
             }
         } else {
@@ -25,7 +26,6 @@ export default class extends Controller {
         localStorage.setItem("cookie-consent", "accepted");
         this.consentGranted();
         this.hideBanner();
-        this.showButton()
     }
 
     reject() {
@@ -38,6 +38,7 @@ export default class extends Controller {
         });
         this.hideBanner();
         this.showButton();
+        window.location.href = '/cookies';
     }
 
     consentGranted() {
