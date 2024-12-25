@@ -18,6 +18,11 @@
     <env name="AZURITE_BLOB_PORT" value="10000"/>
     <env name="AZURITE_ACCOUNT_NAME" value="flowphpaccount01"/>
     <env name="AZURITE_ACCOUNT_KEY" value="flowphpkey01"/>
+    <env name="S3_ENDPOINT" value="http://127.0.0.1:4566"/>
+    <env name="S3_REGION" value="us-east-1"/>
+    <env name="S3_ACCESS_KEY_ID" value="test"/>
+    <env name="S3_SECRET_ACCESS_KEY" value="test"/>
+    <env name="S3_BUCKET" value="flowphpbucket01"/>
     <env name="REDIS_HOST" value="localhost"/>
     <env name="REDIS_PORT" value="6379"/>
     <env name="PGSQL_DATABASE_URL" value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>

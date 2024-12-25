@@ -168,6 +168,11 @@ final class Path
         return ResourceContext::from($this);
     }
 
+    public function endsWith(string $string) : bool
+    {
+        return \str_ends_with($this->path, $string);
+    }
+
     /**
      * @psalm-assert-if-true string $this->extension
      */

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Path;
 
+use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
+
 final class Options
 {
     /**
@@ -20,6 +22,13 @@ final class Options
         }
 
         $this->options = $normalizedOptions;
+    }
+
+    public function assertHas(string $option) : void
+    {
+        if (!$this->has($option)) {
+            throw new MissingOptionsException("Option '{$option}' is missing in Path object.");
+        }
     }
 
     public function getAsString(string $option, ?string $default = null) : ?string

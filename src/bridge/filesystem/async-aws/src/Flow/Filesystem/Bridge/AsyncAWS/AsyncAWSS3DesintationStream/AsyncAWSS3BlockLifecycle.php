@@ -15,6 +15,7 @@ final class AsyncAWSS3BlockLifecycle implements BlockLifecycle
     public function __construct(
         private readonly S3Client $s3Client,
         private readonly Path $path,
+        private readonly string $bucket,
         private readonly string $uploadId,
         private readonly BlockList $blockList,
     ) {
@@ -29,13 +30,16 @@ final class AsyncAWSS3BlockLifecycle implements BlockLifecycle
         }
 
         $uploadPartResponse = $this->s3Client->uploadPart([
-            'Bucket' => $this->path->rootDirectoryName(),
-            'Key' => $this->path->skipDirectories(1)?->path(),
+            'Bucket' => $this->bucket,
+            'Key' => ltrim($this->path->path(), '/'),
             'PartNumber' => $this->blockList->count() + 1,
             'UploadId' => $this->uploadId,
             'Body' => $handle,
         ]);
 
+        /**
+         * @var string $etag
+         */
         $etag = $uploadPartResponse->getETag();
 
         /** @psalm-suppress RedundantCondition */
@@ -46,6 +50,5 @@ final class AsyncAWSS3BlockLifecycle implements BlockLifecycle
         \unlink($block->path()->path());
 
         $this->blockList->add($etag);
-
     }
 }

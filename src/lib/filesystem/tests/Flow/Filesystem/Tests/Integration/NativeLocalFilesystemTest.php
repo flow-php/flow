@@ -288,6 +288,10 @@ TXT
         $stream->close();
 
         self::assertTrue($fs->status($stream->path())->isFile());
+
+        self::assertTrue($fs->rm($stream->path()));
+
+        self::assertNull($fs->status($stream->path()));
     }
 
     public function test_remove_pattern() : void

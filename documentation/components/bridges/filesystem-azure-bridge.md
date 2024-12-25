@@ -40,6 +40,4 @@ $sdk = azure_blob_service(
     azure_shared_key_authorization_factory($config, $accountKey),
     $logger
 );
-
-$fstab = new FilesystemTable
 ```

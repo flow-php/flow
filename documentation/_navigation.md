@@ -52,4 +52,5 @@
 
 ## Bridges
 - [Filesystem Azure](/documentation/components/bridges/filesystem-azure-bridge.md)
+- [Filesystem Async AWS](/documentation/components/bridges/filesystem-async-aws-bridge.md)
 - [Monolog Http](/documentation/components/bridges/monolog-http-bridge.md) 

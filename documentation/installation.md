@@ -53,5 +53,6 @@ Instead of installing whole repository with all dependencies, it's recommended t
     - [snappy](components/libs/snappy.md)
 - Bridges
     - [filesystem-azure](components/bridges/filesystem-azure-bridge.md)
+    - [filesystem-async-aws](components/bridges/filesystem-async-aws-bridge.md) 
     - [monolog-http](components/bridges/monolog-http-bridge.md) 
 

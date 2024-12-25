@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\AsyncAWS;
 
 use function Flow\Filesystem\DSL\path;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
 use Flow\Filesystem\Stream\BlockFactory;
@@ -13,7 +14,7 @@ final class Options
 {
     private BlockFactory $blockFactory;
 
-    private int $partSize = 1024 * 1024 * 4;
+    private int $partSize = 1024 * 1024 * 5;
 
     private Path $tmpDir;
 
@@ -36,5 +37,16 @@ final class Options
     public function tmpDir() : Path
     {
         return $this->tmpDir;
+    }
+
+    public function withBlockSize(int $bytes) : self
+    {
+        if ($bytes <= 1024 * 1024 * 5) {
+            throw new InvalidArgumentException('Block size must be greater than 5Mb');
+        }
+
+        $this->partSize = $bytes;
+
+        return $this;
     }
 }
