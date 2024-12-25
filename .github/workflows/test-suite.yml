@@ -116,6 +116,12 @@ jobs:
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
+      - name: Start LocalStack
+        uses: LocalStack/setup-localstack@v0.2.3
+        with:
+          image-tag: 'latest'
+          install-awslocal: 'false'
+
       - name: "Get Composer Cache Directory"
         id: composer-cache
         run: |
