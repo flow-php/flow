@@ -14,13 +14,9 @@ final class SearchResults
     {
     }
 
-    public function pages() : int
+    public function pages(int $limit) : int
     {
-        if ($this->size() === 0) {
-            return 0;
-        }
-
-        return (int) \ceil($this->total() / $this->size());
+        return (int) \ceil($this->total() / $limit);
     }
 
     public function size() : int

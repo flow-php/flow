@@ -74,7 +74,6 @@ final class MeilisearchExtractorTest extends TestCase
         $params = [
             'q' => '',
             'offset' => 51,
-            'limit' => 100,
             'attributesToRetrieve' => [
                 'id',
                 'position',
@@ -86,7 +85,7 @@ final class MeilisearchExtractorTest extends TestCase
             ->transform(meilisearch_hits_to_rows())
             ->fetch();
 
-        self::assertCount(100, $results);
+        self::assertCount(49, $results);
         self::assertArrayHasKey('id', $results->first()->toArray());
         self::assertArrayHasKey('position', $results->first()->toArray());
         self::assertArrayNotHasKey('active', $results->first()->toArray());

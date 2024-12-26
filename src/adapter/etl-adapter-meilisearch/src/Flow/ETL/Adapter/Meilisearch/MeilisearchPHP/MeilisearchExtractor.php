@@ -36,11 +36,10 @@ final class MeilisearchExtractor implements Extractor
 
         $fetched = $results->size();
 
-        // go with from/size pagination which is not recommended but will work for most of the small indexes.
-        for ($page = 1; $page <= $results->pages(); $page++) {
+        for ($page = 1; $page <= $results->pages($params->getLimit()); $page++) {
             $nextPageParams = $params
-                ->set('offset', $page * $results->size())
-                ->set('limit', $results->size());
+                ->set('offset', $params->getOffset() + $page * $results->size())
+                ->set('limit', $params->getLimit());
 
             if ($nextPageParams->asArray()['offset'] >= $results->total()) {
                 break;

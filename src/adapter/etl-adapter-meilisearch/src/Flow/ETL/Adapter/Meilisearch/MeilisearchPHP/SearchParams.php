@@ -39,4 +39,14 @@ final class SearchParams
          */
         return new self(\array_merge($this->params, [$key => $value]));
     }
+
+    public function getOffset() : int
+    {
+        return $this->params['offset'];
+    }
+
+    public function getLimit() : int
+    {
+        return $this->params['limit'];
+    }
 }
