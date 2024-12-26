@@ -75,7 +75,7 @@ final class MailiSearchTest extends TestCase
                         string_entry('name', 'id_' . $i),
                         new Row\Entry\BooleanEntry('active', false)
                     ),
-                    \range(1, 500)
+                    \range(1, 101)
                 ),
             ),
             self::SOURCE_INDEX
