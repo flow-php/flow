@@ -105,6 +105,19 @@ jobs:
         with:
           node-version: '14'
 
+      - name: Wait for Meilisearch to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:7700/health | grep -q '"status":"available"'; then
+              echo "Meilisearch is ready!";
+              exit 0;
+            fi
+            echo "Waiting for Meilisearch...";
+            sleep 2;
+          done
+          echo "Meilisearch failed to start.";
+          exit 1;
+
       - name: Install Azurite storage emulator
         run: npm install -g azurite
 
