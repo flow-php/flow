@@ -18,6 +18,7 @@ enum Module : string
     case JSON = 'JSON';
     case MEILI_SEARCH = 'Meili Search';
     case PARQUET = 'Parquet';
+    case S3_FILESYSTEM = 'S3 Filesystem';
     case TEXT = 'Text';
     case XML = 'XML';
 
