@@ -89,13 +89,13 @@ jobs:
         run: "composer install --no-interaction --no-progress --no-suggest"
 
       - name: "Test Brotli"
-        run: "composer test -- --group brotli-extension"
+        run: "composer test:lib:parquet -- --group brotli-extension"
 
       - name: "Test LZ4"
-        run: "composer test -- --group lz4-extension"
+        run: "composer test:lib:parquet -- --group lz4-extension"
 
       - name: "Test ZSTD"
-        run: "composer test -- --group zstd-extension"
+        run: "composer test:lib:parquet -- --group zstd-extension"
 
       - name: "Test Snappy"
-        run: "composer test -- --group snappy-extension"
+        run: "composer test:lib:parquet -- --group snappy-extension"
