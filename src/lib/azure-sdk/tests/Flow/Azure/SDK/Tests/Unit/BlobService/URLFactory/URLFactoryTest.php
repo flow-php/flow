@@ -10,7 +10,7 @@ use Flow\Azure\SDK\URLFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-final class URLFactoryTests extends TestCase
+final class URLFactoryTest extends TestCase
 {
     public static function factoryProvider() : array
     {
