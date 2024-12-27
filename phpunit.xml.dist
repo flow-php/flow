@@ -152,6 +152,13 @@
     <testsuite name="adapter-xml-integration">
       <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
     </testsuite>
+    <testsuite name="unit">
+      <directory>src/adapter/**/**/**/**/**/**/Tests/Unit</directory>
+      <directory>src/bridge/**/**/**/**/**/**/**/Tests/Unit</directory>
+      <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
+      <directory>src/lib/**/**/**/**/Tests/Unit</directory>
+      <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
+    </testsuite>
   </testsuites>
   <source>
     <include>
