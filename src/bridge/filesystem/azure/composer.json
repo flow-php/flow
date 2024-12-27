@@ -14,7 +14,7 @@
         "cloud"
     ],
     "require": {
-        "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0",
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
         "flow-php/filesystem": "^0.10.0 || 1.x-dev",
         "flow-php/azure-sdk": "^0.10.0 || 1.x-dev"
     },

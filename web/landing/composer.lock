@@ -480,7 +480,7 @@
                 "flow-php/filesystem": "^0.10.0 || 1.x-dev",
                 "flow-php/rdsl": "^0.10.0 || 1.x-dev",
                 "jawira/case-converter": "^3.4",
-                "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
                 "webmozart/glob": "^3.0 || ^4.0"
             },
@@ -534,7 +534,7 @@
             "require": {
                 "ext-json": "*",
                 "flow-php/etl": "^0.10.0 || 1.x-dev",
-                "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/http-client": "^1.0"
             },
             "require-dev": {
