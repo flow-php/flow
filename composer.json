@@ -228,6 +228,7 @@
             "@test:lib:rdsl",
             "@test:lib:snappy",
             "@test:bridge:filesystem-azure",
+            "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
             "@test:bridge:symfony-http-foundation",
             "@test:adapter:chartjs",
@@ -282,6 +283,9 @@
         "test:bridge:filesystem-azure": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-integration"
+        ],
+        "test:bridge:filesystem-async-aws": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-async-aws-integration"
         ],
         "test:bridge:monolog-http": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-http-unit"

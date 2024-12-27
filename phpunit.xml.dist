@@ -91,6 +91,9 @@
     <testsuite name="bridge-filesystem-azure-integration">
       <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Integration</directory>
     </testsuite>
+    <testsuite name="bridge-filesystem-async-aws-integration">
+      <directory>src/bridge/filesystem/async-aws/tests/Flow/Filesystem/Bridge/AsyncAWS/Tests/Integration</directory>
+    </testsuite>
     <testsuite name="bridge-monolog-http-unit">
       <directory>src/bridge/monolog/http/tests/Flow/Bridge/Monolog/Http/Tests/Unit</directory>
     </testsuite>

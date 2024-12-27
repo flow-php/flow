@@ -185,6 +185,9 @@ jobs:
       - name: "Test - Bridge - Filesystem Azure"
         run: "composer test:bridge:filesystem-azure"
 
+      - name: "Test - Bridge - Filesystem Async AWS"
+        run: "composer test:bridge:filesystem-async-aws"
+
       - name: "Test - Bridge - Monolog Http"
         run: "composer test:bridge:monolog-http"
 
