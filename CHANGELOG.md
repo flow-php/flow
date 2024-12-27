@@ -71,6 +71,7 @@
 - [afb55b](https://github.com/flow-php/flow/commit/afb55b8a8d8f7678257b29cbd34737fbbb9f0fce) - **introduction.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1288](https://github.com/flow-php/flow/pull/1288) - **Drop support for PHP 8.1** - [@stloyd](https://github.com/stloyd)
 - [#1273](https://github.com/flow-php/flow/pull/1273) - **development leftover methods from Filesystems** - [@norberttech](https://github.com/norberttech)
 - [#1270](https://github.com/flow-php/flow/pull/1270) - **CallMethod scalar functions** - [@norberttech](https://github.com/norberttech)
 - [#1266](https://github.com/flow-php/flow/pull/1266) - **ArrayEntry which is now replaced with JsonEntry** - [@norberttech](https://github.com/norberttech)
