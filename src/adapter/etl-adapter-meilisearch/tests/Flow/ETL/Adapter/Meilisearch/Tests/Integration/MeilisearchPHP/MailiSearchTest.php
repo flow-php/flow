@@ -66,7 +66,6 @@ final class MailiSearchTest extends TestCase
 
     public function test_loading_and_extraction_with_limit_and_transformation() : void
     {
-        self::markTestSkipped('Please check https://github.com/flow-php/flow/issues/1282');
         $this->meilisearchContext->loadRows(
             new Rows(
                 ...\array_map(

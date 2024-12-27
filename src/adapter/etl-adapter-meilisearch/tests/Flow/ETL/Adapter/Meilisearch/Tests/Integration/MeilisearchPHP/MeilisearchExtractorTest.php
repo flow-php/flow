@@ -57,8 +57,6 @@ final class MeilisearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_from_and_size() : void
     {
-        self::markTestSkipped('Please check https://github.com/flow-php/flow/issues/1282');
-
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(
             ...\array_map(
@@ -96,8 +94,6 @@ final class MeilisearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_sort() : void
     {
-        self::markTestSkipped('Please check https://github.com/flow-php/flow/issues/1282');
-
         $this->meilisearchContext->client()->index(self::INDEX_NAME)->updateSettings(['sortableAttributes' => ['position']]);
 
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
