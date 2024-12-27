@@ -27,7 +27,7 @@
         "google/apiclient": "^2.13",
         "halaxa/json-machine": "^1.1",
         "jawira/case-converter": "^3.4",
-        "meilisearch/meilisearch-php": "~1.11.0",
+        "meilisearch/meilisearch-php": "^1.11",
         "monolog/monolog": "^2.0||^3.0",
         "packaged/thrift": "^0.15.0",
         "php-http/discovery": "^1.0",

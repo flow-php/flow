@@ -48,10 +48,11 @@ final class SearchResults
 
     public function total() : int
     {
-        try {
-            return $this->results->getTotalHits() ?: 0;
-        } catch (\Error) {
-            return $this->results->getEstimatedTotalHits();
+        // Estimated total hits are set only in paginated result list
+        if (null !== $this->results->getOffset()) {
+            return $this->results->getEstimatedTotalHits() ?: $this->results->getHitsCount() ?: 0;
         }
+
+        return $this->results->getTotalHits() ?: $this->results->getHitsCount() ?: 0;
     }
 }

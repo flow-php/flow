@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ae53942b2966bdcdf7c37621f6a6f65",
+    "content-hash": "0c9b6903c355671ff647fea0ba934b3c",
     "packages": [
         {
             "name": "aeon-php/calendar",
@@ -1075,16 +1075,16 @@
         },
         {
             "name": "meilisearch/meilisearch-php",
-            "version": "v1.11.0",
+            "version": "v1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/meilisearch/meilisearch-php.git",
-                "reference": "4dd127cb87848f7a7b28e83bb355b4b86d329867"
+                "reference": "78879c29cb2eb1c9e3cf09707b87d8a369a4579d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/meilisearch/meilisearch-php/zipball/4dd127cb87848f7a7b28e83bb355b4b86d329867",
-                "reference": "4dd127cb87848f7a7b28e83bb355b4b86d329867",
+                "url": "https://api.github.com/repos/meilisearch/meilisearch-php/zipball/78879c29cb2eb1c9e3cf09707b87d8a369a4579d",
+                "reference": "78879c29cb2eb1c9e3cf09707b87d8a369a4579d",
                 "shasum": ""
             },
             "require": {
@@ -1098,10 +1098,10 @@
                 "http-interop/http-factory-guzzle": "^1.2.0",
                 "php-cs-fixer/shim": "^3.59.3",
                 "phpstan/extension-installer": "^1.4.1",
-                "phpstan/phpstan": "^1.11.5",
-                "phpstan/phpstan-deprecation-rules": "^1.2.0",
-                "phpstan/phpstan-phpunit": "^1.4.0",
-                "phpstan/phpstan-strict-rules": "^1.6.0",
+                "phpstan/phpstan": "^2.0",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
                 "phpunit/phpunit": "^9.5 || ^10.5"
             },
             "suggest": {
@@ -1136,9 +1136,9 @@
             ],
             "support": {
                 "issues": "https://github.com/meilisearch/meilisearch-php/issues",
-                "source": "https://github.com/meilisearch/meilisearch-php/tree/v1.11.0"
+                "source": "https://github.com/meilisearch/meilisearch-php/tree/v1.12.0"
             },
-            "time": "2024-10-28T14:04:37+00:00"
+            "time": "2024-12-23T11:46:42+00:00"
         },
         {
             "name": "monolog/monolog",

@@ -39,7 +39,7 @@ jobs:
         ports:
           - 9200:9200
       meilisearch:
-        image: getmeili/meilisearch:v1.11
+        image: getmeili/meilisearch:latest
         env:
           MEILI_MASTER_KEY: masterKey
           MEILI_NO_ANALYTICS: true
