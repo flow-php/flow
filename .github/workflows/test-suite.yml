@@ -156,12 +156,17 @@ jobs:
 
       - name: "Test - Lib - Doctrine DBAL Bulk"
         run: "composer test:lib:doctrine-dbal-bulk"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
 
       - name: "Test - Lib - Filesystem"
         run: "composer test:lib:filesystem"
 
       - name: "Test - Lib - parquet"
         run: "composer test:lib:parquet"
+        env:
+          FLOW_PARQUET_TESTS_DEBUG: "0"
 
       - name: "Test - Lib - Parquet Viewer"
         run: "composer test:lib:parquet-viewer"
@@ -189,6 +194,10 @@ jobs:
 
       - name: "Test - Adapter - Doctrine"
         run: "composer test:adapter:doctrine"
+        env:
+          PGSQL_DATABASE_URL: "pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8"
+          MYSQL_DATABASE_URL: "mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql"
+          SQLITE_DATABASE_URL: "sqlite:///:memory:"
 
       - name: "Test - Adapter - Elasticsearch"
         run: "composer test:adapter:elasticsearch"
@@ -217,10 +226,5 @@ jobs:
       - name: "Test - Adapter - XML"
         run: "composer test:adapter:xml"
 
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
-          FLOW_LOCAL_FILESYSTEM_CACHE_DIR: "./var/cache/${{ matrix.php-version }}-${{ matrix.dependencies }}"
-
-      - name: "Run Examples"
-        run: "php examples/run.php"
+      - name: "Test - Examples"
+        run: "composer test:examples"
