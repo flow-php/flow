@@ -212,8 +212,123 @@
             "@test:mutation"
         ],
         "test": [
-            "tools/phpunit/vendor/bin/phpunit"
+            "@test:etl",
+            "@test:cli",
+            "@test:lib:array-dot",
+            "@test:lib:azure-sdk",
+            "@test:lib:doctrine-dbal-bulk",
+            "@test:lib:filesystem",
+            "@test:lib:parquet",
+            "@test:lib:parquet-viewer",
+            "@test:lib:rdsl",
+            "@test:lib:snappy",
+            "@test:bridge:filesystem-azure",
+            "@test:bridge:monolog-http",
+            "@test:bridge:symfony-http-foundation",
+            "@test:adapter:chartjs",
+            "@test:adapter:csv",
+            "@test:adapter:doctrine",
+            "@test:adapter:elasticsearch",
+            "@test:adapter:google-sheet",
+            "@test:adapter:http",
+            "@test:adapter:json",
+            "@test:adapter:logger",
+            "@test:adapter:meilisearch",
+            "@test:adapter:parquet",
+            "@test:adapter:text",
+            "@test:adapter:xml"
         ],
+        "test:etl": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=etl-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=etl-integration"
+        ],
+        "test:cli": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=cli-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=cli-integration"
+        ],
+        "test:lib:array-dot": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-array-dot-unit"
+        ],
+        "test:lib:azure-sdk": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-azure-sdk-unit"
+        ],
+        "test:lib:doctrine-dbal-bulk": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-doctrine-dbal-bulk-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-doctrine-dbal-bulk-integration"
+        ],
+        "test:lib:filesystem": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-filesystem-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-filesystem-integration"
+        ],
+        "test:lib:parquet": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration"
+        ],
+        "test:lib:parquet-viewer": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration"
+        ],
+        "test:lib:rdsl": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-integration"
+        ],
+        "test:lib:snappy": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-snappy-integration"
+        ],
+        "test:bridge:filesystem-azure": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-integration"
+        ],
+        "test:bridge:monolog-http": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-http-unit"
+        ],
+        "test:bridge:symfony-http-foundation": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-integration"
+        ],
+        "test:adapter:chartjs": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-chartjs-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-chartjs-integration"
+        ],
+        "test:adapter:csv": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-csv-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-csv-integration"
+        ],
+        "test:adapter:doctrine": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-doctrine-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-doctrine-integration"
+        ],
+        "test:adapter:elasticsearch": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-integration"
+        ],
+        "test:adapter:google-sheet": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-google-sheet-unit"
+        ],
+        "test:adapter:http": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-integration"
+        ],
+        "test:adapter:json": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-json-integration"
+        ],
+        "test:adapter:logger": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-logger-unit"
+        ],
+        "test:adapter:meilisearch": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-meilisearch-integration"
+        ],
+        "test:adapter:parquet": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-integration"
+        ],
+        "test:adapter:text": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-text-integration"
+        ],
+        "test:adapter:xml": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-xml-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-xml-integration"
+        ],
+
         "test:docs": [
             "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor --exclude=.scratchpad --exclude=examples --exclude=documentation ."
         ],

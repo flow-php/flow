@@ -142,8 +142,81 @@ jobs:
         if: ${{ matrix.dependencies == 'locked' }}
         run: "composer install --no-interaction --no-progress --no-suggest"
 
-      - name: "Test"
-        run: "composer test"
+      - name: "Test - ETL "
+        run: "composer test:etl"
+
+      - name: "Test - CLI"
+        run: "composer test:cli"
+
+      - name: "Test - Lib - Array Dot"
+        run: "composer test:lib:array-dot"
+
+      - name: "Test - Lib - Azure SDK"
+        run: "composer test:lib:azure-sdk"
+
+      - name: "Test - Lib - Doctrine DBAL Bulk"
+        run: "composer test:lib:doctrine-dbal-bulk"
+
+      - name: "Test - Lib - Filesystem"
+        run: "composer test:lib:filesystem"
+
+      - name: "Test - Lib - parquet"
+        run: "composer test:lib:parquet"
+
+      - name: "Test - Lib - Parquet Viewer"
+        run: "composer test:lib:parquet-viewer"
+
+      - name: "Test - Lib - RDSL"
+        run: "composer test:lib:rdsl"
+
+      - name: "Test - Lib - Snappy"
+        run: "composer test:lib:snappy"
+
+      - name: "Test - Bridge - Filesystem Azure"
+        run: "composer test:bridge:filesystem-azure"
+
+      - name: "Test - Bridge - Monolog Http"
+        run: "composer test:bridge:monolog-http"
+
+      - name: "Test - Bridge - Symfony Http Foundation"
+        run: "composer test:bridge:symfony-http-foundation"
+
+      - name: "Test - Adapter - ChartJs"
+        run: "composer test:adapter:chartjs"
+
+      - name: "Test - Adapter - CSV"
+        run: "composer test:adapter:csv"
+
+      - name: "Test - Adapter - Doctrine"
+        run: "composer test:adapter:doctrine"
+
+      - name: "Test - Adapter - Elasticsearch"
+        run: "composer test:adapter:elasticsearch"
+
+      - name: "Test - Adapter - Google Sheet"
+        run: "composer test:adapter:google-sheet"
+
+      - name: "Test - Adapter - Http"
+        run: "composer test:adapter:http"
+
+      - name: "Test - Adapter - Json"
+        run: "composer test:adapter:json"
+
+      - name: "Test - Adapter - Logger"
+        run: "composer test:adapter:logger"
+
+      - name: "Test - Adapter - Meilisearch"
+        run: "composer test:adapter:meilisearch"
+
+      - name: "Test - Adapter - Parquet"
+        run: "composer test:adapter:parquet"
+
+      - name: "Test - Adapter - Text"
+        run: "composer test:adapter:text"
+
+      - name: "Test - Adapter - XML"
+        run: "composer test:adapter:xml"
+
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql

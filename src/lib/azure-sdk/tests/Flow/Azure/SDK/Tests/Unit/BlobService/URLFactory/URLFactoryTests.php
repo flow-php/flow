@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Azure\SDK\Unit\BlobService\URLFactory;
+namespace Flow\Azure\SDK\Tests\Unit\BlobService\URLFactory;
 
 use Flow\Azure\SDK\BlobService\URLFactory\{AzureURLFactory, AzuriteURLFactory};
 use Flow\Azure\SDK\BlobService\{Configuration};
