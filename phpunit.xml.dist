@@ -18,7 +18,7 @@
     <env name="AZURITE_BLOB_PORT" value="10000"/>
     <env name="AZURITE_ACCOUNT_NAME" value="flowphpaccount01"/>
     <env name="AZURITE_ACCOUNT_KEY" value="flowphpkey01"/>
-    <env name="S3_ENDPOINT" value="http://127.0.0.1:4566"/>
+    <env name="S3_ENDPOINT" value="http://localhost:4566"/>
     <env name="S3_REGION" value="us-east-1"/>
     <env name="S3_ACCESS_KEY_ID" value="test"/>
     <env name="S3_SECRET_ACCESS_KEY" value="test"/>

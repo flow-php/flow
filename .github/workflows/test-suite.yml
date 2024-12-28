@@ -23,9 +23,8 @@ concurrency:
 jobs:
   tests:
     name: "Tests"
-
     runs-on: ${{ matrix.operating-system }}
-
+    timeout-minutes: 15
     services:
       elasticsearch:
         image: elasticsearch:7.17.2
@@ -67,6 +66,15 @@ jobs:
         image: redis:latest
         ports:
           - 6379:6379
+      localstack:
+        image: localstack/localstack:latest
+        env:
+          SERVICES: s3
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        ports:
+          - 4566:4566
+          - 4571:4571
 
     strategy:
       fail-fast: false
@@ -91,8 +99,8 @@ jobs:
         with:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
+          ini-values: memory_limit=-1, post_max_size=32M, upload_max_filesize=32M
+          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl
 
       - name: "List PHP Extensions"
         run: php -m
@@ -115,12 +123,6 @@ jobs:
           sleep 5
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
-
-      - name: Start LocalStack
-        uses: LocalStack/setup-localstack@v0.2.3
-        with:
-          image-tag: 'latest'
-          install-awslocal: 'false'
 
       - name: "Get Composer Cache Directory"
         id: composer-cache
@@ -184,9 +186,19 @@ jobs:
 
       - name: "Test - Bridge - Filesystem Azure"
         run: "composer test:bridge:filesystem-azure"
+        env:
+          AZURITE_HOST: "localhost"
+          AZURITE_BLOB_PORT: "10000"
+          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
+          AZURITE_ACCOUNT_KEY: "flowphpkey01"
 
       - name: "Test - Bridge - Filesystem Async AWS"
-        run: "composer test:bridge:filesystem-async-aws"
+        run: "composer test:bridge:filesystem-async-aws -vvv"
+        env:
+          S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
+          S3_REGION: "us-east-1"
+          S3_ACCESS_KEY_ID: "test"
+          S3_SECRET_ACCESS_KEY: "test"
 
       - name: "Test - Bridge - Monolog Http"
         run: "composer test:bridge:monolog-http"

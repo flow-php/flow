@@ -15,7 +15,7 @@ final class AsyncAWSS3FilesystemTest extends AsyncAWSS3TestCase
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $fs->writeTo(path('aws-s3://var/file.txt'))
-            ->fromResource(fopen(__DIR__ . '/Fixtures/5mb.txt', 'rb'))
+            ->append(\str_repeat('a', 1024 * 1024 * 5))
             ->close();
 
         $fs->appendTo(path('aws-s3://var/file.txt'))
@@ -332,6 +332,7 @@ TXT
 
     public function test_writing_to_to_s3_using_blocks() : void
     {
+        var_dump('Test Started ' . __METHOD__);
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $stream = $fs->writeTo(path('aws-s3://block_blob.csv'));

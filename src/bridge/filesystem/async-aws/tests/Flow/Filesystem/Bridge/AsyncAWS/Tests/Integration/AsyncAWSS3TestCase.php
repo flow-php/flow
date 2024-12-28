@@ -45,6 +45,7 @@ abstract class AsyncAWSS3TestCase extends IntegrationTestCase
     public function s3Client() : S3Client
     {
         return aws_s3_client([
+            'pathStyleEndpoint' => true,
             'endpoint' => $_ENV['S3_ENDPOINT'],
             'region' => $_ENV['S3_REGION'],
             'accessKeyId' => $_ENV['S3_ACCESS_KEY_ID'],
