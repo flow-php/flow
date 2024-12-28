@@ -250,14 +250,15 @@ jobs:
         run: "composer test:examples"
 
       - name: Upload test results to Codecov.io
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() }} && ${{ matrix.php-version == '8.2' }} && ${{ matrix.dependencies == 'locked' }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./var/phpunit/logs/junit.xml
+          directory: ./var/phpunit/logs
 
       - name: Upload code coverage data to Codecov.io
+        if: ${{ matrix.php-version == '8.2' }} && ${{ matrix.dependencies == 'locked' }}
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./var/phpunit/coverage/coverage.xml
+          directory: ./var/phpunit/coverage/clover

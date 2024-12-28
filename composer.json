@@ -246,97 +246,97 @@
             "@test:adapter:xml"
         ],
         "test:etl": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=etl-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=etl-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=etl-unit --log-junit ./var/phpunit/logs/etl-unit.xml --coverage-clover=./var/phpunit/coverage/clover/etl-unit.xml --coverage-html=./var/phpunit/coverage/html/etl-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=etl-integration --log-junit ./var/phpunit/logs/etl-integration.xml --coverage-clover=./var/phpunit/coverage/clover/etl-integration.xml --coverage-html=./var/phpunit/coverage/html/etl-integration"
         ],
         "test:cli": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=cli-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=cli-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=cli-unit --log-junit ./var/phpunit/logs/cli-unit.xml --coverage-clover=./var/phpunit/coverage/clover/cli-unit.xml --coverage-html=./var/phpunit/coverage/html/cli-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=cli-integration --log-junit ./var/phpunit/logs/cli-integration.xml --coverage-clover=./var/phpunit/coverage/clover/cli-integration.xml --coverage-html=./var/phpunit/coverage/html/cli-integration"
         ],
         "test:lib:array-dot": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-array-dot-unit"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-array-dot-unit --log-junit ./var/phpunit/logs/lib-array-dot-unit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-array-dot-unit.xml --coverage-html=./var/phpunit/coverage/html/lib-array-dot-unit"
         ],
         "test:lib:azure-sdk": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-azure-sdk-unit"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-azure-sdk-unit --log-junit ./var/phpunit/logs/lib-azure-sdk-unit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-azure-sdk-unit.xml --coverage-html=./var/phpunit/coverage/html/lib-azure-sdk-unit"
         ],
         "test:lib:doctrine-dbal-bulk": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-doctrine-dbal-bulk-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-doctrine-dbal-bulk-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-doctrine-dbal-bulk-unit --log-junit ./var/phpunit/logs/lib-doctrine-dbal-bulk-unit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-doctrine-dbal-bulk-unit.xml --coverage-html=./var/phpunit/coverage/html/lib-doctrine-dbal-bulk-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-doctrine-dbal-bulk-integration --log-junit ./var/phpunit/logs/lib-doctrine-dbal-bulk-integration.xml --coverage-clover=./var/phpunit/coverage/clover/lib-doctrine-dbal-bulk-integration.xml --coverage-html=./var/phpunit/coverage/html/lib-doctrine-dbal-bulk-integration"
         ],
         "test:lib:filesystem": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-filesystem-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-filesystem-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-filesystem-unit --log-junit ./var/phpunit/logs/lib-filesystem-unit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-filesystem-unit.xml --coverage-html=./var/phpunit/coverage/html/lib-filesystem-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-filesystem-integration --log-junit ./var/phpunit/logs/lib-filesystem-integration.xml --coverage-clover=./var/phpunit/coverage/clover/lib-filesystem-integration.xml --coverage-html=./var/phpunit/coverage/html/lib-filesystem-integration"
         ],
         "test:lib:parquet": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-unit --log-junit ./var/phpunit/logs/lib-parquet-unit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-parquet-unit.xml --coverage-html=./var/phpunit/coverage/html/lib-parquet-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration --log-junit ./var/phpunit/logs/lib-parquet-integration.xml --coverage-clover=./var/phpunit/coverage/clover/lib-parquet-integration.xml --coverage-html=./var/phpunit/coverage/html/lib-parquet-integration"
         ],
         "test:lib:parquet-viewer": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration --log-junit ./var/phpunit/logs/lib-parquet-integration.xml --coverage-clover=./var/phpunit/coverage/clover/lib-parquet-integration.xml --coverage-html=./var/phpunit/coverage/html/lib-parquet-integration"
         ],
         "test:lib:rdsl": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-unit --log-junit ./var/phpunit/logs/lib-rdsl-unit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-rdsl-unit.xml --coverage-html=./var/phpunit/coverage/html/lib-rdsl-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-integration --log-junit ./var/phpunit/logs/lib-rdsl-integration.xml --coverage-clover=./var/phpunit/coverage/clover/lib-rdsl-integration.xml --coverage-html=./var/phpunit/coverage/html/lib-rdsl-integration"
         ],
         "test:lib:snappy": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-snappy-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-snappy-integration --log-junit ./var/phpunit/logs/lib-snappy-integration.xml --coverage-clover=./var/phpunit/coverage/clover/lib-snappy-integration.xml --coverage-html=./var/phpunit/coverage/html/lib-snappy-integration"
         ],
         "test:bridge:filesystem-azure": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-unit --log-junit ./var/phpunit/logs/bridge-filesystem-azure-unit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-azure-unit.xml --coverage-html=./var/phpunit/coverage/html/bridge-filesystem-azure-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-integration --log-junit ./var/phpunit/logs/bridge-filesystem-azure-integration.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-azure-integration.xml --coverage-html=./var/phpunit/coverage/html/bridge-filesystem-azure-integration"
         ],
         "test:bridge:filesystem-async-aws": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-async-aws-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-async-aws-integration --log-junit ./var/phpunit/logs/bridge-filesystem-async-aws-integration.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-async-aws-integration.xml --coverage-html=./var/phpunit/coverage/html/bridge-filesystem-async-aws-integration"
         ],
         "test:bridge:monolog-http": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-http-unit"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-http-unit --log-junit ./var/phpunit/logs/bridge-monolog-http-unit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-monolog-http-unit.xml --coverage-html=./var/phpunit/coverage/html/bridge-monolog-http-unit"
         ],
         "test:bridge:symfony-http-foundation": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-unit --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-unit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-unit.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-integration --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-integration.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-integration.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-integration"
         ],
         "test:adapter:chartjs": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-chartjs-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-chartjs-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-chartjs-unit --log-junit ./var/phpunit/logs/adapter-chartjs-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-chartjs-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-chartjs-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-chartjs-integration --log-junit ./var/phpunit/logs/adapter-chartjs-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-chartjs-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-chartjs-integration"
         ],
         "test:adapter:csv": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-csv-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-csv-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-csv-unit --log-junit ./var/phpunit/logs/adapter-csv-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-csv-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-csv-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-csv-integration --log-junit ./var/phpunit/logs/adapter-csv-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-csv-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-csv-integration"
         ],
         "test:adapter:doctrine": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-doctrine-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-doctrine-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-doctrine-unit --log-junit ./var/phpunit/logs/adapter-doctrine-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-doctrine-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-doctrine-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-doctrine-integration --log-junit ./var/phpunit/logs/adapter-doctrine-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-doctrine-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-doctrine-integration"
         ],
         "test:adapter:elasticsearch": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-unit --log-junit ./var/phpunit/logs/adapter-elasticsearch-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-elasticsearch-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-elasticsearch-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-integration --log-junit ./var/phpunit/logs/adapter-elasticsearch-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-elasticsearch-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-elasticsearch-integration"
         ],
         "test:adapter:google-sheet": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-google-sheet-unit"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-google-sheet-unit --log-junit ./var/phpunit/logs/adapter-google-sheet-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-google-sheet-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-google-sheet-unit"
         ],
         "test:adapter:http": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-unit --log-junit ./var/phpunit/logs/adapter-http-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-http-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-http-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-integration --log-junit ./var/phpunit/coverage/clover/adapter-http-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-http-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-http-integration"
         ],
         "test:adapter:json": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-json-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-json-integration --log-junit ./var/phpunit/logs/adapter-json-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-json-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-json-integration"
         ],
         "test:adapter:logger": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-logger-unit"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-logger-unit --log-junit ./var/phpunit/logs/adapter-logger-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-logger-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-logger-unit"
         ],
         "test:adapter:meilisearch": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-meilisearch-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-meilisearch-integration --log-junit ./var/phpunit/logs/adapter-meilisearch-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-meilisearch-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-meilisearch-integration"
         ],
         "test:adapter:parquet": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-unit --log-junit ./var/phpunit/logs/adapter-parquet-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-parquet-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-parquet-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-parquet-integration --log-junit ./var/phpunit/logs/adapter-parquet-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-parquet-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-parquet-integration"
         ],
         "test:adapter:text": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-text-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-text-integration --log-junit ./var/phpunit/logs/adapter-text-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-text-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-text-integration"
         ],
         "test:adapter:xml": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-xml-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-xml-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-xml-unit --log-junit ./var/phpunit/logs/adapter-xml-unit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-xml-unit.xml --coverage-html=./var/phpunit/coverage/html/adapter-xml-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-xml-integration --log-junit ./var/phpunit/coverage/clover/adapter-xml-integration.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-xml-integration.xml --coverage-html=./var/phpunit/coverage/html/adapter-xml-integration"
         ],
 
         "test:docs": [
