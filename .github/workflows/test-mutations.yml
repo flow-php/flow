@@ -8,8 +8,9 @@ on:
       - 'src/adapter/**'
       - 'src/core/**'
       - 'src/lib/**'
-      - 'tools/infection/composer.lock'
+      - 'tools/infection/composer.*'
       - 'composer.lock'
+      - 'infection.json'
   push:
     branches: [ 1.x ]
     paths-ignore:
