@@ -248,3 +248,16 @@ jobs:
 
       - name: "Test - Examples"
         run: "composer test:examples"
+
+      - name: Upload test results to Codecov.io
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./var/phpunit/logs/junit.xml
+
+      - name: Upload code coverage data to Codecov.io
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./var/phpunit/coverage/coverage.xml

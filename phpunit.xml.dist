@@ -4,15 +4,19 @@
         xsi:noNamespaceSchemaLocation="tools/phpunit/vendor/phpunit/phpunit/phpunit.xsd"
         bootstrap="vendor/autoload.php"
         colors="true"
-        cacheResultFile="./var/phpunit/phpunit.cache"
+        cacheResultFile="./var/phpunit/cache/phpunit.cache"
         displayDetailsOnTestsThatTriggerWarnings="true"
         displayDetailsOnTestsThatTriggerErrors="true"
 >
-  <coverage cacheDirectory="./var/phpunit/">
+  <coverage cacheDirectory="./var/phpunit/cache">
     <report>
-      <html outputDirectory="var/phpunit/coverage/html" lowUpperBound="75" highLowerBound="95"/>
+      <html outputDirectory="./var/phpunit/coverage/html" lowUpperBound="75" highLowerBound="95"/>
+      <clover outputFile="./var/phpunit/coverage/coverage.xml"/>
     </report>
   </coverage>
+  <logging>
+    <junit outputFile="./var/phpunit/logs/junit.xml" />
+  </logging>
   <php>
     <env name="AZURITE_HOST" value="localhost"/>
     <env name="AZURITE_BLOB_PORT" value="10000"/>
