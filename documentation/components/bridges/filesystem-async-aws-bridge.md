@@ -9,7 +9,7 @@ through [Async AWS SDK](https://github.com/async-aws/s3).
 composer require flow-php/filesystem-async-aws-bridge
 ```
 
-```code
+```php
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesystem};
 
 $aws = aws_s3_filesystem(
