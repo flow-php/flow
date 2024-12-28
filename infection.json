@@ -70,6 +70,6 @@
   },
   "tmpDir": "var/infection/cache",
   "testFrameworkOptions": "--testsuite=unit",
-  "minMsi": 25,
-  "minCoveredMsi": 40
+  "minMsi": 29,
+  "minCoveredMsi": 75
 }
