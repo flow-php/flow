@@ -87,6 +87,12 @@ jobs:
         if: ${{ matrix.dependencies == 'locked' }}
         run: "composer install --no-interaction --no-progress --no-suggest"
 
+      - name: "Get PHPUnit cache"
+        uses: "actions/cache@v4"
+        with:
+          path: ./var/phpunit/cache/phpunit.cache
+          key: "php-${{ matrix.php-version }}-phpunit-cache"
+
       - name: "Test Brotli"
         run: "composer test:lib:parquet -- --group brotli-extension"
 
