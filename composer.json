@@ -50,7 +50,7 @@
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
         "ramsey/uuid": "^4.5",
-        "symfony/http-client": "^5.4 || ^6.4 || ^7.0",
+        "symfony/http-client": "^5.4.47 || ^6.4 || ^7.0",
         "symfony/cache": "^6.2 || ^7.0",
         "symfony/dotenv": "^6.2 || ^7.0",
         "symfony/finder": "^6.3 || ^7.0",
