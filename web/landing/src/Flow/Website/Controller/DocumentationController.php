@@ -68,7 +68,6 @@ final class DocumentationController extends AbstractController
         $currentExample = $example;
 
         return $this->render('documentation/example.html.twig', [
-            'navigation' => $this->pages->get('_navigation.md'),
             'topics' => $topics,
             'examples' => $examples,
             'currentTopic' => $topic,
@@ -95,7 +94,6 @@ final class DocumentationController extends AbstractController
     {
         return $this->render('documentation/page.html.twig', [
             'page' => $this->pages->get('introduction.md'),
-            'navigation' => $this->pages->get('_navigation.md'),
         ]);
     }
 
@@ -115,7 +113,6 @@ final class DocumentationController extends AbstractController
     {
         return $this->render('documentation/page.html.twig', [
             'page' => $this->pages->get($path),
-            'navigation' => $this->pages->get('_navigation.md'),
         ]);
     }
 }
