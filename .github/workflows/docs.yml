@@ -45,9 +45,9 @@ jobs:
         uses: "actions/cache@v4"
         with:
           path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-${{ hashFiles('**/composer.lock') }}"
+          key: "php-8.2-locked-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
-            php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
+            php-8.2-locked-composer-
 
       - name: "Install dependencies"
         run: "composer install --no-interaction --no-progress --no-suggest"
