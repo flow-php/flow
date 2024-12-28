@@ -332,7 +332,6 @@ TXT
 
     public function test_writing_to_to_s3_using_blocks() : void
     {
-        var_dump('Test Started ' . __METHOD__);
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $stream = $fs->writeTo(path('aws-s3://block_blob.csv'));
