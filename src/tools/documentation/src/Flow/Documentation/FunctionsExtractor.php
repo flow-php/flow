@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Documentation;
 
 use Flow\Documentation\Models\FunctionModel;
-use PhpParser\{NodeTraverser, ParserFactory};
+use PhpParser\{NodeTraverser, ParserFactory, PhpVersion};
 
 final class FunctionsExtractor
 {
@@ -20,7 +20,7 @@ final class FunctionsExtractor
      */
     public function extract(array $paths) : \Generator
     {
-        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+        $parser = (new ParserFactory())->createForVersion(PhpVersion::fromComponents(8, 2));
 
         $includedFiles = get_included_files();
 
