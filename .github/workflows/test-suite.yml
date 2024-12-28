@@ -156,42 +156,42 @@ jobs:
           key: "php-${{ matrix.php-version }}-phpunit-cache"
 
       - name: "Test - ETL "
-        run: "composer test:etl"
+        run: "composer test:etl -- --coverage-clover etl.xml"
 
       - name: "Test - CLI"
-        run: "composer test:cli"
+        run: "composer test:cli -- --coverage-clover cli.xml"
 
       - name: "Test - Lib - Array Dot"
-        run: "composer test:lib:array-dot"
+        run: "composer test:lib:array-dot -- --coverage-clover array-dot.xml"
 
       - name: "Test - Lib - Azure SDK"
-        run: "composer test:lib:azure-sdk"
+        run: "composer test:lib:azure-sdk -- --coverage-clover azure-sdk.xml"
 
       - name: "Test - Lib - Doctrine DBAL Bulk"
-        run: "composer test:lib:doctrine-dbal-bulk"
+        run: "composer test:lib:doctrine-dbal-bulk -- --coverage-clover dbal.xml"
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
 
       - name: "Test - Lib - Filesystem"
-        run: "composer test:lib:filesystem"
+        run: "composer test:lib:filesystem -- --coverage-clover filesystem.xml"
 
       - name: "Test - Lib - parquet"
-        run: "composer test:lib:parquet"
+        run: "composer test:lib:parquet -- --coverage-clover parquet.xml"
         env:
           FLOW_PARQUET_TESTS_DEBUG: "0"
 
       - name: "Test - Lib - Parquet Viewer"
-        run: "composer test:lib:parquet-viewer"
+        run: "composer test:lib:parquet-viewer -- --coverage-clover parquet-viewer.xml"
 
       - name: "Test - Lib - RDSL"
-        run: "composer test:lib:rdsl"
+        run: "composer test:lib:rdsl -- --coverage-clover rdsl.xml"
 
       - name: "Test - Lib - Snappy"
-        run: "composer test:lib:snappy"
+        run: "composer test:lib:snappy -- --coverage-clover snappy.xml"
 
       - name: "Test - Bridge - Filesystem Azure"
-        run: "composer test:bridge:filesystem-azure"
+        run: "composer test:bridge:filesystem-azure -- --coverage-clover fs-azure.xml"
         env:
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"
@@ -199,7 +199,7 @@ jobs:
           AZURITE_ACCOUNT_KEY: "flowphpkey01"
 
       - name: "Test - Bridge - Filesystem Async AWS"
-        run: "composer test:bridge:filesystem-async-aws -vvv"
+        run: "composer test:bridge:filesystem-async-aws -- --coverage-clover fs-aws.xml"
         env:
           S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
           S3_REGION: "us-east-1"
@@ -207,53 +207,57 @@ jobs:
           S3_SECRET_ACCESS_KEY: "test"
 
       - name: "Test - Bridge - Monolog Http"
-        run: "composer test:bridge:monolog-http"
+        run: "composer test:bridge:monolog-http -- --coverage-clover monolog.xml"
 
       - name: "Test - Bridge - Symfony Http Foundation"
-        run: "composer test:bridge:symfony-http-foundation"
+        run: "composer test:bridge:symfony-http-foundation -- --coverage-clover sf-http.xml"
 
       - name: "Test - Adapter - ChartJs"
-        run: "composer test:adapter:chartjs"
+        run: "composer test:adapter:chartjs -- --coverage-clover chartjs.xml"
 
       - name: "Test - Adapter - CSV"
-        run: "composer test:adapter:csv"
+        run: "composer test:adapter:csv -- --coverage-clover csv.xml"
 
       - name: "Test - Adapter - Doctrine"
-        run: "composer test:adapter:doctrine"
+        run: "composer test:adapter:doctrine -- --coverage-clover doctrine.xml"
         env:
           PGSQL_DATABASE_URL: "pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8"
           MYSQL_DATABASE_URL: "mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql"
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
 
       - name: "Test - Adapter - Elasticsearch"
-        run: "composer test:adapter:elasticsearch"
+        run: "composer test:adapter:elasticsearch -- --coverage-clover elastic.xml"
 
       - name: "Test - Adapter - Google Sheet"
-        run: "composer test:adapter:google-sheet"
+        run: "composer test:adapter:google-sheet -- --coverage-clover google-sheet.xml"
 
       - name: "Test - Adapter - Http"
-        run: "composer test:adapter:http"
+        run: "composer test:adapter:http -- --coverage-clover http.xml"
 
       - name: "Test - Adapter - Json"
-        run: "composer test:adapter:json"
+        run: "composer test:adapter:json -- --coverage-clover json.xml"
 
       - name: "Test - Adapter - Logger"
-        run: "composer test:adapter:logger"
+        run: "composer test:adapter:logger -- --coverage-clover logger.xml"
 
       - name: "Test - Adapter - Meilisearch"
-        run: "composer test:adapter:meilisearch"
+        run: "composer test:adapter:meilisearch -- --coverage-clover meili.xml"
 
       - name: "Test - Adapter - Parquet"
-        run: "composer test:adapter:parquet"
+        run: "composer test:adapter:parquet -- --coverage-clover lib-parquet.xmlt"
 
       - name: "Test - Adapter - Text"
-        run: "composer test:adapter:text"
+        run: "composer test:adapter:text -- --coverage-clover text.xml"
 
       - name: "Test - Adapter - XML"
-        run: "composer test:adapter:xml"
+        run: "composer test:adapter:xml -- --coverage-clover xml.xml"
 
       - name: "Test - Examples"
         run: "composer test:examples"
+
+      - name: "Merge coverage data"
+        run: |
+          tools/phpunit/vendor/bin/phpunit-merger coverage ./var/phpunit/coverage ./var/phpunit/coverage/coverage.xml
 
       - name: Upload test results to Codecov.io
         if: ${{ !cancelled() }}
