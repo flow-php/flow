@@ -1,1 +1,0 @@
-S3 or any S3 like filesystem is coming soon!

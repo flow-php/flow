@@ -44,10 +44,6 @@ final class AsyncAWSS3Filesystem implements Filesystem
 
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
     {
-        if ($path->rootDirectoryName() === null) {
-            throw new InvalidArgumentException('Root directory name can not be empty for S3 destination stream since it represents bucket name. Example: aws-s3://bucket_name/file.txt');
-        }
-
         $this->protocol()->validateScheme($path);
 
         if ($path->isPattern()) {

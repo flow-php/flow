@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite};
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite, to_stream};
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesystem};
 use function Flow\Filesystem\DSL\path;
 use Symfony\Component\Dotenv\Dotenv;
@@ -40,4 +40,9 @@ data_frame($config)
     ]))
     ->saveMode(overwrite())
     ->write(to_csv(path('aws-s3://test.csv')))
+    ->run();
+
+data_frame($config)
+    ->read(from_csv(path('aws-s3://test.csv')))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
