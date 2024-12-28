@@ -45,7 +45,7 @@
         "cocur/slugify": "^4.5",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
-        "nikic/php-parser": "^4.18",
+        "nikic/php-parser": "^5.3",
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",

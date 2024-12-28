@@ -77,4 +77,4 @@ jobs:
         run: "composer install --no-interaction --no-progress --no-suggest"
 
       - name: "Mutation Tests"
-        run: "composer test:mutation -- --logger-github=false"
+        run: "composer test:mutation -- --logger-github=false --log-verbosity=none"
