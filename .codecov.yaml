@@ -1,0 +1,80 @@
+flag_management:
+  individual_flags:
+    - name: etl
+      paths:
+        - src/core
+    - name: cli
+      paths:
+        - src/cli
+    - name: lib-array-dot
+      paths:
+        - src/lib/array-dot
+    - name: lib-azure-sdk
+      paths:
+        - src/lib/azure-sdk
+    - name: lib-doctrine-dbal-bulk
+      paths:
+        - src/lib/doctrine-dbal-bulk
+    - name: lib-filesystem
+      paths:
+        - src/lib/filesystem
+    - name: lib-parquet
+      paths:
+        - src/lib/parquet
+    - name: lib-parquet-viewer
+      paths:
+        - src/lib/parquet-viewer
+    - name: lib-rdsl
+      paths:
+        - src/lib/rdsl
+    - name: lib-snappy
+      paths:
+        - src/lib/snappy
+    - name: bridge-filesystem-async-aws
+      paths:
+        - src/bridge/filesystem/async-aws
+    - name: bridge-filesystem-azure
+      paths:
+        - src/bridge/filesystem/azure
+    - name: bridge-monolog-http
+      paths:
+        - src/bridge/monolog/http
+    - name: symfony-http-foundation
+      paths:
+        - src/bridge/symfony/http-foundation
+    - name: adapter-chartjs
+      paths:
+        - src/adapter/etl-adapter-chartjs
+    - name: adapter-csv
+      paths:
+        - src/adapter/etl-adapter-csv
+    - name: adapter-doctrine
+      paths:
+        - src/adapter/etl-adapter-doctrine
+    - name: adapter-elasticsearch
+      paths:
+        - src/adapter/etl-adapter-elasticsearch
+    - name: adapter-google-sheet
+      paths:
+        - src/adapter/etl-adapter-google-sheet
+    - name: adapter-http
+      paths:
+        - src/adapter/etl-adapter-http
+    - name: adapter-json
+      paths:
+        - src/adapter/etl-adapter-json
+    - name: adapter-logger
+      paths:
+        - src/adapter/etl-adapter-logger
+    - name: adapter-meilisearch
+      paths:
+        - src/adapter/etl-adapter-meilisearch
+    - name: adapter-parquet
+      paths:
+        - src/adapter/etl-adapter-parquet
+    - name: adapter-text
+      paths:
+        - src/adapter/etl-adapter-text
+    - name: adapter-xml
+      paths:
+        - src/adapter/etl-adapter-xml
