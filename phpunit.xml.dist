@@ -164,12 +164,14 @@
     <testsuite name="adapter-xml-integration">
       <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
     </testsuite>
-    <testsuite name="unit">
-      <directory>src/adapter/**/**/**/**/**/**/Tests/Unit</directory>
-      <directory>src/bridge/**/**/**/**/**/**/**/Tests/Unit</directory>
+    <testsuite name="infection">
       <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
-      <directory>src/lib/**/**/**/**/Tests/Unit</directory>
+      <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
+      <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
+      <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
+      <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
+      <directory>src/lib/rdsl/tests/Flow/RDSL/Tests/Unit</directory>
     </testsuite>
   </testsuites>
   <source>
