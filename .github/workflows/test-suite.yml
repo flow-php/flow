@@ -249,23 +249,16 @@ jobs:
       - name: "Test - Examples"
         run: "composer test:examples"
 
-      - name: Get the source branch of the PR
-        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        run: |
-          pr_source_branch=${{ github.event.pull_request.head.ref }}
-          echo "Source branch of the PR: $pr_source_branch"
-          echo "pr_source_branch=$pr_source_branch" >> $GITHUB_ENV
-
       - name: Download artifact
         if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         uses: actions/download-artifact@v3
         with:
-          name: "codecov-base-commit-sha-${{ env.pr_source_branch }}"
+          name: "codecov-base-commit-sha-1.x"
 
       - name: Read artifact content into variable
         if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         run: |
-          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-${{ env.pr_source_branch }})  # Read artifact content
+          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-1.x)  # Read artifact content
           echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
 
       - name: Upload test results to Codecov.io for baseline
