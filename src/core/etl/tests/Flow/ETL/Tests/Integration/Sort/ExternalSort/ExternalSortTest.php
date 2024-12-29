@@ -8,10 +8,10 @@ use function Flow\ETL\DSL\{flow_context, from_array, ref, refs};
 use Flow\ETL\Pipeline\{SynchronousPipeline};
 use Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
 
-final class ExternalSortTest extends IntegrationTestCase
+final class ExternalSortTest extends FlowIntegrationTestCase
 {
     public function test_memory_implementation_of_external_sort_algorithm() : void
     {

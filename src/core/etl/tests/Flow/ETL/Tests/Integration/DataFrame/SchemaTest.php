@@ -23,9 +23,9 @@ use function Flow\ETL\DSL\{array_to_rows,
     string_entry};
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class SchemaTest extends IntegrationTestCase
+final class SchemaTest extends FlowIntegrationTestCase
 {
     public function test_extraction_according_to_schema() : void
     {

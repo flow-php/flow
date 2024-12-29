@@ -6,22 +6,16 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use function Flow\ETL\DSL\{files, flow_context};
 use Flow\ETL\Extractor\Signal;
-use PHPUnit\Framework\TestCase;
+use Flow\ETL\Tests\FlowTestCase;
 
-final class FilesExtractorTest extends TestCase
+final class FilesExtractorTest extends FlowTestCase
 {
     public function test_extracting_files_from_directory() : void
     {
         $extractor = files(__DIR__ . '/Fixtures/FileListExtractor/*');
 
-        $totalRows = 0;
-
-        foreach ($extractor->extract(flow_context()) as $rows) {
-            self::assertCount(1, $rows);
-            $totalRows += $rows->count();
-        }
-
-        self::assertEquals(3, $totalRows);
+        self::assertExtractedRowsCount(3, $extractor);
+        self::assertExtractedBatchesSize(1, $extractor);
     }
 
     public function test_extracting_files_from_directory_after_getting_stop_signal() : void
@@ -43,14 +37,8 @@ final class FilesExtractorTest extends TestCase
     {
         $extractor = files(__DIR__ . '/Fixtures/FileListExtractor/**/*');
 
-        $totalRows = 0;
-
-        foreach ($extractor->extract(flow_context()) as $rows) {
-            self::assertCount(1, $rows);
-            $totalRows += $rows->count();
-        }
-
-        self::assertEquals(6, $totalRows);
+        self::assertExtractedRowsCount(6, $extractor);
+        self::assertExtractedBatchesSize(1, $extractor);
     }
 
     public function test_extracting_files_from_directory_with_limit() : void
@@ -58,13 +46,7 @@ final class FilesExtractorTest extends TestCase
         $extractor = files(__DIR__ . '/Fixtures/FileListExtractor/**/*');
         $extractor->changeLimit(2);
 
-        $totalRows = 0;
-
-        foreach ($extractor->extract(flow_context()) as $rows) {
-            self::assertCount(1, $rows);
-            $totalRows += $rows->count();
-        }
-
-        self::assertEquals(2, $totalRows);
+        self::assertExtractedRowsCount(2, $extractor);
+        self::assertExtractedBatchesSize(1, $extractor);
     }
 }

@@ -8,10 +8,10 @@ use function Flow\ETL\DSL\{config_builder, df, from_array, from_cache};
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 use Flow\ETL\{Extractor, FlowContext, Rows};
 
-final class CacheTest extends IntegrationTestCase
+final class CacheTest extends FlowIntegrationTestCase
 {
     public function test_cache() : void
     {

@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Integration\Pipeline;
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\{df, from_array, lit};
 use Flow\ETL\Loader;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class SynchronousPipelineTest extends IntegrationTestCase
+final class SynchronousPipelineTest extends FlowIntegrationTestCase
 {
     protected function setUp() : void
     {

@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\{datetime_schema, df, int_schema, ref, schema, type_int};
 use function Flow\Filesystem\DSL\path;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class XMLTest extends IntegrationTestCase
+final class XMLTest extends FlowIntegrationTestCase
 {
     public function test_transforming_xml_into_a_tabular_dataset() : void
     {

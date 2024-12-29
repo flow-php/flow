@@ -12,9 +12,9 @@ use function Flow\ETL\DSL\{df,
     type_list,
     type_string};
 use Flow\ETL\Row;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class MapTest extends IntegrationTestCase
+final class MapTest extends FlowIntegrationTestCase
 {
     public function test_using_map_to_replace_nullable_lists() : void
     {

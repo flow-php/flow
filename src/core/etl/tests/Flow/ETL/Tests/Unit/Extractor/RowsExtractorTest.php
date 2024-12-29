@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use function Flow\ETL\DSL\{from_rows, int_entry, str_entry};
-use Flow\ETL\{Config, FlowContext, Row, Rows};
-use PHPUnit\Framework\TestCase;
+use Flow\ETL\{Row, Rows, Tests\FlowTestCase};
 
-final class RowsExtractorTest extends TestCase
+final class RowsExtractorTest extends FlowTestCase
 {
     public function test_process_extractor() : void
     {
@@ -22,13 +21,7 @@ final class RowsExtractorTest extends TestCase
 
         $extractor = from_rows($rows);
 
-        $data = [];
-
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rowsData) {
-            $data = [...$data, ...$rowsData->toArray()];
-        }
-
-        self::assertSame(
+        self::assertExtractedRowsAsArrayEquals(
             [
                 ['number' => 1, 'name' => 'one'],
                 ['number' => 2, 'name' => 'two'],
@@ -36,7 +29,7 @@ final class RowsExtractorTest extends TestCase
                 ['number' => 4, 'name' => 'four'],
                 ['number' => 5, 'name' => 'five'],
             ],
-            $rows->toArray()
+            $extractor
         );
     }
 }

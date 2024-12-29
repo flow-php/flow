@@ -20,11 +20,11 @@ use function Flow\ETL\DSL\{collect,
     rows_partitioned,
     str_entry};
 use function Flow\Filesystem\DSL\partition;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 use Flow\ETL\{Rows};
 use Flow\Filesystem\Partition;
 
-final class PartitioningTest extends IntegrationTestCase
+final class PartitioningTest extends FlowIntegrationTestCase
 {
     public function test_dropping_partitions() : void
     {

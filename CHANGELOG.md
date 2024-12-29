@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-12-28
+## [Unreleased] - 2024-12-29
 
 ### Added
+- [#1291](https://github.com/flow-php/flow/pull/1291) - **FlowTestCase with assertions around Extractors** - [@Bellangelo](https://github.com/Bellangelo)
 - [#1296](https://github.com/flow-php/flow/pull/1296) - **Added codecov integration** - [@norberttech](https://github.com/norberttech)
 - [#1295](https://github.com/flow-php/flow/pull/1295) - **Symfony Http Foundation Bridge documentation to navigation** - [@norberttech](https://github.com/norberttech)
 - [#1294](https://github.com/flow-php/flow/pull/1294) - **Documentation building step to github actions workflow** - [@norberttech](https://github.com/norberttech)
@@ -32,6 +33,7 @@
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [2072d8](https://github.com/flow-php/flow/commit/2072d8d620aaf0ae013d005455c9306f9a529d0c) - **Renamed output files of phpunit coverage report and junit report for codecov** - [@norberttech](https://github.com/norberttech)
 - [#1300](https://github.com/flow-php/flow/pull/1300) - **Moved coverage and phpunit logs to standalone files** - [@norberttech](https://github.com/norberttech)
 - [#1300](https://github.com/flow-php/flow/pull/1300) - **upload to codecov only from one php and deps version** - [@norberttech](https://github.com/norberttech)
 - [#1295](https://github.com/flow-php/flow/pull/1295) - **Improved readability of remote filesystem examples** - [@norberttech](https://github.com/norberttech)
@@ -2052,6 +2054,7 @@
 ## Contributors
 
 - @alexislefebvre
+- @Bellangelo
 - @DawidSajdak
 - @drupol
 - @flavioheleno

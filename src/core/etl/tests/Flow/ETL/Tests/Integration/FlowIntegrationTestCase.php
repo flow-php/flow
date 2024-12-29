@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration;
 
-use Flow\ETL\{Config\Cache\CacheConfig};
+use Flow\ETL\{Config\Cache\CacheConfig, Tests\FlowTestCase};
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem, Local\StdOutFilesystem};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
-use PHPUnit\Framework\TestCase;
 
-abstract class IntegrationTestCase extends TestCase
+abstract class FlowIntegrationTestCase extends FlowTestCase
 {
     protected Path $cacheDir;
 

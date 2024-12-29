@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use function Flow\ETL\DSL\config_builder;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Sort\SortAlgorithms;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class ConfigBuilderTest extends IntegrationTestCase
+final class ConfigBuilderTest extends FlowIntegrationTestCase
 {
     public function test_creating_custom_cache_dir() : void
     {

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{df, from_array, ref};
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class FilterTest extends IntegrationTestCase
+final class FilterTest extends FlowIntegrationTestCase
 {
     public function test_multiple_filters() : void
     {

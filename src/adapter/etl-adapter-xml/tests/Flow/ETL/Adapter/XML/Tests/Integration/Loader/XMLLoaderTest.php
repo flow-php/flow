@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration\Loader;
 use function Flow\ETL\Adapter\XML\{from_xml, to_xml};
 use function Flow\ETL\DSL\{df, from_array, overwrite, ref};
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class XMLLoaderTest extends IntegrationTestCase
+final class XMLLoaderTest extends FlowIntegrationTestCase
 {
     public function test_partitioning_xml_file() : void
     {

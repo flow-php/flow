@@ -12,10 +12,10 @@ use Flow\ETL\{Adapter\XML\XMLParserExtractor,
     Flow,
     FlowContext,
     PHP\Type\Caster,
-    Tests\Integration\IntegrationTestCase};
+    Tests\Integration\FlowIntegrationTestCase};
 use Flow\Filesystem\Path;
 
-final class XMLParserExtractorTest extends IntegrationTestCase
+final class XMLParserExtractorTest extends FlowIntegrationTestCase
 {
     public function test_limit() : void
     {

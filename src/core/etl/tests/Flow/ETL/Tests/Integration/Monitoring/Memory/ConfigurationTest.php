@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Monitoring\Memory;
 
 use Flow\ETL\Monitoring\Memory\{Configuration, Unit};
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class ConfigurationTest extends IntegrationTestCase
+final class ConfigurationTest extends FlowIntegrationTestCase
 {
     public function test_less_than_for_infinite_memory() : void
     {

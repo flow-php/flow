@@ -35,10 +35,10 @@ use function Flow\ETL\DSL\{average,
     uuid_schema,
     window};
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 use Flow\ETL\{Loader, Rows};
 
-final class GroupByTest extends IntegrationTestCase
+final class GroupByTest extends FlowIntegrationTestCase
 {
     public function test_group_by_array() : void
     {

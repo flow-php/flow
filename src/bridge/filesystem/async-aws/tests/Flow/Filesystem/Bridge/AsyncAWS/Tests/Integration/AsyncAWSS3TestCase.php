@@ -6,10 +6,10 @@ namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_client;
 use AsyncAws\S3\S3Client;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
 
-abstract class AsyncAWSS3TestCase extends IntegrationTestCase
+abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
 {
     protected function setUp() : void
     {

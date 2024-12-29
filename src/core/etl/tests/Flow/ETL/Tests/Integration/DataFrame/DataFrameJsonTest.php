@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class DataFrameJsonTest extends IntegrationTestCase
+final class DataFrameJsonTest extends FlowIntegrationTestCase
 {
     public function test_building_data_frame_from_json() : void
     {

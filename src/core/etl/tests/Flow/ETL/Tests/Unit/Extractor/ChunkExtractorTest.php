@@ -6,18 +6,17 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Extractor\ChunkExtractor;
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Config, FlowContext};
-use PHPUnit\Framework\TestCase;
+use Flow\ETL\Tests\FlowTestCase;
 
-final class ChunkExtractorTest extends TestCase
+final class ChunkExtractorTest extends FlowTestCase
 {
     public function test_chunk_extractor() : void
     {
         $extractor = new ChunkExtractor(new FakeExtractor($batches = 100), $chunkSize = 10);
 
-        self::assertCount(
+        self::assertExtractedBatchesCount(
             $batches / $chunkSize,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            $extractor
         );
     }
 
@@ -25,9 +24,9 @@ final class ChunkExtractorTest extends TestCase
     {
         $extractor = new ChunkExtractor(new FakeExtractor(total: 20), chunkSize: 25);
 
-        self::assertCount(
+        self::assertExtractedBatchesCount(
             1,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            $extractor
         );
     }
 }

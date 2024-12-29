@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Extractor;
 
 use function Flow\ETL\DSL\{flow_context, from_path_partitions, rows};
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
 
-final class PathPartitionsExtractorTest extends IntegrationTestCase
+final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 {
     public function test_extracting_data_from_path_partitions() : void
     {

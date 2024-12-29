@@ -7,10 +7,9 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Extractor\{PipelineExtractor, RowsExtractor};
 use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\{Config, FlowContext, Row, Rows};
-use PHPUnit\Framework\TestCase;
+use Flow\ETL\{Row, Rows, Tests\FlowTestCase};
 
-final class PipelineExtractorTest extends TestCase
+final class PipelineExtractorTest extends FlowTestCase
 {
     public function test_pipeline_extractor() : void
     {
@@ -22,9 +21,6 @@ final class PipelineExtractorTest extends TestCase
 
         $extractor = new PipelineExtractor($pipeline);
 
-        self::assertCount(
-            3,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
-        );
+        self::assertExtractedBatchesCount(3, $extractor);
     }
 }

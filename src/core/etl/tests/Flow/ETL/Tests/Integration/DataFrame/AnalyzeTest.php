@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\{datetime_schema, df, float_schema, from_array, int_schema, schema, str_schema};
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-final class AnalyzeTest extends IntegrationTestCase
+final class AnalyzeTest extends FlowIntegrationTestCase
 {
     public function test_analyzing_csv_file_with_auto_cast() : void
     {

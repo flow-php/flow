@@ -7,10 +7,10 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, Flow, FlowContext, PHP\Type\Caster, Tests\Integration\IntegrationTestCase};
+use Flow\ETL\{Config, Flow, FlowContext, PHP\Type\Caster, Tests\Integration\FlowIntegrationTestCase};
 use Flow\Filesystem\Path;
 
-final class XMLReaderExtractorTest extends IntegrationTestCase
+final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 {
     public function test_limit() : void
     {

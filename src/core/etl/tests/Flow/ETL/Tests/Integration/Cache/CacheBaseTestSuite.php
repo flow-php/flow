@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Integration\Cache;
 use function Flow\ETL\DSL\{row, rows, str_entry};
 use Flow\ETL\Cache\{CacheIndex};
 use Flow\ETL\Exception\KeyNotInCacheException;
-use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
 
-abstract class CacheBaseTestSuite extends IntegrationTestCase
+abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
 {
     protected function setUp() : void
     {
