@@ -252,20 +252,20 @@ jobs:
       - name: Get the source branch of the PR
         if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         run: |
-          source_branch=${{ github.event.pull_request.head.ref }}
-          echo "Source branch of the PR: $source_branch"
-          echo "source_branch=$source_branch" >> $GITHUB_ENV
+          pr_source_branch=${{ github.event.pull_request.head.ref }}
+          echo "Source branch of the PR: $pr_source_branch"
+          echo "source_branch=$pr_source_branch" >> $GITHUB_ENV
 
       - name: Download artifact
         if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         uses: actions/download-artifact@v3
         with:
-          name: "codecov-base-commit-sha-${source_branch}"
+          name: "codecov-base-commit-sha-${{ pr_source_branch }}"
 
       - name: Read artifact content into variable
         if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         run: |
-          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-${source_branch})  # Read artifact content
+          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-${{ pr_source_branch }})  # Read artifact content
           echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
 
       - name: Upload test results to Codecov.io
@@ -274,7 +274,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/logs
-          commit_parent: ${codecov_base_commit_sha}
+          commit_parent: ${{ codecov_base_commit_sha }}
 
       - name: Upload code coverage data to Codecov.io
         if: ${{ !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
@@ -282,7 +282,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover
-          commit_parent: ${codecov_base_commit_sha}
+          commit_parent: ${{ codecov_base_commit_sha }}
 
       - name: Get the branch name and SHA
         if: ${{ github.event_name == 'push' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
