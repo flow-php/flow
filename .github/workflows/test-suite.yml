@@ -259,7 +259,7 @@ jobs:
       - name: Read artifact content into variable
         if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         run: |
-          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-1.x)  # Read artifact content
+          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-1.x.txt)
           echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
 
       - name: Upload test results to Codecov.io for baseline
