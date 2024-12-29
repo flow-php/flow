@@ -2,15 +2,16 @@
   "source": {
     "directories": [
       "src/core/etl/src",
-      "src/adapter/*/src",
-      "src/bridge/filesystem/*/src",
-      "src/bridge/monolog/*/src",
-      "src/bridge/symfony/*/src",
-      "src/lib/*/src"
+      "src/lib/array-dot/src",
+      "src/lib/doctrine-dbal-bulk/src",
+      "src/lib/filesystem/src",
+      "src/lib/parquet/src",
+      "src/lib/rdsl/src"
     ]
   },
   "logs": {
     "text": "./var/infection/infection.log",
+    "html": "./var/infection/infection.html",
     "summary": "./var/infection/infection_summary.log",
     "debug": "./var/infection/infection_summary.log",
     "stryker": {
@@ -48,11 +49,6 @@
         "Flow\\Doctrine\\Bulk\\BulkData::toSqlParameters"
       ]
     },
-    "MethodCallRemoval": {
-      "ignore": [
-        "Flow\\ETL\\Adapter\\Logger\\Logger\\DumpLogger::log"
-      ]
-    },
     "Identical": {
       "ignore": [
         "Flow\\Doctrine\\Bulk\\DbalPlatform"
@@ -69,7 +65,7 @@
     "customPath": "tools/phpunit/vendor/bin/phpunit"
   },
   "tmpDir": "var/infection/cache",
-  "testFrameworkOptions": "--testsuite=unit",
+  "testFrameworkOptions": "--testsuite=infection",
   "minMsi": 29,
   "minCoveredMsi": 75
 }
