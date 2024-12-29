@@ -20,7 +20,7 @@ use function Flow\ETL\DSL\{collect,
     rows_partitioned,
     str_entry};
 use function Flow\Filesystem\DSL\partition;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\{Rows};
 use Flow\Filesystem\Partition;
 

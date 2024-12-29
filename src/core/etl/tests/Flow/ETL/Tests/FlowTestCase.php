@@ -8,6 +8,10 @@ use function Flow\ETL\DSL\{flow_context, rows};
 use Flow\ETL\{Extractor, FlowContext, Rows};
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Base test case for testing FLow, designed mostly for unit tests.
+ * In case of integration tests, use FlowIntegrationTestCase that extends this class.
+ */
 abstract class FlowTestCase extends TestCase
 {
     final public static function assertExtractedBatchesCount(

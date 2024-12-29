@@ -12,7 +12,7 @@ use function Flow\ETL\DSL\{df,
     type_list,
     type_string};
 use Flow\ETL\Row;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class MapTest extends FlowIntegrationTestCase
 {

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\Adapter\CSV\CSVDetector;
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\SourceStream;
 use Flow\Filesystem\Stream\MemorySourceStream;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
 
-final class CSVDetectorTest extends TestCase
+final class CSVDetectorTest extends FlowTestCase
 {
     public static function enclosure_provider() : \Generator
     {

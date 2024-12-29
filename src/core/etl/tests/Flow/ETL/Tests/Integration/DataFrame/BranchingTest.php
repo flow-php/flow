@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{df, from_array, lit, ref, to_branch, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class BranchingTest extends FlowIntegrationTestCase
 {

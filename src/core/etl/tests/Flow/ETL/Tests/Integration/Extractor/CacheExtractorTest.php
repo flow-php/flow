@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{array_to_rows, config_builder, flow_context, from_arr
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Extractor\CacheExtractor;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class CacheExtractorTest extends FlowIntegrationTestCase
 {

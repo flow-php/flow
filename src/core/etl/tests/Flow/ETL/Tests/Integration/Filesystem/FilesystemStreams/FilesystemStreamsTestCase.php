@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams;
 
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 abstract class FilesystemStreamsTestCase extends FlowIntegrationTestCase
 {

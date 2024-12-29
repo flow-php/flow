@@ -35,7 +35,7 @@ use function Flow\ETL\DSL\{average,
     uuid_schema,
     window};
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\{Loader, Rows};
 
 final class GroupByTest extends FlowIntegrationTestCase

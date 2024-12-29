@@ -23,7 +23,7 @@ use function Flow\ETL\DSL\{array_to_rows,
     string_entry};
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class SchemaTest extends FlowIntegrationTestCase
 {

@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\{datetime_schema, df, float_schema, from_array, int_schema, schema, str_schema};
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class AnalyzeTest extends FlowIntegrationTestCase
 {

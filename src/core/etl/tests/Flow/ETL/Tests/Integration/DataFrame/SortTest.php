@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{df, ref};
 use Flow\ETL\Config;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Tests\Double\{FakeExtractor};
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class SortTest extends FlowIntegrationTestCase
 {

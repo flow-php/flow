@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\{datetime_schema, df, int_schema, ref, schema, type_int};
 use function Flow\Filesystem\DSL\path;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class XMLTest extends FlowIntegrationTestCase
 {

@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use function Flow\ETL\DSL\config_builder;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Sort\SortAlgorithms;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class ConfigBuilderTest extends FlowIntegrationTestCase
 {

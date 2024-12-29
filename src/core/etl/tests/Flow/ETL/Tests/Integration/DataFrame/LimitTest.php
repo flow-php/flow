@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\{df,
     type_structure};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\{IntegerEntry};
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\{Extractor, FlowContext, Row, Rows};
 
 final class LimitTest extends FlowIntegrationTestCase

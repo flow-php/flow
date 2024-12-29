@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration;
+namespace Flow\ETL\Tests;
 
-use Flow\ETL\{Config\Cache\CacheConfig, Tests\FlowTestCase};
+use Flow\ETL\{Config\Cache\CacheConfig};
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem, Local\StdOutFilesystem};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
+/**
+ * Test case for integration tests.
+ */
 abstract class FlowIntegrationTestCase extends FlowTestCase
 {
     protected Path $cacheDir;

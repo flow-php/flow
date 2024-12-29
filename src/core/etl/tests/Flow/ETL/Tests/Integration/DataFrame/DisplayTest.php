@@ -30,7 +30,7 @@ use function Flow\ETL\DSL\{
     type_string,
     xml_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\{Extractor, FlowContext, Rows};
 
 final class DisplayTest extends FlowIntegrationTestCase

@@ -8,11 +8,10 @@ use function Flow\ETL\Adapter\CSV\{from_csv};
 use function Flow\ETL\DSL\{df, print_schema, ref};
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, FlowContext, Row, Rows};
+use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
 use Flow\Filesystem\Path;
-use PHPUnit\Framework\TestCase;
 
-final class CSVExtractorTest extends TestCase
+final class CSVExtractorTest extends FlowTestCase
 {
     public function test_extracting_csv_empty_columns_as_empty_strings() : void
     {

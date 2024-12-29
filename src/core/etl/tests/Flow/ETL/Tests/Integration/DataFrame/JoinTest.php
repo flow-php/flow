@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{datetime_entry, df, from_rows, int_entry, row, rows, str_entry};
 use Flow\ETL\Join\Expression;
-use Flow\ETL\Tests\Integration\FlowIntegrationTestCase;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\{Flow, Join\Join, Loader};
 
 final class JoinTest extends FlowIntegrationTestCase
