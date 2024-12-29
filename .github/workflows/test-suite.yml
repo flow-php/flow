@@ -274,7 +274,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/logs
-          commit_parent: ${{ codecov_base_commit_sha }}
+          commit_parent: ${{ env.codecov_base_commit_sha }}
 
       - name: Upload code coverage data to Codecov.io
         if: ${{ !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
@@ -282,7 +282,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover
-          commit_parent: ${{ codecov_base_commit_sha }}
+          commit_parent: ${{ env.codecov_base_commit_sha }}
 
       - name: Get the branch name and SHA
         if: ${{ github.event_name == 'push' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
