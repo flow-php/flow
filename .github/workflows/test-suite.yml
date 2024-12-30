@@ -272,14 +272,14 @@ jobs:
 
       - name: Upload code coverage data to Codecov.io for baseline
         if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover
 
       - name: Upload code coverage data to Codecov.io for pull request
         if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover
