@@ -170,6 +170,7 @@
       <directory suffix=".php">src/adapter/**/src</directory>
       <directory suffix=".php">src/bridge/**/**/src</directory>
       <directory suffix=".php">src/core/**/src</directory>
+      <directory suffix=".php">src/cli/src</directory>
       <directory suffix=".php">src/lib/**/src</directory>
       <directory suffix=".php">src/tools/**/src</directory>
     </include>
