@@ -1,80 +1,109 @@
-flag_management:
-  individual_flags:
-    - name: etl
+comment:
+  layout: "header, diff, components"
+
+component_management:
+  individual_components:
+    - component_id: etl
+      name: etl
       paths:
-        - src/core
-    - name: cli
+        - src/core/**
+    - component_id: cli
+      name: cli
       paths:
-        - src/cli
-    - name: lib-array-dot
+        - src/cli/**
+    - component_id: lib-array-dot
+      name: lib-array-dot
       paths:
-        - src/lib/array-dot
-    - name: lib-azure-sdk
+        - src/lib/array-dot/**
+    - component_id: lib-azure-sdk
+      name: lib-azure-sdk
       paths:
-        - src/lib/azure-sdk
-    - name: lib-doctrine-dbal-bulk
+        - src/lib/azure-sdk/**
+    - component_id: lib-doctrine-dbal-bulk
+      name: lib-doctrine-dbal-bulk
       paths:
-        - src/lib/doctrine-dbal-bulk
-    - name: lib-filesystem
+        - src/lib/doctrine-dbal-bulk/**
+    - component_id: lib-filesystem
+      name: lib-filesystem
       paths:
-        - src/lib/filesystem
-    - name: lib-parquet
+        - src/lib/filesystem/**
+    - component_id: lib-parquet
+      name: lib-parquet
       paths:
-        - src/lib/parquet
-    - name: lib-parquet-viewer
+        - src/lib/parquet/**
+    - component_id: lib-parquet-viewer
+      name: lib-parquet-viewer
       paths:
-        - src/lib/parquet-viewer
-    - name: lib-rdsl
+        - src/lib/parquet-viewer/**
+    - component_id: lib-rdsl
+      name: lib-rdsl
       paths:
-        - src/lib/rdsl
-    - name: lib-snappy
+        - src/lib/rdsl/**
+    - component_id: lib-snappy
+      name: lib-snappy
       paths:
-        - src/lib/snappy
-    - name: bridge-filesystem-async-aws
+        - src/lib/snappy/**
+    - component_id: bridge-filesystem-async-aws
+      name: bridge-filesystem-async-aws
       paths:
-        - src/bridge/filesystem/async-aws
-    - name: bridge-filesystem-azure
+        - src/bridge/filesystem/async-aws/**
+    - component_id: bridge-filesystem-azure
+      name: bridge-filesystem-azure
       paths:
-        - src/bridge/filesystem/azure
-    - name: bridge-monolog-http
+        - src/bridge/filesystem/azure/**
+    - component_id: bridge-monolog-http
+      name: bridge-monolog-http
       paths:
-        - src/bridge/monolog/http
-    - name: symfony-http-foundation
+        - src/bridge/monolog/http/**
+    - component_id: symfony-http-foundation
+      name: symfony-http-foundation
       paths:
-        - src/bridge/symfony/http-foundation
-    - name: adapter-chartjs
+        - src/bridge/symfony/http-foundation/**
+    - component_id: adapter-chartjs
+      name: adapter-chartjs
       paths:
-        - src/adapter/etl-adapter-chartjs
-    - name: adapter-csv
+        - src/adapter/etl-adapter-chartjs/**
+    - component_id: adapter-csv
+      name: adapter-csv
       paths:
-        - src/adapter/etl-adapter-csv
-    - name: adapter-doctrine
+        - src/adapter/etl-adapter-csv/**
+    - component_id: adapter-doctrine
+      name: adapter-doctrine
       paths:
-        - src/adapter/etl-adapter-doctrine
-    - name: adapter-elasticsearch
+        - src/adapter/etl-adapter-doctrine/**
+    - component_id: adapter-elasticsearch
+      name: adapter-elasticsearch
       paths:
-        - src/adapter/etl-adapter-elasticsearch
-    - name: adapter-google-sheet
+        - src/adapter/etl-adapter-elasticsearch/**
+    - component_id: adapter-google-sheet
+      name: adapter-google-sheet
       paths:
-        - src/adapter/etl-adapter-google-sheet
-    - name: adapter-http
+        - src/adapter/etl-adapter-google-sheet/**
+    - component_id: adapter-http
+      name: adapter-http
       paths:
-        - src/adapter/etl-adapter-http
-    - name: adapter-json
+        - src/adapter/etl-adapter-http/**
+    - component_id: adapter-json
+      name: adapter-json
       paths:
-        - src/adapter/etl-adapter-json
-    - name: adapter-logger
+        - src/adapter/etl-adapter-json/**
+    - component_id: adapter-logger
+      name: adapter-logger
       paths:
-        - src/adapter/etl-adapter-logger
-    - name: adapter-meilisearch
+        - src/adapter/etl-adapter-logger/**
+    - component_id: adapter-meilisearch
+      name: adapter-meilisearch
       paths:
-        - src/adapter/etl-adapter-meilisearch
-    - name: adapter-parquet
+        - src/adapter/etl-adapter-meilisearch/**
+    - component_id: adapter-parquet
+      name: adapter-parquet
       paths:
-        - src/adapter/etl-adapter-parquet
-    - name: adapter-text
+        - src/adapter/etl-adapter-parquet/**
+    - component_id: adapter-text
+      name: adapter-text
       paths:
-        - src/adapter/etl-adapter-text
-    - name: adapter-xml
+        - src/adapter/etl-adapter-text/**
+    - component_id: adapter-xml
+      name: adapter-xml
       paths:
-        - src/adapter/etl-adapter-xml
+        - src/adapter/etl-adapter-xml/**

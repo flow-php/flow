@@ -269,7 +269,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/logs
-          flags: etl, cli, lib-azure-sdk, lib-doctrine-dbal-bulk, lib-filesystem, lib-parquet, lib-parquet-viewer, lib-rdsl, lib-snappy, bridge-filesystem-async-aws, bridge-filesystem-azure, bridge-monolog-http, bridge-symfony-http-foundation, adapter-chartjs, adapter-csv, adapter-doctrine, adapter-elasticsearch, adapter-google-sheet, adapter-http, adapter-json, adapter-logger, adapter-meilisearch, adapter-parquet, adapter-text, adapter-xml
 
       - name: Upload code coverage data to Codecov.io for baseline
         if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
@@ -277,7 +276,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover
-          flags: etl, cli, lib-azure-sdk, lib-doctrine-dbal-bulk, lib-filesystem, lib-parquet, lib-parquet-viewer, lib-rdsl, lib-snappy, bridge-filesystem-async-aws, bridge-filesystem-azure, bridge-monolog-http, bridge-symfony-http-foundation, adapter-chartjs, adapter-csv, adapter-doctrine, adapter-elasticsearch, adapter-google-sheet, adapter-http, adapter-json, adapter-logger, adapter-meilisearch, adapter-parquet, adapter-text, adapter-xml
 
       - name: Upload code coverage data to Codecov.io for pull request
         if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
@@ -286,7 +284,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/coverage/clover
           commit_parent: ${{ env.codecov_base_commit_sha }}
-          flags: etl, cli, lib-azure-sdk, lib-doctrine-dbal-bulk, lib-filesystem, lib-parquet, lib-parquet-viewer, lib-rdsl, lib-snappy, bridge-filesystem-async-aws, bridge-filesystem-azure, bridge-monolog-http, bridge-symfony-http-foundation, adapter-chartjs, adapter-csv, adapter-doctrine, adapter-elasticsearch, adapter-google-sheet, adapter-http, adapter-json, adapter-logger, adapter-meilisearch, adapter-parquet, adapter-text, adapter-xml
 
       - name: Upload test results to Codecov.io for pull request
         if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
@@ -295,7 +292,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: ./var/phpunit/logs
           commit_parent: ${{ env.codecov_base_commit_sha }}
-          flags: etl, cli, lib-azure-sdk, lib-doctrine-dbal-bulk, lib-filesystem, lib-parquet, lib-parquet-viewer, lib-rdsl, lib-snappy, bridge-filesystem-async-aws, bridge-filesystem-azure, bridge-monolog-http, bridge-symfony-http-foundation, adapter-chartjs, adapter-csv, adapter-doctrine, adapter-elasticsearch, adapter-google-sheet, adapter-http, adapter-json, adapter-logger, adapter-meilisearch, adapter-parquet, adapter-text, adapter-xml
 
       - name: Get the branch name and SHA
         if: ${{ github.event_name == 'push' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
