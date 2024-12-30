@@ -272,7 +272,7 @@
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration --log-junit ./var/phpunit/logs/lib-parquet-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-parquet-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-parquet-integration"
         ],
         "test:lib:parquet-viewer": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-integration --log-junit ./var/phpunit/logs/lib-parquet-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-parquet-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-parquet-integration"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-viewer-integration --log-junit ./var/phpunit/logs/lib-parquet-viewer-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-parquet-viewer-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-parquet-viewer-integration"
         ],
         "test:lib:rdsl": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-unit --log-junit ./var/phpunit/logs/lib-rdsl-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-rdsl-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-rdsl-unit",
