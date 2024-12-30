@@ -1,5 +1,5 @@
 comment:
-  layout: "header, diff, components"
+  layout: "condensed_header, diff, components"
 
 component_management:
   individual_components:

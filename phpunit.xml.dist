@@ -8,15 +8,6 @@
         displayDetailsOnTestsThatTriggerWarnings="true"
         displayDetailsOnTestsThatTriggerErrors="true"
 >
-  <coverage cacheDirectory="./var/phpunit/cache">
-    <report>
-      <html outputDirectory="./var/phpunit/coverage/html" lowUpperBound="75" highLowerBound="95"/>
-      <clover outputFile="./var/phpunit/coverage/coverage.xml"/>
-    </report>
-  </coverage>
-  <logging>
-    <junit outputFile="./var/phpunit/logs/junit.xml" />
-  </logging>
   <php>
     <env name="AZURITE_HOST" value="localhost"/>
     <env name="AZURITE_BLOB_PORT" value="10000"/>
@@ -177,7 +168,7 @@
   <source>
     <include>
       <directory suffix=".php">src/adapter/**/src</directory>
-      <directory suffix=".php">src/bridge/**/src</directory>
+      <directory suffix=".php">src/bridge/**/**/src</directory>
       <directory suffix=".php">src/core/**/src</directory>
       <directory suffix=".php">src/lib/**/src</directory>
       <directory suffix=".php">src/tools/**/src</directory>
