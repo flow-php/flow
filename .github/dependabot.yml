@@ -51,11 +51,6 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "composer"
-    directory: "/tools/psalm"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "composer"
     directory: "/web/landing"
     schedule:
       interval: "daily"

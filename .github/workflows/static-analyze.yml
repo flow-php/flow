@@ -55,7 +55,6 @@ jobs:
         run: |
           mkdir -p var/cs-fixer
           mkdir -p var/phpstan/cache
-          mkdir -p var/psalm/cache
 
       - name: "Get Composer Cache Directory"
         id: composer-cache
@@ -89,14 +88,6 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-cache-phpstan-
 
-      - name: "Cache psalm results"
-        uses: "actions/cache@v4"
-        with:
-          path: "var/psalm/cache"
-          key: "php-${{ matrix.php-version }}-cache-psalm-${{ github.run_id }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-cache-psalm-
-
       - name: "Monorepo Validate"
         run: "composer test:monorepo"
 
@@ -105,6 +96,3 @@ jobs:
 
       - name: "Static Analyze - PHPStan"
         run: "composer static:analyze:phpstan -- --error-format=github"
-
-      - name: "Static Analyze - Psalm"
-        run: "composer static:analyze:psalm -- --output-format=github"
