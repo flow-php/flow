@@ -208,9 +208,6 @@ final class NestedColumn implements Column
         return $this->flatPath;
     }
 
-    /**
-     * @psalm-suppress UndefinedInterfaceMethod
-     */
     public function getListElement() : Column
     {
         if ($this->isList()) {
@@ -221,9 +218,6 @@ final class NestedColumn implements Column
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a list');
     }
 
-    /**
-     * @psalm-suppress UndefinedInterfaceMethod
-     */
     public function getMapKeyColumn() : FlatColumn
     {
         if ($this->isMap()) {
@@ -234,9 +228,6 @@ final class NestedColumn implements Column
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
     }
 
-    /**
-     * @psalm-suppress UndefinedInterfaceMethod
-     */
     public function getMapValueColumn() : Column
     {
         if ($this->isMap()) {

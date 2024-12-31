@@ -62,8 +62,6 @@ final class DbalLimitOffsetExtractor implements Extractor
                 $countQuery->resetOrderBy();
             } else {
                 /**
-                 * @psalm-suppress UndefinedMethod
-                 *
                  * @phpstan-ignore-next-line
                  */
                 $countQuery->resetQueryPart('orderBy');

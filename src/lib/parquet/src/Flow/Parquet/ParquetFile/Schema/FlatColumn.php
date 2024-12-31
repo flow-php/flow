@@ -8,11 +8,6 @@ use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Thrift\SchemaElement;
 
-/**
- * @psalm-suppress RedundantCastGivenDocblockType
- * @psalm-suppress RedundantConditionGivenDocblockType
- * @psalm-suppress DocblockTypeContradiction
- */
 final class FlatColumn implements Column
 {
     private ?string $flatPath = null;
@@ -171,9 +166,6 @@ final class FlatColumn implements Column
         return $this->convertedType;
     }
 
-    /**
-     * @psalm-suppress PossiblyNullOperand
-     */
     public function ddl() : array
     {
         return [

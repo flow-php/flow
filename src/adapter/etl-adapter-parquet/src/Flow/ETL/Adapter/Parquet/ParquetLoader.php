@@ -123,10 +123,6 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         }
     }
 
-    /**
-     * @psalm-suppress InvalidNullableReturnType
-     * @psalm-suppress NullableReturnStatement
-     */
     private function schema() : Schema
     {
         /** @phpstan-ignore-next-line  */

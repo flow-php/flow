@@ -18,8 +18,6 @@ final class PlainValueUnpacker
     }
 
     /**
-     * @psalm-suppress PossiblyNullArgument
-     *
      * @return array<mixed>
      */
     public function unpack(FlatColumn $column, int $total) : array

@@ -70,8 +70,6 @@ final class TypeDetector
 
             if ($detector->isMap()) {
                 /**
-                 * @psalm-suppress PossiblyNullArgument
-                 *
                  * @phpstan-ignore-next-line
                  */
                 return type_map($detector->firstKeyType(), $detector->valueType()->makeNullable($valueTypes->has(type_null())));

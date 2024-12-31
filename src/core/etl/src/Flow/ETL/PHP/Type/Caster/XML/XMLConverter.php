@@ -24,10 +24,6 @@ final class XMLConverter
         return $xmlArray;
     }
 
-    /**
-     * @psalm-suppress PossiblyNullArgument
-     * @psalm-suppress PossiblyNullIterator
-     */
     private function convertDOMElement(\DOMElement|\DOMNode $element) : array
     {
         $xmlArray = [];

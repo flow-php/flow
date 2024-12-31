@@ -80,8 +80,6 @@ function array_iterate_at_level(array &$array, int $targetLevel, callable $callb
  * @param array<mixed> $array
  *
  * @return array<mixed>
- *
- * @psalm-suppress MixedAssignment
  */
 function array_flatten(array $array) : array
 {

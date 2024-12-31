@@ -7,9 +7,6 @@ namespace Flow\ETL\Row\Schema;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 
-/**
- * @psalm-allow-private-mutation
- */
 final class Metadata
 {
     /**

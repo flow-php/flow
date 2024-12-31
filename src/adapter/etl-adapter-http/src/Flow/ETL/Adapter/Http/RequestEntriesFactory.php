@@ -18,8 +18,6 @@ final class RequestEntriesFactory
      * @throws InvalidArgumentException
      *
      * @return Row\Entries
-     *
-     * @psalm-suppress InvalidLiteralArgument
      */
     public function create(RequestInterface $request) : Row\Entries
     {

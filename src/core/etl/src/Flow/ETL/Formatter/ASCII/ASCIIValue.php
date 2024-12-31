@@ -77,9 +77,6 @@ final class ASCIIValue
         return \mb_substr($this->stringValue(), 0, 20);
     }
 
-    /**
-     * @psalm-suppress TypeDoesNotContainType
-     */
     private function stringValue() : string
     {
         if ($this->stringValue === null) {

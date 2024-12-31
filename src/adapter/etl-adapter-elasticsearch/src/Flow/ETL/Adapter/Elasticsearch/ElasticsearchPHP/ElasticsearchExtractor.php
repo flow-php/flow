@@ -9,8 +9,6 @@ use Flow\ETL\{Extractor, FlowContext};
 final class ElasticsearchExtractor implements Extractor
 {
     /**
-     * @psalm-suppress UndefinedClass
-     *
      * @phpstan-ignore-next-line
      */
     private \Elasticsearch\Client|\Elastic\Elasticsearch\Client|null $client;
@@ -40,10 +38,6 @@ final class ElasticsearchExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
-        /**
-         * @psalm-suppress UndefinedClass
-         * @psalm-suppress PossiblyInvalidArgument
-         */
         $pit = \is_array($this->pointInTimeParams)
             /**
              * @phpstan-ignore-next-line
@@ -56,9 +50,6 @@ final class ElasticsearchExtractor implements Extractor
             : new SearchParams($this->parameters);
 
         /**
-         * @psalm-suppress UndefinedClass
-         * @psalm-suppress PossiblyInvalidArgument
-         *
          * @phpstan-ignore-next-line
          */
         $results = new SearchResults($this->client()->search($params->asArray()));
@@ -79,9 +70,6 @@ final class ElasticsearchExtractor implements Extractor
                 $nextPageParams = $params->setBody('search_after', $lastHitSort);
 
                 /**
-                 * @psalm-suppress UndefinedClass
-                 * @psalm-suppress PossiblyInvalidArgument
-                 *
                  * @phpstan-ignore-next-line
                  */
                 $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray()));
@@ -114,9 +102,6 @@ final class ElasticsearchExtractor implements Extractor
                 }
 
                 /**
-                 * @psalm-suppress UndefinedClass
-                 * @psalm-suppress PossiblyInvalidArgument
-                 *
                  * @phpstan-ignore-next-line
                  */
                 $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray()));
@@ -145,8 +130,6 @@ final class ElasticsearchExtractor implements Extractor
     }
 
     /**
-     * @psalm-suppress UndefinedClass
-     *
      * @phpstan-ignore-next-line
      */
     private function client() : \Elasticsearch\Client|\Elastic\Elasticsearch\Client
@@ -170,9 +153,6 @@ final class ElasticsearchExtractor implements Extractor
     {
         if ($pit) {
             /**
-             * @psalm-suppress UndefinedClass
-             * @psalm-suppress InvalidArgument
-             *
              * @phpstan-ignore-next-line
              */
             $this->client()->closePointInTime(['body' => ['id' => $pit->id()]]);

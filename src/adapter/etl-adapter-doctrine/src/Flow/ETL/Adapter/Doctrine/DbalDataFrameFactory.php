@@ -34,7 +34,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
 
     public static function fromConnection(Connection $connection, string $query, QueryParameter ...$parameters) : self
     {
-        /** @psalm-suppress InternalMethod */
         $factory = new self($connection->getParams(), $query, ...$parameters);
         $factory->connection = $connection;
 
@@ -65,7 +64,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
         }
 
         if (\count($types)) {
-            /** @psalm-suppress InvalidArgument */
             $extractor->withTypes($types);
         }
 

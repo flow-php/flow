@@ -57,10 +57,6 @@ final class AzureBlobSourceStream implements SourceStream
         )->content();
     }
 
-    /**
-     * @psalm-suppress PossiblyFalseArgument
-     * @psalm-suppress PossiblyFalseOperand
-     */
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
         $offset = 0;

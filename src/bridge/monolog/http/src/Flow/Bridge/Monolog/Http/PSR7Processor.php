@@ -14,10 +14,6 @@ final class PSR7Processor implements ProcessorInterface
     {
     }
 
-    /**
-     * @psalm-suppress InvalidReturnType
-     * @psalm-suppress InvalidReturnStatement
-     */
     public function __invoke(LogRecord|array $record) : LogRecord|array
     {
         $context = \is_array($record) ? $record['context'] : $record->context;

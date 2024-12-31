@@ -58,7 +58,6 @@ final class DataConverter
                 return $data;
             }
 
-            /** @psalm-suppress PossiblyNullReference */
             return $this->cache[$column->flatPath()]->fromParquetType($data);
         }
 
@@ -94,7 +93,6 @@ final class DataConverter
                 return $data;
             }
 
-            /** @psalm-suppress PossiblyNullReference */
             return $this->cache[$column->flatPath()]->toParquetType($data);
         }
 

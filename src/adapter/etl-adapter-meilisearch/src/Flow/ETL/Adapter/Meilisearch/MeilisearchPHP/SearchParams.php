@@ -43,8 +43,6 @@ final class SearchParams
     public function set(string $key, mixed $value) : self
     {
         /**
-         * @psalm-suppress InvalidArgument
-         *
          * @phpstan-ignore-next-line
          */
         return new self(\array_merge($this->params, [$key => $value]));

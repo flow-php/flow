@@ -47,9 +47,9 @@ final class Columns
     /**
      * @template ReturnType
      *
-     * @psalm-param callable(string) : ReturnType $callable
+     * @param callable(string) : ReturnType $callable
      *
-     * @psalm-return array<ReturnType>
+     * @return array<ReturnType>
      */
     public function map(callable $callable) : array
     {

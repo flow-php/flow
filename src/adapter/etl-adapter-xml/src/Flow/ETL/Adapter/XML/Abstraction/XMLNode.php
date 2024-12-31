@@ -77,9 +77,6 @@ final class XMLNode
         return \count($this->children) > 0;
     }
 
-    /**
-     * @psalm-assert-if-true !null $this->value
-     */
     public function hasValue() : bool
     {
         return $this->value !== null;

@@ -609,8 +609,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @psalm-suppress NullableReturnStatement
-     *
      * @return mixed[]
      */
     public function reduceToArray(string|Reference $ref) : array

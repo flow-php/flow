@@ -102,7 +102,6 @@ final class AzureBlobDestinationStream implements DestinationStream
 
             $this->blobService->putBlockBlob($this->path->path(), $handle, $this->blocks->block()->size());
 
-            /** @psalm-suppress RedundantCondition */
             if (\is_resource($handle)) {
                 \fclose($handle);
             }

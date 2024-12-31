@@ -58,9 +58,6 @@ final class PlainValuesPacker
 
                         break;
                     case LogicalType::DECIMAL:
-                        /**
-                         * @psalm-suppress PossiblyNullArgument
-                         */
                         $this->writer->writeDecimals($values, $column->typeLength(), $column->precision(), $column->scale());
 
                         break;

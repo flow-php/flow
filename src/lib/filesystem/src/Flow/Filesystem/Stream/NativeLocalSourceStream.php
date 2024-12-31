@@ -66,9 +66,6 @@ final class NativeLocalSourceStream implements SourceStream
         return $content;
     }
 
-    /**
-     * @psalm-assert-if-true resource $this->handle
-     */
     public function isOpen() : bool
     {
         return \is_resource($this->handle);

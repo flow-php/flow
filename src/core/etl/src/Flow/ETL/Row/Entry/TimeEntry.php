@@ -28,8 +28,6 @@ final class TimeEntry implements Entry
     private readonly ?\DateInterval $value;
 
     /**
-     * @psalm-suppress InaccessibleProperty
-     *
      * @throws InvalidArgumentException
      */
     public function __construct(private readonly string $name, \DateInterval|string|null $value)
@@ -93,9 +91,6 @@ final class TimeEntry implements Entry
         return new self($name, 'PT' . $hours . 'H');
     }
 
-    /**
-     * @psalm-suppress InaccessibleProperty
-     */
     public static function fromMicroseconds(string $name, int $microseconds) : self
     {
         $seconds = intdiv($microseconds, 1_000_000);
@@ -107,9 +102,6 @@ final class TimeEntry implements Entry
         return new self($name, $interval);
     }
 
-    /**
-     * @psalm-suppress InaccessibleProperty
-     */
     public static function fromMilliseconds(string $name, int $milliseconds) : self
     {
         $seconds = intdiv($milliseconds, 1000);

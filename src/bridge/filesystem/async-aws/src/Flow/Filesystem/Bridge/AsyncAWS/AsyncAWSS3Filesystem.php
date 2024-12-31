@@ -62,7 +62,6 @@ final class AsyncAWSS3Filesystem implements Filesystem
             ]);
 
             foreach ($result->getContents() as $object) {
-                /** @psalm-suppress PossiblyNullArgument */
                 $objectPath = new Path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim($object->getKey(), DIRECTORY_SEPARATOR), $path->options());
                 $objectFileStatus = new FileStatus($objectPath, (bool) $objectPath->extension());
 

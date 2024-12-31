@@ -33,7 +33,6 @@ final class ConfigOption
             throw new InvalidArgumentException("File '{$path->path()}' does not exist.");
         }
 
-        /** @psalm-suppress UnresolvableInclude */
         $config = require $path->path();
 
         if ($config instanceof Config\ConfigBuilder) {

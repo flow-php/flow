@@ -138,7 +138,6 @@ final class StringTypeChecker
                 \libxml_clear_errors(); // Clear any errors if needed
                 \libxml_use_internal_errors(false); // Restore standard error handling
 
-                /** @psalm-suppress RedundantCastGivenDocblockType */
                 return (bool) $result;
             } catch (\Exception) {
                 \libxml_clear_errors(); // Clear any errors if needed

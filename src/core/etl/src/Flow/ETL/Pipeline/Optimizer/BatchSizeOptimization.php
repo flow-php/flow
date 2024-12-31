@@ -30,8 +30,6 @@ final class BatchSizeOptimization implements Optimization
      * We can't use DbalLoader::class here because that would create a circular dependency between ETL and Adapters.
      * All adapters requires ETL, but ELT does not require a single adapter to be present.
      *
-     * @psalm-suppress PropertyTypeCoercion
-     *
      * @var array<class-string<Loader>>
      */
     private array $supportedLoaders = [

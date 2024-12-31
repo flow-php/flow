@@ -7,9 +7,6 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
 
-/**
- * @psalm-suppress UndefinedClass
- */
 final class ElasticsearchLoader implements Loader
 {
     /** @phpstan-ignore-next-line */
@@ -89,9 +86,6 @@ final class ElasticsearchLoader implements Loader
         }
 
         /**
-         * @psalm-suppress UndefinedClass
-         * @psalm-suppress InvalidArgument
-         *
          * @phpstan-ignore-next-line
          */
         $this->client()->bulk($parameters);
@@ -105,8 +99,6 @@ final class ElasticsearchLoader implements Loader
     }
 
     /**
-     * @psalm-suppress UndefinedClass
-     *
      * @phpstan-ignore-next-line
      */
     private function client() : \Elasticsearch\Client|\Elastic\Elasticsearch\Client

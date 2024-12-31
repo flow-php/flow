@@ -92,9 +92,6 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
             ]);
 
             $blockList = new BlockList();
-            /**
-             * @psalm-suppress PossiblyNullArgument
-             */
             $blockList->add($partCopyResponse->getCopyPartResult()?->getEtag());
 
             return new self(

@@ -61,9 +61,6 @@ final class FlatColumnValues
     }
 
     /**
-     * @psalm-suppress InvalidReturnStatement
-     * @psalm-suppress InvalidReturnType
-     *
      * @return \ArrayIterator<array-key, FlatValue>
      */
     public function iterator() : \ArrayIterator

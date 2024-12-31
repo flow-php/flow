@@ -33,9 +33,6 @@ final class PipelineFactory
             throw new InvalidFileFormatException('php', $this->path->extension() === false ? 'unknown' : $this->path->extension());
         }
 
-        /**
-         * @psalm-suppress UnresolvableInclude
-         */
         $pipeline = include $this->path->path();
 
         if (!$pipeline instanceof DataFrame) {

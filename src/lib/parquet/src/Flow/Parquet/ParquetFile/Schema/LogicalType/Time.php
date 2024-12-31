@@ -6,9 +6,6 @@ namespace Flow\Parquet\ParquetFile\Schema\LogicalType;
 
 use Flow\Parquet\Thrift\TimeType;
 
-/**
- * @psalm-suppress RedundantConditionGivenDocblockType
- */
 final class Time
 {
     public function __construct(

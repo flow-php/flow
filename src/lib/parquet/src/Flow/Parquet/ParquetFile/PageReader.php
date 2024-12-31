@@ -20,9 +20,6 @@ final class PageReader
 
     /**
      * @param resource $stream
-     *
-     * @psalm-suppress PossiblyNullReference
-     * @psalm-suppress PossiblyNullArgument
      */
     public function readData(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : FlatColumnValues
     {

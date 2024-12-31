@@ -13,15 +13,11 @@ use Psr\Http\Message\{RequestInterface, ResponseInterface};
 final class PsrHttpClientDynamicExtractor implements Extractor
 {
     /**
-     * @psalm-var callable(RequestInterface, ResponseInterface) : void|null
-     *
      * @var null|callable(RequestInterface, ResponseInterface) : void
      */
     private $postRequest;
 
     /**
-     * @psalm-var callable(RequestInterface) : void|null
-     *
      * @var null|callable(RequestInterface) : void
      */
     private $preRequest;
@@ -85,7 +81,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     }
 
     /**
-     * @psalm-param callable(RequestInterface, ResponseInterface) : void $postRequest
+     * @param callable(RequestInterface, ResponseInterface) : void $postRequest
      */
     public function withPostRequest(callable $postRequest) : self
     {
@@ -95,7 +91,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     }
 
     /**
-     * @psalm-param callable(RequestInterface) : void $preRequest
+     * @param callable(RequestInterface) : void $preRequest
      */
     public function withPreRequest(callable $preRequest) : self
     {

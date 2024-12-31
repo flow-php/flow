@@ -9,9 +9,6 @@ use Flow\Bridge\Symfony\HttpFoundation\Transformation\{Transformations};
 use Flow\ETL\{Config, Extractor, Transformation};
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/**
- * @psalm-suppress PropertyNotSetInConstructor
- */
 class FlowStreamedResponse extends StreamedResponse
 {
     private Config|Config\ConfigBuilder $config;

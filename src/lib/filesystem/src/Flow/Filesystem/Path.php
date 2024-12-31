@@ -91,7 +91,6 @@ final class Path
                     throw new RuntimeException("Can't resolve homedir for user executing script");
                 }
 
-                /** @psalm-suppress PossiblyUndefinedArrayOffset */
                 $realPath = $userData['dir'] . DIRECTORY_SEPARATOR . \substr($realPath, 1);
             }
         }
@@ -141,8 +140,6 @@ final class Path
         }
 
         /**
-         * @psalm-suppress PossiblyFalseArgument
-         *
          * @phpstan-ignore-next-line
          */
         $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
@@ -173,9 +170,6 @@ final class Path
         return \str_ends_with($this->path, $string);
     }
 
-    /**
-     * @psalm-assert-if-true string $this->extension
-     */
     public function extension() : string|false
     {
         return $this->extension;
@@ -262,7 +256,6 @@ final class Path
 
         foreach ($this->partitions() as $partition) {
             $partitionFolder = $partition->name . '=' . $partition->value;
-            /** @psalm-suppress PossiblyFalseOperand */
             $partitionFolderPos = \mb_strpos($this->uri(), $partitionFolder) + \mb_strlen($partitionFolder);
 
             $partitionPaths[] = new self(\mb_substr($this->uri(), 0, $partitionFolderPos), $this->options);
@@ -284,9 +277,6 @@ final class Path
         return $this->protocol;
     }
 
-    /**
-     * @psalm-suppress PossiblyFalseArgument
-     */
     public function randomize() : self
     {
         $extension = false !== $this->extension ? '.' . $this->extension : '';

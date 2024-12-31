@@ -372,11 +372,7 @@
         "test:monorepo": "tools/monorepo/vendor/bin/monorepo-builder validate",
         "static:analyze": [
             "@static:analyze:cs-fixer",
-            "@static:analyze:psalm",
             "@static:analyze:phpstan"
-        ],
-        "static:analyze:psalm": [
-            "tools/psalm/vendor/bin/psalm.phar --find-unused-psalm-suppress"
         ],
         "static:analyze:phpstan": [
             "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1"
@@ -417,7 +413,6 @@
             "composer install --working-dir=./tools/monorepo",
             "composer install --working-dir=./tools/phpbench",
             "composer install --working-dir=./tools/phpstan",
-            "composer install --working-dir=./tools/psalm",
             "composer install --working-dir=./tools/phpunit"
         ],
         "tools:update": [
@@ -428,7 +423,6 @@
             "composer update --working-dir=./tools/monorepo",
             "composer update --working-dir=./tools/phpbench",
             "composer update --working-dir=./tools/phpstan",
-            "composer update --working-dir=./tools/psalm",
             "composer update --working-dir=./tools/phpunit"
         ]
     }

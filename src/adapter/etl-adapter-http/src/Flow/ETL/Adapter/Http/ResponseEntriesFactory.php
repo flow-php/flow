@@ -18,8 +18,6 @@ final class ResponseEntriesFactory
      * @throws \JsonException
      *
      * @return Row\Entries
-     *
-     * @psalm-suppress InvalidLiteralArgument
      */
     public function create(ResponseInterface $response) : Row\Entries
     {

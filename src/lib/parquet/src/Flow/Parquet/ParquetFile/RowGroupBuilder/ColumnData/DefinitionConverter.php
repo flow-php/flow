@@ -56,9 +56,6 @@ final class DefinitionConverter
                 return $value;
             }
 
-            /**
-             * @psalm-suppress PossiblyInvalidArgument
-             */
             return $this->pushValueToLevel($this->templates[$repetitions->id]['templates'][$definitionLevel], $value);
         }
 

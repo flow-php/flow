@@ -8,9 +8,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\Filesystem\{DestinationStream, Path, Path\Filter, SourceStream, Stream\VoidStream};
 use Flow\Filesystem\{FilesystemTable, Partition};
 
-/**
- * @psalm-suppress MissingTemplateParam
- */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
     public const FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';

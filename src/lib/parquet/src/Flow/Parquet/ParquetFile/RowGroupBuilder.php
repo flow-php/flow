@@ -9,9 +9,6 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, Dis
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkBuilder, DremelShredder, PageSizeCalculator, RowGroupContainer, RowGroupStatistics};
 use Flow\Parquet\{Option, Options};
 
-/**
- * @psalm-suppress PropertyNotSetInConstructor
- */
 final class RowGroupBuilder
 {
     /**

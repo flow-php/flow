@@ -8,9 +8,6 @@ use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
 use Flow\Parquet\{Options};
 
-/**
- * @psalm-suppress RedundantConditionGivenDocblockType
- */
 final class PageHeader
 {
     public function __construct(
@@ -88,8 +85,6 @@ final class PageHeader
         }
 
         /**
-         * @psalm-suppress PossiblyNullReference
-         *
          * @phpstan-ignore-next-line
          */
         return $this->dataPageHeader->encoding();

@@ -15,9 +15,6 @@ final class ToDate extends ScalarFunctionChain
     ) {
     }
 
-    /**
-     * @psalm-suppress PossiblyFalseReference
-     */
     public function eval(Row $row) : mixed
     {
         $value = (new Parameter($this->value))->eval($row);

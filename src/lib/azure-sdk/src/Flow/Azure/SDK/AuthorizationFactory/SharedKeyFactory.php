@@ -42,9 +42,6 @@ final class SharedKeyFactory implements AuthorizationFactory
             if (\str_starts_with($header, 'x-ms-')) {
                 $value = \str_replace("\r\n", ' ', $value);
 
-                /**
-                 * @psalm-suppress PossiblyInvalidArgument
-                 */
                 $value = \ltrim($value);
                 $header = \rtrim($header);
 

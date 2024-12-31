@@ -100,9 +100,6 @@ final class NativeLocalDestinationStream implements DestinationStream
         return $this;
     }
 
-    /**
-     * @psalm-assert-if-true resource $this->handle
-     */
     public function isOpen() : bool
     {
         return \is_resource($this->handle);

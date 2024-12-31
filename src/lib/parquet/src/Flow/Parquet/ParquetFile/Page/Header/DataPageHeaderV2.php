@@ -8,10 +8,6 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\{Encodings, Statistics};
 
-/**
- * @psalm-suppress RedundantConditionGivenDocblockType
- * @psalm-suppress RedundantCastGivenDocblockType
- */
 final class DataPageHeaderV2
 {
     public function __construct(

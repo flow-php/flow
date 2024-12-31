@@ -17,10 +17,6 @@ final class NativePHPSerializer implements Serializer
         return \serialize($serializable);
     }
 
-    /**
-     * @psalm-suppress InvalidReturnStatement
-     * @psalm-suppress InvalidReturnType
-     */
     public function unserialize(string $serialized, array $classes) : object
     {
         $value = \unserialize($serialized, ['allowed_classes' => true]);

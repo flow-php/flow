@@ -30,9 +30,6 @@ final class TimeConverter implements Converter
         return $this->toInt($data);
     }
 
-    /**
-     * @psalm-suppress InaccessibleProperty
-     */
     private function toDateInterval(int $microseconds) : \DateInterval
     {
         $seconds = (int) \floor($microseconds / 1000000);

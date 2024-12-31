@@ -15,8 +15,6 @@ final class PostgreSQLDialect implements Dialect
     }
 
     /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
      * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array{
@@ -74,8 +72,6 @@ final class PostgreSQLDialect implements Dialect
     }
 
     /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
      * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array{

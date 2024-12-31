@@ -10,7 +10,6 @@
 /infection.json export-ignore
 /phpstan.neon export-ignore
 /phpunit.xml.dist export-ignore
-/psalm.xml export-ignore
 /README.md export-ignore
 
 /.gitattributes export-ignore

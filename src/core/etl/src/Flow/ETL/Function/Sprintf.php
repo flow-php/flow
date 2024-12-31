@@ -20,9 +20,6 @@ final class Sprintf extends ScalarFunctionChain
         $this->values = $values;
     }
 
-    /**
-     * @psalm-suppress PossiblyNullArgument
-     */
     public function eval(Row $row) : ?string
     {
         $format = (new Parameter($this->format))->asString($row);

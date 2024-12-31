@@ -21,7 +21,7 @@ interface Entry extends \Stringable
     public function isEqual(self $entry) : bool;
 
     /**
-     * @psalm-param callable(TValue) : TValue $mapper
+     * @param callable(TValue) : TValue $mapper
      */
     public function map(callable $mapper) : self;
 

@@ -41,7 +41,6 @@ final class ColumnData
         }
 
         if ($this->logicalType?->name() !== $columnData->logicalType?->name()) {
-            /** @psalm-suppress PossiblyNullOperand */
             throw new \LogicException('Column data logical type mismatch, expected ' . $this->logicalType?->name() . ', got ' . $columnData->logicalType?->name());
         }
 

@@ -83,9 +83,6 @@ final class StreamLoader implements Closure, Loader
     private function closeStream() : void
     {
         if ($this->stream !== null) {
-            /**
-             * @psalm-suppress InvalidPropertyAssignmentValue
-             */
             \fclose($this->stream);
             $this->stream = null;
         }

@@ -55,10 +55,6 @@ final class AsyncAWSS3SourceStream implements SourceStream
         return $response->getBody()->getContentAsString();
     }
 
-    /**
-     * @psalm-suppress PossiblyFalseArgument
-     * @psalm-suppress PossiblyFalseOperand
-     */
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
         $offset = 0;

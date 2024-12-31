@@ -44,7 +44,6 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
             $block->size(),
         );
 
-        /** @psalm-suppress RedundantCondition */
         if (\is_resource($handle)) {
             \fclose($handle);
         }

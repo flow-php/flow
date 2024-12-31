@@ -6,10 +6,6 @@ namespace Flow\Parquet\ParquetFile\Page\Header;
 
 use Flow\Parquet\ParquetFile\Encodings;
 
-/**
- * @psalm-suppress RedundantConditionGivenDocblockType
- * @psalm-suppress RedundantCastGivenDocblockType
- */
 final class DictionaryPageHeader
 {
     public function __construct(

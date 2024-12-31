@@ -28,9 +28,6 @@ final class StdOutFilesystem implements Filesystem
         throw new RuntimeException('StdOut does not have a system tmp directory');
     }
 
-    /**
-     * @psalm-suppress InvalidReturnType
-     */
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
     {
         yield from [];

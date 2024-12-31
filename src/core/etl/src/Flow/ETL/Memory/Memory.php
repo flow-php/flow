@@ -14,8 +14,6 @@ interface Memory
     public function count() : int;
 
     /**
-     * @psalm-mutation-free
-     *
      * @return array<array<string, mixed>>
      */
     public function dump() : array;

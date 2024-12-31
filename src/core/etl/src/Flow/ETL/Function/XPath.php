@@ -24,10 +24,6 @@ final class XPath extends ScalarFunctionChain
         }
 
         if ($value instanceof \DOMNode && !$value instanceof \DOMDocument) {
-            /**
-             * @psalm-suppress RedundantCondition
-             * @psalm-suppress TypeDoesNotContainType
-             */
             $dom = $value->ownerDocument ?? new \DOMDocument();
             $importedNode = $dom->importNode($value, true);
 

@@ -43,9 +43,6 @@ final class Parameter
     }
 
     /**
-     * @psalm-suppress InvalidReturnType
-     * @psalm-suppress InvalidReturnStatement
-     *
      * @template T of \UnitEnum
      *
      * @param Row $row
@@ -68,9 +65,6 @@ final class Parameter
     }
 
     /**
-     * @psalm-suppress InvalidReturnType
-     * @psalm-suppress InvalidReturnStatement
-     *
      * @template T of object
      *
      * @param Row $row
@@ -109,10 +103,6 @@ final class Parameter
         return $result;
     }
 
-    /**
-     * @psalm-suppress InvalidReturnType
-     * @psalm-suppress InvalidReturnStatement
-     */
     public function asNumber(Row $row) : int|float|null
     {
         $result = $this->function->eval($row);

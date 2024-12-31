@@ -77,8 +77,6 @@ final class XMLElementEntry implements Entry
         @$domDocument->loadXML($element);
 
         /**
-         * @psalm-suppress PropertyTypeCoercion
-         *
          * @phpstan-ignore-next-line
          */
         $this->value = (new \DOMDocument())->importNode($domDocument->documentElement, true);

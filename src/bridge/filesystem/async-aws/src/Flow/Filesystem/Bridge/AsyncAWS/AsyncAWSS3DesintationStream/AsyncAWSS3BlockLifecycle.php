@@ -42,7 +42,6 @@ final class AsyncAWSS3BlockLifecycle implements BlockLifecycle
          */
         $etag = $uploadPartResponse->getETag();
 
-        /** @psalm-suppress RedundantCondition */
         if (\is_resource($handle)) {
             \fclose($handle);
         }

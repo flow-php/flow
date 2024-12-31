@@ -14,8 +14,6 @@ final class SqliteDialect implements Dialect
     }
 
     /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
      * @param array{
      *  skip_conflicts?: boolean,
      *  conflict_columns?: array<string>,
