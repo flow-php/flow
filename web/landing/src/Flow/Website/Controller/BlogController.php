@@ -17,6 +17,8 @@ final class BlogController extends AbstractController
         return $this->render('blog/posts/' . $date . '/' . $slug . '/post.html.twig', [
             'template_folder' => 'blog/posts/' . $date . '/' . $slug,
             'post' => (new Posts())->findByDateAndSlug($date, $slug),
+            'date' => $date,
+            'slug' => $slug,
         ]);
     }
 

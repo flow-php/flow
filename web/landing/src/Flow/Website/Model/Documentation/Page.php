@@ -23,6 +23,11 @@ final class Page
         return $result->getFrontMatter()['seo_description'] ?? 'Documentation';
     }
 
+    public function editOnGitHubUrl() : string
+    {
+        return 'https://github.com/flow-php/flow/edit/1.x/documentation/' . ltrim($this->path, '/');
+    }
+
     public function title() : ?string
     {
         $frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());

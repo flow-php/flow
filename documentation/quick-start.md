@@ -47,7 +47,9 @@ The `data_frame()` function is the entry point to the Flow ETL DSL.
 
 It creates a new instance of the `Flow\ETL\Flow` class, which is the main class of the ETL. 
 
-## Extraction
+[Data Frame Examples](/data_frame/#example)
+
+## Extraction - Reading
 
 The first step in creating a data processing pipeline is to read the data from a data source.
 Extractors are responsible for reading data from a data source and converting it into a format that can be processed by Flow ETL.
@@ -66,6 +68,8 @@ All file-based extractors accept [glob path patterns](https://github.com/webmoza
 data_frame()
     ->read(from_csv(__DIR__ . '/reports/*.csv'))
 ```  
+
+[Extractors Examples](/data_reading/#example)
 
 ## Transformation
 
@@ -95,9 +99,11 @@ You can find all available functions in the [DSL](../src/core/etl/src/Flow/ETL/D
 > [!TIP]
 > DSL is nothing more than a set of functions that return instances of Flow PHP objects. 
 > You can always create objects directly, but DSL is a more convenient way to build a pipeline.
-> All available ETL functions can be found in the [Function](../src/core/etl/src/Flow/ETL/Function) namespace.
+> All available ETL functions can be found in the [Function](/src/core/etl/src/Flow/ETL/Function) namespace.
 
-## Loading
+[Transformations Examples](/transformations/#example)
+
+## Loading - Writing
 
 Loading, also writing to a data source, is the last step in the data processing pipeline.
 There can be more than one writer in the pipeline
@@ -128,6 +134,8 @@ There are three save modes available:
 > Append mode is not really appending anything to existing files, instead it creates a folder in which it stores outputs under randomized file names. 
 > It can be later read using glob-pattern, for example `from_csv('/path/to/folder/*.csv')`.
 
+[Loaders Examples](/data_writing/#example)
+
 ## Lazy Execution
 
 Flow ETL is using lazy execution, which means that the pipeline will not be executed until you call the `run()` function.
@@ -137,5 +145,5 @@ Flow ETL is using lazy execution, which means that the pipeline will not be exec
 ```
 
 There are few more triggering functions, like `fetch()`, you can find which functions are `@lazy` or `@trigger` looking at
-the [DataFrame](../src/core/etl/src/Flow/ETL/DataFrame.php) source code.
+the [DataFrame](/src/core/etl/src/Flow/ETL/DataFrame.php) source code.
       

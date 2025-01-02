@@ -34,6 +34,13 @@
                 </script>
             </section>
 
+            <div class="mb-5 text-right">
+                <a class="btn btn-primary" href="{{ page.editOnGitHubUrl }}" target="_blank">
+                    Edit
+                    <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
+                </a>
+            </div>
+
             {{ page.content|markdown_to_html }}
 
             <hr class="!mt-8 !mb-8"/>

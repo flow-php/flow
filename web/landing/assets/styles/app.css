@@ -24,6 +24,18 @@ html {
     @apply list-disc pl-6;
 }
 
+.btn {
+    @apply font-medium text-white dark:text-white py-2 px-4 rounded;
+}
+
+.btn-primary {
+    @apply bg-blue-200 dark:bg-blue-100 hover:bg-blue-300 dark:hover:bg-blue-200;
+}
+
+.btn img {
+    @apply inline-block;
+}
+
 
 nav a {
     @apply font-medium text-white dark:text-white hover:underline;
