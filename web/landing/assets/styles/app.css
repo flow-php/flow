@@ -25,7 +25,7 @@ html {
 }
 
 .btn {
-    @apply font-medium text-white dark:text-white py-2 px-4 rounded;
+    @apply font-medium text-white dark:text-white py-1 px-2 rounded;
 }
 
 .btn-primary {

@@ -22,6 +22,13 @@
                 <hr class="lg:hidden"/>
                 <h1>Example: {{ currentExample|humanize }}</h1>
                 <h3>Topic: {{ currentTopic|humanize }}</h3>
+                <div class="mb-5 text-left">
+                    <a class="btn btn-primary" href="https://github.com/flow-php/flow/tree/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}" target="_blank">
+                        View
+                        <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
+                    </a>
+                </div>
+
                 <hr class="hidden lg:block"/>
                 {% if description %}
                     <h2 class="text-xl mt-5 mb-5">Description</h2>
