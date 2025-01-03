@@ -40,8 +40,10 @@ use Flow\ETL\Function\{All,
     DenseRank,
     Exists,
     First,
+    Greatest,
     Hash,
     Last,
+    Least,
     ListFunctions,
     Literal,
     Max,
@@ -1163,6 +1165,18 @@ function dense_rank() : DenseRank
 function average(EntryReference|string $ref) : Average
 {
     return new Average(is_string($ref) ? ref($ref) : $ref);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function greatest(mixed ...$values) : Greatest
+{
+    return new Greatest($values);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function least(mixed ...$values) : Least
+{
+    return new Least($values);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
