@@ -16,7 +16,7 @@ class FunctionCollector extends NodeVisitorAbstract
 
     private string $currentNamespace = '';
 
-    public function enterNode(Node $node) : void
+    public function enterNode(Node $node) : int|Node|null
     {
         if ($node instanceof Namespace_) {
             $this->currentNamespace = $node->name ? $node->name->toString() : '';
@@ -28,5 +28,7 @@ class FunctionCollector extends NodeVisitorAbstract
                 $node->name->toString();
             $this->functions[] = $fullyQualifiedName;
         }
+
+        return $node;
     }
 }
