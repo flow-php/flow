@@ -7,6 +7,9 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<array>
+ */
 final class ArrayType implements NativeType
 {
     public function __construct(private readonly bool $empty = false, private readonly bool $nullable = false)

@@ -15,7 +15,7 @@ final class ListCastingHandler implements CastingHandler
         return $type instanceof ListType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : array
     {
         /** @var ListType $type */
         try {

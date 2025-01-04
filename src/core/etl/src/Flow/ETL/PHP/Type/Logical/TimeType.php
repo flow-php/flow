@@ -8,6 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements LogicalType<\DateInterval>
+ */
 final class TimeType implements LogicalType
 {
     public function __construct(private readonly bool $nullable = false)

@@ -16,7 +16,7 @@ final class DateTimeCastingHandler implements CastingHandler
         return $type instanceof DateTimeType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : \DateTimeImmutable
     {
         if ($value instanceof \DateTimeImmutable) {
             return $value;

@@ -10,5 +10,12 @@ interface CastingHandler
 {
     public function supports(Type $type) : bool;
 
+    /**
+     * @template T
+     *
+     * @param Type<T> $type
+     *
+     * @return T
+     */
     public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed;
 }

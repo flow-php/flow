@@ -7,6 +7,9 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<object>
+ */
 final class ObjectType implements NativeType
 {
     /**

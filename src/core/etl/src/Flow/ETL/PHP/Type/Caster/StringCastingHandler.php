@@ -15,7 +15,7 @@ final class StringCastingHandler implements CastingHandler
         return $type instanceof StringType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : string
     {
         if (\is_string($value)) {
             return $value;
@@ -38,11 +38,11 @@ final class StringCastingHandler implements CastingHandler
         }
 
         if ($value instanceof \DOMDocument) {
-            return $value->saveXML() ?: null;
+            return $value->saveXML() ?: '';
         }
 
         if ($value instanceof \DOMElement) {
-            return dom_element_to_string($value);
+            return (string) dom_element_to_string($value);
         }
 
         try {

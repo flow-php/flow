@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
+/**
+ * @template TType
+ */
 interface Type
 {
     public static function fromArray(array $data) : self;

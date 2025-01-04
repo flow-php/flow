@@ -16,7 +16,7 @@ final class ArrayCastingHandler implements CastingHandler
         return $type instanceof ArrayType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : array
     {
         try {
             if (\is_array($value)) {

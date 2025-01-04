@@ -14,7 +14,7 @@ final class NullCastingHandler implements CastingHandler
         return $type instanceof NullType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : null
     {
         return null;
     }

@@ -72,6 +72,15 @@ final class Metadata
         return $this->map[$key];
     }
 
+    /**
+     * @template TType
+     *
+     * @param Type<TType> $type
+     * @param string $key
+     * @param TType $default
+     *
+     * @return TType
+     */
     public function getAs(string $key, Type $type, mixed $default = null) : mixed
     {
         if (!\array_key_exists($key, $this->map)) {

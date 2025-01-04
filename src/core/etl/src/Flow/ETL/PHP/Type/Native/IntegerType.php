@@ -8,6 +8,9 @@ use function Flow\ETL\DSL\type_float;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<integer>
+ */
 final readonly class IntegerType implements NativeType
 {
     public function __construct(private readonly bool $nullable = false)

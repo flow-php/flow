@@ -14,7 +14,7 @@ final class IntegerCastingHandler implements CastingHandler
         return $type instanceof IntegerType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : int
     {
         if (\is_int($value)) {
             return $value;

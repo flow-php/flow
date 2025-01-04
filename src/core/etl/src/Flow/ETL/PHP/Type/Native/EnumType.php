@@ -7,6 +7,9 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<\UnitEnum>
+ */
 final class EnumType implements NativeType
 {
     /**

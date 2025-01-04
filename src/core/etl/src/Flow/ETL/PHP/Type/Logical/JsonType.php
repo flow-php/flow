@@ -9,6 +9,9 @@ use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements LogicalType<string>
+ */
 final class JsonType implements LogicalType
 {
     public function __construct(private readonly bool $nullable)

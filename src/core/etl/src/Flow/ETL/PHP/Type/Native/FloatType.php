@@ -7,6 +7,9 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<float>
+ */
 final readonly class FloatType implements NativeType
 {
     public function __construct(private readonly bool $nullable = false, public readonly int $precision = 6)

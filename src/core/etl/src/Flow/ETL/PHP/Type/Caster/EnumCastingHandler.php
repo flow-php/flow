@@ -15,7 +15,7 @@ final class EnumCastingHandler implements CastingHandler
         return $type instanceof EnumType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : \UnitEnum
     {
         /** @var EnumType $type */
         if ($value instanceof $type->class) {

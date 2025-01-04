@@ -16,7 +16,7 @@ final class XMLCastingHandler implements CastingHandler
         return $type instanceof XMLType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : \DOMDocument
     {
         if ($value instanceof \DOMDocument) {
             return $value;

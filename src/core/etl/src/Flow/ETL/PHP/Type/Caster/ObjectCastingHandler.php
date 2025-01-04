@@ -16,7 +16,7 @@ final class ObjectCastingHandler implements CastingHandler
         return $type instanceof ObjectType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : object
     {
         if (\is_object($value)) {
             return $value;

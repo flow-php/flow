@@ -9,6 +9,9 @@ use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements LogicalType<array>
+ */
 final class ListType implements LogicalType
 {
     public function __construct(private readonly ListElement $element, private readonly bool $nullable = false)

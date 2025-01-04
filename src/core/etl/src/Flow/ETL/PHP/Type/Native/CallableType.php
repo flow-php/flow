@@ -7,6 +7,9 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<callable>
+ */
 final class CallableType implements NativeType
 {
     public function __construct(private readonly bool $nullable)
