@@ -21,7 +21,9 @@ parameters:
         - src/adapter/etl-adapter-text/src
         - src/adapter/etl-adapter-xml/src
         - src/bridge/filesystem/azure/src
+        - src/bridge/filesystem/async-aws/src
         - src/bridge/monolog/http/src
+        - src/bridge/symfony/http-foundation/src
         - src/lib/array-dot/src
         - src/lib/azure-sdk/src
         - src/lib/doctrine-dbal-bulk/src
@@ -32,6 +34,7 @@ parameters:
         - src/lib/rdsl/src
         - src/lib/snappy/src
         - examples/topics
+        - src/tools/documentation/src
 
     excludePaths:
         - src/cli/src/Flow/CLI/Command/*
