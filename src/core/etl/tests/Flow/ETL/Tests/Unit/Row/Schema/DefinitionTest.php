@@ -93,19 +93,19 @@ final class DefinitionTest extends FlowTestCase
     {
         self::assertEquals(
             Definition::integer('id', true),
-            Definition::integer('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+            Definition::integer('id', false)->merge(Definition::string('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
         );
         self::assertEquals(
             Definition::float('id', true),
-            Definition::float('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+            Definition::float('id', false)->merge(Definition::string('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
         );
         self::assertEquals(
             Definition::boolean('id', true),
-            Definition::boolean('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+            Definition::boolean('id', false)->merge(Definition::string('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
         );
         self::assertEquals(
             Definition::dateTime('id', true),
-            Definition::dateTime('id', false)->merge(Definition::string('id', true, Metadata::fromArray(['from_null' => true])))
+            Definition::dateTime('id', false)->merge(Definition::string('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
         );
     }
 

@@ -5,40 +5,45 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Caster;
 
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
-use Flow\ETL\PHP\Type\{Caster, Type};
+use Flow\ETL\PHP\Type\{Caster, Native\FloatType, Type};
 
 final class FloatCastingHandler implements CastingHandler
 {
-    public function supports(Type $type) : bool
+    public function __construct()
     {
-        return $type instanceof ScalarType && $type->isFloat();
     }
 
-    public function value(mixed $value, Type $type, Caster $caster) : mixed
+    public function supports(Type $type) : bool
     {
+        return $type instanceof FloatType;
+    }
+
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
+    {
+        /**
+         * @var FloatType $type
+         */
         if (\is_float($value)) {
-            return $value;
+            return \round($value, $type->precision, $options->get(Options::FLOAT_ROUNDING_MODE)->value);
         }
 
         if ($value instanceof \DOMElement) {
-            return (float) $value->nodeValue;
+            return \round((float) $value->nodeValue, $type->precision, $options->get(Options::FLOAT_ROUNDING_MODE)->value);
         }
 
         if ($value instanceof \DateTimeImmutable) {
-            return (float) $value->format('Uu');
+            return \round((float) $value->format('Uu'), $type->precision, $options->get(Options::FLOAT_ROUNDING_MODE)->value);
         }
 
         if ($value instanceof \DateInterval) {
             $reference = new \DateTimeImmutable();
             $endTime = $reference->add($value);
 
-            return (float) ($endTime->format('Uu')) - (float) ($reference->format('Uu'));
+            return \round((float) ($endTime->format('Uu')) - (float) ($reference->format('Uu')), $type->precision, $options->get(Options::FLOAT_ROUNDING_MODE)->value);
         }
 
         try {
-            return (float) $value;
-            /* @phpstan-ignore-next-line */
+            return \round((float) $value, $type->precision, $options->get(Options::FLOAT_ROUNDING_MODE)->value);
         } catch (\Throwable $e) {
             throw new CastingException($value, $type);
         }

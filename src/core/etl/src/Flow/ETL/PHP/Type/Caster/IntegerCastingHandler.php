@@ -5,17 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Caster;
 
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
-use Flow\ETL\PHP\Type\{Caster, Type};
+use Flow\ETL\PHP\Type\{Caster, Native\IntegerType, Type};
 
 final class IntegerCastingHandler implements CastingHandler
 {
     public function supports(Type $type) : bool
     {
-        return $type instanceof ScalarType && $type->isInteger();
+        return $type instanceof IntegerType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
     {
         if (\is_int($value)) {
             return $value;

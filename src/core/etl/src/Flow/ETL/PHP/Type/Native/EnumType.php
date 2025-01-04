@@ -48,7 +48,7 @@ final class EnumType implements NativeType
             return true;
         }
 
-        if ($type instanceof ScalarType && \is_a($this->class, \BackedEnum::class, true)) {
+        if (($type instanceof StringType || $type instanceof IntegerType) && \is_a($this->class, \BackedEnum::class, true)) {
             return true;
         }
 

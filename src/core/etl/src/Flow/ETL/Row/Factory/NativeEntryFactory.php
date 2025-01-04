@@ -36,7 +36,13 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ObjectType, ScalarType};
+use Flow\ETL\PHP\Type\Native\{ArrayType,
+    BooleanType,
+    EnumType,
+    FloatType,
+    IntegerType,
+    ObjectType,
+    StringType};
 use Flow\ETL\PHP\Type\{Caster, TypeDetector};
 use Flow\ETL\Row\{Entry, EntryFactory, Schema, Schema\Definition};
 use Ramsey\Uuid\UuidInterface;
@@ -72,36 +78,34 @@ final class NativeEntryFactory implements EntryFactory
 
         $valueType = (new TypeDetector())->detectType($value);
 
-        if ($valueType instanceof ScalarType) {
-            if ($valueType->isString()) {
-                $stringChecker = new StringTypeChecker($value);
+        if ($valueType instanceof StringType) {
+            $stringChecker = new StringTypeChecker($value);
 
-                if ($stringChecker->isJson()) {
-                    return json_entry($entryName, $value);
-                }
-
-                if ($stringChecker->isUuid()) {
-                    return uuid_entry($entryName, \Flow\ETL\PHP\Value\Uuid::fromString($value));
-                }
-
-                if ($stringChecker->isXML()) {
-                    return xml_entry($entryName, $value);
-                }
-
-                return str_entry($entryName, $value);
+            if ($stringChecker->isJson()) {
+                return json_entry($entryName, $value);
             }
 
-            if ($valueType->isFloat()) {
-                return float_entry($entryName, $value);
+            if ($stringChecker->isUuid()) {
+                return uuid_entry($entryName, \Flow\ETL\PHP\Value\Uuid::fromString($value));
             }
 
-            if ($valueType->isInteger()) {
-                return int_entry($entryName, $value);
+            if ($stringChecker->isXML()) {
+                return xml_entry($entryName, $value);
             }
 
-            if ($valueType->isBoolean()) {
-                return bool_entry($entryName, $value);
-            }
+            return str_entry($entryName, $value);
+        }
+
+        if ($valueType instanceof FloatType) {
+            return float_entry($entryName, $value, $valueType->precision);
+        }
+
+        if ($valueType instanceof IntegerType) {
+            return int_entry($entryName, $value);
+        }
+
+        if ($valueType instanceof BooleanType) {
+            return bool_entry($entryName, $value);
         }
 
         if ($valueType instanceof JsonType || $valueType instanceof ArrayType) {
@@ -193,13 +197,10 @@ final class NativeEntryFactory implements EntryFactory
 
         if (null === $value && $definition->isNullable()) {
             return match ($type::class) {
-                ScalarType::class => match ($type->type()) {
-                    ScalarType::STRING => str_entry($definition->entry()->name(), null),
-                    ScalarType::INTEGER => int_entry($definition->entry()->name(), null),
-                    ScalarType::FLOAT => float_entry($definition->entry()->name(), null),
-                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), null),
-                    default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
-                },
+                StringType::class => str_entry($definition->entry()->name(), null),
+                IntegerType::class => int_entry($definition->entry()->name(), null),
+                FloatType::class => float_entry($definition->entry()->name(), null, $type->precision),
+                BooleanType::class => bool_entry($definition->entry()->name(), null),
                 MapType::class => map_entry($definition->entry()->name(), null, $type),
                 StructureType::class => struct_entry($definition->entry()->name(), null, $type),
                 ListType::class => new Entry\ListEntry($definition->entry()->name(), null, $type),
@@ -214,14 +215,20 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         try {
-            if ($type instanceof ScalarType) {
-                return match ($type->type()) {
-                    ScalarType::STRING => str_entry($definition->entry()->name(), is_type([type_string()], $value) ? $value : $this->caster->to($type)->value($value)),
-                    ScalarType::INTEGER => int_entry($definition->entry()->name(), is_type([type_int()], $value) ? $value : $this->caster->to($type)->value($value)),
-                    ScalarType::FLOAT => float_entry($definition->entry()->name(), is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value)),
-                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), is_type([type_boolean()], $value) ? $value : $this->caster->to($type)->value($value)),
-                    default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
-                };
+            if ($type instanceof StringType) {
+                return str_entry($definition->entry()->name(), is_type([type_string()], $value) ? $value : $this->caster->to($type)->value($value));
+            }
+
+            if ($type instanceof IntegerType) {
+                return int_entry($definition->entry()->name(), is_type([type_int()], $value) ? $value : $this->caster->to($type)->value($value));
+            }
+
+            if ($type instanceof BooleanType) {
+                return bool_entry($definition->entry()->name(), is_type([type_boolean()], $value) ? $value : $this->caster->to($type)->value($value));
+            }
+
+            if ($type instanceof FloatType) {
+                return float_entry($definition->entry()->name(), is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value), $type->precision);
             }
 
             if ($type instanceof XMLType) {

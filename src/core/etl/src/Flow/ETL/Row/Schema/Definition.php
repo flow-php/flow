@@ -91,9 +91,9 @@ final class Definition
         );
     }
 
-    public static function float(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
+    public static function float(string|Reference $entry, bool $nullable = false, int $precision = 6, ?Metadata $metadata = null) : self
     {
-        return new self($entry, FloatEntry::class, type_float($nullable), $metadata);
+        return new self($entry, FloatEntry::class, type_float($nullable, $precision), $metadata);
     }
 
     public static function fromArray(array $definition) : self
@@ -113,13 +113,10 @@ final class Definition
         return new self(
             $definition['ref'],
             match ($definition['type']['type']) {
-                'scalar' => match ($definition['type']['scalar_type']) {
-                    'boolean' => BooleanEntry::class,
-                    'float' => FloatEntry::class,
-                    'integer' => IntegerEntry::class,
-                    'string' => StringEntry::class,
-                    default => throw new InvalidArgumentException(\sprintf('Unknown scalar type "%s"', \json_encode($definition['type']['scalar_type']))),
-                },
+                'boolean' => BooleanEntry::class,
+                'float' => FloatEntry::class,
+                'integer' => IntegerEntry::class,
+                'string' => StringEntry::class,
                 'datetime' => DateTimeEntry::class,
                 'time' => TimeEntry::class,
                 'date' => DateEntry::class,
@@ -250,21 +247,21 @@ final class Definition
             throw new RuntimeException(\sprintf('Cannot merge different definitions, %s and %s', $this->ref->name(), $definition->ref->name()));
         }
 
-        if ($this->metadata->has('from_null')) {
+        if ($this->metadata->has(Metadata::FROM_NULL)) {
             return new self(
                 $this->ref,
                 $definition->entryClass,
                 $definition->type()->makeNullable($this->isNullable() || $definition->isNullable()),
-                $definition->metadata->remove('from_null')->merge($this->metadata->remove('from_null'))
+                $definition->metadata->remove(Metadata::FROM_NULL)->merge($this->metadata->remove(Metadata::FROM_NULL))
             );
         }
 
-        if ($definition->metadata()->has('from_null')) {
+        if ($definition->metadata()->has(Metadata::FROM_NULL)) {
             return new self(
                 $this->ref,
                 $this->entryClass,
                 $this->type()->makeNullable($this->isNullable() || $definition->isNullable()),
-                $this->metadata->remove('from_null')->merge($definition->metadata->remove('from_null'))
+                $this->metadata->remove(Metadata::FROM_NULL)->merge($definition->metadata->remove(Metadata::FROM_NULL))
             );
         }
 

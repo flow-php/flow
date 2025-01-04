@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use function Flow\ETL\DSL\float_entry;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -20,6 +21,12 @@ final class FloatEntryTest extends FlowTestCase
         yield 'different names characters and different values with high precision' => [false, new FloatEntry('NAME', 1.205502), new FloatEntry('name', 1.205501)];
     }
 
+    public function test_accessing_precission() : void
+    {
+        self::assertSame(6, float_entry('name', 1.0)->precision);
+        self::assertSame(3, float_entry('name', 1.0, 3)->precision);
+    }
+
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame('0', (new FloatEntry('0', 0))->name());
@@ -33,11 +40,11 @@ final class FloatEntryTest extends FlowTestCase
 
     public function test_map() : void
     {
-        $entry = new FloatEntry('entry-name', 1);
+        $float = new FloatEntry('entry-name', 1);
 
         self::assertEquals(
-            $entry,
-            $entry->map(fn (float $float) => $float)
+            $float,
+            $float->map(fn (float $float) => $float)
         );
     }
 
@@ -50,8 +57,8 @@ final class FloatEntryTest extends FlowTestCase
 
     public function test_renames_entry() : void
     {
-        $entry = new FloatEntry('entry-name', 100.00001);
-        $newEntry = $entry->rename('new-entry-name');
+        $float = new FloatEntry('entry-name', 100.00001);
+        $newEntry = $float->rename('new-entry-name');
 
         self::assertEquals('new-entry-name', $newEntry->name());
         self::assertEquals(100.00001, $newEntry->value());
@@ -59,12 +66,12 @@ final class FloatEntryTest extends FlowTestCase
 
     public function test_serialization() : void
     {
-        $string = new FloatEntry('name', 1.0);
+        $float = new FloatEntry('name', 1.0);
 
-        $serialized = \serialize($string);
+        $serialized = \serialize($float);
         /** @var FloatEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        self::assertTrue($string->isEqual($unserialized));
+        self::assertTrue($float->isEqual($unserialized));
     }
 }

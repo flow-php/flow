@@ -82,19 +82,28 @@ use Flow\ETL\Memory\Memory;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\{
-    DateTimeType,
+use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
+    LogicalType,
     MapType,
     StructureType,
     TimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, CallableType, EnumType, NullType, ObjectType, ResourceType, ScalarType};
-use Flow\ETL\PHP\Type\{Type, TypeDetector};
+use Flow\ETL\PHP\Type\Native\{ArrayType,
+    BooleanType,
+    CallableType,
+    EnumType,
+    FloatType,
+    IntegerType,
+    NullType,
+    ObjectType,
+    ResourceType,
+    StringType};
+use Flow\ETL\PHP\Type\{Caster, Caster\Options, Type, TypeDetector};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
@@ -381,9 +390,9 @@ function enum_entry(string $name, ?\UnitEnum $enum) : Entry\EnumEntry
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function float_entry(string $name, ?float $value) : Entry\FloatEntry
+function float_entry(string $name, ?float $value, int $precision = 6) : Entry\FloatEntry
 {
-    return new Entry\FloatEntry($name, $value);
+    return new Entry\FloatEntry($name, $value, $precision);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
@@ -521,7 +530,7 @@ function type_list(Type $element, bool $nullable = false) : ListType
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_map(ScalarType $key_type, Type $value_type, bool $nullable = false) : MapType
+function type_map(IntegerType|StringType|LogicalType $key_type, Type $value_type, bool $nullable = false) : MapType
 {
     return new MapType(new MapKey($key_type), new MapValue($value_type), $nullable);
 }
@@ -575,33 +584,33 @@ function type_uuid(bool $nullable = false) : UuidType
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_int(bool $nullable = false) : ScalarType
+function type_int(bool $nullable = false) : IntegerType
 {
-    return ScalarType::integer($nullable);
+    return new IntegerType($nullable);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_integer(bool $nullable = false) : ScalarType
+function type_integer(bool $nullable = false) : IntegerType
 {
-    return ScalarType::integer($nullable);
+    return new IntegerType($nullable);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_string(bool $nullable = false) : ScalarType
+function type_string(bool $nullable = false) : StringType
 {
-    return ScalarType::string($nullable);
+    return new StringType($nullable);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_float(bool $nullable = false) : ScalarType
+function type_float(bool $nullable = false, int $precision = 6) : FloatType
 {
-    return ScalarType::float($nullable);
+    return new FloatType($nullable, $precision);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_boolean(bool $nullable = false) : ScalarType
+function type_boolean(bool $nullable = false) : BooleanType
 {
-    return ScalarType::boolean($nullable);
+    return new BooleanType($nullable);
 }
 
 /**
@@ -1285,9 +1294,9 @@ function bool_schema(string $name, bool $nullable = false, ?Schema\Metadata $met
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function float_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function float_schema(string $name, bool $nullable = false, int $precision = 6, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::float($name, $nullable, $metadata);
+    return Definition::float($name, $nullable, $precision, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -1627,4 +1636,26 @@ function date_interval_to_microseconds(\DateInterval $interval) : int
     return $interval->invert
         ? -(int) ($absoluteSeconds * 1000000 + $interval->f * 1000000)
         : (int) ($absoluteSeconds * 1000000 + $interval->f * 1000000);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function caster_options() : Options
+{
+    return new Options();
+}
+
+/**
+ * Advanced type casting mechanism.
+ * Usage:
+ *
+ * caster()->to(type_float(precision: 2))->value("1.1234") // 1.12
+ *
+ * Options can be also passed to "to" function to override default options.
+ *
+ * caster()->to(type_float(precision: 2), caster_options())->value("1.1234") // 1.12
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function caster(?Options $options = null) : Caster
+{
+    return Caster::default($options ?? caster_options());
 }

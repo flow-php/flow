@@ -9,7 +9,13 @@ use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ObjectType, ScalarType};
+use Flow\ETL\PHP\Type\Native\{ArrayType,
+    BooleanType,
+    EnumType,
+    FloatType,
+    IntegerType,
+    ObjectType,
+    StringType};
 use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class PHPValueNormalizer
@@ -91,7 +97,10 @@ final class PHPValueNormalizer
         }
 
         return match ($type::class) {
-            ScalarType::class => XMLNode::flatNode($name, $this->caster->to(type_string())->value($value)),
+            StringType::class,
+            IntegerType::class,
+            BooleanType::class,
+            FloatType::class => XMLNode::flatNode($name, $this->caster->to(type_string())->value($value)),
             ArrayType::class => XMLNode::flatNode($name, $this->caster->to(type_json())->value($value)),
             EnumType::class => XMLNode::flatNode($name, $value->name),
             ObjectType::class => XMLNode::flatNode($name, $this->caster->to(type_string())->value($value)),

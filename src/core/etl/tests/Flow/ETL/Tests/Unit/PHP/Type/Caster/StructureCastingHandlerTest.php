@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\{struct_type, structure_element, structure_type, type_integer, type_string};
-use Flow\ETL\PHP\Type\Caster;
+use function Flow\ETL\DSL\{caster,
+    caster_options,
+    struct_type,
+    structure_element,
+    structure_type,
+    type_integer,
+    type_string};
 use Flow\ETL\PHP\Type\Caster\StructureCastingHandler;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -42,7 +47,8 @@ final class StructureCastingHandlerTest extends FlowTestCase
                         ])
                     ),
                 ]),
-                Caster::default()
+                caster(),
+                caster_options()
             )
         );
     }
@@ -75,7 +81,8 @@ final class StructureCastingHandlerTest extends FlowTestCase
                         ])
                     ),
                 ]),
-                Caster::default()
+                caster(),
+                caster_options()
             )
         );
     }
@@ -104,7 +111,8 @@ final class StructureCastingHandlerTest extends FlowTestCase
                         ], true)
                     ),
                 ], true),
-                Caster::default()
+                caster(),
+                caster_options()
             )
         );
     }

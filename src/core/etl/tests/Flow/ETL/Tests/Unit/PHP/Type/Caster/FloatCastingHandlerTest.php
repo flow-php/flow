@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_float;
-use Flow\ETL\PHP\Type\Caster;
-use Flow\ETL\PHP\Type\Caster\FloatCastingHandler;
+use function Flow\ETL\DSL\{caster, caster_options, type_float};
+use Flow\ETL\PHP\Type\Caster\{FloatCastingHandler};
 use Flow\ETL\Tests\FlowTestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
 
 final class FloatCastingHandlerTest extends FlowTestCase
 {
@@ -27,6 +26,14 @@ final class FloatCastingHandlerTest extends FlowTestCase
     #[DataProvider('float_castable_data_provider')]
     public function test_casting_different_data_types_to_float(mixed $value, float $expected) : void
     {
-        self::assertSame($expected, (new FloatCastingHandler())->value($value, type_float(), Caster::default()));
+        self::assertSame($expected, (new FloatCastingHandler())->value($value, type_float(), caster(), caster_options()));
+    }
+
+    #[TestWith([1.2345678, 2, 1.23])]
+    #[TestWith(['1.2345678', 2, 1.23])]
+    #[TestWith([1.234567, 6, 1.234567])]
+    public function test_casting_float_with_precision(mixed $intput, int $precision, float $output) : void
+    {
+        self::assertSame($output, (new FloatCastingHandler())->value($intput, type_float(precision: $precision), caster(), caster_options()));
     }
 }

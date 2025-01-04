@@ -65,7 +65,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             [
                 ['array' => ['a', 'b', 'c', 'd'], 'score_sum' => 40, 'score_avg' => 20.0],
                 ['array' => ['a', 'b', 'c'], 'score_sum' => 55, 'score_avg' => 27.5],
-                ['array' => ['a', 'b'], 'score_sum' => 125, 'score_avg' => 41.666666666666664],
+                ['array' => ['a', 'b'], 'score_sum' => 125, 'score_avg' => 41.666667],
                 ['array' => ['a'], 'score_sum' => 50, 'score_avg' => 50.0],
             ],
             $rows->toArray()
@@ -97,7 +97,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             [
                 ['date' => new \DateTimeImmutable('2024-01-01 10:00:00'), 'score_sum' => 40, 'score_avg' => 20.0],
                 ['date' => new \DateTimeImmutable('2024-01-02 10:00:00'), 'score_sum' => 55, 'score_avg' => 27.5],
-                ['date' => new \DateTimeImmutable('2024-01-03 10:00:00'), 'score_sum' => 125, 'score_avg' => 41.666666666666664],
+                ['date' => new \DateTimeImmutable('2024-01-03 10:00:00'), 'score_sum' => 125, 'score_avg' => 41.666667],
                 ['date' => new \DateTimeImmutable('2024-01-04 10:00:00'), 'score_sum' => 50, 'score_avg' => 50.0],
             ],
             $rows->toArray()
@@ -321,7 +321,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             [
                 ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('b97a23ab-ba84-4d8f-9d9a-abd32cc58110'), 'score_sum' => 40, 'score_avg' => 20.0],
                 ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'), 'score_sum' => 55, 'score_avg' => 27.5],
-                ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'), 'score_sum' => 125, 'score_avg' => 41.666666666666664],
+                ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'), 'score_sum' => 125, 'score_avg' => 41.666667],
                 ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('c7c22b40-45ad-46d1-a47b-0d1dd389ae41'), 'score_sum' => 50, 'score_avg' => 50.0],
             ],
             $rows->toArray()

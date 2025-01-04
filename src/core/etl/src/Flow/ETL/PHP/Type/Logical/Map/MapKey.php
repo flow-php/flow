@@ -7,12 +7,12 @@ namespace Flow\ETL\PHP\Type\Logical\Map;
 use function Flow\ETL\DSL\{type_datetime, type_int, type_string, type_uuid};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\LogicalType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Native\{IntegerType, StringType};
 use Flow\ETL\PHP\Type\TypeFactory;
 
 final class MapKey
 {
-    public function __construct(private readonly ScalarType|LogicalType $value)
+    public function __construct(private readonly IntegerType|StringType|LogicalType $value)
     {
     }
 
@@ -29,14 +29,14 @@ final class MapKey
 
         $keyType = TypeFactory::fromArray($data['type']);
 
-        if (!$keyType instanceof ScalarType && !$keyType instanceof LogicalType) {
+        if (!$keyType instanceof IntegerType && !$keyType instanceof StringType && !$keyType instanceof LogicalType) {
             throw new InvalidArgumentException('Invalid "type" key in ' . self::class . ' fromArray()');
         }
 
         return new self($keyType);
     }
 
-    public static function fromType(ScalarType|LogicalType $type) : self
+    public static function fromType(IntegerType|StringType|LogicalType $type) : self
     {
         return new self($type);
     }
@@ -78,7 +78,7 @@ final class MapKey
         return $this->value->toString();
     }
 
-    public function type() : ScalarType|LogicalType
+    public function type() : StringType|IntegerType|LogicalType
     {
         return $this->value;
     }

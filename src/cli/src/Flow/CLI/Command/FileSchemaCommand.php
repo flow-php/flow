@@ -82,7 +82,7 @@ final class FileSchemaCommand extends Command
                 ->renameAll('type.', '')
                 ->rename('ref', 'name')
                 ->collect()
-                ->select('name', 'type', 'nullable', 'scalar_type', 'metadata')
+                ->select('name', 'type', 'nullable', 'metadata')
                 ->write(to_output())
                 ->run();
 

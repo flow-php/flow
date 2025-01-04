@@ -6,7 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Native\StringType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
@@ -20,7 +20,7 @@ final class StringEntry implements Entry
 
     private bool $fromNull = false;
 
-    private readonly ScalarType $type;
+    private readonly StringType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -68,7 +68,7 @@ final class StringEntry implements Entry
         return Definition::string(
             $this->name,
             $this->type->nullable(),
-            $this->fromNull ? Metadata::fromArray(['from_null' => true]) : null
+            $this->fromNull ? Metadata::fromArray([Metadata::FROM_NULL => true]) : null
         );
     }
 

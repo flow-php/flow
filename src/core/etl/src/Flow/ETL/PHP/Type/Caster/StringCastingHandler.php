@@ -6,17 +6,16 @@ namespace Flow\ETL\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\dom_element_to_string;
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
-use Flow\ETL\PHP\Type\{Caster, Type};
+use Flow\ETL\PHP\Type\{Caster, Native\StringType, Type};
 
 final class StringCastingHandler implements CastingHandler
 {
     public function supports(Type $type) : bool
     {
-        return $type instanceof ScalarType && $type->isString();
+        return $type instanceof StringType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
     {
         if (\is_string($value)) {
             return $value;

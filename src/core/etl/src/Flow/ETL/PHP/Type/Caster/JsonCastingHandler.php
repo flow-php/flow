@@ -16,7 +16,7 @@ final class JsonCastingHandler implements CastingHandler
         return $type instanceof JsonType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster) : string
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : string
     {
         try {
             if (\is_string($value)) {

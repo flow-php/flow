@@ -13,6 +13,7 @@ final class CastingContext
         private readonly CastingHandler $handler,
         private readonly Type $type,
         private readonly Caster $caster,
+        private readonly Options $options,
     ) {
     }
 
@@ -26,6 +27,6 @@ final class CastingContext
             throw new CastingException($value, $this->type);
         }
 
-        return $this->handler->value($value, $this->type, $this->caster);
+        return $this->handler->value($value, $this->type, $this->caster, $this->options);
     }
 }

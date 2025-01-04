@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_boolean;
-use Flow\ETL\PHP\Type\Caster;
+use function Flow\ETL\DSL\{caster, caster_options, type_boolean};
 use Flow\ETL\PHP\Type\Caster\BooleanCastingHandler;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -37,6 +36,6 @@ final class BooleanCastingHandlerTest extends FlowTestCase
     #[DataProvider('boolean_castable_data_provider')]
     public function test_casting_different_data_types_to_integer(mixed $value, bool $expected) : void
     {
-        self::assertSame($expected, (new BooleanCastingHandler())->value($value, type_boolean(), Caster::default()));
+        self::assertSame($expected, (new BooleanCastingHandler())->value($value, type_boolean(), caster(), caster_options()));
     }
 }

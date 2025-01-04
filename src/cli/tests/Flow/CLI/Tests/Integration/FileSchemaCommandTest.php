@@ -20,7 +20,7 @@ final class FileSchemaCommandTest extends TestCase
 
         self::assertSame(
             <<<'OUTPUT'
-[{"ref":"order_id","type":{"type":"uuid","nullable":false},"metadata":[]},{"ref":"created_at","type":{"type":"scalar","scalar_type":"string","nullable":false},"metadata":[]},{"ref":"updated_at","type":{"type":"scalar","scalar_type":"string","nullable":false},"metadata":[]},{"ref":"discount","type":{"type":"scalar","scalar_type":"string","nullable":true},"metadata":[]},{"ref":"address","type":{"type":"json","nullable":false},"metadata":[]},{"ref":"notes","type":{"type":"json","nullable":false},"metadata":[]},{"ref":"items","type":{"type":"json","nullable":false},"metadata":[]}]
+[{"ref":"order_id","type":{"type":"uuid","nullable":false},"metadata":[]},{"ref":"created_at","type":{"type":"string","nullable":false},"metadata":[]},{"ref":"updated_at","type":{"type":"string","nullable":false},"metadata":[]},{"ref":"discount","type":{"type":"string","nullable":true},"metadata":[]},{"ref":"address","type":{"type":"json","nullable":false},"metadata":[]},{"ref":"notes","type":{"type":"json","nullable":false},"metadata":[]},{"ref":"items","type":{"type":"json","nullable":false},"metadata":[]}]
 
 OUTPUT,
             $tester->getDisplay()
@@ -49,8 +49,7 @@ OUTPUT,
     {
         "ref": "created_at",
         "type": {
-            "type": "scalar",
-            "scalar_type": "string",
+            "type": "string",
             "nullable": false
         },
         "metadata": []
@@ -58,8 +57,7 @@ OUTPUT,
     {
         "ref": "updated_at",
         "type": {
-            "type": "scalar",
-            "scalar_type": "string",
+            "type": "string",
             "nullable": false
         },
         "metadata": []
@@ -67,8 +65,7 @@ OUTPUT,
     {
         "ref": "discount",
         "type": {
-            "type": "scalar",
-            "scalar_type": "string",
+            "type": "string",
             "nullable": true
         },
         "metadata": []
@@ -114,17 +111,17 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+------------+--------+----------+-------------+----------+
-|       name |   type | nullable | scalar_type | metadata |
-+------------+--------+----------+-------------+----------+
-|   order_id |   uuid |    false |             |       [] |
-| created_at | scalar |    false |      string |       [] |
-| updated_at | scalar |    false |      string |       [] |
-|   discount | scalar |     true |      string |       [] |
-|    address |   json |    false |             |       [] |
-|      notes |   json |    false |             |       [] |
-|      items |   json |    false |             |       [] |
-+------------+--------+----------+-------------+----------+
++------------+--------+----------+----------+
+|       name |   type | nullable | metadata |
++------------+--------+----------+----------+
+|   order_id |   uuid |    false |       [] |
+| created_at | string |    false |       [] |
+| updated_at | string |    false |       [] |
+|   discount | string |     true |       [] |
+|    address |   json |    false |       [] |
+|      notes |   json |    false |       [] |
+|      items |   json |    false |       [] |
++------------+--------+----------+----------+
 7 rows
 
 OUTPUT,
@@ -142,17 +139,17 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+------------+----------+----------+-------------+----------+
-|       name |     type | nullable | scalar_type | metadata |
-+------------+----------+----------+-------------+----------+
-|   order_id |     uuid |    false |             |       [] |
-| created_at | datetime |    false |             |       [] |
-| updated_at | datetime |    false |             |       [] |
-|   discount |   scalar |     true |       float |       [] |
-|    address |      map |    false |             |       [] |
-|      notes |     list |    false |             |       [] |
-|      items |     list |    false |             |       [] |
-+------------+----------+----------+-------------+----------+
++------------+----------+----------+----------+
+|       name |     type | nullable | metadata |
++------------+----------+----------+----------+
+|   order_id |     uuid |    false |       [] |
+| created_at | datetime |    false |       [] |
+| updated_at | datetime |    false |       [] |
+|   discount |    float |     true |       [] |
+|    address |      map |    false |       [] |
+|      notes |     list |    false |       [] |
+|      items |     list |    false |       [] |
++------------+----------+----------+----------+
 7 rows
 
 OUTPUT,
@@ -170,17 +167,17 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+------------+----------+----------+-------------+----------+
-|       name |     type | nullable | scalar_type | metadata |
-+------------+----------+----------+-------------+----------+
-|   order_id |     uuid |    false |             |       [] |
-| created_at | datetime |    false |             |       [] |
-| updated_at | datetime |    false |             |       [] |
-|   discount |   scalar |     true |       float |       [] |
-|    address |      map |    false |             |       [] |
-|      notes |     list |    false |             |       [] |
-|      items |     list |    false |             |       [] |
-+------------+----------+----------+-------------+----------+
++------------+----------+----------+----------+
+|       name |     type | nullable | metadata |
++------------+----------+----------+----------+
+|   order_id |     uuid |    false |       [] |
+| created_at | datetime |    false |       [] |
+| updated_at | datetime |    false |       [] |
+|   discount |    float |     true |       [] |
+|    address |      map |    false |       [] |
+|      notes |     list |    false |       [] |
+|      items |     list |    false |       [] |
++------------+----------+----------+----------+
 7 rows
 
 OUTPUT,
@@ -198,19 +195,19 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+--------------+-----------+----------+-------------+----------+
-|         name |      type | nullable | scalar_type | metadata |
-+--------------+-----------+----------+-------------+----------+
-|     order_id |      uuid |    false |             |       [] |
-|   created_at |  datetime |    false |             |       [] |
-|   updated_at |  datetime |    false |             |       [] |
-| cancelled_at |    scalar |     true |      string |       [] |
-|  total_price |    scalar |    false |       float |       [] |
-|     discount |    scalar |    false |       float |       [] |
-|     customer | structure |    false |             |       [] |
-|      address | structure |    false |             |       [] |
-|        notes |      list |    false |             |       [] |
-+--------------+-----------+----------+-------------+----------+
++--------------+-----------+----------+----------+
+|         name |      type | nullable | metadata |
++--------------+-----------+----------+----------+
+|     order_id |      uuid |    false |       [] |
+|   created_at |  datetime |    false |       [] |
+|   updated_at |  datetime |    false |       [] |
+| cancelled_at |    string |     true |       [] |
+|  total_price |     float |    false |       [] |
+|     discount |     float |    false |       [] |
+|     customer | structure |    false |       [] |
+|      address | structure |    false |       [] |
+|        notes |      list |    false |       [] |
++--------------+-----------+----------+----------+
 9 rows
 
 OUTPUT,
@@ -228,19 +225,19 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+------------+----------+----------+-------------+----------+
-|       name |     type | nullable | scalar_type | metadata |
-+------------+----------+----------+-------------+----------+
-|   order_id |     uuid |    false |             |       [] |
-| created_at | datetime |    false |             |       [] |
-| updated_at | datetime |    false |             |       [] |
-|   discount |   scalar |     true |       float |       [] |
-|      email |   scalar |    false |      string |       [] |
-|   customer |   scalar |    false |      string |       [] |
-|    address |      map |    false |             |       [] |
-|      notes |     list |    false |             |       [] |
-|      items |     list |    false |             |       [] |
-+------------+----------+----------+-------------+----------+
++------------+----------+----------+----------+
+|       name |     type | nullable | metadata |
++------------+----------+----------+----------+
+|   order_id |     uuid |    false |       [] |
+| created_at | datetime |    false |       [] |
+| updated_at | datetime |    false |       [] |
+|   discount |    float |     true |       [] |
+|      email |   string |    false |       [] |
+|   customer |   string |    false |       [] |
+|    address |      map |    false |       [] |
+|      notes |     list |    false |       [] |
+|      items |     list |    false |       [] |
++------------+----------+----------+----------+
 9 rows
 
 OUTPUT,
@@ -258,11 +255,11 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+------+--------+----------+-------------+----------+
-| name |   type | nullable | scalar_type | metadata |
-+------+--------+----------+-------------+----------+
-| text | scalar |    false |      string |       [] |
-+------+--------+----------+-------------+----------+
++------+--------+----------+----------+
+| name |   type | nullable | metadata |
++------+--------+----------+----------+
+| text | string |    false |       [] |
++------+--------+----------+----------+
 1 rows
 
 OUTPUT,
@@ -280,11 +277,11 @@ OUTPUT,
 
         self::assertSame(
             <<<'OUTPUT'
-+------+------+----------+-------------+----------+
-| name | type | nullable | scalar_type | metadata |
-+------+------+----------+-------------+----------+
-| node |  xml |    false |             |       [] |
-+------+------+----------+-------------+----------+
++------+------+----------+----------+
+| name | type | nullable | metadata |
++------+------+----------+----------+
+| node |  xml |    false |       [] |
++------+------+----------+----------+
 1 rows
 
 OUTPUT,

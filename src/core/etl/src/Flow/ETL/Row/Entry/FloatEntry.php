@@ -6,7 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\type_float;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Native\FloatType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
@@ -18,18 +18,25 @@ final class FloatEntry implements Entry
 {
     use EntryRef;
 
-    private readonly ScalarType $type;
+    private readonly FloatType $type;
+
+    private readonly ?float $value;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly ?float $value, private readonly int $precision = 6)
+    public function __construct(private readonly string $name, ?float $value, public readonly int $precision = 6)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_float($this->value === null);
+        if ($precision < 0 && $this->precision >= 15) {
+            throw InvalidArgumentException::because('Precision must be greater or equal to 0 and less than 15');
+        }
+
+        $this->value = $value ? round($value, $this->precision) : null;
+        $this->type = type_float($this->value === null, $this->precision);
     }
 
     public function __toString() : string
@@ -39,7 +46,7 @@ final class FloatEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::float($this->name, $this->type->nullable());
+        return Definition::float($this->name, $this->type->nullable(), $this->precision);
     }
 
     public function is(string|Reference $name) : bool
@@ -100,13 +107,7 @@ final class FloatEntry implements Entry
             return '';
         }
 
-        $float = (string) $this->value();
-
-        if (!\str_contains($float, '.')) {
-            $float .= '.00';
-        }
-
-        return $float;
+        return \number_format($this->value, $this->precision, '.', '');
     }
 
     public function type() : Type

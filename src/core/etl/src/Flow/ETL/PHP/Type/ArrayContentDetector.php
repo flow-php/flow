@@ -6,7 +6,7 @@ namespace Flow\ETL\PHP\Type;
 
 use function Flow\ETL\DSL\{type_array, type_null, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\{NullType, ScalarType};
+use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
 
 final class ArrayContentDetector
 {
@@ -29,10 +29,10 @@ final class ArrayContentDetector
         $this->isList = $isList;
     }
 
-    public function firstKeyType() : ?ScalarType
+    public function firstKeyType() : IntegerType|StringType|null
     {
-        if (null !== $this->firstKeyType && !$this->firstKeyType instanceof ScalarType) {
-            throw InvalidArgumentException::because('First unique key type must be of ScalarType, given: ' . $this->firstKeyType::class);
+        if (null !== $this->firstKeyType && (!$this->firstKeyType instanceof IntegerType && !$this->firstKeyType instanceof StringType)) {
+            throw InvalidArgumentException::because('First unique key type must be of IntegerType or StringType, given: ' . $this->firstKeyType::class);
         }
 
         return $this->firstKeyType;
@@ -45,7 +45,7 @@ final class ArrayContentDetector
 
     public function isList() : bool
     {
-        return 1 === $this->uniqueValuesTypeCount && $this->firstKeyType()?->isInteger() && $this->isList;
+        return 1 === $this->uniqueValuesTypeCount && $this->firstKeyType() instanceof IntegerType && $this->isList;
     }
 
     public function isMap() : bool
@@ -61,7 +61,7 @@ final class ArrayContentDetector
 
         return 0 !== $this->uniqueValuesTypeCount
             && 1 === $this->uniqueKeysTypeCount
-            && $this->firstKeyType()?->isString();
+            && $this->firstKeyType() instanceof StringType;
     }
 
     public function valueType() : Type

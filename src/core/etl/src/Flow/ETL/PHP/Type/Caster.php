@@ -31,6 +31,7 @@ use Flow\ETL\PHP\Type\Caster\{ArrayCastingHandler,
     MapCastingHandler,
     NullCastingHandler,
     ObjectCastingHandler,
+    Options,
     StringCastingHandler,
     StructureCastingHandler,
     TimeCastingHandler,
@@ -42,11 +43,11 @@ final class Caster
     /**
      * @param array<CastingHandler> $handlers
      */
-    public function __construct(private readonly array $handlers)
+    public function __construct(private readonly array $handlers, private readonly Options $options = new Options())
     {
     }
 
-    public static function default() : self
+    public static function default(Options $options = new Options()) : self
     {
         return new self([
             type_string()->toString() => new StringCastingHandler(),
@@ -66,18 +67,22 @@ final class Caster
             'structure' => new StructureCastingHandler(),
             type_null()->toString() => new NullCastingHandler(),
             'enum' => new EnumCastingHandler(),
-        ]);
+        ], $options);
     }
 
-    public function to(Type $type) : CastingContext
+    /**
+     * @param Type $type
+     * @param null|Options $options - by passing options here you can override Caster global options
+     */
+    public function to(Type $type, ?Options $options = null) : CastingContext
     {
         if (\array_key_exists($type->toString(), $this->handlers)) {
-            return new CastingContext($this->handlers[$type->toString()], $type, $this);
+            return new CastingContext($this->handlers[$type->toString()], $type, $this, $options ?? $this->options);
         }
 
         foreach ($this->handlers as $handler) {
             if ($handler->supports($type)) {
-                return new CastingContext($handler, $type, $this);
+                return new CastingContext($handler, $type, $this, $options ?? $this->options);
             }
         }
 

@@ -15,7 +15,7 @@ final class TimeCastingHandler implements CastingHandler
         return $type instanceof TimeType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
     {
         if ($value instanceof \DateTimeInterface) {
             return $value->diff(new \DateTimeImmutable($value->format('Y-m-d')), true);

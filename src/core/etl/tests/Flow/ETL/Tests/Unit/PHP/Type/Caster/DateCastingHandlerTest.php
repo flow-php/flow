@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\{type_date};
-use Flow\ETL\PHP\Type\Caster;
+use function Flow\ETL\DSL\{caster, caster_options, type_date};
 use Flow\ETL\PHP\Type\Caster\{DateCastingHandler};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -26,6 +25,6 @@ final class DateCastingHandlerTest extends FlowTestCase
     #[DataProvider('date_castable_data_provider')]
     public function test_casting_different_data_types_to_date(mixed $value, \DateTimeImmutable $expected) : void
     {
-        self::assertEquals($expected, (new DateCastingHandler())->value($value, type_date(), Caster::default()));
+        self::assertEquals($expected, (new DateCastingHandler())->value($value, type_date(), caster(), caster_options()));
     }
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_array;
-use Flow\ETL\PHP\Type\Caster;
+use function Flow\ETL\DSL\{caster, caster_options, type_array};
 use Flow\ETL\PHP\Type\Caster\ArrayCastingHandler;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +14,7 @@ final class ArrayCastingHandlerTest extends FlowTestCase
     {
         self::assertEquals(
             [true],
-            (new ArrayCastingHandler())->value(true, type_array(), Caster::default())
+            (new ArrayCastingHandler())->value(true, type_array(), caster(), caster_options())
         );
     }
 
@@ -23,7 +22,7 @@ final class ArrayCastingHandlerTest extends FlowTestCase
     {
         self::assertEquals(
             ['date' => '2021-01-01 00:00:00.000000', 'timezone_type' => 3, 'timezone' => 'UTC'],
-            (new ArrayCastingHandler())->value(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'), type_array(), Caster::default())
+            (new ArrayCastingHandler())->value(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'), type_array(), caster(), caster_options())
         );
     }
 
@@ -31,7 +30,7 @@ final class ArrayCastingHandlerTest extends FlowTestCase
     {
         self::assertEquals(
             [1.1],
-            (new ArrayCastingHandler())->value(1.1, type_array(), Caster::default())
+            (new ArrayCastingHandler())->value(1.1, type_array(), caster(), caster_options())
         );
     }
 
@@ -39,7 +38,7 @@ final class ArrayCastingHandlerTest extends FlowTestCase
     {
         self::assertEquals(
             [1],
-            (new ArrayCastingHandler())->value(1, type_array(), Caster::default())
+            (new ArrayCastingHandler())->value(1, type_array(), caster(), caster_options())
         );
     }
 
@@ -47,7 +46,7 @@ final class ArrayCastingHandlerTest extends FlowTestCase
     {
         self::assertSame(
             ['items' => ['item' => 1]],
-            (new ArrayCastingHandler())->value('{"items":{"item":1}}', type_array(), Caster::default())
+            (new ArrayCastingHandler())->value('{"items":{"item":1}}', type_array(), caster(), caster_options())
         );
     }
 
@@ -58,7 +57,7 @@ final class ArrayCastingHandlerTest extends FlowTestCase
 
         self::assertSame(
             ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
-            (new ArrayCastingHandler())->value($xml, type_array(), Caster::default())
+            (new ArrayCastingHandler())->value($xml, type_array(), caster(), caster_options())
         );
     }
 }

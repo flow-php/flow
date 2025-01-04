@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_integer;
-use Flow\ETL\PHP\Type\Caster;
+use function Flow\ETL\DSL\{caster, caster_options, type_integer};
 use Flow\ETL\PHP\Type\Caster\IntegerCastingHandler;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -27,6 +26,6 @@ final class IntegerCastingHandlerTest extends FlowTestCase
     #[DataProvider('integer_castable_data_provider')]
     public function test_casting_different_data_types_to_integer(mixed $value, int $expected) : void
     {
-        self::assertSame($expected, (new IntegerCastingHandler())->value($value, type_integer(), Caster::default()));
+        self::assertSame($expected, (new IntegerCastingHandler())->value($value, type_integer(), caster(), caster_options()));
     }
 }

@@ -6,7 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\type_boolean;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Native\BooleanType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
@@ -18,7 +18,7 @@ final class BooleanEntry implements Entry
 {
     use EntryRef;
 
-    private readonly ScalarType $type;
+    private readonly BooleanType $type;
 
     /**
      * @throws InvalidArgumentException

@@ -16,7 +16,7 @@ final class UuidCastingHandler implements CastingHandler
         return $type instanceof UuidType;
     }
 
-    public function value(mixed $value, Type $type, Caster $caster) : mixed
+    public function value(mixed $value, Type $type, Caster $caster, Options $options) : mixed
     {
         if ($value instanceof Uuid) {
             return $value;

@@ -24,9 +24,9 @@ final class ASCIIBodyTest extends FlowTestCase
 
         self::assertStringContainsString(
             <<<'TABLE'
-|  1 |   1.4 |
-|  2 |   3.4 |
-+----+-------+
+|  1 | 1.400000 |
+|  2 | 3.400000 |
++----+----------+
 TABLE,
             $headers->print(false)
         );
@@ -46,9 +46,9 @@ TABLE,
 
         self::assertStringContainsString(
             <<<'TABLE'
-|  1 |   1.4 |     a |
-|  2 |   3.4 |     a |
-+----+-------+-------+
+|  1 | 1.400000 |     a |
+|  2 | 3.400000 |     a |
++----+----------+-------+
 Partitions:
  - group=a
 TABLE,

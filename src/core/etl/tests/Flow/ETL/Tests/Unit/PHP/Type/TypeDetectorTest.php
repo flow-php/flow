@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
+use function Flow\ETL\DSL\{type_boolean, type_float, type_int, type_string};
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -14,7 +15,7 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, NullType, ObjectType, ScalarType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, NativeType, NullType, ObjectType, StringType};
 use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -57,7 +58,7 @@ final class TypeDetectorTest extends FlowTestCase
 
         yield 'uuid_string' => [
             'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a',
-            ScalarType::class,
+            StringType::class,
             'string',
         ];
 
@@ -357,21 +358,25 @@ final class TypeDetectorTest extends FlowTestCase
         yield 'bool' => [
             true,
             'boolean',
+            type_boolean(),
         ];
 
         yield 'string' => [
             'test',
             'string',
+            type_string(),
         ];
 
         yield 'float' => [
             1.666,
             'float',
+            type_float(),
         ];
 
         yield 'integer' => [
             123456789,
             'integer',
+            type_int(),
         ];
     }
 
@@ -396,10 +401,10 @@ final class TypeDetectorTest extends FlowTestCase
     }
 
     #[DataProvider('provide_scalar_data')]
-    public function test_scalar_types(mixed $data, string $description) : void
+    public function test_scalar_types(mixed $data, string $description, NativeType $expectedType) : void
     {
         $type = (new TypeDetector())->detectType($data);
-        self::assertInstanceOf(ScalarType::class, $type);
+        self::assertInstanceOf($expectedType::class, $type);
         self::assertSame($description, $type->toString());
     }
 }

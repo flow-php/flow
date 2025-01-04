@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\{type_float, type_int, type_integer, type_map, type_string};
+use function Flow\ETL\DSL\{caster, caster_options, type_float, type_int, type_integer, type_map, type_string};
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\MapCastingHandler;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -20,7 +19,7 @@ final class MapCastingHandlerTest extends FlowTestCase
                 'b' => 2.0,
                 'c' => 3.0,
             ],
-            (new MapCastingHandler())->value(['a' => 1, 'b' => 2, 'c' => 3], type_map(type_string(), type_float()), Caster::default())
+            (new MapCastingHandler())->value(['a' => 1, 'b' => 2, 'c' => 3], type_map(type_string(), type_float()), caster(), caster_options())
         );
     }
 
@@ -35,7 +34,7 @@ final class MapCastingHandlerTest extends FlowTestCase
                 'b' => 2.0,
                 'c' => 3.0,
             ],
-            (new MapCastingHandler())->value(['a' => 1, 'b' => 2, 'c' => 3], type_map(type_int(), type_float()), Caster::default())
+            (new MapCastingHandler())->value(['a' => 1, 'b' => 2, 'c' => 3], type_map(type_int(), type_float()), caster(), caster_options())
         );
     }
 
@@ -45,7 +44,7 @@ final class MapCastingHandlerTest extends FlowTestCase
             [
                 '0' => 2,
             ],
-            (new MapCastingHandler())->value('2', type_map(type_string(), type_integer()), Caster::default())
+            (new MapCastingHandler())->value('2', type_map(type_string(), type_integer()), caster(), caster_options())
         );
     }
 }

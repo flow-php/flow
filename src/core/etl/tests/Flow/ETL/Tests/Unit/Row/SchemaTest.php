@@ -82,7 +82,7 @@ final class SchemaTest extends FlowTestCase
         $this->expectException(\JsonException::class);
         $this->expectExceptionMessage('Syntax error');
 
-        schema_from_json('{"ref": "id", "type": {"type": "scalar", "scalar_type": "integer", "nullable": false}, "metadata": []');
+        schema_from_json('{"ref": "id", "type": {"type": "integer", "nullable": false}, "metadata": []');
     }
 
     public function test_creating_schema_from_invalid_json_format() : void
@@ -90,7 +90,7 @@ final class SchemaTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Schema definition must be an array');
 
-        schema_from_json('{"ref": "id", "type": {"type": "scalar", "scalar_type": "integer", "nullable": false}, "metadata": []}');
+        schema_from_json('{"ref": "id", "type": {"type": "integer", "nullable": false}, "metadata": []}');
     }
 
     public function test_creating_schema_from_invalid_json_format_at_definition_level() : void
@@ -311,8 +311,7 @@ final class SchemaTest extends FlowTestCase
     {
         "ref": "id",
         "type": {
-            "type": "scalar",
-            "scalar_type": "integer",
+            "type": "integer",
             "nullable": false
         },
         "metadata": []
@@ -320,8 +319,7 @@ final class SchemaTest extends FlowTestCase
     {
         "ref": "str",
         "type": {
-            "type": "scalar",
-            "scalar_type": "string",
+            "type": "string",
             "nullable": true
         },
         "metadata": []
@@ -348,15 +346,13 @@ final class SchemaTest extends FlowTestCase
             "type": "map",
             "key": {
                 "type": {
-                    "type": "scalar",
-                    "scalar_type": "string",
+                    "type": "string",
                     "nullable": false
                 }
             },
             "value": {
                 "type": {
-                    "type": "scalar",
-                    "scalar_type": "integer",
+                    "type": "integer",
                     "nullable": false
                 }
             },
@@ -370,8 +366,7 @@ final class SchemaTest extends FlowTestCase
             "type": "list",
             "element": {
                 "type": {
-                    "type": "scalar",
-                    "scalar_type": "integer",
+                    "type": "integer",
                     "nullable": false
                 }
             },
@@ -387,16 +382,14 @@ final class SchemaTest extends FlowTestCase
                 {
                     "name": "street",
                     "type": {
-                        "type": "scalar",
-                        "scalar_type": "string",
+                        "type": "string",
                         "nullable": false
                     }
                 },
                 {
                     "name": "city",
                     "type": {
-                        "type": "scalar",
-                        "scalar_type": "string",
+                        "type": "string",
                         "nullable": false
                     }
                 }

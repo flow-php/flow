@@ -6,9 +6,12 @@ namespace Flow\ETL\Row\Schema;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class Metadata
 {
+    public const FROM_NULL = 'from_null';
+
     /**
      * @var array<string, array<bool|float|int|string>|bool|float|int|string>
      */
@@ -67,6 +70,15 @@ final class Metadata
         }
 
         return $this->map[$key];
+    }
+
+    public function getAs(string $key, Type $type, mixed $default = null) : mixed
+    {
+        if (!\array_key_exists($key, $this->map)) {
+            return $default;
+        }
+
+        return Caster::default()->to($type)->value($this->map[$key]);
     }
 
     public function has(string $key) : bool

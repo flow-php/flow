@@ -168,8 +168,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                 [
                     'ref' => 'id',
                     'type' => [
-                        'type' => 'scalar',
-                        'scalar_type' => 'integer',
+                        'type' => 'integer',
                         'nullable' => false,
                     ],
                     'metadata' => [],
@@ -177,8 +176,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                 [
                     'ref' => 'name',
                     'type' => [
-                        'type' => 'scalar',
-                        'scalar_type' => 'string',
+                        'type' => 'string',
                         'nullable' => false,
                     ],
                     'metadata' => [],
@@ -189,15 +187,13 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                         'type' => 'map',
                         'key' => [
                             'type' => [
-                                'type' => 'scalar',
-                                'scalar_type' => 'string',
+                                'type' => 'string',
                                 'nullable' => false,
                             ],
                         ],
                         'value' => [
                             'type' => [
-                                'type' => 'scalar',
-                                'scalar_type' => 'integer',
+                                'type' => 'integer',
                                 'nullable' => false,
                             ],
                         ],

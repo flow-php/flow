@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_time;
-use Flow\ETL\PHP\Type\Caster;
+use function Flow\ETL\DSL\{caster, caster_options, type_time};
 use Flow\ETL\PHP\Type\Caster\TimeCastingHandler;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -23,6 +22,6 @@ final class TimeCastingHandlerTest extends FlowTestCase
     #[DataProvider('time_castable_data_provider')]
     public function test_casting_different_time_types_to_time(mixed $value, \DateInterval $expextedInterval) : void
     {
-        self::assertEquals($expextedInterval, (new TimeCastingHandler())->value($value, type_time(), Caster::default()));
+        self::assertEquals($expextedInterval, (new TimeCastingHandler())->value($value, type_time(), caster(), caster_options()));
     }
 }
