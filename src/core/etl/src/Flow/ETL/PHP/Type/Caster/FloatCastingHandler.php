@@ -9,10 +9,9 @@ use Flow\ETL\PHP\Type\{Caster, Native\FloatType, Type};
 
 final class FloatCastingHandler implements CastingHandler
 {
-    public function __construct()
-    {
-    }
-
+    /**
+     * @param Type<float> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof FloatType;

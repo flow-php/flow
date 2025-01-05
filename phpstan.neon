@@ -4,7 +4,6 @@ parameters:
     ignoreErrors:
         - identifier: argument.type
         - identifier: missingType.iterableValue
-        - identifier: missingType.generics
     paths:
         - src/core/etl/src
         - src/cli/src

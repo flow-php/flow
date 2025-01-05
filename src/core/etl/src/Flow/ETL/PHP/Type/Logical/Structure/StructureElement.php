@@ -9,6 +9,12 @@ use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 final class StructureElement
 {
+    /**
+     * @param string $name
+     * @param Type<mixed> $type
+     *
+     * @throws InvalidArgumentException
+     */
     public function __construct(private readonly string $name, private readonly Type $type)
     {
         if ('' === $name) {
@@ -71,6 +77,9 @@ final class StructureElement
         return $this->name . ': ' . $this->type->toString();
     }
 
+    /**
+     * @return Type<mixed>
+     */
     public function type() : Type
     {
         return $this->type;

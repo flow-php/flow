@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?\DateTimeInterface>
+ * @implements Entry<?\DateTimeInterface, \DateTimeInterface>
  */
 final class DateTimeEntry implements Entry
 {

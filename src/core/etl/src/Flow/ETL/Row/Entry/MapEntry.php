@@ -12,9 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @template T
- *
- * @implements Entry<?array<T>>
+ * @implements Entry<?array, array>
  */
 final class MapEntry implements Entry
 {
@@ -23,7 +21,7 @@ final class MapEntry implements Entry
     private MapType $type;
 
     /**
-     * @param ?array<T> $value
+     * @param ?array $value
      *
      * @throws InvalidArgumentException
      */

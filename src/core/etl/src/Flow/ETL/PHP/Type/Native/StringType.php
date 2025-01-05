@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<string>
+ * @implements Type<string>
  */
-final readonly class StringType implements NativeType
+final readonly class StringType implements Type
 {
     public function __construct(private readonly bool $nullable = false)
     {

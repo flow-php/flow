@@ -11,6 +11,9 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class ObjectCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<object> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof ObjectType;

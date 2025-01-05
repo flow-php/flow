@@ -10,9 +10,9 @@ use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\PHP\Value\Uuid;
 
 /**
- * @implements LogicalType<\Ramsey\Uuid\UuidInterface|\Symfony\Component\Uid\Uuid|Uuid>
+ * @implements Type<Uuid>
  */
-final class UuidType implements LogicalType
+final class UuidType implements Type
 {
     public function __construct(private readonly bool $nullable = false)
     {

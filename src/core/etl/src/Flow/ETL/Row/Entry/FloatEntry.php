@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?float>
+ * @implements Entry<?float, float>
  */
 final class FloatEntry implements Entry
 {

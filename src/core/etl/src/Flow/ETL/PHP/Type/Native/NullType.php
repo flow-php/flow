@@ -7,9 +7,9 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<null>
+ * @implements Type<null>
  */
-final class NullType implements NativeType
+final class NullType implements Type
 {
     public static function fromArray(array $data) : self
     {

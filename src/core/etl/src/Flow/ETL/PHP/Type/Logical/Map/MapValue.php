@@ -18,6 +18,9 @@ use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 final class MapValue
 {
+    /**
+     * @param Type<mixed> $value
+     */
     public function __construct(private readonly Type $value)
     {
     }
@@ -46,6 +49,9 @@ final class MapValue
         return new self(TypeFactory::fromArray($value['type']));
     }
 
+    /**
+     * @param Type<mixed> $type
+     */
     public static function fromType(Type $type) : self
     {
         return new self($type);
@@ -116,6 +122,9 @@ final class MapValue
         return $this->value->toString();
     }
 
+    /**
+     * @return Type<mixed>
+     */
     public function type() : Type
     {
         return $this->value;

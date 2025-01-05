@@ -12,6 +12,10 @@ final class TypeComparator implements Comparator
     {
     }
 
+    /**
+     * @param Entry<mixed, mixed> $left
+     * @param Entry<mixed, mixed> $right
+     */
     public function compare(Entry $left, Entry $right) : int
     {
         $leftTypePriority = $this->priorities->for($left);

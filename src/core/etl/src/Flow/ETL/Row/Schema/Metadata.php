@@ -79,7 +79,7 @@ final class Metadata
      * @param string $key
      * @param TType $default
      *
-     * @return TType
+     * @return ?TType
      */
     public function getAs(string $key, Type $type, mixed $default = null) : mixed
     {

@@ -18,7 +18,7 @@ final class AttributesModel
         );
     }
 
-    public static function fromReflection(\ReflectionClass|\ReflectionFunction|\ReflectionEnum $reflection) : self
+    public static function fromReflection(\ReflectionFunction $reflection) : self
     {
         return new self(
             array_map(

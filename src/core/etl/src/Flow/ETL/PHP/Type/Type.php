@@ -9,16 +9,33 @@ namespace Flow\ETL\PHP\Type;
  */
 interface Type
 {
+    /**
+     * @return Type<TType>
+     */
     public static function fromArray(array $data) : self;
 
+    /**
+     * @param Type<TType> $type
+     */
     public function isComparableWith(self $type) : bool;
 
+    /**
+     * @param Type<TType> $type
+     */
     public function isEqual(self $type) : bool;
 
     public function isValid(mixed $value) : bool;
 
+    /**
+     * @return Type<TType>
+     */
     public function makeNullable(bool $nullable) : self;
 
+    /**
+     * @param Type<mixed> $type
+     *
+     * @return Type<mixed>
+     */
     public function merge(self $type) : self;
 
     public function normalize() : array;

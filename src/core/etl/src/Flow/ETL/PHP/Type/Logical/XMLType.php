@@ -9,9 +9,9 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements LogicalType<\DOMDocument>
+ * @implements Type<\DOMDocument>
  */
-final class XMLType implements LogicalType
+final class XMLType implements Type
 {
     public function __construct(private readonly bool $nullable)
     {

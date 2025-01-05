@@ -13,6 +13,8 @@ interface EntryFactory
      * @throws InvalidArgumentException
      * @throws RuntimeException
      * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Entry<mixed, mixed>
      */
     public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null) : Entry;
 }

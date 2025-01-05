@@ -10,12 +10,12 @@ use Flow\ETL\Row;
 final class IsType extends ScalarFunctionChain
 {
     /**
-     * @var array<string|Type>
+     * @var array<string|Type<mixed>>
      */
     private array $types;
 
     /**
-     * @param string|Type ...$types
+     * @param string|Type<mixed> ...$types
      */
     public function __construct(
         private readonly mixed $value,

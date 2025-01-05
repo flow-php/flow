@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?int>
+ * @implements Entry<?int, int>
  */
 final class IntegerEntry implements Entry
 {

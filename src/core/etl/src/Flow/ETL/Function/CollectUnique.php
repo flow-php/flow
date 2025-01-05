@@ -40,6 +40,9 @@ final class CollectUnique implements AggregatingFunction
         }
     }
 
+    /**
+     * @return Entry<mixed, mixed>
+     */
     public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {

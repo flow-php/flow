@@ -43,7 +43,8 @@ final class Definition
     private readonly Reference $ref;
 
     /**
-     * @param class-string<Entry> $entryClass
+     * @param class-string<Entry<mixed, mixed>> $entryClass
+     * @param Type<mixed> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -228,6 +229,9 @@ final class Definition
         return new self($this->ref, $this->entryClass, $this->type->makeNullable($nullable), $this->metadata);
     }
 
+    /**
+     * @param Entry<mixed, mixed> $entry
+     */
     public function matches(Entry $entry) : bool
     {
         if ($this->isNullable() && $entry->is($this->ref)) {
@@ -381,6 +385,9 @@ final class Definition
         );
     }
 
+    /**
+     * @return Type<mixed>
+     */
     public function type() : Type
     {
         return $this->type;

@@ -8,6 +8,9 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 interface CastingHandler
 {
+    /**
+     * @param Type<mixed> $type
+     */
     public function supports(Type $type) : bool;
 
     /**

@@ -8,14 +8,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<object>
+ * @implements Type<object>
  */
-final class ObjectType implements NativeType
+final class ObjectType implements Type
 {
     /**
      * @param class-string $class
      */
-    public function __construct(public readonly string $class, private readonly bool $nullable)
+    public function __construct(public readonly string $class, private readonly bool $nullable = false)
     {
         if (!\class_exists($class) && !\interface_exists($class)) {
             throw new InvalidArgumentException("Class {$class} not found");

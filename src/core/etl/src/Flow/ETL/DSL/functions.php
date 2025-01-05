@@ -86,7 +86,6 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
-    LogicalType,
     MapType,
     StructureType,
     TimeType,
@@ -460,6 +459,9 @@ function xml_element_entry(string $name, \DOMElement|string|null $value) : Entry
     return new Entry\XMLElementEntry($name, $value);
 }
 
+/**
+ * @param Entry<mixed, mixed> ...$entries
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function entries(Entry ...$entries) : Row\Entries
 {
@@ -505,12 +507,18 @@ function type_structure(array $elements, bool $nullable = false) : StructureType
     return new StructureType($elements, $nullable);
 }
 
+/**
+ * @param Type<mixed> $type
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
 function struct_element(string $name, Type $type) : StructureElement
 {
     return new StructureElement($name, $type);
 }
 
+/**
+ * @param Type<mixed> $type
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
 function structure_element(string $name, Type $type) : StructureElement
 {
@@ -523,14 +531,20 @@ function list_entry(string $name, ?array $value, ListType $type) : Entry\ListEnt
     return new Entry\ListEntry($name, $value, $type);
 }
 
+/**
+ * @param Type<mixed> $element
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
 function type_list(Type $element, bool $nullable = false) : ListType
 {
     return new ListType(new ListElement($element), $nullable);
 }
 
+/**
+ * @param Type<mixed> $value_type
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_map(IntegerType|StringType|LogicalType $key_type, Type $value_type, bool $nullable = false) : MapType
+function type_map(IntegerType|StringType $key_type, Type $value_type, bool $nullable = false) : MapType
 {
     return new MapType(new MapKey($key_type), new MapValue($value_type), $nullable);
 }
@@ -655,6 +669,9 @@ function type_enum(string $class, bool $nullable = false) : EnumType
     return new EnumType($class, $nullable);
 }
 
+/**
+ * @param Entry<mixed, mixed> ...$entry
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function row(Entry ...$entry) : Row
 {
@@ -860,6 +877,9 @@ function hash(mixed $value, Algorithm $algorithm = new NativePHPHash()) : Hash
     return new Hash($value, $algorithm);
 }
 
+/**
+ * @param ScalarFunction|string|Type<mixed> $type
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function cast(mixed $value, ScalarFunction|string|Type $type) : Cast
 {
@@ -1069,6 +1089,8 @@ function number_format(ScalarFunction|int|float $value, ScalarFunction|int $deci
 
 /**
  * @param array<mixed> $data
+ *
+ * @return Entry<mixed, mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function to_entry(string $name, mixed $data, EntryFactory $entryFactory = new NativeEntryFactory()) : Entry
@@ -1428,6 +1450,9 @@ function append() : SaveMode
     return SaveMode::Append;
 }
 
+/**
+ * @return Type<mixed>
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function get_type(mixed $value) : Type
 {
@@ -1491,7 +1516,7 @@ function compare_entries_by_name_desc() : Transformer\OrderEntries\Comparator
 }
 
 /**
- * @param array<class-string<Entry>, int> $priorities
+ * @param array<class-string<Entry<mixed, mixed>>, int> $priorities
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function compare_entries_by_type(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES, Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
@@ -1500,7 +1525,7 @@ function compare_entries_by_type(array $priorities = Transformer\OrderEntries\Ty
 }
 
 /**
- * @param array<class-string<Entry>, int> $priorities
+ * @param array<class-string<Entry<mixed, mixed>>, int> $priorities
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function compare_entries_by_type_desc(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES) : Transformer\OrderEntries\Comparator
@@ -1509,7 +1534,7 @@ function compare_entries_by_type_desc(array $priorities = Transformer\OrderEntri
 }
 
 /**
- * @param array<class-string<Entry>, int> $priorities
+ * @param array<class-string<Entry<mixed, mixed>>, int> $priorities
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function compare_entries_by_type_and_name(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES, Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
@@ -1521,7 +1546,7 @@ function compare_entries_by_type_and_name(array $priorities = Transformer\OrderE
 }
 
 /**
- * @param array<string|Type> $types
+ * @param array<string|Type<mixed>> $types
  * @param mixed $value
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]

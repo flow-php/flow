@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<\UnitEnum>
+ * @implements Type<\UnitEnum>
  */
-final class EnumType implements NativeType
+final class EnumType implements Type
 {
     /**
      * @param class-string<\UnitEnum> $class

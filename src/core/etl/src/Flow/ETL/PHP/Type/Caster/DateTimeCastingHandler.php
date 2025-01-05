@@ -11,11 +11,17 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class DateTimeCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<\DateTimeImmutable> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof DateTimeType;
     }
 
+    /**
+     * @param Type<\DateTimeImmutable> $type
+     */
     public function value(mixed $value, Type $type, Caster $caster, Options $options) : \DateTimeImmutable
     {
         if ($value instanceof \DateTimeImmutable) {

@@ -13,7 +13,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?Uuid>
+ * @implements Entry<?Uuid, Uuid>
  */
 final class UuidEntry implements Entry
 {

@@ -13,6 +13,9 @@ final class EntryNormalizer
     ) {
     }
 
+    /**
+     * @param Entry<mixed, mixed> $entry
+     */
     public function normalize(Entry $entry) : string|float|int|bool|array|null
     {
         return match ($entry::class) {

@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<array>
+ * @implements Type<array>
  */
-final class ArrayType implements NativeType
+final class ArrayType implements Type
 {
     public function __construct(private readonly bool $empty = false, private readonly bool $nullable = false)
     {

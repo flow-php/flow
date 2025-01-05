@@ -10,7 +10,7 @@ use Flow\ETL\Row\Entry\{IntegerEntry, UuidEntry};
 final class TypePriorities
 {
     /**
-     * @var array<class-string<Entry>,int>
+     * @var array<class-string<Entry<mixed, mixed>>,int>
      */
     public const PRIORITIES = [
         UuidEntry::class => 1,
@@ -29,13 +29,16 @@ final class TypePriorities
     ];
 
     /**
-     * @param array<class-string<Entry>,int> $priorities
+     * @param array<class-string<Entry<mixed, mixed>>,int> $priorities
      */
     public function __construct(private readonly array $priorities = self::PRIORITIES)
     {
 
     }
 
+    /**
+     * @param Entry<mixed, mixed> $entry
+     */
     public function for(Entry $entry) : int
     {
         if (!\array_key_exists($entry::class, $this->priorities)) {

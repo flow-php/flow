@@ -20,6 +20,9 @@ use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 final class ListElement
 {
+    /**
+     * @param Type<mixed> $type
+     */
     public function __construct(private readonly Type $type)
     {
     }
@@ -48,6 +51,9 @@ final class ListElement
         return new self(TypeFactory::fromArray($data['type']));
     }
 
+    /**
+     * @param Type<mixed> $type
+     */
     public static function fromType(Type $type) : self
     {
         return new self($type);
@@ -132,6 +138,9 @@ final class ListElement
         return $this->type->toString();
     }
 
+    /**
+     * @return Type<mixed>
+     */
     public function type() : Type
     {
         return $this->type;

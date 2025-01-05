@@ -42,6 +42,9 @@ final class Min implements AggregatingFunction
         }
     }
 
+    /**
+     * @return Entry<?\DateTimeInterface, \DateTimeInterface>|Entry<?float, float>|Entry<?int, int>
+     */
     public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {

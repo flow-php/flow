@@ -17,6 +17,10 @@ final class Parameter
         $this->function = $function instanceof ScalarFunction ? $function : lit($function);
     }
 
+    /**
+     * @param Type<mixed> $type
+     * @param Type<mixed> ...$types
+     */
     public function as(Row $row, Type $type, Type ...$types) : mixed
     {
         $value = $this->function->eval($row);

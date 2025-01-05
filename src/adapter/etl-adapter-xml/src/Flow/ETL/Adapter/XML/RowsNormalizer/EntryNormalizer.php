@@ -20,6 +20,9 @@ final class EntryNormalizer
 
     }
 
+    /**
+     * @param Entry<mixed, mixed> $entry
+     */
     public function normalize(Entry $entry) : XMLNode|XMLAttribute
     {
         if (\str_starts_with($entry->name(), $this->valueNormalizer->attributePrefix)) {

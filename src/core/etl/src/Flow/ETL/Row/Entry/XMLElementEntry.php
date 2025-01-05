@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?\DOMElement>
+ * @implements Entry<?\DOMElement, \DOMElement>
  */
 final class XMLElementEntry implements Entry
 {

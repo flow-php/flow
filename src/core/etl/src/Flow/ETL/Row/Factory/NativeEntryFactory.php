@@ -61,6 +61,8 @@ final class NativeEntryFactory implements EntryFactory
      * @throws InvalidArgumentException
      * @throws RuntimeException
      * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Entry<mixed, mixed>
      */
     public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null) : Entry
     {
@@ -191,6 +193,9 @@ final class NativeEntryFactory implements EntryFactory
         throw new InvalidArgumentException("{$valueType->toString()} can't be converted to any known Entry");
     }
 
+    /**
+     * @return Entry<mixed, mixed>
+     */
     private function fromDefinition(Definition $definition, mixed $value) : Entry
     {
         $type = $definition->type();

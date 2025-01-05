@@ -9,6 +9,9 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class NullCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<null> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof NullType;

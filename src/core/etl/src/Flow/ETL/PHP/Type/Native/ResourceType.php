@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<resource>
+ * @implements Type<resource>
  */
-final class ResourceType implements NativeType
+final class ResourceType implements Type
 {
     public function __construct(private readonly bool $nullable)
     {

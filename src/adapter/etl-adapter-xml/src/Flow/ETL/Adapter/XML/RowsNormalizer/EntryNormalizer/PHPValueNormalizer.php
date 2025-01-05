@@ -32,6 +32,11 @@ final class PHPValueNormalizer
 
     }
 
+    /**
+     * @param Type<mixed> $type
+     *
+     * @throws InvalidArgumentException
+     */
     public function normalize(string $name, Type $type, mixed $value) : XMLNode|XMLAttribute
     {
         if (\str_starts_with($name, $this->attributePrefix)) {

@@ -10,9 +10,9 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements LogicalType<array>
+ * @implements Type<array>
  */
-final class MapType implements LogicalType
+final class MapType implements Type
 {
     public function __construct(private readonly MapKey $key, private readonly MapValue $value, private readonly bool $nullable = false)
     {

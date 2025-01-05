@@ -10,8 +10,14 @@ use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
 
 final class ArrayContentDetector
 {
+    /**
+     * @var null|Type<mixed>
+     */
     private readonly ?Type $firstKeyType;
 
+    /**
+     * @var null|Type<mixed>
+     */
     private readonly ?Type $firstValueType;
 
     private bool $isList;
@@ -38,6 +44,9 @@ final class ArrayContentDetector
         return $this->firstKeyType;
     }
 
+    /**
+     * @return null|Type<mixed>
+     */
     public function firstValueType() : ?Type
     {
         return $this->firstValueType;
@@ -64,6 +73,9 @@ final class ArrayContentDetector
             && $this->firstKeyType() instanceof StringType;
     }
 
+    /**
+     * @return Type<mixed>
+     */
     public function valueType() : Type
     {
         $type = null;

@@ -71,8 +71,12 @@ final class Caster
     }
 
     /**
-     * @param Type $type
+     * @template T
+     *
+     * @param Type<T> $type
      * @param null|Options $options - by passing options here you can override Caster global options
+     *
+     * @return CastingContext<T>
      */
     public function to(Type $type, ?Options $options = null) : CastingContext
     {

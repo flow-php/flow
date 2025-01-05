@@ -11,6 +11,9 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class XMLCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<\DOMDocument> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof XMLType;

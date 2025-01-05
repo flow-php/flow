@@ -57,9 +57,9 @@ final class HashJoinPipeline implements Pipeline
             $rightSchema = $rightSchema->merge($rightRow->schema());
         }
 
-        /** @var array<Entry> $leftEntries */
+        /** @var array<Entry<mixed, mixed>> $leftEntries */
         $leftEntries = [];
-        /** @var array<Entry> $rightEntries */
+        /** @var array<Entry<mixed, mixed>> $rightEntries */
         $rightEntries = [];
 
         if ($this->join === Join::left) {

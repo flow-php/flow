@@ -35,6 +35,9 @@ final class Collect implements AggregatingFunction
         }
     }
 
+    /**
+     * @return Entry<mixed, mixed>
+     */
     public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {

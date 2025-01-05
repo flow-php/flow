@@ -11,5 +11,8 @@ interface AggregatingFunction
 {
     public function aggregate(Row $row) : void;
 
+    /**
+     * @return Entry<mixed, mixed>
+     */
     public function result() : Entry;
 }

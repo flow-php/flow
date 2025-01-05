@@ -10,14 +10,19 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class EnumCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<\UnitEnum> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof EnumType;
     }
 
+    /**
+     * @param EnumType $type
+     */
     public function value(mixed $value, Type $type, Caster $caster, Options $options) : \UnitEnum
     {
-        /** @var EnumType $type */
         if ($value instanceof $type->class) {
             return $value;
         }

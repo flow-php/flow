@@ -12,6 +12,10 @@ final class NameComparator implements Comparator
     {
     }
 
+    /**
+     * @param Entry<mixed, mixed> $left
+     * @param Entry<mixed, mixed> $right
+     */
     public function compare(Entry $left, Entry $right) : int
     {
         if ($this->order === Order::ASC) {

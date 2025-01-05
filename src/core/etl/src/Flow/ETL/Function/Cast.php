@@ -11,6 +11,10 @@ use Flow\ETL\Row;
 
 final class Cast extends ScalarFunctionChain
 {
+    /**
+     * @param mixed $value
+     * @param ScalarFunction|string|Type<mixed> $type
+     */
     public function __construct(
         private readonly mixed $value,
         private readonly ScalarFunction|Type|string $type,

@@ -10,6 +10,9 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class ListCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<array> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof ListType;

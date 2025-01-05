@@ -71,6 +71,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Capitalize($this);
     }
 
+    /**
+     * @param ScalarFunction|string|Type<mixed> $type
+     */
     public function cast(ScalarFunction|string|Type $type) : self
     {
         return new Cast($this, $type);
@@ -229,6 +232,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Same($this, lit(true));
     }
 
+    /**
+     * @param string|Type<mixed> $types
+     */
     public function isType(string|Type ...$types) : self
     {
         if ([] === $types) {

@@ -8,6 +8,9 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\Filesystem\{DestinationStream, Path, Path\Filter, SourceStream, Stream\VoidStream};
 use Flow\Filesystem\{FilesystemTable, Partition};
 
+/**
+ * @implements \IteratorAggregate<array-key, DestinationStream>
+ */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
     public const FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';

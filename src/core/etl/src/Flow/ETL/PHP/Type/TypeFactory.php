@@ -28,6 +28,9 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
 
 final class TypeFactory
 {
+    /**
+     * @return Type<mixed>
+     */
     public static function fromArray(array $data) : Type
     {
         if (!\array_key_exists('type', $data)) {
@@ -61,6 +64,8 @@ final class TypeFactory
 
     /**
      * @throws InvalidArgumentException
+     *
+     * @return Type<mixed>
      */
     public static function fromString(string $name) : Type
     {

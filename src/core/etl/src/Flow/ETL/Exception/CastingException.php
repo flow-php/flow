@@ -8,6 +8,11 @@ use Flow\ETL\PHP\Type\Type;
 
 final class CastingException extends RuntimeException
 {
+    /**
+     * @param mixed $value
+     * @param Type<mixed> $type
+     * @param null|\Throwable $previous
+     */
     public function __construct(public readonly mixed $value, public readonly Type $type, ?\Throwable $previous = null)
     {
         parent::__construct(

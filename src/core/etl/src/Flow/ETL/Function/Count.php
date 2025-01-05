@@ -53,6 +53,9 @@ final class Count implements AggregatingFunction, WindowFunction
         return $this;
     }
 
+    /**
+     * @return Entry<?int, int>
+     */
     public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {

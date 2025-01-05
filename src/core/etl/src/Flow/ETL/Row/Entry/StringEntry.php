@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
- * @implements Entry<?string>
+ * @implements Entry<?string, string>
  */
 final class StringEntry implements Entry
 {

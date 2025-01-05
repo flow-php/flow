@@ -9,11 +9,17 @@ use Flow\ETL\PHP\Type\{Caster, Native\BooleanType, Type};
 
 final class BooleanCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<bool> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof BooleanType;
     }
 
+    /**
+     * @param Type<bool> $type
+     */
     public function value(mixed $value, Type $type, Caster $caster, Options $options) : bool
     {
         if (\is_bool($value)) {

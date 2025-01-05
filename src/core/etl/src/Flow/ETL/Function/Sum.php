@@ -58,6 +58,9 @@ final class Sum implements AggregatingFunction, WindowFunction
         return $this;
     }
 
+    /**
+     * @return Entry<?float, float>|Entry<?int,int>
+     */
     public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {

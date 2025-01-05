@@ -11,6 +11,9 @@ use Flow\ETL\PHP\Value\Uuid;
 
 final class UuidCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<Uuid> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof UuidType;

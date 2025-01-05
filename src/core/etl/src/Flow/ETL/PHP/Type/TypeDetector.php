@@ -27,6 +27,9 @@ use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType};
 
 final class TypeDetector
 {
+    /**
+     * @return Type<mixed>
+     */
     public function detectType(mixed $value) : Type
     {
         if (null === $value) {

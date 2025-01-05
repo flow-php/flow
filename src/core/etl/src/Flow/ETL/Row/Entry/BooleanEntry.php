@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?bool>
+ * @implements Entry<?bool, bool>
  */
 final class BooleanEntry implements Entry
 {

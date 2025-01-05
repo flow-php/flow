@@ -13,7 +13,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?array<mixed>>
+ * @implements Entry<?array<mixed>, array<mixed>>
  */
 final class JsonEntry implements Entry
 {

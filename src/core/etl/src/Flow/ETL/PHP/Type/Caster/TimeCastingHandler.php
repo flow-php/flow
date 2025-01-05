@@ -10,6 +10,9 @@ use Flow\ETL\PHP\Type\{Caster, Logical\TimeType, Type};
 
 final class TimeCastingHandler implements CastingHandler
 {
+    /**
+     * @param Type<\DateInterval> $type
+     */
     public function supports(Type $type) : bool
     {
         return $type instanceof TimeType;

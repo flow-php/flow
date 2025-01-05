@@ -22,6 +22,9 @@ final class AttributeModel
         );
     }
 
+    /**
+     * @param \ReflectionAttribute<AttributeModel> $reflectionAttribute
+     */
     public static function fromReflection(\ReflectionAttribute $reflectionAttribute) : self
     {
         $attributeReflectionClass = new \ReflectionClass($reflectionAttribute->getName());

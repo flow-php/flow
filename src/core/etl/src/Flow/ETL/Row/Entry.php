@@ -9,6 +9,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @template TValue
+ * @template TType
  */
 interface Entry extends \Stringable
 {
@@ -18,10 +19,15 @@ interface Entry extends \Stringable
 
     public function is(string|Reference $name) : bool;
 
+    /**
+     * @param Entry<TValue, TType> $entry
+     */
     public function isEqual(self $entry) : bool;
 
     /**
      * @param callable(TValue) : TValue $mapper
+     *
+     * @return Entry<TValue, TType>
      */
     public function map(callable $mapper) : self;
 
@@ -29,10 +35,16 @@ interface Entry extends \Stringable
 
     public function ref() : Reference;
 
+    /**
+     * @return Entry<TValue, TType>
+     */
     public function rename(string $name) : self;
 
     public function toString() : string;
 
+    /**
+     * @return Type<TType>
+     */
     public function type() : Type;
 
     /**
@@ -42,6 +54,8 @@ interface Entry extends \Stringable
 
     /**
      * @param TValue $value
+     *
+     * @return Entry<TValue, TType>
      */
     public function withValue(mixed $value) : self;
 }

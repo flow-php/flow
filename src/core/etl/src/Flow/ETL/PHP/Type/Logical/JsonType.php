@@ -10,9 +10,9 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements LogicalType<string>
+ * @implements Type<array>
  */
-final class JsonType implements LogicalType
+final class JsonType implements Type
 {
     public function __construct(private readonly bool $nullable)
     {

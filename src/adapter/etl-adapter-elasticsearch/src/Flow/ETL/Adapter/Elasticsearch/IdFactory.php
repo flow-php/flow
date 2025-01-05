@@ -9,5 +9,8 @@ use Flow\ETL\Row\Entry;
 
 interface IdFactory
 {
+    /**
+     * @return Entry<mixed, mixed>
+     */
     public function create(Row $row) : Entry;
 }

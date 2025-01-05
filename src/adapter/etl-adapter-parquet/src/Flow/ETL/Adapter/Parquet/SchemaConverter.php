@@ -138,8 +138,6 @@ final class SchemaConverter
             case BooleanType::class:
                 return ParquetSchema\MapKey::boolean();
         }
-
-        throw new RuntimeException($mapKeyType::class . ' is not supported.');
     }
 
     private function flowMapValueToParquetMapValue(MapValue $mapValue) : ParquetSchema\MapValue
@@ -221,6 +219,9 @@ final class SchemaConverter
         return $elements;
     }
 
+    /**
+     * @param Type<mixed> $type
+     */
     private function flowTypeToParquetType(string $name, Type $type) : Column
     {
         switch ($type::class) {
