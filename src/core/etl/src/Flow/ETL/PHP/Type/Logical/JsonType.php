@@ -10,7 +10,7 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<array>
+ * @implements Type<string>
  */
 final class JsonType implements Type
 {
