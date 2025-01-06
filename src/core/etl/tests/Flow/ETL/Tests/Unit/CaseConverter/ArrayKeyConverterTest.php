@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\CaseConverter;
 
+use function Symfony\Component\String\u;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\StyleConverter\ArrayKeyConverter;
-use Jawira\CaseConverter\Convert;
 
 final class ArrayKeyConverterTest extends FlowTestCase
 {
     public function test_converts_all_keys_to_snake_case() : void
     {
         $transformer = new ArrayKeyConverter(
-            fn (string $key) : string => (new Convert($key))->toSnake()
+            fn (string $key) : string => u($key)->snake()->toString()
         );
 
         self::assertEquals(

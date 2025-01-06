@@ -11,7 +11,7 @@ use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, Ru
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, WindowFunction};
+use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, StyleConverter\StringStyles, WindowFunction};
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
@@ -26,7 +26,6 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     SortingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema, Schema\Definition};
-use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\{
     AutoCastTransformer,
     CallbackRowTransformer,
@@ -688,7 +687,7 @@ final class DataFrame
     /**
      * @lazy
      * Rename all entries to given style.
-     * Please look into \Flow\ETL\Transformer\StyleConverter\StringStyles class for all available styles.
+     * Please look into \Flow\ETL\Function\StyleConverter\StringStyles class for all available styles.
      */
     public function renameAllStyle(StringStyles|string $style) : self
     {

@@ -6,8 +6,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 
 use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Transformer\EntryNameStyleConverterTransformer;
-use Flow\ETL\Transformer\StyleConverter\StringStyles;
-use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Config, FlowContext, Function\StyleConverter\StringStyles, Row, Rows, Tests\FlowTestCase};
 
 final class EntryNameStyleConverterTransformerTest extends FlowTestCase
 {

@@ -4,33 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\StyleConverter;
 
+use function Symfony\Component\String\u;
 use Flow\ETL\Exception\InvalidArgumentException;
 
 enum StringStyles : string
 {
-    case ADA = 'ada';
-
     case CAMEL = 'camel';
-
-    case COBOL = 'cobol';
-
-    case DOT = 'dot';
 
     case KEBAB = 'kebab';
 
     case LOWER = 'lower';
 
-    case MACRO = 'macro';
-
-    case PASCAL = 'pascal';
-
-    case SENTENCE = 'sentence';
-
     case SNAKE = 'snake';
 
     case TITLE = 'title';
-
-    case TRAIN = 'train';
 
     case UPPER = 'upper';
 
@@ -60,5 +47,17 @@ enum StringStyles : string
         }
 
         throw new InvalidArgumentException("Unrecognized style {$style}, please use one of following: " . \implode(', ', self::all()));
+    }
+
+    public function convert(string $value) : string
+    {
+        return match ($this) {
+            self::CAMEL => u($value)->camel()->toString(),
+            self::KEBAB => u($value)->kebab()->toString(),
+            self::LOWER => u($value)->lower()->toString(),
+            self::SNAKE => u($value)->snake()->toString(),
+            self::TITLE => u($value)->title()->toString(),
+            self::UPPER => u($value)->upper()->toString(),
+        };
     }
 }
