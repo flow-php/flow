@@ -12,7 +12,6 @@ use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Entry;
 
 abstract class ScalarFunctionChain implements ScalarFunction
 {
@@ -54,6 +53,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function arraySort(ScalarFunction|Sort|null $sortFunction = null, ScalarFunction|int|null $flags = null, ScalarFunction|bool $recursive = true) : self
     {
         return new ArraySort($this, $sortFunction ?? Sort::sort, $flags, $recursive);
+    }
+
+    public function ascii() : self
+    {
+        return new Ascii($this);
     }
 
     /**
@@ -167,7 +171,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *   | 1|       3|
      *   +--+--------+
      */
-    public function expand(string $expandEntryName = 'element', ArrayExpand $expand = ArrayExpand::VALUES) : self
+    public function expand(ArrayExpand $expand = ArrayExpand::VALUES) : self
     {
         return new Function\ArrayExpand($this, $expand);
     }
@@ -368,6 +372,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function size() : self
     {
         return new Size($this);
+    }
+
+    public function slug(ScalarFunction|string $separator = '-', ScalarFunction|string|null $locale = null, ScalarFunction|array|null $symbolsMap = null) : self
+    {
+        return new Slug($this, $separator, $locale, $symbolsMap);
     }
 
     public function split(ScalarFunction|string $separator, ScalarFunction|int $limit = PHP_INT_MAX) : self
