@@ -21,13 +21,13 @@ final class ArrayKeysStyleConvertTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('array', array_keys_style_convert(ref('array'), 'kebab'))
+            ->withEntry('array', array_keys_style_convert(ref('array'), 'camel'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         self::assertSame(
             [
-                ['id' => 1, 'array' => ['camel-cased' => 1, 'snake-cased' => 2, 'space-word' => 3]],
+                ['id' => 1, 'array' => ['camelCased' => 1, 'snakeCased' => 2, 'spaceWord' => 3]],
             ],
             $memory->dump()
         );
