@@ -8,6 +8,7 @@ use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
@@ -87,6 +88,19 @@ return RectorConfig::configure()
             // Logical Types
             new StaticCallToFuncCall(MapKey::class, 'integer', 'Flow\ETL\DSL\type_integer'),
             new StaticCallToFuncCall(MapKey::class, 'string', 'Flow\ETL\DSL\type_string'),
+            new StaticCallToFuncCall(MapValue::class, 'boolean', 'Flow\ETL\DSL\type_boolean'),
+            new StaticCallToFuncCall(MapValue::class, 'datetime', 'Flow\ETL\DSL\type_datetime'),
+            new StaticCallToFuncCall(MapValue::class, 'float', 'Flow\ETL\DSL\type_float'),
+            new StaticCallToFuncCall(MapValue::class, 'integer', 'Flow\ETL\DSL\type_integer'),
+            new StaticCallToFuncCall(MapValue::class, 'json', 'Flow\ETL\DSL\type_json'),
+            new StaticCallToFuncCall(MapValue::class, 'list', 'Flow\ETL\DSL\type_list'),
+            new StaticCallToFuncCall(MapValue::class, 'map', 'Flow\ETL\DSL\type_map'),
+            new StaticCallToFuncCall(MapValue::class, 'object', 'Flow\ETL\DSL\type_object'),
+            new StaticCallToFuncCall(MapValue::class, 'string', 'Flow\ETL\DSL\type_string'),
+            new StaticCallToFuncCall(MapValue::class, 'structure', 'Flow\ETL\DSL\type_structure'),
+            new StaticCallToFuncCall(MapValue::class, 'uuid', 'Flow\ETL\DSL\type_uuid'),
+            new StaticCallToFuncCall(MapValue::class, 'xml', 'Flow\ETL\DSL\type_xml'),
+            new StaticCallToFuncCall(MapValue::class, 'xmlElement', 'Flow\ETL\DSL\type_xml_element'),
 
             new StaticCallToFuncCall(ListElement::class, 'boolean', 'Flow\ETL\DSL\type_boolean'),
             new StaticCallToFuncCall(ListElement::class, 'datetime', 'Flow\ETL\DSL\type_datetime'),
@@ -100,7 +114,7 @@ return RectorConfig::configure()
             new StaticCallToFuncCall(ListElement::class, 'structure', 'Flow\ETL\DSL\type_structure'),
             new StaticCallToFuncCall(ListElement::class, 'uuid', 'Flow\ETL\DSL\type_uuid'),
             new StaticCallToFuncCall(ListElement::class, 'xml', 'Flow\ETL\DSL\type_xml'),
-            new StaticCallToFuncCall(ListElement::class, 'xml_element', 'Flow\ETL\DSL\type_xml_element'),
+            new StaticCallToFuncCall(ListElement::class, 'xmlElement', 'Flow\ETL\DSL\type_xml_element'),
         ]
     )
     ->withConfiguredRule(
@@ -153,6 +167,17 @@ return RectorConfig::configure()
             new NewObjectToFunction(XMLElementType::class, 'Flow\ETL\DSL\type_xml_element'),
             new NewObjectToFunction(XMLType::class, 'Flow\ETL\DSL\type_xml'),
             new NewObjectToFunction(StructureElement::class, 'Flow\ETL\DSL\structure_element'),
+
+            // Extractors
+            new NewObjectToFunction(Flow\ETL\Extractor\CacheExtractor::class, 'from_cache'),
+            new NewObjectToFunction(Flow\ETL\Extractor\RowsExtractor::class, 'from_rows'),
+            new NewObjectToFunction(Flow\ETL\Extractor\ArrayExtractor::class, 'from_array'),
+            new NewObjectToFunction(Flow\ETL\Extractor\ChainExtractor::class, 'from_all'),
+            new NewObjectToFunction(Flow\ETL\Extractor\MemoryExtractor::class, 'from_memory'),
+            new NewObjectToFunction(Flow\ETL\Extractor\ChunkExtractor::class, 'chunks_from'),
+            new NewObjectToFunction(Flow\ETL\Extractor\PipelineExtractor::class, 'from_pipeline'),
+            new NewObjectToFunction(Flow\ETL\Extractor\DataFrameExtractor::class, 'from_data_frame'),
+
         ]
     )
     ->withSkip([
