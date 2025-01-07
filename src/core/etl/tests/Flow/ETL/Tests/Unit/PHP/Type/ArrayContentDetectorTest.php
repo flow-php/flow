@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use function Flow\ETL\DSL\{structure_element, type_integer, type_list, type_map, type_structure};
 use function Flow\ETL\DSL\{type_int, type_null, type_string};
+use function Flow\ETL\DSL\{type_integer, type_list, type_map, type_structure};
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\{ArrayContentDetector, Types};
 use Flow\ETL\Tests\FlowTestCase;
@@ -56,8 +56,8 @@ final class ArrayContentDetectorTest extends FlowTestCase
             ],
             [
                 type_structure([
-                    structure_element('id', type_int()),
-                    structure_element('name', type_string()),
+                    'id' => type_int(),
+                    'name' => type_string(),
                 ]),
             ],
             true,
@@ -121,8 +121,8 @@ final class ArrayContentDetectorTest extends FlowTestCase
             ],
             [
                 type_structure([
-                    structure_element('id', type_int()),
-                    structure_element('name', type_string()),
+                    'id' => type_int(),
+                    'name' => type_string(),
                 ]),
             ],
             true,
@@ -197,8 +197,8 @@ final class ArrayContentDetectorTest extends FlowTestCase
             ],
             [
                 type_structure([
-                    structure_element('id', type_int()),
-                    structure_element('name', type_string()),
+                    'id' => type_int(),
+                    'name' => type_string(),
                 ]),
             ],
             false,

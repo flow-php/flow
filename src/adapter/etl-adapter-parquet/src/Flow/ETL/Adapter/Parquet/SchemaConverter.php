@@ -14,14 +14,12 @@ use function Flow\ETL\DSL\{bool_schema,
     map_schema,
     str_schema,
     struct_schema,
-    struct_type,
-    structure_element,
     time_schema,
     type_list,
     type_map,
+    type_structure,
     uuid_schema};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -216,8 +214,8 @@ final class SchemaConverter
     {
         $elements = [];
 
-        foreach ($structureType->elements() as $element) {
-            $elements[] = $this->flowTypeToParquetType($element->name(), $element->type());
+        foreach ($structureType->elements() as $elementName => $elementType) {
+            $elements[] = $this->flowTypeToParquetType($elementName, $elementType);
         }
 
         return $elements;
@@ -343,16 +341,12 @@ final class SchemaConverter
             );
         }
 
-        /** @var array<StructureElement> $elements */
         $elements = [];
 
         foreach ($column->children() as $structColumn) {
-            $elements[] = structure_element(
-                $structColumn->name(),
-                $this->fromParquetColumnToFlowDefinition($structColumn)->type()
-            );
+            $elements[$structColumn->name()] = $this->fromParquetColumnToFlowDefinition($structColumn)->type();
         }
 
-        return struct_schema($column->name(), struct_type($elements, $nullable));
+        return struct_schema($column->name(), type_structure($elements, $nullable));
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Formatter;
 
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 
@@ -47,8 +47,8 @@ final class ASCIISchemaFormatter implements SchemaFormatter
 
             $fields = [];
 
-            foreach ($structureType->elements() as $structEntry) {
-                $fields += $this->formatStructureElement($structEntry, $fields, 1);
+            foreach ($structureType->elements() as $name => $type) {
+                $fields += $this->formatStructureElement($name, $type, $fields, 1);
             }
 
             $buffer = \array_merge($buffer, $fields);
@@ -59,9 +59,11 @@ final class ASCIISchemaFormatter implements SchemaFormatter
         return $buffer;
     }
 
-    private function formatStructureElement(StructureElement $element, array $buffer, int $level) : array
+    /**
+     * @param Type<mixed> $structureType
+     */
+    private function formatStructureElement(string $name, Type $structureType, array $buffer, int $level) : array
     {
-        $structureType = $element->type();
 
         $indention = \str_repeat('    ', $level);
 
@@ -70,17 +72,17 @@ final class ASCIISchemaFormatter implements SchemaFormatter
         }
 
         if ($structureType instanceof StructureType) {
-            $buffer[] = $indention . '|-- ' . $element->name() . ': structure';
+            $buffer[] = $indention . '|-- ' . $name . ': structure';
 
             $fields = [];
 
-            foreach ($structureType->elements() as $structEntry) {
-                $fields += $this->formatStructureElement($structEntry, $fields, $level + 1);
+            foreach ($structureType->elements() as $nextName => $nextType) {
+                $fields += $this->formatStructureElement($nextName, $nextType, $fields, $level + 1);
             }
 
             $buffer = \array_merge($buffer, $fields);
         } else {
-            $buffer[] = $indention . '|-- ' . $element->name() . ': ' . $structureType->toString();
+            $buffer[] = $indention . '|-- ' . $name . ': ' . $structureType->toString();
         }
 
         return $buffer;

@@ -13,7 +13,6 @@ use function Flow\ETL\DSL\{bool_schema,
     list_schema,
     map_schema,
     str_schema,
-    struct_element,
     struct_schema,
     time_schema,
     type_boolean,
@@ -123,9 +122,9 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
                     'struct',
                     type_structure(
                         [
-                            struct_element('uuid', type_uuid(true)),
-                            struct_element('name', type_string(true)),
-                            struct_element('active', type_boolean(true)),
+                            'uuid' => type_uuid(true),
+                            'name' => type_string(true),
+                            'active' => type_boolean(true),
                         ],
                         true
                     ),

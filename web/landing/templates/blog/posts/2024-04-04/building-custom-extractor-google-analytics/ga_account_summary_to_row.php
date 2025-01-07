@@ -6,7 +6,7 @@ use Flow\ETL\Row;
 use Google\Analytics\Admin\V1beta\AccountSummary;
 use Google\Analytics\Admin\V1beta\AnalyticsAdminServiceClient;
 use Google\Analytics\Admin\V1beta\PropertySummary;
-use function Flow\ETL\DSL\{list_entry, row, str_entry, structure_element, type_integer, type_list, type_string, type_structure};
+use function Flow\ETL\DSL\{list_entry, row, str_entry, type_integer, type_list, type_string, type_structure};
 
 function ga_account_summary_to_row(AccountSummary $accountSummary) : Row
 {
@@ -28,10 +28,10 @@ function ga_account_summary_to_row(AccountSummary $accountSummary) : Row
             type_list(
                 type_structure(
                     [
-                        structure_element('property', type_string()),
-                        structure_element('displayName', type_string()),
-                        structure_element('propertyType', type_integer()),
-                        structure_element('parent', type_string()),
+                        'property' => type_string(),
+                        'displayName' => type_string(),
+                        'propertyType' => type_integer(),
+                        'parent' => type_string(),
                     ]
                 )
             ),

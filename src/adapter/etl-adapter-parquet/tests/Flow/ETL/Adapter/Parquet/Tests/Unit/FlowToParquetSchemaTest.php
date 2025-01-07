@@ -12,7 +12,6 @@ use function Flow\ETL\DSL\{bool_schema,
     list_schema,
     map_schema,
     string_schema,
-    structure_element,
     structure_schema,
     type_integer,
     type_list,
@@ -60,15 +59,15 @@ final class FlowToParquetSchemaTest extends FlowTestCase
                         'list_of_structs',
                         type_list(
                             type_structure([
-                                structure_element('integer', type_int()),
-                                structure_element('boolean', type_boolean()),
+                                'integer' => type_int(),
+                                'boolean' => type_boolean(),
                             ])
                         )
                     ),
                     structure_schema(
                         'structure',
                         type_structure([
-                            structure_element('a', type_string()),
+                            'a' => type_string(),
                         ])
                     ),
                     map_schema('map', type_map(type_string(), type_integer()))

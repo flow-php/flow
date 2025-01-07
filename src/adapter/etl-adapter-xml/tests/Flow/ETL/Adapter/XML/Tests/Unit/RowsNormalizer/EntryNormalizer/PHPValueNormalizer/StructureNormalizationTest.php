@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 
-use function Flow\ETL\DSL\{structure_element, type_datetime, type_integer, type_list, type_string, type_structure};
+use function Flow\ETL\DSL\{type_datetime, type_integer, type_list, type_string, type_structure};
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\PHP\Type\Caster;
@@ -19,9 +19,9 @@ final class StructureNormalizationTest extends FlowTestCase
         $normalized = $normalizer->normalize(
             'structure',
             type_structure([
-                structure_element('_id', type_string()),
-                structure_element('name', type_string()),
-                structure_element('age', type_string()),
+                '_id' => type_string(),
+                'name' => type_string(),
+                'age' => type_string(),
             ]),
             ['_id' => 1, 'name' => 'John', 'age' => 30]
         );
@@ -42,9 +42,9 @@ final class StructureNormalizationTest extends FlowTestCase
         $normalized = $normalizer->normalize(
             'structure',
             type_structure([
-                structure_element('name', type_string()),
-                structure_element('age', type_string()),
-                structure_element('numbers', type_list(type_integer())),
+                'name' => type_string(),
+                'age' => type_string(),
+                'numbers' => type_list(type_integer()),
             ]),
             ['name' => 'John', 'age' => 30, 'numbers' => [1, 2, 3, 4, 5]]
         );
@@ -72,14 +72,14 @@ final class StructureNormalizationTest extends FlowTestCase
         $normalized = $normalizer->normalize(
             'structure',
             type_structure([
-                structure_element('_created-at', type_datetime()),
-                structure_element('name', type_string()),
-                structure_element('age', type_string()),
-                structure_element('address', type_structure([
-                    structure_element('street', type_string()),
-                    structure_element('city', type_string()),
-                    structure_element('zip', type_string()),
-                ])),
+                '_created-at' => type_datetime(),
+                'name' => type_string(),
+                'age' => type_string(),
+                'address' => type_structure([
+                    'street' => type_string(),
+                    'city' => type_string(),
+                    'zip' => type_string(),
+                ]),
             ]),
             ['_created-at' => new \DateTimeImmutable('2024-08-22 00:00:00'), 'name' => 'John', 'age' => 30, 'address' => ['street' => 'Main St.', 'city' => 'New York', 'zip' => '10001']]
         );

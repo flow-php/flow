@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row;
 
 use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry, type_int, type_string};
-use function Flow\ETL\DSL\{boolean_entry, enum_entry, integer_entry, structure_element, structure_entry, type_structure};
+use function Flow\ETL\DSL\{boolean_entry, enum_entry, integer_entry, structure_entry, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\Entry\{DateTimeEntry};
 use Flow\ETL\Row\{Entries, Entry};
@@ -361,7 +361,12 @@ final class EntriesTest extends FlowTestCase
             $deleted = boolean_entry('deleted', false),
             $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
             $phase = string_entry('phase', null),
-            $items = structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([structure_element('id', type_int()), structure_element('name', type_string())]))
+            $items = structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(
+                [
+                    'item-id' => type_int(),
+                    'name' => type_string(),
+                ]
+            ))
         );
 
         $sorted = $entries->sort();
@@ -371,7 +376,14 @@ final class EntriesTest extends FlowTestCase
                 $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
                 $deleted = boolean_entry('deleted', false),
                 $id = integer_entry('id', 1234),
-                $items = structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([structure_element('id', type_int()), structure_element('name', type_string())])),
+                $items = structure_entry(
+                    'items',
+                    ['item-id' => 1, 'name' => 'one'],
+                    type_structure([
+                        'item-id' => type_int(),
+                        'name' => type_string(),
+                    ])
+                ),
                 $phase = string_entry('phase', null)
             ),
             $sorted
@@ -385,7 +397,7 @@ final class EntriesTest extends FlowTestCase
             boolean_entry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
-            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([structure_element('id', type_int()), structure_element('name', type_string())])),
+            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(['item-id' => type_int(), 'name' => type_string()])),
             enum_entry('enum', BasicEnum::three)
         );
 
@@ -412,7 +424,12 @@ final class EntriesTest extends FlowTestCase
             boolean_entry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
-            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([structure_element('id', type_int()), structure_element('name', type_string())])),
+            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(
+                [
+                    'item-id' => type_int(),
+                    'name' => type_string(),
+                ]
+            )),
             enum_entry('enum', BasicEnum::three)
         );
 

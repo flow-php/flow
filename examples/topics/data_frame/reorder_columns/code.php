@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{
-    bool_entry,
+use function Flow\ETL\DSL\{bool_entry,
     compare_entries_by_type_and_name,
     data_frame,
     datetime_entry,
@@ -16,15 +15,14 @@ use function Flow\ETL\DSL\{
     row,
     rows,
     str_entry,
-    struct_element,
     struct_entry,
-    struct_type,
     to_stream,
     type_float,
     type_int,
     type_list,
     type_map,
     type_string,
+    type_structure,
     uuid_entry};
 
 data_frame()
@@ -54,18 +52,15 @@ data_frame()
                     'country' => 'country',
                     'location' => ['lat' => 1.5, 'lon' => 1.5],
                 ],
-                struct_type([
-                    struct_element('street', type_string()),
-                    struct_element('city', type_string()),
-                    struct_element('zip', type_string()),
-                    struct_element('country', type_string()),
-                    struct_element(
-                        'location',
-                        struct_type([
-                            struct_element('lat', type_float()),
-                            struct_element('lon', type_float()),
-                        ])
-                    ),
+                type_structure([
+                    'street' => type_string(),
+                    'city' => type_string(),
+                    'zip' => type_string(),
+                    'country' => type_string(),
+                    'location' => type_structure([
+                        'lat' => type_float(),
+                        'lon' => type_float(),
+                    ]),
                 ]),
             ),
         )

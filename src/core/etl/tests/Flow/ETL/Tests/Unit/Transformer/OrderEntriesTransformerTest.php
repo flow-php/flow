@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{
-    bool_entry,
+use function Flow\ETL\DSL\{bool_entry,
     compare_entries_by_name,
     compare_entries_by_name_desc,
     compare_entries_by_type,
@@ -24,14 +23,13 @@ use function Flow\ETL\DSL\{
     row,
     rows,
     str_entry,
-    struct_element,
     struct_entry,
-    struct_type,
     type_float,
     type_int,
     type_list,
     type_map,
     type_string,
+    type_structure,
     uuid_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
@@ -68,18 +66,15 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                         'country' => 'country',
                         'location' => ['lat' => 1.5, 'lon' => 1.5],
                     ],
-                    struct_type([
-                        struct_element('street', type_string()),
-                        struct_element('city', type_string()),
-                        struct_element('zip', type_string()),
-                        struct_element('country', type_string()),
-                        struct_element(
-                            'location',
-                            struct_type([
-                                struct_element('lat', type_float()),
-                                struct_element('lon', type_float()),
-                            ])
-                        ),
+                    type_structure([
+                        'street' => type_string(),
+                        'city' => type_string(),
+                        'zip' => type_string(),
+                        'country' => type_string(),
+                        'location' => type_structure([
+                            'lat' => type_float(),
+                            'lon' => type_float(),
+                        ]),
                     ]),
                 ),
                 enum_entry('enum_a', BackedStringEnum::three),
@@ -150,18 +145,15 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                         'country' => 'country',
                         'location' => ['lat' => 1.5, 'lon' => 1.5],
                     ],
-                    struct_type([
-                        struct_element('street', type_string()),
-                        struct_element('city', type_string()),
-                        struct_element('zip', type_string()),
-                        struct_element('country', type_string()),
-                        struct_element(
-                            'location',
-                            struct_type([
-                                struct_element('lat', type_float()),
-                                struct_element('lon', type_float()),
-                            ])
-                        ),
+                    type_structure([
+                        'street' => type_string(),
+                        'city' => type_string(),
+                        'zip' => type_string(),
+                        'country' => type_string(),
+                        'location' => type_structure([
+                            'lat' => type_float(),
+                            'lon' => type_float(),
+                        ]),
                     ]),
                 ),
                 enum_entry('enum', BackedStringEnum::three)

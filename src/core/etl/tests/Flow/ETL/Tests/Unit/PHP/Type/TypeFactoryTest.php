@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use function Flow\ETL\DSL\{structure_element,
+use function Flow\ETL\DSL\{
     type_array,
     type_boolean,
     type_callable,
@@ -106,11 +106,11 @@ final class TypeFactoryTest extends FlowTestCase
     {
         $structure = type_structure(
             [
-                structure_element('name', type_string()),
-                structure_element('age', type_integer()),
-                structure_element('list', type_list(type_string())),
-                structure_element('map', type_map(type_string(), type_integer())),
-                structure_element('object', type_object(\stdClass::class)),
+                'name' => type_string(),
+                'age' => type_integer(),
+                'list' => type_list(type_string()),
+                'map' => type_map(type_string(), type_integer()),
+                'object' => type_object(\stdClass::class),
             ]
         );
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer;
 
 use function Flow\ETL\DSL\{str_entry,
-    structure_element,
     structure_entry,
     type_boolean,
     type_datetime,
@@ -55,20 +54,20 @@ final class EntryNormalizerTest extends FlowTestCase
                 ],
             ],
             type_structure([
-                structure_element('id', type_integer()),
-                structure_element('name', type_string()),
-                structure_element('active', type_boolean()),
-                structure_element('date', type_datetime()),
-                structure_element('list', type_list(type_integer())),
-                structure_element('map', type_map(type_string(), type_integer())),
-                structure_element('nested_structure', type_structure([
-                    structure_element('id', type_integer()),
-                    structure_element('name', type_string()),
-                    structure_element('active', type_boolean()),
-                    structure_element('date', type_datetime()),
-                    structure_element('list', type_list(type_integer())),
-                    structure_element('map', type_map(type_string(), type_integer())),
-                ])),
+                'id' => type_integer(),
+                'name' => type_string(),
+                'active' => type_boolean(),
+                'date' => type_datetime(),
+                'list' => type_list(type_integer()),
+                'map' => type_map(type_string(), type_integer()),
+                'nested_structure' => type_structure([
+                    'id' => type_integer(),
+                    'name' => type_string(),
+                    'active' => type_boolean(),
+                    'date' => type_datetime(),
+                    'list' => type_list(type_integer()),
+                    'map' => type_map(type_string(), type_integer()),
+                ]),
             ])
         );
 

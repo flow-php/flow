@@ -6,11 +6,9 @@ namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\{caster,
     caster_options,
-    struct_type,
-    structure_element,
-    structure_type,
     type_integer,
-    type_string};
+    type_string,
+    type_structure};
 use Flow\ETL\PHP\Type\Caster\StructureCastingHandler;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -36,16 +34,13 @@ final class StructureCastingHandlerTest extends FlowTestCase
                         'city' => 'Warsaw',
                     ],
                 ],
-                struct_type([
-                    structure_element('name', type_string()),
-                    structure_element('age', type_integer()),
-                    structure_element(
-                        'address',
-                        structure_type([
-                            structure_element('street', type_string()),
-                            structure_element('city', type_string()),
-                        ])
-                    ),
+                type_structure([
+                    'name' => type_string(),
+                    'age' => type_integer(),
+                    'address' => type_structure([
+                        'street' => type_string(),
+                        'city' => type_string(),
+                    ]),
                 ]),
                 caster(),
                 caster_options()
@@ -70,16 +65,13 @@ final class StructureCastingHandlerTest extends FlowTestCase
                     'age' => 30,
                     'address' => [],
                 ],
-                struct_type([
-                    structure_element('name', type_string()),
-                    structure_element('age', type_integer()),
-                    structure_element(
-                        'address',
-                        structure_type([
-                            structure_element('street', type_string(true)),
-                            structure_element('city', type_string(true)),
-                        ])
-                    ),
+                type_structure([
+                    'name' => type_string(),
+                    'age' => type_integer(),
+                    'address' => type_structure([
+                        'street' => type_string(true),
+                        'city' => type_string(true),
+                    ]),
                 ]),
                 caster(),
                 caster_options()
@@ -100,16 +92,13 @@ final class StructureCastingHandlerTest extends FlowTestCase
                     'name' => 'Norbert Orzechowicz',
                     'age' => 30,
                 ],
-                struct_type([
-                    structure_element('name', type_string()),
-                    structure_element('age', type_integer()),
-                    structure_element(
-                        'address',
-                        structure_type([
-                            structure_element('street', type_string()),
-                            structure_element('city', type_string()),
-                        ], true)
-                    ),
+                type_structure([
+                    'name' => type_string(),
+                    'age' => type_integer(),
+                    'address' => type_structure([
+                        'street' => type_string(),
+                        'city' => type_string(),
+                    ], true),
                 ], true),
                 caster(),
                 caster_options()

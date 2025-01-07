@@ -5,7 +5,28 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.10.x to 0.11.x
+
+### 1) Removed StructureElement/struct_element/structure_element from StructureType Definition
+
+Before:
+```php
+type_structure([
+    struct_element('name', string()),
+    struct_element('age', integer()),
+]);
+```
+
+After:
+```php
+type_structure([
+    'name' => string(),
+    'age' => integer(),
+]);
+```
+
 ## Upgrading from 0.8.x to 0.10.x
+
 
 ### 1) Providing multiple paths to single extractor
 

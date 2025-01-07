@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
  * @implements Type<array>
@@ -15,18 +14,30 @@ use Flow\ETL\PHP\Type\Type;
 final readonly class StructureType implements Type
 {
     /**
-     * @var array<StructureElement>
+     * @var array<string, Type<mixed>>
      */
     private array $elements;
 
+    /**
+     * @param array<string, Type<mixed>> $elements
+     * @param bool $nullable
+     *
+     * @throws InvalidArgumentException
+     */
     public function __construct(array $elements, private bool $nullable = false)
     {
         if (0 === \count($elements)) {
             throw InvalidArgumentException::because('Structure must receive at least one element.');
         }
 
-        if (\count($elements) !== \count(\array_unique(\array_map(fn (StructureElement $element) => $element->name(), $elements)))) {
-            throw InvalidArgumentException::because('All structure element names must be unique');
+        foreach ($elements as $name => $type) {
+            //            if (!\is_string($name)) {
+            //                throw InvalidArgumentException::because('Structure element name must be a string');
+            //            }
+
+            if (!$type instanceof Type) {
+                throw InvalidArgumentException::because('Structure element type must be an instance of Type');
+            }
         }
 
         $this->elements = $elements;
@@ -40,15 +51,15 @@ final readonly class StructureType implements Type
 
         $elements = [];
 
-        foreach ($data['elements'] as $element) {
-            $elements[] = StructureElement::fromArray($element);
+        foreach ($data['elements'] as $name => $element) {
+            $elements[$name] = TypeFactory::fromArray($element);
         }
 
         return new self($elements, $data['nullable'] ?? false);
     }
 
     /**
-     * @return array<StructureElement>
+     * @return array<string, Type<mixed>>
      */
     public function elements() : array
     {
@@ -78,9 +89,9 @@ final readonly class StructureType implements Type
             return false;
         }
 
-        foreach ($this->elements as $internalElement) {
-            foreach ($type->elements as $element) {
-                if ($element->isEqual($internalElement)) {
+        foreach ($this->elements as $internalElementName => $internalElement) {
+            foreach ($type->elements as $elementName => $element) {
+                if ($elementName === $internalElementName && $element->isEqual($internalElement)) {
                     continue 2;
                 }
             }
@@ -105,9 +116,9 @@ final readonly class StructureType implements Type
             return false;
         }
 
-        foreach ($value as $item) {
-            foreach ($this->elements as $element) {
-                if ($element->isValid($item)) {
+        foreach ($value as $itemName => $item) {
+            foreach ($this->elements as $name => $element) {
+                if ($itemName === $name && $element->isValid($item)) {
                     continue 2;
                 }
             }
@@ -135,38 +146,44 @@ final readonly class StructureType implements Type
 
         $elements = [];
 
-        foreach ($this->elements as $thisElement) {
-            $elements[$thisElement->name()] = $thisElement;
+        foreach ($this->elements as $name => $thisElement) {
+            $elements[$name] = $thisElement;
         }
 
         $typeElements = [];
 
-        foreach ($type->elements() as $typeElement) {
-            $typeElements[$typeElement->name()] = $typeElement;
+        foreach ($type->elements() as $name => $typeElement) {
+            $typeElements[$name] = $typeElement;
         }
 
-        foreach ($type->elements as $structElement) {
-            if (\array_key_exists($structElement->name(), $elements)) {
-                $elements[$structElement->name()] = $elements[$structElement->name()]->merge($structElement);
+        foreach ($type->elements as $name => $structElement) {
+            if (\array_key_exists($name, $elements)) {
+                $elements[$name] = $elements[$name]->merge($structElement);
             } else {
-                $elements[$structElement->name()] = $structElement->makeNullable(true);
+                $elements[$name] = $structElement->makeNullable(true);
             }
         }
 
-        foreach ($this->elements as $thisElement) {
-            if (!\array_key_exists($thisElement->name(), $typeElements)) {
-                $elements[$thisElement->name()] = $thisElement->makeNullable(true);
+        foreach ($this->elements as $name => $thisElement) {
+            if (!\array_key_exists($name, $typeElements)) {
+                $elements[$name] = $thisElement->makeNullable(true);
             }
         }
 
-        return new self(\array_values($elements), $this->nullable || $type->nullable());
+        return new self($elements, $this->nullable || $type->nullable());
     }
 
     public function normalize() : array
     {
+        $elements = [];
+
+        foreach ($this->elements as $name => $element) {
+            $elements[$name] = $element->normalize();
+        }
+
         return [
             'type' => 'structure',
-            'elements' => \array_map(fn (StructureElement $element) => $element->normalize(), $this->elements),
+            'elements' => $elements,
             'nullable' => $this->nullable,
         ];
     }
@@ -180,8 +197,8 @@ final readonly class StructureType implements Type
     {
         $content = [];
 
-        foreach ($this->elements as $element) {
-            $content[] = $element->toString();
+        foreach ($this->elements as $name => $element) {
+            $content[] = $name . ': ' . $element->toString();
         }
 
         return ($this->nullable ? '?' : '') . 'structure{' . \implode(', ', $content) . '}';

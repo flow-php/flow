@@ -9,7 +9,6 @@ use function Flow\ETL\DSL\{df,
     from_array,
     from_rows,
     ref,
-    struct_element,
     type_int,
     type_list,
     type_map,
@@ -135,8 +134,8 @@ final class LimitTest extends FlowIntegrationTestCase
                         ], type_list(
                             type_structure(
                                 [
-                                    struct_element('id', type_int()),
-                                    struct_element('more_ids', type_list(type_map(type_string(), type_int()))),
+                                    'id' => type_int(),
+                                    'more_ids' => type_list(type_map(type_string(), type_int())),
                                 ]
                             )
                         ))));

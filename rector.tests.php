@@ -15,7 +15,6 @@ use Flow\ETL\PHP\Type\Logical\DateType;
 use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Logical\TimeType;
 use Flow\ETL\PHP\Type\Logical\UuidType;
@@ -142,7 +141,6 @@ return RectorConfig::configure()
             new NewObjectToFunction(UuidType::class, 'Flow\ETL\DSL\type_uuid'),
             new NewObjectToFunction(XMLElementType::class, 'Flow\ETL\DSL\type_xml_element'),
             new NewObjectToFunction(XMLType::class, 'Flow\ETL\DSL\type_xml'),
-            new NewObjectToFunction(StructureElement::class, 'Flow\ETL\DSL\structure_element'),
 
             // Extractors
             new NewObjectToFunction(CacheExtractor::class, 'from_cache'),

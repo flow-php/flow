@@ -15,14 +15,12 @@ use function Flow\ETL\DSL\{bool_entry,
     row,
     str_entry,
     string_entry,
-    struct_element,
     struct_entry,
-    struct_type,
     type_int,
     type_list,
     type_map,
     type_string};
-use function Flow\ETL\DSL\{bool_schema, boolean_entry, datetime_schema, float_schema, integer_entry, integer_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_element, structure_entry, structure_schema, type_integer, type_structure};
+use function Flow\ETL\DSL\{bool_schema, boolean_entry, datetime_schema, float_schema, integer_entry, integer_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_entry, structure_schema, type_integer, type_structure};
 use Flow\ETL\Row\Entry\{
     DateTimeEntry
 };
@@ -56,19 +54,19 @@ final class RowTest extends FlowTestCase
         yield 'simple same collection entries' => [
             true,
             row(
-                structure_entry('json', ['json' => [1, 2, 3]], type_structure([structure_element('json', type_list(type_integer()))]))
+                structure_entry('json', ['json' => [1, 2, 3]], type_structure(['json' => type_list(type_integer())]))
             ),
             row(
-                structure_entry('json', ['json' => [1, 2, 3]], type_structure([structure_element('json', type_list(type_integer()))]))
+                structure_entry('json', ['json' => [1, 2, 3]], type_structure(['json' => type_list(type_integer())]))
             ),
         ];
         yield 'simple different collection entries' => [
             false,
             row(
-                structure_entry('json', ['json' => ['5', '2', '1']], type_structure([structure_element('json', type_list(type_string()))]))
+                structure_entry('json', ['json' => ['5', '2', '1']], type_structure(['json' => type_list(type_string())]))
             ),
             row(
-                structure_entry('json', ['json' => ['1', '2', '3']], type_structure([structure_element('json', type_list(type_string()))]))
+                structure_entry('json', ['json' => ['1', '2', '3']], type_structure(['json' => type_list(type_string())]))
             ),
         ];
     }
@@ -91,9 +89,9 @@ final class RowTest extends FlowTestCase
             struct_entry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                struct_type([
-                    struct_element('item-id', type_int()),
-                    struct_element('name', type_string()),
+                type_structure([
+                    'item-id' => type_int(),
+                    'name' => type_string(),
                 ])
             ),
             list_entry('list', [1, 2, 3], type_list(type_int())),
@@ -106,8 +104,8 @@ final class RowTest extends FlowTestCase
 
         self::assertEquals(
             schema(integer_schema('id'), float_schema('price'), bool_schema('deleted'), datetime_schema('created-at'), string_schema('phase', nullable: true), json_schema('array'), structure_schema('items', type_structure([
-                structure_element('item-id', type_int()),
-                structure_element('name', type_string()),
+                'item-id' => type_int(),
+                'name' => type_string(),
             ])), map_schema('statuses', type_map(type_integer(), type_string())), list_schema('list', type_list(type_integer()))),
             $row->schema()
         );
@@ -260,7 +258,7 @@ final class RowTest extends FlowTestCase
             boolean_entry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
-            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure([structure_element('id', type_int()), structure_element('name', type_string())])),
+            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(['item-id' => type_int(), 'name' => type_string()])),
             map_entry('statuses', ['NEW', 'PENDING'], type_map(type_integer(), type_string()))
         );
 

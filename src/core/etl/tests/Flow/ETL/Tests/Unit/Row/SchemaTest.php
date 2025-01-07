@@ -16,7 +16,6 @@ use function Flow\ETL\DSL\{bool_schema,
     schema_strict_matcher,
     schema_to_json,
     str_schema,
-    struct_element,
     structure_schema,
     type_int,
     type_list,
@@ -193,8 +192,8 @@ final class SchemaTest extends FlowTestCase
             map_schema('map', type_map(type_string(), type_int())),
             list_schema('list', type_list(type_int())),
             structure_schema('struct', type_structure([
-                struct_element('street', type_string()),
-                struct_element('city', type_string()),
+                'street' => type_string(),
+                'city' => type_string(),
             ]))
         );
 
@@ -289,8 +288,8 @@ final class SchemaTest extends FlowTestCase
             map_schema('map', type_map(type_string(), type_int())),
             list_schema('list', type_list(type_int())),
             structure_schema('struct', type_structure([
-                struct_element('street', type_string()),
-                struct_element('city', type_string()),
+                'street' => type_string(),
+                'city' => type_string(),
             ]))
         );
 
@@ -361,22 +360,16 @@ final class SchemaTest extends FlowTestCase
         "ref": "struct",
         "type": {
             "type": "structure",
-            "elements": [
-                {
-                    "name": "street",
-                    "type": {
-                        "type": "string",
-                        "nullable": false
-                    }
+            "elements": {
+                "street": {
+                    "type": "string",
+                    "nullable": false
                 },
-                {
-                    "name": "city",
-                    "type": {
-                        "type": "string",
-                        "nullable": false
-                    }
+                "city": {
+                    "type": "string",
+                    "nullable": false
                 }
-            ],
+            },
             "nullable": false
         },
         "metadata": []

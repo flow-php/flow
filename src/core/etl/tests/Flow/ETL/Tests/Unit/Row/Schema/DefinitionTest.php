@@ -8,10 +8,8 @@ use function Flow\ETL\DSL\{bool_schema, date_schema, float_schema, integer_schem
 use function Flow\ETL\DSL\{datetime_schema,
     int_entry,
     str_entry,
-    struct_element,
     struct_entry,
     struct_schema,
-    struct_type,
     type_datetime,
     type_float,
     type_int,
@@ -200,13 +198,13 @@ final class DefinitionTest extends FlowTestCase
     {
         self::assertEquals(
             json_schema('structure'),
-            structure_schema('structure', struct_type([
-                struct_element('street', type_string()),
-                struct_element('city', type_string()),
+            structure_schema('structure', type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
             ]))->merge(
-                structure_schema('structure', struct_type([
-                    struct_element('street', type_string()),
-                    struct_element('city', type_int()),
+                structure_schema('structure', type_structure([
+                    'street' => type_string(),
+                    'city' => type_int(),
                 ]))
             )
         );
@@ -234,14 +232,14 @@ final class DefinitionTest extends FlowTestCase
             'structure',
             type_structure(
                 [
-                    struct_element('street', type_string()),
-                    struct_element('city', type_string()),
-                    struct_element('location', type_structure(
+                    'street' => type_string(),
+                    'city' => type_string(),
+                    'location' => type_structure(
                         [
-                            struct_element('lat', type_float()),
-                            struct_element('lng', type_float()),
+                            'lat' => type_float(),
+                            'lng' => type_float(),
                         ]
-                    )),
+                    ),
                 ]
             ),
             Metadata::with('description', 'some_random_description')->add('priority', 1)
@@ -283,30 +281,24 @@ final class DefinitionTest extends FlowTestCase
                 'city' => 'city',
                 'location' => ['lat' => 1.0, 'lng' => 1.0],
             ],
-            struct_type([
-                struct_element('street', type_string()),
-                struct_element('city', type_string()),
-                struct_element(
-                    'location',
-                    struct_type([
-                        struct_element('lat', type_float()),
-                        struct_element('lng', type_float()),
-                    ])
-                ),
+            type_structure([
+                'street' => type_string(),
+                'city' => type_string(),
+                'location' => type_structure([
+                    'lat' => type_float(),
+                    'lng' => type_float(),
+                ]),
             ]),
         );
 
         self::assertEquals(
             type_structure([
-                struct_element('street', type_string()),
-                struct_element('city', type_string()),
-                struct_element(
-                    'location',
-                    type_structure([
-                        struct_element('lat', type_float()),
-                        struct_element('lng', type_float()),
-                    ])
-                ),
+                'street' => type_string(),
+                'city' => type_string(),
+                'location' => type_structure([
+                    'lat' => type_float(),
+                    'lng' => type_float(),
+                ]),
             ]),
             $address->definition()->type()
         );

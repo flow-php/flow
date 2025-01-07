@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{
-    bool_entry,
+use function Flow\ETL\DSL\{bool_entry,
     datetime_entry,
     df,
     enum_entry,
@@ -21,13 +20,12 @@ use function Flow\ETL\DSL\{
     rows,
     str_entry,
     string_entry,
-    struct_element,
     struct_entry,
-    struct_type,
     type_int,
     type_list,
     type_map,
     type_string,
+    type_structure,
     xml_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -73,9 +71,9 @@ final class DisplayTest extends FlowIntegrationTestCase
                                 struct_entry(
                                     'items',
                                     ['item-id' => '1', 'name' => 'one'],
-                                    struct_type([
-                                        struct_element('item-id', type_string()),
-                                        struct_element('name', type_string()),
+                                    type_structure([
+                                        'item-id' => type_string(),
+                                        'name' => type_string(),
                                     ])
                                 ),
                                 enum_entry('enum', BackedStringEnum::three),

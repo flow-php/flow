@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\TypeDetector;
 
-use function Flow\ETL\DSL\{structure_element, type_boolean, type_int, type_map, type_string, type_structure};
+use function Flow\ETL\DSL\{type_boolean, type_int, type_map, type_string, type_structure};
 use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -19,34 +19,34 @@ final class StructuresTypeDetectorTest extends FlowTestCase
 
         self::assertEquals(
             type_structure([
-                structure_element('id', type_string()),
-                structure_element('type', type_string()),
-                structure_element('actor', type_structure([
-                    structure_element('id', type_int()),
-                    structure_element('login', type_string()),
-                    structure_element('display_login', type_string()),
-                    structure_element('gravatar_id', type_string()),
-                    structure_element('url', type_string()),
-                    structure_element('avatar_url', type_string()),
-                ])),
-                structure_element('repo', type_structure([
-                    structure_element('id', type_int()),
-                    structure_element('name', type_string()),
-                    structure_element('url', type_string()),
-                ])),
-                structure_element('payload', type_map(
+                'id' => type_string(),
+                'type' => type_string(),
+                'actor' => type_structure([
+                    'id' => type_int(),
+                    'login' => type_string(),
+                    'display_login' => type_string(),
+                    'gravatar_id' => type_string(),
+                    'url' => type_string(),
+                    'avatar_url' => type_string(),
+                ]),
+                'repo' => type_structure([
+                    'id' => type_int(),
+                    'name' => type_string(),
+                    'url' => type_string(),
+                ]),
+                'payload' => type_map(
                     key_type: type_string(),
                     value_type: type_string(true)
-                )),
-                structure_element('public', type_boolean()),
-                structure_element('created_at', type_string()),
-                structure_element('org', type_structure([
-                    structure_element('id', type_int()),
-                    structure_element('login', type_string()),
-                    structure_element('gravatar_id', type_string()),
-                    structure_element('url', type_string()),
-                    structure_element('avatar_url', type_string()),
-                ])),
+                ),
+                'public' => type_boolean(),
+                'created_at' => type_string(),
+                'org' => type_structure([
+                    'id' => type_int(),
+                    'login' => type_string(),
+                    'gravatar_id' => type_string(),
+                    'url' => type_string(),
+                    'avatar_url' => type_string(),
+                ]),
             ]),
             $type,
         );

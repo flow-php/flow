@@ -7,8 +7,8 @@ namespace Flow\ETL\Adapter\XML\RowsNormalizer;
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, UuidEntry};
 
@@ -148,12 +148,12 @@ final readonly class EntryNormalizer
         $structureIterator->attachIterator(new \ArrayIterator($type->elements()), 'structure_element');
         $structureIterator->attachIterator(new \ArrayIterator($value), 'value_element');
 
-        foreach ($structureIterator as $element) {
-            /** @var StructureElement $structureElement */
-            $structureElement = $element['structure_element'];
+        foreach ($structureIterator as $keys => $element) {
+            /** @var Type<mixed> $structureElementType */
+            $structureElementType = $element['structure_element'];
             $structureValue = $element['value_element'];
 
-            $node = $node->append($this->valueNormalizer->normalize($structureElement->name(), $structureElement->type(), $structureValue));
+            $node = $node->append($this->valueNormalizer->normalize($keys['structure_element'], $structureElementType, $structureValue));
         }
 
         return $node;

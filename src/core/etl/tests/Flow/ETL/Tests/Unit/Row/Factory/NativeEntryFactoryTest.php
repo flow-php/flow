@@ -14,8 +14,6 @@ use function Flow\ETL\DSL\{bool_entry,
     json_object_entry,
     list_entry,
     str_entry,
-    structure_element,
-    structure_type,
     time_entry,
     type_datetime,
     type_float,
@@ -66,7 +64,7 @@ final class NativeEntryFactoryTest extends FlowTestCase
     public function test_array_structure() : void
     {
         self::assertEquals(
-            structure_entry('e', ['a' => 1, 'b' => '2'], type_structure([structure_element('a', type_int()), structure_element('b', type_string())])),
+            structure_entry('e', ['a' => 1, 'b' => '2'], type_structure(['a' => type_int(), 'b' => type_string()])),
             (new NativeEntryFactory())->create('e', ['a' => 1, 'b' => '2'])
         );
     }
@@ -304,14 +302,11 @@ final class NativeEntryFactoryTest extends FlowTestCase
                 ],
                 'street' => 'Floriańska',
                 'zip' => '31-021',
-            ], structure_type([
-                structure_element('city', type_string()),
-                structure_element(
-                    'geo',
-                    type_map(type_string(), type_float())
-                ),
-                structure_element('street', type_string()),
-                structure_element('zip', type_string()),
+            ], type_structure([
+                'city' => type_string(),
+                'geo' => type_map(type_string(), type_float()),
+                'street' => type_string(),
+                'zip' => type_string(),
             ])),
             (new NativeEntryFactory())->create('address', [
                 'city' => 'Krakow',
@@ -352,10 +347,10 @@ final class NativeEntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             structure_entry('address', ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'], type_structure([
-                structure_element('id', type_int()),
-                structure_element('city', type_string()),
-                structure_element('street', type_string()),
-                structure_element('zip', type_string()),
+                'id' => type_int(),
+                'city' => type_string(),
+                'street' => type_string(),
+                'zip' => type_string(),
             ])),
             (new NativeEntryFactory())->create('address', ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
         );
