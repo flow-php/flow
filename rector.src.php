@@ -13,7 +13,7 @@ return RectorConfig::configure()
         __DIR__ . '/src/bridge/*/*/src',
         __DIR__ . '/src/tools/*/*/src',
     ])
-    ->withCache(__DIR__ . '/var/cache/rector/src')
+    ->withCache(__DIR__ . '/var/rector/src')
     ->withSets([
         LevelSetList::UP_TO_PHP_82
     ]);

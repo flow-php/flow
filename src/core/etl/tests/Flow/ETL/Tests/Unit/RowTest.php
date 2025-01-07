@@ -25,7 +25,7 @@ use function Flow\ETL\DSL\{bool_entry,
 use function Flow\ETL\DSL\{bool_schema, boolean_entry, datetime_schema, float_schema, integer_entry, integer_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_element, structure_entry, structure_schema, type_integer, type_structure};
 use Flow\ETL\Row\Entry\{
     DateTimeEntry
-    };
+};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
