@@ -80,7 +80,6 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
@@ -546,7 +545,7 @@ function type_list(Type $element, bool $nullable = false) : ListType
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
 function type_map(IntegerType|StringType $key_type, Type $value_type, bool $nullable = false) : MapType
 {
-    return new MapType(new MapKey($key_type), new MapValue($value_type), $nullable);
+    return new MapType($key_type, $value_type, $nullable);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]

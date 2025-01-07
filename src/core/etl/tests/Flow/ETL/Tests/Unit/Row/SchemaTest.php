@@ -334,16 +334,12 @@ final class SchemaTest extends FlowTestCase
         "type": {
             "type": "map",
             "key": {
-                "type": {
-                    "type": "string",
-                    "nullable": false
-                }
+                "type": "string",
+                "nullable": false
             },
             "value": {
-                "type": {
-                    "type": "integer",
-                    "nullable": false
-                }
+                "type": "integer",
+                "nullable": false
             },
             "nullable": false
         },

@@ -5,22 +5,32 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
  * @implements Type<array>
  */
 final readonly class MapType implements Type
 {
-    public function __construct(private MapKey $key, private MapValue $value, private bool $nullable = false)
+    /**
+     * @param IntegerType|StringType $key
+     * @param Type<mixed> $value
+     * @param bool $nullable
+     */
+    public function __construct(private StringType|IntegerType $key, private Type $value, private bool $nullable = false)
     {
     }
 
     public static function fromArray(array $data) : self
     {
-        return new self(MapKey::fromArray($data['key']), MapValue::fromArray($data['value']), $data['nullable'] ?? false);
+        $keyType = TypeFactory::fromArray($data['key']);
+
+        if (!$keyType instanceof StringType && !$keyType instanceof IntegerType) {
+            throw new InvalidArgumentException('Invalid "key" key in ' . self::class . ' fromArray()');
+        }
+
+        return new self($keyType, TypeFactory::fromArray($data['value']), $data['nullable'] ?? false);
     }
 
     public function isComparableWith(Type $type) : bool
@@ -68,7 +78,7 @@ final readonly class MapType implements Type
         return true;
     }
 
-    public function key() : MapKey
+    public function key() : StringType|IntegerType
     {
         return $this->key;
     }
@@ -88,7 +98,7 @@ final readonly class MapType implements Type
             throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
         }
 
-        if (!$this->key->type()->isEqual($type->key()->type()) || !$this->value->type()->isEqual($type->value()->type())) {
+        if (!$this->key->isEqual($type->key()) || !$this->value->isEqual($type->value())) {
             throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
         }
 
@@ -115,7 +125,10 @@ final readonly class MapType implements Type
         return ($this->nullable ? '?' : '') . 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';
     }
 
-    public function value() : MapValue
+    /**
+     * @return Type<mixed>
+     */
+    public function value() : Type
     {
         return $this->value;
     }

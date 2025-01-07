@@ -21,7 +21,6 @@ use function Flow\ETL\DSL\{bool_schema,
     type_map,
     uuid_schema};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
@@ -116,10 +115,11 @@ final class SchemaConverter
         throw new RuntimeException($element::class . ' is not supported.');
     }
 
-    private function flowMapKeyToParquetMapKey(MapKey $mapKey) : ParquetSchema\MapKey
+    /**
+     * @param Type<mixed> $mapKeyType
+     */
+    private function flowMapKeyToParquetMapKey(Type $mapKeyType) : ParquetSchema\MapKey
     {
-        $mapKeyType = $mapKey->type();
-
         switch ($mapKeyType::class) {
             case UuidType::class:
                 return ParquetSchema\MapKey::uuid();
@@ -138,12 +138,15 @@ final class SchemaConverter
             case BooleanType::class:
                 return ParquetSchema\MapKey::boolean();
         }
+
+        throw new RuntimeException($mapKeyType::class . ' is not supported.');
     }
 
-    private function flowMapValueToParquetMapValue(MapValue $mapValue) : ParquetSchema\MapValue
+    /**
+     * @param Type<mixed> $mapValueType
+     */
+    private function flowMapValueToParquetMapValue(Type $mapValueType) : ParquetSchema\MapValue
     {
-        $mapValueType = $mapValue->type();
-
         switch ($mapValueType::class) {
             case FloatType::class:
                 return ParquetSchema\MapValue::float(!$mapValueType->nullable());

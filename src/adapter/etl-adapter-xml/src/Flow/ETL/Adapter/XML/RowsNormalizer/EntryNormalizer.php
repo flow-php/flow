@@ -124,8 +124,8 @@ final readonly class EntryNormalizer
         $type = $entry->type();
 
         foreach ($mapValue as $key => $value) {
-            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementKeyName, $type->key()->type(), $key));
-            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementValueName, $type->value()->type(), $value));
+            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementKeyName, $type->key(), $key));
+            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->mapElementValueName, $type->value(), $value));
         }
 
         return $node;

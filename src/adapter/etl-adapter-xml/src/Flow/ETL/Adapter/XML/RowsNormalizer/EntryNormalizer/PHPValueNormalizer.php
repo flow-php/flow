@@ -71,8 +71,8 @@ final readonly class PHPValueNormalizer
             foreach ($value as $key => $elementValue) {
                 $mapNode = $mapNode->append(
                     XMLNode::nestedNode($this->mapElementName)
-                        ->append($this->normalize($this->mapElementKeyName, $type->key()->type(), $key))
-                        ->append($this->normalize($this->mapElementValueName, $type->value()->type(), $elementValue))
+                        ->append($this->normalize($this->mapElementKeyName, $type->key(), $key))
+                        ->append($this->normalize($this->mapElementValueName, $type->value(), $elementValue))
                 );
             }
 

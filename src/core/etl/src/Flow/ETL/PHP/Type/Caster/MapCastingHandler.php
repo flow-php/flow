@@ -30,20 +30,20 @@ final class MapCastingHandler implements CastingHandler
 
             if (!\is_array($value)) {
                 return [
-                    $caster->to($type->key()->type())->value(0) => $caster->to($type->value()->type())->value($value),
+                    $caster->to($type->key())->value(0) => $caster->to($type->value())->value($value),
                 ];
             }
 
             $castedMap = [];
 
             foreach ($value as $key => $item) {
-                $castedKey = $caster->to($type->key()->type())->value($key);
+                $castedKey = $caster->to($type->key())->value($key);
 
                 if (\array_key_exists($castedKey, $castedMap)) {
                     throw new CastingException($value, $type);
                 }
 
-                $castedMap[$caster->to($type->key()->type())->value($key)] = $caster->to($type->value()->type())->value($item);
+                $castedMap[$caster->to($type->key())->value($key)] = $caster->to($type->value())->value($item);
             }
 
             return $castedMap;
