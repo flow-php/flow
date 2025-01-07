@@ -16,9 +16,12 @@ $finder = Finder::create()
         __DIR__ . '/src/adapter/**/tests',
         __DIR__ . '/src/lib/**/src',
         __DIR__ . '/src/lib/**/tests',
+        __DIR__ . '/src/tools/**/src',
+        __DIR__ . '/src/tools/**/tests',
         __DIR__ . '/web/**/src',
         __DIR__ . '/web/**/tests',
         __DIR__ . '/examples',
+        __DIR__ . '/tools/rector/src',
     ]);
 
 if (!\file_exists(__DIR__ . '/var')) {
