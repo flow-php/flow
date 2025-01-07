@@ -372,10 +372,13 @@
         "test:monorepo": "tools/monorepo/vendor/bin/monorepo-builder validate",
         "static:analyze": [
             "@static:analyze:cs-fixer",
-            "@static:analyze:phpstan"
+            "@static:analyze:phpstan",
+            "@static:analyze:rector"
         ],
         "static:analyze:phpstan": [
-            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1",
+            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1"
+        ],
+        "static:analyze:rector": [
             "tools/rector/vendor/bin/rector -c ./rector.tests.php --dry-run",
             "tools/rector/vendor/bin/rector -c ./rector.src.php --dry-run"
         ],
