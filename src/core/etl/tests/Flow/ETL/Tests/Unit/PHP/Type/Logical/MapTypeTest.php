@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
 use function Flow\ETL\DSL\{type_float, type_integer, type_list, type_map, type_string};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class MapTypeTest extends FlowTestCase
@@ -28,6 +29,14 @@ final class MapTypeTest extends FlowTestCase
             'map<string, string>',
             (type_map(type_string(), type_string()))->toString()
         );
+    }
+
+    public function test_using_nullable_map_key() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Key cannot be nullable');
+
+        type_map(type_string(true), type_string());
     }
 
     public function test_valid() : void

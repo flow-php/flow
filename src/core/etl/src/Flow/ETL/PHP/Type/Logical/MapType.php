@@ -20,6 +20,9 @@ final readonly class MapType implements Type
      */
     public function __construct(private StringType|IntegerType $key, private Type $value, private bool $nullable = false)
     {
+        if ($this->key->nullable()) {
+            throw new InvalidArgumentException('Key cannot be nullable');
+        }
     }
 
     public static function fromArray(array $data) : self
