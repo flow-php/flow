@@ -9,12 +9,12 @@ use Flow\ETL\{Extractor, FlowContext, Rows};
 /**
  * @internal
  */
-final class RowsExtractor implements Extractor
+final readonly class RowsExtractor implements Extractor
 {
     /**
      * @var array<Rows>
      */
-    private readonly array $rows;
+    private array $rows;
 
     public function __construct(Rows ...$rows)
     {

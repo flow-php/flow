@@ -6,9 +6,9 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
-final class VoidPipeline implements Pipeline
+final readonly class VoidPipeline implements Pipeline
 {
-    public function __construct(private readonly Pipeline $pipeline)
+    public function __construct(private Pipeline $pipeline)
     {
     }
 

@@ -7,9 +7,9 @@ namespace Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\{FlowContext, Loader, Rows};
 
-final class MemoryLoader implements Loader
+final readonly class MemoryLoader implements Loader
 {
-    public function __construct(private readonly Memory $memory)
+    public function __construct(private Memory $memory)
     {
     }
 

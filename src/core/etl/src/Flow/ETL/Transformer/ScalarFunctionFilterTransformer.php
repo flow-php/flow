@@ -7,10 +7,10 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class ScalarFunctionFilterTransformer implements Transformer
+final readonly class ScalarFunctionFilterTransformer implements Transformer
 {
     public function __construct(
-        public readonly ScalarFunction $function,
+        public ScalarFunction $function,
     ) {
     }
 

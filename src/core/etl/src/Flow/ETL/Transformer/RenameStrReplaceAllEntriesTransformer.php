@@ -6,11 +6,11 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class RenameStrReplaceAllEntriesTransformer implements Transformer
+final readonly class RenameStrReplaceAllEntriesTransformer implements Transformer
 {
     public function __construct(
-        private readonly string $search,
-        private readonly string $replace,
+        private string $search,
+        private string $replace,
     ) {
     }
 

@@ -15,9 +15,9 @@ use Flow\Filesystem\{DestinationStream,
     Protocol,
     SourceStream};
 
-final class AzureBlobFilesystem implements Filesystem
+final readonly class AzureBlobFilesystem implements Filesystem
 {
-    public function __construct(private readonly BlobServiceInterface $blobService, private readonly Options $options)
+    public function __construct(private BlobServiceInterface $blobService, private Options $options)
     {
     }
 
@@ -116,7 +116,7 @@ final class AzureBlobFilesystem implements Filesystem
             $this->blobService->deleteBlob($path->path());
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             /**
              * Since AzureBlobStorage doesn't have a concept of folders, before we check if the intention is not to delete
              * entire path, like for example azure-blob://nested/folder we need to first add / at the end, to accidentally

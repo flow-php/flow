@@ -7,9 +7,9 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Row\{Reference, References};
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class DropEntriesTransformer implements Transformer
+final readonly class DropEntriesTransformer implements Transformer
 {
-    private readonly References $refs;
+    private References $refs;
 
     public function __construct(string|Reference ...$names)
     {

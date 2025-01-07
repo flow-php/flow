@@ -10,14 +10,14 @@ use Flow\ETL\Adapter\XML\Loader\XMLLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class XMLLoaderFactory
+final readonly class XMLLoaderFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly string $rootElementName = 'output-xml-root-element',
-        private readonly string $rowElementName = 'output-xml-row-element',
-        private readonly string $attributePrefix = 'output-xml-attribute-prefix',
-        private readonly string $dateTimeFormat = 'output-xml-date-time-format',
+        private Path $path,
+        private string $rootElementName = 'output-xml-root-element',
+        private string $rowElementName = 'output-xml-row-element',
+        private string $attributePrefix = 'output-xml-attribute-prefix',
+        private string $dateTimeFormat = 'output-xml-date-time-format',
     ) {
     }
 

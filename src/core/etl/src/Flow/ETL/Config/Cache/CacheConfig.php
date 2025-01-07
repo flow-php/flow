@@ -7,7 +7,7 @@ namespace Flow\ETL\Config\Cache;
 use Flow\ETL\Cache;
 use Flow\Filesystem\Path;
 
-final class CacheConfig
+final readonly class CacheConfig
 {
     public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
 
@@ -15,9 +15,9 @@ final class CacheConfig
      * @param int<1, max> $externalSortBucketsCount
      */
     public function __construct(
-        public readonly Cache $cache,
-        public readonly Path $localFilesystemCacheDir,
-        public readonly int $externalSortBucketsCount,
+        public Cache $cache,
+        public Path $localFilesystemCacheDir,
+        public int $externalSortBucketsCount,
     ) {
     }
 }

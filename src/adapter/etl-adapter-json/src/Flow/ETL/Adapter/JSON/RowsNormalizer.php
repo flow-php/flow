@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\JSON;
 use Flow\ETL\Adapter\JSON\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Rows;
 
-final class RowsNormalizer
+final readonly class RowsNormalizer
 {
-    public function __construct(private readonly EntryNormalizer $normalizer)
+    public function __construct(private EntryNormalizer $normalizer)
     {
 
     }

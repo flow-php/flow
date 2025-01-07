@@ -33,15 +33,15 @@ final class BatchSizeOptimization implements Optimization
      * @var array<class-string<Loader>>
      */
     private array $supportedLoaders = [
-        'Flow\ETL\Adapter\Doctrine\DbalLoader',
-        'Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader',
-        'Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader',
+        \Flow\ETL\Adapter\Doctrine\DbalLoader::class,
+        \Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader::class,
+        \Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader::class,
     ];
 
     /**
      * @param int<1, max> $batchSize
      */
-    public function __construct(private int $batchSize = 1000)
+    public function __construct(private readonly int $batchSize = 1000)
     {
     }
 

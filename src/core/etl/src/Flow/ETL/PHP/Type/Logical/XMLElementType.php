@@ -11,9 +11,9 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<\DOMElement>
  */
-final class XMLElementType implements Type
+final readonly class XMLElementType implements Type
 {
-    public function __construct(private readonly bool $nullable)
+    public function __construct(private bool $nullable)
     {
     }
 

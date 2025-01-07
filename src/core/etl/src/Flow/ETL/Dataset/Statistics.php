@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset;
 
-final class Statistics
+final readonly class Statistics
 {
     public function __construct(
-        private readonly int $totalRows,
+        private int $totalRows,
     ) {
     }
 

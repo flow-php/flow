@@ -6,11 +6,11 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\{Extractor, FlowContext, Rows};
 
-final class ChunkExtractor implements Extractor, OverridingExtractor
+final readonly class ChunkExtractor implements Extractor, OverridingExtractor
 {
     public function __construct(
-        private readonly Extractor $extractor,
-        private readonly int $chunkSize,
+        private Extractor $extractor,
+        private int $chunkSize,
     ) {
     }
 

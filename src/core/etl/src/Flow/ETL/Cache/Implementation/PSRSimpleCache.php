@@ -10,12 +10,12 @@ use Flow\ETL\{Cache, Row, Rows};
 use Flow\Serializer\{NativePHPSerializer, Serializer};
 use Psr\SimpleCache\{CacheInterface, InvalidArgumentException};
 
-final class PSRSimpleCache implements Cache
+final readonly class PSRSimpleCache implements Cache
 {
     public function __construct(
-        private readonly CacheInterface $cache,
-        private readonly int|\DateInterval|null $ttl = null,
-        private readonly Serializer $serializer = new NativePHPSerializer(),
+        private CacheInterface $cache,
+        private int|\DateInterval|null $ttl = null,
+        private Serializer $serializer = new NativePHPSerializer(),
     ) {
     }
 
@@ -44,7 +44,7 @@ final class PSRSimpleCache implements Cache
     {
         try {
             return $this->cache->has($key);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             return false;
         }
     }

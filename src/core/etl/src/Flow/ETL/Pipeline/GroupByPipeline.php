@@ -6,13 +6,10 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\{Extractor, FlowContext, GroupBy, Loader, Pipeline, Transformer};
 
-final class GroupByPipeline implements Pipeline
+final readonly class GroupByPipeline implements Pipeline
 {
-    private readonly Pipeline $pipeline;
-
-    public function __construct(public readonly GroupBy $groupBy, Pipeline $pipeline)
+    public function __construct(public GroupBy $groupBy, private Pipeline $pipeline)
     {
-        $this->pipeline = $pipeline;
     }
 
     public function add(Loader|Transformer $pipe) : self

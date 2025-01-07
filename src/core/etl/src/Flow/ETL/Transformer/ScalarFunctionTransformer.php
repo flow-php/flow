@@ -9,11 +9,11 @@ use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\{FlowContext, Row, Row\Schema\Definition, Rows, Transformer};
 
-final class ScalarFunctionTransformer implements Transformer
+final readonly class ScalarFunctionTransformer implements Transformer
 {
     public function __construct(
-        private readonly string|Definition $entry,
-        public readonly ScalarFunction $function,
+        private string|Definition $entry,
+        public ScalarFunction $function,
     ) {
     }
 

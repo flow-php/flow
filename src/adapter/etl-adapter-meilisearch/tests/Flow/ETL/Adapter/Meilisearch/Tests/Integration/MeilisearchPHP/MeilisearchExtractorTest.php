@@ -23,8 +23,6 @@ final class MeilisearchExtractorTest extends FlowTestCase
 
     protected function tearDown() : void
     {
-        parent::tearDown();
-
         $this->meilisearchContext->deleteIndex(self::INDEX_NAME);
     }
 

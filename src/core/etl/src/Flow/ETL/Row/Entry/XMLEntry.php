@@ -70,7 +70,7 @@ final class XMLEntry implements Entry
         }
 
         /** @phpstan-ignore-next-line  */
-        $xmlString = \gzuncompress(\base64_decode($data['value'], true));
+        $xmlString = \gzuncompress(\base64_decode((string) $data['value'], true));
         $doc = new \DOMDocument();
 
         /** @phpstan-ignore-next-line  */

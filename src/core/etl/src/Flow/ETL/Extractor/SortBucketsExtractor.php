@@ -6,15 +6,15 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\{Extractor, FlowContext, Rows, Sort\ExternalSort\Bucket, Sort\ExternalSort\BucketsCache};
 
-final class SortBucketsExtractor implements Extractor
+final readonly class SortBucketsExtractor implements Extractor
 {
     /**
      * @param array<Bucket> $sortBuckets
      */
     public function __construct(
-        private readonly array $sortBuckets,
-        private readonly int $batchSize,
-        private readonly BucketsCache $cache,
+        private array $sortBuckets,
+        private int $batchSize,
+        private BucketsCache $cache,
     ) {
 
     }

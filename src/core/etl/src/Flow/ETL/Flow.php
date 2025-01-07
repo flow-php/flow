@@ -8,9 +8,9 @@ use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Extractor\RowsExtractor;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 
-final class Flow
+final readonly class Flow
 {
-    private readonly Config $config;
+    private Config $config;
 
     public function __construct(Config|ConfigBuilder|null $config = null)
     {

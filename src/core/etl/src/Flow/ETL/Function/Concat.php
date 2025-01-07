@@ -23,9 +23,7 @@ final class Concat extends ScalarFunctionChain
 
     public function eval(Row $row) : mixed
     {
-        $values = \array_map(function (ScalarFunction|string $string) use ($row) : mixed {
-            return \is_string($string) ? $string : Caster::default()->to(type_string(true))->value($string->eval($row));
-        }, $this->refs);
+        $values = \array_map(fn (ScalarFunction|string $string) : mixed => \is_string($string) ? $string : Caster::default()->to(type_string(true))->value($string->eval($row)), $this->refs);
 
         foreach ($values as $value) {
             if (!\is_string($value)) {

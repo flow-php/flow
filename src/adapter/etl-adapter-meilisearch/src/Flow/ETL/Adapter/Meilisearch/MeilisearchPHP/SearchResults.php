@@ -8,9 +8,9 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\{Row, Rows};
 use Meilisearch\Search\SearchResult;
 
-final class SearchResults
+final readonly class SearchResults
 {
-    public function __construct(private readonly SearchResult $results)
+    public function __construct(private SearchResult $results)
     {
     }
 
@@ -46,9 +46,9 @@ final class SearchResults
     {
         // Estimated total hits are set only in paginated result list
         if (null !== $this->results->getOffset()) {
-            return $this->results->getEstimatedTotalHits() ?: $this->results->getHitsCount() ?: 0;
+            return ($this->results->getEstimatedTotalHits() ?: $this->results->getHitsCount()) ?: 0;
         }
 
-        return $this->results->getTotalHits() ?: $this->results->getHitsCount() ?: 0;
+        return ($this->results->getTotalHits() ?: $this->results->getHitsCount()) ?: 0;
     }
 }

@@ -99,7 +99,7 @@ final class DataFrame
             }
 
             if (!$results[0] instanceof self) {
-                throw new InvalidArgumentException('Invalid JSON, expected DataFrame instance but got ' . \get_class($results[0]));
+                throw new InvalidArgumentException('Invalid JSON, expected DataFrame instance but got ' . $results[0]::class);
             }
 
             return $results[0];

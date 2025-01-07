@@ -30,8 +30,6 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
 
     protected function tearDown() : void
     {
-        parent::tearDown();
-
         $this->elasticsearchContext->deleteIndex(self::INDEX_NAME);
     }
 

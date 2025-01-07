@@ -27,7 +27,7 @@ final class ArrayPathExists extends ScalarFunctionChain
             }
 
             return array_dot_exists($array, $path);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             return false;
         }
     }

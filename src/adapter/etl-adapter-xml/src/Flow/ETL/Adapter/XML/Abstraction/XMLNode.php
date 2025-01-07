@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\XML\Abstraction;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-final class XMLNode
+final readonly class XMLNode
 {
     /**
      * @param string $name
@@ -16,11 +16,11 @@ final class XMLNode
      * @throws InvalidArgumentException
      */
     private function __construct(
-        public readonly string $name,
-        public readonly ?string $value,
-        public readonly XMLNodeType $type,
-        public readonly array $attributes = [],
-        public readonly array $children = [],
+        public string $name,
+        public ?string $value,
+        public XMLNodeType $type,
+        public array $attributes = [],
+        public array $children = [],
     ) {
         if (!\mb_strlen($name)) {
             throw new InvalidArgumentException('XMLNode name can not be empty');

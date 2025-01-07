@@ -8,11 +8,11 @@ use function Flow\ETL\DSL\type_json;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Entry;
 
-final class EntryNormalizer
+final readonly class EntryNormalizer
 {
     public function __construct(
-        private readonly Caster $caster,
-        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM,
+        private Caster $caster,
+        private string $dateTimeFormat = \DateTimeInterface::ATOM,
     ) {
     }
 

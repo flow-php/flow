@@ -70,7 +70,7 @@ final class TimeEntry implements Entry
                     }
 
                     $this->value = $interval;
-                } catch (\Throwable $dateTimeException) {
+                } catch (\Throwable) {
                     throw $dateIntervalException;
                 }
             }

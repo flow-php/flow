@@ -18,9 +18,9 @@ use Flow\ETL\{Cache\CacheIndex,
     Transformer};
 use Flow\Filesystem\Partition;
 
-final class PartitioningPipeline implements Pipeline
+final readonly class PartitioningPipeline implements Pipeline
 {
-    private readonly Algorithm $hashAlgorithm;
+    private Algorithm $hashAlgorithm;
 
     /**
      * @param Pipeline $pipeline
@@ -30,9 +30,9 @@ final class PartitioningPipeline implements Pipeline
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private readonly Pipeline $pipeline,
-        private readonly array $partitionBy = [],
-        private readonly array $orderBy = [],
+        private Pipeline $pipeline,
+        private array $partitionBy = [],
+        private array $orderBy = [],
     ) {
         if (!\count($this->partitionBy)) {
             throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');

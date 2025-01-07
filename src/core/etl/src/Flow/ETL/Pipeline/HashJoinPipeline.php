@@ -12,7 +12,7 @@ use Flow\ETL\Pipeline\HashJoin\HashTable;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Pipeline, Row, Rows, Transformer};
 
-final class HashJoinPipeline implements Pipeline
+final readonly class HashJoinPipeline implements Pipeline
 {
     private Extractor $extractor;
 

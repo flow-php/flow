@@ -7,13 +7,13 @@ namespace Flow\ETL\Config\Sort;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Sort\SortAlgorithms;
 
-final class SortConfig
+final readonly class SortConfig
 {
     public const SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
 
     public function __construct(
-        public readonly SortAlgorithms $algorithm,
-        public readonly Unit $memoryLimit,
+        public SortAlgorithms $algorithm,
+        public Unit $memoryLimit,
     ) {
     }
 }

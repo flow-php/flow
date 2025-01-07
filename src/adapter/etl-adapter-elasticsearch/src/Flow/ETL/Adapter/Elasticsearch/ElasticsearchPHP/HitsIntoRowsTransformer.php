@@ -6,10 +6,10 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class HitsIntoRowsTransformer implements Transformer
+final readonly class HitsIntoRowsTransformer implements Transformer
 {
     public function __construct(
-        private readonly DocumentDataSource $source = DocumentDataSource::source,
+        private DocumentDataSource $source = DocumentDataSource::source,
     ) {
     }
 

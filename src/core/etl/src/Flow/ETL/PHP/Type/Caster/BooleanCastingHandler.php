@@ -43,7 +43,7 @@ final class BooleanCastingHandler implements CastingHandler
         try {
             return (bool) $value;
             /* @phpstan-ignore-next-line */
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

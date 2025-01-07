@@ -32,7 +32,7 @@ final class ConfigBuilder
 
     private bool $putInputIntoRows;
 
-    private RandomValueGenerator $randomValueGenerator;
+    private readonly RandomValueGenerator $randomValueGenerator;
 
     private ?Serializer $serializer;
 

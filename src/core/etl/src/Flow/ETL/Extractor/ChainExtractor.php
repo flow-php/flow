@@ -6,12 +6,12 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\{Extractor, FlowContext};
 
-final class ChainExtractor implements Extractor, OverridingExtractor
+final readonly class ChainExtractor implements Extractor, OverridingExtractor
 {
     /**
      * @var array<Extractor>
      */
-    private readonly array $extractors;
+    private array $extractors;
 
     public function __construct(Extractor ...$extractors)
     {

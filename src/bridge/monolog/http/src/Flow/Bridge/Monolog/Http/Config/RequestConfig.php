@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Config;
 
-final class RequestConfig
+final readonly class RequestConfig
 {
     public function __construct(
-        private readonly bool $withMethod = true,
-        private readonly bool $withUri = true,
-        private readonly bool $withBody = false,
-        private readonly int $bodySizeLimit = 1024 * 1024 * 32,
-        private readonly array $headers = ['host', 'accept', 'user-agent'],
+        private bool $withMethod = true,
+        private bool $withUri = true,
+        private bool $withBody = false,
+        private int $bodySizeLimit = 1024 * 1024 * 32,
+        private array $headers = ['host', 'accept', 'user-agent'],
     ) {
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Hash;
 
-final class NativePHPHash implements Algorithm
+final readonly class NativePHPHash implements Algorithm
 {
     public function __construct(private string $algorithm = 'xxh128', private bool $binary = false, private array $options = [])
     {

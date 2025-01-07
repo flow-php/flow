@@ -42,7 +42,7 @@ final class ArrayCastingHandler implements CastingHandler
             }
 
             return (array) $value;
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

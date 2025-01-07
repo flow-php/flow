@@ -18,16 +18,16 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     StringType};
 use Flow\ETL\PHP\Type\{Caster, Type};
 
-final class PHPValueNormalizer
+final readonly class PHPValueNormalizer
 {
     public function __construct(
-        private readonly Caster $caster,
-        public readonly string $attributePrefix = '_',
-        public readonly string $dateTimeFormat = 'Y-m-d\TH:i:s.uP',
-        public readonly string $listElementName = 'element',
-        public readonly string $mapElementName = 'element',
-        public readonly string $mapElementKeyName = 'key',
-        public readonly string $mapElementValueName = 'value',
+        private Caster $caster,
+        public string $attributePrefix = '_',
+        public string $dateTimeFormat = 'Y-m-d\TH:i:s.uP',
+        public string $listElementName = 'element',
+        public string $mapElementName = 'element',
+        public string $mapElementKeyName = 'key',
+        public string $mapElementValueName = 'value',
     ) {
 
     }

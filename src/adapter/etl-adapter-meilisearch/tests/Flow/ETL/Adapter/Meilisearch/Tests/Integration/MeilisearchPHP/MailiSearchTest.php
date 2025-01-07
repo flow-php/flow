@@ -29,8 +29,6 @@ final class MailiSearchTest extends FlowTestCase
 
     protected function tearDown() : void
     {
-        parent::tearDown();
-
         $this->meilisearchContext->deleteIndex(self::SOURCE_INDEX);
         $this->meilisearchContext->deleteIndex(self::DESTINATION_INDEX);
     }

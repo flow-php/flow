@@ -8,9 +8,9 @@ use function Flow\ETL\DSL\row;
 use Flow\ETL\Transformer\OrderEntries\Comparator;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class OrderEntriesTransformer implements Transformer
+final readonly class OrderEntriesTransformer implements Transformer
 {
-    public function __construct(private readonly Comparator $comparator)
+    public function __construct(private Comparator $comparator)
     {
     }
 
@@ -19,9 +19,7 @@ final class OrderEntriesTransformer implements Transformer
         return $rows->map(function (Row $row) : Row {
             $entries = $row->entries()->all();
 
-            usort($entries, function ($left, $right) {
-                return $this->comparator->compare($left, $right);
-            });
+            usort($entries, fn ($left, $right) => $this->comparator->compare($left, $right));
 
             return row(...$entries);
         });

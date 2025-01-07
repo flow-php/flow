@@ -27,8 +27,6 @@ final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
 
     protected function tearDown() : void
     {
-        parent::tearDown();
-
         $this->elasticsearchContext->deleteIndex(self::SOURCE_INDEX);
         $this->elasticsearchContext->deleteIndex(self::DESTINATION_INDEX);
     }

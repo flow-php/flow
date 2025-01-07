@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
-final class SearchParams
+final readonly class SearchParams
 {
     /**
      * @param array<mixed> $params - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html
      */
-    public function __construct(private readonly array $params)
+    public function __construct(private array $params)
     {
     }
 

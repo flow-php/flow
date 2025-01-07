@@ -27,7 +27,7 @@ final class ArrayGet extends ScalarFunctionChain
             }
 
             return array_dot_get($value, $path);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }

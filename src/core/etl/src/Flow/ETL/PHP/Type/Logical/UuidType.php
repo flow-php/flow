@@ -12,9 +12,9 @@ use Flow\ETL\PHP\Value\Uuid;
 /**
  * @implements Type<Uuid>
  */
-final class UuidType implements Type
+final readonly class UuidType implements Type
 {
-    public function __construct(private readonly bool $nullable = false)
+    public function __construct(private bool $nullable = false)
     {
     }
 

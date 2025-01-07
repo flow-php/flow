@@ -6,9 +6,9 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row\Reference;
 
-final class ListFunctions
+final readonly class ListFunctions
 {
-    public function __construct(private readonly Reference $ref)
+    public function __construct(private Reference $ref)
     {
     }
 

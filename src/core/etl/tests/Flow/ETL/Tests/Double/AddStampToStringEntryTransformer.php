@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Double;
 use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class AddStampToStringEntryTransformer implements Transformer
+final readonly class AddStampToStringEntryTransformer implements Transformer
 {
     public function __construct(private string $entryName, private string $stamp, private string $divider)
     {

@@ -13,15 +13,15 @@ if (!function_exists('Flow\ETL\Adapter\CSV\to_csv')) {
     throw new \RuntimeException('Flow\ETL\Adapter\CSV\to_csv function is not available. Make sure that composer require flow-php/etl-adapter-json dependency is present in your composer.json.');
 }
 
-final class CSVOutput implements Output
+final readonly class CSVOutput implements Output
 {
     public function __construct(
-        private readonly bool $withHeader = true,
-        private readonly string $separator = ',',
-        private readonly string $enclosure = '"',
-        private readonly string $escape = '\\',
-        private readonly string $newLineSeparator = PHP_EOL,
-        private readonly string $datetimeFormat = \DateTimeInterface::ATOM,
+        private bool $withHeader = true,
+        private string $separator = ',',
+        private string $enclosure = '"',
+        private string $escape = '\\',
+        private string $newLineSeparator = PHP_EOL,
+        private string $datetimeFormat = \DateTimeInterface::ATOM,
     ) {
 
     }

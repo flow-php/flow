@@ -8,11 +8,11 @@ use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException};
 use Flow\ETL\{Config, DataFrame};
 use Flow\Filesystem\Path;
 
-final class PipelineFactory
+final readonly class PipelineFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly Config $config,
+        private Path $path,
+        private Config $config,
     ) {
     }
 
@@ -36,7 +36,7 @@ final class PipelineFactory
         $pipeline = include $this->path->path();
 
         if (!$pipeline instanceof DataFrame) {
-            throw InvalidArgumentException::because('Expecting Flow-PHP DataFrame, received: ' . (\is_object($pipeline) ? $pipeline::class : \gettype($pipeline)));
+            throw InvalidArgumentException::because('Expecting Flow-PHP DataFrame, received: ' . (get_debug_type($pipeline)));
         }
 
         return $pipeline;

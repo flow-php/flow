@@ -66,7 +66,7 @@ final class Cast extends ScalarFunctionChain
                 'xml' => $caster->to(type_xml())->value($value),
                 default => null,
             };
-        } catch (CastingException $e) {
+        } catch (CastingException) {
             return null;
         }
     }

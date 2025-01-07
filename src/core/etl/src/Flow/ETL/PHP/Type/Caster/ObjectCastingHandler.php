@@ -34,7 +34,7 @@ final class ObjectCastingHandler implements CastingHandler
             }
 
             return $object;
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Row, Rows};
 use Flow\Filesystem\Partition;
 
-final class Body
+final readonly class Body
 {
-    public function __construct(private readonly Rows $rows)
+    public function __construct(private Rows $rows)
     {
     }
 
@@ -25,7 +25,7 @@ final class Body
                 if ($value->length($truncate) >= $max) {
                     $max = $value->length($truncate);
                 }
-            } catch (InvalidArgumentException $e) {
+            } catch (InvalidArgumentException) {
             }
         }
 

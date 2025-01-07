@@ -7,9 +7,9 @@ namespace Flow\ETL\PHP\Type;
 use function Flow\ETL\DSL\{get_type, type_boolean, type_datetime, type_float, type_integer, type_json, type_uuid};
 use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 
-final class AutoCaster
+final readonly class AutoCaster
 {
-    public function __construct(private readonly Caster $caster)
+    public function __construct(private Caster $caster)
     {
     }
 

@@ -6,12 +6,12 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-final class Columns
+final readonly class Columns
 {
     public function __construct(
-        public readonly string $sheetName,
-        public readonly string $startColumn,
-        public readonly string $endColumn,
+        public string $sheetName,
+        public string $startColumn,
+        public string $endColumn,
     ) {
         if ('' === $sheetName) {
             throw new InvalidArgumentException('Sheet name can\'t be empty');

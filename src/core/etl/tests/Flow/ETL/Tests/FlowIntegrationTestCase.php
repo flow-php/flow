@@ -22,7 +22,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     protected Serializer $serializer;
 
-    private string|false $baseMemoryLimit;
+    private readonly string|false $baseMemoryLimit;
 
     public function __construct(string $name)
     {

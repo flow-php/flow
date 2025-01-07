@@ -8,9 +8,9 @@ use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\{DataFrame, GroupBy, Pipeline};
 
-final class GroupedDataFrame
+final readonly class GroupedDataFrame
 {
-    public function __construct(private readonly DataFrame $df, private readonly GroupBy $groupBy)
+    public function __construct(private DataFrame $df, private GroupBy $groupBy)
     {
     }
 

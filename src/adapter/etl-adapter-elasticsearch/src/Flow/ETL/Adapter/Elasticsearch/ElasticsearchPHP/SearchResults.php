@@ -8,12 +8,12 @@ use Elastic\Elasticsearch\Response\Elasticsearch;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\{Row, Rows};
 
-final class SearchResults
+final readonly class SearchResults
 {
     /**
      * @var array<mixed>
      */
-    private readonly array $results;
+    private array $results;
 
     /**
      * @param array<mixed>|Elasticsearch $results

@@ -9,7 +9,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
 use Flow\ETL\{FlowContext, Hash\Algorithm, Hash\NativePHPHash, Rows, Transformer};
 
-final class DropDuplicatesTransformer implements Transformer
+final readonly class DropDuplicatesTransformer implements Transformer
 {
     private Hashes $deduplication;
 

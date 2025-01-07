@@ -37,7 +37,7 @@ final class ListCastingHandler implements CastingHandler
             }
 
             return $castedList;
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

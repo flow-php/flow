@@ -6,9 +6,9 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class RenameEntryTransformer implements Transformer
+final readonly class RenameEntryTransformer implements Transformer
 {
-    public function __construct(private readonly string $from, private readonly string $to)
+    public function __construct(private string $from, private string $to)
     {
     }
 

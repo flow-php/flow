@@ -6,11 +6,11 @@ namespace Flow\ETL\Dataset;
 
 use Flow\ETL\Row\Schema;
 
-final class Report
+final readonly class Report
 {
     public function __construct(
-        private readonly Schema $schema,
-        private readonly Statistics $statistics,
+        private Schema $schema,
+        private Statistics $statistics,
     ) {
 
     }

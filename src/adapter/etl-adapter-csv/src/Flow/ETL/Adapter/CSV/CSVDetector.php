@@ -11,17 +11,11 @@ use Flow\Filesystem\SourceStream;
 
 final class CSVDetector
 {
-    private ?Option $fallback;
-
     private Options $options;
 
-    private SourceStream $stream;
-
-    public function __construct(SourceStream $stream, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null)
+    public function __construct(private readonly SourceStream $stream, private readonly ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null)
     {
-        $this->stream = $stream;
         $this->options = $options ?? Options::all();
-        $this->fallback = $fallback;
     }
 
     /**

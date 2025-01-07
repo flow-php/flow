@@ -15,7 +15,7 @@ final class HashIdFactory implements IdFactory
     /**
      * @var string[]
      */
-    private array $entryNames;
+    private readonly array $entryNames;
 
     private Algorithm $hashAlgorithm;
 

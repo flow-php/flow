@@ -8,11 +8,11 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\{FlowContext, Row\Schema\Definition, Rows, Transformer};
 
-final class WindowFunctionTransformer implements Transformer
+final readonly class WindowFunctionTransformer implements Transformer
 {
     public function __construct(
-        private readonly string|Definition $entry,
-        private readonly WindowFunction $function,
+        private string|Definition $entry,
+        private WindowFunction $function,
     ) {
     }
 

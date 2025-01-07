@@ -11,13 +11,13 @@ use Flow\ETL\{Cache, Row, Rows};
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Serializer\Serializer;
 
-final class FilesystemCache implements Cache
+final readonly class FilesystemCache implements Cache
 {
     private Path $cacheDir;
 
     public function __construct(
-        private readonly Filesystem $filesystem,
-        private readonly Serializer $serializer,
+        private Filesystem $filesystem,
+        private Serializer $serializer,
         ?Path $cacheDir,
     ) {
         $this->cacheDir = $cacheDir ?? $this->filesystem->getSystemTmpDir();

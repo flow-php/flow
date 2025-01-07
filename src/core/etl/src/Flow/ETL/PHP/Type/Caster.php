@@ -38,12 +38,12 @@ use Flow\ETL\PHP\Type\Caster\{ArrayCastingHandler,
     UuidCastingHandler,
     XMLCastingHandler};
 
-final class Caster
+final readonly class Caster
 {
     /**
      * @param array<CastingHandler> $handlers
      */
-    public function __construct(private readonly array $handlers, private readonly Options $options = new Options())
+    public function __construct(private array $handlers, private Options $options = new Options())
     {
     }
 

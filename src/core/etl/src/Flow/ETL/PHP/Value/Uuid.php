@@ -6,7 +6,7 @@ namespace Flow\ETL\PHP\Value;
 
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 
-final class Uuid implements \Stringable
+final readonly class Uuid implements \Stringable
 {
     /**
      * This regexp is a port of the Uuid library,
@@ -14,7 +14,7 @@ final class Uuid implements \Stringable
      */
     public const UUID_REGEXP = '/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/ms';
 
-    private readonly string $value;
+    private string $value;
 
     /**
      * @throws InvalidArgumentException|RuntimeException

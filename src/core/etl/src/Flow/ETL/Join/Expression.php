@@ -9,11 +9,11 @@ use Flow\ETL\Join\Comparison\{All, Equal};
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
-final class Expression
+final readonly class Expression
 {
     public function __construct(
-        private readonly Comparison $comparison,
-        private readonly string $joinPrefix = '',
+        private Comparison $comparison,
+        private string $joinPrefix = '',
     ) {
     }
 

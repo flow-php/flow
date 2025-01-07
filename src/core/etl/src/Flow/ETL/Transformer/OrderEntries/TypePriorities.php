@@ -7,7 +7,7 @@ namespace Flow\ETL\Transformer\OrderEntries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{IntegerEntry, UuidEntry};
 
-final class TypePriorities
+final readonly class TypePriorities
 {
     /**
      * @var array<class-string<Entry<mixed, mixed>>,int>
@@ -31,7 +31,7 @@ final class TypePriorities
     /**
      * @param array<class-string<Entry<mixed, mixed>>,int> $priorities
      */
-    public function __construct(private readonly array $priorities = self::PRIORITIES)
+    public function __construct(private array $priorities = self::PRIORITIES)
     {
 
     }

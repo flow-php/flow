@@ -9,11 +9,11 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\{Exception\RuntimeException, FlowContext, Loader, Rows};
 use Flow\Filesystem\Path;
 
-final class AvroLoader implements Closure, Loader, Loader\FileLoader
+final readonly class AvroLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly ?Schema $schema = null,
+        private Path $path,
+        private ?Schema $schema = null,
     ) {
         throw new RuntimeException('Avro integration was abandoned due to lack of availability of good Avro libraries.');
     }

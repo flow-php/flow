@@ -36,7 +36,7 @@ final class TimeCastingHandler implements CastingHandler
             if (\is_string($value)) {
                 return new \DateInterval($value);
             }
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, type_time());
         }
 

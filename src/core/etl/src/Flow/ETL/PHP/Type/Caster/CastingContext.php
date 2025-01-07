@@ -10,7 +10,7 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 /**
  * @template T
  */
-final class CastingContext
+final readonly class CastingContext
 {
     /**
      * @param CastingHandler $handler
@@ -19,10 +19,10 @@ final class CastingContext
      * @param Options $options
      */
     public function __construct(
-        private readonly CastingHandler $handler,
-        private readonly Type $type,
-        private readonly Caster $caster,
-        private readonly Options $options,
+        private CastingHandler $handler,
+        private Type $type,
+        private Caster $caster,
+        private Options $options,
     ) {
     }
 

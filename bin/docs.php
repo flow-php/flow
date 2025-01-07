@@ -63,7 +63,7 @@ $application->add(new class extends Command {
             $normalizedFunctions[] = $function->normalize();
         }
 
-        \file_put_contents(__DIR__ . '/../' . \ltrim($input->getArgument('output'), '/'), \json_encode($normalizedFunctions));
+        \file_put_contents(__DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'), \json_encode($normalizedFunctions));
 
         return Command::SUCCESS;
     }

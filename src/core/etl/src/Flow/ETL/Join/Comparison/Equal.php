@@ -8,11 +8,11 @@ use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{EntryReference, Reference};
 
-final class Equal implements Comparison
+final readonly class Equal implements Comparison
 {
     public function __construct(
-        private readonly string|Reference $entryLeft,
-        private readonly string|Reference $entryRight,
+        private string|Reference $entryLeft,
+        private string|Reference $entryRight,
     ) {
     }
 

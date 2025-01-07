@@ -12,10 +12,10 @@ use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, UuidEntry};
 
-final class EntryNormalizer
+final readonly class EntryNormalizer
 {
     public function __construct(
-        private readonly PHPValueNormalizer $valueNormalizer,
+        private PHPValueNormalizer $valueNormalizer,
     ) {
 
     }

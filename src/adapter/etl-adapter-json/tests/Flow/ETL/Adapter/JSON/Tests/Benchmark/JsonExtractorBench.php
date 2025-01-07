@@ -9,9 +9,9 @@ use Flow\ETL\{Config, FlowContext};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['extractor'])]
-final class JsonExtractorBench
+final readonly class JsonExtractorBench
 {
-    private readonly FlowContext $context;
+    private FlowContext $context;
 
     public function __construct()
     {

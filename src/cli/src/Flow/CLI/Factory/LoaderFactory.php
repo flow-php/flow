@@ -10,11 +10,11 @@ use Flow\ETL\Loader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class LoaderFactory
+final readonly class LoaderFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly FileFormat $format,
+        private Path $path,
+        private FileFormat $format,
     ) {
 
     }

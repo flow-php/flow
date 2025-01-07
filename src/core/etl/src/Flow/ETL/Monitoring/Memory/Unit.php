@@ -6,9 +6,9 @@ namespace Flow\ETL\Monitoring\Memory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-final class Unit
+final readonly class Unit
 {
-    private function __construct(private readonly int $bytes)
+    private function __construct(private int $bytes)
     {
     }
 

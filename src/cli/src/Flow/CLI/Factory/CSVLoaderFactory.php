@@ -10,16 +10,16 @@ use Flow\ETL\Adapter\CSV\CSVLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class CSVLoaderFactory
+final readonly class CSVLoaderFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly string $withHeaderOption = 'output-csv-header',
-        private readonly string $separatorOption = 'output-csv-separator',
-        private readonly string $enclosureOption = 'output-csv-enclosure',
-        private readonly string $escapeOption = 'output-csv-escape',
-        private readonly string $newLineSeparatorOption = 'output-csv-new-line-separator',
-        private readonly string $dateTimeFormat = 'output-csv-date-time-format',
+        private Path $path,
+        private string $withHeaderOption = 'output-csv-header',
+        private string $separatorOption = 'output-csv-separator',
+        private string $enclosureOption = 'output-csv-enclosure',
+        private string $escapeOption = 'output-csv-escape',
+        private string $newLineSeparatorOption = 'output-csv-new-line-separator',
+        private string $dateTimeFormat = 'output-csv-date-time-format',
     ) {
     }
 

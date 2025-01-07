@@ -62,8 +62,8 @@ final class TypeDetector
             }
 
             $detector = new ArrayContentDetector(
-                $keyTypes = new Types(...\array_map([$this, 'detectType'], \array_keys($value))),
-                $valueTypes = new Types(...\array_map([$this, 'detectType'], \array_values($value))),
+                $keyTypes = new Types(...\array_map($this->detectType(...), \array_keys($value))),
+                $valueTypes = new Types(...\array_map($this->detectType(...), \array_values($value))),
                 \array_is_list($value)
             );
 

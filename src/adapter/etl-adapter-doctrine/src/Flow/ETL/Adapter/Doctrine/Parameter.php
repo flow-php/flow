@@ -8,12 +8,12 @@ use Doctrine\DBAL\ArrayParameterType;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
-final class Parameter implements QueryParameter
+final readonly class Parameter implements QueryParameter
 {
     public function __construct(
-        private readonly string $queryParamName,
-        private readonly EntryReference $ref,
-        private readonly int|ArrayParameterType $type = ArrayParameterType::STRING,
+        private string $queryParamName,
+        private EntryReference $ref,
+        private int|ArrayParameterType $type = ArrayParameterType::STRING,
     ) {
     }
 

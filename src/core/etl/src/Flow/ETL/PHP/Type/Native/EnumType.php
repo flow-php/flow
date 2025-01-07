@@ -10,12 +10,12 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<\UnitEnum>
  */
-final class EnumType implements Type
+final readonly class EnumType implements Type
 {
     /**
      * @param class-string<\UnitEnum> $class
      */
-    public function __construct(public readonly string $class, private readonly bool $nullable)
+    public function __construct(public string $class, private bool $nullable)
     {
         if (!\enum_exists($class)) {
             throw new InvalidArgumentException("Enum {$class} not found");

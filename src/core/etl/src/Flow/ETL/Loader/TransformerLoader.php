@@ -6,11 +6,11 @@ namespace Flow\ETL\Loader;
 
 use Flow\ETL\{FlowContext, Loader, Rows, Transformer};
 
-final class TransformerLoader implements Loader, OverridingLoader
+final readonly class TransformerLoader implements Loader, OverridingLoader
 {
     public function __construct(
-        private readonly Transformer $transformer,
-        private readonly Loader $loader,
+        private Transformer $transformer,
+        private Loader $loader,
     ) {
     }
 

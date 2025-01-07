@@ -10,9 +10,9 @@ use Flow\ETL\Config;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class FilePathArgument
+final readonly class FilePathArgument
 {
-    public function __construct(private readonly string $path)
+    public function __construct(private string $path)
     {
     }
 

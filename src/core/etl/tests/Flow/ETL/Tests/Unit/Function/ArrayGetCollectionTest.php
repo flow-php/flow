@@ -33,7 +33,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
             ),
         );
 
-        self::assertNull(array_get_collection(ref('array_entry'), ['id'], 'status')->eval($row));
+        self::assertNull(array_get_collection(ref('array_entry'), ['id'])->eval($row));
     }
 
     public function test_getting_specific_keys_from_collection_of_array() : void

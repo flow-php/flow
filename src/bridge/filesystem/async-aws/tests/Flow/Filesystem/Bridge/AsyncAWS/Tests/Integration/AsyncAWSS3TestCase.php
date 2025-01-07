@@ -67,7 +67,7 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         $objects = $s3Client->listObjectsV2(['Bucket' => $bucket]);
 
         foreach ($objects->getContents() as $object) {
-            $s3Client->deleteObject(['Bucket' => $bucket, 'Key' => ltrim($object->getKey(), '/')]);
+            $s3Client->deleteObject(['Bucket' => $bucket, 'Key' => ltrim((string) $object->getKey(), '/')]);
         }
     }
 }

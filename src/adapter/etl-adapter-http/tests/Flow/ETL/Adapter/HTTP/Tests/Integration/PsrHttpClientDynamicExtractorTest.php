@@ -43,7 +43,7 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
 
         $rows = $extractor->extract(new FlowContext(Config::default()));
 
-        $body = \json_decode($rows->current()->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
+        $body = \json_decode((string) $rows->current()->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
 
         self::assertSame(1, $rows->current()->count());
         self::assertSame('flow-php', $body['login'], \json_encode($body, JSON_THROW_ON_ERROR));

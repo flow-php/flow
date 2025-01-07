@@ -53,7 +53,7 @@ final class DateCastingHandler implements CastingHandler
                 return (new \DateTimeImmutable('@0'))->add($value)->setTime(0, 0, 0, 0);
 
             }
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, type_date());
         }
 

@@ -21,7 +21,7 @@ final class DbalLoader implements Loader
      * @param array<string, mixed> $connectionParams
      */
     public function __construct(
-        private string $tableName,
+        private readonly string $tableName,
         private readonly array $connectionParams,
     ) {
     }

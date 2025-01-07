@@ -20,7 +20,7 @@ abstract class FlowTestCase extends TestCase
         ?FlowContext $flowContext = null,
         string $message = '',
     ) : void {
-        $flowContext = $flowContext ?? flow_context();
+        $flowContext ??= flow_context();
 
         static::assertCount(
             $expectedCount,
@@ -35,7 +35,7 @@ abstract class FlowTestCase extends TestCase
         ?FlowContext $flowContext = null,
         string $message = '',
     ) : void {
-        $flowContext = $flowContext ?? flow_context();
+        $flowContext ??= flow_context();
         $extractorContainsBatches = false;
 
         foreach ($extractor->extract($flowContext) as $rows) {
@@ -54,7 +54,7 @@ abstract class FlowTestCase extends TestCase
         ?FlowContext $flowContext = null,
         string $message = '',
     ) : void {
-        $flowContext = $flowContext ?? flow_context();
+        $flowContext ??= flow_context();
         $extractedRows = rows();
 
         foreach ($extractor->extract($flowContext) as $nextRows) {
@@ -70,7 +70,7 @@ abstract class FlowTestCase extends TestCase
         ?FlowContext $flowContext = null,
         string $message = '',
     ) : void {
-        $flowContext = $flowContext ?? flow_context();
+        $flowContext ??= flow_context();
         $totalRows = 0;
 
         foreach ($extractor->extract($flowContext) as $rows) {
@@ -86,7 +86,7 @@ abstract class FlowTestCase extends TestCase
         ?FlowContext $flowContext = null,
         string $message = '',
     ) : void {
-        $flowContext = $flowContext ?? flow_context();
+        $flowContext ??= flow_context();
         $extractedRows = rows();
 
         foreach ($extractor->extract($flowContext) as $nextRows) {

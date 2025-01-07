@@ -16,7 +16,7 @@ final class Optional extends ScalarFunctionChain
     {
         try {
             return $this->function->eval($row);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return null;
         }
     }

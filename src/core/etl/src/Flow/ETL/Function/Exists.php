@@ -23,7 +23,7 @@ final class Exists extends ScalarFunctionChain
             $this->ref->eval($row);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }

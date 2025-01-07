@@ -27,7 +27,7 @@ final class AnyTest extends FlowTestCase
             ->withEntry(
                 'result',
                 when(
-                    any(ref('id')->isEven(), ref('array')->exists('b')),
+                    any(ref('id')->isEven(), ref('array')->exists()),
                     lit('found'),
                     lit('not found')
                 )

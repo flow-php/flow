@@ -16,7 +16,7 @@ use Flow\ETL\{Exception\OutOfMemoryException,
 
 final class MemorySort implements SortingAlgorithm
 {
-    private Configuration $configuration;
+    private readonly Configuration $configuration;
 
     public function __construct(
         private Unit $maximumMemory,

@@ -10,12 +10,12 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<object>
  */
-final class ObjectType implements Type
+final readonly class ObjectType implements Type
 {
     /**
      * @param class-string $class
      */
-    public function __construct(public readonly string $class, private readonly bool $nullable = false)
+    public function __construct(public string $class, private bool $nullable = false)
     {
         if (!\class_exists($class) && !\interface_exists($class)) {
             throw new InvalidArgumentException("Class {$class} not found");

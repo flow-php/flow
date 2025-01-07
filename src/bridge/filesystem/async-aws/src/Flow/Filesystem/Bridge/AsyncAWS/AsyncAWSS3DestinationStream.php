@@ -106,7 +106,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
                 ),
                 $blockList
             );
-        } catch (NoSuchKeyException $e) {
+        } catch (NoSuchKeyException) {
             return self::openBlank($s3Client, $bucket, $path, $blockFactory, $blockSize);
         }
     }

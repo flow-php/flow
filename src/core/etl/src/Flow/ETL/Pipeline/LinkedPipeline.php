@@ -14,12 +14,12 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
  *
  * All new elements are added to the SyncPipeline
  */
-final class LinkedPipeline implements OverridingPipeline, Pipeline
+final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
 {
-    private readonly Pipeline $nextPipeline;
+    private Pipeline $nextPipeline;
 
     public function __construct(
-        private readonly Pipeline $pipeline,
+        private Pipeline $pipeline,
     ) {
         $this->nextPipeline = new SynchronousPipeline(new Extractor\PipelineExtractor($this->pipeline));
     }

@@ -57,7 +57,7 @@ final class XMLElementEntry implements Entry
         }
 
         /* @phpstan-ignore-next-line */
-        return $this->value->ownerDocument->saveXML($this->value);
+        return (string) $this->value->ownerDocument->saveXML($this->value);
     }
 
     public function __unserialize(array $data) : void
@@ -71,7 +71,7 @@ final class XMLElementEntry implements Entry
             return;
         }
 
-        $element = \gzuncompress(\base64_decode($data['value'], true) ?: '') ?: '';
+        $element = \gzuncompress(\base64_decode((string) $data['value'], true) ?: '') ?: '';
 
         $domDocument = new \DOMDocument();
         @$domDocument->loadXML($element);

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-final class Types implements \Countable
+final readonly class Types implements \Countable
 {
     /**
      * @var ?Type<mixed>
      */
-    private readonly ?Type $first;
+    private ?Type $first;
 
     /**
      * @var array<Type<mixed>>

@@ -6,9 +6,9 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\{Extractor, FlowContext, Rows};
 
-final class CollectingExtractor implements Extractor, OverridingExtractor
+final readonly class CollectingExtractor implements Extractor, OverridingExtractor
 {
-    public function __construct(private readonly Extractor $extractor)
+    public function __construct(private Extractor $extractor)
     {
     }
 

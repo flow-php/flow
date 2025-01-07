@@ -10,9 +10,9 @@ use Flow\ETL\Row\Entry\{UuidEntry, XMLEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 
-final class RowsNormalizer
+final readonly class RowsNormalizer
 {
-    public function __construct(private readonly Caster $caster)
+    public function __construct(private Caster $caster)
     {
     }
 

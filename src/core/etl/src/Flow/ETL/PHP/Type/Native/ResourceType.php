@@ -10,9 +10,9 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<resource>
  */
-final class ResourceType implements Type
+final readonly class ResourceType implements Type
 {
-    public function __construct(private readonly bool $nullable)
+    public function __construct(private bool $nullable)
     {
 
     }

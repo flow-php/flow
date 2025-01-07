@@ -6,9 +6,9 @@ namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-final class ASCIIBody
+final readonly class ASCIIBody
 {
-    public function __construct(private readonly Headers $headers, private readonly Body $body)
+    public function __construct(private Headers $headers, private Body $body)
     {
     }
 
@@ -24,7 +24,7 @@ final class ASCIIBody
 
                 try {
                     $value = new ASCIIValue($row->entries()->get($name));
-                } catch (InvalidArgumentException $e) {
+                } catch (InvalidArgumentException) {
                     $value = new ASCIIValue('');
                 }
 

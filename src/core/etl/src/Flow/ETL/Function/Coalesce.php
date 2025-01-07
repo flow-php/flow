@@ -11,7 +11,7 @@ final class Coalesce extends ScalarFunctionChain
     /**
      * @param array<ScalarFunction> $values
      */
-    private array $values;
+    private readonly array $values;
 
     public function __construct(
         ScalarFunction ...$values,
@@ -24,7 +24,7 @@ final class Coalesce extends ScalarFunctionChain
         foreach ($this->values as $value) {
             try {
                 $result = (new Parameter($value))->eval($row);
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 continue;
             }
 

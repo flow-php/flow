@@ -8,11 +8,11 @@ use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{FlowContext, Loader, Rows, SchemaValidator};
 
-final class SchemaValidationLoader implements Loader
+final readonly class SchemaValidationLoader implements Loader
 {
     public function __construct(
-        private readonly Schema $schema,
-        private readonly SchemaValidator $validator,
+        private Schema $schema,
+        private SchemaValidator $validator,
     ) {
     }
 

@@ -8,11 +8,11 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\{FlowContext, Loader, Rows};
 
-final class BranchingLoader implements Closure, Loader, OverridingLoader
+final readonly class BranchingLoader implements Closure, Loader, OverridingLoader
 {
     public function __construct(
-        private readonly ScalarFunction $condition,
-        private readonly Loader $loader,
+        private ScalarFunction $condition,
+        private Loader $loader,
     ) {
     }
 

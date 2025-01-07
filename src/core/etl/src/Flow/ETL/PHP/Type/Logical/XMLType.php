@@ -11,9 +11,9 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<\DOMDocument>
  */
-final class XMLType implements Type
+final readonly class XMLType implements Type
 {
-    public function __construct(private readonly bool $nullable)
+    public function __construct(private bool $nullable)
     {
     }
 

@@ -7,9 +7,9 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class GroupToArrayTransformer implements Transformer
+final readonly class GroupToArrayTransformer implements Transformer
 {
-    public function __construct(private readonly string $groupByEntry, private readonly string $newEntryName)
+    public function __construct(private string $groupByEntry, private string $newEntryName)
     {
     }
 

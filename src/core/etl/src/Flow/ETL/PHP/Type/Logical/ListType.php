@@ -12,13 +12,13 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<array<int, mixed>>
  */
-final class ListType implements Type
+final readonly class ListType implements Type
 {
     /**
      * @param ListElement $element
      * @param bool $nullable
      */
-    public function __construct(private readonly ListElement $element, private readonly bool $nullable = false)
+    public function __construct(private ListElement $element, private bool $nullable = false)
     {
     }
 

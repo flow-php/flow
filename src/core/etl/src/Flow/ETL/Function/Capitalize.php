@@ -21,9 +21,9 @@ final class Capitalize extends ScalarFunctionChain
         }
 
         if (\function_exists('mb_convert_case')) {
-            return \mb_convert_case($string, \MB_CASE_TITLE);
+            return \mb_convert_case((string) $string, \MB_CASE_TITLE);
         }
 
-        return \ucwords($string);
+        return \ucwords((string) $string);
     }
 }

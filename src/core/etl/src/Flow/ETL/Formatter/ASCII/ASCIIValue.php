@@ -108,7 +108,7 @@ final class ASCIIValue
                     'double', 'integer' => (string) $val,
                     'array' => \json_encode($val, \JSON_THROW_ON_ERROR),
                 };
-            } catch (\JsonException $e) {
+            } catch (\JsonException) {
                 $this->stringValue = '{...}';
             }
         }

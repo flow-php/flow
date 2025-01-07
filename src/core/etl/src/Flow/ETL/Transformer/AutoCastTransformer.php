@@ -8,18 +8,14 @@ use Flow\ETL\PHP\Type\AutoCaster;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class AutoCastTransformer implements Transformer
+final readonly class AutoCastTransformer implements Transformer
 {
-    public function __construct(private readonly AutoCaster $caster)
+    public function __construct(private AutoCaster $caster)
     {
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        return $rows->map(function (Row $row) use ($context) {
-            return $row->map(function (Entry $entry) use ($context) {
-                return $context->entryFactory()->create($entry->name(), $this->caster->cast($entry->value()));
-            });
-        });
+        return $rows->map(fn (Row $row) => $row->map(fn (Entry $entry) => $context->entryFactory()->create($entry->name(), $this->caster->cast($entry->value()))));
     }
 }

@@ -7,12 +7,12 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\{DataFrameFactory, FlowContext, Rows, Transformer};
 
-final class JoinEachRowsTransformer implements Transformer
+final readonly class JoinEachRowsTransformer implements Transformer
 {
     private function __construct(
-        private readonly DataFrameFactory $factory,
-        private readonly Expression $condition,
-        private readonly Join $type,
+        private DataFrameFactory $factory,
+        private Expression $condition,
+        private Join $type,
     ) {
     }
 

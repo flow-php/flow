@@ -6,9 +6,9 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext, Rows, Transformer};
 
-final class DropPartitionsTransformer implements Transformer
+final readonly class DropPartitionsTransformer implements Transformer
 {
-    public function __construct(private readonly bool $dropPartitionColumns = false)
+    public function __construct(private bool $dropPartitionColumns = false)
     {
 
     }

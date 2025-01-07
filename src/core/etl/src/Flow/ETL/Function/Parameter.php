@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\lit;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class Parameter
+final readonly class Parameter
 {
     private ScalarFunction $function;
 

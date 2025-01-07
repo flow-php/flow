@@ -41,7 +41,7 @@ final class IntegerCastingHandler implements CastingHandler
         try {
             return (int) $value;
             /* @phpstan-ignore-next-line */
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

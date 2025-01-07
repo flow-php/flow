@@ -8,9 +8,9 @@ use function Flow\ETL\DSL\{row, rows, str_entry};
 use Flow\ETL\Row\{Reference, References};
 use Flow\ETL\{FlowContext, Rows, Transformer};
 
-final class SelectEntriesTransformer implements Transformer
+final readonly class SelectEntriesTransformer implements Transformer
 {
-    private readonly References $refs;
+    private References $refs;
 
     public function __construct(string|Reference ...$refs)
     {
@@ -27,7 +27,7 @@ final class SelectEntriesTransformer implements Transformer
             foreach ($this->refs as $ref) {
                 try {
                     $newRowEntries[] = $row->get($ref);
-                } catch (\Exception $e) {
+                } catch (\Exception) {
                     $newRowEntries[] = str_entry($ref->name(), null);
                 }
             }

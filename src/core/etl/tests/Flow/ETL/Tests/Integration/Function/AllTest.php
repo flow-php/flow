@@ -27,7 +27,7 @@ final class AllTest extends FlowTestCase
             ->withEntry(
                 'result',
                 when(
-                    all(ref('id')->isEven(), ref('array')->exists('b')),
+                    all(ref('id')->isEven(), ref('array')->exists()),
                     lit('found'),
                     lit('not found')
                 )

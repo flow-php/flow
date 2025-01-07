@@ -18,12 +18,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
-final class ListElement
+final readonly class ListElement
 {
     /**
      * @param Type<mixed> $type
      */
-    public function __construct(private readonly Type $type)
+    public function __construct(private Type $type)
     {
     }
 

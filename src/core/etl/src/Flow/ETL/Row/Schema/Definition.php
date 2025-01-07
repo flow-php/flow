@@ -36,11 +36,11 @@ use Flow\ETL\Row\Entry\{BooleanEntry,
     XMLEntry};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 
-final class Definition
+final readonly class Definition
 {
     private Metadata $metadata;
 
-    private readonly Reference $ref;
+    private Reference $ref;
 
     /**
      * @param class-string<Entry<mixed, mixed>> $entryClass
@@ -48,8 +48,8 @@ final class Definition
      */
     public function __construct(
         string|Reference $ref,
-        private readonly string $entryClass,
-        private readonly Type $type,
+        private string $entryClass,
+        private Type $type,
         ?Metadata $metadata = null,
     ) {
         if (!\is_a($this->entryClass, Entry::class, true)) {

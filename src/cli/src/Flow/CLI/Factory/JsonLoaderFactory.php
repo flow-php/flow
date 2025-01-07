@@ -10,12 +10,12 @@ use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class JsonLoaderFactory
+final readonly class JsonLoaderFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly string $dateTimeFormat = 'output-json-date-time-format',
-        private readonly string $putRowsInNewLine = 'output-json-rows-in-new-line',
+        private Path $path,
+        private string $dateTimeFormat = 'output-json-date-time-format',
+        private string $putRowsInNewLine = 'output-json-rows-in-new-line',
     ) {
     }
 

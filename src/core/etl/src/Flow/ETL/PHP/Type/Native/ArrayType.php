@@ -10,9 +10,9 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<array>
  */
-final class ArrayType implements Type
+final readonly class ArrayType implements Type
 {
-    public function __construct(private readonly bool $empty = false, private readonly bool $nullable = false)
+    public function __construct(private bool $empty = false, private bool $nullable = false)
     {
     }
 

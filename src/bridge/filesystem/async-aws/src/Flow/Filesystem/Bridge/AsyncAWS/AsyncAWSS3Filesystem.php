@@ -17,9 +17,9 @@ use Flow\Filesystem\{DestinationStream,
     Protocol,
     SourceStream};
 
-final class AsyncAWSS3Filesystem implements Filesystem
+final readonly class AsyncAWSS3Filesystem implements Filesystem
 {
-    public function __construct(private readonly string $bucket, private readonly S3Client $s3Client, private readonly Options $options)
+    public function __construct(private string $bucket, private S3Client $s3Client, private Options $options)
     {
         if ($bucket === '') {
             throw new InvalidArgumentException('Bucket name can not be empty');
@@ -62,7 +62,7 @@ final class AsyncAWSS3Filesystem implements Filesystem
             ]);
 
             foreach ($result->getContents() as $object) {
-                $objectPath = new Path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim($object->getKey(), DIRECTORY_SEPARATOR), $path->options());
+                $objectPath = new Path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim((string) $object->getKey(), DIRECTORY_SEPARATOR), $path->options());
                 $objectFileStatus = new FileStatus($objectPath, (bool) $objectPath->extension());
 
                 if ($path->isPattern() && !$path->matches($objectPath)) {
@@ -134,7 +134,7 @@ final class AsyncAWSS3Filesystem implements Filesystem
                 'Key' => ltrim($path->path(), '/'),
             ]);
             $headObject->resolve();
-        } catch (NoSuchKeyException $e) {
+        } catch (NoSuchKeyException) {
             /**
              * Since AzureS3 doesn't have a concept of folders, before we check if the intention is not to delete
              * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally
@@ -185,7 +185,7 @@ final class AsyncAWSS3Filesystem implements Filesystem
                 $headObject->resolve();
 
                 return new FileStatus($path, true);
-            } catch (NoSuchKeyException $e) {
+            } catch (NoSuchKeyException) {
                 /**
                  * Since S3 doesn't have a concept of folders, before we check if the intention is not to delete
                  * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally

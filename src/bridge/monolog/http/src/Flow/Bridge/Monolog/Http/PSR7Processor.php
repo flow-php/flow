@@ -8,9 +8,9 @@ use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
-final class PSR7Processor implements ProcessorInterface
+final readonly class PSR7Processor implements ProcessorInterface
 {
-    public function __construct(private readonly Config $config = new Config())
+    public function __construct(private Config $config = new Config())
     {
     }
 

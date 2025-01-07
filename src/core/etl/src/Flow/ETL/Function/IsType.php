@@ -12,7 +12,7 @@ final class IsType extends ScalarFunctionChain
     /**
      * @var array<string|Type<mixed>>
      */
-    private array $types;
+    private readonly array $types;
 
     /**
      * @param string|Type<mixed> ...$types

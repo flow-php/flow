@@ -51,7 +51,7 @@ final class StringCastingHandler implements CastingHandler
         try {
             return (string) $value;
             /* @phpstan-ignore-next-line */
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

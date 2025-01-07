@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\CSV;
 use Flow\ETL\Adapter\CSV\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Rows;
 
-final class RowsNormalizer
+final readonly class RowsNormalizer
 {
-    public function __construct(private readonly EntryNormalizer $entryNormalizer)
+    public function __construct(private EntryNormalizer $entryNormalizer)
     {
     }
 

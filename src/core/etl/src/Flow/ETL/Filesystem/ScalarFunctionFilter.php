@@ -11,12 +11,12 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\{FileStatus, Partition};
 
-final class ScalarFunctionFilter implements Filter
+final readonly class ScalarFunctionFilter implements Filter
 {
     public function __construct(
-        private readonly ScalarFunction $function,
-        private readonly EntryFactory $entryFactory,
-        private readonly AutoCaster $caster,
+        private ScalarFunction $function,
+        private EntryFactory $entryFactory,
+        private AutoCaster $caster,
     ) {
     }
 

@@ -31,7 +31,7 @@ final class JsonCastingHandler implements CastingHandler
             }
 
             return \json_encode($value, JSON_THROW_ON_ERROR);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

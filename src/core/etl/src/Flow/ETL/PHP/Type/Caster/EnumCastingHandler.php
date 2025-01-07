@@ -36,7 +36,7 @@ final class EnumCastingHandler implements CastingHandler
             }
 
             throw new CastingException($value, $type);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

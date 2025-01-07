@@ -31,9 +31,9 @@ use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\{Extractor, FlowContext};
 use Ramsey\Uuid\Uuid;
 
-final class FakeExtractor implements Extractor
+final readonly class FakeExtractor implements Extractor
 {
-    public function __construct(private readonly int $total)
+    public function __construct(private int $total)
     {
     }
 

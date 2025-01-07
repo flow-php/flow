@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Row\{Entries, Entry, Reference, References, Schema};
 
-final class Row
+final readonly class Row
 {
-    public function __construct(private readonly Entries $entries)
+    public function __construct(private Entries $entries)
     {
     }
 

@@ -21,7 +21,7 @@ abstract class AzureBlobServiceTestCase extends FlowTestCase
         foreach ($this->containers as $container) {
             try {
                 $this->blobService($container)->deleteContainer();
-            } catch (AzureException $e) {
+            } catch (AzureException) {
             }
         }
     }

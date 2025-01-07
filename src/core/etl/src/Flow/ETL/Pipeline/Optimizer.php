@@ -7,7 +7,7 @@ namespace Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer\Optimization;
 use Flow\ETL\{Loader, Pipeline, Transformer};
 
-final class Optimizer
+final readonly class Optimizer
 {
     /**
      * @var array<Optimization>

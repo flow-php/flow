@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-final class OrderBy
+final readonly class OrderBy
 {
     public function __construct(
-        public readonly string $column,
-        public readonly Order $order = Order::ASC,
+        public string $column,
+        public Order $order = Order::ASC,
     ) {
     }
 }

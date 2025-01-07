@@ -6,12 +6,12 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Transformation;
 
 use Flow\ETL\{DataFrame, Transformation};
 
-final class Transformations implements Transformation
+final readonly class Transformations implements Transformation
 {
     /**
      * @param Transformation ...$transformations
      */
-    private readonly array $transformations;
+    private array $transformations;
 
     public function __construct(Transformation ...$transformations)
     {

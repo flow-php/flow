@@ -11,9 +11,9 @@ use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class ConfigOption
+final readonly class ConfigOption
 {
-    public function __construct(private readonly string $optionName)
+    public function __construct(private string $optionName)
     {
     }
 

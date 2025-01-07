@@ -18,7 +18,7 @@ use Flow\Serializer\Serializer;
  * Immutable configuration that can be used to initialize many contexts.
  * Configuration must not be changed after it's passed to FlowContext.
  */
-final class Config
+final readonly class Config
 {
     /**
      * @deprecated Use CacheConfig::CACHE_DIR_ENV instead
@@ -31,16 +31,16 @@ final class Config
     public const SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
 
     public function __construct(
-        private readonly string $id,
-        private readonly Serializer $serializer,
-        private readonly FilesystemTable $filesystemTable,
-        private readonly FilesystemStreams $filesystemStreams,
-        private readonly Optimizer $optimizer,
-        private readonly Caster $caster,
-        private readonly bool $putInputIntoRows,
-        private readonly EntryFactory $entryFactory,
-        public readonly CacheConfig $cache,
-        public readonly SortConfig $sort,
+        private string $id,
+        private Serializer $serializer,
+        private FilesystemTable $filesystemTable,
+        private FilesystemStreams $filesystemStreams,
+        private Optimizer $optimizer,
+        private Caster $caster,
+        private bool $putInputIntoRows,
+        private EntryFactory $entryFactory,
+        public CacheConfig $cache,
+        public SortConfig $sort,
     ) {
     }
 

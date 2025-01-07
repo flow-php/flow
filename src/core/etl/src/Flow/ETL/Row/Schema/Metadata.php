@@ -13,16 +13,10 @@ final class Metadata
     public const FROM_NULL = 'from_null';
 
     /**
-     * @var array<string, array<bool|float|int|string>|bool|float|int|string>
-     */
-    private array $map;
-
-    /**
      * @param array<string, array<bool|float|int|string>|bool|float|int|string> $map
      */
-    private function __construct(array $map)
+    private function __construct(private array $map)
     {
-        $this->map = $map;
     }
 
     public static function empty() : self

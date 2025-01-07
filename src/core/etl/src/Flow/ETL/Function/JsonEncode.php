@@ -21,7 +21,7 @@ final class JsonEncode extends ScalarFunctionChain
 
         try {
             return \json_encode($value, $flags);
-        } catch (\JsonException $e) {
+        } catch (\JsonException) {
             return null;
         }
     }

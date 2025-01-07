@@ -6,10 +6,10 @@ namespace Flow\ETL\Adapter\JSON\RowsNormalizer;
 
 use Flow\ETL\Row\Entry;
 
-final class EntryNormalizer
+final readonly class EntryNormalizer
 {
     public function __construct(
-        private readonly string $dateTimeFormat = \DateTimeInterface::ATOM,
+        private string $dateTimeFormat = \DateTimeInterface::ATOM,
     ) {
     }
 

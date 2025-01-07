@@ -26,7 +26,7 @@ final class First implements AggregatingFunction
         if ($this->first === null) {
             try {
                 $this->first = $row->get($this->ref);
-            } catch (InvalidArgumentException $e) {
+            } catch (InvalidArgumentException) {
                 // entry not found
             }
         }

@@ -11,9 +11,9 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<\DateTimeInterface>
  */
-final class DateTimeType implements Type
+final readonly class DateTimeType implements Type
 {
-    public function __construct(private readonly bool $nullable = false)
+    public function __construct(private bool $nullable = false)
     {
     }
 

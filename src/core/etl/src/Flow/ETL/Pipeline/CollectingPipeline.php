@@ -9,9 +9,9 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 /**
  * @internal
  */
-final class CollectingPipeline implements Pipeline
+final readonly class CollectingPipeline implements Pipeline
 {
-    public function __construct(private readonly Pipeline $pipeline)
+    public function __construct(private Pipeline $pipeline)
     {
     }
 

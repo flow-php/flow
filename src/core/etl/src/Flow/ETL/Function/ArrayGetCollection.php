@@ -52,7 +52,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
             }
 
             return $extractedValues;
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             return null;
         }
     }

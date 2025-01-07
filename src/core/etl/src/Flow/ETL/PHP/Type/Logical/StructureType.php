@@ -12,14 +12,14 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<array>
  */
-final class StructureType implements Type
+final readonly class StructureType implements Type
 {
     /**
      * @var array<StructureElement>
      */
-    private readonly array $elements;
+    private array $elements;
 
-    public function __construct(array $elements, private readonly bool $nullable = false)
+    public function __construct(array $elements, private bool $nullable = false)
     {
         if (0 === \count($elements)) {
             throw InvalidArgumentException::because('Structure must receive at least one element.');

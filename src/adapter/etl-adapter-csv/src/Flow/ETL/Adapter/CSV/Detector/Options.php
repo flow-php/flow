@@ -6,19 +6,13 @@ namespace Flow\ETL\Adapter\CSV\Detector;
 
 use Flow\ETL\Adapter\CSV\Exception\CantDetectCSVOptions;
 
-final class Options
+final readonly class Options
 {
-    /**
-     * @var array<Option>
-     */
-    private array $options;
-
     /**
      * @param array<Option> $options
      */
-    public function __construct(array $options)
+    public function __construct(private array $options)
     {
-        $this->options = $options;
     }
 
     public static function all() : self

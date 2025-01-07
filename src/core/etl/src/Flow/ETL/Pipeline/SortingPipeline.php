@@ -11,9 +11,9 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Sort\{ExternalSort, MemorySort};
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
-final class SortingPipeline implements Pipeline
+final readonly class SortingPipeline implements Pipeline
 {
-    public function __construct(private readonly Pipeline $pipeline, private readonly References $refs)
+    public function __construct(private Pipeline $pipeline, private References $refs)
     {
     }
 
@@ -52,7 +52,7 @@ final class SortingPipeline implements Pipeline
                 )
                 )->sortBy($this->pipeline, $context, $this->refs);
             }
-        } catch (OutOfMemoryException $memoryException) {
+        } catch (OutOfMemoryException) {
             $extractor = (new ExternalSort(
                 new ExternalSort\BucketsCache\FilesystemBucketsCache(
                     $context->filesystem(protocol('file')),

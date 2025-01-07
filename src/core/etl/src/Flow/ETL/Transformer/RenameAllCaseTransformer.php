@@ -6,13 +6,13 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
-final class RenameAllCaseTransformer implements Transformer
+final readonly class RenameAllCaseTransformer implements Transformer
 {
     public function __construct(
-        private readonly bool $upper = false,
-        private readonly bool $lower = false,
-        private readonly bool $ucfirst = false,
-        private readonly bool $ucwords = false,
+        private bool $upper = false,
+        private bool $lower = false,
+        private bool $ucfirst = false,
+        private bool $ucwords = false,
     ) {
     }
 

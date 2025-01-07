@@ -10,12 +10,12 @@ use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class ParquetExtractorFactory
+final readonly class ParquetExtractorFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly string $columns = 'input-parquet-columns',
-        private readonly string $offset = 'input-parquet-offset',
+        private Path $path,
+        private string $columns = 'input-parquet-columns',
+        private string $offset = 'input-parquet-offset',
     ) {
     }
 

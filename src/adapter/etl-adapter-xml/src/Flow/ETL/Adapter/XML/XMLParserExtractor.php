@@ -215,8 +215,8 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         if ($this->parser === null) {
             $this->parser = xml_parser_create();
             xml_parser_set_option($this->parser, XML_OPTION_CASE_FOLDING, 0);
-            xml_set_element_handler($this->parser, [$this, 'startElementHandler'], [$this, 'endElementHandler']);
-            xml_set_character_data_handler($this->parser, [$this, 'characterDataHandler']);
+            xml_set_element_handler($this->parser, $this->startElementHandler(...), $this->endElementHandler(...));
+            xml_set_character_data_handler($this->parser, $this->characterDataHandler(...));
         }
 
         return $this->parser;

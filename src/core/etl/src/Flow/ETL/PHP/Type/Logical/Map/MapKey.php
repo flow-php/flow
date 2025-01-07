@@ -10,9 +10,9 @@ use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\Native\{IntegerType, StringType};
 use Flow\ETL\PHP\Type\TypeFactory;
 
-final class MapKey
+final readonly class MapKey
 {
-    public function __construct(private readonly IntegerType|StringType $value)
+    public function __construct(private IntegerType|StringType $value)
     {
     }
 

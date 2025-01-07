@@ -10,15 +10,15 @@ use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class CSVExtractorFactory
+final readonly class CSVExtractorFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly string $withHeaderOption = 'input-csv-header',
-        private readonly string $emptyToNullOption = 'input-csv-empty-to-null',
-        private readonly string $separatorOption = 'input-csv-separator',
-        private readonly string $enclosureOption = 'input-csv-enclosure',
-        private readonly string $escapeOption = 'input-csv-escape',
+        private Path $path,
+        private string $withHeaderOption = 'input-csv-header',
+        private string $emptyToNullOption = 'input-csv-empty-to-null',
+        private string $separatorOption = 'input-csv-separator',
+        private string $enclosureOption = 'input-csv-enclosure',
+        private string $escapeOption = 'input-csv-escape',
     ) {
     }
 

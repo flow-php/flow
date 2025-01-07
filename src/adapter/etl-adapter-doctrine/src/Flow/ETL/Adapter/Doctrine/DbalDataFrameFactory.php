@@ -15,7 +15,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
     /**
      * @var array<QueryParameter>
      */
-    private array $parameters;
+    private readonly array $parameters;
 
     private ?Schema $schema = null;
 

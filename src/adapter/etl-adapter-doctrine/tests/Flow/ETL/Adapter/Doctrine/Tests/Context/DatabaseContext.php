@@ -7,11 +7,11 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Table;
 
-final class DatabaseContext
+final readonly class DatabaseContext
 {
     public function __construct(
-        private readonly Connection $connection,
-        private readonly InsertQueryCounter $logger,
+        private Connection $connection,
+        private InsertQueryCounter $logger,
     ) {
     }
 

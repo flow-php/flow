@@ -10,11 +10,11 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
-final class SynchronousPipeline implements Pipeline
+final readonly class SynchronousPipeline implements Pipeline
 {
     private Extractor $extractor;
 
-    private readonly Pipes $pipes;
+    private Pipes $pipes;
 
     public function __construct(?Extractor $extractor = null)
     {
@@ -52,7 +52,7 @@ final class SynchronousPipeline implements Pipeline
                     if ($pipe instanceof Transformer) {
                         try {
                             $rows = $pipe->transform($rows, $context);
-                        } catch (LimitReachedException $limitReachedException) {
+                        } catch (LimitReachedException) {
                             $rows = new Rows();
                             $generator->send(Signal::STOP);
                         }

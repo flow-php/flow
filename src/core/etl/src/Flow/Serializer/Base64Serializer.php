@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Serializer;
 
-final class Base64Serializer implements Serializer
+final readonly class Base64Serializer implements Serializer
 {
-    public function __construct(private readonly Serializer $serializer)
+    public function __construct(private Serializer $serializer)
     {
     }
 

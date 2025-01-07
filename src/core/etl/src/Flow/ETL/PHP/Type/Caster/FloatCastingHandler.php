@@ -43,7 +43,7 @@ final class FloatCastingHandler implements CastingHandler
 
         try {
             return \round((float) $value, $type->precision, $options->get(Options::FLOAT_ROUNDING_MODE)->value);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             throw new CastingException($value, $type);
         }
     }

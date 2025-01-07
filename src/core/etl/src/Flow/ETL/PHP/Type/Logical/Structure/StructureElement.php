@@ -7,7 +7,7 @@ namespace Flow\ETL\PHP\Type\Logical\Structure;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
-final class StructureElement
+final readonly class StructureElement
 {
     /**
      * @param string $name
@@ -15,7 +15,7 @@ final class StructureElement
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly Type $type)
+    public function __construct(private string $name, private Type $type)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Structure element name cannot be empty');

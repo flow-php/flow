@@ -18,7 +18,7 @@ final class DOMElementAttributesCountTest extends FlowTestCase
 
         self::assertEquals(
             3,
-            ref('value')->domElementAttributesCount('baz')->eval(
+            ref('value')->domElementAttributesCount()->eval(
                 Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
             )
         );
@@ -31,7 +31,7 @@ final class DOMElementAttributesCountTest extends FlowTestCase
 
         self::assertEquals(
             1,
-            ref('value')->domElementAttributesCount('baz')->eval(
+            ref('value')->domElementAttributesCount()->eval(
                 Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
             )
         );
@@ -44,7 +44,7 @@ final class DOMElementAttributesCountTest extends FlowTestCase
 
         self::assertEquals(
             0,
-            ref('value')->domElementAttributesCount('baz')->eval(
+            ref('value')->domElementAttributesCount()->eval(
                 Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
             )
         );

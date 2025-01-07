@@ -6,12 +6,12 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-final class SheetRange
+final readonly class SheetRange
 {
     public function __construct(
-        public readonly Columns $columnRange,
-        public readonly int $startRow,
-        public readonly int $endRow,
+        public Columns $columnRange,
+        public int $startRow,
+        public int $endRow,
     ) {
         if ($this->startRow < 1) {
             throw new InvalidArgumentException(\sprintf('Start row "%d" must be greater than 0', $this->startRow));

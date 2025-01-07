@@ -7,9 +7,9 @@ namespace Flow\CLI\Arguments;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class TypedArgument
+final readonly class TypedArgument
 {
-    public function __construct(private readonly string $name)
+    public function __construct(private string $name)
     {
     }
 

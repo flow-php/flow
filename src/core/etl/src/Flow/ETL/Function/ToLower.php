@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 final class ToLower extends ScalarFunctionChain
 {
     public function __construct(
-        private ScalarFunction|string $value,
+        private readonly ScalarFunction|string $value,
     ) {
     }
 

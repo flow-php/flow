@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FlowStreamedResponse extends StreamedResponse
 {
-    private Config|Config\ConfigBuilder $config;
+    private readonly Config|Config\ConfigBuilder $config;
 
     public function __construct(
         private readonly Extractor $extractor,

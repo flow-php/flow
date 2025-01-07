@@ -8,11 +8,11 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\{EntryReference, Reference, References};
 
-final class ListSelect implements ScalarFunction
+final readonly class ListSelect implements ScalarFunction
 {
-    private readonly Reference $ref;
+    private Reference $ref;
 
-    private readonly References $refs;
+    private References $refs;
 
     public function __construct(
         Reference|string $ref,

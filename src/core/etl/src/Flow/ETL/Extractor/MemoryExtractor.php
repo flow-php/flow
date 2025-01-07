@@ -8,13 +8,13 @@ use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\{Extractor, FlowContext};
 
-final class MemoryExtractor implements Extractor
+final readonly class MemoryExtractor implements Extractor
 {
     /**
      * @param Memory $memory
      */
     public function __construct(
-        private readonly Memory $memory,
+        private Memory $memory,
     ) {
     }
 

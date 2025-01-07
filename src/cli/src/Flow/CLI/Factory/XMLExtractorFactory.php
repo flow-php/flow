@@ -10,12 +10,12 @@ use Flow\ETL\Adapter\XML\XMLParserExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class XMLExtractorFactory
+final readonly class XMLExtractorFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly string $nodePathOption = 'input-xml-node-path',
-        private readonly string $bufferSizeOption = 'input-xml-buffer-size',
+        private Path $path,
+        private string $nodePathOption = 'input-xml-node-path',
+        private string $bufferSizeOption = 'input-xml-buffer-size',
     ) {
     }
 

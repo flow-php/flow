@@ -6,15 +6,15 @@ namespace Flow\ETL\Sort\ExternalSort;
 
 use Flow\ETL\Row;
 
-final class Bucket
+final readonly class Bucket
 {
     /**
      * @param string $id
      * @param iterable<Row> $rows
      */
     public function __construct(
-        public readonly string $id,
-        public readonly iterable $rows,
+        public string $id,
+        public iterable $rows,
     ) {
     }
 }

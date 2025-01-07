@@ -23,7 +23,7 @@ final class InsertQueryCounter extends AbstractLogger implements LoggerAwareInte
             return;
         }
 
-        if (\str_starts_with(\trim($context['sql']), 'INSERT')) {
+        if (\str_starts_with(\trim((string) $context['sql']), 'INSERT')) {
             $this->count++;
         }
     }

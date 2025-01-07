@@ -7,9 +7,9 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Transformation;
 use function Flow\ETL\DSL\lit;
 use Flow\ETL\{DataFrame, Transformation};
 
-final class MaskColumns implements Transformation
+final readonly class MaskColumns implements Transformation
 {
-    public function __construct(private readonly array $columns = [], private readonly string $mask = '******')
+    public function __construct(private array $columns = [], private string $mask = '******')
     {
     }
 

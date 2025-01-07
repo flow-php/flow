@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Logger;
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
 use Psr\Log\{LogLevel, LoggerInterface};
 
-final class PsrLoggerLoader implements Loader
+final readonly class PsrLoggerLoader implements Loader
 {
     public function __construct(private LoggerInterface $logger, private string $message, private string $logLevel = LogLevel::DEBUG)
     {

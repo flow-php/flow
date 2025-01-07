@@ -6,11 +6,11 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\{Extractor, FlowContext, Row, Rows};
 
-final class SequenceExtractor implements Extractor
+final readonly class SequenceExtractor implements Extractor
 {
     public function __construct(
-        private readonly SequenceGenerator\SequenceGenerator $generator,
-        private readonly string $entryName = 'entry',
+        private SequenceGenerator\SequenceGenerator $generator,
+        private string $entryName = 'entry',
     ) {
     }
 

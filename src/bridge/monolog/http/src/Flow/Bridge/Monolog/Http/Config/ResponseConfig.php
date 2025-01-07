@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Config;
 
-final class ResponseConfig
+final readonly class ResponseConfig
 {
     /**
      * @param bool $withReasonPhrase
@@ -15,12 +15,12 @@ final class ResponseConfig
      * @param array $headers<string>
      */
     public function __construct(
-        private readonly bool $withReasonPhrase = true,
-        private readonly bool $withStatus = true,
-        private readonly bool $withBody = false,
-        private readonly int $bodySizeLimit = 1024 * 1024 * 32,
-        private readonly array $withoutStatusCodes = [],
-        private readonly array $headers = ['cache-control', 'location', 'set-cookie', 'server', 'expires', 'content-type', 'content-length', 'last-modified', 'kee-alive', 'referrer-policy', 'etag'],
+        private bool $withReasonPhrase = true,
+        private bool $withStatus = true,
+        private bool $withBody = false,
+        private int $bodySizeLimit = 1024 * 1024 * 32,
+        private array $withoutStatusCodes = [],
+        private array $headers = ['cache-control', 'location', 'set-cookie', 'server', 'expires', 'content-type', 'content-length', 'last-modified', 'kee-alive', 'referrer-policy', 'etag'],
     ) {
 
     }

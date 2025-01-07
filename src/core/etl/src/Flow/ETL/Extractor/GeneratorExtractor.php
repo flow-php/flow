@@ -10,12 +10,12 @@ use Flow\ETL\{Extractor, FlowContext, Rows};
 /**
  * @internal
  */
-final class GeneratorExtractor implements Extractor
+final readonly class GeneratorExtractor implements Extractor
 {
     /**
      * @param \Generator<Rows> $rows
      */
-    public function __construct(private readonly \Generator $rows)
+    public function __construct(private \Generator $rows)
     {
     }
 

@@ -12,9 +12,9 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<array>
  */
-final class MapType implements Type
+final readonly class MapType implements Type
 {
-    public function __construct(private readonly MapKey $key, private readonly MapValue $value, private readonly bool $nullable = false)
+    public function __construct(private MapKey $key, private MapValue $value, private bool $nullable = false)
     {
     }
 

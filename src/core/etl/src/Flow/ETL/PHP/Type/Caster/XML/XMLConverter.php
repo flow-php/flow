@@ -41,8 +41,7 @@ final class XMLConverter
 
         foreach ($element->childNodes as $childNode) {
             if ($childNode->nodeType === XML_TEXT_NODE) {
-                /** @phpstan-ignore-next-line  */
-                if (\trim($childNode->nodeValue)) {
+                if (\trim((string) $childNode->nodeValue)) {
                     $xmlArray['@value'] = $childNode->nodeValue;
                 }
             }

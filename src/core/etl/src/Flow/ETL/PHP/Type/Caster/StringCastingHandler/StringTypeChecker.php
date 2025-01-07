@@ -6,9 +6,9 @@ namespace Flow\ETL\PHP\Type\Caster\StringCastingHandler;
 
 use Flow\ETL\PHP\Value\Uuid;
 
-final class StringTypeChecker
+final readonly class StringTypeChecker
 {
-    private readonly string $string;
+    private string $string;
 
     public function __construct(string $string)
     {

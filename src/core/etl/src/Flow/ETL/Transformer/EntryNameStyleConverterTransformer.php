@@ -7,9 +7,9 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\{FlowContext, Function\StyleConverter\StringStyles, Row, Rows, Transformer};
 
-final class EntryNameStyleConverterTransformer implements Transformer
+final readonly class EntryNameStyleConverterTransformer implements Transformer
 {
-    public function __construct(private readonly StringStyles $style)
+    public function __construct(private StringStyles $style)
     {
     }
 

@@ -9,12 +9,12 @@ use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 
-final class JsonExtractorFactory
+final readonly class JsonExtractorFactory
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly string $pointerOption = 'input-json-pointer',
-        private readonly string $pointerAsEntryNameOption = 'input-json-pointer-entry-name',
+        private Path $path,
+        private string $pointerOption = 'input-json-pointer',
+        private string $pointerAsEntryNameOption = 'input-json-pointer-entry-name',
     ) {
     }
 

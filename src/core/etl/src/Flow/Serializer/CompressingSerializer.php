@@ -6,9 +6,9 @@ namespace Flow\Serializer;
 
 use Flow\ETL\Exception\RuntimeException;
 
-final class CompressingSerializer implements Serializer
+final readonly class CompressingSerializer implements Serializer
 {
-    public function __construct(private readonly Serializer $serializer, private readonly int $compressionLevel = 9)
+    public function __construct(private Serializer $serializer, private int $compressionLevel = 9)
     {
     }
 

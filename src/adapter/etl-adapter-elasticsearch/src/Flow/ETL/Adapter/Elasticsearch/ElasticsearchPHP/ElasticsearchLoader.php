@@ -23,9 +23,9 @@ final class ElasticsearchLoader implements Loader
      * @param array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: bool, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: (bool|string), elasticMetaHeader?: bool, includePortInHostHeader?: bool} $config
      */
     public function __construct(
-        private array $config,
-        private string $index,
-        private IdFactory $idFactory,
+        private readonly array $config,
+        private readonly string $index,
+        private readonly IdFactory $idFactory,
     ) {
         $this->client = null;
         $this->method = 'index';

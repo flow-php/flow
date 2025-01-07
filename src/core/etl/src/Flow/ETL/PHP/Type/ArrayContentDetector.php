@@ -8,31 +8,28 @@ use function Flow\ETL\DSL\{type_array, type_null, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
 
-final class ArrayContentDetector
+final readonly class ArrayContentDetector
 {
     /**
      * @var null|Type<mixed>
      */
-    private readonly ?Type $firstKeyType;
+    private ?Type $firstKeyType;
 
     /**
      * @var null|Type<mixed>
      */
-    private readonly ?Type $firstValueType;
+    private ?Type $firstValueType;
 
-    private bool $isList;
+    private int $uniqueKeysTypeCount;
 
-    private readonly int $uniqueKeysTypeCount;
+    private int $uniqueValuesTypeCount;
 
-    private readonly int $uniqueValuesTypeCount;
-
-    public function __construct(Types $uniqueKeysType, private readonly Types $uniqueValuesType, bool $isList = false)
+    public function __construct(Types $uniqueKeysType, private Types $uniqueValuesType, private bool $isList = false)
     {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
         $this->uniqueKeysTypeCount = $uniqueKeysType->count();
         $this->uniqueValuesTypeCount = $uniqueValuesType->without(type_array(true), type_null())->count();
-        $this->isList = $isList;
     }
 
     public function firstKeyType() : IntegerType|StringType|null

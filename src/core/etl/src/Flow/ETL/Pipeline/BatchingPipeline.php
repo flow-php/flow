@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{chunks_from, from_pipeline};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
-final class BatchingPipeline implements Pipeline
+final readonly class BatchingPipeline implements Pipeline
 {
     /**
      * @param Pipeline $pipeline
@@ -16,7 +16,7 @@ final class BatchingPipeline implements Pipeline
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly Pipeline $pipeline, private readonly int $size)
+    public function __construct(private Pipeline $pipeline, private int $size)
     {
         if ($this->size <= 0) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->size);

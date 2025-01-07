@@ -10,9 +10,9 @@ use Flow\ETL\PHP\Type\Type;
 /**
  * @implements Type<callable>
  */
-final class CallableType implements Type
+final readonly class CallableType implements Type
 {
-    public function __construct(private readonly bool $nullable)
+    public function __construct(private bool $nullable)
     {
 
     }

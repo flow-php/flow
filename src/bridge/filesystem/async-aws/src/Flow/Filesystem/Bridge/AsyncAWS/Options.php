@@ -12,11 +12,11 @@ use Flow\Filesystem\Stream\BlockFactory;
 
 final class Options
 {
-    private BlockFactory $blockFactory;
+    private readonly BlockFactory $blockFactory;
 
     private int $partSize = 1024 * 1024 * 5;
 
-    private Path $tmpDir;
+    private readonly Path $tmpDir;
 
     public function __construct()
     {

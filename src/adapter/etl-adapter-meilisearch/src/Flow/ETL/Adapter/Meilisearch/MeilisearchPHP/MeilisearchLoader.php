@@ -17,7 +17,7 @@ final class MeilisearchLoader implements Loader
      */
     public function __construct(
         private array $config,
-        private string $index,
+        private readonly string $index,
     ) {
     }
 
@@ -37,9 +37,7 @@ final class MeilisearchLoader implements Loader
 
         $dataCollection = $rows->map(fn (Row $row) : Row => Row::create(
             ...$row->map(
-                function (Row\Entry $entry) : Row\Entry {
-                    return $entry;
-                }
+                fn (Row\Entry $entry) : Row\Entry => $entry
             )->entries()
         ))->toArray();
 

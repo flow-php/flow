@@ -48,9 +48,9 @@ use Flow\ETL\Row\{Entry, EntryFactory, Schema, Schema\Definition};
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\Uuid;
 
-final class NativeEntryFactory implements EntryFactory
+final readonly class NativeEntryFactory implements EntryFactory
 {
-    private readonly Caster $caster;
+    private Caster $caster;
 
     public function __construct()
     {
