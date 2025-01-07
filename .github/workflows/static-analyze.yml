@@ -98,4 +98,4 @@ jobs:
         run: "composer static:analyze:phpstan -- --error-format=github"
 
       - name: "Static Analyze - Rector"
-        run: "composer static:analyze:rector -- --error-format=github"
+        run: "composer static:analyze:rector"
