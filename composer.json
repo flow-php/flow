@@ -375,7 +375,9 @@
             "@static:analyze:phpstan"
         ],
         "static:analyze:phpstan": [
-            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1"
+            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1",
+            "tools/rector/vendor/bin/rector -c ./rector.tests.php --dry-run",
+            "tools/rector/vendor/bin/rector -c ./rector.src.php --dry-run"
         ],
         "static:analyze:cs-fixer": [
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix --dry-run"
@@ -413,7 +415,8 @@
             "composer install --working-dir=./tools/monorepo",
             "composer install --working-dir=./tools/phpbench",
             "composer install --working-dir=./tools/phpstan",
-            "composer install --working-dir=./tools/phpunit"
+            "composer install --working-dir=./tools/phpunit",
+            "composer install --working-dir=./tools/rector"
         ],
         "tools:update": [
             "composer update --working-dir=./tools/blackfire",
@@ -423,7 +426,8 @@
             "composer update --working-dir=./tools/monorepo",
             "composer update --working-dir=./tools/phpbench",
             "composer update --working-dir=./tools/phpstan",
-            "composer update --working-dir=./tools/phpunit"
+            "composer update --working-dir=./tools/phpunit",
+            "composer update --working-dir=./tools/rector"
         ]
     }
 }

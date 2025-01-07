@@ -183,6 +183,7 @@ return RectorConfig::configure()
     ->withSkip([
         RemoveParentCallWithoutParentRector::class
     ])
+    ->withCache(__DIR__ . '/var/cache/rector/tests')
     ->withImportNames(
         importNames: true,
         importDocBlockNames: true,
