@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
 use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
+use function Flow\ETL\DSL\{config, flow_context};
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elastic\Elasticsearch\{Client, ClientBuilder};
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
-use Flow\ETL\{Config, FlowContext, Rows};
+use Flow\ETL\{Rows};
 
 final class Elasticsearch8Context implements ElasticsearchContext
 {
@@ -71,7 +72,7 @@ final class Elasticsearch8Context implements ElasticsearchContext
             $idFactory,
             ['refresh' => true]
         )
-            ->load($rows, new FlowContext(Config::default()));
+            ->load($rows, flow_context(config()));
     }
 
     public function version() : int

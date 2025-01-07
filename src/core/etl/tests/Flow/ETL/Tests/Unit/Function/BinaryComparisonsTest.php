@@ -13,7 +13,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 {
     public function test_equals() : void
     {
-        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), datetime_entry('d', '2023-01-01 00:00:00 UTC'), datetime_entry('e', '2023-01-01 00:00:00 UTC'));
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), datetime_entry('d', '2023-01-01 00:00:00 UTC'), datetime_entry('e', '2023-01-01 00:00:00 UTC'));
 
         self::assertTrue(
             (new Equals(ref('a'), ref('b')))->eval($row)
@@ -28,14 +28,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_greater_than() : void
     {
-        $row = Row::create(
-            int_entry('a', 100),
-            int_entry('b', 100),
-            int_entry('c', 10),
-            datetime_entry('d', '2023-01-01 00:00:00 UTC'),
-            datetime_entry('e', '2023-01-02 00:00:00 UTC'),
-            int_entry('f', null),
-        );
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), datetime_entry('d', '2023-01-01 00:00:00 UTC'), datetime_entry('e', '2023-01-02 00:00:00 UTC'), int_entry('f', null));
 
         self::assertTrue((new GreaterThan(ref('a'), ref('c')))->eval($row));
         self::assertFalse((new GreaterThan(ref('a'), ref('f')))->eval($row));
@@ -71,10 +64,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_is_numeric() : void
     {
-        $row = Row::create(
-            int_entry('a', 100),
-            int_entry('b', null),
-        );
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', null));
         self::assertTrue((new IsNumeric(ref('a')))->eval($row));
         self::assertFalse((new IsNumeric(ref('b')))->eval($row));
         self::assertFalse((new IsNotNumeric(ref('a')))->eval($row));
@@ -85,10 +75,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_is_type() : void
     {
-        $row = Row::create(
-            int_entry('a', 100),
-            int_entry('b', null),
-        );
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', null));
 
         self::assertTrue((new IsType(ref('a'), 'integer', 'string'))->eval($row));
         self::assertFalse((new IsType(ref('a'), type_string()))->eval($row));
@@ -98,17 +85,14 @@ final class BinaryComparisonsTest extends FlowTestCase
     {
         $this->expectExceptionMessage('Unknown type \'aaa\'');
 
-        $row = Row::create(
-            int_entry('a', 100),
-            int_entry('b', null),
-        );
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', null));
 
         self::assertFalse((new IsType(ref('a'), 'aaa'))->eval($row));
     }
 
     public function test_less_than() : void
     {
-        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), int_entry('d', null));
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), int_entry('d', null));
 
         self::assertFalse((new LessThan(ref('a'), ref('c')))->eval($row));
         self::assertFalse((new LessThan(ref('a'), ref('d')))->eval($row));
@@ -124,7 +108,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_not_equals() : void
     {
-        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
 
         self::assertFalse(
             (new NotEquals(ref('a'), ref('b')))->eval($row)
@@ -136,7 +120,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_not_same() : void
     {
-        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
 
         self::assertTrue(
             (new NotSame(ref('a'), ref('c')))->eval($row)
@@ -148,10 +132,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_null() : void
     {
-        $row = Row::create(
-            int_entry('a', 100),
-            int_entry('b', null),
-        );
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', null));
 
         self::assertFalse((new IsNull(ref('a')))->eval($row));
         self::assertTrue((new IsNull(ref('b')))->eval($row));
@@ -163,7 +144,7 @@ final class BinaryComparisonsTest extends FlowTestCase
 
     public function test_same() : void
     {
-        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), datetime_entry('d', '2023-01-01 00:00:00 UTC'), datetime_entry('e', '2023-01-01 00:00:00 UTC'));
+        $row = \Flow\ETL\DSL\row(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), datetime_entry('d', '2023-01-01 00:00:00 UTC'), datetime_entry('e', '2023-01-01 00:00:00 UTC'));
 
         self::assertTrue(
             (new Same(ref('a'), ref('b')))->eval($row)

@@ -6,14 +6,12 @@ namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
 use function Flow\ETL\Adapter\Elasticsearch\{es_hits_to_rows, from_es, to_es_bulk_index};
 use function Flow\ETL\DSL\{bool_entry, df, generate_random_int, int_entry, string_entry};
+use function Flow\ETL\DSL\{config, flow_context, rows};
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\{Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase,
-    Config,
     Flow,
-    FlowContext,
-    Row,
-    Rows
+    Row
 };
 
 final class ElasticsearchExtractorTest extends ElasticsearchTestCase
@@ -37,17 +35,10 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    int_entry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    bool_entry('active', (bool) generate_random_int(0, 1))
-                ),
-                \range(1, 100)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), int_entry('position', $i), string_entry('name', 'id_' . $i), bool_entry('active', (bool) generate_random_int(0, 1))),
+            \range(1, 100)
+        )), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -77,17 +68,10 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    int_entry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    bool_entry('active', (bool) generate_random_int(0, 1))
-                ),
-                \range(1, 2000)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), int_entry('position', $i), string_entry('name', 'id_' . $i), bool_entry('active', (bool) generate_random_int(0, 1))),
+            \range(1, 2000)
+        )), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -120,17 +104,10 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    int_entry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    bool_entry('active', (bool) generate_random_int(0, 1))
-                ),
-                \range(1, 2005)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), int_entry('position', $i), string_entry('name', 'id_' . $i), bool_entry('active', (bool) generate_random_int(0, 1))),
+            \range(1, 2005)
+        )), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -156,17 +133,10 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    int_entry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    bool_entry('active', (bool) generate_random_int(0, 1))
-                ),
-                \range(1, 2005)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), int_entry('position', $i), string_entry('name', 'id_' . $i), bool_entry('active', (bool) generate_random_int(0, 1))),
+            \range(1, 2005)
+        )), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -197,17 +167,10 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    int_entry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    bool_entry('active', (bool) generate_random_int(0, 1))
-                ),
-                \range(1, 2005)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), int_entry('position', $i), string_entry('name', 'id_' . $i), bool_entry('active', (bool) generate_random_int(0, 1))),
+            \range(1, 2005)
+        )), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,

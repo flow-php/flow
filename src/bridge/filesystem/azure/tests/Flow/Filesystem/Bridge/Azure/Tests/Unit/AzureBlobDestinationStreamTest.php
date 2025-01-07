@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure\Tests\Unit;
 
+use function Flow\ETL\DSL\generate_random_string;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\PutBlockBlob\PutBlockBlobOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlock\PutBlockBlobBlockOptions;
@@ -23,7 +24,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
         $blockFactory = $this->createMock(BlockFactory::class);
         $blockFactory->method('create')
             ->willReturnCallback(
-                fn () => new Block($id = \Flow\ETL\DSL\generate_random_string(), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
+                fn () => new Block($id = generate_random_string(), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
             );
 
         $stream = AzureBlobDestinationStream::openBlank(
@@ -71,7 +72,7 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
         $blockFactory = $this->createMock(BlockFactory::class);
         $blockFactory->method('create')
             ->willReturnCallback(
-                fn () => new Block($id = \Flow\ETL\DSL\generate_random_string(), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
+                fn () => new Block($id = generate_random_string(), $blockSize, new Path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
             );
         $stream = AzureBlobDestinationStream::openBlank(
             $blobService = $this->createMock(BlobServiceInterface::class),

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\ref;
-use Flow\ETL\Row;
+use function Flow\ETL\DSL\{ref, row};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -19,7 +18,7 @@ final class DOMElementAttributeValueTest extends FlowTestCase
         self::assertEquals(
             'buz',
             ref('value')->domElementAttributeValue('baz')->eval(
-                Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
+                row((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
             )
         );
     }
@@ -31,7 +30,7 @@ final class DOMElementAttributeValueTest extends FlowTestCase
 
         self::assertNull(
             ref('value')->domElementAttributeValue('bar')->eval(
-                Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
+                row((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild))
             )
         );
     }

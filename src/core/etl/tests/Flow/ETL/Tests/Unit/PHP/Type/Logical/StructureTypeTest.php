@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
 use function Flow\ETL\DSL\{struct_element, struct_type, type_boolean, type_float, type_int, type_string};
+use function Flow\ETL\DSL\{type_datetime, type_integer, type_list, type_map};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Logical\{ListType, MapType};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StructureTypeTest extends FlowTestCase
@@ -16,7 +14,7 @@ final class StructureTypeTest extends FlowTestCase
     public function test_elements() : void
     {
         self::assertEquals(
-            $map = [struct_element('map', new MapType(MapKey::string(), MapValue::float()))],
+            $map = [struct_element('map', type_map(type_string(), type_float()))],
             (struct_type($map))->elements()
         );
     }
@@ -24,12 +22,12 @@ final class StructureTypeTest extends FlowTestCase
     public function test_equals() : void
     {
         self::assertTrue(
-            (struct_type([struct_element('map', new MapType(MapKey::string(), MapValue::float()))]))
-                ->isEqual(struct_type([struct_element('map', new MapType(MapKey::string(), MapValue::float()))]))
+            (struct_type([struct_element('map', type_map(type_string(), type_float()))]))
+                ->isEqual(struct_type([struct_element('map', type_map(type_string(), type_float()))]))
         );
         self::assertFalse(
             (struct_type([struct_element('string', type_string()), struct_element('bool', type_boolean())]))
-                ->isEqual(new ListType(ListElement::integer()))
+                ->isEqual(type_list(type_integer()))
         );
         self::assertFalse(
             (struct_type([struct_element('string', type_string()), struct_element('bool', type_boolean())]))
@@ -67,14 +65,14 @@ final class StructureTypeTest extends FlowTestCase
             struct_type([
                 struct_element('string', type_string(true)),
                 struct_element('float', type_float()),
-                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())), true)),
+                struct_element('map', type_map(type_string(), type_list(type_list(type_datetime())), true)),
             ]),
             struct_type([
                 struct_element('string', type_string()),
                 struct_element('float', type_float()),
             ])->merge(struct_type([
                 struct_element('float', type_float()),
-                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())))),
+                struct_element('map', type_map(type_string(), type_list(type_list(type_datetime())))),
             ]))
         );
     }
@@ -85,13 +83,13 @@ final class StructureTypeTest extends FlowTestCase
             struct_type([
                 struct_element('string', type_string(true)),
                 struct_element('float', type_float(true)),
-                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())), true)),
+                struct_element('map', type_map(type_string(), type_list(type_list(type_datetime())), true)),
             ]),
             struct_type([
                 struct_element('string', type_string()),
                 struct_element('float', type_float()),
             ])->merge(struct_type([
-                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())))),
+                struct_element('map', type_map(type_string(), type_list(type_list(type_datetime())))),
             ]))
         );
     }
@@ -150,7 +148,7 @@ final class StructureTypeTest extends FlowTestCase
         $struct = struct_type([
             struct_element('string', type_string()),
             struct_element('float', type_float()),
-            struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())))),
+            struct_element('map', type_map(type_string(), type_list(type_datetime()))),
         ]);
 
         self::assertSame(
@@ -172,10 +170,7 @@ final class StructureTypeTest extends FlowTestCase
                 struct_type([
                     struct_element(
                         'map',
-                        new MapType(
-                            MapKey::integer(),
-                            MapValue::map(new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::integer()))))
-                        )
+                        type_map(type_integer(), type_map(type_string(), type_list(type_integer())))
                     ),
                     struct_element('string', type_string()),
                     struct_element('float', type_float()),

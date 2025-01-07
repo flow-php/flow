@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{collect, ref, str_entry};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class CollectTest extends FlowTestCase
@@ -14,10 +14,10 @@ final class CollectTest extends FlowTestCase
     {
         $aggregator = collect(ref('data'));
 
-        $aggregator->aggregate(Row::create(str_entry('data', 'a')));
-        $aggregator->aggregate(Row::create(str_entry('data', 'b')));
-        $aggregator->aggregate(Row::create(str_entry('data', 'b')));
-        $aggregator->aggregate(Row::create(str_entry('data', 'c')));
+        $aggregator->aggregate(row(str_entry('data', 'a')));
+        $aggregator->aggregate(row(str_entry('data', 'b')));
+        $aggregator->aggregate(row(str_entry('data', 'b')));
+        $aggregator->aggregate(row(str_entry('data', 'c')));
 
         self::assertSame(
             [

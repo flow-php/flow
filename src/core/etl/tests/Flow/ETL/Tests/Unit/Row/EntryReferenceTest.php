@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{int_entry, ref};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class EntryReferenceTest extends FlowTestCase
@@ -15,7 +15,7 @@ final class EntryReferenceTest extends FlowTestCase
         $ref = ref('a')->equals(ref('b'));
 
         self::assertTrue(
-            $ref->eval(Row::create(int_entry('a', 1), int_entry('b', 1)))
+            $ref->eval(row(int_entry('a', 1), int_entry('b', 1)))
         );
     }
 
@@ -25,7 +25,7 @@ final class EntryReferenceTest extends FlowTestCase
 
         self::assertSame(
             100,
-            $ref->eval(Row::create(int_entry('a', 1)))
+            $ref->eval(row(int_entry('a', 1)))
         );
     }
 
@@ -34,11 +34,11 @@ final class EntryReferenceTest extends FlowTestCase
         $ref = ref('a')->isEven();
 
         self::assertFalse(
-            $ref->eval(Row::create(int_entry('a', 1)))
+            $ref->eval(row(int_entry('a', 1)))
         );
 
         self::assertTrue(
-            $ref->eval(Row::create(int_entry('a', 2)))
+            $ref->eval(row(int_entry('a', 2)))
         );
     }
 
@@ -47,11 +47,11 @@ final class EntryReferenceTest extends FlowTestCase
         $ref = ref('a')->isOdd();
 
         self::assertTrue(
-            $ref->eval(Row::create(int_entry('a', 1)))
+            $ref->eval(row(int_entry('a', 1)))
         );
 
         self::assertFalse(
-            $ref->eval(Row::create(int_entry('a', 2)))
+            $ref->eval(row(int_entry('a', 2)))
         );
     }
 }

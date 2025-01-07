@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{combine, lit};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class CombineTest extends FlowTestCase
@@ -14,7 +14,7 @@ final class CombineTest extends FlowTestCase
     {
         self::assertSame(
             ['a' => 1, 'b' => 2, 'c' => 3],
-            combine(lit(['a', 'b', 'c']), lit([1, 2, 3]))->eval(Row::create()),
+            combine(lit(['a', 'b', 'c']), lit([1, 2, 3]))->eval(row()),
         );
     }
 
@@ -22,14 +22,14 @@ final class CombineTest extends FlowTestCase
     {
         self::assertSame(
             [],
-            combine(lit([]), lit([]))->eval(Row::create()),
+            combine(lit([]), lit([]))->eval(row()),
         );
     }
 
     public function test_array_combine_when_keys_are_not_array() : void
     {
         self::assertNull(
-            combine(lit('a'), lit([1, 2, 3]))->eval(Row::create()),
+            combine(lit('a'), lit([1, 2, 3]))->eval(row()),
         );
     }
 
@@ -37,14 +37,14 @@ final class CombineTest extends FlowTestCase
     {
         self::assertSame(
             ['a' => 4, 'b' => 2, 'c' => 3],
-            combine(lit(['a', 'b', 'c', 'a']), lit([1, 2, 3, 4]))->eval(Row::create()),
+            combine(lit(['a', 'b', 'c', 'a']), lit([1, 2, 3, 4]))->eval(row()),
         );
     }
 
     public function test_array_combine_when_one_of_arrays_is_empty() : void
     {
         self::assertNull(
-            combine(lit(['a', 'b', 'c']), lit([]))->eval(Row::create()),
+            combine(lit(['a', 'b', 'c']), lit([]))->eval(row()),
         );
     }
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{int_entry, json_entry, lit, ref};
 use Flow\ETL\Function\ArrayMerge;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayMergeTest extends FlowTestCase
@@ -17,10 +17,7 @@ final class ArrayMergeTest extends FlowTestCase
             ['a' => 1, 'b' => 2],
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
-                    Row::create(
-                        json_entry('a', ['a' => 1]),
-                        json_entry('b', ['b' => 2]),
-                    ),
+                    row(json_entry('a', ['a' => 1]), json_entry('b', ['b' => 2])),
                 )
         );
     }
@@ -32,7 +29,7 @@ final class ArrayMergeTest extends FlowTestCase
             lit(['b' => 2])
         );
 
-        self::assertSame(['a' => 1, 'b' => 2], $function->eval(Row::create()));
+        self::assertSame(['a' => 1, 'b' => 2], $function->eval(row()));
     }
 
     public function test_array_merge_when_left_side_is_not_an_array() : void
@@ -40,10 +37,7 @@ final class ArrayMergeTest extends FlowTestCase
         self::assertNull(
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
-                    Row::create(
-                        int_entry('a', 1),
-                        json_entry('b', ['b' => 2]),
-                    ),
+                    row(int_entry('a', 1), json_entry('b', ['b' => 2])),
                 )
         );
     }
@@ -53,10 +47,7 @@ final class ArrayMergeTest extends FlowTestCase
         self::assertNull(
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
-                    Row::create(
-                        json_entry('a', ['a' => 1]),
-                        int_entry('b', 2),
-                    ),
+                    row(json_entry('a', ['a' => 1]), int_entry('b', 2)),
                 )
         );
     }

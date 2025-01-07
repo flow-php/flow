@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, FlowContext, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 use Flow\Filesystem\Path;
 use Flow\Parquet\{Options, Reader};
 
@@ -19,7 +20,7 @@ final class ParquetExtractorTest extends FlowTestCase
 
         self::assertCount(
             2,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            \iterator_to_array($extractor->extract(flow_context(config())))
         );
     }
 
@@ -33,7 +34,7 @@ final class ParquetExtractorTest extends FlowTestCase
 
         self::assertCount(
             100,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            \iterator_to_array($extractor->extract(flow_context(config())))
         );
     }
 
@@ -41,7 +42,7 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $extractor = new ParquetExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/Fixtures/orders_1k.parquet'), Options::default());
 
-        $generator = $extractor->extract(new FlowContext(Config::default()));
+        $generator = $extractor->extract(flow_context(config()));
 
         self::assertTrue($generator->valid());
         $generator->next();

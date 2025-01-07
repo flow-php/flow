@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
 use function Flow\ETL\DSL\{type_callable, type_float};
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Logical\MapType;
+use function Flow\ETL\DSL\{type_map, type_string};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class CallableTypeTest extends FlowTestCase
@@ -17,7 +16,7 @@ final class CallableTypeTest extends FlowTestCase
             type_callable(false)->isEqual(type_callable(false))
         );
         self::assertFalse(
-            type_callable(false)->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            type_callable(false)->isEqual(type_map(type_string(), type_float()))
         );
         self::assertFalse(
             type_callable(false)->isEqual(type_float())

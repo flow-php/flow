@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{json_entry, ref, str_entry};
 use Flow\ETL\Function\ArraySort\Sort;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArraySortTest extends FlowTestCase
@@ -14,8 +14,8 @@ final class ArraySortTest extends FlowTestCase
     public function test_sorting_big_arrays() : void
     {
         self::assertSame(
-            ref('array')->arraySort()->eval(Row::create(json_entry('array', \json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)))),
-            ref('array')->arraySort()->eval(Row::create(json_entry('array', \json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR))))
+            ref('array')->arraySort()->eval(row(json_entry('array', \json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)))),
+            ref('array')->arraySort()->eval(row(json_entry('array', \json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR))))
         );
     }
 
@@ -31,20 +31,18 @@ final class ArraySortTest extends FlowTestCase
                     ],
                 ],
             ],
-            ref('array')->arraySort(Sort::asort)->eval(Row::create(
-                json_entry(
-                    'array',
-                    [
-                        'a' => [
-                            'b' => [
-                                'e' => 'f',
-                                'c' => 'd',
-                            ],
-                            'g' => 'h',
+            ref('array')->arraySort(Sort::asort)->eval(row(json_entry(
+                'array',
+                [
+                    'a' => [
+                        'b' => [
+                            'e' => 'f',
+                            'c' => 'd',
                         ],
-                    ]
-                )
-            ))
+                        'g' => 'h',
+                    ],
+                ]
+            )))
         );
     }
 
@@ -60,28 +58,26 @@ final class ArraySortTest extends FlowTestCase
                     'g' => 'h',
                 ],
             ],
-            ref('array')->arraySort(Sort::ksort)->eval(Row::create(
-                json_entry(
-                    'array',
-                    [
-                        'a' => [
-                            'g' => 'h',
-                            'b' => [
-                                'e' => 'f',
-                                'c' => 'd',
-                            ],
-
+            ref('array')->arraySort(Sort::ksort)->eval(row(json_entry(
+                'array',
+                [
+                    'a' => [
+                        'g' => 'h',
+                        'b' => [
+                            'e' => 'f',
+                            'c' => 'd',
                         ],
-                    ]
-                )
-            ))
+
+                    ],
+                ]
+            )))
         );
     }
 
     public function test_sorting_non_array_value() : void
     {
         self::assertNull(
-            ref('array')->arraySort()->eval(Row::create(str_entry('array', 'string')))
+            ref('array')->arraySort()->eval(row(str_entry('array', 'string')))
         );
     }
 

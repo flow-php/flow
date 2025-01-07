@@ -35,6 +35,7 @@ use function Flow\ETL\DSL\{average,
     uuid_schema,
     window};
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\{Loader, Rows};
 
@@ -319,10 +320,10 @@ final class GroupByTest extends FlowIntegrationTestCase
         );
         self::assertEquals(
             [
-                ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('b97a23ab-ba84-4d8f-9d9a-abd32cc58110'), 'score_sum' => 40, 'score_avg' => 20.0],
-                ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'), 'score_sum' => 55, 'score_avg' => 27.5],
-                ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'), 'score_sum' => 125, 'score_avg' => 41.666667],
-                ['uuid' => \Flow\ETL\PHP\Value\Uuid::fromString('c7c22b40-45ad-46d1-a47b-0d1dd389ae41'), 'score_sum' => 50, 'score_avg' => 50.0],
+                ['uuid' => Uuid::fromString('b97a23ab-ba84-4d8f-9d9a-abd32cc58110'), 'score_sum' => 40, 'score_avg' => 20.0],
+                ['uuid' => Uuid::fromString('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'), 'score_sum' => 55, 'score_avg' => 27.5],
+                ['uuid' => Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'), 'score_sum' => 125, 'score_avg' => 41.666667],
+                ['uuid' => Uuid::fromString('c7c22b40-45ad-46d1-a47b-0d1dd389ae41'), 'score_sum' => 50, 'score_avg' => 50.0],
             ],
             $rows->toArray()
         );

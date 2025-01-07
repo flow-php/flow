@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
-use function Flow\ETL\DSL\{array_to_rows, config_builder, flow_context, from_array};
+use function Flow\ETL\DSL\{array_to_rows, config_builder, flow_context, from_array, from_cache};
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
-use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class CacheExtractorTest extends FlowIntegrationTestCase
@@ -27,7 +26,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         $cache->set('key', $index);
 
-        $extractor = new CacheExtractor($cacheKey);
+        $extractor = from_cache($cacheKey);
 
         $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
@@ -53,7 +52,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
 
         $cache->set('key', $index);
 
-        $extractor = (new CacheExtractor($cacheKey))->withClearOnFinish(true);
+        $extractor = (from_cache($cacheKey))->withClearOnFinish(true);
 
         $rows = \iterator_to_array($extractor->extract(flow_context(config_builder()->cache($cache)->build())));
 
@@ -68,7 +67,7 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
     {
         $cache = new InMemoryCache();
 
-        $extractor = (new CacheExtractor('non_existing_cache_key'))
+        $extractor = (from_cache('non_existing_cache_key'))
             ->withClearOnFinish(true)
             ->withFallbackExtractor(from_array([
                 ['id' => 1],

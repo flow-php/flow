@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\JSON\{from_json, to_json};
-use Flow\ETL\{Config, FlowContext, Rows};
+use function Flow\ETL\DSL\{config, flow_context};
+use Flow\ETL\{FlowContext, Rows};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]
@@ -19,9 +20,9 @@ final class JsonLoaderBench
 
     public function __construct()
     {
-        $this->context = new FlowContext(Config::default());
+        $this->context = flow_context(config());
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_json_loader_bench') . '.json';
-        $this->rows = new Rows();
+        $this->rows = \Flow\ETL\DSL\rows();
 
         foreach (from_json(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);

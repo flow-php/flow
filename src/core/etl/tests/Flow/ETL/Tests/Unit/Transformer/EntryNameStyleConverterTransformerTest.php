@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\{config, row, rows};
+use function Flow\ETL\DSL\{flow_context, string_entry};
 use Flow\ETL\Transformer\EntryNameStyleConverterTransformer;
-use Flow\ETL\{Config, FlowContext, Function\StyleConverter\StringStyles, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Function\StyleConverter\StringStyles, Tests\FlowTestCase};
 
 final class EntryNameStyleConverterTransformerTest extends FlowTestCase
 {
@@ -14,12 +15,7 @@ final class EntryNameStyleConverterTransformerTest extends FlowTestCase
     {
         $transformer = new EntryNameStyleConverterTransformer(StringStyles::SNAKE);
 
-        $rows = $transformer->transform(new Rows(
-            Row::create(
-                string_entry('CamelCaseEntryName', 'test'),
-                string_entry('otherCaseEntryName', 'test'),
-            )
-        ), new FlowContext(Config::default()));
+        $rows = $transformer->transform(rows(row(string_entry('CamelCaseEntryName', 'test'), string_entry('otherCaseEntryName', 'test'))), flow_context(config()));
 
         self::assertSame(
             [

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{lit, upper};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ToUpperTest extends FlowTestCase
@@ -14,7 +14,7 @@ final class ToUpperTest extends FlowTestCase
     {
         self::assertSame(
             'UPPER',
-            upper(lit('upper'))->eval(Row::create())
+            upper(lit('upper'))->eval(row())
         );
     }
 }

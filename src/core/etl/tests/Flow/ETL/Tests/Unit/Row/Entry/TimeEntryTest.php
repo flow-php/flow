@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use function Flow\ETL\DSL\time_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Tests\FlowTestCase;
@@ -13,10 +14,10 @@ final class TimeEntryTest extends FlowTestCase
 {
     public static function is_equal_data_provider() : \Generator
     {
-        yield 'equal names and values' => [true, new TimeEntry('name', new \DateInterval('PT10S')), new TimeEntry('name', new \DateInterval('PT10S'))];
-        yield 'different names and values' => [false, new TimeEntry('name', new \DateInterval('PT10S')), new TimeEntry('different_name', new \DateInterval('PT20S'))];
-        yield 'equal names and different values day' => [false, new TimeEntry('name', new \DateInterval('PT1S')), new TimeEntry('name', new \DateInterval('PT2S'))];
-        yield 'different names characters and equal values' => [false, new TimeEntry('NAME', new \DateInterval('P1D')), new TimeEntry('name', new \DateInterval('P1D'))];
+        yield 'equal names and values' => [true, time_entry('name', new \DateInterval('PT10S')), time_entry('name', new \DateInterval('PT10S'))];
+        yield 'different names and values' => [false, time_entry('name', new \DateInterval('PT10S')), time_entry('different_name', new \DateInterval('PT20S'))];
+        yield 'equal names and different values day' => [false, time_entry('name', new \DateInterval('PT1S')), time_entry('name', new \DateInterval('PT2S'))];
+        yield 'different names characters and equal values' => [false, time_entry('NAME', new \DateInterval('P1D')), time_entry('name', new \DateInterval('P1D'))];
     }
 
     public function test_creating_from_days() : void
@@ -69,17 +70,17 @@ final class TimeEntryTest extends FlowTestCase
 
     public function test_creating_from_time_string() : void
     {
-        $timeEntry = new TimeEntry('name', '00:01:23');
+        $timeEntry = time_entry('name', '00:01:23');
 
         self::assertEquals(
-            new TimeEntry('name', new \DateInterval('PT1M23S')),
+            time_entry('name', new \DateInterval('PT1M23S')),
             $timeEntry
         );
     }
 
     public function test_entry_name_can_be_zero() : void
     {
-        self::assertSame('0', (new TimeEntry('0', new \DateInterval('PT10S')))->name());
+        self::assertSame('0', (time_entry('0', new \DateInterval('PT10S')))->name());
     }
 
     #[DataProvider('is_equal_data_provider')]
@@ -90,7 +91,7 @@ final class TimeEntryTest extends FlowTestCase
 
     public function test_map() : void
     {
-        $entry = new TimeEntry('entry-name', new \DateInterval('PT10S'));
+        $entry = time_entry('entry-name', new \DateInterval('PT10S'));
 
         self::assertEquals(
             $entry,
@@ -103,12 +104,12 @@ final class TimeEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
 
-        new TimeEntry('', new \DateInterval('P1D'));
+        time_entry('', new \DateInterval('P1D'));
     }
 
     public function test_renames_entry() : void
     {
-        $entry = new TimeEntry('entry-name', new \DateInterval('P1D'));
+        $entry = time_entry('entry-name', new \DateInterval('P1D'));
         $newEntry = $entry->rename('new-entry-name');
 
         self::assertEquals('new-entry-name', $newEntry->name());
@@ -117,7 +118,7 @@ final class TimeEntryTest extends FlowTestCase
 
     public function test_serialization() : void
     {
-        $string = new TimeEntry('name', new \DateInterval('P1D'));
+        $string = time_entry('name', new \DateInterval('P1D'));
 
         $serialized = \serialize($string);
         /** @var TimeEntry $unserialized */

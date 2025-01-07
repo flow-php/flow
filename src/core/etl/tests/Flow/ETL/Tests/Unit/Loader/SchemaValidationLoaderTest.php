@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\ETL\DSL\{config, row, rows};
+use function Flow\ETL\DSL\{flow_context, integer_schema, schema};
 use function Flow\ETL\DSL\{int_entry, str_entry};
 use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\Loader\SchemaValidationLoader;
-use Flow\ETL\Row\Schema;
-use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\Row\Schema\StrictValidator;
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class SchemaValidationLoaderTest extends FlowTestCase
 {
@@ -29,29 +31,21 @@ EXCEPTION
         );
 
         $loader = new SchemaValidationLoader(
-            new Schema(
-                Schema\Definition::integer('id')
-            ),
-            new Schema\StrictValidator()
+            schema(integer_schema('id')),
+            new StrictValidator()
         );
 
-        $loader->load(new Rows(
-            Row::create(str_entry('id', '1'))
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(row(str_entry('id', '1'))), flow_context(config()));
     }
 
     public function test_schema_validation_succeed() : void
     {
         $loader = new SchemaValidationLoader(
-            new Schema(
-                Schema\Definition::integer('id')
-            ),
-            new Schema\StrictValidator()
+            schema(integer_schema('id')),
+            new StrictValidator()
         );
 
-        $loader->load(new Rows(
-            Row::create(int_entry('id', 1))
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(row(int_entry('id', 1))), flow_context(config()));
 
         // validate that error wasn't thrown
         $this->addToAssertionCount(1);

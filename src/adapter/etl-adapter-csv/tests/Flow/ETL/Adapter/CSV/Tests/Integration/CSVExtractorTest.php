@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use function Flow\ETL\Adapter\CSV\{from_csv};
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\{df, print_schema, ref};
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\Filesystem\Path;
 
 final class CSVExtractorTest extends FlowTestCase
@@ -41,7 +42,7 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             \array_map(
                 static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->putInputIntoRows()->build())))
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
             )
         );
     }
@@ -71,7 +72,7 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             \array_map(
                 static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
             )
         );
     }
@@ -93,7 +94,7 @@ final class CSVExtractorTest extends FlowTestCase
             ],
             \array_map(
                 fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
             )
         );
     }
@@ -193,7 +194,7 @@ SCHEMA,
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
+        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
@@ -224,7 +225,7 @@ SCHEMA,
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
+        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertSame(
                     ['id', 'name'],
@@ -246,7 +247,7 @@ SCHEMA,
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
+        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertSame(
                     ['id', 'name', 'active'],
@@ -291,7 +292,7 @@ SCHEMA,
 
         self::assertCount(
             2,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
         );
     }
 
@@ -321,7 +322,7 @@ SCHEMA,
     {
         $extractor = new CSVExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
-        $generator = $extractor->extract(new FlowContext(Config::default()));
+        $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 
         self::assertTrue($generator->valid());
         $generator->next();

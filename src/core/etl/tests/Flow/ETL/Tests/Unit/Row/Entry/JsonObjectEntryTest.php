@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\Row\Entry\{IntegerEntry, JsonEntry};
+use function Flow\ETL\DSL\integer_entry;
+use Flow\ETL\Row\Entry\{JsonEntry};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -49,8 +50,8 @@ final class JsonObjectEntryTest extends FlowTestCase
         ];
         yield 'equal names and equal multi dimensional array with equals different entries 1' => [
             true,
-            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
-            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
+            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => integer_entry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
+            JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => integer_entry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
         ];
     }
 

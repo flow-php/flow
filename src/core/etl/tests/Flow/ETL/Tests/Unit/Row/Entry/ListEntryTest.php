@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\{list_entry, type_boolean, type_datetime, type_int, type_list, type_string};
+use function Flow\ETL\DSL\{list_schema, type_float, type_integer, type_object};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ListEntryTest extends FlowTestCase
@@ -33,9 +30,9 @@ final class ListEntryTest extends FlowTestCase
     public function test_creating_datetime_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<datetime> got different types: array<mixed>');
+        $this->expectExceptionMessage('Expected list<object<DateTimeInterface>> got different types: array<mixed>');
 
-        new ListEntry('list', ['string', new \DateTimeImmutable()], new ListType(ListElement::object(\DateTimeInterface::class)));
+        list_entry('list', ['string', new \DateTimeImmutable()], type_list(type_object(\DateTimeInterface::class)));
     }
 
     public function test_creating_float_list_from_wrong_value_types() : void
@@ -43,7 +40,7 @@ final class ListEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<float> got different types: array<mixed>');
 
-        new ListEntry('list', ['string', 1.3], new ListType(ListElement::float()));
+        list_entry('list', ['string', 1.3], type_list(type_float()));
     }
 
     public function test_creating_integer_list_from_wrong_value_types() : void
@@ -51,7 +48,7 @@ final class ListEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<integer> got different types: array<mixed>');
 
-        new ListEntry('list', ['string', 1], new ListType(ListElement::integer()));
+        list_entry('list', ['string', 1], type_list(type_integer()));
     }
 
     public function test_creating_list_from_not_list_array() : void
@@ -59,7 +56,7 @@ final class ListEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<integer> got different types: map<string, integer>');
 
-        new ListEntry('list', ['a' => 1, 'b' => 2], new ListType(ListElement::integer()));
+        list_entry('list', ['a' => 1, 'b' => 2], type_list(type_integer()));
     }
 
     public function test_creating_string_list_from_wrong_value_types() : void
@@ -67,13 +64,13 @@ final class ListEntryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list<string> got different types: array<mixed>');
 
-        new ListEntry('list', ['string', 1], new ListType(ListElement::string()));
+        list_entry('list', ['string', 1], type_list(type_string()));
     }
 
     public function test_definition() : void
     {
         self::assertEquals(
-            Definition::list('strings', new ListType(ListElement::string())),
+            list_schema('strings', type_list(type_string())),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->definition()
         );
     }
@@ -129,7 +126,7 @@ final class ListEntryTest extends FlowTestCase
     public function test_type() : void
     {
         self::assertEquals(
-            new ListType(ListElement::string()),
+            type_list(type_string()),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->type()
         );
     }

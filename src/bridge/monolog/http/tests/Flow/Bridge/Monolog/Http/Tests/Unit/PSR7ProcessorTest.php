@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Tests\Unit;
 
-use Flow\Bridge\Monolog\Http\Config\ResponseConfig;
+use Flow\Bridge\Monolog\Http\Config\{RequestConfig, ResponseConfig};
 use Flow\Bridge\Monolog\Http\{Config, PSR7Processor};
 use Flow\ETL\Tests\FlowTestCase;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -50,7 +50,7 @@ final class PSR7ProcessorTest extends FlowTestCase
             ->withHeader('Authorization', 'Bearer 123')
             ->withBody($psr17->createStream('Hello World!'));
 
-        $processor = new PSR7Processor((new Config(new Config\RequestConfig(withBody: true))));
+        $processor = new PSR7Processor((new Config(new RequestConfig(withBody: true))));
 
         $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
 
@@ -80,7 +80,7 @@ final class PSR7ProcessorTest extends FlowTestCase
             ->withHeader('Authorization', 'Bearer 123')
             ->withBody($psr17->createStream('Hello World!'));
 
-        $processor = new PSR7Processor((new Config(new Config\RequestConfig(withBody: true, bodySizeLimit: 5))));
+        $processor = new PSR7Processor((new Config(new RequestConfig(withBody: true, bodySizeLimit: 5))));
 
         $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
 
@@ -107,7 +107,7 @@ final class PSR7ProcessorTest extends FlowTestCase
         $request = $psr17->createRequest('POST', 'https://example.com/api/v1/users')
             ->withBody($psr17->createStream('Hello World!'));
 
-        $processor = new PSR7Processor((new Config(new Config\RequestConfig(headers: []))));
+        $processor = new PSR7Processor((new Config(new RequestConfig(headers: []))));
 
         $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
 

@@ -2,13 +2,9 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\{Flow, Row, Rows};
+use function Flow\ETL\DSL\{row, rows, str_entry};
+use Flow\ETL\{Flow};
 
 return (new Flow())->process(
-    new Rows(
-        Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-        Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-        Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
-    )
+    rows(row(str_entry('code', 'PL'), str_entry('name', 'Poland')), row(str_entry('code', 'US'), str_entry('name', 'United States')), row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')))
 );

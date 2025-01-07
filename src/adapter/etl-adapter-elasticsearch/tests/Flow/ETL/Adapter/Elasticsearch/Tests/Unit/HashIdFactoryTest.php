@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Unit;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{str_entry, string_entry};
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\HashIdFactory;
 use Flow\ETL\Hash\NativePHPHash;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class HashIdFactoryTest extends FlowTestCase
@@ -22,7 +22,7 @@ final class HashIdFactoryTest extends FlowTestCase
                 \hash('xxh128', 'John:Doe')
             ),
             $factory->create(
-                Row::create(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))
+                row(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))
             )
         );
     }
@@ -37,7 +37,7 @@ final class HashIdFactoryTest extends FlowTestCase
                 \sha1('John:Doe')
             ),
             $factory->create(
-                Row::create(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))
+                row(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))
             )
         );
     }

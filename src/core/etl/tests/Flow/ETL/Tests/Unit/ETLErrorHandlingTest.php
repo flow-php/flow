@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\{boolean_entry, integer_entry};
 use function Flow\ETL\DSL\{ignore_error_handler, skip_rows_handler, string_entry, throw_error_handler};
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry};
-use Flow\ETL\{Extractor, Flow, FlowContext, Loader, Row, Rows, Tests\FlowTestCase, Transformer};
+use Flow\ETL\Row\Entry\{DateTimeEntry};
+use Flow\ETL\{Extractor, Flow, FlowContext, Loader, Rows, Tests\FlowTestCase, Transformer};
 
 final class ETLErrorHandlingTest extends FlowTestCase
 {
@@ -20,23 +22,9 @@ final class ETLErrorHandlingTest extends FlowTestCase
              */
             public function extract(FlowContext $context) : \Generator
             {
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 101),
-                        new BooleanEntry('deleted', false),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
 
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 102),
-                        new BooleanEntry('deleted', true),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(row(integer_entry('id', 102), boolean_entry('deleted', true), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')), string_entry('phase', null)));
             }
         };
 
@@ -77,23 +65,9 @@ final class ETLErrorHandlingTest extends FlowTestCase
              */
             public function extract(FlowContext $context) : \Generator
             {
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 101),
-                        new BooleanEntry('deleted', false),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
 
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 102),
-                        new BooleanEntry('deleted', true),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(row(integer_entry('id', 102), boolean_entry('deleted', true), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')), string_entry('phase', null)));
             }
         };
 
@@ -149,23 +123,9 @@ final class ETLErrorHandlingTest extends FlowTestCase
              */
             public function extract(FlowContext $context) : \Generator
             {
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 101),
-                        new BooleanEntry('deleted', false),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
 
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 102),
-                        new BooleanEntry('deleted', true),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(row(integer_entry('id', 102), boolean_entry('deleted', true), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')), string_entry('phase', null)));
             }
         };
 

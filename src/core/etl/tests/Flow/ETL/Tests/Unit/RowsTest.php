@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\{bool_entry,
     datetime_entry,
     int_entry,
@@ -17,14 +18,12 @@ use function Flow\ETL\DSL\{bool_entry,
     type_int,
     type_list,
     type_string};
+use function Flow\ETL\DSL\{boolean_entry, integer_schema, json_schema, list_schema, string_schema, type_integer};
 use function Flow\Filesystem\DSL\{partition, partitions};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row\Comparator\{NativeComparator};
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry};
-use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Comparator, Schema};
+use Flow\ETL\Row\Entry\{DateTimeEntry};
+use Flow\ETL\Row\{Comparator};
 use Flow\ETL\{Row, Rows, Tests\FlowTestCase};
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -823,12 +822,7 @@ final class RowsTest extends FlowTestCase
         );
 
         self::assertEquals(
-            new Schema(
-                Definition::integer('id'),
-                Definition::string('name', true),
-                Definition::list('tags', new ListType(ListElement::string(), true)),
-                Definition::list('list', new ListType(ListElement::integer(), true))
-            ),
+            schema(integer_schema('id'), string_schema('name', true), list_schema('tags', type_list(type_string(), true)), list_schema('list', type_list(type_integer(), true))),
             $rows->schema()
         );
     }
@@ -841,7 +835,7 @@ final class RowsTest extends FlowTestCase
         );
 
         self::assertEquals(
-            new Schema(Definition::json('list')),
+            schema(json_schema('list')),
             $rows->schema()
         );
     }
@@ -955,12 +949,12 @@ final class RowsTest extends FlowTestCase
         $rows = rows(
             row(
                 $rowOneId = int_entry('id', 1),
-                $rowOneDeleted = new BooleanEntry('deleted', true),
+                $rowOneDeleted = boolean_entry('deleted', true),
                 $rowOnePhase = string_entry('phase', null),
                 $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
             ),
             row(
-                $rowTwoDeleted = new BooleanEntry('deleted', true),
+                $rowTwoDeleted = boolean_entry('deleted', true),
                 $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                 $rowTwoId = int_entry('id', 1),
                 $rowTwoPhase = string_entry('phase', null),
@@ -973,13 +967,13 @@ final class RowsTest extends FlowTestCase
             rows(
                 row(
                     $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
-                    $rowOneDeleted = new BooleanEntry('deleted', true),
+                    $rowOneDeleted = boolean_entry('deleted', true),
                     $rowOneId = int_entry('id', 1),
                     $rowOnePhase = string_entry('phase', null),
                 ),
                 row(
                     $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
-                    $rowTwoDeleted = new BooleanEntry('deleted', true),
+                    $rowTwoDeleted = boolean_entry('deleted', true),
                     $rowTwoId = int_entry('id', 1),
                     $rowTwoPhase = string_entry('phase', null),
                 )
@@ -1085,12 +1079,12 @@ final class RowsTest extends FlowTestCase
         $rows = rows(
             row(
                 int_entry('id', 1234),
-                new BooleanEntry('deleted', false),
+                boolean_entry('deleted', false),
                 string_entry('phase', null),
             ),
             row(
                 int_entry('id', 4321),
-                new BooleanEntry('deleted', true),
+                boolean_entry('deleted', true),
                 string_entry('phase', 'launch'),
             )
         );
@@ -1109,12 +1103,12 @@ final class RowsTest extends FlowTestCase
         $rows = rows(
             row(
                 int_entry('id', 1234),
-                new BooleanEntry('deleted', false),
+                boolean_entry('deleted', false),
                 string_entry('phase', null),
             ),
             row(
                 int_entry('id', 4321),
-                new BooleanEntry('deleted', true),
+                boolean_entry('deleted', true),
                 string_entry('phase', 'launch'),
             )
         );

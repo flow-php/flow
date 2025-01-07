@@ -21,8 +21,8 @@ final class XMLEntryTest extends FlowTestCase
 
         yield 'equal names and equal simple xml documents' => [
             true,
-            new XMLEntry('name', $doc1),
-            new XMLEntry('name', $doc2),
+            xml_entry('name', $doc1),
+            xml_entry('name', $doc2),
         ];
 
         $doc1 = new \DOMDocument();
@@ -32,8 +32,8 @@ final class XMLEntryTest extends FlowTestCase
 
         yield 'equal names and equal simple xml documents with different order of attributes' => [
             true,
-            new XMLEntry('name', $doc1),
-            new XMLEntry('name', $doc2),
+            xml_entry('name', $doc1),
+            xml_entry('name', $doc2),
         ];
 
         $doc1 = new \DOMDocument();
@@ -43,8 +43,8 @@ final class XMLEntryTest extends FlowTestCase
 
         yield 'equal nodes but different attributes' => [
             false,
-            new XMLEntry('name', $doc1),
-            new XMLEntry('name', $doc2),
+            xml_entry('name', $doc1),
+            xml_entry('name', $doc2),
         ];
 
         $doc1 = new \DOMDocument();
@@ -54,8 +54,8 @@ final class XMLEntryTest extends FlowTestCase
 
         yield 'equal attributes but different nodes' => [
             false,
-            new XMLEntry('name', $doc1),
-            new XMLEntry('name', $doc2),
+            xml_entry('name', $doc1),
+            xml_entry('name', $doc2),
         ];
 
         $doc1 = new \DOMDocument();
@@ -64,8 +64,8 @@ final class XMLEntryTest extends FlowTestCase
 
         yield 'compare with empty document' => [
             false,
-            new XMLEntry('name', $doc1),
-            new XMLEntry('name', $doc2),
+            xml_entry('name', $doc1),
+            xml_entry('name', $doc2),
         ];
 
         $doc1 = new \DOMDocument();
@@ -73,8 +73,8 @@ final class XMLEntryTest extends FlowTestCase
 
         yield 'compare twp empty documents' => [
             true,
-            new XMLEntry('name', $doc1),
-            new XMLEntry('name', $doc2),
+            xml_entry('name', $doc1),
+            xml_entry('name', $doc2),
         ];
     }
 
@@ -106,12 +106,12 @@ XML);
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Given string "foo" is not valid XML');
 
-        new XMLEntry('name', 'foo');
+        xml_entry('name', 'foo');
     }
 
     public function test_creating_entry_from_valid_xml_string() : void
     {
-        $entry = new XMLEntry('name', '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
+        $entry = xml_entry('name', '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
 
         self::assertSame('name', $entry->name());
         self::assertSame('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>', $entry->__toString());
@@ -120,7 +120,7 @@ XML);
     public function test_creating_xml_entry_with_empty_dom_document() : void
     {
         $doc = new \DOMDocument();
-        $entry = new XMLEntry('name', $doc);
+        $entry = xml_entry('name', $doc);
 
         self::assertSame('name', $entry->name());
         self::assertSame($doc, $entry->value());
@@ -135,7 +135,7 @@ XML);
 
     public function test_serialization() : void
     {
-        $entry = new XMLEntry('xml', <<<'XML'
+        $entry = xml_entry('xml', <<<'XML'
 <xml>
     <root>
         <item>

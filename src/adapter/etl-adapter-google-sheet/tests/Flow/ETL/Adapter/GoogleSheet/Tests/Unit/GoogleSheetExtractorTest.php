@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet_columns;
+use function Flow\ETL\DSL\{flow_context, row};
 use function Flow\ETL\DSL\{str_entry, string_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Config\ConfigBuilder, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Config\ConfigBuilder, Rows, Tests\FlowTestCase};
 use Google\Service\Sheets;
 use Google\Service\Sheets\Resource\SpreadsheetsValues;
+use Google\Service\Sheets\ValueRange;
 
 final class GoogleSheetExtractorTest extends FlowTestCase
 {
@@ -26,12 +28,12 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         );
         $spreadSheetIdEntry = string_entry('_spread_sheet_id', $spreadSheetId);
         $sheetNameEntry = string_entry('_sheet_name', $sheetName);
-        $firstValueRangeMock = $this->createMock(Sheets\ValueRange::class);
+        $firstValueRangeMock = $this->createMock(ValueRange::class);
         $firstValueRangeMock->method('getValues')->willReturn([
             ['header'],
             ['row1'],
         ]);
-        $secondValueRangeMock = $this->createMock(Sheets\ValueRange::class);
+        $secondValueRangeMock = $this->createMock(ValueRange::class);
         $secondValueRangeMock->method('getValues')->willReturn([
             ['row2'],
         ]);
@@ -42,12 +44,12 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             ->willReturnOnConsecutiveCalls($firstValueRangeMock, $secondValueRangeMock);
 
         /** @var array<Rows> $rowsArray */
-        $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->putInputIntoRows()->build())));
+        $rowsArray = \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->putInputIntoRows()->build())));
         self::assertCount(2, $rowsArray);
         self::assertSame(1, $rowsArray[0]->count());
-        self::assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')), $rowsArray[0]->first());
+        self::assertEquals(row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')), $rowsArray[0]->first());
         self::assertSame(1, $rowsArray[1]->count());
-        self::assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')), $rowsArray[1]->first());
+        self::assertEquals(row($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')), $rowsArray[1]->first());
     }
 
     public function test_rows_in_batch_must_be_positive_integer() : void
@@ -77,13 +79,13 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             true,
             20
         );
-        $ValueRangeMock = $this->createMock(Sheets\ValueRange::class);
+        $ValueRangeMock = $this->createMock(ValueRange::class);
         $ValueRangeMock->method('getValues')->willReturn(null);
 
         $service->spreadsheets_values = ($spreadsheetsValues = $this->createMock(SpreadsheetsValues::class));
         $spreadsheetsValues->method('get')->willReturn($ValueRangeMock);
         /** @var array<Rows> $rowsArray */
-        $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->build())));
+        $rowsArray = \iterator_to_array($extractor->extract(flow_context((new ConfigBuilder())->build())));
         self::assertCount(0, $rowsArray);
     }
 }

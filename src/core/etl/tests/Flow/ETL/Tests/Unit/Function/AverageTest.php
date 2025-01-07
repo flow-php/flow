@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{average, int_entry, ref, str_entry, window};
-use Flow\ETL\{Row, Rows, Tests\FlowTestCase};
+use function Flow\ETL\DSL\{row, rows};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class AverageTest extends FlowTestCase
 {
@@ -13,11 +14,11 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(str_entry('int', '10')));
-        $aggregator->aggregate(Row::create(str_entry('int', '20')));
-        $aggregator->aggregate(Row::create(str_entry('int', '30')));
-        $aggregator->aggregate(Row::create(str_entry('int', '25')));
-        $aggregator->aggregate(Row::create(str_entry('not_int', null)));
+        $aggregator->aggregate(row(str_entry('int', '10')));
+        $aggregator->aggregate(row(str_entry('int', '20')));
+        $aggregator->aggregate(row(str_entry('int', '30')));
+        $aggregator->aggregate(row(str_entry('int', '25')));
+        $aggregator->aggregate(row(str_entry('not_int', null)));
 
         self::assertSame(
             21.25,
@@ -29,10 +30,10 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(int_entry('int', 10)));
-        $aggregator->aggregate(Row::create(int_entry('int', 20)));
-        $aggregator->aggregate(Row::create(int_entry('int', 30)));
-        $aggregator->aggregate(Row::create(int_entry('int', null)));
+        $aggregator->aggregate(row(int_entry('int', 10)));
+        $aggregator->aggregate(row(int_entry('int', 20)));
+        $aggregator->aggregate(row(int_entry('int', 30)));
+        $aggregator->aggregate(row(int_entry('int', null)));
 
         self::assertSame(
             20,
@@ -44,10 +45,10 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(int_entry('int', 10)));
-        $aggregator->aggregate(Row::create(int_entry('int', 20)));
-        $aggregator->aggregate(Row::create(int_entry('int', 30)));
-        $aggregator->aggregate(Row::create(int_entry('int', 25)));
+        $aggregator->aggregate(row(int_entry('int', 10)));
+        $aggregator->aggregate(row(int_entry('int', 20)));
+        $aggregator->aggregate(row(int_entry('int', 30)));
+        $aggregator->aggregate(row(int_entry('int', 25)));
 
         self::assertSame(
             21.25,
@@ -59,10 +60,10 @@ final class AverageTest extends FlowTestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(int_entry('int', 10)));
-        $aggregator->aggregate(Row::create(int_entry('int', 20)));
-        $aggregator->aggregate(Row::create(int_entry('int', 30)));
-        $aggregator->aggregate(Row::create(int_entry('int', 40)));
+        $aggregator->aggregate(row(int_entry('int', 10)));
+        $aggregator->aggregate(row(int_entry('int', 20)));
+        $aggregator->aggregate(row(int_entry('int', 30)));
+        $aggregator->aggregate(row(int_entry('int', 40)));
 
         self::assertSame(
             25,
@@ -82,13 +83,7 @@ final class AverageTest extends FlowTestCase
 
     public function test_window_function_average_on_partitioned_rows() : void
     {
-        $rows = new Rows(
-            $row1 = Row::create(int_entry('id', 1), int_entry('value', 1)),
-            Row::create(int_entry('id', 2), int_entry('value', 100)),
-            Row::create(int_entry('id', 3), int_entry('value', 25)),
-            Row::create(int_entry('id', 4), int_entry('value', 64)),
-            Row::create(int_entry('id', 5), int_entry('value', 23)),
-        );
+        $rows = rows($row1 = row(int_entry('id', 1), int_entry('value', 1)), row(int_entry('id', 2), int_entry('value', 100)), row(int_entry('id', 3), int_entry('value', 25)), row(int_entry('id', 4), int_entry('value', 64)), row(int_entry('id', 5), int_entry('value', 23)));
 
         $avg = average(ref('value'))->over(window()->orderBy(ref('value')));
 

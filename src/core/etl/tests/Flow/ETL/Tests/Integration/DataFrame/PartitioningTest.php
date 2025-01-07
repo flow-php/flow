@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\{from_text, to_text};
+use function Flow\ETL\DSL\generate_random_string;
 use function Flow\ETL\DSL\{collect,
     df,
     from_array,
@@ -168,7 +169,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
                         for ($d = 0; $d < $maxItems; $d++) {
                             $data[] = [
-                                'id' => \Flow\ETL\DSL\generate_random_string(),
+                                'id' => generate_random_string(),
                                 'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(new \DateInterval('P' . $i . 'D'))->setTime(generate_random_int(0, 23), generate_random_int(0, 59), generate_random_int(0, 59)),
                                 'value' => generate_random_int(1, 1000),
                             ];

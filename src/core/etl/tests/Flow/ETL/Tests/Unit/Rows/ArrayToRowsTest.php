@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Rows;
 
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\{array_to_rows,
     bool_entry,
     bool_schema,
@@ -17,7 +18,6 @@ use function Flow\ETL\DSL\{array_to_rows,
     str_schema,
     type_list,
     type_string};
-use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayToRowsTest extends FlowTestCase
@@ -66,10 +66,7 @@ final class ArrayToRowsTest extends FlowTestCase
     {
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
-            schema: new Schema(
-                int_schema('id'),
-                bool_schema('deleted'),
-            )
+            schema: schema(int_schema('id'), bool_schema('deleted'))
         );
 
         self::assertEquals(
@@ -87,11 +84,7 @@ final class ArrayToRowsTest extends FlowTestCase
     {
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false],
-            schema: new Schema(
-                int_schema('id'),
-                bool_schema('deleted'),
-                str_schema('phase', true),
-            )
+            schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true))
         );
 
         self::assertEquals(
@@ -139,10 +132,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
-            schema: new Schema(
-                int_schema('id'),
-                bool_schema('deleted'),
-            )
+            schema: schema(int_schema('id'), bool_schema('deleted'))
         );
 
         self::assertEquals(
@@ -167,11 +157,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 1234, 'deleted' => false],
                 ['id' => 4321, 'deleted' => true],
             ],
-            schema: new Schema(
-                int_schema('id'),
-                bool_schema('deleted'),
-                str_schema('phase', true),
-            )
+            schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true))
         );
 
         self::assertEquals(

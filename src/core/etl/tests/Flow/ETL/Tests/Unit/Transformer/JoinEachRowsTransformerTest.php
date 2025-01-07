@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, row, rows, str_entry};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
-use Flow\ETL\{Config, DataFrame, DataFrameFactory, Flow, FlowContext, Rows, Tests\FlowTestCase};
+use Flow\ETL\{DataFrame, DataFrameFactory, Flow, Rows, Tests\FlowTestCase};
 
 final class JoinEachRowsTransformerTest extends FlowTestCase
 {
@@ -39,7 +40,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
                 ['id' => 1, 'country' => 'PL', 'joined_name' => 'Poland', 'joined_code' => 'PL'],
                 ['id' => 2, 'country' => 'US', 'joined_name' => 'United States', 'joined_code' => 'US'],
             ],
-            $transformer->transform($left, new FlowContext(Config::default()))->toArray()
+            $transformer->transform($left, flow_context(config()))->toArray()
         );
     }
 
@@ -71,7 +72,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
                 ['id' => 2, 'country' => 'US', 'joined_name' => 'United States', 'joined_code' => 'US'],
                 ['id' => 3, 'country' => 'FR', 'joined_name' => null, 'joined_code' => null],
             ],
-            $transformer->transform($left, new FlowContext(Config::default()))->toArray()
+            $transformer->transform($left, flow_context(config()))->toArray()
         );
     }
 
@@ -103,7 +104,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
                 ['id' => 2, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
                 ['id' => null, 'country' => null, 'joined_code' => 'GB', 'joined_name' => 'Great Britain'],
             ],
-            $transformer->transform($left, new FlowContext(Config::default()))->toArray()
+            $transformer->transform($left, flow_context(config()))->toArray()
         );
     }
 }

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\Adapter\Meilisearch\{to_meilisearch_bulk_index, to_meilisearch_bulk_update};
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\{config, row, rows};
+use function Flow\ETL\DSL\{flow_context, generate_random_string, integer_entry, string_entry};
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
-use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\Row\Entry\{DateTimeEntry, JsonEntry};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class MeilisearchLoaderTest extends FlowTestCase
 {
@@ -29,7 +31,7 @@ final class MeilisearchLoaderTest extends FlowTestCase
     public function test_empty_rows() : void
     {
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $loader->load(new Rows(), new FlowContext(Config::default()));
+        $loader->load(rows(), flow_context(config()));
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('', ['page' => 1]);
 
@@ -39,24 +41,7 @@ final class MeilisearchLoaderTest extends FlowTestCase
     public function test_integration_with_entry_factory() : void
     {
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $loader->load(new Rows(
-            Row::create(
-                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                string_entry('name', 'Łukasz')
-            ),
-            Row::create(
-                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                string_entry('name', 'Norbert')
-            ),
-            Row::create(
-                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                string_entry('name', 'Dawid')
-            ),
-            Row::create(
-                string_entry('id', \sha1('id' . \Flow\ETL\DSL\generate_random_string())),
-                string_entry('name', 'Tomek')
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Łukasz')), row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Norbert')), row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Dawid')), row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Tomek'))), flow_context(config()));
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('');
 
@@ -71,12 +56,7 @@ final class MeilisearchLoaderTest extends FlowTestCase
     public function test_integration_with_json_entry() : void
     {
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $loader->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                Row\Entry\JsonEntry::object('json', ['foo' => 'bar'])
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(row(integer_entry('id', 1), JsonEntry::object('json', ['foo' => 'bar']))), flow_context(config()));
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('');
 
@@ -90,22 +70,10 @@ final class MeilisearchLoaderTest extends FlowTestCase
     public function test_integration_with_partial_update_id_factory() : void
     {
         $insertLoader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $insertLoader->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                string_entry('name', 'Some Name'),
-                string_entry('status', 'NEW'),
-                new Row\Entry\DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00'))
-            ),
-        ), new FlowContext(Config::default()));
+        $insertLoader->load(rows(row(integer_entry('id', 1), string_entry('name', 'Some Name'), string_entry('status', 'NEW'), new DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00')))), flow_context(config()));
 
         $updateLoader = to_meilisearch_bulk_update($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $updateLoader->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                string_entry('name', 'Other Name'),
-            ),
-        ), new FlowContext(Config::default()));
+        $updateLoader->load(rows(row(integer_entry('id', 1), string_entry('name', 'Other Name'))), flow_context(config()));
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('');
 

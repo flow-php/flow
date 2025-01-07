@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{df,
     from_array,
     from_rows,
@@ -14,10 +15,10 @@ use function Flow\ETL\DSL\{df,
     type_map,
     type_string,
     type_structure};
+use function Flow\ETL\DSL\{integer_entry, list_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entry\{IntegerEntry};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\ETL\{Extractor, FlowContext, Row, Rows};
+use Flow\ETL\{Extractor, FlowContext, Rows};
 
 final class LimitTest extends FlowIntegrationTestCase
 {
@@ -61,7 +62,7 @@ final class LimitTest extends FlowIntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        df()->read(from_rows(new Rows()))->fetch(-1);
+        df()->read(from_rows(\Flow\ETL\DSL\rows()))->fetch(-1);
     }
 
     public function test_fetch_without_limit() : void
@@ -76,9 +77,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 20; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
+                        yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i)));
                     }
                 }
             })
@@ -99,10 +98,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
+                        yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i + 1)), row(integer_entry('id', $i + 2)));
                     }
                 }
             })
@@ -117,7 +113,7 @@ final class LimitTest extends FlowIntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        df()->read(from_rows(new Rows()))->limit(-1);
+        df()->read(from_rows(\Flow\ETL\DSL\rows()))->limit(-1);
     }
 
     public function test_limit_when_transformation_is_expanding_rows_extracted_from_extractor() : void
@@ -132,26 +128,18 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(
-                                new Row\Entry\ListEntry(
-                                    'ids',
-                                    [
-                                        ['id' => $i + 1, 'more_ids' => [['more_id' => $i + 4], ['more_id' => $i + 7]]],
-                                        ['id' => $i + 2, 'more_ids' => [['more_id' => $i + 5], ['more_id' => $i + 8]]],
-                                        ['id' => $i + 3, 'more_ids' => [['more_id' => $i + 6], ['more_id' => $i + 9]]],
-                                    ],
-                                    type_list(
-                                        type_structure(
-                                            [
-                                                struct_element('id', type_int()),
-                                                struct_element('more_ids', type_list(type_map(type_string(), type_int()))),
-                                            ]
-                                        )
-                                    )
-                                ),
+                        yield \Flow\ETL\DSL\rows(row(list_entry('ids', [
+                            ['id' => $i + 1, 'more_ids' => [['more_id' => $i + 4], ['more_id' => $i + 7]]],
+                            ['id' => $i + 2, 'more_ids' => [['more_id' => $i + 5], ['more_id' => $i + 8]]],
+                            ['id' => $i + 3, 'more_ids' => [['more_id' => $i + 6], ['more_id' => $i + 9]]],
+                        ], type_list(
+                            type_structure(
+                                [
+                                    struct_element('id', type_int()),
+                                    struct_element('more_ids', type_list(type_map(type_string(), type_int()))),
+                                ]
                             )
-                        );
+                        ))));
                     }
                 }
             })
@@ -180,10 +168,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
+                        yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i + 1)), row(integer_entry('id', $i + 2)));
                     }
                 }
             })
@@ -206,10 +191,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
+                        yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i + 1)), row(integer_entry('id', $i + 2)));
                     }
                 }
             })
@@ -232,9 +214,7 @@ final class LimitTest extends FlowIntegrationTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
+                        yield \Flow\ETL\DSL\rows(row(integer_entry('id', $i)));
                     }
                 }
             })

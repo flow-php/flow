@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{lit, sprintf};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SprintfTest extends FlowTestCase
@@ -18,7 +18,7 @@ final class SprintfTest extends FlowTestCase
             lit(25)
         );
 
-        self::assertNull($sprintf->eval(Row::create()));
+        self::assertNull($sprintf->eval(row()));
     }
 
     public function test_sprintf_expression_on_valid_format_and_args() : void
@@ -31,7 +31,7 @@ final class SprintfTest extends FlowTestCase
 
         self::assertSame(
             'Hello, John! Your age is 25.',
-            $sprintf->eval(Row::create())
+            $sprintf->eval(row())
         );
     }
 }

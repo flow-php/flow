@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema\Formatter;
 
+use function Flow\ETL\DSL\{bool_schema, datetime_schema, integer_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_element, structure_schema, type_integer, type_map, type_structure, uuid_schema, xml_element_schema, xml_schema};
 use function Flow\ETL\DSL\{type_int, type_list, type_string};
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
-use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -17,33 +13,15 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
 {
     public function test_format_nested_schema() : void
     {
-        $schema = new Schema(
-            Schema\Definition::integer('integer', true),
-            Schema\Definition::integer('float'),
-            Schema\Definition::structure(
-                'user',
-                new StructureType([
-                    new StructureElement('name', type_string(true)),
-                    new StructureElement('age', type_int()),
-                    new StructureElement(
-                        'address',
-                        new StructureType([
-                            new StructureElement('street', type_string(true)),
-                            new StructureElement('city', type_string(true)),
-                            new StructureElement('country', type_string(true)),
-                        ])
-                    ),
-                ]),
-            ),
-            Schema\Definition::string('name', nullable: true),
-            Schema\Definition::list('tags', type_list(type_string())),
-            Schema\Definition::boolean('active'),
-            Schema\Definition::xml('xml'),
-            Schema\Definition::xml_element('xml_element'),
-            Schema\Definition::json('json'),
-            Schema\Definition::uuid('uuid'),
-            Schema\Definition::dateTime('datetime'),
-        );
+        $schema = schema(integer_schema('integer', true), integer_schema('float'), structure_schema('user', type_structure([
+            structure_element('name', type_string(true)),
+            structure_element('age', type_int()),
+            structure_element('address', type_structure([
+                structure_element('street', type_string(true)),
+                structure_element('city', type_string(true)),
+                structure_element('country', type_string(true)),
+            ])),
+        ])), string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), xml_element_schema('xml_element'), json_schema('json'), uuid_schema('uuid'), datetime_schema('datetime'));
 
         self::assertSame(
             <<<'SCHEMA'
@@ -73,14 +51,7 @@ SCHEMA,
 
     public function test_format_schema() : void
     {
-        $schema = new Schema(
-            Schema\Definition::string('name', nullable: true),
-            Schema\Definition::list('tags', type_list(type_string())),
-            Schema\Definition::boolean('active'),
-            Schema\Definition::xml('xml'),
-            Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::string())),
-            Schema\Definition::list('list', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::integer()))))
-        );
+        $schema = schema(string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), map_schema('map', type_map(type_string(), type_string())), list_schema('list', type_list(type_map(type_string(), type_integer()))));
 
         self::assertSame(
             <<<'SCHEMA'

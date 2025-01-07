@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use function Flow\ETL\DSL\uuid_entry;
 use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Tests\FlowTestCase;
@@ -15,23 +16,23 @@ final class UuidEntryTest extends FlowTestCase
     {
         yield 'equal names and values' => [
             true,
-            new UuidEntry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
-            new UuidEntry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
+            uuid_entry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
+            uuid_entry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
         ];
         yield 'different names and values' => [
             false,
-            new UuidEntry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
-            new UuidEntry('different_name', Uuid::fromString('11111111-1111-1111-1111-111111111111')),
+            uuid_entry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
+            uuid_entry('different_name', Uuid::fromString('11111111-1111-1111-1111-111111111111')),
         ];
         yield 'equal names and different values' => [
             false,
-            new UuidEntry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
-            new UuidEntry('name', Uuid::fromString('11111111-1111-1111-1111-111111111111')),
+            uuid_entry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
+            uuid_entry('name', Uuid::fromString('11111111-1111-1111-1111-111111111111')),
         ];
         yield 'different names characters and equal values' => [
             false,
-            new UuidEntry('NAME', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
-            new UuidEntry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
+            uuid_entry('NAME', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
+            uuid_entry('name', Uuid::fromString('00000000-0000-0000-0000-000000000000')),
         ];
     }
 
@@ -66,7 +67,7 @@ final class UuidEntryTest extends FlowTestCase
 
     public function test_map() : void
     {
-        $entry = new UuidEntry('entry-name', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
+        $entry = uuid_entry('entry-name', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
 
         self::assertEquals(
             $entry,
@@ -85,12 +86,12 @@ final class UuidEntryTest extends FlowTestCase
     {
         $this->expectExceptionMessage('Entry name cannot be empty');
 
-        new UuidEntry('', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
+        uuid_entry('', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
     }
 
     public function test_renames_entry() : void
     {
-        $entry = new UuidEntry('entry-name', $uuid = Uuid::fromString('00000000-0000-0000-0000-000000000000'));
+        $entry = uuid_entry('entry-name', $uuid = Uuid::fromString('00000000-0000-0000-0000-000000000000'));
         /** @var UuidEntry $newEntry */
         $newEntry = $entry->rename('new-entry-name');
 

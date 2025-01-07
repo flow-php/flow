@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, null_entry, ref, row, rows, str_entry, sum};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\{Config, FlowContext, GroupBy, Tests\FlowTestCase};
+use Flow\ETL\{GroupBy, Tests\FlowTestCase};
 
 final class GroupByTest extends FlowTestCase
 {
@@ -26,7 +27,7 @@ final class GroupByTest extends FlowTestCase
                 row(null_entry('type')),
                 row(str_entry('type', 'c'))
             ),
-            $groupBy->result(new FlowContext(Config::default()))
+            $groupBy->result(flow_context(config()))
         );
     }
 
@@ -50,7 +51,7 @@ final class GroupByTest extends FlowTestCase
                 row(int_entry('id_sum', 3), str_entry('type', 'c')),
                 row(int_entry('id_sum', 5), str_entry('type', 'd')),
             ),
-            $group->result(new FlowContext(Config::default()))
+            $group->result(flow_context(config()))
         );
     }
 
@@ -92,7 +93,7 @@ final class GroupByTest extends FlowTestCase
                 row(str_entry('product', 'Carrots'), int_entry('Canada', 2000), int_entry('China', 1200), null_entry('Mexico'), int_entry('USA', 1500)),
                 row(str_entry('product', 'Orange'), null_entry('Canada'), int_entry('China', 4000), null_entry('Mexico'), int_entry('USA', 4000)),
             ),
-            $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))
+            $group->result(flow_context(config()))->sortBy(ref('product'))
         );
     }
 
@@ -114,7 +115,7 @@ final class GroupByTest extends FlowTestCase
                 row(str_entry('product', 'Apple'), null_entry('USA')),
                 row(str_entry('product', 'Banana'), int_entry('USA', 1000)),
             ),
-            $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))
+            $group->result(flow_context(config()))->sortBy(ref('product'))
         );
     }
 

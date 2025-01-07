@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\{config, flow_context, row, rows};
 use function Flow\ETL\DSL\{int_entry,
     list_entry,
     lit,
@@ -14,7 +15,7 @@ use function Flow\ETL\DSL\{int_entry,
     xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
-use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class ScalarFunctionTransformerTest extends FlowTestCase
 {
@@ -24,7 +25,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             [
             ],
             (new ScalarFunctionTransformer('number', lit(1_000)))
-                ->transform(new Rows(), new FlowContext(Config::default()))
+                ->transform(rows(), flow_context(config()))
                 ->toArray()
         );
     }
@@ -37,8 +38,8 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             ],
             (new ScalarFunctionTransformer('number', lit(1)))
                 ->transform(
-                    new Rows(Row::create(str_entry('name', 'Norbert'))),
-                    new FlowContext(Config::default())
+                    rows(row(str_entry('name', 'Norbert'))),
+                    flow_context(config())
                 )
                 ->toArray()
         );
@@ -50,7 +51,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             [
             ],
             (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
-                ->transform(new Rows(), new FlowContext(Config::default()))
+                ->transform(rows(), flow_context(config()))
                 ->toArray()
         );
     }
@@ -62,9 +63,7 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                 ['a' => 1, 'b' => 2, 'c' => 3],
             ],
             (new ScalarFunctionTransformer('c', ref('a')->plus(ref('b'))))
-                ->transform(new Rows(
-                    Row::create(int_entry('a', 1), int_entry('b', 2))
-                ), new FlowContext(Config::default()))
+                ->transform(rows(row(int_entry('a', 1), int_entry('b', 2))), flow_context(config()))
                 ->toArray()
         );
     }
@@ -80,8 +79,8 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             ],
             (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
                 ->transform(
-                    new Rows(Row::create(int_entry('a', 1))),
-                    new FlowContext(Config::default())
+                    rows(row(int_entry('a', 1))),
+                    flow_context(config())
                 )
                 ->toArray()
         );
@@ -101,8 +100,8 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
             ], type_list(type_xml_element())),
             (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))
                 ->transform(
-                    new Rows(Row::create(xml_entry('xml', $xml))),
-                    new FlowContext(Config::default())
+                    rows(row(xml_entry('xml', $xml))),
+                    flow_context(config())
                 )
                 ->first()
                 ->get(ref('xpath'))

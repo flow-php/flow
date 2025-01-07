@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\{config, flow_context, row, rows};
 use function Flow\ETL\DSL\{int_entry, str_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class DropDuplicatesTransformerTest extends FlowTestCase
 {
@@ -23,21 +24,11 @@ final class DropDuplicatesTransformerTest extends FlowTestCase
     {
         $transformer = new DropDuplicatesTransformer('id');
 
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-            Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-            Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-            Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-            Row::create(int_entry('id', 3), str_entry('name', 'name3')),
-        );
+        $rows = rows(row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 2), str_entry('name', 'name2')), row(int_entry('id', 2), str_entry('name', 'name2')), row(int_entry('id', 3), str_entry('name', 'name3')));
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-                Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-                Row::create(int_entry('id', 3), str_entry('name', 'name3')),
-            ),
-            $transformer->transform($rows, new FlowContext(Config::default()))
+            rows(row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 2), str_entry('name', 'name2')), row(int_entry('id', 3), str_entry('name', 'name3'))),
+            $transformer->transform($rows, flow_context(config()))
         );
     }
 
@@ -45,23 +36,11 @@ final class DropDuplicatesTransformerTest extends FlowTestCase
     {
         $transformer = new DropDuplicatesTransformer('id');
 
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-            Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-            Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-            Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-            Row::create(str_entry('name', 'name3')),
-            Row::create(int_entry('id', 4), str_entry('name', 'name4')),
-        );
+        $rows = rows(row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 2), str_entry('name', 'name2')), row(int_entry('id', 2), str_entry('name', 'name2')), row(str_entry('name', 'name3')), row(int_entry('id', 4), str_entry('name', 'name4')));
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-                Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-                Row::create(str_entry('name', 'name3')),
-                Row::create(int_entry('id', 4), str_entry('name', 'name4')),
-            ),
-            $transformer->transform($rows, new FlowContext(Config::default()))
+            rows(row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 2), str_entry('name', 'name2')), row(str_entry('name', 'name3')), row(int_entry('id', 4), str_entry('name', 'name4'))),
+            $transformer->transform($rows, flow_context(config()))
         );
     }
 
@@ -69,21 +48,11 @@ final class DropDuplicatesTransformerTest extends FlowTestCase
     {
         $transformer = new DropDuplicatesTransformer('id', 'name');
 
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-            Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-            Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-            Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-            Row::create(int_entry('id', 3), str_entry('name', 'name3')),
-        );
+        $rows = rows(row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 2), str_entry('name', 'name2')), row(int_entry('id', 2), str_entry('name', 'name2')), row(int_entry('id', 3), str_entry('name', 'name3')));
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'name1')),
-                Row::create(int_entry('id', 2), str_entry('name', 'name2')),
-                Row::create(int_entry('id', 3), str_entry('name', 'name3')),
-            ),
-            $transformer->transform($rows, new FlowContext(Config::default()))
+            rows(row(int_entry('id', 1), str_entry('name', 'name1')), row(int_entry('id', 2), str_entry('name', 'name2')), row(int_entry('id', 3), str_entry('name', 'name3'))),
+            $transformer->transform($rows, flow_context(config()))
         );
     }
 }

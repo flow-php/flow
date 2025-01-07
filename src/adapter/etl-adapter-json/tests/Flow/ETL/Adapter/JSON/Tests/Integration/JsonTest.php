@@ -7,10 +7,11 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\{average, df, from_array, overwrite, ref};
+use function Flow\ETL\DSL\{config, flow_context, rows};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Config, FlowContext, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class JsonTest extends FlowTestCase
 {
@@ -41,7 +42,7 @@ final class JsonTest extends FlowTestCase
     {
         $loader = new JsonLoader(path($path = __DIR__ . '/var/test_json_loader_loading_empty_string.json'));
 
-        $loader->load(new Rows(), $context = new FlowContext(Config::default()));
+        $loader->load(rows(), $context = flow_context(config()));
 
         $loader->closure($context);
 

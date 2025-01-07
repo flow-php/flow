@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\{bool_schema,
     type_string,
     type_structure,
     uuid_schema};
+use function Flow\ETL\DSL\{integer_schema, string_schema};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
 use Flow\ETL\Row\{EntryReference, Schema};
 use Flow\ETL\Tests\FlowTestCase;
@@ -61,18 +62,12 @@ final class SchemaTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
 
-        new Schema(
-            Schema\Definition::integer('id'),
-            Schema\Definition::string('id')
-        );
+        schema(integer_schema('id'), string_schema('id'));
     }
 
     public function test_allowing_only_unique_definitions_case_insensitive() : void
     {
-        $schema = new Schema(
-            Schema\Definition::integer('id'),
-            Schema\Definition::integer('Id')
-        );
+        $schema = schema(integer_schema('id'), integer_schema('Id'));
 
         self::assertEquals(refs(EntryReference::init('id'), EntryReference::init('Id')), $schema->references());
     }
@@ -148,16 +143,10 @@ final class SchemaTest extends FlowTestCase
 
     public function test_making_whole_schema_nullable() : void
     {
-        $schema = new Schema(
-            Schema\Definition::integer('id', $nullable = false),
-            Schema\Definition::string('name', $nullable = true)
-        );
+        $schema = schema(integer_schema('id', $nullable = false), string_schema('name', $nullable = true));
 
         self::assertEquals(
-            new Schema(
-                Schema\Definition::integer('id', $nullable = true),
-                Schema\Definition::string('name', $nullable = true)
-            ),
+            schema(integer_schema('id', $nullable = true), string_schema('name', $nullable = true)),
             $schema->makeNullable()
         );
     }

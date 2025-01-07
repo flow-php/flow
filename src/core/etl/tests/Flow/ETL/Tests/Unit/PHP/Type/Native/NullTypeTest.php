@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
 use function Flow\ETL\DSL\{type_float, type_null};
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Logical\MapType;
+use function Flow\ETL\DSL\{type_map, type_string};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class NullTypeTest extends FlowTestCase
@@ -17,7 +16,7 @@ final class NullTypeTest extends FlowTestCase
             type_null()->isEqual(type_null())
         );
         self::assertFalse(
-            type_null()->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            type_null()->isEqual(type_map(type_string(), type_float()))
         );
         self::assertFalse(
             type_null()->isEqual(type_float())

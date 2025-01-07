@@ -20,9 +20,10 @@ use function Flow\ETL\DSL\{average,
     str_entry,
     string_entry,
     to_callable};
+use function Flow\ETL\DSL\{bool_schema, boolean_entry, integer_entry, integer_schema, schema, string_schema};
 use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry};
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\Entry\{DateTimeEntry};
+use Flow\ETL\Row\Schema\SelectiveValidator;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\{DataFrame,
     Extractor,
@@ -104,21 +105,13 @@ final class DataFrameTest extends FlowTestCase
     public function test_drop() : void
     {
         $rows = df()->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )
             ->drop('id')
             ->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(str_entry('name', null), bool_entry('active', false)),
-                Row::create(str_entry('name', 'bar'), bool_entry('active', false)),
-            ),
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(str_entry('name', 'bar'), bool_entry('active', false))),
             $rows
         );
     }
@@ -126,20 +119,13 @@ final class DataFrameTest extends FlowTestCase
     public function test_drop_duplicates() : void
     {
         $rows = df()->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )
             ->dropDuplicates(ref('id'))
             ->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            ),
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false))),
             $rows
         );
     }
@@ -147,16 +133,7 @@ final class DataFrameTest extends FlowTestCase
     public function test_encapsulate_transformations() : void
     {
         $rows = df()->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')), \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')), \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')), \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')), \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')), \Flow\ETL\DSL\row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')), \Flow\ETL\DSL\row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')))
         )
             ->rows(new class implements Transformation {
                 public function transform(DataFrame $dataFrame) : DataFrame
@@ -177,16 +154,7 @@ final class DataFrameTest extends FlowTestCase
             ->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('country', 'pl'), int_entry('age', 2)),
-                Row::create(str_entry('country', 'pl'), int_entry('age', 2)),
-                Row::create(str_entry('country', 'pl'), float_entry('age', 2.5)),
-                Row::create(str_entry('country', 'pl'), int_entry('age', 3)),
-                Row::create(str_entry('country', 'us'), int_entry('age', 4)),
-                Row::create(str_entry('country', 'us'), int_entry('age', 4)),
-                Row::create(str_entry('country', 'us'), float_entry('age', 4.5)),
-                Row::create(str_entry('country', 'us'), int_entry('age', 5)),
-            ),
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(str_entry('country', 'pl'), int_entry('age', 2)), \Flow\ETL\DSL\row(str_entry('country', 'pl'), int_entry('age', 2)), \Flow\ETL\DSL\row(str_entry('country', 'pl'), float_entry('age', 2.5)), \Flow\ETL\DSL\row(str_entry('country', 'pl'), int_entry('age', 3)), \Flow\ETL\DSL\row(str_entry('country', 'us'), int_entry('age', 4)), \Flow\ETL\DSL\row(str_entry('country', 'us'), int_entry('age', 4)), \Flow\ETL\DSL\row(str_entry('country', 'us'), float_entry('age', 4.5)), \Flow\ETL\DSL\row(str_entry('country', 'us'), int_entry('age', 5))),
             $rows
         );
     }
@@ -203,9 +171,7 @@ final class DataFrameTest extends FlowTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
+                        yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', $i)));
                     }
                 }
             }
@@ -223,19 +189,11 @@ final class DataFrameTest extends FlowTestCase
     public function test_foreach() : void
     {
         df()->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )
             ->foreach(function (Rows $rows) : void {
                 $this->assertEquals(
-                    new Rows(
-                        Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                        Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                        Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-                    ),
+                    \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false))),
                     $rows
                 );
             });
@@ -245,14 +203,7 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->read(from_rows(
-                $extractedRows = new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-                )
+                $extractedRows = \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('name', 'baz')), \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('name', 'baz')))
             ))
             ->get();
 
@@ -263,14 +214,7 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->read(from_rows(
-                $extractedRows = new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-                )
+                $extractedRows = \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('name', 'baz')), \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('name', 'baz')))
             ))
             ->getAsArray();
 
@@ -283,24 +227,17 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->read(from_rows(
-                $extractedRows = new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-                )
+                $extractedRows = \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('name', 'baz')), \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('name', 'baz')))
             ))
             ->getEach();
 
         self::assertEquals([
-            Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-            Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-            Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-            Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-            Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-            Row::create(int_entry('id', 6), str_entry('name', 'baz')),
+            \Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo')),
+            \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar')),
+            \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('name', 'baz')),
+            \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('name', 'foo')),
+            \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('name', 'bar')),
+            \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('name', 'baz')),
         ], \iterator_to_array($rows));
     }
 
@@ -308,14 +245,7 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = df()
             ->read(from_rows(
-                $extractedRows = new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-                )
+                $extractedRows = \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('name', 'baz')), \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('name', 'foo')), \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('name', 'bar')), \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('name', 'baz')))
             ))
             ->getEachAsArray();
 
@@ -344,14 +274,12 @@ final class DataFrameTest extends FlowTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
+                        yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', $i)));
                     }
                 }
             }
         )
-            ->map(fn (Row $row) => $row->add(new BooleanEntry('odd', $row->valueOf('id') % 2 === 0)))
+            ->map(fn (Row $row) => $row->add(boolean_entry('odd', $row->valueOf('id') % 2 === 0)))
             ->fetch();
 
         self::assertCount(10, $rows);
@@ -402,23 +330,9 @@ final class DataFrameTest extends FlowTestCase
              */
             public function extract(FlowContext $context) : \Generator
             {
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 101),
-                        new BooleanEntry('deleted', false),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
 
-                yield new Rows(
-                    Row::create(
-                        new IntegerEntry('id', 102),
-                        new BooleanEntry('deleted', true),
-                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        string_entry('phase', null)
-                    )
-                );
+                yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 102), boolean_entry('deleted', true), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')), string_entry('phase', null)));
             }
         };
 
@@ -479,14 +393,7 @@ final class DataFrameTest extends FlowTestCase
     public function test_process_constructor() : void
     {
         $collectedRows = (new Flow())->process(
-            $rows = new Rows(
-                Row::create(
-                    new IntegerEntry('id', 101),
-                    new BooleanEntry('deleted', false),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                    string_entry('phase', null)
-                )
-            )
+            $rows = \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)))
         )
             ->fetch();
 
@@ -496,21 +403,13 @@ final class DataFrameTest extends FlowTestCase
     public function test_select() : void
     {
         $rows = (new Flow())->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )
             ->select('name', 'id')
             ->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('name', 'foo'), int_entry('id', 1)),
-                Row::create(str_entry('name', null), int_entry('id', 2)),
-                Row::create(str_entry('name', 'bar'), int_entry('id', 2)),
-            ),
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(str_entry('name', 'foo'), int_entry('id', 1)), \Flow\ETL\DSL\row(str_entry('name', null), int_entry('id', 2)), \Flow\ETL\DSL\row(str_entry('name', 'bar'), int_entry('id', 2))),
             $rows
         );
     }
@@ -518,22 +417,14 @@ final class DataFrameTest extends FlowTestCase
     public function test_selective_validation_against_schema() : void
     {
         $rows = (new Flow())->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )->validate(
-            new Schema(Schema\Definition::integer('id', $nullable = false)),
-            new Schema\SelectiveValidator()
+            schema(integer_schema('id', $nullable = false)),
+            new SelectiveValidator()
         )->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            ),
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false))),
             $rows
         );
     }
@@ -541,25 +432,13 @@ final class DataFrameTest extends FlowTestCase
     public function test_strict_validation_against_schema() : void
     {
         $rows = (new Flow())->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )->validate(
-            new Schema(
-                Schema\Definition::integer('id', $nullable = false),
-                Schema\Definition::string('name', $nullable = true),
-                Schema\Definition::boolean('active', $nullable = false),
-            )
+            schema(integer_schema('id', $nullable = false), string_schema('name', $nullable = true), bool_schema('active', $nullable = false))
         )->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            ),
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false))),
             $rows
         );
     }
@@ -600,16 +479,7 @@ final class DataFrameTest extends FlowTestCase
     public function test_void() : void
     {
         $rows = (new Flow())->process(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-            )
+            \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)), \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)), \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)), \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)), \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)), \Flow\ETL\DSL\row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)), \Flow\ETL\DSL\row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)))
         )
             ->rename('country', 'country_code')
             ->void()
@@ -618,7 +488,7 @@ final class DataFrameTest extends FlowTestCase
             ->fetch();
 
         self::assertEquals(
-            new Rows(),
+            \Flow\ETL\DSL\rows(),
             $rows
         );
     }
@@ -634,18 +504,7 @@ final class DataFrameTest extends FlowTestCase
                  */
                 public function extract(FlowContext $context) : \Generator
                 {
-                    yield new Rows(
-                        Row::create(new IntegerEntry('id', 1)),
-                        Row::create(new IntegerEntry('id', 2)),
-                        Row::create(new IntegerEntry('id', 3)),
-                        Row::create(new IntegerEntry('id', 4)),
-                        Row::create(new IntegerEntry('id', 5)),
-                        Row::create(new IntegerEntry('id', 6)),
-                        Row::create(new IntegerEntry('id', 7)),
-                        Row::create(new IntegerEntry('id', 8)),
-                        Row::create(new IntegerEntry('id', 9)),
-                        Row::create(new IntegerEntry('id', 10)),
-                    );
+                    yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 1)), \Flow\ETL\DSL\row(integer_entry('id', 2)), \Flow\ETL\DSL\row(integer_entry('id', 3)), \Flow\ETL\DSL\row(integer_entry('id', 4)), \Flow\ETL\DSL\row(integer_entry('id', 5)), \Flow\ETL\DSL\row(integer_entry('id', 6)), \Flow\ETL\DSL\row(integer_entry('id', 7)), \Flow\ETL\DSL\row(integer_entry('id', 8)), \Flow\ETL\DSL\row(integer_entry('id', 9)), \Flow\ETL\DSL\row(integer_entry('id', 10)));
                 }
             }
         )
@@ -680,9 +539,9 @@ final class DataFrameTest extends FlowTestCase
                  */
                 public function extract(FlowContext $context) : \Generator
                 {
-                    yield new Rows(Row::create(new IntegerEntry('id', 1)));
-                    yield new Rows(Row::create(new IntegerEntry('id', 2)));
-                    yield new Rows(Row::create(new IntegerEntry('id', 3)));
+                    yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 1)));
+                    yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 2)));
+                    yield \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 3)));
                 }
             }
         )

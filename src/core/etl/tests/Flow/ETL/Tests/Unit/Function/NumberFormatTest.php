@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{float_entry, int_entry, lit, ref, str_entry};
+use function Flow\ETL\DSL\{number_format, row};
 use Flow\ETL\Function\NumberFormat;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class NumberFormatTest extends FlowTestCase
@@ -23,19 +23,14 @@ final class NumberFormatTest extends FlowTestCase
         self::assertSame(
             '1,234.57',
             $expression->eval(
-                Row::create(
-                    float_entry('value', 1234.5678),
-                    int_entry('decimals', 2),
-                    str_entry('decimal_separator', '.'),
-                    str_entry('thousands_separator', ',')
-                )
+                row(float_entry('value', 1234.5678), int_entry('decimals', 2), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ','))
             )
         );
     }
 
     public function test_number_format_dsl() : void
     {
-        $expression = \Flow\ETL\DSL\number_format(
+        $expression = number_format(
             ref('value'),
             lit(2),
             lit('.'),
@@ -45,9 +40,7 @@ final class NumberFormatTest extends FlowTestCase
         self::assertSame(
             '1,234.57',
             $expression->eval(
-                Row::create(
-                    float_entry('value', 1234.5678),
-                )
+                row(float_entry('value', 1234.5678))
             )
         );
     }
@@ -63,12 +56,7 @@ final class NumberFormatTest extends FlowTestCase
 
         self::assertNull(
             $expression->eval(
-                Row::create(
-                    float_entry('value', 1234.5678),
-                    float_entry('decimals', 2.5),
-                    str_entry('decimal_separator', '.'),
-                    str_entry('thousands_separator', ',')
-                )
+                row(float_entry('value', 1234.5678), float_entry('decimals', 2.5), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ','))
             )
         );
     }
@@ -84,12 +72,7 @@ final class NumberFormatTest extends FlowTestCase
 
         self::assertNull(
             $expression->eval(
-                Row::create(
-                    str_entry('value', 'test'),
-                    int_entry('decimals', 2),
-                    str_entry('decimal_separator', '.'),
-                    str_entry('thousands_separator', ',')
-                )
+                row(str_entry('value', 'test'), int_entry('decimals', 2), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ','))
             )
         );
     }

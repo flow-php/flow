@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 
 use function Flow\ETL\Adapter\Elasticsearch\{es_hits_to_rows, from_es, to_es_bulk_index};
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry};
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
-use Flow\ETL\{Flow, Row, Rows};
+use Flow\ETL\{Flow, Row};
 
 final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
 {
@@ -34,17 +35,10 @@ final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
     public function test_loading_and_extraction_with_limit_and_transformation() : void
     {
         $this->elasticsearchContext->loadRows(
-            new Rows(
-                ...\array_map(
-                    static fn (int $i) : Row => Row::create(
-                        string_entry('id', \sha1((string) $i)),
-                        int_entry('position', $i),
-                        string_entry('name', 'id_' . $i),
-                        bool_entry('active', false)
-                    ),
-                    \range(1, 2005)
-                ),
-            ),
+            rows(...\array_map(
+                static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), int_entry('position', $i), string_entry('name', 'id_' . $i), bool_entry('active', false)),
+                \range(1, 2005)
+            )),
             self::SOURCE_INDEX,
             new EntryIdFactory('id')
         );

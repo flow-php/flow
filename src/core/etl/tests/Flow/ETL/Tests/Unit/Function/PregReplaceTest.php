@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{lit, regex_replace};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class PregReplaceTest extends FlowTestCase
@@ -18,7 +18,7 @@ final class PregReplaceTest extends FlowTestCase
             lit('foo is awesome')
         );
 
-        self::assertNull($pregReplace->eval(Row::create()));
+        self::assertNull($pregReplace->eval(row()));
     }
 
     public function test_preg_replace_expression_on_invalid_replacement() : void
@@ -29,7 +29,7 @@ final class PregReplaceTest extends FlowTestCase
             lit('foo is awesome')
         );
 
-        self::assertNull($pregReplace->eval(Row::create()));
+        self::assertNull($pregReplace->eval(row()));
     }
 
     public function test_preg_replace_expression_on_invalid_subject() : void
@@ -40,7 +40,7 @@ final class PregReplaceTest extends FlowTestCase
             lit(3)
         );
 
-        self::assertNull($pregReplace->eval(Row::create()));
+        self::assertNull($pregReplace->eval(row()));
     }
 
     public function test_preg_replace_expression_on_valid_strings() : void
@@ -53,7 +53,7 @@ final class PregReplaceTest extends FlowTestCase
 
         self::assertSame(
             'bar is awesome',
-            $pregReplace->eval(Row::create())
+            $pregReplace->eval(row())
         );
     }
 }

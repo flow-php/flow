@@ -1297,14 +1297,32 @@ function schema_evolving_matcher() : EvolvingSchemaMatcher
     return new EvolvingSchemaMatcher();
 }
 
+/**
+ * Alias for `int_schema`.
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function int_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+{
+    return integer_schema($name, $nullable, $metadata);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function integer_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
     return Definition::integer($name, $nullable, $metadata);
 }
 
+/**
+ * Alias for `string_schema`.
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function str_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+{
+    return string_schema($name, $nullable, $metadata);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function string_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
     return Definition::string($name, $nullable, $metadata);
 }

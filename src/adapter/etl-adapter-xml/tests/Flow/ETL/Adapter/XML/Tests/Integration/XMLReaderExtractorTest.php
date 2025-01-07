@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\{flow_context, type_string};
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, Flow, FlowContext, PHP\Type\Caster, Tests\FlowIntegrationTestCase};
+use Flow\ETL\{Flow, PHP\Type\Caster, Tests\FlowIntegrationTestCase};
 use Flow\Filesystem\Path;
 
 final class XMLReaderExtractorTest extends FlowIntegrationTestCase
@@ -19,7 +20,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 
         self::assertCount(
             2,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            \iterator_to_array($extractor->extract(flow_context(config())))
         );
     }
 
@@ -113,7 +114,7 @@ XML,
     {
         $extractor = new XMLReaderExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
 
-        $generator = $extractor->extract(new FlowContext(Config::default()));
+        $generator = $extractor->extract(flow_context(config()));
 
         self::assertTrue($generator->valid());
         $generator->next();

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\{boolean_entry, flow_context, integer_entry, json_entry, string_entry};
+use function Flow\ETL\DSL\{config, row, rows};
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Transformer\RenameEntryTransformer;
-use Flow\ETL\{Config, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class RenameEntryTransformerTest extends FlowTestCase
 {
@@ -16,34 +18,14 @@ final class RenameEntryTransformerTest extends FlowTestCase
         $renameTransformerTwo = new RenameEntryTransformer('null', 'nothing');
 
         $rows = $renameTransformerOne->transform(
-            new Rows(
-                Row::create(
-                    new Row\Entry\IntegerEntry('old_int', 1000),
-                    new Row\Entry\IntegerEntry('id', 1),
-                    string_entry('status', 'PENDING'),
-                    new Row\Entry\BooleanEntry('enabled', true),
-                    new Row\Entry\DateTimeEntry('datetime', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')),
-                    new Row\Entry\JsonEntry('json', ['foo', 'bar']),
-                    string_entry('null', null)
-                ),
-            ),
-            $context = new FlowContext(Config::default())
+            rows(row(integer_entry('old_int', 1000), integer_entry('id', 1), string_entry('status', 'PENDING'), boolean_entry('enabled', true), new DateTimeEntry('datetime', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')), json_entry('json', ['foo', 'bar']), string_entry('null', null))),
+            $context = flow_context(config())
         );
 
         $rows = $renameTransformerTwo->transform($rows, $context);
 
         self::assertEquals(
-            new Rows(
-                Row::create(
-                    new Row\Entry\IntegerEntry('id', 1),
-                    string_entry('status', 'PENDING'),
-                    new Row\Entry\BooleanEntry('enabled', true),
-                    new Row\Entry\DateTimeEntry('datetime', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')),
-                    new Row\Entry\JsonEntry('json', ['foo', 'bar']),
-                    new Row\Entry\IntegerEntry('new_int', 1000),
-                    string_entry('nothing', null)
-                ),
-            ),
+            rows(row(integer_entry('id', 1), string_entry('status', 'PENDING'), boolean_entry('enabled', true), new DateTimeEntry('datetime', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')), json_entry('json', ['foo', 'bar']), integer_entry('new_int', 1000), string_entry('nothing', null))),
             $rows
         );
     }

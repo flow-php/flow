@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{ref, str_entry};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StrReplaceTest extends FlowTestCase
@@ -14,7 +14,7 @@ final class StrReplaceTest extends FlowTestCase
     {
         self::assertSame(
             '1',
-            ref('value')->strReplace('test', '1')->eval(Row::create(str_entry('value', 'test'))),
+            ref('value')->strReplace('test', '1')->eval(row(str_entry('value', 'test'))),
         );
     }
 
@@ -22,7 +22,7 @@ final class StrReplaceTest extends FlowTestCase
     {
         self::assertSame(
             'test was successful',
-            ref('value')->strReplace(['is', 'broken'], ['was', 'successful'])->eval(Row::create(str_entry('value', 'test is broken'))),
+            ref('value')->strReplace(['is', 'broken'], ['was', 'successful'])->eval(row(str_entry('value', 'test is broken'))),
         );
     }
 }

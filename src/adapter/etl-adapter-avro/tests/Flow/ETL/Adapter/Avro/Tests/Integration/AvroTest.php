@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
 use function Flow\ETL\DSL\Adapter\Avro\{to_avro};
+use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, FlowContext, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 use Flow\Filesystem\Path;
 
 final class AvroTest extends FlowTestCase
@@ -24,7 +25,7 @@ final class AvroTest extends FlowTestCase
 
         self::assertCount(
             2,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            \iterator_to_array($extractor->extract(flow_context(config())))
         );
     }
 
@@ -32,7 +33,7 @@ final class AvroTest extends FlowTestCase
     {
         $extractor = new AvroExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.avro'));
 
-        $generator = $extractor->extract(new FlowContext(Config::default()));
+        $generator = $extractor->extract(flow_context(config()));
 
         self::assertTrue($generator->valid());
         $generator->next();

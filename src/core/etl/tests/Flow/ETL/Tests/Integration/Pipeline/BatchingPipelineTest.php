@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
+use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{from_all, from_array};
 use Flow\ETL\Pipeline\{BatchingPipeline, SynchronousPipeline};
-use Flow\ETL\{Config, FlowContext, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Rows, Tests\FlowTestCase};
 
 final class BatchingPipelineTest extends FlowTestCase
 {
@@ -31,7 +32,7 @@ final class BatchingPipelineTest extends FlowTestCase
 
         self::assertCount(
             1,
-            \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
+            \iterator_to_array($pipeline->process(flow_context(config())))
         );
     }
 
@@ -71,7 +72,7 @@ final class BatchingPipelineTest extends FlowTestCase
             ],
             \array_map(
                 static fn (Rows $r) => $r->toArray(),
-                \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
+                \iterator_to_array($pipeline->process(flow_context(config())))
             )
         );
     }
@@ -97,7 +98,7 @@ final class BatchingPipelineTest extends FlowTestCase
 
         self::assertCount(
             1,
-            \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
+            \iterator_to_array($pipeline->process(flow_context(config())))
         );
     }
 
@@ -120,7 +121,7 @@ final class BatchingPipelineTest extends FlowTestCase
 
         self::assertCount(
             2,
-            \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
+            \iterator_to_array($pipeline->process(flow_context(config())))
         );
     }
 }

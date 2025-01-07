@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{lit, size};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SizeTest extends FlowTestCase
@@ -14,14 +14,14 @@ final class SizeTest extends FlowTestCase
     {
         self::assertSame(
             3,
-            size(lit(['foo', 'bar', 'baz']))->eval(Row::create())
+            size(lit(['foo', 'bar', 'baz']))->eval(row())
         );
     }
 
     public function test_size_expression_on_integer_value() : void
     {
         self::assertNull(
-            size(lit(1))->eval(Row::create())
+            size(lit(1))->eval(row())
         );
     }
 
@@ -29,7 +29,7 @@ final class SizeTest extends FlowTestCase
     {
         self::assertSame(
             3,
-            size(lit('foo'))->eval(Row::create())
+            size(lit('foo'))->eval(row())
         );
     }
 }

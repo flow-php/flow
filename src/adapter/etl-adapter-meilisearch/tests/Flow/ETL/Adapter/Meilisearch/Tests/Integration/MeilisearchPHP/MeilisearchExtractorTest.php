@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\Adapter\Meilisearch\{from_meilisearch, meilisearch_hits_to_rows, to_meilisearch_bulk_index};
+use function Flow\ETL\DSL\{boolean_entry, flow_context, integer_entry};
+use function Flow\ETL\DSL\{config, rows};
 use function Flow\ETL\DSL\{generate_random_int, string_entry};
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
-use Flow\ETL\{Config, Flow, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Flow, Row, Tests\FlowTestCase};
 
 final class MeilisearchExtractorTest extends FlowTestCase
 {
@@ -29,17 +31,10 @@ final class MeilisearchExtractorTest extends FlowTestCase
     public function test_empty_extraction() : void
     {
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
-                ),
-                \range(1, 100)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), integer_entry('position', $i), string_entry('name', 'id_' . $i), boolean_entry('active', (bool) generate_random_int(0, 1))),
+            \range(1, 100)
+        )), flow_context(config()));
 
         $params = [
             'q' => 'title=this_cant_be_matched',
@@ -55,18 +50,11 @@ final class MeilisearchExtractorTest extends FlowTestCase
     public function test_extraction_index_with_from_and_size() : void
     {
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
-                ),
-                // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
-                \range(1, 100)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), integer_entry('position', $i), string_entry('name', 'id_' . $i), boolean_entry('active', (bool) generate_random_int(0, 1))),
+            // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
+            \range(1, 100)
+        )), flow_context(config()));
 
         $params = [
             'q' => '',
@@ -94,18 +82,11 @@ final class MeilisearchExtractorTest extends FlowTestCase
         $this->meilisearchContext->client()->index(self::INDEX_NAME)->updateSettings(['sortableAttributes' => ['position']]);
 
         $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
-        $loader->load(new Rows(
-            ...\array_map(
-                static fn (int $i) : Row => Row::create(
-                    string_entry('id', \sha1((string) $i)),
-                    new Row\Entry\IntegerEntry('position', $i),
-                    string_entry('name', 'id_' . $i),
-                    new Row\Entry\BooleanEntry('active', (bool) generate_random_int(0, 1))
-                ),
-                // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
-                \range(1, 100)
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(...\array_map(
+            static fn (int $i) : Row => \Flow\ETL\DSL\row(string_entry('id', \sha1((string) $i)), integer_entry('position', $i), string_entry('name', 'id_' . $i), boolean_entry('active', (bool) generate_random_int(0, 1))),
+            // Default limit for Meilisearch is 1000 documents: https://www.meilisearch.com/docs/reference/api/settings#pagination
+            \range(1, 100)
+        )), flow_context(config()));
 
         $params = [
             'q' => '',

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
 use function Flow\ETL\Adapter\Elasticsearch\{entry_id_factory, hash_id_factory, to_es_bulk_index, to_es_bulk_update};
+use function Flow\ETL\DSL\{config, row, rows};
+use function Flow\ETL\DSL\{flow_context, integer_entry};
 use function Flow\ETL\DSL\{generate_random_string, string_entry};
-use Flow\ETL\{Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase, Config, FlowContext, Row, Rows};
+use Flow\ETL\Row\Entry\{DateTimeEntry, JsonEntry};
+use Flow\ETL\{Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase};
 
 final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 {
@@ -28,7 +31,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, entry_id_factory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(), new FlowContext(Config::default()));
+        $loader->load(rows(), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -48,24 +51,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, entry_id_factory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            Row::create(
-                string_entry('id', \sha1('id' . generate_random_string())),
-                string_entry('name', 'Łukasz')
-            ),
-            Row::create(
-                string_entry('id', \sha1('id' . generate_random_string())),
-                string_entry('name', 'Norbert')
-            ),
-            Row::create(
-                string_entry('id', \sha1('id' . generate_random_string())),
-                string_entry('name', 'Dawid')
-            ),
-            Row::create(
-                string_entry('id', \sha1('id' . generate_random_string())),
-                string_entry('name', 'Tomek')
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Łukasz')), row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Norbert')), row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Dawid')), row(string_entry('id', \sha1('id' . generate_random_string())), string_entry('name', 'Tomek'))), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -90,12 +76,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                Row\Entry\JsonEntry::object('json', ['foo' => 'bar'])
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(row(integer_entry('id', 1), JsonEntry::object('json', ['foo' => 'bar']))), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -119,23 +100,11 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
     {
         $insertLoader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
-        $insertLoader->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                string_entry('name', 'Some Name'),
-                string_entry('status', 'NEW'),
-                new Row\Entry\DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00'))
-            ),
-        ), new FlowContext(Config::default()));
+        $insertLoader->load(rows(row(integer_entry('id', 1), string_entry('name', 'Some Name'), string_entry('status', 'NEW'), new DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00')))), flow_context(config()));
 
         $updateLoader = to_es_bulk_update($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
-        $updateLoader->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                string_entry('name', 'Other Name'),
-            ),
-        ), new FlowContext(Config::default()));
+        $updateLoader->load(rows(row(integer_entry('id', 1), string_entry('name', 'Other Name'))), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -173,24 +142,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
     {
         $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, hash_id_factory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                string_entry('name', 'Łukasz')
-            ),
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 2),
-                string_entry('name', 'Norbert')
-            ),
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 3),
-                string_entry('name', 'Dawid')
-            ),
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 4),
-                string_entry('name', 'Tomek')
-            ),
-        ), new FlowContext(Config::default()));
+        $loader->load(rows(row(integer_entry('id', 1), string_entry('name', 'Łukasz')), row(integer_entry('id', 2), string_entry('name', 'Norbert')), row(integer_entry('id', 3), string_entry('name', 'Dawid')), row(integer_entry('id', 4), string_entry('name', 'Tomek'))), flow_context(config()));
 
         $params = [
             'index' => self::INDEX_NAME,

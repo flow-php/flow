@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, json_entry, row, rows, string_entry};
 use Flow\ETL\Transformer\DropEntriesTransformer;
-use Flow\ETL\{Config, FlowContext, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class DropEntriesTransformerTest extends FlowTestCase
 {
@@ -25,7 +26,7 @@ final class DropEntriesTransformerTest extends FlowTestCase
             [
                 ['name' => 'Row Name'],
             ],
-            $transformer->transform($rows, new FlowContext(Config::default()))->toArray()
+            $transformer->transform($rows, flow_context(config()))->toArray()
         );
     }
 
@@ -44,7 +45,7 @@ final class DropEntriesTransformerTest extends FlowTestCase
             [
                 ['id' => 1, 'name' => 'Row Name', 'array' => ['test']],
             ],
-            $transformer->transform($rows, new FlowContext(Config::default()))->toArray()
+            $transformer->transform($rows, flow_context(config()))->toArray()
         );
     }
 }

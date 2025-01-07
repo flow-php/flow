@@ -5,22 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use function Flow\ETL\Adapter\Text\to_text;
-use function Flow\ETL\DSL\string_entry;
-use Flow\ETL\{Flow, Row, Rows, Tests\FlowTestCase};
+use function Flow\ETL\DSL\{generate_random_string, string_entry};
+use function Flow\ETL\DSL\{row, rows};
+use Flow\ETL\{Flow, Tests\FlowTestCase};
 
 final class TextTest extends FlowTestCase
 {
     public function test_loading_text_files() : void
     {
-        $path = __DIR__ . '/var/flow_php_etl_csv_loader' . \Flow\ETL\DSL\generate_random_string() . '.csv';
+        $path = __DIR__ . '/var/flow_php_etl_csv_loader' . generate_random_string() . '.csv';
 
         (new Flow())
             ->process(
-                new Rows(
-                    Row::create(string_entry('name', 'Norbert')),
-                    Row::create(string_entry('name', 'Tomek')),
-                    Row::create(string_entry('name', 'Dawid')),
-                )
+                rows(row(string_entry('name', 'Norbert')), row(string_entry('name', 'Tomek')), row(string_entry('name', 'Dawid')))
             )
             ->write(to_text($path))
             ->run();

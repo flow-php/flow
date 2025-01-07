@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
+use function Flow\ETL\DSL\{structure_element, type_integer, type_list, type_map, type_structure};
 use function Flow\ETL\DSL\{type_int, type_null, type_string};
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\{ArrayContentDetector, Types};
 use Flow\ETL\Tests\FlowTestCase;
@@ -46,8 +43,8 @@ final class ArrayContentDetectorTest extends FlowTestCase
             ],
             [
                 type_string(),
-                new MapType(MapKey::string(), MapValue::string()),
-                new ListType(ListElement::integer()),
+                type_map(type_string(), type_string()),
+                type_list(type_integer()),
             ],
             false,
             false,
@@ -58,9 +55,9 @@ final class ArrayContentDetectorTest extends FlowTestCase
                 type_int(),
             ],
             [
-                new StructureType([
-                    new StructureElement('id', type_int()),
-                    new StructureElement('name', type_string()),
+                type_structure([
+                    structure_element('id', type_int()),
+                    structure_element('name', type_string()),
                 ]),
             ],
             true,
@@ -72,12 +69,7 @@ final class ArrayContentDetectorTest extends FlowTestCase
                 type_string(),
             ],
             [
-                new MapType(
-                    MapKey::string(),
-                    MapValue::map(
-                        new MapType(MapKey::string(), MapValue::string()),
-                    )
-                ),
+                type_map(type_string(), type_map(type_string(), type_string())),
             ],
             false,
             false,
@@ -116,8 +108,8 @@ final class ArrayContentDetectorTest extends FlowTestCase
             ],
             [
                 type_string(),
-                new MapType(MapKey::string(), MapValue::string()),
-                new ListType(ListElement::integer()),
+                type_map(type_string(), type_string()),
+                type_list(type_integer()),
             ],
             false,
             false,
@@ -128,9 +120,9 @@ final class ArrayContentDetectorTest extends FlowTestCase
                 type_int(),
             ],
             [
-                new StructureType([
-                    new StructureElement('id', type_int()),
-                    new StructureElement('name', type_string()),
+                type_structure([
+                    structure_element('id', type_int()),
+                    structure_element('name', type_string()),
                 ]),
             ],
             true,
@@ -142,12 +134,7 @@ final class ArrayContentDetectorTest extends FlowTestCase
                 type_string(),
             ],
             [
-                new MapType(
-                    MapKey::string(),
-                    MapValue::map(
-                        new MapType(MapKey::string(), MapValue::string()),
-                    )
-                ),
+                type_map(type_string(), type_map(type_string(), type_string())),
             ],
             false,
             true,
@@ -197,8 +184,8 @@ final class ArrayContentDetectorTest extends FlowTestCase
             ],
             [
                 type_string(),
-                new MapType(MapKey::string(), MapValue::string()),
-                new ListType(ListElement::integer()),
+                type_map(type_string(), type_string()),
+                type_list(type_integer()),
             ],
             true,
             true,
@@ -209,9 +196,9 @@ final class ArrayContentDetectorTest extends FlowTestCase
                 type_int(),
             ],
             [
-                new StructureType([
-                    new StructureElement('id', type_int()),
-                    new StructureElement('name', type_string()),
+                type_structure([
+                    structure_element('id', type_int()),
+                    structure_element('name', type_string()),
                 ]),
             ],
             false,
@@ -223,12 +210,7 @@ final class ArrayContentDetectorTest extends FlowTestCase
                 type_string(),
             ],
             [
-                new MapType(
-                    MapKey::string(),
-                    MapValue::map(
-                        new MapType(MapKey::string(), MapValue::string()),
-                    )
-                ),
+                type_map(type_string(), type_map(type_string(), type_string())),
             ],
             false,
             false,

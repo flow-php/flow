@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{lit, ulid};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 use Symfony\Component\Uid\Ulid;
 
@@ -16,12 +16,12 @@ final class UlidTest extends FlowTestCase
         $expression = ulid();
         self::assertTrue(
             Ulid::isValid(
-                $expression->eval(Row::create())->toBase32()
+                $expression->eval(row())->toBase32()
             )
         );
         self::assertNotSame(
-            $expression->eval(Row::create()),
-            $expression->eval(Row::create())
+            $expression->eval(row()),
+            $expression->eval(row())
         );
     }
 
@@ -30,15 +30,15 @@ final class UlidTest extends FlowTestCase
         $expression = ulid();
 
         self::assertNotEquals(
-            $expression->eval(Row::create()),
-            $expression->eval(Row::create())
+            $expression->eval(row()),
+            $expression->eval(row())
         );
     }
 
     public function test_ulid_with_invalid_value_returns_null() : void
     {
         self::assertNull(
-            ulid(lit(''))->eval(Row::create())
+            ulid(lit(''))->eval(row())
         );
     }
 }

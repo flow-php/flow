@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{ref, str_entry};
 use Flow\ETL\Function\Trim\Type;
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class TrimTest extends FlowTestCase
@@ -15,7 +15,7 @@ final class TrimTest extends FlowTestCase
     {
         self::assertSame(
             'value',
-            ref('string')->trim()->eval(Row::create(str_entry('string', '   value')))
+            ref('string')->trim()->eval(row(str_entry('string', '   value')))
         );
     }
 
@@ -23,7 +23,7 @@ final class TrimTest extends FlowTestCase
     {
         self::assertSame(
             'value   ',
-            ref('string')->trim(Type::LEFT)->eval(Row::create(str_entry('string', '   value   ')))
+            ref('string')->trim(Type::LEFT)->eval(row(str_entry('string', '   value   ')))
         );
     }
 
@@ -31,7 +31,7 @@ final class TrimTest extends FlowTestCase
     {
         self::assertSame(
             '   value',
-            ref('string')->trim(Type::RIGHT)->eval(Row::create(str_entry('string', '   value   ')))
+            ref('string')->trim(Type::RIGHT)->eval(row(str_entry('string', '   value   ')))
         );
     }
 }

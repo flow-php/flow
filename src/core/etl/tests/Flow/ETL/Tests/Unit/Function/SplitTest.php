@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{lit, split};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SplitTest extends FlowTestCase
@@ -13,7 +13,7 @@ final class SplitTest extends FlowTestCase
     public function test_split_not_string() : void
     {
         self::assertNull(
-            split(lit(123), ',')->eval(Row::create())
+            split(lit(123), ',')->eval(row())
         );
     }
 
@@ -21,7 +21,7 @@ final class SplitTest extends FlowTestCase
     {
         self::assertSame(
             ['foo', 'bar', 'baz'],
-            split(lit('foo,bar,baz'), ',')->eval(Row::create())
+            split(lit('foo,bar,baz'), ',')->eval(row())
         );
     }
 
@@ -29,7 +29,7 @@ final class SplitTest extends FlowTestCase
     {
         self::assertSame(
             ['foo', 'bar,baz'],
-            split(lit('foo,bar,baz'), ',', 2)->eval(Row::create())
+            split(lit('foo,bar,baz'), ',', 2)->eval(row())
         );
     }
 }

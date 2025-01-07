@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\{datetime_entry, float_entry, int_entry, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -11,7 +12,7 @@ final class MaxTest extends FlowTestCase
 {
     public function test_aggregation_max_from_numeric_values() : void
     {
-        $aggregator = \Flow\ETL\DSL\max(ref('int'));
+        $aggregator = max(ref('int'));
 
         $aggregator->aggregate(row(str_entry('int', '10')));
         $aggregator->aggregate(row(str_entry('int', '20')));
@@ -27,7 +28,7 @@ final class MaxTest extends FlowTestCase
 
     public function test_aggregation_max_including_null_value() : void
     {
-        $aggregator = \Flow\ETL\DSL\max(ref('int'));
+        $aggregator = max(ref('int'));
 
         $aggregator->aggregate(row(int_entry('int', 10)));
         $aggregator->aggregate(row(int_entry('int', 20)));
@@ -42,7 +43,7 @@ final class MaxTest extends FlowTestCase
 
     public function test_aggregation_max_with_datetime_values() : void
     {
-        $aggregator = \Flow\ETL\DSL\max(ref('datetime'));
+        $aggregator = max(ref('datetime'));
 
         $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-01 00:00:00')));
         $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-02 00:00:00')));
@@ -57,7 +58,7 @@ final class MaxTest extends FlowTestCase
 
     public function test_aggregation_max_with_float_result() : void
     {
-        $aggregator = \Flow\ETL\DSL\max(ref('int'));
+        $aggregator = max(ref('int'));
 
         $aggregator->aggregate(row(int_entry('int', 10)));
         $aggregator->aggregate(row(int_entry('int', 20)));
@@ -72,7 +73,7 @@ final class MaxTest extends FlowTestCase
 
     public function test_aggregation_max_with_integer_result() : void
     {
-        $aggregator = \Flow\ETL\DSL\max(ref('int'));
+        $aggregator = max(ref('int'));
 
         $aggregator->aggregate(row(int_entry('int', 10)));
         $aggregator->aggregate(row(int_entry('int', 20)));

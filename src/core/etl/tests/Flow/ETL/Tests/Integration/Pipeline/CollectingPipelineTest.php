@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
+use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{from_all, from_array};
 use Flow\ETL\Pipeline\{CollectingPipeline, SynchronousPipeline};
-use Flow\ETL\{Config, FlowContext, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 
 final class CollectingPipelineTest extends FlowTestCase
 {
@@ -36,7 +37,7 @@ final class CollectingPipelineTest extends FlowTestCase
 
         self::assertCount(
             1,
-            \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
+            \iterator_to_array($pipeline->process(flow_context(config())))
         );
     }
 }

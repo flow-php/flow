@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, ref, row, rows, str_entry, to_output, to_stream};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\StreamLoader;
-use Flow\ETL\{Config, FlowContext, Tests\FlowTestCase};
+use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\{Tests\FlowTestCase};
 use Flow\Filesystem\Stream\Mode;
 
 final class StreamLoaderTest extends FlowTestCase
 {
     public function test_columns_count_to_php_output_stream() : void
     {
-        $loader = to_output(false, StreamLoader\Output::column_count);
+        $loader = to_output(false, Output::column_count);
 
         \ob_start();
 
@@ -24,7 +26,7 @@ final class StreamLoaderTest extends FlowTestCase
                 row(int_entry('id', 2), str_entry('name', 'id_2')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
-            new FlowContext(Config::default())
+            flow_context(config())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -51,7 +53,7 @@ ASCII,
                 row(int_entry('id', 2), str_entry('name', 'id_2')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
-            new FlowContext(Config::default())
+            flow_context(config())
         );
     }
 
@@ -67,7 +69,7 @@ ASCII,
                 row(int_entry('id', 2), str_entry('name', 'id_2'), str_entry('group', 'a')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'), str_entry('group', 'a'))
             )->partitionBy(ref('group'))[0],
-            new FlowContext(Config::default())
+            flow_context(config())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -91,7 +93,7 @@ TABLE,
 
     public function test_loading_rows_and_schema_into_output_stream() : void
     {
-        $loader = to_output(false, StreamLoader\Output::rows_and_schema);
+        $loader = to_output(false, Output::rows_and_schema);
 
         \ob_start();
 
@@ -101,7 +103,7 @@ TABLE,
                 row(int_entry('id', 2), str_entry('name', 'id_2')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
-            new FlowContext(Config::default())
+            flow_context(config())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -138,7 +140,7 @@ ASCII,
                 row(int_entry('id', 2), str_entry('name', 'id_2')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
-            new FlowContext(Config::default())
+            flow_context(config())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -160,7 +162,7 @@ TABLE,
 
     public function test_loading_schema_into_php_output_stream() : void
     {
-        $loader = new StreamLoader('php://output', Mode::WRITE, 0, StreamLoader\Output::schema);
+        $loader = new StreamLoader('php://output', Mode::WRITE, 0, Output::schema);
 
         \ob_start();
 
@@ -170,7 +172,7 @@ TABLE,
                 row(int_entry('id', 2), str_entry('name', 'id_2')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
-            new FlowContext(Config::default())
+            flow_context(config())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -188,7 +190,7 @@ ASCII,
 
     public function test_rows_and_columns_count_to_php_output_stream() : void
     {
-        $loader = to_output(false, StreamLoader\Output::rows_and_column_count);
+        $loader = to_output(false, Output::rows_and_column_count);
 
         \ob_start();
 
@@ -198,7 +200,7 @@ ASCII,
                 row(int_entry('id', 2), str_entry('name', 'id_2')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
-            new FlowContext(Config::default())
+            flow_context(config())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -214,7 +216,7 @@ ASCII,
 
     public function test_rows_count_to_php_output_stream() : void
     {
-        $loader = to_output(false, StreamLoader\Output::rows_count);
+        $loader = to_output(false, Output::rows_count);
 
         \ob_start();
 
@@ -224,7 +226,7 @@ ASCII,
                 row(int_entry('id', 2), str_entry('name', 'id_2')),
                 row(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
-            new FlowContext(Config::default())
+            flow_context(config())
         );
         $output = \ob_get_contents();
         \ob_end_clean();

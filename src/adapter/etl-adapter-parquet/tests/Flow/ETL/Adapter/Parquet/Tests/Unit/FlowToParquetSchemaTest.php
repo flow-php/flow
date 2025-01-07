@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
-use function Flow\ETL\DSL\{type_boolean, type_int, type_string};
+use function Flow\ETL\DSL\{bool_schema,
+    datetime_schema,
+    float_schema,
+    integer_schema,
+    json_schema,
+    list_schema,
+    map_schema,
+    string_schema,
+    structure_element,
+    structure_schema,
+    type_integer,
+    type_list,
+    type_map,
+    type_structure};
+use function Flow\ETL\DSL\{schema, type_boolean, type_int, type_string};
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
-use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
@@ -38,23 +47,33 @@ final class FlowToParquetSchemaTest extends FlowTestCase
                 NestedColumn::struct('structure', [FlatColumn::string('a', ParquetSchema\Repetition::REQUIRED)], ParquetSchema\Repetition::REQUIRED),
                 NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64(true), ParquetSchema\Repetition::REQUIRED),
             ),
-            (new SchemaConverter())->toParquet(new Schema(
-                Schema\Definition::integer('integer'),
-                Schema\Definition::boolean('boolean'),
-                Schema\Definition::string('string'),
-                Schema\Definition::float('float'),
-                Schema\Definition::dateTime('datetime'),
-                Schema\Definition::json('json'),
-                Schema\Definition::list('list', new ListType(ListElement::string())),
-                Schema\Definition::list('list_of_structs', new ListType(ListElement::structure(
-                    new StructureType([
-                        new StructureElement('integer', type_int()),
-                        new StructureElement('boolean', type_boolean()),
-                    ]),
-                ))),
-                Schema\Definition::structure('structure', new StructureType([new StructureElement('a', type_string())])),
-                Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer())),
-            ))
+            (new SchemaConverter())->toParquet(
+                schema(
+                    integer_schema('integer'),
+                    bool_schema('boolean'),
+                    string_schema('string'),
+                    float_schema('float'),
+                    datetime_schema('datetime'),
+                    json_schema('json'),
+                    list_schema('list', type_list(type_string())),
+                    list_schema(
+                        'list_of_structs',
+                        type_list(
+                            type_structure([
+                                structure_element('integer', type_int()),
+                                structure_element('boolean', type_boolean()),
+                            ])
+                        )
+                    ),
+                    structure_schema(
+                        'structure',
+                        type_structure([
+                            structure_element('a', type_string()),
+                        ])
+                    ),
+                    map_schema('map', type_map(type_string(), type_integer()))
+                )
+            )
         );
     }
 }

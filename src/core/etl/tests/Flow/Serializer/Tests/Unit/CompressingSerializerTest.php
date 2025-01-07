@@ -20,27 +20,17 @@ final class CompressingSerializerTest extends TestCase
 
     public function test_serializing_rows() : void
     {
-        $rows = new Rows(
-            ...\array_map(
-                fn () : Row => Row::create(
-                    int_entry('integer', 1),
-                    str_entry('string', 'string'),
-                    bool_entry('boolean', true),
-                    datetime_entry('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')),
-                    str_entry('null', null),
-                    float_entry('float', 0.12),
-                    struct_entry(
-                        'struct',
-                        ['integer' => 1, 'string' => 'string'],
-                        struct_type([
-                            struct_element('integer', type_int()),
-                            struct_element('string', type_string()),
-                        ])
-                    )
-                ),
-                \range(0, 100)
-            )
-        );
+        $rows = \Flow\ETL\DSL\rows(...\array_map(
+            fn () : Row => \Flow\ETL\DSL\row(int_entry('integer', 1), str_entry('string', 'string'), bool_entry('boolean', true), datetime_entry('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')), str_entry('null', null), float_entry('float', 0.12), struct_entry(
+                'struct',
+                ['integer' => 1, 'string' => 'string'],
+                struct_type([
+                    struct_element('integer', type_int()),
+                    struct_element('string', type_string()),
+                ])
+            )),
+            \range(0, 100)
+        ));
 
         $serializer = new CompressingSerializer(new NativePHPSerializer());
 

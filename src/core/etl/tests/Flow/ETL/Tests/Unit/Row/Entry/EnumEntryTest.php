@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Schema\Definition;
+use function Flow\ETL\DSL\{enum_entry, enum_schema};
 use Flow\ETL\Tests\Fixtures\Enum\{BackedIntEnum, BackedStringEnum, BasicEnum};
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -13,7 +12,7 @@ final class EnumEntryTest extends FlowTestCase
 {
     public function test_creating_backed_int_enum_entry() : void
     {
-        $enum = new EnumEntry('enum', BackedIntEnum::one);
+        $enum = enum_entry('enum', BackedIntEnum::one);
 
         self::assertSame(
             BackedIntEnum::one,
@@ -27,7 +26,7 @@ final class EnumEntryTest extends FlowTestCase
 
     public function test_creating_backed_string_enum_entry() : void
     {
-        $enum = new EnumEntry('enum', BackedStringEnum::one);
+        $enum = enum_entry('enum', BackedStringEnum::one);
 
         self::assertSame(
             BackedStringEnum::one,
@@ -41,7 +40,7 @@ final class EnumEntryTest extends FlowTestCase
 
     public function test_creating_basic_enum_entry() : void
     {
-        $enum = new EnumEntry('enum', BasicEnum::one);
+        $enum = enum_entry('enum', BasicEnum::one);
 
         self::assertSame(
             BasicEnum::one,
@@ -53,21 +52,18 @@ final class EnumEntryTest extends FlowTestCase
     public function test_definition() : void
     {
         self::assertEquals(
-            Definition::enum(
-                'enum',
-                BackedStringEnum::class
-            ),
-            (new EnumEntry('enum', BackedStringEnum::one))->definition()
+            enum_schema('enum', BackedStringEnum::class),
+            (enum_entry('enum', BackedStringEnum::one))->definition()
         );
     }
 
     public function test_is_equal() : void
     {
         self::assertTrue(
-            (new EnumEntry('enum', BasicEnum::one))->isEqual(new EnumEntry('enum', BasicEnum::one)),
+            (enum_entry('enum', BasicEnum::one))->isEqual(enum_entry('enum', BasicEnum::one)),
         );
         self::assertFalse(
-            (new EnumEntry('enum', BasicEnum::one))->isEqual(new EnumEntry('enum', BackedStringEnum::one)),
+            (enum_entry('enum', BasicEnum::one))->isEqual(enum_entry('enum', BackedStringEnum::one)),
         );
     }
 
@@ -75,15 +71,15 @@ final class EnumEntryTest extends FlowTestCase
     {
         self::assertSame(
             'one',
-            (new EnumEntry('enum', BasicEnum::one))->toString()
+            (enum_entry('enum', BasicEnum::one))->toString()
         );
         self::assertSame(
             'one',
-            (new EnumEntry('enum', BackedStringEnum::one))->toString()
+            (enum_entry('enum', BackedStringEnum::one))->toString()
         );
         self::assertSame(
             'one',
-            (new EnumEntry('enum', BackedIntEnum::one))->toString()
+            (enum_entry('enum', BackedIntEnum::one))->toString()
         );
     }
 }

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, ref, str_entry};
+use function Flow\ETL\DSL\{row, rows};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\ETL\{Function\StyleConverter\StringStyles, Row, Rows};
+use Flow\ETL\{Function\StyleConverter\StringStyles};
 
 final class RenameTest extends FlowIntegrationTestCase
 {
@@ -14,31 +15,20 @@ final class RenameTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                    Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
-                    Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-                )
+                rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
             ))
             ->rename('name', 'new_name')
             ->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('new_name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('new_name', null), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('new_name', 'bar'), bool_entry('active', false)),
-            ),
+            rows(row(int_entry('id', 1), str_entry('new_name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('new_name', null), bool_entry('active', false)), row(int_entry('id', 2), str_entry('new_name', 'bar'), bool_entry('active', false))),
             $rows
         );
     }
 
     public function test_rename_all() : void
     {
-        $rows = new Rows(
-            Row::create(json_entry('array', ['id' => 1, 'name' => 'name', 'active' => true])),
-            Row::create(json_entry('array', ['id' => 2, 'name' => 'name', 'active' => false]))
-        );
+        $rows = rows(row(json_entry('array', ['id' => 1, 'name' => 'name', 'active' => true])), row(json_entry('array', ['id' => 2, 'name' => 'name', 'active' => false])));
 
         $ds = df()
             ->read(from_rows($rows))
@@ -58,10 +48,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_lower_case() : void
     {
-        $rows = new Rows(
-            Row::create(int_entry('ID', 1), str_entry('NAME', 'name'), bool_entry('ACTIVE', true)),
-            Row::create(int_entry('ID', 2), str_entry('NAME', 'name'), bool_entry('ACTIVE', false)),
-        );
+        $rows = rows(row(int_entry('ID', 1), str_entry('NAME', 'name'), bool_entry('ACTIVE', true)), row(int_entry('ID', 2), str_entry('NAME', 'name'), bool_entry('ACTIVE', false)));
 
         $ds = df()->read(from_rows($rows))->renameAllLowerCase()->getEachAsArray();
 
@@ -76,10 +63,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_to_snake_case() : void
     {
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('UserName', 'name'), bool_entry('isActive', true)),
-            Row::create(int_entry('id', 2), str_entry('UserName', 'name'), bool_entry('isActive', false)),
-        );
+        $rows = rows(row(int_entry('id', 1), str_entry('UserName', 'name'), bool_entry('isActive', true)), row(int_entry('id', 2), str_entry('UserName', 'name'), bool_entry('isActive', false)));
 
         $ds = df()
             ->read(from_rows($rows))
@@ -98,10 +82,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_upper_case() : void
     {
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('name', 'name'), bool_entry('active', true)),
-            Row::create(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)),
-        );
+        $rows = rows(row(int_entry('id', 1), str_entry('name', 'name'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)));
 
         $ds = df()
             ->read(from_rows($rows))
@@ -119,10 +100,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_upper_case_first() : void
     {
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('name', 'name'), bool_entry('active', true)),
-            Row::create(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)),
-        );
+        $rows = rows(row(int_entry('id', 1), str_entry('name', 'name'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)));
 
         $ds = df()
             ->read(from_rows($rows))
@@ -140,10 +118,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
     public function test_rename_all_upper_case_word() : void
     {
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('name', 'name'), bool_entry('active', true)),
-            Row::create(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)),
-        );
+        $rows = rows(row(int_entry('id', 1), str_entry('name', 'name'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)));
 
         $ds = df()
             ->read(from_rows($rows))

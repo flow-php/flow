@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use function Flow\ETL\Adapter\Text\{from_text};
+use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, Flow, FlowContext, Row, Tests\FlowTestCase};
+use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\{Flow, Tests\FlowTestCase};
 use Flow\Filesystem\Path;
 
 final class TextExtractorTest extends FlowTestCase
@@ -21,7 +23,7 @@ final class TextExtractorTest extends FlowTestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            self::assertInstanceOf(Row\Entry\StringEntry::class, $row->get('text'));
+            self::assertInstanceOf(StringEntry::class, $row->get('text'));
         }
 
         self::assertSame(1024, $rows->count());
@@ -34,7 +36,7 @@ final class TextExtractorTest extends FlowTestCase
 
         self::assertCount(
             2,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            \iterator_to_array($extractor->extract(flow_context(config())))
         );
     }
 
@@ -42,7 +44,7 @@ final class TextExtractorTest extends FlowTestCase
     {
         $extractor = new TextExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
-        $generator = $extractor->extract(new FlowContext(Config::default()));
+        $generator = $extractor->extract(flow_context(config()));
 
         self::assertTrue($generator->valid());
         $generator->next();

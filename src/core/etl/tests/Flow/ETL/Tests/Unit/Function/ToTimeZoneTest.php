@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{lit, ref, str_entry, to_timezone};
-use Flow\ETL\Row;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ToTimeZoneTest extends FlowTestCase
@@ -17,7 +17,7 @@ final class ToTimeZoneTest extends FlowTestCase
             to_timezone(
                 lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
                 lit(new \DateTimeZone('UTC'))
-            )->eval(Row::create())->format('Y-m-d H:i:s.u')
+            )->eval(row())->format('Y-m-d H:i:s.u')
         );
     }
 
@@ -28,7 +28,7 @@ final class ToTimeZoneTest extends FlowTestCase
             to_timezone(
                 lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
                 ref('tz')
-            )->eval(Row::create(str_entry('tz', 'UTC')))->format('Y-m-d H:i:s.u')
+            )->eval(row(str_entry('tz', 'UTC')))->format('Y-m-d H:i:s.u')
         );
     }
 
@@ -39,7 +39,7 @@ final class ToTimeZoneTest extends FlowTestCase
             to_timezone(
                 lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
                 lit('UTC')
-            )->eval(Row::create())->format('Y-m-d H:i:s.u')
+            )->eval(row())->format('Y-m-d H:i:s.u')
         );
     }
 }

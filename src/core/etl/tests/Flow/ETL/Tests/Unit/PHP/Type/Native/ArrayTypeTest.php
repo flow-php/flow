@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
 use function Flow\ETL\DSL\{type_array, type_float};
-use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
-use Flow\ETL\PHP\Type\Logical\MapType;
+use function Flow\ETL\DSL\{type_map, type_string};
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,13 +14,13 @@ final class ArrayTypeTest extends FlowTestCase
     public function test_equals() : void
     {
         self::assertTrue(
-            (type_array())->isEqual(new ArrayType)
+            (type_array())->isEqual(type_array())
         );
         self::assertTrue(
             ArrayType::empty()->isEqual(ArrayType::empty())
         );
         self::assertFalse(
-            (type_array())->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            (type_array())->isEqual(type_map(type_string(), type_float()))
         );
         self::assertFalse(
             (type_array())->isEqual(type_float())

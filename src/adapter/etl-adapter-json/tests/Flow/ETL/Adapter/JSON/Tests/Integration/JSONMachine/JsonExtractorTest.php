@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use function Flow\ETL\Adapter\JSON\{from_json};
+use function Flow\ETL\DSL\flow_context;
 use function Flow\ETL\DSL\{df, print_schema};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, Flow, FlowContext, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Config, Flow, Row, Rows, Tests\FlowTestCase};
 use Flow\Filesystem\Path;
 
 final class JsonExtractorTest extends FlowTestCase
@@ -108,7 +109,7 @@ SCHEMA
         $total = 0;
 
         /** @var Rows $rows */
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
+        foreach ($extractor->extract(flow_context(\Flow\ETL\DSL\config())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertSame(
                     [
@@ -135,7 +136,7 @@ SCHEMA
 
         self::assertCount(
             2,
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
         );
     }
 
@@ -143,7 +144,7 @@ SCHEMA
     {
         $extractor = new JsonExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.json'));
 
-        $generator = $extractor->extract(new FlowContext(Config::default()));
+        $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 
         self::assertTrue($generator->valid());
         $generator->next();
