@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
  * @implements Type<array<int, mixed>>
@@ -15,19 +14,22 @@ use Flow\ETL\PHP\Type\Type;
 final readonly class ListType implements Type
 {
     /**
-     * @param ListElement $element
+     * @param Type<mixed> $element
      * @param bool $nullable
      */
-    public function __construct(private ListElement $element, private bool $nullable = false)
+    public function __construct(private Type $element, private bool $nullable = false)
     {
     }
 
     public static function fromArray(array $data) : self
     {
-        return new self(ListElement::fromArray($data['element']), $data['nullable'] ?? false);
+        return new self(TypeFactory::fromArray($data['element']), $data['nullable'] ?? false);
     }
 
-    public function element() : ListElement
+    /**
+     * @return Type<mixed>
+     */
+    public function element() : Type
     {
         return $this->element;
     }

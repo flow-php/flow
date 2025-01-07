@@ -73,7 +73,7 @@ final readonly class EntryNormalizer
         }
 
         foreach ($listValue as $value) {
-            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->listElementName, $type->element()->type(), $value));
+            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->listElementName, $type->element(), $value));
         }
 
         return $node;

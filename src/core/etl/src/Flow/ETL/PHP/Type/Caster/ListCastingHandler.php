@@ -27,13 +27,13 @@ final class ListCastingHandler implements CastingHandler
             }
 
             if (!\is_array($value)) {
-                return [$caster->to($type->element()->type())->value($value)];
+                return [$caster->to($type->element())->value($value)];
             }
 
             $castedList = [];
 
             foreach ($value as $key => $item) {
-                $castedList[$key] = $caster->to($type->element()->type())->value($item);
+                $castedList[$key] = $caster->to($type->element())->value($item);
             }
 
             return $castedList;

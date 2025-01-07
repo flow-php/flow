@@ -79,7 +79,6 @@ use Flow\ETL\Function\{All,
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Memory\Memory;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
@@ -536,7 +535,7 @@ function list_entry(string $name, ?array $value, ListType $type) : Entry\ListEnt
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
 function type_list(Type $element, bool $nullable = false) : ListType
 {
-    return new ListType(new ListElement($element), $nullable);
+    return new ListType($element, $nullable);
 }
 
 /**

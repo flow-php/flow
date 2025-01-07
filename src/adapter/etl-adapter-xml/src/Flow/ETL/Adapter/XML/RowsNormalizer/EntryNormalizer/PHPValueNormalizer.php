@@ -55,7 +55,7 @@ final readonly class PHPValueNormalizer
             }
 
             foreach ($value as $elementValue) {
-                $listNode = $listNode->append($this->normalize($this->listElementName, $type->element()->type(), $elementValue));
+                $listNode = $listNode->append($this->normalize($this->listElementName, $type->element(), $elementValue));
             }
 
             return $listNode;

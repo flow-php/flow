@@ -350,10 +350,8 @@ final class SchemaTest extends FlowTestCase
         "type": {
             "type": "list",
             "element": {
-                "type": {
-                    "type": "integer",
-                    "nullable": false
-                }
+                "type": "integer",
+                "nullable": false
             },
             "nullable": false
         },

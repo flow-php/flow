@@ -66,53 +66,54 @@ final class SchemaConverter
         return ParquetSchema::with(...$columns);
     }
 
-    private function flowListToParquetList(ListType $type) : ListElement
+    /**
+     * @param Type<mixed> $elementType
+     */
+    private function flowListToParquetList(Type $elementType) : ListElement
     {
-        $element = $type->element()->type();
-
-        switch ($element::class) {
+        switch ($elementType::class) {
             case FloatType::class:
-                return ListElement::float(!$element->nullable());
+                return ListElement::float(!$elementType->nullable());
             case IntegerType::class:
-                return ListElement::int64(!$element->nullable());
+                return ListElement::int64(!$elementType->nullable());
             case StringType::class:
-                return ListElement::string(!$element->nullable());
+                return ListElement::string(!$elementType->nullable());
             case BooleanType::class:
-                return ListElement::boolean(!$element->nullable());
+                return ListElement::boolean(!$elementType->nullable());
             case DateTimeType::class:
-                return ListElement::datetime(!$element->nullable());
+                return ListElement::datetime(!$elementType->nullable());
             case DateType::class:
-                return ListElement::date(!$element->nullable());
+                return ListElement::date(!$elementType->nullable());
             case TimeType::class:
-                return ListElement::time(!$element->nullable());
+                return ListElement::time(!$elementType->nullable());
             case UuidType::class:
-                return ListElement::uuid(!$element->nullable());
+                return ListElement::uuid(!$elementType->nullable());
             case JsonType::class:
-                return ListElement::json(!$element->nullable());
+                return ListElement::json(!$elementType->nullable());
             case XMLType::class:
             case XMLElementType::class:
-                return ListElement::string(!$element->nullable());
+                return ListElement::string(!$elementType->nullable());
             case ObjectType::class:
-                $class = $element->class;
+                $class = $elementType->class;
 
                 if ($class === \DateInterval::class) {
-                    return ListElement::time(!$element->nullable());
+                    return ListElement::time(!$elementType->nullable());
                 }
 
                 throw new \Flow\Parquet\Exception\RuntimeException($class . ' can\'t be converted to any parquet columns.');
             case ListType::class:
-                return ListElement::list($this->flowListToParquetList($element), !$element->nullable());
+                return ListElement::list($this->flowListToParquetList($elementType->element()), !$elementType->nullable());
             case MapType::class:
                 return ListElement::map(
-                    $this->flowMapKeyToParquetMapKey($element->key()),
-                    $this->flowMapValueToParquetMapValue($element->value()),
-                    !$type->nullable()
+                    $this->flowMapKeyToParquetMapKey($elementType->key()),
+                    $this->flowMapValueToParquetMapValue($elementType->value()),
+                    !$elementType->nullable()
                 );
             case StructureType::class:
-                return ListElement::structure($this->flowStructureToParquetStructureElements($element), !$element->nullable());
+                return ListElement::structure($this->flowStructureToParquetStructureElements($elementType), !$elementType->nullable());
         }
 
-        throw new RuntimeException($element::class . ' is not supported.');
+        throw new RuntimeException($elementType::class . ' is not supported.');
     }
 
     /**
@@ -186,7 +187,7 @@ final class SchemaConverter
 
                 throw new \Flow\Parquet\Exception\RuntimeException($class . ' can\'t be converted to any parquet columns.');
             case ListType::class:
-                return ParquetSchema\MapValue::list($this->flowListToParquetList($mapValueType), !$mapValueType->nullable());
+                return ParquetSchema\MapValue::list($this->flowListToParquetList($mapValueType->element()), !$mapValueType->nullable());
             case MapType::class:
                 return ParquetSchema\MapValue::map(
                     $this->flowMapKeyToParquetMapKey($mapValueType->key()),
@@ -252,7 +253,7 @@ final class SchemaConverter
             case ObjectType::class:
                 return $this->flowObjectToParquetFlat($type, $name);
             case ListType::class:
-                return NestedColumn::list($name, $this->flowListToParquetList($type), $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
+                return NestedColumn::list($name, $this->flowListToParquetList($type->element()), $type->nullable() ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case MapType::class:
                 return NestedColumn::map(
                     $name,

@@ -277,7 +277,7 @@ final readonly class Definition
                 return new self(
                     $this->ref,
                     $this->entryClass,
-                    type_list(type_float($this->type->element()->type()->nullable() || $definition->type->element()->type()->nullable())),
+                    type_list(type_float($this->type->element()->nullable() || $definition->type->element()->nullable())),
                     $this->metadata->merge($definition->metadata)
                 );
             }
