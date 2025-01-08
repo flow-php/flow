@@ -187,3 +187,7 @@ code {
 #documentation-page code {
     @apply text-orange-100;
 }
+
+#documentation-page blockquote {
+    @apply border-l-4 border-orange-100 p-2 bg-blue-300 mb-3;
+}

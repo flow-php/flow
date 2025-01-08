@@ -26,6 +26,11 @@ composer test
 composer static:analyze
 ```
 
+### Before you change anything
+
+Please make sure that you are aware of our [Architecture Decision Records](/documentation/adrs.md).
+It's mandatory to follow all of them without any exceptions unless explicitly overridden by a new ADR.
+
 ### Fixing Coding Standards
 
 Before committing your code, please make sure that your code is following our coding standards.
