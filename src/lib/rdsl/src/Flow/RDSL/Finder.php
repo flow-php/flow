@@ -8,20 +8,20 @@ use Flow\RDSL\AccessControl\DenyAll;
 use Flow\RDSL\Attribute\{DSL, DSLMethod};
 use Flow\RDSL\Exception\InvalidArgumentException;
 
-final class Finder
+final readonly class Finder
 {
     /**
      * @var array<DSLNamespace>
      */
-    private readonly array $namespaces;
+    private array $namespaces;
 
     /**
      * @param array<DSLNamespace> $namespaces - list of namespaces to search for DSL functions
      */
     public function __construct(
         array $namespaces,
-        private readonly AccessControl $entryPointACL,
-        private readonly AccessControl $methodACL,
+        private AccessControl $entryPointACL,
+        private AccessControl $methodACL,
     ) {
         $namespaces = \array_map(static fn (DSLNamespace $n) : DSLNamespace => $n, $namespaces);
 

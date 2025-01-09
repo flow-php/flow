@@ -10,7 +10,7 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder\Statistics\Comparator;
 
 final class DataPageV2Statistics
 {
-    private Comparator $comparator;
+    private readonly Comparator $comparator;
 
     private mixed $max;
 

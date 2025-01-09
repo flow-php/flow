@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
-final class Statistics
+final readonly class Statistics
 {
     public function __construct(
-        public readonly ?string $max,
-        public readonly ?string $min,
-        public readonly ?int $nullCount,
-        public readonly ?int $distinctCount,
-        public readonly ?string $maxValue,
-        public readonly ?string $minValue,
+        public ?string $max,
+        public ?string $min,
+        public ?int $nullCount,
+        public ?int $distinctCount,
+        public ?string $maxValue,
+        public ?string $minValue,
     ) {
 
     }

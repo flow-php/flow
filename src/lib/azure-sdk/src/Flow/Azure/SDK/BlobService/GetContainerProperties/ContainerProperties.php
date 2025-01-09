@@ -7,9 +7,9 @@ namespace Flow\Azure\SDK\BlobService\GetContainerProperties;
 use Flow\Azure\SDK\Exception\InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 
-final class ContainerProperties
+final readonly class ContainerProperties
 {
-    public function __construct(private readonly ResponseInterface $response)
+    public function __construct(private ResponseInterface $response)
     {
         if ($this->response->getStatusCode() < 200 || $this->response->getStatusCode() >= 300) {
             throw new InvalidArgumentException('Container properties could not be fetched');

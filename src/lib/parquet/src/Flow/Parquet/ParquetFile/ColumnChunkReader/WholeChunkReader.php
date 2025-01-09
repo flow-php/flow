@@ -15,11 +15,11 @@ use Flow\Parquet\ThriftStream\{TPhpFileStream};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\{TBufferedTransport};
 
-final class WholeChunkReader implements ColumnChunkReader
+final readonly class WholeChunkReader implements ColumnChunkReader
 {
     public function __construct(
-        private readonly PageReader $pageReader,
-        private readonly Options $options,
+        private PageReader $pageReader,
+        private Options $options,
     ) {
     }
 
@@ -107,7 +107,7 @@ final class WholeChunkReader implements ColumnChunkReader
             }
 
             return PageHeader::fromThrift($thriftHeader, $this->options);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             /** @phpstan-ignore-next-line */
             \fseek($stream, $currentOffset);
 

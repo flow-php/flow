@@ -7,11 +7,11 @@ namespace Flow\Azure\SDK;
 use Flow\Azure\SDK\Exception\InvalidArgumentException;
 use Psr\Http\Message\{RequestFactoryInterface, RequestInterface, StreamFactoryInterface, StreamInterface};
 
-final class HttpFactory
+final readonly class HttpFactory
 {
     public function __construct(
-        private readonly RequestFactoryInterface $requestFactory,
-        private readonly StreamFactoryInterface $streamFactory,
+        private RequestFactoryInterface $requestFactory,
+        private StreamFactoryInterface $streamFactory,
     ) {
     }
 

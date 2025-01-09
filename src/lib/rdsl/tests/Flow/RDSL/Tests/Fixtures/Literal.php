@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\RDSL\Tests\Fixtures;
 
-final class Literal
+final readonly class Literal
 {
-    public function __construct(public readonly mixed $value)
+    public function __construct(public mixed $value)
     {
     }
 }

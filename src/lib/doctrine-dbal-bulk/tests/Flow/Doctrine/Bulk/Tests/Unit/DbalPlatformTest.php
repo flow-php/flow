@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\DBAL\Platforms\{MariaDBPlatform, MySQL80Platform, OraclePlatform, PostgreSQLPlatform};
 use Flow\Doctrine\Bulk\DbalPlatform;
 use Flow\Doctrine\Bulk\Dialect\{MySQLDialect, PostgreSQLDialect, SqliteDialect};
@@ -16,7 +17,7 @@ final class DbalPlatformTest extends TestCase
     public static function provideSQLitePlatform() : iterable
     {
         yield 'legacy' => ['Doctrine\DBAL\Platforms\SqlitePlatform'];
-        yield 'new' => ['Doctrine\DBAL\Platforms\SQLitePlatform'];
+        yield 'new' => [SQLitePlatform::class];
     }
 
     public function test_is_mysql() : void

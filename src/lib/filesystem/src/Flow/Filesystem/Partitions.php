@@ -10,9 +10,9 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
  * @implements \ArrayAccess<int, Partition>
  * @implements \IteratorAggregate<int, Partition>
  */
-final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
+final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
 {
-    private readonly array $partitions;
+    private array $partitions;
 
     public function __construct(Partition ...$partitions)
     {

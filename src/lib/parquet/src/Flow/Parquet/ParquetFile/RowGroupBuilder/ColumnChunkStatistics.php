@@ -12,9 +12,9 @@ use Flow\Parquet\ParquetFile\Schema\{ColumnPrimitiveType, FlatColumn, PhysicalTy
 
 final class ColumnChunkStatistics
 {
-    private bool $columnIsString;
+    private readonly bool $columnIsString;
 
-    private Comparator $comparator;
+    private readonly Comparator $comparator;
 
     private mixed $max;
 

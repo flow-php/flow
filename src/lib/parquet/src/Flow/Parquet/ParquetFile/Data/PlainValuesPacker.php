@@ -7,9 +7,9 @@ namespace Flow\Parquet\ParquetFile\Data;
 use Flow\Parquet\BinaryWriter;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
-final class PlainValuesPacker
+final readonly class PlainValuesPacker
 {
-    public function __construct(private readonly BinaryWriter $writer)
+    public function __construct(private BinaryWriter $writer)
     {
     }
 
@@ -52,32 +52,18 @@ final class PlainValuesPacker
 
                 break;
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
-                switch ($column->logicalType()?->name()) {
-                    case LogicalType::UUID:
-                        $this->writer->writeStrings($values);
-
-                        break;
-                    case LogicalType::DECIMAL:
-                        $this->writer->writeDecimals($values, $column->typeLength(), $column->precision(), $column->scale());
-
-                        break;
-
-                    default:
-                        throw new \RuntimeException('Writing logical type "' . ($column->logicalType()?->name() ?: 'UNKNOWN') . '" is not implemented yet');
-                }
+                match ($column->logicalType()?->name()) {
+                    LogicalType::UUID => $this->writer->writeStrings($values),
+                    LogicalType::DECIMAL => $this->writer->writeDecimals($values, $column->typeLength(), $column->precision(), $column->scale()),
+                    default => throw new \RuntimeException('Writing logical type "' . ($column->logicalType()?->name() ?: 'UNKNOWN') . '" is not implemented yet'),
+                };
 
                 break;
             case PhysicalType::BYTE_ARRAY:
-                switch ($column->logicalType()?->name()) {
-                    case LogicalType::JSON:
-                    case LogicalType::STRING:
-                        $this->writer->writeStrings($values);
-
-                        break;
-
-                    default:
-                        throw new \RuntimeException('Writing logical type "' . ($column->logicalType()?->name() ?: 'UNKNOWN') . '" is not implemented yet');
-                }
+                match ($column->logicalType()?->name()) {
+                    LogicalType::JSON, LogicalType::STRING => $this->writer->writeStrings($values),
+                    default => throw new \RuntimeException('Writing logical type "' . ($column->logicalType()?->name() ?: 'UNKNOWN') . '" is not implemented yet'),
+                };
 
                 break;
 

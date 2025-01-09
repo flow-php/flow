@@ -9,7 +9,7 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\ParquetFile\{Compressions, Encodings, Statistics};
 use Flow\Parquet\Thrift\ColumnMetaData;
 
-final class ColumnChunk
+final readonly class ColumnChunk
 {
     /**
      * @param PhysicalType $type
@@ -25,19 +25,19 @@ final class ColumnChunk
      * @param null|int $indexPageOffset
      */
     public function __construct(
-        private readonly PhysicalType $type,
-        private readonly Compressions $codec,
-        private readonly int $valuesCount,
-        private readonly int $fileOffset,
-        private readonly array $path,
-        private readonly array $encodings,
-        private readonly int $totalCompressedSize,
-        private readonly int $totalUncompressedSize,
-        private readonly ?int $dictionaryPageOffset,
-        private readonly ?int $dataPageOffset,
-        private readonly ?int $indexPageOffset,
-        private readonly ?Statistics $statistics,
-        private readonly Options $options,
+        private PhysicalType $type,
+        private Compressions $codec,
+        private int $valuesCount,
+        private int $fileOffset,
+        private array $path,
+        private array $encodings,
+        private int $totalCompressedSize,
+        private int $totalUncompressedSize,
+        private ?int $dictionaryPageOffset,
+        private ?int $dataPageOffset,
+        private ?int $indexPageOffset,
+        private ?Statistics $statistics,
+        private Options $options,
     ) {
     }
 

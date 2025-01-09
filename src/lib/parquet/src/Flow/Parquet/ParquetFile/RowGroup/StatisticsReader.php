@@ -10,9 +10,9 @@ use Flow\Parquet\ParquetFile\Data\PlainValueUnpacker;
 use Flow\Parquet\ParquetFile\Schema\{ColumnPrimitiveType, FlatColumn};
 use Flow\Parquet\ParquetFile\Statistics;
 
-final class StatisticsReader
+final readonly class StatisticsReader
 {
-    public function __construct(private readonly Statistics $statistics, private Options $options)
+    public function __construct(private Statistics $statistics, private Options $options)
     {
     }
 

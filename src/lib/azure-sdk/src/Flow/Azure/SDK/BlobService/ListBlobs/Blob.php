@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\ListBlobs;
 
-final class Blob
+final readonly class Blob
 {
-    public function __construct(private readonly array $data)
+    public function __construct(private array $data)
     {
     }
 

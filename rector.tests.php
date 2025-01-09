@@ -61,6 +61,7 @@ return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/src/core/etl/tests',
         __DIR__ . '/src/cli/tests',
+        __DIR__ . '/src/lib/*/tests',
         __DIR__ . '/src/adapter/*/tests',
         __DIR__ . '/src/bridge/*/*/tests',
         __DIR__ . '/src/tools/*/*/tests',
@@ -158,6 +159,7 @@ return RectorConfig::configure()
         RemoveParentCallWithoutParentRector::class
     ])
     ->withCache(__DIR__ . '/var/rector/tests')
+    ->withSkipPath(__DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift')
     ->withImportNames(
         importNames: true,
         importDocBlockNames: true,

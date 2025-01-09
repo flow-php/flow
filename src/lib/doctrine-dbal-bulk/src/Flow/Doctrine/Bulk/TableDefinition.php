@@ -9,14 +9,14 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
-final class TableDefinition
+final readonly class TableDefinition
 {
     /**
      * @var Column[]
      */
     private array $columns;
 
-    public function __construct(private readonly string $name, Column ...$columns)
+    public function __construct(private string $name, Column ...$columns)
     {
         $this->columns = $columns;
     }

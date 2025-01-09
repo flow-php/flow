@@ -10,11 +10,11 @@ use Flow\Parquet\ParquetFile\Page\{Dictionary, PageHeader};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
 
-final class PageReader
+final readonly class PageReader
 {
     public function __construct(
-        private readonly ByteOrder $byteOrder,
-        private readonly Options $options,
+        private ByteOrder $byteOrder,
+        private Options $options,
     ) {
     }
 

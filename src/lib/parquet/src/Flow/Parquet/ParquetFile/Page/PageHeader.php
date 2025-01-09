@@ -8,15 +8,15 @@ use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
 use Flow\Parquet\{Options};
 
-final class PageHeader
+final readonly class PageHeader
 {
     public function __construct(
-        private readonly Type $type,
-        private readonly int $compressedPageSize,
-        private readonly int $uncompressedPageSize,
-        private readonly ?DataPageHeader $dataPageHeader,
-        private readonly ?DataPageHeaderV2 $dataPageHeaderV2,
-        private readonly ?DictionaryPageHeader $dictionaryPageHeader,
+        private Type $type,
+        private int $compressedPageSize,
+        private int $uncompressedPageSize,
+        private ?DataPageHeader $dataPageHeader,
+        private ?DataPageHeaderV2 $dataPageHeaderV2,
+        private ?DictionaryPageHeader $dictionaryPageHeader,
     ) {
     }
 

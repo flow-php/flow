@@ -16,7 +16,7 @@ final class RowGroupBuilder
      */
     private array $chunkBuilders;
 
-    private DremelShredder $shredder;
+    private readonly DremelShredder $shredder;
 
     private RowGroupStatistics $statistics;
 

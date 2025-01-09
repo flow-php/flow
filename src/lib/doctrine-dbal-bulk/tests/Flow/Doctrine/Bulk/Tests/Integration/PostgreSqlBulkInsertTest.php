@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
+use function Flow\ETL\DSL\generate_random_string;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
@@ -35,9 +36,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => $id1 = \Flow\ETL\DSL\generate_random_string(10), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format(\DateTimeInterface::ATOM), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id2 = \Flow\ETL\DSL\generate_random_string(10), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id3 = \Flow\ETL\DSL\generate_random_string(10), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id1 = generate_random_string(10), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format(\DateTimeInterface::ATOM), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id2 = generate_random_string(10), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id3 = generate_random_string(10), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
             ])
         );
 

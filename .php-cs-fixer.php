@@ -22,6 +22,9 @@ $finder = Finder::create()
         __DIR__ . '/web/**/tests',
         __DIR__ . '/examples',
         __DIR__ . '/tools/rector/src',
+    ])
+    ->exclude([
+        __DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift'
     ]);
 
 if (!\file_exists(__DIR__ . '/var')) {

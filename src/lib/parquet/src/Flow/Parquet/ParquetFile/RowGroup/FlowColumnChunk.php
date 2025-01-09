@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
-final class FlowColumnChunk
+final readonly class FlowColumnChunk
 {
     public function __construct(
-        public readonly ColumnChunk $chunk,
-        public readonly int $rowsOffset,
-        public readonly int $rowsInGroup,
+        public ColumnChunk $chunk,
+        public int $rowsOffset,
+        public int $rowsInGroup,
     ) {
     }
 }

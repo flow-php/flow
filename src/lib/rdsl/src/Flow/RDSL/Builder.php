@@ -6,10 +6,10 @@ namespace Flow\RDSL;
 
 use Flow\RDSL\Exception\InvalidArgumentException;
 
-final class Builder
+final readonly class Builder
 {
     public function __construct(
-        private readonly Finder $finder,
+        private Finder $finder,
     ) {
     }
 

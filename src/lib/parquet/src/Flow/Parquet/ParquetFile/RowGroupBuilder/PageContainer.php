@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 
-final class PageContainer
+final readonly class PageContainer
 {
     /**
      * @param string $pageHeaderBuffer
@@ -16,11 +16,11 @@ final class PageContainer
      * @param PageHeader $pageHeader
      */
     public function __construct(
-        public readonly string $pageHeaderBuffer,
-        public readonly string $pageBuffer,
-        public readonly array $values,
-        public readonly ?array $dictionary,
-        public readonly PageHeader $pageHeader,
+        public string $pageHeaderBuffer,
+        public string $pageBuffer,
+        public array $values,
+        public ?array $dictionary,
+        public PageHeader $pageHeader,
     ) {
     }
 

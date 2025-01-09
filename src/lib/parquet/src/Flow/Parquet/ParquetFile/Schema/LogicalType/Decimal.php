@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema\LogicalType;
 
-final class Decimal
+final readonly class Decimal
 {
     public function __construct(
-        private readonly int $scale,
-        private readonly int $precision,
+        private int $scale,
+        private int $precision,
     ) {
     }
 

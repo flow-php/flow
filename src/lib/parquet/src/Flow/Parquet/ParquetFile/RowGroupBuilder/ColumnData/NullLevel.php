@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData;
 
-final class NullLevel
+final readonly class NullLevel
 {
-    public function __construct(public readonly int $level = 0)
+    public function __construct(public int $level = 0)
     {
     }
 }

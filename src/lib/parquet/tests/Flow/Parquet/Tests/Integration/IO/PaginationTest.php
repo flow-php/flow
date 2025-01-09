@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\generate_random_int;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\{ListElement, MapKey, MapValue};
 use Flow\Parquet\{Option, Options, Reader, Writer};
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
@@ -23,9 +24,7 @@ final class PaginationTest extends TestCase
         self::assertEquals(
             \array_merge(
                 ...\array_map(
-                    static function (int $i) : array {
-                        return [['id' => $i]];
-                    },
+                    static fn (int $i) : array => [['id' => $i]],
                     \range($totalRows - 100, $totalRows - 1)
                 )
             ),
@@ -78,9 +77,7 @@ final class PaginationTest extends TestCase
         self::assertEquals(
             \array_merge(
                 ...\array_map(
-                    static function (int $i) : array {
-                        return [['id' => $i]];
-                    },
+                    static fn (int $i) : array => [['id' => $i]],
                     \range(1020, 1029)
                 )
             ),
@@ -100,21 +97,35 @@ final class PaginationTest extends TestCase
             FlatColumn::string('name'),
             FlatColumn::boolean('active'),
             FlatColumn::dateTime('created_at'),
-            NestedColumn::list('list_of_int', Schema\ListElement::int32()),
-            NestedColumn::map('map_of_int_string', Schema\MapKey::int32(), Schema\MapValue::string()),
+            NestedColumn::list('list_of_int', ListElement::int32()),
+            NestedColumn::map('map_of_int_string', MapKey::int32(), MapValue::string()),
             NestedColumn::struct('struct', [
                 FlatColumn::int64('id'),
                 FlatColumn::string('name'),
                 FlatColumn::boolean('active'),
                 FlatColumn::dateTime('created_at'),
-                NestedColumn::list('list_of_int', Schema\ListElement::int32()),
-                NestedColumn::map('map_of_int_string', Schema\MapKey::int32(), Schema\MapValue::string()),
+                NestedColumn::list('list_of_int', ListElement::int32()),
+                NestedColumn::map('map_of_int_string', MapKey::int32(), MapValue::string()),
             ])
         );
 
-        $inputData = \array_merge(...\array_map(static function (int $i) : array {
-            return [
-                [
+        $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
+            [
+                'id' => $i,
+                'name' => 'name-' . $i,
+                'active' => $i % 2 === 0,
+                'created_at' => new \DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
+                'list_of_int' => \array_map(
+                    static fn (int $i) => $i,
+                    \range(1, generate_random_int(2, 10))
+                ),
+                'map_of_int_string' => \array_merge(
+                    ...\array_map(
+                        static fn (int $i) => [$i => 'value-' . $i],
+                        \range(1, generate_random_int(2, 10))
+                    )
+                ),
+                'struct' => [
                     'id' => $i,
                     'name' => 'name-' . $i,
                     'active' => $i % 2 === 0,
@@ -129,25 +140,9 @@ final class PaginationTest extends TestCase
                             \range(1, generate_random_int(2, 10))
                         )
                     ),
-                    'struct' => [
-                        'id' => $i,
-                        'name' => 'name-' . $i,
-                        'active' => $i % 2 === 0,
-                        'created_at' => new \DateTimeImmutable('2024-01-01 + ' . $i . ' days'),
-                        'list_of_int' => \array_map(
-                            static fn (int $i) => $i,
-                            \range(1, generate_random_int(2, 10))
-                        ),
-                        'map_of_int_string' => \array_merge(
-                            ...\array_map(
-                                static fn (int $i) => [$i => 'value-' . $i],
-                                \range(1, generate_random_int(2, 10))
-                            )
-                        ),
-                    ],
                 ],
-            ];
-        }, \range(0, 4999)));
+            ],
+        ], \range(0, 4999)));
 
         if (\file_exists($path)) {
             \unlink($path);

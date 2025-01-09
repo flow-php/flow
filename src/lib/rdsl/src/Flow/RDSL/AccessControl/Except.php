@@ -6,11 +6,11 @@ namespace Flow\RDSL\AccessControl;
 
 use Flow\RDSL\AccessControl;
 
-final class Except implements AccessControl
+final readonly class Except implements AccessControl
 {
     public function __construct(
-        private readonly AccessControl $acl,
-        private readonly array $except = [],
+        private AccessControl $acl,
+        private array $except = [],
     ) {
     }
 

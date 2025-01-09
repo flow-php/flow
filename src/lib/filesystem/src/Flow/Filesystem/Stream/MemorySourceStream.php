@@ -6,14 +6,14 @@ namespace Flow\Filesystem\Stream;
 
 use Flow\Filesystem\{Exception\InvalidArgumentException, Path, SourceStream};
 
-final class MemorySourceStream implements SourceStream
+final readonly class MemorySourceStream implements SourceStream
 {
     /**
      * @param non-empty-string $content
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $content)
+    public function __construct(private string $content)
     {
         if (!\strlen($this->content)) {
             throw new InvalidArgumentException('MemorySourceStream expects non-empty content');

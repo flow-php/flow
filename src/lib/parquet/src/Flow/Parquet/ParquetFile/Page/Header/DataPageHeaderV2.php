@@ -8,18 +8,18 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\{Encodings, Statistics};
 
-final class DataPageHeaderV2
+final readonly class DataPageHeaderV2
 {
     public function __construct(
-        private readonly int $valuesCount,
-        private readonly int $nullsCount,
-        private readonly int $rowsCount,
-        private readonly Encodings $encoding,
-        private readonly int $definitionsByteLength,
-        private readonly int $repetitionsByteLength,
-        private readonly ?bool $isCompressed,
-        private readonly ?Statistics $statistics,
-        private readonly Options $options,
+        private int $valuesCount,
+        private int $nullsCount,
+        private int $rowsCount,
+        private Encodings $encoding,
+        private int $definitionsByteLength,
+        private int $repetitionsByteLength,
+        private ?bool $isCompressed,
+        private ?Statistics $statistics,
+        private Options $options,
     ) {
     }
 

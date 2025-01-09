@@ -8,7 +8,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\{Decimal, Time, Timestamp};
 use Flow\Parquet\Thrift\TimeUnit;
 
-final class LogicalType
+final readonly class LogicalType
 {
     public const BSON = 'BSON';
 
@@ -37,10 +37,10 @@ final class LogicalType
     public const UUID = 'UUID';
 
     public function __construct(
-        private readonly string $name,
-        private readonly ?Timestamp $timestamp = null,
-        private readonly ?Time $time = null,
-        private readonly ?Decimal $decimal = null,
+        private string $name,
+        private ?Timestamp $timestamp = null,
+        private ?Time $time = null,
+        private ?Decimal $decimal = null,
     ) {
     }
 

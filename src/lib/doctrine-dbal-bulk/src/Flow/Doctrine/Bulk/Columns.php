@@ -6,7 +6,7 @@ namespace Flow\Doctrine\Bulk;
 
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
-final class Columns
+final readonly class Columns
 {
     /**
      * @var array<string>

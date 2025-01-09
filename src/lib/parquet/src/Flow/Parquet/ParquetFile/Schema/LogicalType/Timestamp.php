@@ -6,13 +6,13 @@ namespace Flow\Parquet\ParquetFile\Schema\LogicalType;
 
 use Flow\Parquet\Thrift\TimestampType;
 
-final class Timestamp
+final readonly class Timestamp
 {
     public function __construct(
-        private readonly bool $isAdjustedToUTC,
-        private readonly bool $millis,
-        private readonly bool $micros,
-        private readonly bool $nanos,
+        private bool $isAdjustedToUTC,
+        private bool $millis,
+        private bool $micros,
+        private bool $nanos,
     ) {
     }
 

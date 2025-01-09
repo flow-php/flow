@@ -7,9 +7,9 @@ namespace Flow\Doctrine\Bulk\Dialect;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\{BulkData, Columns, TableDefinition};
 
-final class SqliteDialect implements Dialect
+final readonly class SqliteDialect implements Dialect
 {
-    public function __construct(private readonly AbstractPlatform $platform)
+    public function __construct(private AbstractPlatform $platform)
     {
     }
 

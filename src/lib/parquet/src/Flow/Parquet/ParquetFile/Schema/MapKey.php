@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-final class MapKey
+final readonly class MapKey
 {
-    private function __construct(public readonly Column $key)
+    private function __construct(public Column $key)
     {
     }
 

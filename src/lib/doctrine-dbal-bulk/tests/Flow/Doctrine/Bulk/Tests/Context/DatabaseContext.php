@@ -7,9 +7,9 @@ namespace Flow\Doctrine\Bulk\Tests\Context;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Table;
 
-final class DatabaseContext
+final readonly class DatabaseContext
 {
-    public function __construct(private readonly Connection $connection)
+    public function __construct(private Connection $connection)
     {
     }
 

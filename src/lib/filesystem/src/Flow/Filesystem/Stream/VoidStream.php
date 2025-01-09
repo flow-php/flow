@@ -6,9 +6,9 @@ namespace Flow\Filesystem\Stream;
 
 use Flow\Filesystem\{DestinationStream, Path, SourceStream};
 
-final class VoidStream implements DestinationStream, SourceStream
+final readonly class VoidStream implements DestinationStream, SourceStream
 {
-    public function __construct(private readonly Path $path)
+    public function __construct(private Path $path)
     {
 
     }

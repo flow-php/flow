@@ -6,11 +6,11 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 
-final class ColumnChunkContainer
+final readonly class ColumnChunkContainer
 {
     public function __construct(
-        public readonly string $binaryBuffer,
-        public readonly ColumnChunk $columnChunk,
+        public string $binaryBuffer,
+        public ColumnChunk $columnChunk,
     ) {
     }
 }

@@ -7,10 +7,10 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
 
-final class RLEBitPackedPacker
+final readonly class RLEBitPackedPacker
 {
     public function __construct(
-        private readonly RLEBitPackedHybrid $bitPackedHybrid,
+        private RLEBitPackedHybrid $bitPackedHybrid,
     ) {
     }
 

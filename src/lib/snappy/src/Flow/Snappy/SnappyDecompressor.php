@@ -11,16 +11,13 @@ final class SnappyDecompressor
 {
     private const WORD_MASK = [0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF];
 
-    private readonly array $array;
-
     private readonly int $arrayLength;
 
     private int $pos = 0;
 
-    public function __construct(array $compressed)
+    public function __construct(private readonly array $array)
     {
-        $this->array = $compressed;
-        $this->arrayLength = \count($compressed);
+        $this->arrayLength = \count($this->array);
     }
 
     public function readUncompressedLength() : int

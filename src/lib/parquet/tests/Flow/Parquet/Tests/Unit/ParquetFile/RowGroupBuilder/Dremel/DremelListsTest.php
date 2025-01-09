@@ -9,6 +9,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder, FlatColumnData};
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\{ListElement, MapKey, MapValue, NestedColumn, Repetition};
 use PHPUnit\Framework\Attributes\{TestWith};
 use PHPUnit\Framework\TestCase;
@@ -524,8 +525,8 @@ final class DremelListsTest extends TestCase
                         MapKey::string(),
                         MapValue::structure(
                             [
-                                Schema\FlatColumn::int32('int32'),
-                                Schema\FlatColumn::string('string'),
+                                FlatColumn::int32('int32'),
+                                FlatColumn::string('string'),
                                 NestedColumn::list(
                                     'list',
                                     ListElement::int32(),
@@ -633,8 +634,8 @@ final class DremelListsTest extends TestCase
                 ListElement::list(
                     ListElement::structure(
                         [
-                            Schema\FlatColumn::int32('int32'),
-                            Schema\FlatColumn::string('string'),
+                            FlatColumn::int32('int32'),
+                            FlatColumn::string('string'),
                         ],
                     ),
                 )
@@ -884,7 +885,7 @@ final class DremelListsTest extends TestCase
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData, $rows));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData));
         }
     }
 
@@ -999,7 +1000,7 @@ final class DremelListsTest extends TestCase
                 'l',
                 ListElement::structure(
                     [
-                        Schema\FlatColumn::int32('int32'),
+                        FlatColumn::int32('int32'),
                         NestedColumn::list('l', ListElement::string()),
                     ],
                 )
@@ -1116,7 +1117,7 @@ final class DremelListsTest extends TestCase
                 'l',
                 ListElement::structure(
                     [
-                        Schema\FlatColumn::int32('int32'),
+                        FlatColumn::int32('int32'),
                         NestedColumn::map('m', MapKey::int32(), MapValue::string()),
                     ],
                 )
@@ -1301,8 +1302,8 @@ final class DremelListsTest extends TestCase
                 'l',
                 ListElement::structure(
                     [
-                        Schema\FlatColumn::int32('int32'),
-                        Schema\FlatColumn::string('string'),
+                        FlatColumn::int32('int32'),
+                        FlatColumn::string('string'),
                     ],
                 )
             )
@@ -1363,8 +1364,8 @@ final class DremelListsTest extends TestCase
                 ListElement::structure(
                     [
                         NestedColumn::struct('s', [
-                            Schema\FlatColumn::int32('int32'),
-                            Schema\FlatColumn::string('string'),
+                            FlatColumn::int32('int32'),
+                            FlatColumn::string('string'),
                         ]),
                     ],
                 )
@@ -1691,8 +1692,8 @@ final class DremelListsTest extends TestCase
                 'l',
                 ListElement::structure(
                     [
-                        Schema\FlatColumn::int32('int32')->makeRequired(),
-                        Schema\FlatColumn::string('string')->makeRequired(),
+                        FlatColumn::int32('int32')->makeRequired(),
+                        FlatColumn::string('string')->makeRequired(),
                     ],
                     true
                 ),

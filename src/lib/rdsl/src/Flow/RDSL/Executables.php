@@ -6,12 +6,12 @@ namespace Flow\RDSL;
 
 use Flow\RDSL\Exception\InvalidArgumentException;
 
-final class Executables
+final readonly class Executables
 {
     /**
      * @param array<DSLFunction> $executables
      */
-    public function __construct(private readonly array $executables)
+    public function __construct(private array $executables)
     {
         foreach ($executables as $executable) {
             if (!$executable instanceof DSLFunction) {

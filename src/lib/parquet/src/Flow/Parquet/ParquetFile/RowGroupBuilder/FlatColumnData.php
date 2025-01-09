@@ -8,13 +8,13 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatColumnValues, FlatValue};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
-final class FlatColumnData
+final readonly class FlatColumnData
 {
     /**
      * @param Column $column
      * @param array<string, FlatColumnValues> $flatValues
      */
-    private function __construct(public readonly Column $column, private readonly array $flatValues = [])
+    private function __construct(public Column $column, private array $flatValues = [])
     {
     }
 

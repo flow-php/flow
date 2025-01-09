@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Page;
 
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
-final class ColumnData
+final readonly class ColumnData
 {
     /**
      * @param PhysicalType $type
@@ -16,11 +16,11 @@ final class ColumnData
      * @param array $values
      */
     public function __construct(
-        public readonly PhysicalType $type,
-        public readonly ?LogicalType $logicalType,
-        public readonly array $repetitions,
-        public readonly array $definitions,
-        public readonly array $values,
+        public PhysicalType $type,
+        public ?LogicalType $logicalType,
+        public array $repetitions,
+        public array $definitions,
+        public array $values,
     ) {
     }
 

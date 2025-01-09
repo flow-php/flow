@@ -30,17 +30,17 @@ use Flow\Azure\SDK\Normalizer\SimpleXMLNormalizer;
 use Psr\Http\Client\{ClientExceptionInterface, ClientInterface};
 use Psr\Log\{LoggerInterface};
 
-final class BlobService implements BlobServiceInterface
+final readonly class BlobService implements BlobServiceInterface
 {
     public const VERSION = '2024-08-04';
 
     public function __construct(
-        private readonly Configuration $configuration,
-        private readonly ClientInterface $httpClient,
-        private readonly HttpFactory $httpFactory,
-        private readonly URLFactory $urlFactory,
-        private readonly AuthorizationFactory $authorizationFactory,
-        private readonly LoggerInterface $logger,
+        private Configuration $configuration,
+        private ClientInterface $httpClient,
+        private HttpFactory $httpFactory,
+        private URLFactory $urlFactory,
+        private AuthorizationFactory $authorizationFactory,
+        private LoggerInterface $logger,
     ) {
     }
 

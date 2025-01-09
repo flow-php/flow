@@ -11,9 +11,9 @@ use Flow\Doctrine\Bulk\Exception\RuntimeException;
 /**
  * @infection-ignore-all
  */
-final class DbalPlatform
+final readonly class DbalPlatform
 {
-    public function __construct(private readonly AbstractPlatform $platform)
+    public function __construct(private AbstractPlatform $platform)
     {
     }
 
@@ -33,7 +33,7 @@ final class DbalPlatform
 
         throw new RuntimeException(\sprintf(
             'Database platform "%s" is not yet supported',
-            \get_class($this->platform)
+            $this->platform::class
         ));
     }
 
@@ -54,6 +54,6 @@ final class DbalPlatform
 
     private function isSqlite() : bool
     {
-        return \in_array($this->platform::class, ['Doctrine\DBAL\Platforms\SqlitePlatform', 'Doctrine\DBAL\Platforms\SQLitePlatform'], true);
+        return \in_array($this->platform::class, ['Doctrine\DBAL\Platforms\SqlitePlatform', \Doctrine\DBAL\Platforms\SQLitePlatform::class], true);
     }
 }

@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 
-final class Repetitions implements \Countable
+final class Repetitions implements \Countable, \Stringable
 {
     public readonly string $id;
 
@@ -17,7 +17,7 @@ final class Repetitions implements \Countable
     /**
      * Total count of REPEATED repetitions.
      */
-    private int $repeatedCount;
+    private readonly int $repeatedCount;
 
     private array $repetitions;
 

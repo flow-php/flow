@@ -7,9 +7,9 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
 use Flow\Parquet\{Option, Options};
 
-final class PageSizeCalculator
+final readonly class PageSizeCalculator
 {
-    public function __construct(private readonly Options $options)
+    public function __construct(private Options $options)
     {
     }
 

@@ -7,9 +7,9 @@ namespace Flow\Azure\SDK\BlobService\GetBlob;
 use Flow\Azure\SDK\Exception\Exception;
 use Psr\Http\Message\ResponseInterface;
 
-final class BlobContent
+final readonly class BlobContent
 {
-    public function __construct(private readonly ResponseInterface $response)
+    public function __construct(private ResponseInterface $response)
     {
         if ($this->response->getStatusCode() < 200 || $this->response->getStatusCode() >= 300) {
             throw new \RuntimeException('Blob content could not be fetched');

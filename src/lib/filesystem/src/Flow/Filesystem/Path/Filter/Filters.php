@@ -7,7 +7,7 @@ namespace Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\{FileStatus};
 
-final class Filters implements Filter
+final readonly class Filters implements Filter
 {
     /**
      * @param array<Filter> $filters

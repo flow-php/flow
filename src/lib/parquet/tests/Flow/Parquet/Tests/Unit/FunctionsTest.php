@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit;
 
+use function Flow\Parquet\array_merge_recursive;
 use PHPUnit\Framework\TestCase;
 
 final class FunctionsTest extends TestCase
@@ -26,7 +27,7 @@ final class FunctionsTest extends TestCase
                     ],
                 ],
             ],
-            \Flow\Parquet\array_merge_recursive(
+            array_merge_recursive(
                 [
                     'members' => [
                         0 => ['addresses' => [0 => ['street' => 'Street_2_0_0']]],

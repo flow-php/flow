@@ -386,7 +386,9 @@
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix --dry-run"
         ],
         "cs:php:fix": [
-            "tools/cs-fixer/vendor/bin/php-cs-fixer fix"
+            "tools/cs-fixer/vendor/bin/php-cs-fixer fix",
+            "./tools/rector/vendor/bin/rector -c ./rector.src.php",
+            "./tools/rector/vendor/bin/rector -c ./rector.tests.php"
         ],
         "build:phar": [
             "composer update --working-dir=./src/cli",

@@ -6,12 +6,12 @@ namespace Flow\RDSL\AccessControl;
 
 use Flow\RDSL\AccessControl;
 
-final class DenyList implements AccessControl
+final readonly class DenyList implements AccessControl
 {
     /**
      * @param array<string> $denyList
      */
-    public function __construct(private readonly array $denyList = [])
+    public function __construct(private array $denyList = [])
     {
     }
 

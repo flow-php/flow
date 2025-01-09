@@ -7,13 +7,13 @@ namespace Flow\RDSL;
 use Flow\RDSL\AccessControl\AllowAll;
 use Flow\RDSL\Exception\InvalidArgumentException;
 
-final class DSLNamespace
+final readonly class DSLNamespace
 {
     private const NAMESPACE_REGEX = '/^\\\\[a-zA-Z_][a-zA-Z0-9_]*(\\\\[a-zA-Z_][a-zA-Z0-9_]*)*$/';
 
     public function __construct(
-        public readonly string $name,
-        private readonly AccessControl $acl = new AllowAll(),
+        public string $name,
+        private AccessControl $acl = new AllowAll(),
     ) {
         if ($name !== '\\' && !\preg_match(self::NAMESPACE_REGEX, $name)) {
             throw new InvalidArgumentException(\sprintf('Namespace name "%s" is invalid.', $name));

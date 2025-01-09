@@ -10,17 +10,17 @@ use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
-final class ColumnChunkBuilder
+final readonly class ColumnChunkBuilder
 {
     private FlatColumnValues $columnData;
 
     private ColumnChunkStatistics $statistics;
 
     public function __construct(
-        private readonly FlatColumn $column,
-        private readonly Compressions $compression,
-        private readonly PageSizeCalculator $calculator,
-        private readonly Options $options,
+        private FlatColumn $column,
+        private Compressions $compression,
+        private PageSizeCalculator $calculator,
+        private Options $options,
     ) {
         $this->statistics = new ColumnChunkStatistics($this->column);
         $this->columnData = new FlatColumnValues($this->column);

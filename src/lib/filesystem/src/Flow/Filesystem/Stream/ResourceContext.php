@@ -6,12 +6,12 @@ namespace Flow\Filesystem\Stream;
 
 use Flow\Filesystem\Path;
 
-final class ResourceContext
+final readonly class ResourceContext
 {
     /**
      * @param array<mixed> $options
      */
-    private function __construct(private readonly string $scheme, private readonly array $options)
+    private function __construct(private string $scheme, private array $options)
     {
     }
 

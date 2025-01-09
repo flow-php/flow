@@ -18,25 +18,21 @@ use Flow\Parquet\{Option, Options};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 
-final class DataPageBuilder
+final readonly class DataPageBuilder
 {
     public function __construct(
-        private readonly Compressions $compression,
-        private readonly Options $options,
+        private Compressions $compression,
+        private Options $options,
     ) {
     }
 
     public function build(FlatColumn $column, FlatColumnValues $rows, ?array $dictionary = null, ?array $indices = null) : PageContainer
     {
-        switch ($this->options->get(Option::WRITER_VERSION)) {
-            case 1:
-                return $this->buildDataPage($rows, $column, $dictionary, $indices);
-            case 2:
-                return $this->buildDataPageV2($rows, $column, $dictionary, $indices);
-
-            default:
-                throw new \RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $this->options->get(Option::WRITER_VERSION));
-        }
+        return match ($this->options->get(Option::WRITER_VERSION)) {
+            1 => $this->buildDataPage($rows, $column, $dictionary, $indices),
+            2 => $this->buildDataPageV2($rows, $column, $dictionary, $indices),
+            default => throw new \RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $this->options->get(Option::WRITER_VERSION)),
+        };
     }
 
     private function buildDataPage(FlatColumnValues $data, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer

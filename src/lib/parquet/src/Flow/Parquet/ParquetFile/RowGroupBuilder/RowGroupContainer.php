@@ -6,11 +6,11 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\ParquetFile\RowGroup;
 
-final class RowGroupContainer
+final readonly class RowGroupContainer
 {
     public function __construct(
-        public readonly string $binaryBuffer,
-        public readonly RowGroup $rowGroup,
+        public string $binaryBuffer,
+        public RowGroup $rowGroup,
     ) {
     }
 }

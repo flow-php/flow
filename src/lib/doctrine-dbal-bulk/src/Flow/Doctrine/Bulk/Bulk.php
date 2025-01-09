@@ -8,13 +8,10 @@ use Doctrine\DBAL\{Connection, Exception};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\QueryFactory\DbalQueryFactory;
 
-final class Bulk
+final readonly class Bulk
 {
-    private QueryFactory $queryFactory;
-
-    public function __construct(QueryFactory $queryFactory)
+    public function __construct(private QueryFactory $queryFactory)
     {
-        $this->queryFactory = $queryFactory;
     }
 
     public static function create() : self

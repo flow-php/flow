@@ -45,7 +45,7 @@ final class Stack
 
             $lastStackNode = &$lastStackNode[\count($lastStackNode) - 1];
         }
-        $valueNode = $valueNode ?? $value;
+        $valueNode ??= $value;
 
         $lastStackNode = \array_merge($lastStackNode, $valueNode);
 

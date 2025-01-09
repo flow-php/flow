@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\GetBlob;
 
-final class Range
+final readonly class Range
 {
-    private ?int $end;
-
-    private int $start;
-
-    public function __construct(int $start, ?int $end = null)
+    public function __construct(private int $start, private ?int $end = null)
     {
-        $this->start = $start;
-        $this->end = $end;
     }
 
     public function toString() : string

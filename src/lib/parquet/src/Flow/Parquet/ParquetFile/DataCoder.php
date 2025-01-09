@@ -12,11 +12,11 @@ use Flow\Parquet\ParquetFile\Page\{Dictionary};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
 
-final class DataCoder
+final readonly class DataCoder
 {
     public function __construct(
-        private readonly Options $options,
-        private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
+        private Options $options,
+        private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
     ) {
     }
 

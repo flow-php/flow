@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\ParquetFile;
 
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
 use Flow\Parquet\ParquetFile\{Compressions, RowGroupBuilder, Schema};
 use Flow\Parquet\{Options};
@@ -33,7 +34,7 @@ final class RowGroupBuilderStructuresTest extends TestCase
             Compressions::UNCOMPRESSED,
             $options = Options::default(),
             DataConverter::initialize($options),
-            new RowGroupBuilder\PageSizeCalculator($options)
+            new PageSizeCalculator($options)
         );
 
         $builder->addRow([

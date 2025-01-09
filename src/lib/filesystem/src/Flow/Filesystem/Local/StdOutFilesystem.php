@@ -10,9 +10,9 @@ use Flow\Filesystem\Path\Filter;
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Protocol, SourceStream};
 
-final class StdOutFilesystem implements Filesystem
+final readonly class StdOutFilesystem implements Filesystem
 {
-    public function __construct(private readonly ?\php_user_filter $filter = null)
+    public function __construct(private ?\php_user_filter $filter = null)
     {
     }
 

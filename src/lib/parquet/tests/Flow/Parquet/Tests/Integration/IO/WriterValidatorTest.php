@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use function Flow\ETL\DSL\generate_random_string;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use Flow\Parquet\{Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
@@ -22,9 +24,9 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "string" is not string, got "integer" instead');
 
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(Schema\FlatColumn::string('string'));
+        $schema = Schema::with(FlatColumn::string('string'));
 
         $writer->write($path, $schema, [['string' => 12345]]);
     }
@@ -34,9 +36,9 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "list" is required');
 
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(Schema\NestedColumn::list('list', Schema\ListElement::string())->makeRequired());
+        $schema = Schema::with(NestedColumn::list('list', ListElement::string())->makeRequired());
 
         $writer->write($path, $schema, [['list' => null]]);
     }
@@ -46,9 +48,9 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "list.list.element" is required');
 
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(Schema\NestedColumn::list('list', Schema\ListElement::string(required: true)));
+        $schema = Schema::with(NestedColumn::list('list', ListElement::string(required: true)));
 
         $writer->write($path, $schema, [['list' => [null]]]);
     }
@@ -58,9 +60,9 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "map.key_value.value" is required');
 
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(Schema\NestedColumn::map('map', Schema\MapKey::string(), Schema\MapValue::string(required: true)));
+        $schema = Schema::with(NestedColumn::map('map', MapKey::string(), MapValue::string(required: true)));
 
         $writer->write($path, $schema, [['map' => ['a' => null]]]);
     }
@@ -70,9 +72,9 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "map" is required');
 
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(Schema\NestedColumn::map('map', Schema\MapKey::string(), Schema\MapValue::string())->makeRequired());
+        $schema = Schema::with(NestedColumn::map('map', MapKey::string(), MapValue::string())->makeRequired());
 
         $writer->write($path, $schema, [['map' => null]]);
     }
@@ -82,9 +84,9 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "string" is required');
 
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
-        $schema = Schema::with(Schema\FlatColumn::string('string')->makeRequired());
+        $schema = Schema::with(FlatColumn::string('string')->makeRequired());
 
         $writer->write($path, $schema, [['string' => null]]);
     }
@@ -92,11 +94,11 @@ final class WriterValidatorTest extends TestCase
     public function test_writing_row_with_missing_optional_columns() : void
     {
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with(
-            Schema\FlatColumn::int32('id'),
-            Schema\FlatColumn::string('string')
+            FlatColumn::int32('id'),
+            FlatColumn::string('string')
         );
 
         $writer->write($path, $schema, [['id' => 123], []]);
@@ -126,11 +128,11 @@ final class WriterValidatorTest extends TestCase
     public function test_writing_row_with_missing_optional_columns_in_different_columns() : void
     {
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with(
-            Schema\FlatColumn::int32('id'),
-            Schema\FlatColumn::string('string')
+            FlatColumn::int32('id'),
+            FlatColumn::string('string')
         );
 
         $writer->write($path, $schema, [
@@ -163,11 +165,11 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "string" is required');
 
         $writer = new Writer();
-        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . \Flow\ETL\DSL\generate_random_string() . '.parquet';
+        $path = __DIR__ . '/var/test-writer-validator-parquet-test-' . generate_random_string() . '.parquet';
 
         $schema = Schema::with(
-            Schema\FlatColumn::int32('id'),
-            Schema\FlatColumn::string('string')->makeRequired()
+            FlatColumn::int32('id'),
+            FlatColumn::string('string')->makeRequired()
         );
 
         $writer->write($path, $schema, [['id' => 123]]);

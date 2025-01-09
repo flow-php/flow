@@ -15,16 +15,13 @@ final class SnappyCompressor
 
     private const MAX_HASH_TABLE_BITS = 14;
 
-    private readonly array $array;
-
     private readonly int $arrayLength;
 
     private array $globalHashTables = [];
 
-    public function __construct(array $uncompressed)
+    public function __construct(private readonly array $array)
     {
-        $this->array = $uncompressed;
-        $this->arrayLength = \count($uncompressed);
+        $this->arrayLength = \count($this->array);
     }
 
     public function compressToBuffer(array &$outBuffer) : int

@@ -18,7 +18,7 @@ final class StdOutDestinationStream implements DestinationStream
         /**
          * @phpstan-ignore-next-line
          */
-        $outputStream = \mb_strtolower($this->path->options()->getAsString('stream', 'stdout'));
+        $outputStream = \mb_strtolower((string) $this->path->options()->getAsString('stream', 'stdout'));
 
         if (!\in_array($outputStream, ['stdout', 'stderr', 'output'], true)) {
             throw new InvalidArgumentException('Invalid output stream, allowed values are "stdout", "stderr" and "output", given: ' . $outputStream);

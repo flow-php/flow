@@ -10,6 +10,7 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\{MapKey, MapValue};
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
@@ -336,7 +337,7 @@ final class DremelStructuresTest extends TestCase
             NestedColumn::struct(
                 's',
                 [
-                    NestedColumn::map('m', Schema\MapKey::string(), Schema\MapValue::int32()),
+                    NestedColumn::map('m', MapKey::string(), MapValue::int32()),
                 ]
             )
         );
@@ -731,7 +732,7 @@ final class DremelStructuresTest extends TestCase
             NestedColumn::struct(
                 's',
                 [
-                    NestedColumn::map('m', Schema\MapKey::string(), Schema\MapValue::int32(true))->makeRequired(),
+                    NestedColumn::map('m', MapKey::string(), MapValue::int32(true))->makeRequired(),
                 ]
             )->makeRequired()
         );

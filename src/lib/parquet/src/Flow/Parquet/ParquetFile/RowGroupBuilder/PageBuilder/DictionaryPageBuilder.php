@@ -15,11 +15,11 @@ use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings, RowGroupBuilder\Co
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 
-final class DictionaryPageBuilder
+final readonly class DictionaryPageBuilder
 {
     public function __construct(
-        private readonly Compressions $compression,
-        private readonly Options $options,
+        private Compressions $compression,
+        private Options $options,
     ) {
     }
 

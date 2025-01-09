@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-final class ListElement
+final readonly class ListElement
 {
-    private function __construct(public readonly Column $element)
+    private function __construct(public Column $element)
     {
     }
 

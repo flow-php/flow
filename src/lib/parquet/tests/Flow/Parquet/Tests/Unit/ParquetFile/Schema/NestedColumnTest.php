@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Schema;
 
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use PHPUnit\Framework\TestCase;
 
@@ -110,7 +111,7 @@ final class NestedColumnTest extends TestCase
         );
 
         self::assertEquals(
-            [Schema\Repetition::OPTIONAL, Schema\Repetition::OPTIONAL, Schema\Repetition::REPEATED, Schema\Repetition::OPTIONAL, Schema\Repetition::OPTIONAL, Schema\Repetition::REPEATED],
+            [Repetition::OPTIONAL, Repetition::OPTIONAL, Repetition::REPEATED, Repetition::OPTIONAL, Repetition::OPTIONAL, Repetition::REPEATED],
             $schema->get('struct.list.list.element.map.key_value')->repetitions()->toArray()
         );
     }

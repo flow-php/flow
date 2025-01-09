@@ -9,12 +9,12 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\{DataPageBuilder, Dicti
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
 use Flow\Parquet\{Option, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
 
-final class PagesBuilder
+final readonly class PagesBuilder
 {
     public function __construct(
-        private readonly Compressions $compression,
-        private readonly PageSizeCalculator $pageSizeCalculator,
-        private readonly Options $options,
+        private Compressions $compression,
+        private PageSizeCalculator $pageSizeCalculator,
+        private Options $options,
     ) {
     }
 

@@ -15,9 +15,9 @@ use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TBufferedTransport;
 
-final class WholeChunkViewer implements ColumnChunkViewer
+final readonly class WholeChunkViewer implements ColumnChunkViewer
 {
-    public function __construct(private readonly Options $options)
+    public function __construct(private Options $options)
     {
     }
 
@@ -75,7 +75,7 @@ final class WholeChunkViewer implements ColumnChunkViewer
             }
 
             return PageHeader::fromThrift($thriftHeader, $this->options);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             /** @phpstan-ignore-next-line */
             \fseek($stream, $currentOffset);
 

@@ -42,7 +42,7 @@ final class ReadDataCommand extends Command
 
         try {
             $parquetFile->metadata();
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             $style->error(\sprintf('File "%s" is not a valid parquet file', $filePath));
 
             return Command::FAILURE;
