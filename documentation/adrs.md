@@ -24,5 +24,10 @@ ADRs act as a single source of truth for important design and architectural choi
 
 ## Index of ADRs
 
+### [Accepted AD](https://github.com/flow-php/flow/pulls?q=is%3Apr+is%3Aclosed+is%3Amerged+label%3AAD+)
 - [2025-01-07: Static Analysis Baseline](/documentation/adrs/static-analysis-baseline.md)
 - [2025-01-09: Extension Points](/documentation/adrs/extension-points.md)
+
+### [Proposed AD](https://github.com/flow-php/flow/pulls?q=is%3Apr+is%3Aopen+label%3AAD+)
+
+### [Rejected AD](https://github.com/flow-php/flow/pulls?q=is%3Apr+is%3Aclosed+is%3Aunmerged+label%3AAD+)
