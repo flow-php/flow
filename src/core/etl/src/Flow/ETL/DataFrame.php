@@ -397,7 +397,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param ScalarFunction[] $functions
+     * @param array<ScalarFunction> $functions
      */
     public function filters(array $functions) : self
     {

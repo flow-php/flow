@@ -50,7 +50,7 @@ class OffsetIndex
      * PageLocations, ordered by increasing PageLocation.offset. It is required
      * that page_locations[i].first_row_index < page_locations[i+1].first_row_index.
      *
-     * @var PageLocation[]
+     * @var array<PageLocation>
      */
     public $page_locations;
 
@@ -60,7 +60,7 @@ class OffsetIndex
      * See documention for unencoded_byte_array_data_bytes in SizeStatistics for
      * more details on this field.
      *
-     * @var int[]
+     * @var array<int>
      */
     public $unencoded_byte_array_data_bytes;
 

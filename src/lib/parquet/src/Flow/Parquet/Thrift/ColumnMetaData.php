@@ -170,7 +170,7 @@ class ColumnMetaData
      * This information can be used to determine if all data pages are
      * dictionary encoded for example *.
      *
-     * @var PageEncodingStats[]
+     * @var array<PageEncodingStats>
      */
     public $encoding_stats;
 
@@ -178,7 +178,7 @@ class ColumnMetaData
      * Set of all encodings used for this column. The purpose is to validate
      * whether we can decode those pages. *.
      *
-     * @var int[]
+     * @var array<int>
      */
     public $encodings;
 
@@ -192,7 +192,7 @@ class ColumnMetaData
     /**
      * Optional key/value metadata *.
      *
-     * @var KeyValue[]
+     * @var array<KeyValue>
      */
     public $key_value_metadata;
 
@@ -206,7 +206,7 @@ class ColumnMetaData
     /**
      * Path in schema *.
      *
-     * @var string[]
+     * @var array<string>
      */
     public $path_in_schema;
 

@@ -22,7 +22,7 @@ enum StringStyles : string
     case UPPER = 'upper';
 
     /**
-     * @return string[]
+     * @return array<string>
      */
     public static function all() : array
     {

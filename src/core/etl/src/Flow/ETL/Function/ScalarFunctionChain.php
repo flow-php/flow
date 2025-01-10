@@ -415,8 +415,8 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * @param ScalarFunction|string|string[] $search
-     * @param ScalarFunction|string|string[] $replace
+     * @param array<string>|ScalarFunction|string $search
+     * @param array<string>|ScalarFunction|string $replace
      */
     public function strReplace(ScalarFunction|string|array $search, ScalarFunction|string|array $replace) : self
     {

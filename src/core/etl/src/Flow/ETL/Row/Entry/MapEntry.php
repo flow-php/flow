@@ -21,7 +21,7 @@ final class MapEntry implements Entry
     private MapType $type;
 
     /**
-     * @param ?array $value
+     * @param ?array<mixed> $value
      *
      * @throws InvalidArgumentException
      */

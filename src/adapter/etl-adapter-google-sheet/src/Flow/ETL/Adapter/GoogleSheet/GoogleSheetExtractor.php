@@ -44,12 +44,12 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         );
 
         /**
-         * @var array[] $values
+         * @var array<array> $values
          */
         $values = $response->getValues() ?? [];
 
         if ($this->withHeader && [] !== $values) {
-            /** @var string[] $headers */
+            /** @var array<string> $headers */
             $headers = $values[0];
             unset($values[0]);
             $totalRows = 1;
@@ -108,7 +108,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
             /** @var Sheets\ValueRange $response */
             $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
             /**
-             * @var array[] $values
+             * @var array<array> $values
              */
             $values = $response->getValues() ?? [];
         }

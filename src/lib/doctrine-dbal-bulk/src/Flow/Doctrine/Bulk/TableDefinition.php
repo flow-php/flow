@@ -12,7 +12,7 @@ use Flow\Doctrine\Bulk\Exception\RuntimeException;
 final readonly class TableDefinition
 {
     /**
-     * @var Column[]
+     * @var array<Column>
      */
     private array $columns;
 

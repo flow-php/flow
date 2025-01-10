@@ -103,12 +103,12 @@ class ColumnIndex
     /**
      * Same as repetition_level_histograms except for definitions levels.
      *
-     * @var int[]
+     * @var array<int>
      */
     public $definition_level_histograms;
 
     /**
-     * @var string[]
+     * @var array<string>
      */
     public $max_values;
 
@@ -122,7 +122,7 @@ class ColumnIndex
      * logical type. Readers must make sure that list entries are populated before
      * using them by inspecting null_pages.
      *
-     * @var string[]
+     * @var array<string>
      */
     public $min_values;
 
@@ -136,7 +136,7 @@ class ColumnIndex
      * If null_counts are not present, readers MUST NOT assume all
      * null counts are 0.
      *
-     * @var int[]
+     * @var array<int>
      */
     public $null_counts;
 
@@ -147,7 +147,7 @@ class ColumnIndex
      * byte[0], so that all lists have the same length. If false, the
      * corresponding entries in min_values and max_values must be valid.
      *
-     * @var bool[]
+     * @var array<bool>
      */
     public $null_pages;
 
@@ -163,7 +163,7 @@ class ColumnIndex
      * Element (max_repetition_level + 1) is the first element of the histogram
      * for the second page.
      *
-     * @var int[]
+     * @var array<int>
      */
     public $repetition_level_histograms;
 

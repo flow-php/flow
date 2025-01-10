@@ -33,7 +33,7 @@ final class Examples
     }
 
     /**
-     * @return string[]
+     * @return array<string>
      */
     public function examples(string $topic) : array
     {
@@ -86,7 +86,7 @@ final class Examples
     }
 
     /**
-     * @return string[]
+     * @return array<string>
      */
     public function topics() : array
     {

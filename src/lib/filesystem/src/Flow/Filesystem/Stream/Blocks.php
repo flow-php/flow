@@ -20,7 +20,7 @@ use Flow\Filesystem\Stream\Block\{BlockVoidLifecycle, NativeLocalFileBlocksFacto
 final class Blocks
 {
     /**
-     * @var Block[]
+     * @var array<Block>
      */
     private array $blocks = [];
 

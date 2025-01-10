@@ -15,7 +15,7 @@ final class Pages
     }
 
     /**
-     * @return Page[]
+     * @return array<Page>
      */
     public function all() : array
     {

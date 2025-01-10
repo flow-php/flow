@@ -44,7 +44,7 @@ class EncryptionWithColumnKey
     /**
      * Column path in schema *.
      *
-     * @var string[]
+     * @var array<string>
      */
     public $path_in_schema;
 

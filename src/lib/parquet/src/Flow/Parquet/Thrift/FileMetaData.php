@@ -105,7 +105,7 @@ class FileMetaData
      * The obsolete min and max fields in the Statistics object are always sorted
      * by signed comparison regardless of column_orders.
      *
-     * @var ColumnOrder[]
+     * @var array<ColumnOrder>
      */
     public $column_orders;
 
@@ -138,7 +138,7 @@ class FileMetaData
     /**
      * Optional key/value metadata *.
      *
-     * @var KeyValue[]
+     * @var array<KeyValue>
      */
     public $key_value_metadata;
 
@@ -152,7 +152,7 @@ class FileMetaData
     /**
      * Row groups in this file *.
      *
-     * @var RowGroup[]
+     * @var array<RowGroup>
      */
     public $row_groups;
 
@@ -164,7 +164,7 @@ class FileMetaData
      * used to map columns to nodes in the schema.
      * The first element is the root *.
      *
-     * @var SchemaElement[]
+     * @var array<SchemaElement>
      */
     public $schema;
 

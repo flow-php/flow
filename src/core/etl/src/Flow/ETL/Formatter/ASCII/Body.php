@@ -33,7 +33,7 @@ final readonly class Body
     }
 
     /**
-     * @return Partition[]
+     * @return array<Partition>
      */
     public function partitions() : array
     {

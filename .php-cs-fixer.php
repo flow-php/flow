@@ -150,6 +150,7 @@ return (new Config())
         'yoda_style' => false,
         'void_return' => true,
         'fully_qualified_strict_types' => false,
+        'phpdoc_array_type' => true,
         'php_unit_method_casing' => ['case' => 'snake_case'],
         'php_unit_test_case_static_method_calls' => ['call_type' => 'static'],
     ])

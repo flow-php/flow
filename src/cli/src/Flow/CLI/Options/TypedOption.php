@@ -93,7 +93,7 @@ final readonly class TypedOption
         }
 
         /**
-         * @var string[] $options
+         * @var array<string> $options
          */
         $options = [];
 

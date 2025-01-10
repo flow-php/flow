@@ -13,7 +13,7 @@ use Flow\ETL\Row\Entry;
 final class HashIdFactory implements IdFactory
 {
     /**
-     * @var string[]
+     * @var array<string>
      */
     private readonly array $entryNames;
 

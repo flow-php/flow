@@ -508,11 +508,10 @@ function type_list(Type $element, bool $nullable = false) : ListType
 }
 
 /**
- * @param Type<int>|Type<string> $key_type
  * @param Type<mixed> $value_type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_map(Type $key_type, Type $value_type, bool $nullable = false) : MapType
+function type_map(StringType|IntegerType $key_type, Type $value_type, bool $nullable = false) : MapType
 {
     return new MapType($key_type, $value_type, $nullable);
 }
@@ -577,11 +576,8 @@ function type_integer(bool $nullable = false) : IntegerType
     return new IntegerType($nullable);
 }
 
-/**
- * @return Type<string>
- */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_string(bool $nullable = false) : Type
+function type_string(bool $nullable = false) : StringType
 {
     return new StringType($nullable);
 }

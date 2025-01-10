@@ -57,7 +57,7 @@ class SizeStatistics
      * This field may be omitted if max_definition_level is 0 or 1 without
      * loss of information.
      *
-     * @var int[]
+     * @var array<int>
      */
     public $definition_level_histogram;
 
@@ -70,7 +70,7 @@ class SizeStatistics
      * This field may be omitted if max_repetition_level is 0 without loss
      * of information.
      *
-     * @var int[]
+     * @var array<int>
      */
     public $repetition_level_histogram;
 

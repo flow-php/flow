@@ -247,7 +247,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @param callable(Row) : Row[] $callable
+     * @param callable(Row) : array<Row> $callable
      */
     public function flatMap(callable $callable) : self
     {
@@ -609,7 +609,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @return mixed[]
+     * @return array<mixed>
      */
     public function reduceToArray(string|Reference $ref) : array
     {
@@ -738,7 +738,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function unique(Comparator $comparator = new NativeComparator()) : self
     {
         /**
-         * @var Row[] $uniqueRows
+         * @var array<Row> $uniqueRows
          */
         $uniqueRows = [];
 
