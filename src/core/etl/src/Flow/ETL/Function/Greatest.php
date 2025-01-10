@@ -24,6 +24,10 @@ final class Greatest extends ScalarFunctionChain
             $extractedValues[] = (new Parameter($value))->eval($row);
         }
 
+        if (!\count($extractedValues)) {
+            return null;
+        }
+
         $this->assertAllComparable($extractedValues, '>');
 
         return max($extractedValues);

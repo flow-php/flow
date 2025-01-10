@@ -39,6 +39,12 @@ final class FunctionModel
 
     public static function fromReflection(string $relativePath, \ReflectionFunction $reflectionFunction) : self
     {
+        $returnTypeReflection = $reflectionFunction->getReturnType();
+
+        if ($returnTypeReflection === null) {
+            throw new \InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
+        }
+
         return new self(
             $relativePath,
             $reflectionFunction->getStartLine(),
@@ -46,7 +52,7 @@ final class FunctionModel
             $reflectionFunction->getShortName(),
             $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
-            TypesModel::fromReflection($reflectionFunction->getReturnType()),
+            TypesModel::fromReflection($returnTypeReflection),
             AttributesModel::fromReflection($reflectionFunction),
             $reflectionFunction->getDocComment() ? \base64_encode($reflectionFunction->getDocComment()) : null,
         );

@@ -28,6 +28,7 @@ final class DefinitionTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry class "DateTimeInterface" must implement "Flow\ETL\Row\Entry"');
 
+        /** @phpstan-ignore-next-line */
         new Definition('name', \DateTimeInterface::class, type_datetime());
     }
 

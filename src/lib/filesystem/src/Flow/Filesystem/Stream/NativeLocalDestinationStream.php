@@ -58,8 +58,8 @@ final class NativeLocalDestinationStream implements DestinationStream
             throw new RuntimeException('Cannot write to closed stream');
         }
 
-        \fseek($this->handle, 0, \SEEK_END);
-        \fwrite($this->handle, $data);
+        \fseek($this->handle(), 0, \SEEK_END);
+        \fwrite($this->handle(), $data);
 
         return $this;
     }
@@ -72,7 +72,7 @@ final class NativeLocalDestinationStream implements DestinationStream
             return;
         }
 
-        \fclose($this->handle);
+        \fclose($this->handle());
         $this->handle = null;
     }
 
@@ -95,7 +95,7 @@ final class NativeLocalDestinationStream implements DestinationStream
             \rewind($resource);
         }
 
-        \stream_copy_to_stream($resource, $this->handle);
+        \stream_copy_to_stream($resource, $this->handle());
 
         return $this;
     }
@@ -108,5 +108,17 @@ final class NativeLocalDestinationStream implements DestinationStream
     public function path() : Path
     {
         return $this->path;
+    }
+
+    /**
+     * @return resource
+     */
+    private function handle()
+    {
+        if (!$this->isOpen() || $this->handle === null) {
+            throw new RuntimeException('Cannot read from closed stream');
+        }
+
+        return $this->handle;
     }
 }

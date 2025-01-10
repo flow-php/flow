@@ -35,7 +35,12 @@ final class FunctionsExtractor
                 require_once $realpath;
             }
 
-            $ast = $parser->parse(file_get_contents($path));
+            $ast = $parser->parse((string) file_get_contents($path));
+
+            if ($ast === null) {
+                continue;
+            }
+
             $traverser = new NodeTraverser();
             $traverser->addVisitor($this->functionCollector);
             $traverser->traverse($ast);
@@ -43,7 +48,7 @@ final class FunctionsExtractor
 
         foreach ($this->functionCollector->functions as $functionName) {
             $reflectionFunction = new \ReflectionFunction($functionName);
-            $repositoryPath = \ltrim(\str_replace($this->repositoryRootPath, '', $reflectionFunction->getFileName()), '/');
+            $repositoryPath = \ltrim(\str_replace($this->repositoryRootPath, '', (string) $reflectionFunction->getFileName()), '/');
 
             yield FunctionModel::fromReflection(
                 $repositoryPath,

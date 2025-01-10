@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?array<int, mixed>, array<int, mixed>>
+ * @implements Entry<?list<mixed>, list<mixed>>
  */
 final class ListEntry implements Entry
 {
@@ -21,7 +21,7 @@ final class ListEntry implements Entry
     private readonly ListType $type;
 
     /**
-     * @param array<int, mixed> $value
+     * @param list<mixed> $value
      * @param ListType $type
      *
      * @throws InvalidArgumentException

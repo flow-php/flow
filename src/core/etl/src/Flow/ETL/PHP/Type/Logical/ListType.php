@@ -9,7 +9,7 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<array<int, mixed>>
+ * @implements Type<list<mixed>>
  */
 final readonly class ListType implements Type
 {

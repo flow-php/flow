@@ -30,7 +30,7 @@ final class DOMDocumentWriter implements XMLWriter
         $element = $dom->createElement($node->name);
 
         if ($node->hasValue()) {
-            $element->appendChild($dom->createTextNode($node->value));
+            $element->appendChild($dom->createTextNode((string) $node->value));
         }
 
         foreach ($node->attributes as $attribute) {

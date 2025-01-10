@@ -77,6 +77,9 @@ final class UuidEntry implements Entry
         if ($entryValue !== null && $thisValue === null) {
             return false;
         }
+        /**
+         * @var Uuid $entryValue
+         */
 
         return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value?->isEqual($entryValue);
     }

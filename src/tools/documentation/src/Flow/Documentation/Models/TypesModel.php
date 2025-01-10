@@ -24,9 +24,9 @@ final class TypesModel
     public static function fromReflection(\ReflectionType $reflectionType) : self
     {
         $types = match ($reflectionType::class) {
-            \ReflectionIntersectionType::class => array_map(fn ($type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
+            \ReflectionIntersectionType::class => array_map(fn (\ReflectionType $type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
             \ReflectionNamedType::class => [TypeModel::fromReflection($reflectionType)],
-            \ReflectionUnionType::class => array_map(fn ($type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
+            \ReflectionUnionType::class => array_map(fn (\ReflectionType $type) => TypeModel::fromReflection($type), $reflectionType->getTypes()),
             default => [],
         };
 

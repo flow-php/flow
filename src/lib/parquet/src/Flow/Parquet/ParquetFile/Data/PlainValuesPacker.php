@@ -54,7 +54,7 @@ final readonly class PlainValuesPacker
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
                 match ($column->logicalType()?->name()) {
                     LogicalType::UUID => $this->writer->writeStrings($values),
-                    LogicalType::DECIMAL => $this->writer->writeDecimals($values, $column->typeLength(), $column->precision(), $column->scale()),
+                    LogicalType::DECIMAL => $this->writer->writeDecimals($values, (int) $column->typeLength(), (int) $column->precision(), (int) $column->scale()),
                     default => throw new \RuntimeException('Writing logical type "' . ($column->logicalType()?->name() ?: 'UNKNOWN') . '" is not implemented yet'),
                 };
 

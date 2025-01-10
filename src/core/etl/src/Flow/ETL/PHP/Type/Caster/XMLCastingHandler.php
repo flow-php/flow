@@ -40,7 +40,7 @@ final class XMLCastingHandler implements CastingHandler
 
             $doc = new \DOMDocument();
 
-            if (!@$doc->loadXML($stringValue)) {
+            if (!@$doc->loadXML((string) $stringValue)) {
                 throw new CastingException($stringValue, type_xml());
             }
 

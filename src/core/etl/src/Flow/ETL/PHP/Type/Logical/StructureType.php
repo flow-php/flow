@@ -9,7 +9,7 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<array>
+ * @implements Type<array<string, mixed>>
  */
 final readonly class StructureType implements Type
 {

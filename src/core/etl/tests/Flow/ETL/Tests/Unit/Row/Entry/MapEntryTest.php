@@ -94,7 +94,7 @@ final class MapEntryTest extends FlowTestCase
     {
         self::assertEquals(
             (map_entry('strings', ['one, two, three'], type_map(type_integer(), type_string()))),
-            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->map(fn (array $value) => [\implode(', ', $value)])
+            (map_entry('strings', ['one', 'two', 'three'], type_map(type_integer(), type_string())))->map(fn (array $value) : array => [\implode(', ', $value)])
         );
     }
 

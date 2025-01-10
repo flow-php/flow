@@ -3,6 +3,18 @@ parameters:
     treatPhpDocTypesAsCertain: false
     ignoreErrors:
         - identifier: argument.type
+          paths:
+            - src/core/etl/tests/*
+            - src/bridge/filesystem/azure/tests/*
+            - src/bridge/filesystem/async-aws/tests/*
+            - src/adapter/etl-adapter-xml/tests/*
+            - src/adapter/etl-adapter-text/tests/*
+            - src/adapter/etl-adapter-parquet/tests/*
+            - src/adapter/etl-adapter-meilisearch/tests/*
+            - src/adapter/etl-adapter-logger/tests/*
+            - src/adapter/etl-adapter-json/tests/*
+            - src/adapter/etl-adapter-http/tests/*
+            -  src/adapter/etl-adapter-csv/tests/*
         - identifier: missingType.iterableValue
     bootstrapFiles:
         - tools/phpunit/vendor/autoload.php

@@ -15,9 +15,6 @@ final class StdOutDestinationStream implements DestinationStream
 
     public function __construct(private readonly Path $path, ?\php_user_filter $filter = null)
     {
-        /**
-         * @phpstan-ignore-next-line
-         */
         $outputStream = \mb_strtolower((string) $this->path->options()->getAsString('stream', 'stdout'));
 
         if (!\in_array($outputStream, ['stdout', 'stderr', 'output'], true)) {

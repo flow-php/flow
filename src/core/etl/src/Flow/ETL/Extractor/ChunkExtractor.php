@@ -8,6 +8,9 @@ use Flow\ETL\{Extractor, FlowContext, Rows};
 
 final readonly class ChunkExtractor implements Extractor, OverridingExtractor
 {
+    /**
+     * @param int<1, max> $chunkSize
+     */
     public function __construct(
         private Extractor $extractor,
         private int $chunkSize,

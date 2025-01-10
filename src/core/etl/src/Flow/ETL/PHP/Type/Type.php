@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type;
 
 /**
- * @template TType
+ * @template-covariant  TType
  */
 interface Type
 {
@@ -15,12 +15,12 @@ interface Type
     public static function fromArray(array $data) : self;
 
     /**
-     * @param Type<TType> $type
+     * @param Type<mixed> $type
      */
     public function isComparableWith(self $type) : bool;
 
     /**
-     * @param Type<TType> $type
+     * @param Type<mixed> $type
      */
     public function isEqual(self $type) : bool;
 

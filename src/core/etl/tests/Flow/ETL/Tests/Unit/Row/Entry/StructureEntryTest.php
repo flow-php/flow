@@ -112,7 +112,8 @@ final class StructureEntryTest extends FlowTestCase
 
         self::assertEquals(
             $entry,
-            $entry->map(fn (array $entries) => $entries)
+            /** @phpstan-ignore-next-line */
+            $entry->map(fn (array $entries) : array => $entries)
         );
     }
 
@@ -160,10 +161,12 @@ final class StructureEntryTest extends FlowTestCase
     public function test_structure_element_names_as_numbers() : void
     {
         self::assertNotEquals(
+            /** @phpstan-ignore-next-line */
             structure_entry('name', ['1' => 1, '2' => '2'], type_structure([
                 '1' => type_int(),
                 '2' => type_string(),
             ])),
+            /** @phpstan-ignore-next-line */
             structure_entry('name', ['1' => 1, '2' => '2', '3' => '3'], type_structure([
                 '1' => type_int(),
                 '2' => type_string(),
@@ -171,11 +174,13 @@ final class StructureEntryTest extends FlowTestCase
             ])),
         );
         self::assertEquals(
+            /** @phpstan-ignore-next-line */
             structure_entry('name', ['1' => 1, '2' => 2, '3' => 3], type_structure([
                 '1' => type_int(),
                 '2' => type_int(),
                 '3' => type_int(),
             ])),
+            /** @phpstan-ignore-next-line */
             structure_entry('name', ['1' => 1, '2' => 2, '3' => 3], type_structure(['1' => type_int(), '2' => type_int(), '3' => type_int()])),
         );
     }

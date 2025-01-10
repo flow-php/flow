@@ -149,6 +149,7 @@ return (new Config())
         'ternary_to_null_coalescing' => true,
         'yoda_style' => false,
         'void_return' => true,
+        'fully_qualified_strict_types' => false,
         'php_unit_method_casing' => ['case' => 'snake_case'],
         'php_unit_test_case_static_method_calls' => ['call_type' => 'static'],
     ])

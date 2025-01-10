@@ -24,6 +24,10 @@ final class Least extends ScalarFunctionChain
             $extractedValues[] = (new Parameter($value))->eval($row);
         }
 
+        if (!\count($extractedValues)) {
+            return null;
+        }
+
         $this->assertAllComparable($extractedValues, '<');
 
         return \min($extractedValues);

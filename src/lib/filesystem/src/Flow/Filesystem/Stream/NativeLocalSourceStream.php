@@ -45,7 +45,7 @@ final class NativeLocalSourceStream implements SourceStream
             return;
         }
 
-        \fclose($this->handle);
+        \fclose($this->handle());
         $this->handle = null;
     }
 
@@ -55,9 +55,9 @@ final class NativeLocalSourceStream implements SourceStream
             throw new RuntimeException('Cannot read from closed stream');
         }
 
-        \fseek($this->handle, 0);
+        \fseek($this->handle(), 0);
 
-        $content = \stream_get_contents($this->handle);
+        $content = \stream_get_contents($this->handle());
 
         if ($content === false) {
             throw new RuntimeException("Cannot read file content: {$this->path->uri()}");
@@ -82,10 +82,10 @@ final class NativeLocalSourceStream implements SourceStream
             throw new RuntimeException('Cannot read from closed stream');
         }
 
-        \fseek($this->handle, 0);
+        \fseek($this->handle(), 0);
 
-        while (!\feof($this->handle)) {
-            $string = \fread($this->handle, $length);
+        while (!\feof($this->handle())) {
+            $string = \fread($this->handle(), $length);
 
             if ($string === false) {
                 break;
@@ -106,9 +106,9 @@ final class NativeLocalSourceStream implements SourceStream
             throw new RuntimeException('Cannot read from closed stream');
         }
 
-        \fseek($this->handle, $offset, $offset < 0 ? \SEEK_END : \SEEK_SET);
+        \fseek($this->handle(), $offset, $offset < 0 ? \SEEK_END : \SEEK_SET);
 
-        $result = \fread($this->handle, $length);
+        $result = \fread($this->handle(), $length);
 
         return $result === false ? '' : $result;
     }
@@ -124,10 +124,10 @@ final class NativeLocalSourceStream implements SourceStream
             throw new RuntimeException('Cannot read from closed stream');
         }
 
-        \fseek($this->handle, 0);
+        \fseek($this->handle(), 0);
 
-        while (!\feof($this->handle)) {
-            $line = \stream_get_line($this->handle, \PHP_INT_MAX, $separator);
+        while (!\feof($this->handle())) {
+            $line = \stream_get_line($this->handle(), \PHP_INT_MAX, $separator);
 
             if ($line === false) {
                 break;
@@ -146,5 +146,17 @@ final class NativeLocalSourceStream implements SourceStream
         }
 
         return $size;
+    }
+
+    /**
+     * @return resource
+     */
+    private function handle()
+    {
+        if (!$this->isOpen() || $this->handle === null) {
+            throw new RuntimeException('Cannot read from closed stream');
+        }
+
+        return $this->handle;
     }
 }

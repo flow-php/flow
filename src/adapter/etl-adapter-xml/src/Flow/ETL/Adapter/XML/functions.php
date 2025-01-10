@@ -44,7 +44,7 @@ function from_xml(
  * @param string $row_element_name - @deprecated use `withRowElementName()` method instead
  * @param string $attribute_prefix - @deprecated use `withAttributePrefix()` method instead
  * @param string $date_time_format - @deprecated use `withDateTimeFormat()` method instead
- * @param DOMDocumentWriter $xml_writer
+ * @param XMLWriter $xml_writer
  */
 #[DocumentationDSL(module: Module::XML, type: DSLType::LOADER)]
 function to_xml(

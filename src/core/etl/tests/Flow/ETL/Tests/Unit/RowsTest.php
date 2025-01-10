@@ -570,6 +570,7 @@ final class RowsTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
+        /** @phpstan-ignore-next-line */
         (rows())->offsetExists('a');
     }
 

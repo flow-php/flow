@@ -83,11 +83,14 @@ final readonly class Parameter
         return \is_a($result, $class) ? $result : null;
     }
 
-    public function asInt(Row $row) : ?int
+    /**
+     * @phpstan-return ($default is null ? int|null : int)
+     */
+    public function asInt(Row $row, ?int $default = null) : ?int
     {
         $result = $this->function->eval($row);
 
-        return \is_int($result) ? $result : null;
+        return \is_int($result) ? $result : $default;
     }
 
     public function asListOfObjects(Row $row, string $class) : ?array
@@ -107,15 +110,18 @@ final readonly class Parameter
         return $result;
     }
 
-    public function asNumber(Row $row) : int|float|null
+    /**
+     * @phpstan-return ($default is null ? int|float|null : int|float)
+     */
+    public function asNumber(Row $row, int|float|null $default = null) : int|float|null
     {
         $result = $this->function->eval($row);
 
         if (\is_string($result)) {
-            return null;
+            return $default;
         }
 
-        return \is_numeric($result) ? $result : null;
+        return \is_numeric($result) ? $result : $default;
     }
 
     public function asObject(Row $row) : ?object
@@ -125,11 +131,14 @@ final readonly class Parameter
         return \is_object($result) ? $result : null;
     }
 
-    public function asString(Row $row) : ?string
+    /**
+     * @phpstan-return ($default is null ? string|null : string)
+     */
+    public function asString(Row $row, ?string $default = null) : ?string
     {
         $result = $this->function->eval($row);
 
-        return \is_string($result) ? $result : null;
+        return \is_string($result) ? $result : $default;
     }
 
     public function eval(Row $row) : mixed

@@ -29,7 +29,7 @@ final readonly class CastingContext
     /**
      * @return ?T
      */
-    public function value(mixed $value) : mixed
+    public function value(mixed $value)
     {
         if ($value === null && $this->type->nullable()) {
             return null;

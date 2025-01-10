@@ -11,7 +11,7 @@ use Flow\ETL\PHP\Type\{Caster, Type};
 final class MapCastingHandler implements CastingHandler
 {
     /**
-     * @param Type<array> $type
+     * @param Type<mixed> $type
      */
     public function supports(Type $type) : bool
     {
@@ -38,6 +38,10 @@ final class MapCastingHandler implements CastingHandler
 
             foreach ($value as $key => $item) {
                 $castedKey = $caster->to($type->key())->value($key);
+
+                if ($castedKey === null) {
+                    continue;
+                }
 
                 if (\array_key_exists($castedKey, $castedMap)) {
                     throw new CastingException($value, $type);

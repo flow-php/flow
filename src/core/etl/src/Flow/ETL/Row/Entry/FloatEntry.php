@@ -80,6 +80,7 @@ final class FloatEntry implements Entry
         return $this->is($entry->name())
             && $entry instanceof self
             && $this->type->isEqual($entry->type)
+            /** @phpstan-ignore-next-line */
             && \bccomp((string) $thisValue, (string) $entryValue, $this->precision) === 0;
     }
 

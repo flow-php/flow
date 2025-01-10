@@ -23,7 +23,7 @@ final class AttributeModel
     }
 
     /**
-     * @param \ReflectionAttribute<AttributeModel> $reflectionAttribute
+     * @param \ReflectionAttribute<object> $reflectionAttribute
      */
     public static function fromReflection(\ReflectionAttribute $reflectionAttribute) : self
     {

@@ -41,9 +41,15 @@ final class ParameterModel
             $hasDefaultValue = false;
         }
 
+        $reflectionType = $reflectionParameter->getType();
+
+        if ($reflectionType === null) {
+            throw new \InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
+        }
+
         return new self(
             $reflectionParameter->getName(),
-            TypesModel::fromReflection($reflectionParameter->getType()),
+            TypesModel::fromReflection($reflectionType),
             $hasDefaultValue,
             $reflectionParameter->allowsNull(),
             $reflectionParameter->isVariadic(),

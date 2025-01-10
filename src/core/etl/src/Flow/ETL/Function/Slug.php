@@ -20,7 +20,7 @@ final class Slug extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         $string = (new Parameter($this->string))->asString($row);
-        $separator = (new Parameter($this->separator))->asString($row);
+        $separator = (new Parameter($this->separator))->asString($row, '-');
         $locale = (new Parameter($this->locale))->asString($row);
         $symbolsMap = (new Parameter($this->symbolsMap))->asArray($row);
 

@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
+use Flow\ETL\PHP\Type\Native\{NullType};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<array>
+ * @implements Type<array<array-key, mixed>>
  */
 final readonly class MapType implements Type
 {
     /**
-     * @param IntegerType|StringType $key
+     * @param Type<int>|Type<string> $key
      * @param Type<mixed> $value
      * @param bool $nullable
      */
-    public function __construct(private StringType|IntegerType $key, private Type $value, private bool $nullable = false)
+    public function __construct(private Type $key, private Type $value, private bool $nullable = false)
     {
         if ($this->key->nullable()) {
             throw new InvalidArgumentException('Key cannot be nullable');
@@ -27,13 +27,7 @@ final readonly class MapType implements Type
 
     public static function fromArray(array $data) : self
     {
-        $keyType = TypeFactory::fromArray($data['key']);
-
-        if (!$keyType instanceof StringType && !$keyType instanceof IntegerType) {
-            throw new InvalidArgumentException('Invalid "key" key in ' . self::class . ' fromArray()');
-        }
-
-        return new self($keyType, TypeFactory::fromArray($data['value']), $data['nullable'] ?? false);
+        return new self(TypeFactory::fromArray($data['key']), TypeFactory::fromArray($data['value']), $data['nullable'] ?? false);
     }
 
     public function isComparableWith(Type $type) : bool
@@ -81,7 +75,10 @@ final readonly class MapType implements Type
         return true;
     }
 
-    public function key() : StringType|IntegerType
+    /**
+     * @return Type<int>|Type<string>
+     */
+    public function key() : Type
     {
         return $this->key;
     }

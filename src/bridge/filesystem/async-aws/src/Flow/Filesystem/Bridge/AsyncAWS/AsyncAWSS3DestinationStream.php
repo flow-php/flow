@@ -92,7 +92,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
             ]);
 
             $blockList = new BlockList();
-            $blockList->add($partCopyResponse->getCopyPartResult()?->getEtag());
+            $blockList->add((string) $partCopyResponse->getCopyPartResult()?->getEtag());
 
             return new self(
                 $s3Client,
@@ -153,6 +153,10 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         if ($this->blocks->size() === 0) {
 
             $handle = \fopen($this->blocks->block()->path()->path(), 'rb');
+
+            if ($handle === false) {
+                throw new InvalidArgumentException('Cannot open file: ' . $this->blocks->block()->path()->path());
+            }
 
             $partResponse = $this->s3Client->uploadPart([
                 'Bucket' => $this->bucket,

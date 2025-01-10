@@ -64,14 +64,14 @@ final class JsonObjectEntryTest extends FlowTestCase
     public function test_map() : void
     {
         $item = ['item-id' => 1, 'name' => 'one'];
-        $entry = (JsonEntry::object('item', $item))->map(function (array $value) {
+        $entry = (JsonEntry::object('item', $item))->map(function (array $value) : string {
             \array_walk($value, function (&$v) : void {
                 if (\is_string($v)) {
                     $v = \mb_strtoupper($v);
                 }
             });
 
-            return \json_encode($value, JSON_THROW_ON_ERROR);
+            return (string) \json_encode($value, JSON_THROW_ON_ERROR);
         });
 
         self::assertEquals(

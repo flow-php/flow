@@ -24,8 +24,12 @@ final class TypeModel
         );
     }
 
-    public static function fromReflection(\ReflectionNamedType $reflectionType) : self
+    public static function fromReflection(\ReflectionType $reflectionType) : self
     {
+        if (!$reflectionType instanceof \ReflectionNamedType) {
+            throw new \InvalidArgumentException('ReflectionType must be instance of ReflectionNamedType');
+        }
+
         $name = $reflectionType->getName();
 
         $isClass = \class_exists($name) || \interface_exists($name) || \enum_exists($name);
