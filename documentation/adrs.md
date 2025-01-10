@@ -24,4 +24,5 @@ ADRs act as a single source of truth for important design and architectural choi
 
 ## Index of ADRs
 
-- [ADR 2025-01-07: Static Analysis Baseline](/documentation/adrs/static-analysis-baseline.md)
+- [2025-01-07: Static Analysis Baseline](/documentation/adrs/static-analysis-baseline.md)
+- [2025-01-09: Extension Points](/documentation/adrs/extension-points.md)

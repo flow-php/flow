@@ -37,7 +37,7 @@ in the static analysis tool configuration.
 Error suppression should be considered an edge case and should be used sparingly.
 Core contributors should review and approve all suppression annotations.
 
-## Consequences
+## Pros & Cons
 ---
 
 - The codebase will be cleaner and more maintainable.

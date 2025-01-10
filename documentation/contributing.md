@@ -6,6 +6,11 @@ Even that we are supporting 3 PHP versions at time, we are using the lowest supp
 
 For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
 
+### Before you change anything
+
+Please make sure that you are aware of our [Architecture Decision Records](/documentation/adrs.md).
+It's mandatory to follow all of them without any exceptions unless explicitly overridden by a new ADR.
+
 ### Prepare Project:
 
 ```shell
@@ -25,11 +30,6 @@ composer test
 ```shell
 composer static:analyze
 ```
-
-### Before you change anything
-
-Please make sure that you are aware of our [Architecture Decision Records](/documentation/adrs.md).
-It's mandatory to follow all of them without any exceptions unless explicitly overridden by a new ADR.
 
 ### Fixing Coding Standards
 

@@ -20,7 +20,7 @@ Date: YYYY-MM-DD
 > What is the decision being made?  
 > State it clearly and concisely.
 
-## Consequences
+## Pros & Cons
 ---
 
 `// Todo: Describe the consequences here`
