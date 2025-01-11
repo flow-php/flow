@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\StringType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
@@ -19,10 +20,7 @@ final class StringEntry implements Entry
 
     private bool $fromNull = false;
 
-    /**
-     * @var Type<string>
-     */
-    private readonly Type $type;
+    private readonly StringType $type;
 
     /**
      * @throws InvalidArgumentException

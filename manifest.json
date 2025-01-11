@@ -1,0 +1,145 @@
+{
+  "name": "Flow PHP",
+  "packages": [
+    {
+      "name" : "flow-php/etl",
+      "path": "src/core/etl",
+      "type": "core"
+    },
+    {
+      "name" : "flow-php/cli",
+      "path": "src/cli",
+      "type": "cli"
+    },
+    {
+      "name" : "flow-php/etl-adapter-avro",
+      "path": "src/adapter/etl-adapter-avro",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-chartjs",
+      "path": "src/adapter/etl-adapter-chartjs",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-csv",
+      "path": "src/adapter/etl-adapter-csv",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-doctrine",
+      "path": "src/adapter/etl-adapter-doctrine",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-elasticsearch",
+      "path": "src/adapter/etl-adapter-elasticsearch",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-google-sheet",
+      "path": "src/adapter/etl-adapter-google-sheet",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-http",
+      "path": "src/adapter/etl-adapter-http",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-json",
+      "path": "src/adapter/etl-adapter-json",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-logger",
+      "path": "src/adapter/etl-adapter-logger",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-meilisearch",
+      "path": "src/adapter/etl-adapter-meilisearch",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-parquet",
+      "path": "src/adapter/etl-adapter-parquet",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-text",
+      "path": "src/adapter/etl-adapter-text",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/etl-adapter-xml",
+      "path": "src/adapter/etl-adapter-xml",
+      "type": "adapter"
+    },
+    {
+      "name" : "flow-php/filesystem-async-aws-bridge",
+      "path": "src/bridge/filesystem/async-aws",
+      "type": "bridge"
+    },
+    {
+      "name" : "flow-php/filesystem-azure-bridge",
+      "path": "src/bridge/filesystem/azure",
+      "type": "bridge"
+    },
+    {
+      "name" : "flow-php/monolog-http-bridge",
+      "path": "src/bridge/monolog/http",
+      "type": "bridge"
+    },
+    {
+      "name" : "flow-php/symfony-http-foundation",
+      "path": "src/bridge/symfony/http-foundation",
+      "type": "bridge"
+    },
+    {
+      "name" : "flow-php/array-dot",
+      "path": "src/lib/array-dot",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/azure-sdk",
+      "path": "src/lib/azure-sdk",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/doctrine-dbal-bulk",
+      "path": "src/lib/doctrine-dbal-bulk",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/dremel",
+      "path": "src/lib/dremel",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/filesystem",
+      "path": "src/lib/filesystem",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/parquet",
+      "path": "src/lib/parquet",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/parquet-viewer",
+      "path": "src/lib/parquet-viewer",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/rdsl",
+      "path": "src/lib/rdsl",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/snappy",
+      "path": "src/lib/snappy",
+      "type": "lib"
+    }
+  ]
+}

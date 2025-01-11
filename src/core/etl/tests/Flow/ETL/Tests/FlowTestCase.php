@@ -95,4 +95,12 @@ abstract class FlowTestCase extends TestCase
 
         static::assertEquals($expectedRows, $extractedRows, $message);
     }
+
+    /**
+     * Root of the project monorepo.
+     */
+    public function repositoryRoot() : string
+    {
+        return \dirname(__DIR__, 7);
+    }
 }
