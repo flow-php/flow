@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Serializer;
 
+use Flow\Serializer\Exception\SerializationException;
+
 final readonly class Base64Serializer implements Serializer
 {
     public function __construct(private Serializer $serializer)
@@ -17,7 +19,12 @@ final readonly class Base64Serializer implements Serializer
 
     public function unserialize(string $serialized, array $classes) : object
     {
-        /** @phpstan-ignore-next-line */
-        return $this->serializer->unserialize(\base64_decode($serialized, true), $classes);
+        $decodedString = \base64_decode($serialized, true);
+
+        if ($decodedString === false) {
+            throw new SerializationException('Base64Serializer::unserialize failed to decode string');
+        }
+
+        return $this->serializer->unserialize($decodedString, $classes);
     }
 }
