@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?list<mixed>, list<mixed>>
+ * @implements Entry<?list<mixed>, ?list<mixed>>
  */
 final class ListEntry implements Entry
 {

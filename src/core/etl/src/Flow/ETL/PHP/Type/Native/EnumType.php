@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<\UnitEnum>
+ * @implements Type<?\UnitEnum>
  */
 final readonly class EnumType implements Type
 {

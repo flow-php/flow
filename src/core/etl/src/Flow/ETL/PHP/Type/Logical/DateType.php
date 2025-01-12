@@ -9,7 +9,7 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<\DateTimeInterface>
+ * @implements Type<?\DateTimeInterface>
  */
 final readonly class DateType implements Type
 {

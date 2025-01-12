@@ -54,7 +54,7 @@ final class Count implements AggregatingFunction, WindowFunction
     }
 
     /**
-     * @return Entry<?int, int>
+     * @return Entry<?int, ?int>
      */
     public function result() : Entry
     {

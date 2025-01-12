@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<callable>
+ * @implements Type<?callable>
  */
 final readonly class CallableType implements Type
 {

@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<integer>
+ * @implements Type<?integer>
  */
 final readonly class IntegerType implements Type
 {

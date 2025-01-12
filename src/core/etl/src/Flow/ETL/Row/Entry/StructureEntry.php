@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?array<string, mixed>, array<string, mixed>>
+ * @implements Entry<?array<string, mixed>, ?array<string, mixed>>
  */
 final class StructureEntry implements Entry
 {

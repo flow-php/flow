@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<boolean>
+ * @implements Type<?boolean>
  */
 final readonly class BooleanType implements Type
 {

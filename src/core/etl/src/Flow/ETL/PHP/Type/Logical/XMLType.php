@@ -9,7 +9,7 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<\DOMDocument>
+ * @implements Type<?\DOMDocument>
  */
 final readonly class XMLType implements Type
 {

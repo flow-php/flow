@@ -9,7 +9,7 @@ use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<array<array-key, mixed>>
+ * @implements Type<?array<array-key, mixed>>
  */
 final readonly class MapType implements Type
 {

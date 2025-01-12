@@ -10,7 +10,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?\UnitEnum, \UnitEnum>
+ * @implements Entry<?\UnitEnum, ?\UnitEnum>
  */
 final class EnumEntry implements Entry
 {

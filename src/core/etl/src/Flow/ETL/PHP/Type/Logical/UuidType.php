@@ -10,7 +10,7 @@ use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\PHP\Value\Uuid;
 
 /**
- * @implements Type<Uuid>
+ * @implements Type<?Uuid>
  */
 final readonly class UuidType implements Type
 {

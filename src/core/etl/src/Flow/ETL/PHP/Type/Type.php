@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type;
 
 /**
- * @template-covariant  TType
+ * @template-covariant T of mixed
  */
 interface Type
 {
     /**
-     * @return Type<TType>
+     * @return Type<T>
      */
     public static function fromArray(array $data) : self;
 
@@ -27,7 +27,7 @@ interface Type
     public function isValid(mixed $value) : bool;
 
     /**
-     * @return Type<TType>
+     * @return Type<T>
      */
     public function makeNullable(bool $nullable) : self;
 

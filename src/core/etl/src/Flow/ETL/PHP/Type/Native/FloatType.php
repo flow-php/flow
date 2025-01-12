@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<float>
+ * @implements Type<?float>
  */
 final readonly class FloatType implements Type
 {

@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?array<array-key, mixed>, array<array-key, mixed>>
+ * @implements Entry<?array<array-key, mixed>, ?array<array-key, mixed>>
  */
 final class MapEntry implements Entry
 {

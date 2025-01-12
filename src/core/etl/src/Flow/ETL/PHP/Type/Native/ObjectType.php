@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<object>
+ * @implements Type<?object>
  */
 final readonly class ObjectType implements Type
 {

@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<resource>
+ * @implements Type<?resource>
  */
 final readonly class ResourceType implements Type
 {
