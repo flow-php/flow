@@ -11,7 +11,7 @@
         "psr/http-client": "^1.0",
         "symfony/http-kernel": "^6.4",
         "symfony/http-foundation": "^6.4",
-        "symfony/routing": "^6.4",
+        "symfony/routing": "^7.2",
         "symfony/framework-bundle": "^6.4",
         "symfony/config": "^6.4",
         "symfony/twig-bundle": "^6.4",
