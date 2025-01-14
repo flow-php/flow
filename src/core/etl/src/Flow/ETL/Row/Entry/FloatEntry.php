@@ -35,7 +35,7 @@ final class FloatEntry implements Entry
             throw InvalidArgumentException::because('Precision must be greater or equal to 0 and less than 15');
         }
 
-        $this->value = $value ? round($value, $this->precision) : null;
+        $this->value = $value !== null ? round($value, $this->precision) : null;
         $this->type = type_float($this->value === null, $this->precision);
     }
 

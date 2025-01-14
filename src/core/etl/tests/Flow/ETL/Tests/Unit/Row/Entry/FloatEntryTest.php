@@ -21,7 +21,7 @@ final class FloatEntryTest extends FlowTestCase
         yield 'different names characters and different values with high precision' => [false, float_entry('NAME', 1.205502), float_entry('name', 1.205501)];
     }
 
-    public function test_accessing_precission() : void
+    public function test_accessing_precision() : void
     {
         self::assertSame(6, float_entry('name', 1.0)->precision);
         self::assertSame(3, float_entry('name', 1.0, 3)->precision);
@@ -30,6 +30,7 @@ final class FloatEntryTest extends FlowTestCase
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame('0', (float_entry('0', 0))->name());
+        self::assertSame(0.0, (float_entry('0', 0))->value());
     }
 
     #[DataProvider('is_equal_data_provider')]
