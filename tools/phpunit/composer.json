@@ -2,7 +2,7 @@
   "name": "flow-php/flow-tools",
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
-    "phpunit/phpunit": "^10"
+    "phpunit/phpunit": "^11"
   },
   "config": {
     "allow-plugins": false
