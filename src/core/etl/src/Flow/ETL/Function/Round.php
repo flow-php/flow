@@ -15,7 +15,7 @@ final class Round extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?float
+    public function eval(Row $row) : int|float|null
     {
         $value = (new Parameter($this->value))->asNumber($row);
         $precision = (new Parameter($this->precision))->asInt($row);
@@ -29,6 +29,6 @@ final class Round extends ScalarFunctionChain
             $mode = 1;
         }
 
-        return \round($value, $precision, $mode);
+        return $precision === 0 ? (int) \round($value, $precision, $mode) : \round($value, $precision, $mode);
     }
 }
