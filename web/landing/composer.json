@@ -3,6 +3,7 @@
     "description": "Flow PHP ETL - Web",
     "type": "project",
     "require": {
+        "php": "8.2.*",
         "flow-php/etl": "1.x-dev",
         "flow-php/etl-adapter-http": "1.x-dev",
         "nyholm/psr7": "^1.8",
@@ -12,6 +13,7 @@
         "symfony/http-foundation": "^6.4",
         "symfony/routing": "^6.4",
         "symfony/framework-bundle": "^6.4",
+        "symfony/config": "^6.4",
         "symfony/twig-bundle": "^6.4",
         "symfony/asset-mapper": "^6.4",
         "symfony/asset": "^6.4",
