@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "88d7bf375670c5e517df59640b169e48",
+    "content-hash": "16f21776f97c2c4ab006d565f4272410",
     "packages": [
         {
             "name": "aeon-php/calendar",
@@ -6188,16 +6188,16 @@
         },
         {
             "name": "symfonycasts/tailwind-bundle",
-            "version": "v0.5.3",
+            "version": "v0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SymfonyCasts/tailwind-bundle.git",
-                "reference": "61d6d35c860f61e0d17adbee2f21c0f95ba9172d"
+                "reference": "28db7cfe23758cffc79f25a7c75cdb2fca52e9d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/61d6d35c860f61e0d17adbee2f21c0f95ba9172d",
-                "reference": "61d6d35c860f61e0d17adbee2f21c0f95ba9172d",
+                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/28db7cfe23758cffc79f25a7c75cdb2fca52e9d9",
+                "reference": "28db7cfe23758cffc79f25a7c75cdb2fca52e9d9",
                 "shasum": ""
             },
             "require": {
@@ -6209,10 +6209,10 @@
                 "symfony/process": "^5.4|^6.3|^7.0"
             },
             "require-dev": {
-                "phpstan/phpstan": "1.11.x-dev",
+                "phpunit/phpunit": "^9.6",
                 "symfony/filesystem": "^6.3|^7.0",
                 "symfony/framework-bundle": "^6.3|^7.0",
-                "symfony/phpunit-bridge": "^6.3|^7.0"
+                "symfony/phpunit-bridge": "^6.3.9|^7.0"
             },
             "type": "library",
             "autoload": {
@@ -6237,9 +6237,9 @@
             ],
             "support": {
                 "issues": "https://github.com/SymfonyCasts/tailwind-bundle/issues",
-                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.5.3"
+                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.6.1"
             },
-            "time": "2024-05-24T13:08:53+00:00"
+            "time": "2024-11-06T18:41:22+00:00"
         }
     ],
     "aliases": [],
@@ -6254,6 +6254,6 @@
     "platform": {
         "php": "8.2.*"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
