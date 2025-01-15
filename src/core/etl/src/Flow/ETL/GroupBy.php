@@ -135,10 +135,6 @@ final class GroupBy
 
     public function pivot(Reference $ref) : void
     {
-        //        if ($this->refs->count() !== 1) {
-        //            throw new RuntimeException('Pivot requires exactly one entry reference in group by, given: ' . $this->refs->count() . '');
-        //        }
-
         $this->pivot = $ref;
     }
 
