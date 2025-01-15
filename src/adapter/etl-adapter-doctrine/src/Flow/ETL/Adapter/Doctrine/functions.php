@@ -8,10 +8,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Doctrine\DBAL\{ArrayParameterType as DbalArrayType, Connection, ParameterType as DbalParameterType};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Attribute\DocumentationDSL,
-    Attribute\Module,
-    Attribute\Type as DSLType
-};
+use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type as DSLType};
 
 /**
  * @param array<string, mixed>|Connection $connection
@@ -176,6 +173,7 @@ function dbal_from_query(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
+#[DocumentationExample(topic: 'data_writing', example: 'database_upsert')]
 function to_dbal_table_insert(
     array|Connection $connection,
     string $table,
