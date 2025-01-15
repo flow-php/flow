@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, null_entry, ref, row, rows, str_entry, sum};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Exception\{InvalidArgumentException};
 use Flow\ETL\{GroupBy, Tests\FlowTestCase};
 
 final class GroupByTest extends FlowTestCase
@@ -117,16 +117,5 @@ final class GroupByTest extends FlowTestCase
             ),
             $group->result(flow_context(config()))->sortBy(ref('product'))
         );
-    }
-
-    public function test_pivot_with_more_than_one_group_by_entry() : void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Pivot requires exactly one entry reference in group by, given: 2');
-
-        $group = (new GroupBy('type', 'id'));
-
-        $group->aggregate(sum(ref('id')));
-        $group->pivot(ref('id'));
     }
 }

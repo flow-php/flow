@@ -386,6 +386,98 @@ final class GroupByTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_pivot_with_multiple_group_by_column() : void
+    {
+        $dataset1 = [
+            ['date' => '2023-11-01', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 5],
+            ['date' => '2023-11-01', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 4],
+            ['date' => '2023-11-02', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 3],
+            ['date' => '2023-11-02', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 6],
+        ];
+
+        $dataset2 = [
+            ['date' => '2023-11-03', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 2],
+            ['date' => '2023-11-03', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 7],
+            ['date' => '2023-11-04', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 3],
+            ['date' => '2023-11-04', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 5],
+            ['date' => '2023-11-05', 'type' => 'admin', 'user' => 'norberttech', 'contributions' => 7],
+            ['date' => '2023-11-05', 'type' => 'contributor', 'user' => 'stloyd', 'contributions' => 11],
+        ];
+
+        $rows = df()
+            ->read(from_all(from_array($dataset1), from_array($dataset2)))
+            ->groupBy(ref('date'), ref('type'))
+            ->pivot(ref('user'))
+            ->aggregate(sum(ref('contributions')))
+            ->fetch();
+
+        self::assertSame(
+            [
+                [
+                    'date' => '2023-11-01',
+                    'type' => 'admin',
+                    'norberttech' => 5,
+                    'stloyd' => null,
+                ],
+                [
+                    'date' => '2023-11-01',
+                    'type' => 'contributor',
+                    'stloyd' => 4,
+                    'norberttech' => null,
+                ],
+                [
+                    'date' => '2023-11-02',
+                    'type' => 'admin',
+                    'norberttech' => 3,
+                    'stloyd' => null,
+                ],
+                [
+                    'date' => '2023-11-02',
+                    'type' => 'contributor',
+                    'stloyd' => 6,
+                    'norberttech' => null,
+                ],
+                [
+                    'date' => '2023-11-03',
+                    'type' => 'admin',
+                    'norberttech' => 2,
+                    'stloyd' => null,
+                ],
+                [
+                    'date' => '2023-11-03',
+                    'type' => 'contributor',
+                    'stloyd' => 7,
+                    'norberttech' => null,
+                ],
+                [
+                    'date' => '2023-11-04',
+                    'type' => 'admin',
+                    'norberttech' => 3,
+                    'stloyd' => null,
+                ],
+                [
+                    'date' => '2023-11-04',
+                    'type' => 'contributor',
+                    'stloyd' => 5,
+                    'norberttech' => null,
+                ],
+                [
+                    'date' => '2023-11-05',
+                    'type' => 'admin',
+                    'norberttech' => 7,
+                    'stloyd' => null,
+                ],
+                [
+                    'date' => '2023-11-05',
+                    'type' => 'contributor',
+                    'stloyd' => 11,
+                    'norberttech' => null,
+                ],
+            ],
+            $rows->toArray()
+        );
+    }
+
     public function test_standalone_avg_aggregation() : void
     {
         $rows = df()

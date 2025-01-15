@@ -69,11 +69,22 @@ final class GroupBy
             $indexRef = $this->refs->first();
 
             foreach ($rows as $row) {
-                $indexValue = $row->valueOf($indexRef);
+                $values = [];
+
+                foreach ($this->refs as $ref) {
+                    $values[$ref->name()] = $row->valueOf($ref);
+                }
+
+                $indexValue = $this->hash($values);
+
                 $pivotValue = $row->valueOf($this->pivot);
 
                 if (!\array_key_exists($indexValue, $this->pivotedTable)) {
                     $this->pivotedTable[$indexValue] = [];
+                }
+
+                foreach ($this->refs as $ref) {
+                    $this->pivotedTable[$indexValue][$ref->name()] = $row->valueOf($ref);
                 }
 
                 if ($pivotValue === null) {
@@ -124,9 +135,9 @@ final class GroupBy
 
     public function pivot(Reference $ref) : void
     {
-        if ($this->refs->count() !== 1) {
-            throw new RuntimeException('Pivot requires exactly one entry reference in group by, given: ' . $this->refs->count() . '');
-        }
+        //        if ($this->refs->count() !== 1) {
+        //            throw new RuntimeException('Pivot requires exactly one entry reference in group by, given: ' . $this->refs->count() . '');
+        //        }
 
         $this->pivot = $ref;
     }
@@ -140,7 +151,9 @@ final class GroupBy
                 $row = [$this->refs->first()->name() => $index];
 
                 foreach ($columns as $rowIndex => $values) {
-                    $row[$rowIndex] = $values->result()->value();
+                    $row[$rowIndex] = $values instanceof AggregatingFunction
+                        ? $values->result()->value()
+                        : $values;
                 }
 
                 foreach ($this->pivotColumns as $column) {
