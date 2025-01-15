@@ -66,8 +66,6 @@ final class GroupBy
 
             $this->pivotColumns = \array_values(\array_filter(\array_unique($this->pivotColumns)));
 
-            $indexRef = $this->refs->first();
-
             foreach ($rows as $row) {
                 $values = [];
 
