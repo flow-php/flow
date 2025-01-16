@@ -745,7 +745,7 @@ final class DataFrame
     /**
      * @trigger
      *
-     * @param null|callable(Rows $rows): void $callback
+     * @param null|callable(Rows $rows, FlowContext $context): void $callback
      * @param bool $analyze - when set to true, run will return Report
      */
     #[DSLMethod(exclude: true)]
@@ -756,9 +756,13 @@ final class DataFrame
         $totalRows = 0;
         $schema = new Schema();
 
+        if ($analyze) {
+            $startedAt = $this->context->config->clock()->now();
+        }
+
         foreach ($clone->pipeline->process($clone->context) as $rows) {
             if ($callback !== null) {
-                $callback($rows);
+                $callback($rows, $clone->context);
             }
 
             if ($analyze) {
@@ -768,7 +772,9 @@ final class DataFrame
         }
 
         if ($analyze) {
-            return new Report($schema, new Statistics($totalRows));
+            $endedAt = $this->context->config->clock()->now();
+
+            return new Report($schema, new Statistics($totalRows, new Statistics\ExecutionTime($startedAt, $endedAt)));
         }
 
         return null;

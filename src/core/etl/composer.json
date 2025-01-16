@@ -12,6 +12,7 @@
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
         "ext-json": "*",
         "ext-mbstring": "*",
+        "psr/clock": "^1.0",
         "flow-php/array-dot": "^0.10.0 || 1.x-dev",
         "flow-php/rdsl": "^0.10.0 || 1.x-dev",
         "flow-php/filesystem": "^0.10.0 || 1.x-dev",

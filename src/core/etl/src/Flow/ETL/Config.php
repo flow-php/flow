@@ -13,6 +13,7 @@ use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FilesystemTable};
 use Flow\Serializer\Serializer;
+use Psr\Clock\ClockInterface;
 
 /**
  * Immutable configuration that can be used to initialize many contexts.
@@ -33,6 +34,7 @@ final readonly class Config
     public function __construct(
         private string $id,
         private Serializer $serializer,
+        private ClockInterface $clock,
         private FilesystemTable $filesystemTable,
         private FilesystemStreams $filesystemStreams,
         private Optimizer $optimizer,
@@ -57,6 +59,11 @@ final readonly class Config
     public function caster() : Caster
     {
         return $this->caster;
+    }
+
+    public function clock() : ClockInterface
+    {
+        return $this->clock;
     }
 
     public function entryFactory() : EntryFactory

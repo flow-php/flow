@@ -1395,16 +1395,16 @@
         },
         {
             "name": "humbug/php-scoper",
-            "version": "0.18.15",
+            "version": "0.18.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/humbug/php-scoper.git",
-                "reference": "79b2b4e0fbc1d1ef6ae99c4e078137b42bd43d19"
+                "reference": "aff0ef968d8a07ea5be8a2fe797dbf4927e750af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/humbug/php-scoper/zipball/79b2b4e0fbc1d1ef6ae99c4e078137b42bd43d19",
-                "reference": "79b2b4e0fbc1d1ef6ae99c4e078137b42bd43d19",
+                "url": "https://api.github.com/repos/humbug/php-scoper/zipball/aff0ef968d8a07ea5be8a2fe797dbf4927e750af",
+                "reference": "aff0ef968d8a07ea5be8a2fe797dbf4927e750af",
                 "shasum": ""
             },
             "require": {
@@ -1425,7 +1425,7 @@
                 "fidry/makefile": "^1.0",
                 "humbug/box": "^4.6.2",
                 "phpspec/prophecy-phpunit": "^2.0",
-                "phpunit/phpunit": "^10.0",
+                "phpunit/phpunit": "^10.0 || ^11.0",
                 "symfony/yaml": "^6.4 || ^7.0"
             },
             "bin": [
@@ -1473,9 +1473,9 @@
             "description": "Prefixes all PHP namespaces in a file or directory.",
             "support": {
                 "issues": "https://github.com/humbug/php-scoper/issues",
-                "source": "https://github.com/humbug/php-scoper/tree/0.18.15"
+                "source": "https://github.com/humbug/php-scoper/tree/0.18.16"
             },
-            "time": "2024-09-02T13:35:10+00:00"
+            "time": "2025-01-12T15:48:25+00:00"
         },
         {
             "name": "jetbrains/phpstorm-stubs",

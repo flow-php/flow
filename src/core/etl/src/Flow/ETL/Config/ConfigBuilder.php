@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Config;
 
 use function Flow\Filesystem\DSL\fstab;
+use Flow\Clock\SystemClock;
 use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Filesystem\FilesystemStreams;
@@ -15,6 +16,7 @@ use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\{Cache, Config, NativePHPRandomValueGenerator, RandomValueGenerator};
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
+use Psr\Clock\ClockInterface;
 
 final class ConfigBuilder
 {
@@ -23,6 +25,8 @@ final class ConfigBuilder
     public readonly SortConfigBuilder $sort;
 
     private ?Caster $caster;
+
+    private ?ClockInterface $clock;
 
     private ?FilesystemTable $fstab;
 
@@ -44,6 +48,7 @@ final class ConfigBuilder
         $this->putInputIntoRows = false;
         $this->optimizer = null;
         $this->caster = null;
+        $this->clock = null;
         $this->cache = new CacheConfigBuilder();
         $this->sort = new SortConfigBuilder();
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
@@ -54,7 +59,7 @@ final class ConfigBuilder
         $this->id ??= 'flow_php' . $this->randomValueGenerator->string(32);
         $entryFactory = new NativeEntryFactory();
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
-
+        $this->clock ??= SystemClock::utc();
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
             new Optimizer\BatchSizeOptimization(batchSize: 1000)
@@ -65,6 +70,7 @@ final class ConfigBuilder
         return new Config(
             $this->id,
             $this->serializer,
+            $this->clock,
             $this->fstab(),
             new FilesystemStreams($this->fstab()),
             $this->optimizer,
@@ -79,6 +85,13 @@ final class ConfigBuilder
     public function cache(Cache $cache) : self
     {
         $this->cache->cache($cache);
+
+        return $this;
+    }
+
+    public function clock(ClockInterface $clocks) : self
+    {
+        $this->clock = $clocks;
 
         return $this;
     }
