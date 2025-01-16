@@ -6,22 +6,32 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class All extends ScalarFunctionChain implements CompositeScalarFunction
+final readonly class All implements ScalarFunction
 {
     /**
      * @var array<ScalarFunction>
      */
-    private readonly array $refs;
+    private array $functions;
 
     public function __construct(
-        ScalarFunction ...$refs,
+        ScalarFunction ...$functions,
     ) {
-        $this->refs = $refs;
+        $this->functions = $functions;
+    }
+
+    public function and(ScalarFunction $scalarFunction) : self
+    {
+        return new self(...$this->functions, ...[$scalarFunction]);
+    }
+
+    public function andNot(ScalarFunction $scalarFunction) : self
+    {
+        return new self(...$this->functions, ...[new Not($scalarFunction)]);
     }
 
     public function eval(Row $row) : mixed
     {
-        foreach ($this->refs as $ref) {
+        foreach ($this->functions as $ref) {
             if (!$ref->eval($row)) {
                 return false;
             }
@@ -30,8 +40,13 @@ final class All extends ScalarFunctionChain implements CompositeScalarFunction
         return true;
     }
 
-    public function functions() : array
+    public function or(ScalarFunction $scalarFunction) : Any
     {
-        return $this->refs;
+        return new Any(...$this->functions, ...[$scalarFunction]);
+    }
+
+    public function orNot(ScalarFunction $scalarFunction) : Any
+    {
+        return new Any(...$this->functions, ...[new Not($scalarFunction)]);
     }
 }

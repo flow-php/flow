@@ -15,6 +15,16 @@ use Flow\ETL\PHP\Type\Type;
 
 abstract class ScalarFunctionChain implements ScalarFunction
 {
+    public function and(ScalarFunction $function) : All
+    {
+        return new All($this, $function);
+    }
+
+    public function andNot(ScalarFunction $function) : All
+    {
+        return new All($this, new Not($function));
+    }
+
     public function arrayGet(ScalarFunction|string $path) : self
     {
         return new ArrayGet($this, $path);
@@ -317,6 +327,16 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function onEach(ScalarFunction $function, ScalarFunction|bool $preserveKeys = true) : OnEach
     {
         return new OnEach($this, $function, $preserveKeys);
+    }
+
+    public function or(ScalarFunction $function) : Any
+    {
+        return new Any($this, $function);
+    }
+
+    public function orNot(ScalarFunction $function) : Any
+    {
+        return new Any($this, new Not($function));
     }
 
     public function plus(ScalarFunction|int|float $ref) : self

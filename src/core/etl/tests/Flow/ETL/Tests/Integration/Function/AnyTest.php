@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{any, from_array, lit, ref, to_memory, when};
+use function Flow\ETL\DSL\{from_array, lit, ref, to_memory, when};
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
@@ -27,7 +27,7 @@ final class AnyTest extends FlowTestCase
             ->withEntry(
                 'result',
                 when(
-                    any(ref('id')->isEven(), ref('array')->exists()),
+                    ref('id')->isEven()->or(ref('array')->exists()),
                     lit('found'),
                     lit('not found')
                 )
