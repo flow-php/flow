@@ -24,7 +24,7 @@
         "symfony/stimulus-bundle": "^2.14",
         "monolog/monolog": "^3.5",
         "symfony/monolog-bundle": "^3.10",
-        "coduo/php-humanizer": "^4.0",
+        "coduo/php-humanizer": "^5.0",
         "twig/markdown-extra": "^3.11",
         "twig/extra-bundle": "^3.8",
         "league/commonmark": "^2.4",
