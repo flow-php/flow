@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{df, from_rows, int_entry, row, rows, str_entry};
 use Flow\ETL\Join\Expression;
-use Flow\ETL\{DataFrame, DataFrameFactory, Flow, Loader, Rows, Tests\FlowTestCase};
+use Flow\ETL\{DataFrame, DataFrameFactory, Loader, Rows, Tests\FlowTestCase};
 
 final class JoinEachTest extends FlowTestCase
 {
@@ -34,7 +35,7 @@ final class JoinEachTest extends FlowTestCase
                 new class implements DataFrameFactory {
                     public function from(Rows $rows) : DataFrame
                     {
-                        return (new Flow())->process(
+                        return data_frame()->process(
                             rows(
                                 row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                                 row(str_entry('code', 'US'), str_entry('name', 'United States')),

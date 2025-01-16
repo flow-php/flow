@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_table_update};
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{from_array, ref};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Flow;
 
 final class DbalLoaderTest extends IntegrationTestCase
 {
@@ -70,7 +70,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $loader = to_dbal_table_insert($this->connectionParams(), $table);
 
-        (new Flow())
+        (data_frame())
             ->read(from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -98,7 +98,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $loader = to_dbal_table_insert($this->connectionParams(), $table);
 
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -128,7 +128,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $loader = to_dbal_table_insert($this->pgsqlDatabaseContext->connection(), $table);
 
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -155,7 +155,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -180,7 +180,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ],
         ))
             ->setPrimaryKey(['id']));
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -191,7 +191,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->load(to_dbal_table_insert($this->connectionParams(), $table))
             ->run();
 
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array([
                     ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
@@ -228,7 +228,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
 
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -239,7 +239,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->load(to_dbal_table_insert($this->connectionParams(), $table))
             ->run();
 
-        (new Flow())->extract(
+        (data_frame())->extract(
             from_array([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
@@ -276,7 +276,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         $insertLoader = to_dbal_table_insert($this->connectionParams(), $table);
         $updateLoader = to_dbal_table_update($this->connectionParams(), $table, ['primary_key_columns' => ['id'], ['update_columns' => ['name']]]);
 
-        (new Flow())->extract(
+        (data_frame())->extract(
             from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -286,7 +286,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ->load($insertLoader)
         ->run();
 
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array([
                     ['id' => 1, 'name' => 'Changed Name One', 'description' => 'Description One'],

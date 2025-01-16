@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{average,
     bool_entry,
     compare_entries_by_name_desc,
@@ -27,7 +28,6 @@ use Flow\ETL\Row\Schema\SelectiveValidator;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\{DataFrame,
     Extractor,
-    Flow,
     FlowContext,
     Loader,
     Row,
@@ -264,7 +264,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_map() : void
     {
-        $rows = (new Flow())->extract(
+        $rows = (data_frame())->extract(
             new class implements Extractor {
                 /**
                  * @param FlowContext $context
@@ -354,7 +354,7 @@ final class DataFrameTest extends FlowTestCase
             }
         };
 
-        (new Flow())->read($extractor)
+        (data_frame())->read($extractor)
             ->onError(new IgnoreError())
             ->rows($addStampStringEntry)
             ->rows(new class implements Transformer {
@@ -392,7 +392,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_process_constructor() : void
     {
-        $collectedRows = (new Flow())->process(
+        $collectedRows = (data_frame())->process(
             $rows = \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)))
         )
             ->fetch();
@@ -402,7 +402,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_select() : void
     {
-        $rows = (new Flow())->process(
+        $rows = (data_frame())->process(
             \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )
             ->select('name', 'id')
@@ -416,7 +416,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_selective_validation_against_schema() : void
     {
-        $rows = (new Flow())->process(
+        $rows = (data_frame())->process(
             \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )->validate(
             schema(integer_schema('id', $nullable = false)),
@@ -431,7 +431,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_strict_validation_against_schema() : void
     {
-        $rows = (new Flow())->process(
+        $rows = (data_frame())->process(
             \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
         )->validate(
             schema(integer_schema('id', $nullable = false), string_schema('name', $nullable = true), bool_schema('active', $nullable = false))
@@ -445,7 +445,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_until() : void
     {
-        $rows = (new Flow())
+        $rows = (data_frame())
             ->read(from_all(
                 from_array([
                     ['id' => 1],
@@ -478,7 +478,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_void() : void
     {
-        $rows = (new Flow())->process(
+        $rows = (data_frame())->process(
             \Flow\ETL\DSL\rows(\Flow\ETL\DSL\row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)), \Flow\ETL\DSL\row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)), \Flow\ETL\DSL\row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)), \Flow\ETL\DSL\row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)), \Flow\ETL\DSL\row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)), \Flow\ETL\DSL\row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)), \Flow\ETL\DSL\row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)), \Flow\ETL\DSL\row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)))
         )
             ->rename('country', 'country_code')
@@ -495,7 +495,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_with_batch_size() : void
     {
-        (new Flow())->extract(
+        (data_frame())->extract(
             new class implements Extractor {
                 /**
                  * @param FlowContext $context
@@ -530,7 +530,7 @@ final class DataFrameTest extends FlowTestCase
 
     public function test_with_collecting() : void
     {
-        (new Flow())->extract(
+        (data_frame())->extract(
             new class implements Extractor {
                 /**
                  * @param FlowContext $context

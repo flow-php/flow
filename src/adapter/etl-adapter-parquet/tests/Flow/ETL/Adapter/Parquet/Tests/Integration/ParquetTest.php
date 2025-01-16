@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{df, from_array, json_schema, schema, str_schema};
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Flow, Tests\FlowTestCase};
+use Flow\ETL\{Tests\FlowTestCase};
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Reader;
 use Ramsey\Uuid\Uuid;
@@ -27,7 +28,7 @@ final class ParquetTest extends FlowTestCase
 
         self::assertEquals(
             10,
-            (new Flow())
+            (data_frame())
                 ->read(from_parquet($path))
                 ->count()
         );

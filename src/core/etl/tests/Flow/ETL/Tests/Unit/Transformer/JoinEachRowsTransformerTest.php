@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, row, rows, str_entry};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
-use Flow\ETL\{DataFrame, DataFrameFactory, Flow, Rows, Tests\FlowTestCase};
+use Flow\ETL\{DataFrame, DataFrameFactory, Rows, Tests\FlowTestCase};
 
 final class JoinEachRowsTransformerTest extends FlowTestCase
 {
@@ -23,7 +24,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
         $right = new class implements DataFrameFactory {
             public function from(Rows $rows) : DataFrame
             {
-                return (new Flow())->process(
+                return data_frame()->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),
@@ -54,7 +55,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
         $right = new class implements DataFrameFactory {
             public function from(Rows $rows) : DataFrame
             {
-                return (new Flow())->process(
+                return data_frame()->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),
@@ -86,7 +87,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
         $right = new class implements DataFrameFactory {
             public function from(Rows $rows) : DataFrame
             {
-                return (new Flow())->process(
+                return data_frame()->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\Adapter\Meilisearch\{from_meilisearch, meilisearch_hits_to_rows, to_meilisearch_bulk_index};
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\{boolean_entry, integer_entry};
+use function Flow\ETL\DSL\{data_frame, rows};
 use function Flow\ETL\DSL\{from_array, string_entry};
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Adapter\Meilisearch\Tests\Double\Spy\HttpClientSpy;
-use Flow\ETL\{Flow, Row, Tests\FlowTestCase};
+use Flow\ETL\{Row, Tests\FlowTestCase};
 
 final class MailiSearchTest extends FlowTestCase
 {
@@ -37,7 +37,7 @@ final class MailiSearchTest extends FlowTestCase
 
     public function test_batch_size_when_its_not_explicitly_set() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(from_array([
                 ['id' => 1, 'text' => 'lorem ipsum'],
                 ['id' => 2, 'text' => 'lorem ipsum'],
@@ -78,7 +78,7 @@ final class MailiSearchTest extends FlowTestCase
             'limit' => $limit = 100,
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::SOURCE_INDEX))
             ->rows(meilisearch_hits_to_rows())
             ->limit($limit)

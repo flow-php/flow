@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Elasticsearch;
 
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\{DocumentDataSource, ElasticsearchExtractor, ElasticsearchLoader, HitsIntoRowsTransformer};
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\{EntryIdFactory, HashIdFactory};
-use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
+use Flow\ETL\Attribute\{DocumentationDSL, DocumentationExample, Module, Type};
 
 /**
  * https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.
@@ -29,6 +29,7 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
  * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html - @deprecated use withParameters method instead
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::LOADER)]
+#[DocumentationExample(topic: 'data_writing', example: 'elasticsearch')]
 function to_es_bulk_index(
     array $config,
     string $index,
@@ -39,6 +40,7 @@ function to_es_bulk_index(
 }
 
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::HELPER)]
+#[DocumentationExample(topic: 'data_writing', example: 'elasticsearch')]
 function entry_id_factory(string $entry_name) : IdFactory
 {
     return new EntryIdFactory($entry_name);
@@ -86,6 +88,7 @@ function to_es_bulk_update(
  * @return HitsIntoRowsTransformer
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::HELPER)]
+#[DocumentationExample(topic: 'data_writing', example: 'elasticsearch')]
 function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source) : HitsIntoRowsTransformer
 {
     return new HitsIntoRowsTransformer($source);
@@ -114,6 +117,7 @@ function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source
  * @param ?array<mixed> $pit_params - when used extractor will create point in time to stabilize search results. Point in time is automatically closed when last element is extracted. https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html - @deprecated use withPointInTime method instead
  */
 #[DocumentationDSL(module: Module::ELASTIC_SEARCH, type: Type::EXTRACTOR)]
+#[DocumentationExample(topic: 'data_reading', example: 'elasticsearch')]
 function from_es(array $config, array $parameters, ?array $pit_params = null) : ElasticsearchExtractor
 {
     $extractor = new ElasticsearchExtractor($config, $parameters);

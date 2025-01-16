@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
-use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\{config, data_frame};
 use function Flow\ETL\DSL\{flow_context, type_string};
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Flow, PHP\Type\Caster, Tests\FlowIntegrationTestCase};
+use Flow\ETL\{PHP\Type\Caster, Tests\FlowIntegrationTestCase};
 use Flow\Filesystem\Path;
 
 final class XMLReaderExtractorTest extends FlowIntegrationTestCase
@@ -28,7 +28,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
     {
         self::assertEquals(
             5,
-            (new Flow())
+            (data_frame())
                 ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/deepest_items_flat.xml'), 'root/items/item/deep'))
                 ->fetch()
                 ->count()
@@ -42,7 +42,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 
         self::assertEquals(
             1,
-            (new Flow())
+            (data_frame())
                 ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items.xml')))
                 ->fetch()
                 ->count()
@@ -58,7 +58,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 </item>
 XML,
             Caster::default()->to(type_string())->value(
-                (new Flow())
+                (data_frame())
                     ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
                     ->fetch()[0]
                     ->valueOf('node')
@@ -72,7 +72,7 @@ XML,
 </item>
 XML,
             Caster::default()->to(type_string())->value(
-                (new Flow())
+                (data_frame())
                     ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
                     ->fetch()[4]
                     ->valueOf('node')
@@ -103,7 +103,7 @@ XML,
 </items>
 XML,
             Caster::default()->to(type_string())->value(
-                (new Flow())
+                (data_frame())
                     ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
                     ->fetch()[0]->valueOf('node')
             )

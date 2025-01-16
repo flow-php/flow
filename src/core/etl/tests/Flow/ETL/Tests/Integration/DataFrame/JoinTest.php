@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{datetime_entry, df, from_rows, int_entry, row, rows, str_entry};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\ETL\{Flow, Join\Join, Loader};
+use Flow\ETL\{Join\Join, Loader};
 
 final class JoinTest extends FlowIntegrationTestCase
 {
@@ -28,7 +29,7 @@ final class JoinTest extends FlowIntegrationTestCase
                 )
             ))
             ->join(
-                (new Flow())->process(
+                (data_frame())->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),
@@ -73,7 +74,7 @@ final class JoinTest extends FlowIntegrationTestCase
                 )
             ))
             ->join(
-                (new Flow())->process(
+                (data_frame())->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),
@@ -117,7 +118,7 @@ final class JoinTest extends FlowIntegrationTestCase
                 )
             ))
             ->join(
-                (new Flow())->process(
+                (data_frame())->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),
@@ -161,7 +162,7 @@ final class JoinTest extends FlowIntegrationTestCase
                 )
             ))
             ->join(
-                (new Flow())->process(
+                (data_frame())->process(
                     rows(
                         row(datetime_entry('date', new \DateTimeImmutable('2024-01-01 00:00:00')), int_entry('events', 1)),
                         row(datetime_entry('date', new \DateTimeImmutable('2024-01-05 00:00:00')), int_entry('events', 5)),
@@ -209,7 +210,7 @@ final class JoinTest extends FlowIntegrationTestCase
                 )
             ))
             ->join(
-                (new Flow())->process(
+                (data_frame())->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),
@@ -253,7 +254,7 @@ final class JoinTest extends FlowIntegrationTestCase
                 )
             ))
             ->join(
-                (new Flow())->process(
+                (data_frame())->process(
                     rows(
                         row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
                         row(str_entry('code', 'US'), str_entry('name', 'United States')),

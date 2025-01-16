@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{from_array, ref, to_memory};
-use Flow\ETL\Flow;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
@@ -22,7 +22,7 @@ final class HashTest extends FlowTestCase
     #[DataProvider('provideValues')]
     public function test_hash_on_given_value(mixed $value, string $expected) : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [
@@ -44,7 +44,7 @@ final class HashTest extends FlowTestCase
 
     public function test_hash_with_different_algorithm() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [

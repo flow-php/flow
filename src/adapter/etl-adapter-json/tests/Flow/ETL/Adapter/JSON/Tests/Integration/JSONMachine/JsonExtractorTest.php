@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use function Flow\ETL\Adapter\JSON\{from_json};
-use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\{data_frame, flow_context};
 use function Flow\ETL\DSL\{df, print_schema};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Config, Flow, Row, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\Filesystem\Path;
 
 final class JsonExtractorTest extends FlowTestCase
 {
     public function test_extracting_json_from_local_file_stream() : void
     {
-        $rows = (new Flow(Config::builder()->putInputIntoRows()))
+        $rows = (data_frame(Config::builder()->putInputIntoRows()))
             ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json'))
             ->fetch();
 
@@ -39,7 +39,7 @@ final class JsonExtractorTest extends FlowTestCase
 
     public function test_extracting_json_from_local_file_stream_using_pointer() : void
     {
-        $rows = (new Flow())
+        $rows = (data_frame())
             ->read(from_json(__DIR__ . '/../../Fixtures/nested_timezones.json')->withPointer('/timezones', true))
             ->fetch();
 

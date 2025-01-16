@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{boolean_entry, integer_entry};
+use function Flow\ETL\DSL\{data_frame, row};
 use function Flow\ETL\DSL\{ignore_error_handler, skip_rows_handler, string_entry, throw_error_handler};
 use Flow\ETL\Row\Entry\{DateTimeEntry};
-use Flow\ETL\{Extractor, Flow, FlowContext, Loader, Rows, Tests\FlowTestCase, Transformer};
+use Flow\ETL\{Extractor, FlowContext, Loader, Rows, Tests\FlowTestCase, Transformer};
 
 final class ETLErrorHandlingTest extends FlowTestCase
 {
@@ -47,7 +47,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Transformer Exception');
 
-        (new Flow())
+        (data_frame())
             ->extract($extractor)
             ->onError(throw_error_handler())
             ->transform($brokenTransformer)
@@ -87,7 +87,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             }
         };
 
-        (new Flow())
+        (data_frame())
             ->extract($extractor)
             ->onError(ignore_error_handler())
             ->transform($brokenTransformer)
@@ -149,7 +149,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             }
         };
 
-        (new Flow())
+        (data_frame())
             ->extract($extractor)
             ->onError(skip_rows_handler())
             ->transform($brokenTransformer)

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{from_array, ref, to_memory};
-use Flow\ETL\Flow;
 use Flow\ETL\Function\Trim\Type;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
@@ -14,7 +14,7 @@ final class TrimTest extends FlowTestCase
 {
     public function test_trim_both() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [
@@ -36,7 +36,7 @@ final class TrimTest extends FlowTestCase
 
     public function test_trim_custom_characters() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [
@@ -58,7 +58,7 @@ final class TrimTest extends FlowTestCase
 
     public function test_trim_left() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [
@@ -80,7 +80,7 @@ final class TrimTest extends FlowTestCase
 
     public function test_trim_right() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [

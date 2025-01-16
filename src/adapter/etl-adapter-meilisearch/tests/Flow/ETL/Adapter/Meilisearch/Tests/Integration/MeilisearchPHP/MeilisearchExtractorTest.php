@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\Adapter\Meilisearch\{from_meilisearch, meilisearch_hits_to_rows, to_meilisearch_bulk_index};
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{boolean_entry, flow_context, integer_entry};
 use function Flow\ETL\DSL\{config, rows};
 use function Flow\ETL\DSL\{generate_random_int, string_entry};
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
-use Flow\ETL\{Flow, Row, Tests\FlowTestCase};
+use Flow\ETL\{Row, Tests\FlowTestCase};
 
 final class MeilisearchExtractorTest extends FlowTestCase
 {
@@ -40,7 +41,7 @@ final class MeilisearchExtractorTest extends FlowTestCase
             'q' => 'title=this_cant_be_matched',
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
             ->fetch();
 
@@ -65,7 +66,7 @@ final class MeilisearchExtractorTest extends FlowTestCase
             ],
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
             ->transform(meilisearch_hits_to_rows())
             ->fetch();
@@ -93,7 +94,7 @@ final class MeilisearchExtractorTest extends FlowTestCase
             'sort' => ['position:desc'],
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
             ->fetch();
 

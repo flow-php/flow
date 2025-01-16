@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
 use function Flow\ETL\Adapter\Elasticsearch\{es_hits_to_rows, from_es, to_es_bulk_index};
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{bool_entry, df, generate_random_int, int_entry, string_entry};
 use function Flow\ETL\DSL\{config, flow_context, rows};
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\{Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase,
-    Flow,
     Row
 };
 
@@ -88,7 +88,7 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
             ],
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
             ->transform(es_hits_to_rows(DocumentDataSource::fields))
             ->fetch();
@@ -122,7 +122,7 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
             ],
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
             ->fetch();
 
@@ -156,7 +156,7 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
             'keep_alive' => '5m',
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
@@ -190,7 +190,7 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
             'keep_alive' => '5m',
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 

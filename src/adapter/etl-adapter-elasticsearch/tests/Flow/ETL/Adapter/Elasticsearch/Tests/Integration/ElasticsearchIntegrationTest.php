@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 
 use function Flow\ETL\Adapter\Elasticsearch\{es_hits_to_rows, from_es, to_es_bulk_index};
-use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry};
+use function Flow\ETL\DSL\{data_frame, rows};
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
-use Flow\ETL\{Flow, Row};
+use Flow\ETL\{Row};
 
 final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
 {
@@ -56,7 +56,7 @@ final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
             ],
         ];
 
-        $results = (new Flow())
+        $results = (data_frame())
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
             ->rows(es_hits_to_rows())
             ->limit($limit = 20)

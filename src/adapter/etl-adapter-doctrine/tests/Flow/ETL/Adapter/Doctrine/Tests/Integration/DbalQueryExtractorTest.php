@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_queries, from_dbal_query};
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{df, from_array, int_schema, map_schema, schema, str_schema, type_int, type_map, type_string};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Adapter\Doctrine\{DbalLoader, ParametersSet};
-use Flow\ETL\Flow;
 
 final class DbalQueryExtractorTest extends IntegrationTestCase
 {
@@ -26,7 +26,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        (new Flow())->extract(
+        (data_frame())->extract(
             from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -65,7 +65,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        (new Flow())
+        (data_frame())
             ->extract(
                 from_array([
                     ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
@@ -83,7 +83,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
             ->run();
 
-        $rows = (new Flow())->extract(
+        $rows = (data_frame())->extract(
             from_dbal_queries(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
@@ -127,7 +127,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        (new Flow())
+        (data_frame())
             ->extract(
                 from_array([
                     ['id' => 1, 'name' => 'Name', 'tags' => '{"a": 1, "b": 2 }'],
@@ -145,7 +145,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
             ->run();
 
-        $schema = (new Flow())->extract(
+        $schema = (data_frame())->extract(
             from_dbal_queries(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",

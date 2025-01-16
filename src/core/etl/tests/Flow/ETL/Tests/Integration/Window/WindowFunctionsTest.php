@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Window;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{dense_rank, from_all, from_array, rank, ref, window};
-use Flow\ETL\{Flow, Rows, Tests\FlowTestCase};
+use Flow\ETL\{Rows, Tests\FlowTestCase};
 
 final class WindowFunctionsTest extends FlowTestCase
 {
     public function test_rank_on_partitioned_window() : void
     {
-        $rows = (new Flow())
+        $rows = (data_frame())
             ->read(
                 from_all(
                     from_array([
@@ -48,7 +49,7 @@ final class WindowFunctionsTest extends FlowTestCase
 
     public function test_rank_without_partitioning() : void
     {
-        $rows = (new Flow())
+        $rows = (data_frame())
             ->read(
                 from_all(
                     from_array([

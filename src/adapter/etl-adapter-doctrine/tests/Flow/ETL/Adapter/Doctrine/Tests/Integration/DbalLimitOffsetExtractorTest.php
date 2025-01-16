@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_limit_offset, from_dbal_limit_offset_qb};
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{df, int_schema, map_schema, schema, str_schema, type_int, type_map, type_string};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Adapter\Doctrine\{Order, OrderBy};
-use Flow\ETL\Flow;
 
 final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
 {
@@ -70,7 +70,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'description' => 'description_' . $i]);
         }
 
-        $data = (new Flow())
+        $data = (data_frame())
             ->extract(
                 from_dbal_limit_offset_qb(
                     $this->pgsqlDatabaseContext->connection(),
@@ -114,7 +114,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'tags' => '{"a": 1, "b": 2 }']);
         }
 
-        $schema = (new Flow())
+        $schema = (data_frame())
             ->extract(
                 from_dbal_limit_offset_qb(
                     $this->pgsqlDatabaseContext->connection(),

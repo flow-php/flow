@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
+use function Flow\ETL\DSL\data_frame;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Flow, FlowContext, Loader, Rows, Tests\FlowTestCase};
+use Flow\ETL\{FlowContext, Loader, Rows, Tests\FlowTestCase};
 
 final class ClosureTest extends FlowTestCase
 {
     public function test_loader_closure() : void
     {
-        (new Flow())
+        (data_frame())
             ->extract(new FakeExtractor(40))
             ->batchSize(2)
             ->load($loader = new class implements Closure, Loader {

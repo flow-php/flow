@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{from_array, lit, ref, to_memory};
-use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -13,7 +13,7 @@ final class SanitizeTest extends FlowTestCase
 {
     public function test_sanitize_on_non_string_key() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [
@@ -35,7 +35,7 @@ final class SanitizeTest extends FlowTestCase
 
     public function test_sanitize_with_skip_characters() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [
@@ -57,7 +57,7 @@ final class SanitizeTest extends FlowTestCase
 
     public function test_sanitize_without_skip_characters() : void
     {
-        (new Flow())
+        (data_frame())
             ->read(
                 from_array(
                     [

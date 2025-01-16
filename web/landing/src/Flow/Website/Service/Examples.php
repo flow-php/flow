@@ -76,13 +76,25 @@ final class Examples
 
     public function output(string $topic, string $example) : ?string
     {
-        $path = \sprintf('%s/topics/%s/%s/output.txt', \realpath($this->examplesPath), $topic, $example);
+        $folder = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
 
-        if (false === \file_exists($path)) {
+        $paths = \glob(\sprintf('{%s/output.txt,%s/output.*.txt}', $folder, $folder), GLOB_BRACE);
+
+        if (!\count($paths)) {
             return null;
         }
 
-        return \file_get_contents($path);
+        $content = '';
+
+        foreach ($paths as $path) {
+            $content .= \file_get_contents($path);
+
+            if (\count($paths) > 1) {
+                $content .= \PHP_EOL;
+            }
+        }
+
+        return $content;
     }
 
     /**

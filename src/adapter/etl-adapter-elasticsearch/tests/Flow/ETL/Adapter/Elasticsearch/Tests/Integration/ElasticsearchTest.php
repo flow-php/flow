@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 
 use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
-use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\{data_frame, from_array};
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Doubles\Spy\HttpClientSpy;
-use Flow\ETL\Flow;
 
 final class ElasticsearchTest extends ElasticsearchTestCase
 {
@@ -18,7 +17,7 @@ final class ElasticsearchTest extends ElasticsearchTestCase
             self::markTestSkipped('httpClient option is not accepted in Elasticsearch 7');
         }
 
-        (new Flow())
+        (data_frame())
             ->read(from_array([
                 ['id' => 1, 'text' => 'lorem ipsum'],
                 ['id' => 2, 'text' => 'lorem ipsum'],

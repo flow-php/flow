@@ -9,6 +9,7 @@ use Flow\ETL\Extractor\DataFrameExtractor;
 use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Extractor\PipelineExtractor;
 use Flow\ETL\Extractor\RowsExtractor;
+use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\DateType;
@@ -101,6 +102,7 @@ return RectorConfig::configure()
             new NewObjectToFunction(Config::class, 'Flow\ETL\DSL\config'),
             new NewObjectToFunction(FlowContext::class, 'Flow\ETL\DSL\flow_context'),
             new NewObjectToFunction(Schema::class, 'Flow\ETL\DSL\schema'),
+            new NewObjectToFunction(Flow::class, 'Flow\ETL\DSL\data_frame'),
 
             // Entries
             new NewObjectToFunction(BooleanEntry::class, 'Flow\ETL\DSL\boolean_entry'),

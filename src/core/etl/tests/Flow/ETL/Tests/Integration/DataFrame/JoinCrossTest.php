@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, row, rows, str_entry};
-use Flow\ETL\{Flow, Loader, Tests\FlowTestCase};
+use Flow\ETL\{Loader, Tests\FlowTestCase};
 
 final class JoinCrossTest extends FlowTestCase
 {
@@ -26,7 +27,7 @@ final class JoinCrossTest extends FlowTestCase
             ))
             ->batchSize(2)
             ->crossJoin(
-                (new Flow())->process(
+                (data_frame())->process(
                     rows(
                         row(int_entry('num', 1), bool_entry('active', true)),
                         row(int_entry('num', 2), bool_entry('active', false)),
