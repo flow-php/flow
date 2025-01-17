@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row;
 
-final class Concat extends ScalarFunctionChain
+final class ConcatWithSeparator extends ScalarFunctionChain
 {
     /**
      * @var array<ScalarFunction|string>
@@ -16,6 +16,7 @@ final class Concat extends ScalarFunctionChain
     private readonly array $refs;
 
     public function __construct(
+        private readonly ScalarFunction|string $separator,
         ScalarFunction|string ...$refs,
     ) {
         $this->refs = $refs;
@@ -23,6 +24,12 @@ final class Concat extends ScalarFunctionChain
 
     public function eval(Row $row) : mixed
     {
+        $separator = (new Parameter($this->separator))->asString($row);
+
+        if (!\is_string($separator)) {
+            return '';
+        }
+
         $values = \array_map(fn (ScalarFunction|string $string) : mixed => \is_string($string) ? $string : Caster::default()->to(type_string(true))->value($string->eval($row)), $this->refs);
 
         $concatValues = [];
@@ -38,6 +45,6 @@ final class Concat extends ScalarFunctionChain
         }
 
         /** @var array<string> $values */
-        return \implode('', $concatValues);
+        return \implode($separator, $concatValues);
     }
 }
