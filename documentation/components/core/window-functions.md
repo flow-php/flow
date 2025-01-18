@@ -1,6 +1,6 @@
 # Window Functions
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Window functions are a special type of function that perform calculations on a set of rows that are related to the current row. 
 Unlike regular aggregate functions, use of a window function does not cause rows to become grouped into a single output row — the rows retain their separate identities. 

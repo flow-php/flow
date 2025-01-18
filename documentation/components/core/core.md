@@ -1,6 +1,6 @@
 # Data Frame
 
-- [⬅️️ Back](../../quick-start.md)
+- [⬅️️ Back](/documentation/quick-start.md)
 
 A Data Frame is a structured collection of tabular data, similar to a spreadsheet.  
 It organizes information into rows and columns, making it easy to understand, filter, and transform.  

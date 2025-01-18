@@ -1,6 +1,6 @@
 # Building Blocks
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Entries are the columns of the data frame, they are represented by the [Entry](/src/core/etl/src/Flow/ETL/Row/Entry.php) interface.
 Group of Entries is called `Row`, it is represented by the [Row](/src/core/etl/src/Flow/ETL/Row.php) class.

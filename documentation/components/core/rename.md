@@ -1,6 +1,6 @@
 # Rename
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 There are multiple ways to rename entries in the data frame.
 

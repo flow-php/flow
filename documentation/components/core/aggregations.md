@@ -1,6 +1,6 @@
 # Aggregations
 
-- [⬅️️ Back](group-by.md)
+- [⬅️️ Back](/documentation/components/core/group-by.md)
 
 Each group created by `groupBy` function can be aggregated using one of the aggregation functions.
 
@@ -13,8 +13,9 @@ Each group created by `groupBy` function can be aggregated using one of the aggr
 - [`MAX()`](/src/core/etl/src/Flow/ETL/Function/Max.php)
 - [`COLLECT()`](/src/core/etl/src/Flow/ETL/Function/Collect.php)
 - [`COLLECT_UNIQUE()`](/src/core/etl/src/Flow/ETL/Function/CollectUnique.php)
-- [`FIRST`](/src/core/etl/src/Flow/ETL/Function/First.php)
-- [`LAST`](/src/core/etl/src/Flow/ETL/Function/Last.php)
+- [`FIRST()`](/src/core/etl/src/Flow/ETL/Function/First.php)
+- [`LAST()`](/src/core/etl/src/Flow/ETL/Function/Last.php)
+- [`STRIRNG_AGG()`](/src/core/etl/src/Flow/ETL/Function/StringAggregate.php)
 
 All aggregation functions are implementing [`AggregatingFunction`](/src/core/etl/src/Flow/ETL/Function/AggregatingFunction.php) interface.
 

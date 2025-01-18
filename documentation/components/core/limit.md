@@ -1,6 +1,6 @@
 # Limit
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Sometimes you might just want to process only few first rows, maybe for debugging purpose or you don't want to go above certain number of rows.
 

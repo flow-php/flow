@@ -67,6 +67,7 @@ use Flow\ETL\Function\{All,
     Size,
     Split,
     Sprintf,
+    StringAggregate,
     StructureFunctions,
     Sum,
     ToDate,
@@ -1194,6 +1195,12 @@ function least(mixed ...$values) : Least
 function collect(EntryReference|string $ref) : Collect
 {
     return new Collect(is_string($ref) ? ref($ref) : $ref);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
+function string_agg(EntryReference|string $ref, string $separator = ', ', ?Row\SortOrder $sort = null) : StringAggregate
+{
+    return new StringAggregate(is_string($ref) ? ref($ref) : $ref, $separator, $sort);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]

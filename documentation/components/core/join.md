@@ -1,6 +1,6 @@
 # Join
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Joining two data frames is a common operation in data processing. 
 It is used to combine data from two different sources into one data frame. 

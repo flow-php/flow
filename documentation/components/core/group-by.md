@@ -1,6 +1,6 @@
 # Group By
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Grouping is a common operation in data analysis. The concept is no different from the one you know from SQL.
 

@@ -1,6 +1,6 @@
 # Schema
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Schema is a set of rules that defines how data is structured.
 It is used to validate data and to provide information about data structure.

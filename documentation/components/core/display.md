@@ -1,6 +1,6 @@
 # Display
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Displaying/printing data frame is a common operation during development. 
 It's the easiest way to debug data frame.

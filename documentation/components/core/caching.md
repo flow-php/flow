@@ -1,6 +1,6 @@
 # Caching
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 ## Cache
 

@@ -1,6 +1,6 @@
 # Sort
 
-- [⬅️️ Back](core.md)
+- [⬅️️ Back](/documentation/components/core/core.md)
 
 Sorting is a common operation in data processing.
 Thanks to implementation of External Sort algorithm, sorting as everything else is by default memory-safe. 
