@@ -25,6 +25,19 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new All($this, new Not($function));
     }
 
+    /**
+     * Filters an array by removing all elements that matches passed value.
+     * Applicable to all data structures that can be converted to an array:
+     *    - json
+     *    - list
+     *    - map
+     *    - structure.
+     */
+    public function arrayFilter(mixed $value) : self
+    {
+        return new ArrayFilter($this, $value);
+    }
+
     public function arrayGet(ScalarFunction|string $path) : self
     {
         return new ArrayGet($this, $path);
@@ -38,6 +51,32 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function arrayGetCollectionFirst(string ...$keys) : self
     {
         return ArrayGetCollection::fromFirst($this, $keys);
+    }
+
+    /**
+     * Filters an array by keeping only elements that matches passed value.
+     * Applicable to all data structures that can be converted to an array:
+     *   - json
+     *   - list
+     *   - map
+     *   - structure.
+     */
+    public function arrayKeep(mixed $value) : self
+    {
+        return new ArrayKeep($this, $value);
+    }
+
+    /**
+     * Returns all keys from an array, ignoring the values.
+     * Applicable to all data structures that can be converted to an array:
+     *   - json
+     *   - list
+     *   - map
+     *   - structure.
+     */
+    public function arrayKeys() : self
+    {
+        return new ArrayKeys($this);
     }
 
     public function arrayMerge(ScalarFunction|array $ref) : self
@@ -63,6 +102,19 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function arraySort(ScalarFunction|Sort|null $sortFunction = null, ScalarFunction|int|null $flags = null, ScalarFunction|bool $recursive = true) : self
     {
         return new ArraySort($this, $sortFunction ?? Sort::sort, $flags, $recursive);
+    }
+
+    /**
+     * Returns all values from an array, ignoring the keys.
+     * Applicable to all data structures that can be converted to an array:
+     *   - json
+     *   - list
+     *   - map
+     *   - structure.
+     */
+    public function arrayValues() : self
+    {
+        return new ArrayValues($this);
     }
 
     public function ascii() : self
