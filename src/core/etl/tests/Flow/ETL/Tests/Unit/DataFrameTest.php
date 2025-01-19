@@ -508,7 +508,7 @@ final class DataFrameTest extends FlowTestCase
                 }
             }
         )
-            ->transform(
+            ->with(
                 new class implements Transformer {
                     public function transform(Rows $rows, FlowContext $context) : Rows
                     {
@@ -545,7 +545,7 @@ final class DataFrameTest extends FlowTestCase
                 }
             }
         )
-            ->transform(
+            ->with(
                 new class implements Transformer {
                     public function transform(Rows $rows, FlowContext $context) : Rows
                     {

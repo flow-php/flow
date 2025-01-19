@@ -19,7 +19,7 @@ final class MaskColumnTransformationTest extends FlowTestCase
                 ['id' => 3, 'name' => 'John Smith', 'salary' => 9000, 'currency' => 'USD'],
                 ['id' => 4, 'name' => 'Jane Smith', 'salary' => 10000, 'currency' => 'USD'],
             ]))
-            ->transform(new MaskColumns(['salary']))
+            ->with(new MaskColumns(['salary']))
             ->fetch()
             ->toArray();
 

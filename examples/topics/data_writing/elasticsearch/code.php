@@ -52,6 +52,6 @@ data_frame()
         ]
     ))
     ->write(to_stream(__DIR__ . '/output.raw.txt', truncate: false))
-    ->transform(es_hits_to_rows())
+    ->with(es_hits_to_rows())
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

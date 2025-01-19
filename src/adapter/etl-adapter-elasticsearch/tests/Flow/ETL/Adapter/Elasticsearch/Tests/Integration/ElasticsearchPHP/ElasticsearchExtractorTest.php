@@ -90,7 +90,7 @@ final class ElasticsearchExtractorTest extends ElasticsearchTestCase
 
         $results = (data_frame())
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
-            ->transform(es_hits_to_rows(DocumentDataSource::fields))
+            ->with(es_hits_to_rows(DocumentDataSource::fields))
             ->fetch();
 
         self::assertCount(2000, $results);

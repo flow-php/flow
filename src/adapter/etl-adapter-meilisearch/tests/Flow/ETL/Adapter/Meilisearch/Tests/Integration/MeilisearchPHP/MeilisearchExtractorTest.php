@@ -68,7 +68,7 @@ final class MeilisearchExtractorTest extends FlowTestCase
 
         $results = (data_frame())
             ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
-            ->transform(meilisearch_hits_to_rows())
+            ->with(meilisearch_hits_to_rows())
             ->fetch();
 
         self::assertCount(49, $results);

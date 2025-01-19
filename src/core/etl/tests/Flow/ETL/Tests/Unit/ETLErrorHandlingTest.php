@@ -50,7 +50,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         (data_frame())
             ->extract($extractor)
             ->onError(throw_error_handler())
-            ->transform($brokenTransformer)
+            ->with($brokenTransformer)
             ->load($loader)
             ->run();
     }
@@ -90,7 +90,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         (data_frame())
             ->extract($extractor)
             ->onError(ignore_error_handler())
-            ->transform($brokenTransformer)
+            ->with($brokenTransformer)
             ->load($loader)
             ->run();
 
@@ -152,7 +152,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         (data_frame())
             ->extract($extractor)
             ->onError(skip_rows_handler())
-            ->transform($brokenTransformer)
+            ->with($brokenTransformer)
             ->load($loader)
             ->run();
 

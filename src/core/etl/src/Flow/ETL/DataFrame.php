@@ -222,7 +222,7 @@ final class DataFrame
     #[DSLMethod(exclude: true)]
     public function collectRefs(References $references) : self
     {
-        $this->transform(new CallbackRowTransformer(function (Row $row) use ($references) : Row {
+        $this->with(new CallbackRowTransformer(function (Row $row) use ($references) : Row {
             foreach ($row->entries()->all() as $entry) {
                 $references->add($entry->ref());
             }
@@ -739,7 +739,7 @@ final class DataFrame
      */
     public function rows(Transformer|Transformation $transformer) : self
     {
-        return $this->transform($transformer);
+        return $this->with($transformer);
     }
 
     /**
@@ -826,17 +826,13 @@ final class DataFrame
     }
 
     /**
+     * Alias for DataFrame::with().
+     *
      * @lazy
      */
     public function transform(Transformer|Transformation $transformer) : self
     {
-        if ($transformer instanceof Transformer) {
-            $this->pipeline->add($transformer);
-
-            return $this;
-        }
-
-        return $transformer->transform($this);
+        return $this->with($transformer);
     }
 
     /**
@@ -880,6 +876,20 @@ final class DataFrame
 
     /**
      * @lazy
+     */
+    public function with(Transformer|Transformation $transformer) : self
+    {
+        if ($transformer instanceof Transformer) {
+            $this->pipeline->add($transformer);
+
+            return $this;
+        }
+
+        return $transformer->transform($this);
+    }
+
+    /**
+     * @lazy
      *
      * @param array<string, ScalarFunction|WindowFunction> $references
      */
@@ -910,7 +920,7 @@ final class DataFrame
 
             $this->pipeline->add(new WindowFunctionTransformer($entry, $reference));
         } else {
-            $this->transform(new ScalarFunctionTransformer($entry, $reference));
+            $this->with(new ScalarFunctionTransformer($entry, $reference));
         }
 
         return $this;
