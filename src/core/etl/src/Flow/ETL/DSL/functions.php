@@ -35,7 +35,6 @@ use Flow\ETL\Function\{All,
     CollectUnique,
     Combine,
     Concat,
-    ConcatWithSeparator,
     Count,
     DateTimeFormat,
     DenseRank,
@@ -840,16 +839,16 @@ function combine(ScalarFunction|array $keys, ScalarFunction|array $values) : Com
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function concat(ScalarFunction|string ...$functions) : Concat
 {
-    return new Concat(...$functions);
+    return new Concat('', ...$functions);
 }
 
 /**
  * Concat all values with separator.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function concat_ws(ScalarFunction|string ...$functions) : ConcatWithSeparator
+function concat_ws(ScalarFunction|string ...$functions) : Concat
 {
-    return new ConcatWithSeparator(...$functions);
+    return new Concat(...$functions);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]

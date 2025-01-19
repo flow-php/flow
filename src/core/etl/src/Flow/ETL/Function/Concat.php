@@ -16,6 +16,7 @@ final class Concat extends ScalarFunctionChain
     private readonly array $refs;
 
     public function __construct(
+        private readonly ScalarFunction|string $separator,
         ScalarFunction|string ...$refs,
     ) {
         $this->refs = $refs;
@@ -23,6 +24,12 @@ final class Concat extends ScalarFunctionChain
 
     public function eval(Row $row) : mixed
     {
+        $separator = (new Parameter($this->separator))->asString($row);
+
+        if (!\is_string($separator)) {
+            return '';
+        }
+
         /** @var array<string> $concatValues */
         $concatValues = [];
 
@@ -34,6 +41,6 @@ final class Concat extends ScalarFunctionChain
             }
         }
 
-        return \implode('', $concatValues);
+        return \implode($separator, $concatValues);
     }
 }
