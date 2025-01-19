@@ -15,11 +15,12 @@ final class ArrayKeep extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         $array = (new Parameter($this->array))->asArray($row);
-        $value = (new Parameter($this->value))->eval($row);
 
-        if (!\is_array($array)) {
+        if (null === $array) {
             return null;
         }
+
+        $value = (new Parameter($this->value))->eval($row);
 
         return \array_filter($array, fn ($item) => $item === $value);
     }
