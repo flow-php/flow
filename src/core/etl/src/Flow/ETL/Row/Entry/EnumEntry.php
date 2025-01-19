@@ -7,7 +7,7 @@ namespace Flow\ETL\Row\Entry;
 use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?\UnitEnum, ?\UnitEnum>
@@ -16,13 +16,18 @@ final class EnumEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly EnumType $type;
 
     public function __construct(
         private readonly string $name,
         private readonly ?\UnitEnum $value,
+        ?EnumType $type = null,
+        ?Metadata $metadata = null,
     ) {
-        $this->type = EnumType::of($value === null ? \UnitEnum::class : $value::class, $value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: EnumType::of($value === null ? \UnitEnum::class : $value::class, $value === null);
     }
 
     public function __toString() : string
@@ -39,7 +44,8 @@ final class EnumEntry implements Entry
         return Definition::enum(
             $this->name,
             $this->type->class,
-            $this->type->nullable()
+            $this->type->nullable(),
+            $this->metadata
         );
     }
 

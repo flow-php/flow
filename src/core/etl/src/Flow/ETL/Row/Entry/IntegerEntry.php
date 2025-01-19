@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\IntegerType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?int, ?int>
@@ -18,18 +18,25 @@ final class IntegerEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly IntegerType $type;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly ?int $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        private readonly ?int $value,
+        ?IntegerType $type = null,
+        ?Metadata $metadata = null,
+    ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_int($this->value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_int($this->value === null);
     }
 
     public function __toString() : string
@@ -39,7 +46,7 @@ final class IntegerEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::integer($this->name, $this->type->nullable());
+        return Definition::integer($this->name, $this->type->nullable(), $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

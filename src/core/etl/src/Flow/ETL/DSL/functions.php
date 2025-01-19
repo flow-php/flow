@@ -343,82 +343,82 @@ function to_branch(ScalarFunction $condition, Loader $loader) : Loader
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function bool_entry(string $name, ?bool $value) : Entry\BooleanEntry
+function bool_entry(string $name, ?bool $value, ?BooleanType $type = null, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
 {
-    return new Entry\BooleanEntry($name, $value);
+    return new Entry\BooleanEntry($name, $value, $type);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function boolean_entry(string $name, ?bool $value) : Entry\BooleanEntry
+function boolean_entry(string $name, ?bool $value, ?BooleanType $type = null, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
 {
-    return bool_entry($name, $value);
+    return bool_entry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function datetime_entry(string $name, \DateTimeInterface|string|null $value) : Entry\DateTimeEntry
+function datetime_entry(string $name, \DateTimeInterface|string|null $value, ?DateTimeType $type = null, ?Schema\Metadata $metadata = null) : Entry\DateTimeEntry
 {
-    return new Entry\DateTimeEntry($name, $value);
+    return new Entry\DateTimeEntry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function time_entry(string $name, \DateInterval|string|null $value) : Entry\TimeEntry
+function time_entry(string $name, \DateInterval|string|null $value, ?TimeType $type = null, ?Schema\Metadata $metadata = null) : Entry\TimeEntry
 {
-    return new Entry\TimeEntry($name, $value);
+    return new Entry\TimeEntry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function date_entry(string $name, \DateTimeInterface|string|null $value) : Entry\DateEntry
+function date_entry(string $name, \DateTimeInterface|string|null $value, ?DateType $type = null, ?Schema\Metadata $metadata = null) : Entry\DateEntry
 {
-    return new Entry\DateEntry($name, $value);
+    return new Entry\DateEntry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function int_entry(string $name, ?int $value) : Entry\IntegerEntry
+function int_entry(string $name, ?int $value, ?IntegerType $type = null, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
 {
-    return new Entry\IntegerEntry($name, $value);
+    return new Entry\IntegerEntry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function integer_entry(string $name, ?int $value) : Entry\IntegerEntry
+function integer_entry(string $name, ?int $value, ?IntegerType $type = null, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
 {
-    return int_entry($name, $value);
+    return int_entry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function enum_entry(string $name, ?\UnitEnum $enum) : Entry\EnumEntry
+function enum_entry(string $name, ?\UnitEnum $enum, ?EnumType $type = null, ?Schema\Metadata $metadata = null) : Entry\EnumEntry
 {
-    return new Entry\EnumEntry($name, $enum);
+    return new Entry\EnumEntry($name, $enum, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function float_entry(string $name, ?float $value, int $precision = 6) : Entry\FloatEntry
+function float_entry(string $name, ?float $value, int $precision = 6, ?FloatType $type = null, ?Schema\Metadata $metadata = null) : Entry\FloatEntry
 {
-    return new Entry\FloatEntry($name, $value, $precision);
+    return new Entry\FloatEntry($name, $value, $precision, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_entry(string $name, array|string|null $data) : Entry\JsonEntry
+function json_entry(string $name, array|string|null $data, ?JsonType $type = null, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
 {
-    return new Entry\JsonEntry($name, $data);
+    return new Entry\JsonEntry($name, $data, $type, $metadata);
 }
 
 /**
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_object_entry(string $name, array|string|null $data) : Entry\JsonEntry
+function json_object_entry(string $name, array|string|null $data, ?JsonType $type = null, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
 {
     if (\is_string($data)) {
-        return new Entry\JsonEntry($name, $data);
+        return new Entry\JsonEntry($name, $data, $type, $metadata);
     }
 
-    return Entry\JsonEntry::object($name, $data);
+    return Entry\JsonEntry::object($name, $data, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function str_entry(string $name, ?string $value) : Entry\StringEntry
+function str_entry(string $name, ?string $value, ?StringType $type = null, ?Schema\Metadata $metadata = null) : Entry\StringEntry
 {
-    return new Entry\StringEntry($name, $value);
+    return new Entry\StringEntry($name, $value, $type, $metadata);
 }
 
 /**
@@ -432,33 +432,33 @@ function str_entry(string $name, ?string $value) : Entry\StringEntry
  * By design flow assumes when guessing column type that null would be a string (the most flexible type).
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function null_entry(string $name) : Entry\StringEntry
+function null_entry(string $name, ?Schema\Metadata $metadata = null) : Entry\StringEntry
 {
-    return Entry\StringEntry::fromNull($name);
+    return Entry\StringEntry::fromNull($name, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function string_entry(string $name, ?string $value) : Entry\StringEntry
+function string_entry(string $name, ?string $value, ?StringType $type = null, ?Schema\Metadata $metadata = null) : Entry\StringEntry
 {
-    return str_entry($name, $value);
+    return str_entry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function uuid_entry(string $name, \Flow\ETL\PHP\Value\Uuid|string|null $value) : Entry\UuidEntry
+function uuid_entry(string $name, \Flow\ETL\PHP\Value\Uuid|string|null $value, ?UuidType $type = null, ?Schema\Metadata $metadata = null) : Entry\UuidEntry
 {
-    return new Entry\UuidEntry($name, $value);
+    return new Entry\UuidEntry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, \DOMDocument|string|null $value) : Entry\XMLEntry
+function xml_entry(string $name, \DOMDocument|string|null $value, ?XMLType $type = null, ?Schema\Metadata $metadata = null) : Entry\XMLEntry
 {
-    return new Entry\XMLEntry($name, $value);
+    return new Entry\XMLEntry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, \DOMElement|string|null $value) : Entry\XMLElementEntry
+function xml_element_entry(string $name, \DOMElement|string|null $value, ?XMLElementType $type = null, ?Schema\Metadata $metadata = null) : Entry\XMLElementEntry
 {
-    return new Entry\XMLElementEntry($name, $value);
+    return new Entry\XMLElementEntry($name, $value, $type, $metadata);
 }
 
 /**
@@ -471,15 +471,15 @@ function entries(Entry ...$entries) : Row\Entries
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function struct_entry(string $name, ?array $value, StructureType $type) : Entry\StructureEntry
+function struct_entry(string $name, ?array $value, StructureType $type, ?Schema\Metadata $metadata = null) : Entry\StructureEntry
 {
-    return new Entry\StructureEntry($name, $value, $type);
+    return new Entry\StructureEntry($name, $value, $type, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function structure_entry(string $name, ?array $value, StructureType $type) : Entry\StructureEntry
+function structure_entry(string $name, ?array $value, StructureType $type, ?Schema\Metadata $metadata = null) : Entry\StructureEntry
 {
-    return new Entry\StructureEntry($name, $value, $type);
+    return new Entry\StructureEntry($name, $value, $type, $metadata);
 }
 
 /**
@@ -519,9 +519,9 @@ function type_map(StringType|IntegerType $key_type, Type $value_type, bool $null
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function map_entry(string $name, ?array $value, MapType $mapType) : Entry\MapEntry
+function map_entry(string $name, ?array $value, MapType $mapType, ?Schema\Metadata $metadata = null) : Entry\MapEntry
 {
-    return new Entry\MapEntry($name, $value, $mapType);
+    return new Entry\MapEntry($name, $value, $mapType, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]

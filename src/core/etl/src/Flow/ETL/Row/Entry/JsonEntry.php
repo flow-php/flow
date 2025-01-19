@@ -10,7 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?array<mixed>, ?string>
@@ -18,6 +18,8 @@ use Flow\ETL\Row\{Entry, Reference};
 final class JsonEntry implements Entry
 {
     use EntryRef;
+
+    private Metadata $metadata;
 
     private bool $object = false;
 
@@ -28,8 +30,12 @@ final class JsonEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, array|string|null $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        array|string|null $value,
+        ?JsonType $type = null,
+        ?Metadata $metadata = null,
+    ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
@@ -46,13 +52,14 @@ final class JsonEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_json($this->value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_json($this->value === null);
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public static function object(string $name, ?array $value) : self
+    public static function object(string $name, ?array $value, ?JsonType $type = null, ?Metadata $metadata = null) : self
     {
         if (\is_array($value)) {
             foreach (\array_keys($value) as $key) {
@@ -62,7 +69,7 @@ final class JsonEntry implements Entry
             }
         }
 
-        $entry = new self($name, $value);
+        $entry = new self($name, $value, $type, $metadata);
         $entry->object = true;
 
         return $entry;
@@ -75,7 +82,7 @@ final class JsonEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::json($this->name, $this->type()->nullable());
+        return Definition::json($this->name, $this->type()->nullable(), $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

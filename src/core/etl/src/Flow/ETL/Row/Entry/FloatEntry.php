@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\FloatType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?float, ?float>
@@ -18,6 +18,8 @@ final class FloatEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly FloatType $type;
 
     private readonly ?float $value;
@@ -25,8 +27,13 @@ final class FloatEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, ?float $value, public readonly int $precision = 6)
-    {
+    public function __construct(
+        private readonly string $name,
+        ?float $value,
+        public readonly int $precision = 6,
+        ?FloatType $type = null,
+        ?Metadata $metadata = null,
+    ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
@@ -35,8 +42,9 @@ final class FloatEntry implements Entry
             throw InvalidArgumentException::because('Precision must be greater or equal to 0 and less than 15');
         }
 
+        $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value !== null ? round($value, $this->precision) : null;
-        $this->type = type_float($this->value === null, $this->precision);
+        $this->type = $type ?: type_float($this->value === null, $this->precision);
     }
 
     public function __toString() : string
@@ -46,7 +54,7 @@ final class FloatEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::float($this->name, $this->type->nullable(), $this->precision);
+        return Definition::float($this->name, $this->type->nullable(), $this->precision, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

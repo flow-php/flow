@@ -27,6 +27,7 @@ use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, enum_schem
 use Flow\ETL\Exception\{CastingException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\{TimeEntry};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\ETL\Row\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -186,6 +187,14 @@ final class NativeEntryFactoryTest extends FlowTestCase
         );
     }
 
+    public function test_float_with_schema_and_metadata() : void
+    {
+        self::assertEquals(
+            float_entry('e', 1.1, metadata: Metadata::with('test', 1)),
+            (new NativeEntryFactory())->create('e', 1.1, schema(float_schema('e', metadata: Metadata::with('test', 1))))
+        );
+    }
+
     public function test_from_empty_string() : void
     {
         self::assertEquals(
@@ -207,6 +216,14 @@ final class NativeEntryFactoryTest extends FlowTestCase
         self::assertEquals(
             int_entry('e', 1),
             (new NativeEntryFactory())->create('e', 1, schema(integer_schema('e')))
+        );
+    }
+
+    public function test_integer_with_schema_and_metadata() : void
+    {
+        self::assertEquals(
+            int_entry('e', 1, metadata: Metadata::with('test', 1)),
+            (new NativeEntryFactory())->create('e', 1, schema(integer_schema('e', metadata: Metadata::with('test', 1))))
         );
     }
 

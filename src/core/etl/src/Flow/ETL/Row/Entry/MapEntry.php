@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?array<array-key, mixed>, ?array<array-key, mixed>>
@@ -17,6 +17,8 @@ use Flow\ETL\Row\{Entry, Reference};
 final class MapEntry implements Entry
 {
     use EntryRef;
+
+    private Metadata $metadata;
 
     private MapType $type;
 
@@ -29,6 +31,7 @@ final class MapEntry implements Entry
         private readonly string $name,
         private readonly ?array $value,
         MapType $type,
+        ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -38,6 +41,7 @@ final class MapEntry implements Entry
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
 
+        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = $type->makeNullable($this->value === null);
     }
 
@@ -51,6 +55,7 @@ final class MapEntry implements Entry
         return Definition::map(
             $this->name,
             $this->type,
+            $this->metadata
         );
     }
 

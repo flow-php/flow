@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\BooleanType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?bool, ?bool>
@@ -18,18 +18,21 @@ final class BooleanEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly BooleanType $type;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly ?bool $value)
+    public function __construct(private readonly string $name, private readonly ?bool $value, ?BooleanType $type = null, ?Metadata $metadata = null)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_boolean($this->value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_boolean($this->value === null);
     }
 
     public function __toString() : string
@@ -39,7 +42,7 @@ final class BooleanEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::boolean($this->name, $this->type->nullable());
+        return Definition::boolean($this->name, $this->type->nullable(), $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

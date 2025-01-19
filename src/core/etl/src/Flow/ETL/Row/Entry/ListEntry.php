@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?list<mixed>, ?list<mixed>>
@@ -17,6 +17,8 @@ use Flow\ETL\Row\{Entry, Reference};
 final class ListEntry implements Entry
 {
     use EntryRef;
+
+    private Metadata $metadata;
 
     private readonly ListType $type;
 
@@ -30,6 +32,7 @@ final class ListEntry implements Entry
         private readonly string $name,
         private readonly ?array $value,
         ListType $type,
+        ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -39,6 +42,7 @@ final class ListEntry implements Entry
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
 
+        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = $type->makeNullable($this->value === null);
     }
 
@@ -49,7 +53,7 @@ final class ListEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::list($this->name, $this->type);
+        return Definition::list($this->name, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

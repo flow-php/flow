@@ -10,7 +10,7 @@ use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?Uuid, ?Uuid>
@@ -19,6 +19,8 @@ final class UuidEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly UuidType $type;
 
     private ?Uuid $value;
@@ -26,8 +28,12 @@ final class UuidEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, Uuid|string|null $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        Uuid|string|null $value,
+        ?UuidType $type = null,
+        ?Metadata $metadata = null,
+    ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
@@ -38,7 +44,8 @@ final class UuidEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_uuid($this->value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_uuid($this->value === null);
     }
 
     public static function from(string $name, string $value) : self
@@ -53,7 +60,7 @@ final class UuidEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::uuid($this->name);
+        return Definition::uuid($this->name, $this->type->nullable(), $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

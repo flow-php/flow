@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\XMLElementType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?\DOMElement, ?\DOMElement>
@@ -18,12 +18,18 @@ final class XMLElementEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly XMLElementType $type;
 
     private readonly ?\DOMElement $value;
 
-    public function __construct(private readonly string $name, \DOMElement|string|null $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        \DOMElement|string|null $value,
+        ?XMLElementType $type = null,
+        ?Metadata $metadata = null,
+    ) {
         if (\is_string($value)) {
             $doc = new \DOMDocument();
 
@@ -37,7 +43,8 @@ final class XMLElementEntry implements Entry
             $value = (new \DOMDocument())->importNode($value, true);
         }
 
-        $this->type = type_xml_element($value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_xml_element($value === null);
         $this->value = $value;
     }
 
@@ -84,7 +91,7 @@ final class XMLElementEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::xml_element($this->ref(), $this->type->nullable());
+        return Definition::xml_element($this->ref(), $this->type->nullable(), $this->metadata);
     }
 
     public function is(Reference|string $name) : bool

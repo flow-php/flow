@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?array<string, mixed>, ?array<string, mixed>>
@@ -17,6 +17,8 @@ use Flow\ETL\Row\{Entry, Reference};
 final class StructureEntry implements Entry
 {
     use EntryRef;
+
+    private Metadata $metadata;
 
     private readonly StructureType $type;
 
@@ -29,6 +31,7 @@ final class StructureEntry implements Entry
         private readonly string $name,
         private readonly ?array $value,
         StructureType $type,
+        ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -42,6 +45,7 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
 
+        $this->metadata = $metadata ?: Metadata::empty();
         $this->type = $type->makeNullable($this->value === null);
     }
 
@@ -52,7 +56,7 @@ final class StructureEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::structure($this->name, $this->type);
+        return Definition::structure($this->name, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\DateType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?\DateTimeInterface, ?\DateTimeInterface>
@@ -18,6 +18,8 @@ final class DateEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly DateType $type;
 
     private readonly ?\DateTimeInterface $value;
@@ -25,7 +27,7 @@ final class DateEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, \DateTimeInterface|string|null $value)
+    public function __construct(private readonly string $name, \DateTimeInterface|string|null $value, ?DateType $type = null, ?Metadata $metadata = null)
     {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -45,7 +47,8 @@ final class DateEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_date($this->value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_date($this->value === null);
     }
 
     public function __toString() : string
@@ -55,7 +58,7 @@ final class DateEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::dateTime($this->name, $this->type->nullable());
+        return Definition::dateTime($this->name, $this->type->nullable(), $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

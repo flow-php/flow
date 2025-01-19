@@ -20,23 +20,30 @@ final class StringEntry implements Entry
 
     private bool $fromNull = false;
 
+    private Metadata $metadata;
+
     private readonly StringType $type;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly ?string $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        private readonly ?string $value,
+        ?StringType $type = null,
+        ?Metadata $metadata = null,
+    ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_string($this->value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_string($this->value === null);
     }
 
-    public static function fromNull(string $name) : self
+    public static function fromNull(string $name, ?Metadata $metadata = null) : self
     {
-        $entry = new self($name, null);
+        $entry = new self($name, null, type_string(true), $metadata);
         $entry->fromNull = true;
 
         return $entry;
@@ -68,7 +75,9 @@ final class StringEntry implements Entry
         return Definition::string(
             $this->name,
             $this->type->nullable(),
-            $this->fromNull ? Metadata::fromArray([Metadata::FROM_NULL => true]) : null
+            $this->fromNull
+                ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
+                : $this->metadata
         );
     }
 

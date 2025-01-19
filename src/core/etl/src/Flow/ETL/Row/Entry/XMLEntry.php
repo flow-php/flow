@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\XMLType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 
 /**
  * @implements Entry<?\DOMDocument, ?\DOMDocument>
@@ -18,12 +18,18 @@ final class XMLEntry implements Entry
 {
     use EntryRef;
 
+    private Metadata $metadata;
+
     private readonly XMLType $type;
 
     private readonly ?\DOMDocument $value;
 
-    public function __construct(private readonly string $name, \DOMDocument|string|null $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        \DOMDocument|string|null $value,
+        ?XMLType $type = null,
+        ?Metadata $metadata = null,
+    ) {
         if (\is_string($value)) {
             $doc = new \DOMDocument();
 
@@ -36,7 +42,8 @@ final class XMLEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_xml($this->value === null);
+        $this->metadata = $metadata ?: Metadata::empty();
+        $this->type = $type ?: type_xml($this->value === null);
     }
 
     public function __serialize() : array
@@ -83,7 +90,7 @@ final class XMLEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::xml($this->ref(), $this->type->nullable());
+        return Definition::xml($this->ref(), $this->type->nullable(), $this->metadata);
     }
 
     public function is(Reference|string $name) : bool
