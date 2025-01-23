@@ -27,7 +27,8 @@ final class EnumEntry implements Entry
         ?Metadata $metadata = null,
     ) {
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: EnumType::of($value === null ? \UnitEnum::class : $value::class, $value === null);
+        $type = $type ?: EnumType::of($value === null ? \UnitEnum::class : $value::class);
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __toString() : string

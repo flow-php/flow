@@ -138,9 +138,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * @param ScalarFunction|string|Type<mixed> $type
+     * @param string|Type<mixed> $type
      */
-    public function cast(ScalarFunction|string|Type $type) : self
+    public function cast(string|Type $type) : self
     {
         return new Cast($this, $type);
     }

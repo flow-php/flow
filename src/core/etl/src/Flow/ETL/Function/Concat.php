@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\type_string;
-use Flow\ETL\PHP\Type\Caster;
+use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
+use Flow\ETL\PHP\Type\{Caster, Type};
 use Flow\ETL\Row;
 
-final class Concat extends ScalarFunctionChain
+final class Concat extends ScalarFunctionChain implements TypedScalarFunction
 {
     /**
      * @var array<ScalarFunction|string>
@@ -35,5 +36,10 @@ final class Concat extends ScalarFunctionChain
         }
 
         return \implode('', $concatValues);
+    }
+
+    public function returns() : Type
+    {
+        return type_string();
     }
 }

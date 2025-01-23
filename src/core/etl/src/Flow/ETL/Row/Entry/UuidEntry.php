@@ -45,7 +45,8 @@ final class UuidEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_uuid($this->value === null);
+        $type = $type ?: type_uuid($this->value === null);
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public static function from(string $name, string $value) : self

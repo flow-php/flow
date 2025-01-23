@@ -43,7 +43,8 @@ final class XMLEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_xml($this->value === null);
+        $type = $type ?: type_xml();
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __serialize() : array

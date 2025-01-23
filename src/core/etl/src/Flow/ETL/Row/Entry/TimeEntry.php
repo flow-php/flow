@@ -85,7 +85,8 @@ final class TimeEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_time($this->value === null);
+        $type = $type ?: type_time($this->value === null);
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public static function fromDays(string $name, int $days) : self

@@ -48,7 +48,8 @@ final class DateEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_date($this->value === null);
+        $type = $type ?: type_date();
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __toString() : string

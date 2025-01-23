@@ -46,7 +46,7 @@ final class StructureEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type->makeNullable($this->value === null);
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __toString() : string

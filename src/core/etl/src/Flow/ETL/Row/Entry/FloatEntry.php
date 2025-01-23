@@ -20,7 +20,10 @@ final class FloatEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly FloatType $type;
+    /**
+     * @var Type<?float>
+     */
+    private readonly Type $type;
 
     private readonly ?float $value;
 
@@ -44,7 +47,8 @@ final class FloatEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value !== null ? round($value, $this->precision) : null;
-        $this->type = $type ?: type_float($this->value === null, $this->precision);
+        $type = $type ?: type_float(false, $this->precision);
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __toString() : string

@@ -22,7 +22,10 @@ final class StringEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly StringType $type;
+    /**
+     * @var Type<?string>
+     */
+    private readonly Type $type;
 
     /**
      * @throws InvalidArgumentException
@@ -38,7 +41,8 @@ final class StringEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_string($this->value === null);
+        $type = $type ?: type_string();
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public static function fromNull(string $name, ?Metadata $metadata = null) : self

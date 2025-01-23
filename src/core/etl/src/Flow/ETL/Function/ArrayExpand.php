@@ -13,7 +13,7 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
     {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?array
     {
         $array = (new Parameter($this->ref))->asArray($row);
 
@@ -30,10 +30,5 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
         }
 
         return $array;
-    }
-
-    public function expandResults() : bool
-    {
-        return true;
     }
 }

@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_object, type_string};
+use function Flow\ETL\DSL\{type_object, type_string, type_uuid};
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
+use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Value\Uuid as FlowUuid;
 use Flow\ETL\Row;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\{UuidV4, UuidV7};
 
 if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Component\Uid\Uuid::class)) {
     throw new RuntimeException("\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.");
 }
 
-final class Uuid extends ScalarFunctionChain
+final class Uuid extends ScalarFunctionChain implements TypedScalarFunction
 {
     private function __construct(
         private readonly ScalarFunction|string $uuidVersion,
@@ -37,27 +42,32 @@ final class Uuid extends ScalarFunctionChain
         $uuidVersion = (new Parameter($this->uuidVersion))->asString($row);
 
         return match ($uuidVersion) {
-            'uuid4' => $this->generateV4(),
-            'uuid7' => $param instanceof \DateTimeInterface ? $this->generateV7($param) : null,
+            'uuid4' => new FlowUuid($this->generateV4()),
+            'uuid7' => $param instanceof \DateTimeInterface ? new FlowUuid($this->generateV7($param)) : null,
             default => null,
         };
     }
 
-    private function generateV4() : \Symfony\Component\Uid\UuidV4|\Ramsey\Uuid\UuidInterface
+    public function returns() : Type
+    {
+        return type_uuid();
+    }
+
+    private function generateV4() : UuidV4|UuidInterface
     {
         if (\class_exists(\Ramsey\Uuid\Uuid::class)) {
             return \Ramsey\Uuid\Uuid::uuid4();
         }
 
-        return \Symfony\Component\Uid\UuidV4::v4();
+        return UuidV4::v4();
     }
 
-    private function generateV7(\DateTimeInterface $dateTime) : \Symfony\Component\Uid\UuidV7|\Ramsey\Uuid\UuidInterface
+    private function generateV7(\DateTimeInterface $dateTime) : UuidV7|UuidInterface
     {
         if (\class_exists(\Ramsey\Uuid\Uuid::class)) {
             return \Ramsey\Uuid\Uuid::uuid7($dateTime);
         }
 
-        return new \Symfony\Component\Uid\UuidV7(\Symfony\Component\Uid\UuidV7::generate($dateTime));
+        return new UuidV7(UuidV7::generate($dateTime));
     }
 }

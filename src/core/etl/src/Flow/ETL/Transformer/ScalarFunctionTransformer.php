@@ -6,7 +6,6 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
-use Flow\ETL\Row\Entries;
 use Flow\ETL\{FlowContext, Row, Row\Schema\Definition, Rows, Transformer};
 
 final readonly class ScalarFunctionTransformer implements Transformer
@@ -19,18 +18,16 @@ final readonly class ScalarFunctionTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        if ($this->function instanceof ExpandResults && $this->function->expandResults()) {
+        if ($this->function instanceof ExpandResults) {
             return $rows->flatMap(
                 fn (Row $r) : array => \array_map(
                     fn ($val) : Row => new Row(
                         $r->entries()
-                            ->merge(
-                                new Entries(
-                                    $context->entryFactory()->create(
-                                        $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                                        $val,
-                                        $this->entry instanceof Definition ? $this->entry : null
-                                    )
+                            ->set(
+                                $context->entryFactory()->create(
+                                    $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
+                                    $val,
+                                    $this->entry instanceof Definition ? $this->entry : null
                                 )
                             )
                     ),
@@ -44,26 +41,32 @@ final readonly class ScalarFunctionTransformer implements Transformer
                 /** @var mixed $value */
                 $value = $this->function->eval($r);
 
-                if (\is_array($value)) {
-                    if ($this->function instanceof ScalarFunction\UnpackResults && $this->function->unpackResults()) {
-                        /**
-                         * @var array-key $key
-                         * @var mixed $val
-                         */
-                        foreach ($value as $key => $val) {
-                            $r = $r->set($context->entryFactory()->create(($this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry) . '.' . $key, $val));
-                        }
-
-                        return $r;
+                if ($this->function instanceof ScalarFunction\UnpackResults) {
+                    /**
+                     * @var array-key $key
+                     * @var mixed $val
+                     */
+                    foreach ($value as $key => $val) {
+                        $r = $r->set($context->entryFactory()->create(($this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry) . '.' . $key, $val));
                     }
+
+                    return $r;
                 }
 
+                $val = $this->function->eval($r);
+
                 return $r->set(
-                    $context->entryFactory()->create(
-                        $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                        $this->function->eval($r),
-                        $this->entry instanceof Definition ? $this->entry : null
-                    )
+                    $this->function instanceof ScalarFunction\TypedScalarFunction
+                     ? $context->entryFactory()->createAs(
+                         $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
+                         $val,
+                         $this->function->returns()
+                     )
+                     : $context->entryFactory()->create(
+                         $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
+                         $val,
+                         $this->entry instanceof Definition ? $this->entry : null
+                     )
                 );
             }
         );

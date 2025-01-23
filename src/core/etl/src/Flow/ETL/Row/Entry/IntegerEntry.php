@@ -20,7 +20,10 @@ final class IntegerEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly IntegerType $type;
+    /**
+     * @var Type<?int>
+     */
+    private readonly Type $type;
 
     /**
      * @throws InvalidArgumentException
@@ -36,7 +39,8 @@ final class IntegerEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_int($this->value === null);
+        $type = $type ?: type_int();
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __toString() : string

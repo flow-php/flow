@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\type_string;
+use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
-final class Slug extends ScalarFunctionChain
+final class Slug extends ScalarFunctionChain implements TypedScalarFunction
 {
     public function __construct(
         private readonly ScalarFunction|string $string,
@@ -29,5 +32,10 @@ final class Slug extends ScalarFunctionChain
         }
 
         return (new AsciiSlugger(symbolsMap: $symbolsMap))->slug($string, $separator, $locale)->toString();
+    }
+
+    public function returns() : Type
+    {
+        return type_string();
     }
 }

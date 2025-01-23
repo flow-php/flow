@@ -20,7 +20,10 @@ final class BooleanEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly BooleanType $type;
+    /**
+     * @var Type<?bool>
+     */
+    private readonly Type $type;
 
     /**
      * @throws InvalidArgumentException
@@ -32,7 +35,8 @@ final class BooleanEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_boolean($this->value === null);
+        $type = $type ?: type_boolean();
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __toString() : string

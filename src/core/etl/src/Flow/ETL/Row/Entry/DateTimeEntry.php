@@ -50,7 +50,8 @@ final class DateTimeEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_datetime($this->value === null);
+        $type = $type ?: type_datetime();
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     public function __toString() : string

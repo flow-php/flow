@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\{type_datetime};
+use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class ToDateTime extends ScalarFunctionChain
+final class ToDateTime extends ScalarFunctionChain implements TypedScalarFunction
 {
     public function __construct(
         private readonly mixed $value,
@@ -42,5 +45,10 @@ final class ToDateTime extends ScalarFunctionChain
         }
 
         return null;
+    }
+
+    public function returns() : Type
+    {
+        return type_datetime();
     }
 }

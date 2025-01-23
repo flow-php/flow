@@ -42,10 +42,11 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     EnumType,
     FloatType,
     IntegerType,
+    NullType,
     ObjectType,
     StringType};
-use Flow\ETL\PHP\Type\{Caster, TypeDetector};
-use Flow\ETL\Row\{Entry, EntryFactory, Schema, Schema\Definition};
+use Flow\ETL\PHP\Type\{Caster, Type, TypeDetector};
+use Flow\ETL\Row\{Entry, EntryFactory, Schema, Schema\Definition, Schema\Metadata};
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -68,11 +69,13 @@ final readonly class NativeEntryFactory implements EntryFactory
     public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null) : Entry
     {
         if ($schema instanceof Definition) {
-            return $this->fromDefinition($schema, $value);
+            return $this->createAs($schema->entry()->name(), $value, $schema->type(), $schema->metadata());
         }
 
         if ($schema instanceof Schema) {
-            return $this->fromDefinition($schema->getDefinition($entryName), $value);
+            $definition = $schema->getDefinition($entryName);
+
+            return $this->createAs($definition->entry()->name(), $value, $definition->type(), $definition->metadata());
         }
 
         if (null === $value) {
@@ -195,103 +198,104 @@ final readonly class NativeEntryFactory implements EntryFactory
     }
 
     /**
+     * @param Type<mixed> $type
+     *
      * @return Entry<mixed, mixed>
      */
-    private function fromDefinition(Definition $definition, mixed $value) : Entry
+    public function createAs(string $entryName, mixed $value, Type $type, ?Metadata $metadata = null) : Entry
     {
-        $type = $definition->type();
-
-        if (null === $value && $definition->isNullable()) {
+        if (null === $value && $type->nullable()) {
             return match ($type::class) {
-                StringType::class => str_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                IntegerType::class => int_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                FloatType::class => float_entry($definition->entry()->name(), null, $type->precision, $type, $definition->metadata()),
-                BooleanType::class => bool_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                MapType::class => map_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                StructureType::class => struct_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                ListType::class => new Entry\ListEntry($definition->entry()->name(), null, $type, $definition->metadata()),
-                UuidType::class => uuid_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                DateTimeType::class => datetime_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                TimeType::class => time_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                DateType::class => date_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                EnumType::class => enum_entry($definition->entry()->name(), null, $type, $definition->metadata()),
-                ArrayType::class, JsonType::class => json_entry($definition->entry()->name(), null, type_json($type->nullable()), $definition->metadata()),
-                default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
+                StringType::class => str_entry($entryName, null, $type, $metadata),
+                IntegerType::class => int_entry($entryName, null, $type, $metadata),
+                FloatType::class => float_entry($entryName, null, $type->precision, $type, $metadata),
+                BooleanType::class => bool_entry($entryName, null, $type, $metadata),
+                MapType::class => map_entry($entryName, null, $type, $metadata),
+                StructureType::class => struct_entry($entryName, null, $type, $metadata),
+                ListType::class => new Entry\ListEntry($entryName, null, $type, $metadata),
+                UuidType::class => uuid_entry($entryName, null, $type, $metadata),
+                DateTimeType::class => datetime_entry($entryName, null, $type, $metadata),
+                TimeType::class => time_entry($entryName, null, $type, $metadata),
+                DateType::class => date_entry($entryName, null, $type, $metadata),
+                EnumType::class => enum_entry($entryName, null, $type, $metadata),
+                ArrayType::class, JsonType::class => json_entry($entryName, null, type_json($type->nullable()), $metadata),
+                NullType::class => Entry\StringEntry::fromNull($entryName, $metadata),
+                default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
             };
         }
 
         try {
             if ($type instanceof StringType) {
-                return str_entry($definition->entry()->name(), is_type([type_string()], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return str_entry($entryName, is_type([type_string()], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof IntegerType) {
-                return int_entry($definition->entry()->name(), is_type([type_int()], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return int_entry($entryName, is_type([type_int()], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof BooleanType) {
-                return bool_entry($definition->entry()->name(), is_type([type_boolean()], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return bool_entry($entryName, is_type([type_boolean()], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof FloatType) {
-                return float_entry($definition->entry()->name(), is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value), $type->precision, $type, $definition->metadata());
+                return float_entry($entryName, is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value), $type->precision, $type, $metadata);
             }
 
             if ($type instanceof XMLType) {
-                return xml_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return xml_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof UuidType) {
-                return uuid_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return uuid_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof DateType) {
-                return date_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return date_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof TimeType) {
-                return time_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return time_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof DateTimeType) {
-                return datetime_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return datetime_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof EnumType) {
-                return enum_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return enum_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof JsonType) {
                 try {
-                    return json_object_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                    return json_object_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
                 } catch (InvalidArgumentException) {
-                    return json_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                    return json_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
                 }
             }
 
             if ($type instanceof ArrayType) {
-                return json_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), type_json($type->nullable()), $definition->metadata());
+                return json_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), type_json($type->nullable()), $metadata);
             }
 
             if ($type instanceof ObjectType) {
-                throw new InvalidArgumentException("{$definition->entry()->name()}: {$type->toString()} can't be converted to any known Entry, please normalize that object first.");
+                throw new InvalidArgumentException("{$entryName}: {$type->toString()} can't be converted to any known Entry, please normalize that object first.");
             }
 
             if ($type instanceof MapType) {
-                return map_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return map_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof StructureType) {
-                return struct_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return struct_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof ListType) {
-                return new Entry\ListEntry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $definition->metadata());
+                return new Entry\ListEntry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
         } catch (InvalidArgumentException|\TypeError $e) {
-            throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
+            throw new InvalidArgumentException("Field \"{$entryName}\" conversion exception. {$e->getMessage()}", previous: $e);
         }
 
-        throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\"");
+        throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\"");
     }
 }

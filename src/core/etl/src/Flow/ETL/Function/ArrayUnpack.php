@@ -15,7 +15,7 @@ final class ArrayUnpack extends ScalarFunctionChain implements ScalarFunction\Un
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?array
     {
         $array = (new Parameter($this->array))->asArray($row);
         $skipKeys = (new Parameter($this->skipKeys))->asArray($row);
@@ -46,10 +46,5 @@ final class ArrayUnpack extends ScalarFunctionChain implements ScalarFunction\Un
         }
 
         return $values;
-    }
-
-    public function unpackResults() : bool
-    {
-        return true;
     }
 }

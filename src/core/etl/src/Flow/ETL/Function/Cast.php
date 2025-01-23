@@ -4,20 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_integer, type_json, type_object, type_string, type_xml};
+use function Flow\ETL\DSL\{type_array,
+    type_boolean,
+    type_date,
+    type_datetime,
+    type_float,
+    type_integer,
+    type_json,
+    type_object,
+    type_string,
+    type_xml};
 use Flow\ETL\Exception\{CastingException, InvalidArgumentException};
+use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
 use Flow\ETL\PHP\Type\{Caster, Type};
 use Flow\ETL\Row;
 
-final class Cast extends ScalarFunctionChain
+final class Cast extends ScalarFunctionChain implements TypedScalarFunction
 {
     /**
      * @param mixed $value
-     * @param ScalarFunction|string|Type<mixed> $type
+     * @param string|Type<mixed> $type
      */
     public function __construct(
         private readonly mixed $value,
-        private readonly ScalarFunction|Type|string $type,
+        private readonly Type|string $type,
     ) {
     }
 
@@ -28,15 +38,13 @@ final class Cast extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         $value = (new Parameter($this->value))->eval($row);
-        $type = $this->type instanceof ScalarFunction ? (new Parameter($this->type))->asString($row) : $this->type;
+        $type = $this->type;
 
-        if (null === $value || $type === null) {
+        if (null === $value) {
             return null;
         }
 
         $caster = Caster::default();
-
-        $type = $this->type;
 
         if ($type instanceof Type) {
             return $caster->to($type)->value($value);
@@ -69,5 +77,30 @@ final class Cast extends ScalarFunctionChain
         } catch (CastingException) {
             return null;
         }
+    }
+
+    /**
+     * @returns Type<mixed>
+     */
+    public function returns() : Type
+    {
+        if ($this->type instanceof Type) {
+            return $this->type;
+        }
+
+        return match (\mb_strtolower($this->type)) {
+            'datetime' => type_datetime(),
+            'date' => type_date(),
+            'int', 'integer' => type_integer(),
+            'float', 'double', 'real' => type_float(),
+            'string' => type_string(),
+            'bool', 'boolean' => type_boolean(),
+            'array' => type_array(),
+            'object' => type_object(\stdClass::class),
+            'json' => type_json(),
+            'json_pretty' => type_json(),
+            'xml' => type_xml(),
+            default => type_string(),
+        };
     }
 }

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\ScalarFunction;
 
-interface UnpackResults
+use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Row;
+
+interface UnpackResults extends ScalarFunction
 {
-    public function unpackResults() : bool;
+    public function eval(Row $row) : ?array;
 }

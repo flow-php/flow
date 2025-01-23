@@ -53,7 +53,8 @@ final class JsonEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $type ?: type_json($this->value === null);
+        $type = $type ?: type_json();
+        $this->type = $value === null ? $type->makeNullable(true) : $type;
     }
 
     /**
