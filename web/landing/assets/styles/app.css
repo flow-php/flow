@@ -1,4 +1,4 @@
-@import 'changelog.css';
+@import './changelog.css';
 
 @tailwind base;
 @tailwind components;

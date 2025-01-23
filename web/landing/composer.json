@@ -33,7 +33,7 @@
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "^6.4",
-        "symfonycasts/tailwind-bundle": "^0.6.1",
+        "symfonycasts/tailwind-bundle": "~0.6.1",
         "norberttech/static-content-generator-bundle": "1.x-dev",
         "symfony/css-selector": "^6.4"
     },
