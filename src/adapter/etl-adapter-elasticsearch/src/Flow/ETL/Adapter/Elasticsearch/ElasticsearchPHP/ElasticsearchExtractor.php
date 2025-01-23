@@ -142,6 +142,9 @@ final class ElasticsearchExtractor implements Extractor
             }
         }
 
+        /**
+         * @phpstan-ignore-next-line
+         */
         return $this->client;
     }
 

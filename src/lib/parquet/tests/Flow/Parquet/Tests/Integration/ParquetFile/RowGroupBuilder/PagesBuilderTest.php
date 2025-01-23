@@ -49,8 +49,8 @@ final class PagesBuilderTest extends TestCase
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
                     Encodings::RLE,
@@ -107,8 +107,8 @@ final class PagesBuilderTest extends TestCase
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::RLE_DICTIONARY,
                     Encodings::RLE,
@@ -148,8 +148,8 @@ final class PagesBuilderTest extends TestCase
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
                     Encodings::RLE,
@@ -189,8 +189,8 @@ final class PagesBuilderTest extends TestCase
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
                     Encodings::RLE,
@@ -243,8 +243,8 @@ final class PagesBuilderTest extends TestCase
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::RLE_DICTIONARY,
                     Encodings::RLE,
@@ -285,8 +285,8 @@ final class PagesBuilderTest extends TestCase
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
-                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
                     Encodings::RLE,

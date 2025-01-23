@@ -111,6 +111,9 @@ final class ElasticsearchLoader implements Loader
             }
         }
 
+        /**
+         * @phpstan-ignore-next-line
+         */
         return $this->client;
     }
 }
