@@ -42,7 +42,6 @@
         "webmozart/glob": "^3.0 || ^4.0"
     },
     "require-dev": {
-        "aeon-php/calendar": "^1.0",
         "cocur/slugify": "^4.5",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",

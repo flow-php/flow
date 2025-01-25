@@ -4,58 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8400ea2b77c9a64e8896d8bf98426259",
+    "content-hash": "333ba17577ebdf07c50001d0e760a0a5",
     "packages": [
-        {
-            "name": "aeon-php/calendar",
-            "version": "1.0.9",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/aeon-php/calendar.git",
-                "reference": "2cfc45a2cd28b78f1450d8155a1c62df2efe45de"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/2cfc45a2cd28b78f1450d8155a1c62df2efe45de",
-                "reference": "2cfc45a2cd28b78f1450d8155a1c62df2efe45de",
-                "shasum": ""
-            },
-            "require": {
-                "php": "~8.1.10 || ~8.2"
-            },
-            "require-dev": {
-                "ext-bcmath": "*",
-                "ext-pcov": "*"
-            },
-            "suggest": {
-                "ext-bcmath": "Compare time units with high precision"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Aeon\\": [
-                        "src/Aeon"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP type safe, immutable calendar library",
-            "keywords": [
-                "calendar",
-                "date",
-                "datetime",
-                "immutable",
-                "time"
-            ],
-            "support": {
-                "issues": "https://github.com/aeon-php/calendar/issues",
-                "source": "https://github.com/aeon-php/calendar/tree/1.0.9"
-            },
-            "time": "2023-08-29T09:47:37+00:00"
-        },
         {
             "name": "async-aws/core",
             "version": "1.24.1",
@@ -186,25 +136,24 @@
         },
         {
             "name": "coduo/php-humanizer",
-            "version": "5.0.0",
+            "version": "5.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/coduo/php-humanizer.git",
-                "reference": "9d5058698294312d79f6def8613e8011466c4f84"
+                "reference": "a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/9d5058698294312d79f6def8613e8011466c4f84",
-                "reference": "9d5058698294312d79f6def8613e8011466c4f84",
+                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e",
+                "reference": "a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e",
                 "shasum": ""
             },
             "require": {
-                "aeon-php/calendar": "^1.0",
-                "php": "~8.1 || ~8.2 || ~8.3",
-                "symfony/translation": "~5.4||~6.4||~7",
-                "symfony/yaml": "~5.4||~6.4||~7"
+                "php": "~8.2 || ~8.3 || ~8.4",
+                "symfony/translation": "~5.4||~6.4||~7"
             },
             "require-dev": {
+                "aeon-php/calendar": "^1.0",
                 "thunderer/shortcode": "^0.7"
             },
             "suggest": {
@@ -238,9 +187,19 @@
             ],
             "support": {
                 "issues": "https://github.com/coduo/php-humanizer/issues",
-                "source": "https://github.com/coduo/php-humanizer/tree/5.0.0"
+                "source": "https://github.com/coduo/php-humanizer/tree/5.0.1"
             },
-            "time": "2024-04-11T10:30:46+00:00"
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-01-25T02:32:49+00:00"
         },
         {
             "name": "doctrine/dbal",
@@ -511,16 +470,16 @@
         },
         {
             "name": "firebase/php-jwt",
-            "version": "v6.10.2",
+            "version": "v6.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/firebase/php-jwt.git",
-                "reference": "30c19ed0f3264cb660ea496895cfb6ef7ee3653b"
+                "reference": "8f718f4dfc9c5d5f0c994cdfd103921b43592712"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/30c19ed0f3264cb660ea496895cfb6ef7ee3653b",
-                "reference": "30c19ed0f3264cb660ea496895cfb6ef7ee3653b",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/8f718f4dfc9c5d5f0c994cdfd103921b43592712",
+                "reference": "8f718f4dfc9c5d5f0c994cdfd103921b43592712",
                 "shasum": ""
             },
             "require": {
@@ -568,9 +527,9 @@
             ],
             "support": {
                 "issues": "https://github.com/firebase/php-jwt/issues",
-                "source": "https://github.com/firebase/php-jwt/tree/v6.10.2"
+                "source": "https://github.com/firebase/php-jwt/tree/v6.11.0"
             },
-            "time": "2024-11-24T11:22:49+00:00"
+            "time": "2025-01-23T05:11:06+00:00"
         },
         {
             "name": "google/apiclient",
@@ -3564,78 +3523,6 @@
                 }
             ],
             "time": "2024-09-25T14:20:29+00:00"
-        },
-        {
-            "name": "symfony/yaml",
-            "version": "v7.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/yaml.git",
-                "reference": "099581e99f557e9f16b43c5916c26380b54abb22"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/099581e99f557e9f16b43c5916c26380b54abb22",
-                "reference": "099581e99f557e9f16b43c5916c26380b54abb22",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.2",
-                "symfony/deprecation-contracts": "^2.5|^3.0",
-                "symfony/polyfill-ctype": "^1.8"
-            },
-            "conflict": {
-                "symfony/console": "<6.4"
-            },
-            "require-dev": {
-                "symfony/console": "^6.4|^7.0"
-            },
-            "bin": [
-                "Resources/bin/yaml-lint"
-            ],
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Symfony\\Component\\Yaml\\": ""
-                },
-                "exclude-from-classmap": [
-                    "/Tests/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Fabien Potencier",
-                    "email": "fabien@symfony.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Loads and dumps YAML files",
-            "homepage": "https://symfony.com",
-            "support": {
-                "source": "https://github.com/symfony/yaml/tree/v7.2.0"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2024-10-23T06:56:12+00:00"
         },
         {
             "name": "webmozart/glob",

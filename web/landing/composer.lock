@@ -7,56 +7,6 @@
     "content-hash": "6eda8de73cb213d5ff5f8595451db189",
     "packages": [
         {
-            "name": "aeon-php/calendar",
-            "version": "1.0.9",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/aeon-php/calendar.git",
-                "reference": "2cfc45a2cd28b78f1450d8155a1c62df2efe45de"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/2cfc45a2cd28b78f1450d8155a1c62df2efe45de",
-                "reference": "2cfc45a2cd28b78f1450d8155a1c62df2efe45de",
-                "shasum": ""
-            },
-            "require": {
-                "php": "~8.1.10 || ~8.2"
-            },
-            "require-dev": {
-                "ext-bcmath": "*",
-                "ext-pcov": "*"
-            },
-            "suggest": {
-                "ext-bcmath": "Compare time units with high precision"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Aeon\\": [
-                        "src/Aeon"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP type safe, immutable calendar library",
-            "keywords": [
-                "calendar",
-                "date",
-                "datetime",
-                "immutable",
-                "time"
-            ],
-            "support": {
-                "issues": "https://github.com/aeon-php/calendar/issues",
-                "source": "https://github.com/aeon-php/calendar/tree/1.0.9"
-            },
-            "time": "2023-08-29T09:47:37+00:00"
-        },
-        {
             "name": "clue/stream-filter",
             "version": "v1.7.0",
             "source": {
@@ -198,25 +148,24 @@
         },
         {
             "name": "coduo/php-humanizer",
-            "version": "5.0.0",
+            "version": "5.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/coduo/php-humanizer.git",
-                "reference": "9d5058698294312d79f6def8613e8011466c4f84"
+                "reference": "a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/9d5058698294312d79f6def8613e8011466c4f84",
-                "reference": "9d5058698294312d79f6def8613e8011466c4f84",
+                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e",
+                "reference": "a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e",
                 "shasum": ""
             },
             "require": {
-                "aeon-php/calendar": "^1.0",
-                "php": "~8.1 || ~8.2 || ~8.3",
-                "symfony/translation": "~5.4||~6.4||~7",
-                "symfony/yaml": "~5.4||~6.4||~7"
+                "php": "~8.2 || ~8.3 || ~8.4",
+                "symfony/translation": "~5.4||~6.4||~7"
             },
             "require-dev": {
+                "aeon-php/calendar": "^1.0",
                 "thunderer/shortcode": "^0.7"
             },
             "suggest": {
@@ -250,9 +199,19 @@
             ],
             "support": {
                 "issues": "https://github.com/coduo/php-humanizer/issues",
-                "source": "https://github.com/coduo/php-humanizer/tree/5.0.0"
+                "source": "https://github.com/coduo/php-humanizer/tree/5.0.1"
             },
-            "time": "2024-04-11T10:30:46+00:00"
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-01-25T02:32:49+00:00"
         },
         {
             "name": "composer/semver",
@@ -464,12 +423,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "982d68e8701168cd9069473fa2f9a25b6e148cde"
+                "reference": "b50a264b7c26bd055caba04d27514378665e2e91"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/982d68e8701168cd9069473fa2f9a25b6e148cde",
-                "reference": "982d68e8701168cd9069473fa2f9a25b6e148cde",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/b50a264b7c26bd055caba04d27514378665e2e91",
+                "reference": "b50a264b7c26bd055caba04d27514378665e2e91",
                 "shasum": ""
             },
             "require": {
@@ -525,7 +484,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-20T00:16:08+00:00"
+            "time": "2025-01-25T01:55:39+00:00"
         },
         {
             "name": "flow-php/etl-adapter-http",
@@ -5682,22 +5641,82 @@
     ],
     "packages-dev": [
         {
-            "name": "aeon-php/sleep",
-            "version": "1.0.9",
+            "name": "aeon-php/calendar",
+            "version": "1.0.11",
             "source": {
                 "type": "git",
-                "url": "https://github.com/aeon-php/sleep.git",
-                "reference": "2fd7a6a2443f60efbf922dfdc57cf419bf226767"
+                "url": "https://github.com/aeon-php/calendar.git",
+                "reference": "41f4b0ff07247c36b232ddfbcddc62af738be6fe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aeon-php/sleep/zipball/2fd7a6a2443f60efbf922dfdc57cf419bf226767",
-                "reference": "2fd7a6a2443f60efbf922dfdc57cf419bf226767",
+                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/41f4b0ff07247c36b232ddfbcddc62af738be6fe",
+                "reference": "41f4b0ff07247c36b232ddfbcddc62af738be6fe",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+            },
+            "require-dev": {
+                "ext-bcmath": "*",
+                "ext-pcov": "*"
+            },
+            "suggest": {
+                "ext-bcmath": "Compare time units with high precision"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Aeon\\": [
+                        "src/Aeon"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP type safe, immutable calendar library",
+            "keywords": [
+                "calendar",
+                "date",
+                "datetime",
+                "immutable",
+                "time"
+            ],
+            "support": {
+                "issues": "https://github.com/aeon-php/calendar/issues",
+                "source": "https://github.com/aeon-php/calendar/tree/1.0.11"
+            },
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-01-24T04:47:09+00:00"
+        },
+        {
+            "name": "aeon-php/sleep",
+            "version": "1.0.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/aeon-php/sleep.git",
+                "reference": "59f44ef6313e0b05d65aa20369be1fcc937142d3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/aeon-php/sleep/zipball/59f44ef6313e0b05d65aa20369be1fcc937142d3",
+                "reference": "59f44ef6313e0b05d65aa20369be1fcc937142d3",
                 "shasum": ""
             },
             "require": {
                 "aeon-php/calendar": "~1.0",
-                "php": "~8.1.10 || ~8.2"
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
             },
             "type": "library",
             "autoload": {
@@ -5723,9 +5742,19 @@
             ],
             "support": {
                 "issues": "https://github.com/aeon-php/sleep/issues",
-                "source": "https://github.com/aeon-php/sleep/tree/1.0.9"
+                "source": "https://github.com/aeon-php/sleep/tree/1.0.11"
             },
-            "time": "2023-03-28T11:08:40+00:00"
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-01-24T04:47:20+00:00"
         },
         {
             "name": "masterminds/html5",
@@ -6236,16 +6265,16 @@
         },
         {
             "name": "symfonycasts/tailwind-bundle",
-            "version": "v0.7.0",
+            "version": "v0.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SymfonyCasts/tailwind-bundle.git",
-                "reference": "5c0e36694a49f017a06d0331e45ca384fc5f7677"
+                "reference": "81c9e6ff2bb1a95e67fc6af04ca87fccdcf55aa4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/5c0e36694a49f017a06d0331e45ca384fc5f7677",
-                "reference": "5c0e36694a49f017a06d0331e45ca384fc5f7677",
+                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/81c9e6ff2bb1a95e67fc6af04ca87fccdcf55aa4",
+                "reference": "81c9e6ff2bb1a95e67fc6af04ca87fccdcf55aa4",
                 "shasum": ""
             },
             "require": {
@@ -6285,9 +6314,9 @@
             ],
             "support": {
                 "issues": "https://github.com/SymfonyCasts/tailwind-bundle/issues",
-                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.7.0"
+                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.7.1"
             },
-            "time": "2025-01-22T16:31:51+00:00"
+            "time": "2025-01-23T14:54:07+00:00"
         }
     ],
     "aliases": [],
@@ -6302,6 +6331,6 @@
     "platform": {
         "php": "8.2.*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }
