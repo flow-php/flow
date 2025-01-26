@@ -6,7 +6,7 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
-use Flow\ETL\Row\{Entries, Entry, Reference, References, Schema};
+use Flow\ETL\Row\{Entries, Entry, Reference, Schema};
 
 final readonly class Row
 {
@@ -82,8 +82,8 @@ final readonly class Row
     {
         $entries = [];
 
-        foreach (References::init(...$names) as $ref) {
-            $entries[] = $this->entries->get($ref);
+        foreach ($names as $name) {
+            $entries[] = $this->entries->get($name);
         }
 
         return new self(new Entries(...$entries));
@@ -113,9 +113,9 @@ final readonly class Row
     {
         $namesToRemove = [];
 
-        foreach (References::init(...$names) as $ref) {
-            if ($this->entries->has($ref)) {
-                $namesToRemove[] = $ref;
+        foreach ($names as $name) {
+            if ($this->entries->has($name)) {
+                $namesToRemove[] = $name;
             }
         }
 
