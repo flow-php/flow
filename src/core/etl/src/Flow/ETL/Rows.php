@@ -328,7 +328,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             foreach ($right as $rightRow) {
                 if ($expression->meet($leftRow, $rightRow)) {
                     try {
-                        $joinedRow = $leftRow->merge($rightRow, $expression->prefix());
+                        $joinedRow = $leftRow->merge($expression->dropDuplicateRightEntries($rightRow), $expression->prefix());
                     } catch (DuplicatedEntriesException $e) {
                         throw new DuplicatedEntriesException($e->getMessage() . ' try to use a different join prefix than: "' . $expression->prefix() . '"');
                     }
@@ -364,7 +364,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             foreach ($right as $rightRow) {
                 if ($expression->meet($leftRow, $rightRow)) {
                     try {
-                        $joinedRow = $leftRow->merge($rightRow, $expression->prefix());
+                        $joinedRow = $leftRow->merge($expression->dropDuplicateRightEntries($rightRow), $expression->prefix());
                     } catch (DuplicatedEntriesException $e) {
                         throw new DuplicatedEntriesException($e->getMessage() . ' try to use a different join prefix than: "' . $expression->prefix() . '"');
                     }
@@ -382,7 +382,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
                     $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->makeNullable());
                 }
 
-                $joinedRow = $leftRow->merge(row(...$entries), $expression->prefix());
+                $joinedRow = $leftRow->merge($expression->dropDuplicateRightEntries(row(...$entries)), $expression->prefix());
             }
 
             $joined[] = $joinedRow;
@@ -438,7 +438,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             foreach ($this->rows as $leftRow) {
                 if ($expression->meet($leftRow, $rightRow)) {
                     try {
-                        $joinedRow = $leftRow->merge($rightRow, $expression->prefix());
+                        $joinedRow = $expression->dropDuplicateLeftEntries($leftRow)->merge($rightRow, $expression->prefix());
                     } catch (DuplicatedEntriesException $e) {
                         throw new DuplicatedEntriesException($e->getMessage() . ' try to use a different join prefix than: "' . $expression->prefix() . '"');
                     }
@@ -456,7 +456,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
                     $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->makeNullable());
                 }
 
-                $joined[] = row(...$entries)->merge($rightRow, $expression->prefix());
+                $joined[] = $expression->dropDuplicateLeftEntries(row(...$entries))->merge($rightRow, $expression->prefix());
             }
         }
 

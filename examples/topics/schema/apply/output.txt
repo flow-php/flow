@@ -1,4 +1,4 @@
 schema
 |-- id: integer
-|-- name: string
+|-- name: ?string
 |-- active: boolean

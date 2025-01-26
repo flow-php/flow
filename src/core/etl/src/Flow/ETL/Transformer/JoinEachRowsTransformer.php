@@ -11,7 +11,7 @@ final readonly class JoinEachRowsTransformer implements Transformer
 {
     private function __construct(
         private DataFrameFactory $factory,
-        private Expression $condition,
+        private Expression $expression,
         private Join $type,
     ) {
     }
@@ -43,11 +43,13 @@ final readonly class JoinEachRowsTransformer implements Transformer
      */
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
+        $rightRows = $this->factory->from($rows)->fetch();
+
         return match ($this->type) {
-            Join::left => $rows->joinLeft($this->factory->from($rows)->fetch(), $this->condition),
-            Join::left_anti => $rows->joinLeftAnti($this->factory->from($rows)->fetch(), $this->condition),
-            Join::right => $rows->joinRight($this->factory->from($rows)->fetch(), $this->condition),
-            default => $rows->joinInner($this->factory->from($rows)->fetch(), $this->condition),
+            Join::left => $rows->joinLeft($rightRows, $this->expression),
+            Join::left_anti => $rows->joinLeftAnti($rightRows, $this->expression),
+            Join::right => $rows->joinRight($rightRows, $this->expression),
+            default => $rows->joinInner($rightRows, $this->expression),
         };
     }
 }

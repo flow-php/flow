@@ -34,7 +34,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
             }
         };
 
-        $transformer = JoinEachRowsTransformer::inner($right, Expression::on(['country' => 'code']));
+        $transformer = JoinEachRowsTransformer::inner($right, Expression::on(['country' => 'code'], 'joined_'));
 
         self::assertEquals(
             [
@@ -65,7 +65,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
             }
         };
 
-        $transformer = JoinEachRowsTransformer::left($right, Expression::on(['country' => 'code']));
+        $transformer = JoinEachRowsTransformer::left($right, Expression::on(['country' => 'code'], 'joined_'));
 
         self::assertEquals(
             [
@@ -97,7 +97,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
             }
         };
 
-        $transformer = JoinEachRowsTransformer::right($right, Expression::on(['country' => 'code']));
+        $transformer = JoinEachRowsTransformer::right($right, Expression::on(['country' => 'code'], 'joined_'));
 
         self::assertEquals(
             [

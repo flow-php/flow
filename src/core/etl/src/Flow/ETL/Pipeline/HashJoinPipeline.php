@@ -122,7 +122,13 @@ final readonly class HashJoinPipeline implements Pipeline
     private function createRows(Row $leftRow, Row $rightRow) : Rows
     {
         try {
-            return rows($leftRow->merge($rightRow, $this->expression->prefix()));
+            return match ($this->join) {
+                Join::inner => rows($leftRow->merge($rightRow, $this->expression->prefix())),
+                Join::left => rows($leftRow->merge($this->expression->dropDuplicateRightEntries($rightRow), $this->expression->prefix())),
+                Join::right => rows($this->expression->dropDuplicateLeftEntries($leftRow)->merge($rightRow, $this->expression->prefix())),
+                Join::left_anti => rows(),
+            };
+
         } catch (DuplicatedEntriesException $e) {
             throw new JoinException($e->getMessage() . ' try to use a different join prefix than: "' . $this->expression->prefix() . '"', $e->getCode(), $e);
         }

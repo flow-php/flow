@@ -6,6 +6,7 @@
         colors="true"
         displayDetailsOnTestsThatTriggerWarnings="true"
         displayDetailsOnTestsThatTriggerErrors="true"
+        cacheDirectory="var/phpunit/cache"
 >
   <php>
     <env name="AZURITE_HOST" value="localhost"/>

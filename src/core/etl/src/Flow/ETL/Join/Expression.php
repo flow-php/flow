@@ -6,8 +6,8 @@ namespace Flow\ETL\Join;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Comparison\{All, Equal};
-use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\{Row};
 
 final readonly class Expression
 {
@@ -20,7 +20,7 @@ final readonly class Expression
     /**
      * @param array<Comparison>|array<string, string>|Comparison $comparison
      */
-    public static function on(array|Comparison $comparison, string $joinPrefix = 'joined_') : self
+    public static function on(array|Comparison $comparison, string $joinPrefix = '') : self
     {
         if (\is_array($comparison)) {
             /** @var array<Comparison> $comparisons */
@@ -48,6 +48,62 @@ final readonly class Expression
         }
 
         return new self($comparison, $joinPrefix);
+    }
+
+    public function dropDuplicateLeftEntries(Row $left) : Row
+    {
+        if ($this->joinPrefix === '') {
+            $leftEntries = [];
+            $rightEntries = [];
+
+            foreach ($this->left() as $leftReference) {
+                $leftEntries[] = $leftReference->name();
+            }
+
+            foreach ($this->right() as $rightReference) {
+                $rightEntries[] = $rightReference->name();
+            }
+
+            $dropLeft = [];
+
+            foreach ($leftEntries as $leftEntry) {
+                if (\in_array($leftEntry, $rightEntries, true)) {
+                    $dropLeft[] = $leftEntry;
+                }
+            }
+
+            return $left->remove(...$dropLeft);
+        }
+
+        return $left;
+    }
+
+    public function dropDuplicateRightEntries(Row $right) : Row
+    {
+        if ($this->joinPrefix === '') {
+            $leftEntries = [];
+            $rightEntries = [];
+
+            foreach ($this->left() as $leftReference) {
+                $leftEntries[] = $leftReference->name();
+            }
+
+            foreach ($this->right() as $rightReference) {
+                $rightEntries[] = $rightReference->name();
+            }
+
+            $dropRight = [];
+
+            foreach ($rightEntries as $rightEntry) {
+                if (\in_array($rightEntry, $leftEntries, true)) {
+                    $dropRight[] = $rightEntry;
+                }
+            }
+
+            return $right->remove(...$dropRight);
+        }
+
+        return $right;
     }
 
     /**
