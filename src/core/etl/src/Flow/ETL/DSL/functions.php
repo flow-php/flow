@@ -129,6 +129,7 @@ use Flow\ETL\{Attribute\DocumentationDSL,
     RandomValueGenerator,
     Row,
     Rows,
+    Transformation,
     Transformer,
     Window};
 use Flow\Filesystem\Stream\Mode;
@@ -329,13 +330,13 @@ function to_stream(string $uri, int|bool $truncate = 20, Output $output = Output
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_transformation(Transformer $transformer, Loader $loader) : TransformerLoader
+function to_transformation(Transformer|Transformation $transformer, Loader $loader) : TransformerLoader
 {
     return new TransformerLoader($transformer, $loader);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_branch(ScalarFunction $condition, Loader $loader) : Loader
+function to_branch(ScalarFunction $condition, Loader $loader) : Loader\BranchingLoader
 {
     return new Loader\BranchingLoader($condition, $loader);
 }

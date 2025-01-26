@@ -4,19 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use Flow\ETL\{FlowContext, Loader, Rows, Transformer};
+use function Flow\ETL\DSL\{df, from_rows};
+use Flow\ETL\{FlowContext, Loader, Rows, Transformation, Transformer};
 
 final readonly class TransformerLoader implements Loader, OverridingLoader
 {
     public function __construct(
-        private Transformer $transformer,
+        private Transformer|Transformation $transformer,
         private Loader $loader,
     ) {
     }
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        $this->loader->load($this->transformer->transform($rows, $context), $context);
+        if ($this->transformer instanceof Transformer) {
+            $rows = $this->transformer->transform($rows, $context);
+        } else {
+            $rows = df()->from(from_rows($rows))->with($this->transformer)->fetch();
+        }
+
+        $this->loader->load($rows, $context);
     }
 
     public function loaders() : array
