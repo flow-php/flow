@@ -1,0 +1,349 @@
+{% extends 'blog/post.html.twig' %}
+
+{% block article %}
+<article id="blog-post">
+    <h1>Data Processing for Beginners</h1>
+    <hr />
+    <p>
+        Let's imagine a situation where we have to import a large amount of data from a file to our database.<br/>
+        Typically, the file format would be some variation of CSV or maybe even an Excel file.<br/>
+        The purpose of those kinds of operations is to allow system users to upload data in bulk.
+    </p>
+    <p>
+        In the simple scenario, our database structure will more or less match the import file data structure. <br/>
+        Some columns might be named differently, but those are minor obstacles that can be very easily addressed. <br/>
+        The real challenge starts when we need to fully convert the input format to match our database. Let me give you an example.
+    </p>
+    <p>
+        Let’s imagine a system that allows users to upload user delivery addresses.<br/>
+        Each user needs to have at least one address, and each address comes in the following format:
+    </p>
+    <pre><code class="language-json" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/address.json' %}{% endapply %}</code></pre>
+    <p>
+        For the sake of this article, our database has only two tables.<br/>
+        The first one table is called <code>users</code> and it has the following columns:
+    </p>
+    <ul>
+        <li>id - uuid</li>
+        <li>first_name - string</li>
+        <li>last_name - string</li>
+        <li>email - string</li>
+    </ul>
+    <p>
+        The second one is called <code>user_addresses</code> and it has the following structure:
+    </p>
+    <ul>
+        <li>id - uuid</li>
+        <li>user_id - uuid</li>
+        <li>country - string</li>
+        <li>state - string</li>
+        <li>zip - string</li>
+        <li>city - string</li>
+        <li>address_1 - string</li>
+        <li>address_2 - string (optional)</li>
+        <li>address_3 - string (optional)</li>
+    </ul>
+
+    <section class="google-ad">
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2364202911639369" crossorigin="anonymous"></script>
+        <ins class="adsbygoogle"
+             style="display:block; text-align:center;"
+             data-ad-layout="in-article"
+             data-ad-format="fluid"
+             data-ad-client="ca-pub-2364202911639369"
+             data-ad-slot="7201592389">
+
+        </ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </section>
+
+    <p>
+        Doesn’t look like a complicated task, right?
+    </p>
+    <p>
+        Well, those are famous last words 😅
+    </p>
+    <p>
+        What if business users would like to upload files larger than our available amount of RAM?
+    </p>
+    <ul>
+        <li>Maximum RAM we are willing to use per single import: 100Mb</li>
+        <li>Single import file size: 512Mb</li>
+    </ul>
+    <p>
+        PHP can process large amounts of data, as demonstrated in an article by <a href="https://dev.to/realflowcontrol/processing-one-billion-rows-in-php-3eg0" target="_blank">Florian Engelhardt</a>
+    </p>
+    <p>
+        However, his solution is optimized for speed, not memory consumption.<br/>
+        To handle large data in PHP with limited memory, use Generators (the foundation of Flow PHP).<br/>
+        Generators allow you to process data in chunks without loading the entire file into memory.
+    </p>
+    <p>
+        Similarly, fgets, fgetcsv, and fopen/fclose can be used.<br/>
+        Large data processing in PHP is possible, but it's not easy.
+    </p>
+    <p>
+        Languages like Python provide tools that hide this complexity behind easier-to-digest abstractions, making data processing more accessible.
+    </p>
+    <ul>
+        <li><a href="https://pandas.pydata.org/" target="_blank">Pandas</a> </li>
+        <li><a href="https://www.dask.org/" target="_blank">Dask</a></li>
+        <li><a href="https://spark.apache.org/docs/latest/api/python/index.html" target="_blank">PySpark</a></li>
+        <li>...</li>
+    </ul>
+
+    <p>
+        Flow PHP aims to reduce data processing complexity and standardize the approach, considering resource consumption.<br/>
+        OK, but let’s get back to our example.<br/>
+        To make it easier to create those import files for the user, the file's expected data structure looks like this:
+    </p>
+    <ul>
+        <li>id (optional address id, used only to update addresses)</li>
+        <li>user_email</li>
+        <li>country</li>
+        <li>zip</li>
+        <li>state</li>
+        <li>city</li>
+        <li>address_1</li>
+        <li>address_2</li>
+        <li>address_3</li>
+    </ul>
+
+    <p>
+        In order to import that file's content into our database, we need to take the following steps:
+    </p>
+    <ul>
+        <li>1) Read a row from a file</li>
+        <li>2) Validate it</li>
+        <li>3) Find a user_id based on user_email from a file</li>
+        <li>4) Insert an address to a database or update it if it’s already there</li>
+    </ul>
+    <p>
+        OK, but what about invalid rows?<br/>
+        There are many different strategies; sometimes the entire import pipeline should be stopped when the<br/>
+        first invalid row is spotted. In this case, we can just import all valid rows and filter out invalid ones.
+        But to provide a decent UX, we are going to save filtered-out rows in a separate file so the user can fix them.
+    </p>
+
+    <section class="google-ad">
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2364202911639369" crossorigin="anonymous"></script>
+        <ins class="adsbygoogle"
+             style="display:block; text-align:center;"
+             data-ad-layout="in-article"
+             data-ad-format="fluid"
+             data-ad-client="ca-pub-2364202911639369"
+             data-ad-slot="7201592389">
+
+        </ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </section>
+
+    <h2>Step #1 - Reading file</h2>
+    <hr/>
+
+    <p>
+        No surprises here, we just need to use from_csv which will do its best to automatically detect
+        separator, enclosure, and escape which can also be set manually.
+    </p>
+
+    <blockquote>
+        Flow by design yields one row at a time; this behavior can be changed through <code>DataFrame::batchSize(int $batchSize).</code>
+    </blockquote>
+
+    <h2>Step #2 - Validation</h2>
+    <hr/>
+
+    <p>
+        Here things are becoming a bit more tricky since we need to approach it in a similar way we would approach processing data directly in Excel.<br/>
+        One of the techniques we can use is creating a temporary column "valid" with a value set by default to "true".<br/>
+        Then we should update that column's value to false whenever the column we are validating is not satisfying our rules.
+    </p>
+    <p>
+        Let's take a look at email validation; here is what we want to check:
+    </p>
+    <ul>
+        <li>user_email column is a valid string.</li>
+        <li>column value is not empty.</li>
+        <li>column value length is less than 256 characters.</li>
+    </ul>
+
+    <p>
+        <code>
+            ref('user_email')->isType(type_string()) // valid string
+        </code><br/>
+        <code>
+            ref('user_email')->size()->between(lit(1), lit(256)) // length
+        </code>
+    </p>
+
+    <p>In order to combine those two conditions we can use and operator:</p>
+
+    <p>
+    <code>ref('user_email')->isType(type_string())->and(ref('user_email')->size()->between(lit(1), lit(256))) </code>
+    </p>
+
+    <p>
+        Now we need to check if this condition is true and when it’s true, just leave the value of the column "valid" as is, otherwise we need to set it to "false".
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/single-column-validation.php' %}{% endapply %}</code></pre>
+
+    <p>
+        This is how all our validation rules are going to look like:
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/full-validation.php' %}{% endapply %}</code></pre>
+
+    <blockquote>
+        💡 It’s usually a good idea to extract such logic into a standalone transformation. This way our validation logic can be tested in isolation.
+    </blockquote>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/validation-transformation.php' %}{% endapply %}</code></pre>
+
+    <p>
+        At this point, all rows that go through our pipeline get that additional column "valid", which can be used to filter out invalid rows,
+        but before we do that, we should first write all invalid rows to a separate file.
+    </p>
+    <p>
+        Flow has a dedicated loader which can write only a subset of the dataset based on the provided condition. It’s called <code>to_branch()</code>.
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/write-to-branch.php' %}{% endapply %}</code></pre>
+
+    <blockquote>
+        💡 Try clicking function names in the code examples!
+    </blockquote>
+
+    <section class="google-ad">
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2364202911639369" crossorigin="anonymous"></script>
+        <ins class="adsbygoogle"
+             style="display:block; text-align:center;"
+             data-ad-layout="in-article"
+             data-ad-format="fluid"
+             data-ad-client="ca-pub-2364202911639369"
+             data-ad-slot="7201592389">
+
+        </ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </section>
+
+    <p>
+        All invalid rows are going to be saved separately; everything else we can consider valid.
+    </p>
+    <p>
+        Obviously, those validation rules can be way more sophisticated, to the point where each field can be validated in a separate
+        transformation object.
+    </p>
+    <blockquote>
+        When operations are repeatable, it might be a good idea to extract them and make them flexible; for example, we can easily create a string length validation Transformation.
+    </blockquote>
+    <p>
+        Below you can find an example of simple StringLengthValidation implemented as a Transformation object.
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/string-length-validation.php' %}{% endapply %}</code></pre>
+
+    <p>
+        Dividing transformation logic into smaller parts is pretty much the only reliable way to properly test edge cases in
+        data processing pipelines.
+    </p>
+
+    <h2>Step #3 - Finding user_id based on user_email </h2>
+    <p>
+        Once we confirmed that our data is valid, we can move on to figuring out to which user given address belongs.
+        We already have a user email in the import file; what we are missing is user_id.
+        User identifiers are stored in the table `users` in our database, so our next step is to bring those IDs under the `user_id` column.
+    </p>
+    <p>
+        In a typical scenario, we would try to collect emails from the import file into reasonable batches and query a database
+        to return us the user_id’s those emails belong to.
+    </p>
+    <blockquote>
+        In order to not overcomplicate our example, we are going to assume that all emails exist in the database.
+    </blockquote>
+    <p>
+        We are going to use <code>DataFrame::joinEach()</code>, which is slightly different than <code>DataFrame::join</code>.
+        The only difference between those two joins is that <code>join</code> will try to execute the join on the entire dataset before moving forward.
+        This means that if our dataset has 2 million rows, Flow would first go through them, executing the join on each row before it can move forward.
+    </p>
+    <p>
+        Additionally, we are executing a join between two different data storages: database and file. In order to use <code>DataFrame::join</code>,
+        we would need to either first load everything to the database and then run an SQL query with a join or we could dump
+        the database table to a CSV file and then join between files.
+    </p>
+    <p>
+        This is where joinEach comes into play. The goal of this join is to execute a join operation on a subset of the dataset.<br/>
+        First thing we need to do is to define our batch size. As mentioned previously, all extractors by design will yield only one row at a time.
+        Using batchSize, we can change that behavior.
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/batch-size.php' %}{% endapply %}</code></pre>
+
+    <p>
+        In the example above, everything that will happen after <code>->batchSize(100)</code> will happen on 100 rows (or less when there is not enough).
+        So now when we use joinEach, it will perform a join operation at 100 rows at a time. After joining them, it will proceed with other transformations
+        to start over again until the whole import file is processed.
+    </p>
+    <p>
+        JoinEach is a very specific operation; it requires us to create a new DataFrame for each batch, that’s why we need to implement the <code>DataFrameFactory</code> interface.
+    </p>
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/user-id-join-data-frame-factory.php' %}{% endapply %}</code></pre>
+
+    <p>
+        The very last step is to define the join expression (how to join two datasets, based on what condition).
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/join-each.php' %}{% endapply %}</code></pre>
+
+    <p>
+        That’s it, lets now use `to_output()` loader to display our dataset after join operation
+    </p>
+
+    <pre><code class="language-txt" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/data.txt' %}{% endapply %}</code></pre>
+
+    <p>
+        As we can see, the user_id column was added just as expected. Normally, here we would need to execute another validation and append
+        invalid rows to our broken rows file, but let's skip that part and move to loading data into the database.
+    </p>
+
+    <h2>Step #4 - Insert an address to a database or update it, if it’s already there</h2>
+
+    <p>
+        Now, when we know which address belongs to which user, it’s time to update (insert or update) those addresses into the user_addresses database table.<br/>
+        Oh wait, there is one more thing.
+    </p>
+    <p>
+        If the address id is null (empty), it means that we are not updating an existing address but instead adding a new one.<br/>
+        So in this case, we just need to generate a new unique identifier, but only when id is null; otherwise, keep it as is.
+    </p>
+
+    <p>
+        <code>->withEntry('id', when(ref('id')->isNull(), lit(Uuid::uuid4()->toString()), ref('id')))</code>
+    </p>
+
+    <p>
+        Now we are ready to update our addresses into a database!<br/>
+        Ready? Normally it’s not the easiest to perform bulk upsert through Doctrine DBAL.<br/>
+        Luckily, Flow comes with a <a href="/documentation/components/libs/doctrine-dbal-bulk/" target="_blank">doctrine-dbal-bulk</a> library so at the end of the day, here is how it looks:
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/dbal-bulk-upsert.php' %}{% endapply %}</code></pre>
+
+    <p>
+        And finally, we got to the end. Below is the full code (without transformations that we extracted from this pipeline).
+    </p>
+
+    <pre><code class="language-php" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/code.php' %}{% endapply %}</code></pre>
+
+    <p>
+        As you can see, processing large amounts of data is not an easy task, but with the right tools, it can be done without reinventing the wheel.
+    </p>
+    <p>
+        In the next article, we are going to take a look at how to export data from a database to a file.
+    </p>
+</article>
+{% endblock %}

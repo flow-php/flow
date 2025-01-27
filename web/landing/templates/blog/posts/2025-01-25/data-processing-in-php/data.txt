@@ -1,0 +1,14 @@
++----------------------+---------+-------+------------+-------------------+-----------------+-----------+-----------+----------------------+
+|                   id | country | state |        zip |              city |       address_1 | address_2 | address_3 |              user_id |
++----------------------+---------+-------+------------+-------------------+-----------------+-----------+-----------+----------------------+
+| 36a1192d-1c8e-31fc-9 |      US |    AR |      44389 |       Keelingbury |     Noemy Burgs |       359 |           | 01a3e823-2a69-3432-9 |
+| 3d763134-aec2-3a75-8 |      US |    FL | 71341-9244 |          Krisside |       Oren Road |       511 |           | 01b0abd3-7217-332c-9 |
+| b03c6357-8451-3320-9 |      US |    ID |      65146 |      Bernardoview |   Tevin Harbors |      4344 |           | 01b1a371-1c70-320a-b |
+| 476cf6ba-2aac-3b58-9 |      US |    LA | 64572-0907 |        Lake Estel |    Harber Ranch |       436 |  Motorway | 01c45346-3fb8-3edf-8 |
+| b37710e0-26dc-343c-9 |      US |    MS | 83824-7369 | North Carissafort |      Bulah Dale |      8097 |           | 01c45346-3fb8-3edf-8 |
+| 03eaaf10-644d-3d92-9 |      US |    OH |      71386 |      Cameronshire |     Oren Drives |      3828 |           | 01c64f97-9ec1-3b55-9 |
+| a78970b7-4964-3f91-b |      US |    MA |      79319 |  Port Rodgershire |     Parker Mall |       873 |           | 01c64f97-9ec1-3b55-9 |
+| cc73778c-cb3a-305a-8 |      US |    NE |      63187 |        Parkerfort |  Cassandre Ways |      4633 |           | 01c64f97-9ec1-3b55-9 |
+|                      |      US |    NH |      96807 |    West Catherine | Schmeler Valley |      9834 |     Mills | 01ce6d03-6b8e-3b8a-9 |
+| 2419b64c-db25-38af-9 |      US |    NM |      74053 |         Carolstad |        Rory Row |      8019 |  Crossing | 01ce6d03-6b8e-3b8a-9 |
++----------------------+---------+-------+------------+-------------------+-----------------+-----------+-----------+----------------------+

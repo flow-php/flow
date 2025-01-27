@@ -91,6 +91,14 @@ code {
     @apply text-blue-100 my-4 border-t-2 rounded;
 }
 
+#blog-post blockquote {
+    @apply border-l-4 border-orange-100 p-2 bg-blue-300 mb-3;
+}
+
+#blog-post code {
+    @apply text-orange-100;
+}
+
 #example-description h1 {
     @apply font-bold text-2xl;
 }

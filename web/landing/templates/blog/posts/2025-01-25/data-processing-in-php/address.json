@@ -1,0 +1,10 @@
+{
+  "id": "uuid",
+  "country": "string{2}",
+  "state": "string{2}",
+  "zip": "string{9}",
+  "city": "string{256}",
+  "address_1": "string{256}",
+  "address_2": "string{256}",
+  "address_3": "string{256}"
+}

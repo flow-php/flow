@@ -18,7 +18,12 @@ final class Posts
             'description' => 'Scalar functions are one of the most important building blocks of Flow. Learn how to build and use custom scalar functions in Flow PHP.',
             'date' => '2024-08-08',
             'slug' => 'scalar-functions',
-
+        ],
+        [
+            'title' => 'Data processing in PHP',
+            'description' => 'Processing datasets is a common problem in almost any software. Learn how to process datasets in PHP just like it\'s being done in other programming languages.',
+            'date' => '2025-01-25',
+            'slug' => 'data-processing-in-php',
         ],
     ];
 
