@@ -10,7 +10,7 @@ final readonly class Statistics
 {
     public function __construct(
         private int $totalRows,
-        public readonly ExecutionTime $executionTime,
+        public ExecutionTime $executionTime,
     ) {
     }
 

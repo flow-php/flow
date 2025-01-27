@@ -758,6 +758,7 @@ final class DataFrame
 
         if ($analyze) {
             $startedAt = $this->context->config->clock()->now();
+            $startTime = Statistics\HighResolutionTime::now();
         }
 
         foreach ($clone->pipeline->process($clone->context) as $rows) {
@@ -773,8 +774,9 @@ final class DataFrame
 
         if ($analyze) {
             $endedAt = $this->context->config->clock()->now();
+            $endTime = Statistics\HighResolutionTime::now();
 
-            return new Report($schema, new Statistics($totalRows, new Statistics\ExecutionTime($startedAt, $endedAt)));
+            return new Report($schema, new Statistics($totalRows, new Statistics\ExecutionTime($startedAt, $endedAt, $startTime->diff($endTime))));
         }
 
         return null;

@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\{
     str_schema};
 use Flow\Clock\FakeClock;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\ETL\{FlowContext, Rows};
+use Flow\ETL\{Dataset\Statistics\HighResolutionTime, FlowContext, Rows};
 
 final class AnalyzeTest extends FlowIntegrationTestCase
 {
@@ -63,6 +63,8 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         self::assertInstanceOf(\DateTimeImmutable::class, $report->statistics()->executionTime->finishedAt);
         self::assertGreaterThanOrEqual($report->statistics()->executionTime->startedAt, $report->statistics()->executionTime->finishedAt);
         self::assertEquals(5 * 60, $report->statistics()->executionTime->inSeconds());
+        self::assertInstanceOf(HighResolutionTime::class, $report->statistics()->executionTime->highResolutionTime);
+        self::assertgreaterThan(0, $report->statistics()->executionTime->highResolutionTime->toSeconds());
     }
 
     public function test_analyzing_csv_file_with_limit() : void

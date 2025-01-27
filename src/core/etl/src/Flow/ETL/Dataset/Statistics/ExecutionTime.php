@@ -8,8 +8,11 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 final readonly class ExecutionTime
 {
-    public function __construct(public \DateTimeImmutable $startedAt, public \DateTimeImmutable $finishedAt)
-    {
+    public function __construct(
+        public \DateTimeImmutable $startedAt,
+        public \DateTimeImmutable $finishedAt,
+        public HighResolutionTime $highResolutionTime,
+    ) {
         if ($startedAt > $finishedAt) {
             throw new InvalidArgumentException('Execution start date must be before finish date');
         }
