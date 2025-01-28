@@ -10,28 +10,18 @@ use function Flow\ETL\DSL\{datetime_schema,
     str_entry,
     struct_entry,
     struct_schema,
-    type_datetime,
     type_float,
     type_int,
     type_list,
     type_map,
     type_string,
     type_structure};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Exception\{RuntimeException};
 use Flow\ETL\Row\Schema\{Definition, Metadata};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class DefinitionTest extends FlowTestCase
 {
-    public function test_creating_definition_without_class() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Entry class "DateTimeInterface" must implement "Flow\ETL\Row\Entry"');
-
-        /** @phpstan-ignore-next-line */
-        new Definition('name', \DateTimeInterface::class, type_datetime());
-    }
-
     public function test_equals_nullability() : void
     {
         $def = integer_schema('id', nullable: true);

@@ -47,7 +47,7 @@ final readonly class ObjectType implements Type
         return $type instanceof self && $this->class === $type->class;
     }
 
-    public function isSame(Type $type): bool
+    public function isSame(Type $type) : bool
     {
         return $this->isEqual($type) && $this->nullable() === $type->nullable();
     }

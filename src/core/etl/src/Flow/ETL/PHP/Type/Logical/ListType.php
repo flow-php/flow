@@ -56,9 +56,14 @@ final readonly class ListType implements Type
         return $this->element->isEqual($type->element());
     }
 
-    public function isSame(Type $type): bool
+    public function isSame(Type $type) : bool
     {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable() && $this->element->isSame($type->element());
+        if (!$this->isEqual($type)) {
+            return false;
+        }
+
+        /** @var self $type */
+        return $this->nullable() === $type->nullable() && $this->element->isSame($type->element());
     }
 
     public function isValid(mixed $value) : bool

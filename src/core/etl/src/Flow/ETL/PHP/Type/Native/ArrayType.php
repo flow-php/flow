@@ -39,14 +39,22 @@ final readonly class ArrayType implements Type
         return false;
     }
 
+    /**
+     * @psalm
+     */
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;
     }
 
-    public function isSame(Type $type): bool
+    public function isSame(Type $type) : bool
     {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable() && $this->empty === $type->empty;
+        if (!$this->isEqual($type)) {
+            return false;
+        }
+
+        /** @var self $type */
+        return $this->nullable() === $type->nullable() && $this->empty === $type->empty;
     }
 
     public function isValid(mixed $value) : bool

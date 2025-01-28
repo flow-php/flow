@@ -40,7 +40,7 @@ final readonly class TimeType implements Type
         return $type instanceof self;
     }
 
-    public function isSame(Type $type): bool
+    public function isSame(Type $type) : bool
     {
         return $this->isEqual($type) && $this->nullable() === $type->nullable();
     }

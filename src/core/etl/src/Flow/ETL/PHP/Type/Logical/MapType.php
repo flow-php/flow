@@ -56,9 +56,14 @@ final readonly class MapType implements Type
         return $this->key->isEqual($type->key()) && $this->value->isEqual($type->value());
     }
 
-    public function isSame(Type $type): bool
+    public function isSame(Type $type) : bool
     {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable() && $this->key->isSame($type->key()) && $this->value->isSame($type->value());
+        if (!$this->isEqual($type)) {
+            return false;
+        }
+
+        /** @var self $type */
+        return $this->nullable() === $type->nullable() && $this->key->isSame($type->key()) && $this->value->isSame($type->value());
     }
 
     public function isValid(mixed $value) : bool
