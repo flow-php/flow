@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use function Flow\ETL\Adapter\XML\from_xml;
-use function Flow\ETL\DSL\{datetime_schema, df, int_schema, ref, schema, type_int};
+use function Flow\ETL\DSL\{date_schema, datetime_schema, df, int_schema, ref, schema, type_int};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
@@ -82,7 +82,7 @@ final class XMLTest extends FlowIntegrationTestCase
                 int_schema('parent_attribute_02'),
                 int_schema('item_attribute_01'),
                 int_schema('value'),
-                datetime_schema('date')
+                date_schema('date')
             ),
             $rows->schema()
         );
