@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
-use function Flow\ETL\DSL\{
-    config_builder,
+use function Flow\ETL\DSL\{config_builder,
+    date_schema,
     datetime_schema,
     df,
     float_schema,
@@ -49,7 +49,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
         self::assertEquals(
             schema(
                 int_schema('Index'),
-                datetime_schema('Date'),
+                date_schema('Date'),
                 float_schema('Close'),
                 float_schema('Volume'),
                 float_schema('Open'),

@@ -46,7 +46,7 @@ final class BooleanEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::boolean($this->name, $this->type->nullable(), $this->metadata);
+        return new Definition($this->name, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

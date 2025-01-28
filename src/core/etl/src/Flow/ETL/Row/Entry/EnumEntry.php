@@ -42,12 +42,7 @@ final class EnumEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::enum(
-            $this->name,
-            $this->type->class,
-            $this->type->nullable(),
-            $this->metadata
-        );
+        return new Definition($this->name, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

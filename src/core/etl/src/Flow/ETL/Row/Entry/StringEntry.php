@@ -76,9 +76,9 @@ final class StringEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::string(
+        return new Definition(
             $this->name,
-            $this->type->nullable(),
+            $this->type,
             $this->fromNull
                 ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
                 : $this->metadata

@@ -53,7 +53,7 @@ final class ListEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::list($this->name, $this->type, $this->metadata);
+        return new Definition($this->name, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

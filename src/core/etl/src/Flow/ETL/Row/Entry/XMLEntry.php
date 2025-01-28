@@ -91,7 +91,7 @@ final class XMLEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::xml($this->ref(), $this->type->nullable(), $this->metadata);
+        return new Definition($this->name, $this->type, $this->metadata);
     }
 
     public function is(Reference|string $name) : bool

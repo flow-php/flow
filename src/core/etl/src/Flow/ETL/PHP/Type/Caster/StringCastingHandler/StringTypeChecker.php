@@ -51,6 +51,50 @@ final readonly class StringTypeChecker
         return true;
     }
 
+
+    public function isDate()
+    {
+        if ($this->string === '') {
+            return false;
+        }
+
+        $dateParts = \date_parse($this->string);
+
+        if ($dateParts['error_count'] > 0) {
+            return false;
+        }
+
+        if ($dateParts['year'] === false) {
+            return false;
+        }
+
+        if ($dateParts['month'] === false) {
+            return false;
+        }
+
+        if ($dateParts['day'] === false) {
+            return false;
+        }
+
+        if ($dateParts['hour'] !== false) {
+            return false;
+        }
+
+        if ($dateParts['minute'] !== false) {
+            return false;
+        }
+
+        if ($dateParts['second'] !== false) {
+            return false;
+        }
+
+        if ($dateParts['fraction'] !== false) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function isFloat() : bool
     {
         if ($this->string === '') {

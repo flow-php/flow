@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{get_type, type_boolean, type_datetime, type_float, type_integer, type_json, type_uuid};
+use function Flow\ETL\DSL\{get_type,
+    type_boolean,
+    type_date,
+    type_datetime,
+    type_float,
+    type_integer,
+    type_json,
+    type_uuid};
 use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 
 final readonly class AutoCaster
@@ -77,6 +84,10 @@ final readonly class AutoCaster
 
         if ($typeChecker->isUuid()) {
             return $this->caster->to(type_uuid())->value($value);
+        }
+
+        if ($typeChecker->isDate()) {
+            return $this->caster->to(type_date())->value($value);
         }
 
         if ($typeChecker->isDateTime()) {
