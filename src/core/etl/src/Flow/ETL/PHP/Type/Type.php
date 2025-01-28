@@ -20,9 +20,19 @@ interface Type
     public function isComparableWith(self $type) : bool;
 
     /**
+     * Checks if another type is equal to this type.
+     * Nullability is not considered in this comparison.
+     *
      * @param Type<mixed> $type
      */
     public function isEqual(self $type) : bool;
+
+    /**
+     * Checks if another type is the same as this type, including nullability.
+     *
+     * @param Type<mixed> $type
+     */
+    public function isSame(self $type) : bool;
 
     public function isValid(mixed $value) : bool;
 

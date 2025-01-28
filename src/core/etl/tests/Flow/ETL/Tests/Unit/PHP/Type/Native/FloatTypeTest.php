@@ -21,7 +21,7 @@ final class FloatTypeTest extends FlowTestCase
             type_float(false)->isEqual(type_callable(false))
         );
         self::assertFalse(
-            type_float(false)->isEqual(type_float(true))
+            type_float(false)->isSame(type_float(true))
         );
     }
 
@@ -69,7 +69,7 @@ final class FloatTypeTest extends FlowTestCase
             type_float(false)->isEqual(type_float(false))
         );
         self::assertFalse(
-            type_float(false)->isEqual(type_float(true))
+            type_float(false)->isSame(type_float(true))
         );
         self::assertFalse(
             type_float(false)->isEqual(type_int())

@@ -26,7 +26,7 @@ final class ArrayTypeTest extends FlowTestCase
             (type_array())->isEqual(type_float())
         );
         self::assertFalse(
-            ArrayType::empty()->isEqual(type_array())
+            ArrayType::empty()->isSame(type_array())
         );
     }
 

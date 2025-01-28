@@ -43,7 +43,12 @@ final readonly class FloatType implements Type
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $this->nullable === $type->nullable && $this->precision === $type->precision;
+        return $type instanceof self && $this->precision === $type->precision;
+    }
+
+    public function isSame(Type $type): bool
+    {
+        return $this->isEqual($type) && $this->nullable() === $type->nullable();
     }
 
     public function isValid(mixed $value) : bool

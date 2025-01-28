@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 final readonly class MapKey
 {
-    private function __construct(public Column $key)
+    public function __construct(public Column $key)
     {
     }
 

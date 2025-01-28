@@ -21,7 +21,7 @@ final class BooleanTypeTest extends FlowTestCase
             type_boolean(false)->isEqual(type_callable(false))
         );
         self::assertFalse(
-            type_boolean(false)->isEqual(type_boolean(true))
+            type_boolean(false)->isSame(type_boolean(true))
         );
     }
 
@@ -57,7 +57,7 @@ final class BooleanTypeTest extends FlowTestCase
             type_boolean(false)->isEqual(type_boolean(false))
         );
         self::assertFalse(
-            type_boolean(false)->isEqual(type_boolean(true))
+            type_boolean(false)->isSame(type_boolean(true))
         );
     }
 

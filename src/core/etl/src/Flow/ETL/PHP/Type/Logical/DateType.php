@@ -40,6 +40,11 @@ final readonly class DateType implements Type
         return $type instanceof self;
     }
 
+    public function isSame(Type $type): bool
+    {
+        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+    }
+
     public function isValid(mixed $value) : bool
     {
         if ($this->nullable && $value === null) {

@@ -21,7 +21,7 @@ final class IntegerTypeTest extends FlowTestCase
             type_int(false)->isEqual(type_callable(false))
         );
         self::assertFalse(
-            type_int(false)->isEqual(type_int(true))
+            type_int(false)->isSame(type_int(true))
         );
     }
 
@@ -72,7 +72,7 @@ final class IntegerTypeTest extends FlowTestCase
             type_int(false)->isEqual(type_callable(false))
         );
         self::assertFalse(
-            type_int(false)->isEqual(type_int(true))
+            type_int(false)->isSame(type_int(true))
         );
     }
 

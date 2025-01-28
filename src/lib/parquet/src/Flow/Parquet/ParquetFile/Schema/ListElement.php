@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 final readonly class ListElement
 {
-    private function __construct(public Column $element)
+    public function __construct(public Column $element)
     {
     }
 

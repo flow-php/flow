@@ -49,7 +49,7 @@ final class StructureTypeTest extends FlowTestCase
                 'string' => type_string(),
                 'bool' => type_boolean(),
             ])
-                ->isEqual(
+                ->isSame(
                     type_structure([
                         'string' => type_string(),
                         'bool' => type_boolean(true),

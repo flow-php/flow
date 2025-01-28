@@ -22,7 +22,7 @@ final class CallableTypeTest extends FlowTestCase
             type_callable(false)->isEqual(type_float())
         );
         self::assertFalse(
-            type_callable(false)->isEqual(type_callable(true))
+            type_callable(false)->isSame(type_callable(true))
         );
     }
 

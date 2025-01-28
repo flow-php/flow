@@ -46,7 +46,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
         foreach ($this->readers($context) as $fileData) {
             $fileRows = $fileData['file']->metadata()->rowsNumber();
-            $flowSchema = $this->schemaConverter->fromParquet($fileData['file']->schema());
+            $flowSchema = $this->schemaConverter->toFlow($fileData['file']->schema());
 
             if (count($this->columns)) {
                 $flowSchema = $flowSchema->keep(...$this->columns);

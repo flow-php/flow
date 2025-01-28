@@ -35,7 +35,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
     {
         $converted = new SchemaConverter();
 
-        $flowSchema = $converted->fromParquet(Schema::with(
+        $flowSchema = $converted->toFlow(Schema::with(
             FlatColumn::int32('int32'),
             FlatColumn::int64('int64'),
             FlatColumn::string('string'),
@@ -73,7 +73,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
     {
         $converted = new SchemaConverter();
 
-        $flowSchema = $converted->fromParquet(Schema::with(
+        $flowSchema = $converted->toFlow(Schema::with(
             NestedColumn::list('list', ListElement::string()),
         ));
 
@@ -89,7 +89,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
     {
         $converted = new SchemaConverter();
 
-        $flowSchema = $converted->fromParquet(Schema::with(
+        $flowSchema = $converted->toFlow(Schema::with(
             NestedColumn::map('map', MapKey::string(), MapValue::int64()),
         ));
 
@@ -105,7 +105,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
     {
         $converted = new SchemaConverter();
 
-        $flowSchema = $converted->fromParquet(Schema::with(
+        $flowSchema = $converted->toFlow(Schema::with(
             NestedColumn::struct(
                 'struct',
                 [

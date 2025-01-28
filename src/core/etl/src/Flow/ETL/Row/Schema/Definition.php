@@ -212,7 +212,7 @@ final readonly class Definition
             return false;
         }
 
-        if ($this->type->isEqual($definition->type) === false) {
+        if ($this->type->isSame($definition->type) === false) {
             return false;
         }
 

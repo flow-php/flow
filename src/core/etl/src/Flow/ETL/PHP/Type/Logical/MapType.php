@@ -53,7 +53,12 @@ final readonly class MapType implements Type
             return false;
         }
 
-        return $this->key->toString() === $type->key()->toString() && $this->value->toString() === $type->value()->toString();
+        return $this->key->isEqual($type->key()) && $this->value->isEqual($type->value());
+    }
+
+    public function isSame(Type $type): bool
+    {
+        return $this->isEqual($type) && $this->nullable() === $type->nullable() && $this->key->isSame($type->key()) && $this->value->isSame($type->value());
     }
 
     public function isValid(mixed $value) : bool

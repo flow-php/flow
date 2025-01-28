@@ -60,7 +60,12 @@ final readonly class EnumType implements Type
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $this->class === $type->class && $this->nullable === $type->nullable;
+        return $type instanceof self && $this->class === $type->class;
+    }
+
+    public function isSame(Type $type): bool
+    {
+        return $this->isEqual($type) && $this->nullable() === $type->nullable();
     }
 
     public function isValid(mixed $value) : bool

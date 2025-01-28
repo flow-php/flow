@@ -26,6 +26,11 @@ final class NullType implements Type
         return $type instanceof self;
     }
 
+    public function isSame(Type $type): bool
+    {
+        return $this->isEqual($type);
+    }
+
     public function isValid(mixed $value) : bool
     {
         return null === $value;
