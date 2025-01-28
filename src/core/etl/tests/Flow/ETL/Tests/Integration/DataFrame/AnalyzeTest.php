@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\{config_builder,
     date_schema,
-    datetime_schema,
     df,
     float_schema,
     from_array,

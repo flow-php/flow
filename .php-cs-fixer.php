@@ -4,6 +4,14 @@ use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
+if (!\file_exists(__DIR__ . '/var')) {
+    \mkdir(__DIR__ . '/var');
+}
+
+if (!\file_exists(__DIR__ . '/var/cs-fixer')) {
+    \mkdir(__DIR__ . '/var/cs-fixer');
+}
+
 $finder = Finder::create()
     ->files()
     ->in([
@@ -26,14 +34,6 @@ $finder = Finder::create()
     ->exclude([
         __DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift'
     ]);
-
-if (!\file_exists(__DIR__ . '/var')) {
-    \mkdir(__DIR__ . '/var');
-}
-
-if (!\file_exists(__DIR__ . '/var/cs-fixer')) {
-    \mkdir(__DIR__ . '/var/cs-fixer');
-}
 
 return (new Config())
     ->setParallelConfig(ParallelConfigFactory::detect())
