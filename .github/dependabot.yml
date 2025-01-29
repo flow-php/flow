@@ -24,6 +24,9 @@ updates:
     directory: "/tools/cs-fixer"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "friendsofphp/php-cs-fixer"
+        versions: ["3.68.3"]
 
   - package-ecosystem: "composer"
     directory: "/tools/infection"
