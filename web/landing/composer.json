@@ -32,7 +32,7 @@
         "presta/sitemap-bundle": "^4.1"
     },
     "require-dev": {
-        "symfony/web-profiler-bundle": "^6.4",
+        "symfony/web-profiler-bundle": "^7.2",
         "symfonycasts/tailwind-bundle": "~0.7.0",
         "norberttech/static-content-generator-bundle": "1.x-dev",
         "symfony/css-selector": "^6.4"
