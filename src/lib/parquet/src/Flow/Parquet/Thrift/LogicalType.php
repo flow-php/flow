@@ -266,7 +266,7 @@ class LogicalType
                 case 1:
                     if ($ftype == TType::STRUCT) {
                         $this->STRING = new StringType();
-                        $xfer += $this->STRING->read($input);
+                        $xfer += $this->string->read($input);
                     } else {
                         $xfer += $input->skip($ftype);
                     }
@@ -407,12 +407,12 @@ class LogicalType
         $xfer = 0;
         $xfer += $output->writeStructBegin('LogicalType');
 
-        if ($this->STRING !== null) {
-            if (!is_object($this->STRING)) {
+        if ($this->string !== null) {
+            if (!is_object($this->string)) {
                 throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
             }
             $xfer += $output->writeFieldBegin('STRING', TType::STRUCT, 1);
-            $xfer += $this->STRING->write($output);
+            $xfer += $this->string->write($output);
             $xfer += $output->writeFieldEnd();
         }
 

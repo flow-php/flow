@@ -68,7 +68,7 @@ final readonly class LogicalType
     {
         $name = null;
 
-        if ($logicalType->STRING !== null) {
+        if ($logicalType->string !== null) {
             $name = self::STRING;
         }
 
