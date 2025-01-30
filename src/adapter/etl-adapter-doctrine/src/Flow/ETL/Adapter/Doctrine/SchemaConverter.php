@@ -62,7 +62,7 @@ final class SchemaConverter
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
     {
         $columns = [];
-        $indexes = $this->toDbTableIndexes($schema);
+        $indexes =
         $uniqueConstraints = [];
         $fkConstraints = [];
 
@@ -71,7 +71,10 @@ final class SchemaConverter
             $columns[$column->getName()] = $column;
         }
 
-        return new Table($tableName, $columns, $indexes, $uniqueConstraints, $fkConstraints, $tableOptions);
+        $table = new Table($tableName, $columns, $indexes, $uniqueConstraints, $fkConstraints, $tableOptions);
+        $this->updateIndexes($schema, $table);
+
+        return $table;
     }
 
     /**
@@ -106,6 +109,12 @@ final class SchemaConverter
         $options = [
             'notnull' => !$type->nullable(),
         ];
+
+        if ($type instanceof FloatType) {
+            // with decimals precision and scale are confusing, in float precision is number of digits, not digits before/after decimal point
+            // with decimals precision is total number of digits, and scale is number of digits after decimal point
+            $options['scale'] = $type->precision;
+        }
 
         if ($metadata?->has(DbalMetadata::LENGTH->value)) {
             $options['length'] = $metadata->get(DbalMetadata::LENGTH->value);
@@ -150,7 +159,7 @@ final class SchemaConverter
         return new Column($name, $dbalType, $options);
     }
 
-    private function toDbTableIndexes(Schema $schema) : array
+    private function updateIndexes(Schema $schema, Table $table) : array
     {
         $indexesData = [];
         $uniqueIndexesData = [];
@@ -190,15 +199,16 @@ final class SchemaConverter
         $indexes = [];
 
         foreach ($indexesData as $name => $columns) {
-            $indexes[] = new \Doctrine\DBAL\Schema\Index($name, $columns);
+            $table->addIndex($columns, $name);
         }
 
         foreach ($uniqueIndexesData as $name => $columns) {
             $indexes[] = new \Doctrine\DBAL\Schema\Index($name, $columns, isUnique: true);
+            $table->addUniqueIndex($columns, $name);
         }
 
         foreach ($primaryKey as $name => $columns) {
-            $indexes[] = new \Doctrine\DBAL\Schema\Index($name, $columns, isUnique: true, isPrimary: true);
+            $table->setPrimaryKey($columns, $name);
         }
 
         return $indexes;

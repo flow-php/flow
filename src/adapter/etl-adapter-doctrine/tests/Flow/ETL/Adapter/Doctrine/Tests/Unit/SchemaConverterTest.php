@@ -22,6 +22,7 @@ final class SchemaConverterTest extends FlowTestCase
             str_schema('str_unique', true, DbalMetadata::indexUnique('idx_str_unique')),
             date_schema('date', nullable: true, metadata: DbalMetadata::index('idx_date')),
             float_schema('float', nullable: true, metadata: DbalMetadata::precision(10)->merge(DbalMetadata::scale(2))),
+            float_schema('float_default'),
             bool_schema('bool', nullable: true, metadata: DbalMetadata::default(true)),
             json_schema('json', nullable: true, metadata: DbalMetadata::platformOptions(['jsonb' => true])),
             list_schema('list', type_list(type_integer()), metadata: DbalMetadata::columnDefinition('integer[]')),
@@ -33,10 +34,11 @@ final class SchemaConverterTest extends FlowTestCase
                 'test',
                 [
                     new Column('int', Type::getType('integer'), ['notnull' => true]),
-                    new Column('str', Type::getType('string'), ['notnull' => false]),
+                    new Column('str', Type::getType('string'), ['notnull' => true]), // pk changes nullable true into false
                     new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
                     new Column('str_unique', Type::getType('string'), ['notnull' => false]),
                     new Column('float', Type::getType('float'), ['notnull' => false, 'precision' => 10, 'scale' => 2]),
+                    new Column('float_default', Type::getType('float'), ['notnull' => true, 'scale' => 6]),
                     new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
                     new Column('json', Type::getType('json'), ['notnull' => false, 'platformOptions' => ['jsonb' => true]]),
                     new Column('list', Type::getType('json'), ['notnull' => true, 'columnDefinition' => 'integer[]']),
