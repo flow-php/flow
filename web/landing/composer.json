@@ -14,7 +14,7 @@
         "symfony/routing": "^6.4",
         "symfony/framework-bundle": "^6.4",
         "symfony/config": "^6.4",
-        "symfony/twig-bundle": "^6.4",
+        "symfony/twig-bundle": "^7.2",
         "symfony/asset-mapper": "^6.4",
         "symfony/asset": "^6.4",
         "symfony/runtime": "^6.4",
