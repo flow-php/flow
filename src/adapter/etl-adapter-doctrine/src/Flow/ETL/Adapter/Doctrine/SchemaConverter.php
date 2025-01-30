@@ -61,17 +61,12 @@ final class SchemaConverter
 
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
     {
-        $columns = [];
-        $indexes =
-        $uniqueConstraints = [];
-        $fkConstraints = [];
-
         foreach ($schema->definitions() as $definition) {
             $column = $this->flowToColumn($definition->entry()->name(), $definition->type(), $definition->metadata());
             $columns[$column->getName()] = $column;
         }
 
-        $table = new Table($tableName, $columns, $indexes, $uniqueConstraints, $fkConstraints, $tableOptions);
+        $table = new Table($tableName, $columns, options: $tableOptions);
         $this->updateIndexes($schema, $table);
 
         return $table;
