@@ -8,7 +8,11 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Doctrine\DBAL\{ArrayParameterType as DbalArrayType, Connection, ParameterType as DbalParameterType};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type as DSLType};
+use Flow\ETL\{Attribute\DocumentationDSL,
+    Attribute\DocumentationExample,
+    Attribute\Module,
+    Attribute\Type as DSLType,
+    Row\Schema};
 
 /**
  * @param array<string, mixed>|Connection $connection
@@ -207,4 +211,13 @@ function to_dbal_table_update(
     return \is_array($connection)
         ? (new DbalLoader($table, $connection))->withOperation('update')->withOperationOptions($options)
         : DbalLoader::fromConnection($connection, $table, $options, 'update');
+}
+
+/**
+ * Converts a Flow\ETL\Row\Schema to a Doctrine\DBAL\Schema\Table.
+ */
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function to_dbal_schema_table(Schema $schema, string $table_name, array $table_options = [], array $types_map = []) : \Doctrine\DBAL\Schema\Table
+{
+    return (new SchemaConverter($types_map))->toDbalTable($schema, $table_name, $table_options);
 }

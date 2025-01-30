@@ -1,6 +1,6 @@
 # Upgrade Guide
 
-This document provides guidelines for upgrading between versions of Flow PHP. 
+This document provides guidelines for upgrading between versions of Flow PHP.
 Please follow the instructions for your specific version to ensure a smooth upgrade process.
 
 ---
@@ -30,7 +30,7 @@ type_structure([
 
 ### 1) Providing multiple paths to single extractor
 
-From now in order to read from multiple locations use `from_all(Extractor ...$extractors) : Exctractor` extractor. 
+From now in order to read from multiple locations use `from_all(Extractor ...$extractors) : Exctractor` extractor.
 
 Before:
 ```php
@@ -54,8 +54,8 @@ from_all(
 
 ### 2) Passing optional arguments to extractors/loaders
 
-From now all extractors/loaders are accepting only mandatory arguments, 
-all optional arguments should be passed through `with*` methods and fluent interface. 
+From now all extractors/loaders are accepting only mandatory arguments,
+all optional arguments should be passed through `with*` methods and fluent interface.
 
 Before:
 ```php
@@ -73,17 +73,17 @@ from_parquet(path(__DIR__ . '/data/1.parquet'))->withSchema($schema);
 
 ## Upgrading from 0.7.x to 0.8.x
 
-### 1) Joins 
+### 1) Joins
 
 In order to support joining bigger datasets, we had to move from initial NestedLoop join algorithm into Hash Join algorithm.
 
-- the only supported coin expression is `=` (equals) that can be grouped with `AND` and `OR` operators. 
+- the only supported coin expression is `=` (equals) that can be grouped with `AND` and `OR` operators.
 - `joinPrefix` is now always required, and by default is set to 'joined_'
 - join will always result all columns from both datasets, columns used in join condition will be prefixed with `joinPrefix`.
 
-Other than that, API stays the same. 
+Other than that, API stays the same.
 
-Above changes were introduced in all 3 types of joins: 
+Above changes were introduced in all 3 types of joins:
 
 - `DataFrame::join()`
 - `DataFrame::joinEach()`
@@ -104,7 +104,7 @@ statement Builder. In order to get the results you first need to define the aggr
 
 ### 1) Rows::merge() accepts single instance of Rows
 
-Before: 
+Before:
 
 ```php
 Rows::merge(Rows ...$rows) : Rows
@@ -134,14 +134,14 @@ BufferLoader was removed in favor of `DataFrame::collect(int $batchSize = null)`
 argument `$batchSize` that will keep collecting Rows from Extractor until the given batch size is reached.
 Which does exactly the same thing as BufferLoader did, but in a more generic way.
 
-### 4) Pipeline Closure 
+### 4) Pipeline Closure
 
-Pipeline Closure was reduced to be only Loader Closure and it was moved to \Flow\ETL\Loader namespace. 
+Pipeline Closure was reduced to be only Loader Closure and it was moved to \Flow\ETL\Loader namespace.
 Additionally, \Closure::close method no longer requires Rows to be passed as an argument.
 
-### 5) Parallelize 
+### 5) Parallelize
 
-DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size) method. 
+DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size) method.
 
 ### 6) Rows in batch - Extractors
 
@@ -158,7 +158,7 @@ Before:
     ->count();
 ```
 
-After: 
+After:
 ```php
 (new Flow())
     ->read(CSV::from(__DIR__ . '/1_mln_rows.csv',))
@@ -175,23 +175,23 @@ Affected extractors:
 - Text
 - XML
 - Avro
-- DoctrineDBAL - rows_in_batch wasn't removed but now results are thrown row by row, instead of whole page. 
+- DoctrineDBAL - rows_in_batch wasn't removed but now results are thrown row by row, instead of whole page.
 - GoogleSheet
 
 ### 7) `GoogleSheetExtractor`
 
-Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size of the page that will be fetched from Google API. 
-Rows are yielded one by one. 
+Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size of the page that will be fetched from Google API.
+Rows are yielded one by one.
 
 ### 8) `DataFrame::threadSafe()` method was replaced by `DataFrame::appendSafe()`
 
-`DataFrame::appendSafe()` is doing exactly the same thing as the old method, it's just more 
-descriptive and self-explanatory. 
-It's no longer mandatory to set this flat to true when using SaveMode::APPEND, it's now set automatically. 
+`DataFrame::appendSafe()` is doing exactly the same thing as the old method, it's just more
+descriptive and self-explanatory.
+It's no longer mandatory to set this flat to true when using SaveMode::APPEND, it's now set automatically.
 
 ### 9) Loaders - chunk size
 
-Loaders are no longer accepting chunk_size parameter, from now in order to control 
+Loaders are no longer accepting chunk_size parameter, from now in order to control
 the number of rows saved at once use `DataFrame::batchSize(int $size)` method.
 
 ### 10) Removed DSL functions: `datetime_string()`, `json_string()`
@@ -202,12 +202,12 @@ Those functions were removed in favor of accepting string values in related DSL 
 
 ### 11) Removed Asynchronous Processing
 
-More details can be found in [this issue](https://github.com/flow-php/flow/issues/793). 
+More details can be found in [this issue](https://github.com/flow-php/flow/issues/793).
 
 - Removed etl-adapter-amphp
 - Removed etl-adapter-reactphp
 - Removed `LocalSocketPipeline`
-- Removed `DataFrame::pipeline()` 
+- Removed `DataFrame::pipeline()`
 
 ### 12) `CollectionEntry` removal
 
@@ -228,7 +228,7 @@ Class `Sha1IdFactory` was removed, use `HashIdFactory` class:
 
 DSL static classes were deprecated in favor of using functions defined in `src/core/etl/src/Flow/ETL/DSL/functions.php` file.
 
-Deprecated classes: 
+Deprecated classes:
 
 - `src/core/etl/src/Flow/ETL/DSL/From.php`
 - `src/core/etl/src/Flow/ETL/DSL/Handler.php`
@@ -286,10 +286,10 @@ use Flow\ETL\Flow;
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
 ```
 
-### 2) `ref` function nullability 
+### 2) `ref` function nullability
 
 `ref("entry_name")` is no longer returning null when the entry is not found. Instead, it throws an exception.
-The same behavior can be achieved through using a newly introduced `optional` function: 
+The same behavior can be achieved through using a newly introduced `optional` function:
 
 Before:
 ```php
@@ -301,7 +301,7 @@ use function Flow\ETL\DSL\ref;
 ref('non_existing_column')->cast('string'); 
 ```
 
-After: 
+After:
 ```php
 <?php
 
@@ -315,7 +315,7 @@ optional(ref('non_existing_column')->cast('string'));
 
 ### 3) Extractors output
 
-Affected extractors: 
+Affected extractors:
 
 * CSV
 * JSON
@@ -326,10 +326,10 @@ Affected extractors:
 * Text
 * XML
 
-Extractors are no longer returning data under an array entry called `row`, thanks to this unpacking row become redundant. 
+Extractors are no longer returning data under an array entry called `row`, thanks to this unpacking row become redundant.
 
 Because of that all DSL functions are no longer expecting `$entry_row_name` parameter, if it was used anywhere,
-please remove it. 
+please remove it.
 
 Before:
 ```php
@@ -345,7 +345,7 @@ Before:
     ->run();
 ```
 
-After: 
+After:
 
 ```php
 <?php
@@ -360,7 +360,7 @@ After:
 ### 4) ConfigBuilder::putInputIntoRows() output is now prefixed with _ (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows()
-would now be prefixed with `_` (underscore) symbol. 
+would now be prefixed with `_` (underscore) symbol.
 
 Before:
 ```php
@@ -381,7 +381,7 @@ foreach ($rows as $row) {
 }
 ```
 
-After: 
+After:
 ```php
 <?php
 

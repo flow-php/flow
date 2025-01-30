@@ -8,9 +8,9 @@ Flow is a PHP-based, strongly typed data processing framework with a low memory 
 [![Test Suite](https://github.com/flow-php/flow/actions/workflows/test-suite.yml/badge.svg?branch=1.x)](https://github.com/flow-php/flow/actions/workflows/test-suite.yml)
 
 - 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)
-- 📜 [Documentation](documentation/introduction.md)
-- 🛠️ [Contributing](CONTRIBUTING.md)
-- 🚧 [Upgrading](UPGRADE.md)
+- 📜 [Documentation](https://flow-php.com/documentation/)
+- 🛠️ [Contributing](https://flow-php.com/documentation/contributing/)
+- 🚧 [Upgrading](https://flow-php.com/documentation/upgrading/)
 - <img src="https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/636e0a69f118df70ad7828d4_icon_clyde_blurple_RGB.svg" width="16px" height="16px" alt="Discord"> [Discord Server](https://discord.gg/5dNXfQyACW)
 
 Supported PHP versions: [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/) [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/) [![PHP 8.4](https://img.shields.io/badge/php-~8.4-8892BF.svg)](https://php.net/)
