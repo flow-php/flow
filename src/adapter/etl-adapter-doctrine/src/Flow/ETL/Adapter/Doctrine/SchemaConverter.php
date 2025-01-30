@@ -61,6 +61,8 @@ final class SchemaConverter
 
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
     {
+        $columns = [];
+
         foreach ($schema->definitions() as $definition) {
             $column = $this->flowToColumn($definition->entry()->name(), $definition->type(), $definition->metadata());
             $columns[$column->getName()] = $column;
