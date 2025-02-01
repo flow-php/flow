@@ -130,7 +130,7 @@ final class FileAnalyzeCommand extends Command
         $output->writeln(
             $formatter->formatBlock(
                 [
-                    'Analyzed Rows: ' . $report->statistics()->totalRows(),
+                    'Analyzed Rows: ' . \number_format($report->statistics()->totalRows()),
                 ],
                 'blue-block',
                 true
