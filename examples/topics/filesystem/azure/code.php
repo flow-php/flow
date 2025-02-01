@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\Azure\SDK\DSL\{azure_blob_service, azure_blob_service_config, azure_shared_key_authorization_factory};
-use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
 use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite, to_stream};
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\DSL\path;
@@ -44,10 +44,10 @@ data_frame($config)
         ['id' => 4, 'name' => 'test'],
     ]))
     ->saveMode(overwrite())
-    ->write(to_csv(path('azure-blob://test.csv')))
+    ->write(to_parquet(path('azure-blob://test.parquet')))
     ->run();
 
 data_frame($config)
-    ->read(from_csv(path('azure-blob://test.csv')))
+    ->read(from_parquet(path('azure-blob://test.parquet')))
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
