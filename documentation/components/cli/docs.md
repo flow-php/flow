@@ -173,6 +173,46 @@ $ flow schema orders.csv --table --auto-cast
 7 rows
 ```
 
+
+### `file:analyze` alias `analyze`
+
+```
+file:analyze --help                         
+Description:
+  Analyze a file.
+
+Usage:
+  file:analyze [options] [--] <input-file>
+  analyze
+
+Arguments:
+  input-file                                               Path to a file from which schema should be extracted.
+
+Options:
+      --input-file-format=INPUT-FILE-FORMAT                File format. When not set file format is guessed from source file path extension
+      --input-file-batch-size=INPUT-FILE-BATCH-SIZE        Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once [default: 1000]
+      --input-file-limit=INPUT-FILE-LIMIT                  Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed
+      --config=CONFIG                                      Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --input-json-pointer=INPUT-JSON-POINTER              JSON Pointer to a subtree from which schema should be extracted
+      --input-json-pointer-entry-name                      When set, JSON Pointer will be used as an entry name in the schema
+      --input-csv-header[=INPUT-CSV-HEADER]                When set, CSV header will be used as a schema
+      --input-csv-empty-to-null[=INPUT-CSV-EMPTY-TO-NULL]  When set, empty CSV values will be treated as NULL values
+      --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
+      --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
+      --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
+      --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
+      --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
+      --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
+  -h, --help                                               Display help for the given command. When no command is given display help for the list command
+      --silent                                             Do not output any message
+  -q, --quiet                                              Only errors are displayed. All other output is suppressed
+  -V, --version                                            Display this application version
+      --ansi|--no-ansi                                     Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                                     Do not ask any interactive question
+  -v|vv|vvv, --verbose                                     Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+```
+
 ### `file:read` alias `read`
 
 ```shell

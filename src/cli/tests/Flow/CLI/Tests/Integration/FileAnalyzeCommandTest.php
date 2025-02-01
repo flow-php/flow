@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\CLI\Tests\Integration;
+
+use Flow\CLI\Command\{FileAnalyzeCommand};
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Tester\CommandTester;
+
+final class FileAnalyzeCommandTest extends TestCase
+{
+    public function test_read_rows_csv() : void
+    {
+        $application = new Application();
+        $application->add(new FileAnalyzeCommand());
+        $tester = new CommandTester($application->get('file:analyze'));
+
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--input-file-limit' => 5]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
+Analyzing File
+==============
+
+ [INFO] File path: orders.csv
+OUTPUT,
+            $tester->getDisplay()
+        );
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
+┌────────────┬───────────────────────────────────────────────────────────────┬──────────┬──────────┐
+│ Name       │ Type                                                          │ Nullable │ Metadata │
+├────────────┼───────────────────────────────────────────────────────────────┼──────────┼──────────┤
+│ order_id   │ uuid                                                          │ false    │ {}       │
+│ created_at │ datetime                                                      │ false    │ {}       │
+│ updated_at │ datetime                                                      │ false    │ {}       │
+│ discount   │ ?float                                                        │ true     │ {}       │
+│ address    │ map<string, string>                                           │ false    │ {}       │
+│ notes      │ list<string>                                                  │ false    │ {}       │
+│ items      │ list<structure{sku: string, quantity: integer, price: float}> │ false    │ {}       │
+└────────────┴───────────────────────────────────────────────────────────────┴──────────┴──────────┘
+OUTPUT,
+            $tester->getDisplay()
+        );
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
+Analyzed Rows: 5
+OUTPUT,
+            $tester->getDisplay()
+        );
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
+Execution Time:
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+}
