@@ -54,4 +54,26 @@ final class SchemaConverterTest extends FlowTestCase
             to_dbal_schema_table($flowSchema, 'test')
         );
     }
+
+    public function test_converting_flow_to_dbal_schema_without_providing_pk_name() : void
+    {
+        $flowSchema = schema(
+            int_schema('int', nullable: false, metadata: DbalMetadata::primaryKey()),
+            str_schema('str', nullable: true, metadata: DbalMetadata::primaryKey()),
+        );
+
+        self::assertEquals(
+            new Table(
+                'test',
+                [
+                    new Column('int', Type::getType('integer'), ['notnull' => true]),
+                    new Column('str', Type::getType('string'), ['notnull' => true]), // pk changes nullable true into false
+                ],
+                [
+                    new Index('', ['int', 'str'], true, true),
+                ]
+            ),
+            to_dbal_schema_table($flowSchema, 'test')
+        );
+    }
 }
