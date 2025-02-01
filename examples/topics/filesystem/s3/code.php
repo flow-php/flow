@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
 use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite, to_stream};
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesystem};
 use function Flow\Filesystem\DSL\path;
@@ -39,10 +39,10 @@ data_frame($config)
         ['id' => 4, 'name' => 'test'],
     ]))
     ->saveMode(overwrite())
-    ->write(to_csv(path('aws-s3://test.csv')))
+    ->write(to_parquet(path('aws-s3://test.parquet')))
     ->run();
 
 data_frame($config)
-    ->read(from_csv(path('aws-s3://test.csv')))
+    ->read(from_parquet(path('aws-s3://test.parquet')))
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

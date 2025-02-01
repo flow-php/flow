@@ -67,7 +67,7 @@ enum DbalMetadata : string
         return Metadata::with(self::PRECISION->value, $precision);
     }
 
-    public static function primaryKey(string $name) : Metadata
+    public static function primaryKey(string $name = '') : Metadata
     {
         return Metadata::with(self::PRIMARY_KEY->value, $name);
     }

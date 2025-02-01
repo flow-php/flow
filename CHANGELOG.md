@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-01-31
+## [Unreleased] - 2025-02-01
 
 ### Added
 - [#1429](https://github.com/flow-php/flow/pull/1429) - **Flow to Doctrine Dbal schema converter** - [@norberttech](https://github.com/norberttech)
@@ -70,6 +70,7 @@
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1437](https://github.com/flow-php/flow/pull/1437) - **Allow to not pass primary key name to dbal metadata since it's not used in some cases** - [@norberttech](https://github.com/norberttech)
 - [#1435](https://github.com/flow-php/flow/pull/1435) - **Indexes and primary key are added to directly the table instead of being returned** - [@norberttech](https://github.com/norberttech)
 - [#1429](https://github.com/flow-php/flow/pull/1429) - **Moved UPGRADE.md to documentation folder to make it available as a static website** - [@norberttech](https://github.com/norberttech)
 - [#1427](https://github.com/flow-php/flow/pull/1427) - **Revert "Bump friendsofphp/php-cs-fixer from 3.68.0 to 3.68.2 in /tools/cs-fixer"** - [@norberttech](https://github.com/norberttech)
@@ -135,6 +136,7 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1437](https://github.com/flow-php/flow/pull/1437) - **Setting up the offset for reading remote parquet files** - [@norberttech](https://github.com/norberttech)
 - [#1436](https://github.com/flow-php/flow/pull/1436) - **typo in documentation** - [@paul-court](https://github.com/paul-court)
 - [#1435](https://github.com/flow-php/flow/pull/1435) - **Read scale from float type in Dbal Schema Converter** - [@norberttech](https://github.com/norberttech)
 - [#1429](https://github.com/flow-php/flow/pull/1429) - **links in all repos readme** - [@norberttech](https://github.com/norberttech)
