@@ -9,5 +9,11 @@
     "flow-php/doctrine-dbal-bulk": "1.x-dev",
     "fakerphp/faker": "^1.24",
     "symfony/uid": "^7.2"
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
   }
 }

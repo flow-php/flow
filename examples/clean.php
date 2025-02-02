@@ -53,13 +53,19 @@ foreach ($finder as $file) {
 
     $start = HighResolutionTime::now();
 
-    $style->info("Removing vendor folder: {$file->getRelativePathname()}");
+    $style->info("Removing vendor and code archive: {$file->getRelativePathname()}");
 
     $vendorPath = path($file->getPath() . '/vendor');
 
     if ($fs->status($vendorPath)?->isDirectory()) {
         $fs->rm(path($file->getPath() . '/vendor'));
     }
+
+    $archiveZip = path($file->getPath() . '/flow_php_example.zip');
+
+    if ($fs->status($archiveZip)?->isFile()) {
+        $fs->rm($archiveZip);
+    }
 }
 
-$style->success('Vendor folders remove from all examples');
+$style->success('Vendor adn archive folders remove from all examples');

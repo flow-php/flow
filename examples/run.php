@@ -58,7 +58,8 @@ foreach ($finder as $file) {
     $style->info('Composer install finished');
 
     if (!$composerProcess->isSuccessful()) {
-        print "Composer install failed: {$composerProcess->getErrorOutput()}\n";
+        $style->error("Composer install failed: {$file->getPath()}");
+        $style->error("Details: {$composerProcess->getErrorOutput()}");
 
         exit(1);
     }
@@ -67,7 +68,8 @@ foreach ($finder as $file) {
     $codeProcess->run();
 
     if (!$codeProcess->isSuccessful()) {
-        print "Example failed: {$codeProcess->getOutput()}\n";
+        $style->error("Example failed: {$file->getPath()}");
+        $style->error("Details: {$codeProcess->getOutput()}");
 
         exit(1);
     }
@@ -75,10 +77,18 @@ foreach ($finder as $file) {
 
     $style->success('Example finished in ' . $start->diff($end)->toSeconds() . ' seconds');
 
-    if ($intput->getOption('composer-update')) {
+    if ($intput->getOption('composer-archive')) {
         $style->note('Generating composer archive');
         $composerProcess = new Symfony\Component\Process\Process(['composer', 'archive', '--format', 'zip', '--file', 'flow_php_example'], $file->getPath());
         $composerProcess->run();
+
+        if (!$composerProcess->isSuccessful()) {
+            $style->error("Composer archive failed: {$file->getPath()}");
+            $style->error("Details: {$composerProcess->getErrorOutput()}");
+
+            exit(1);
+        }
+
         $style->info('Composer archive generated');
     }
 }

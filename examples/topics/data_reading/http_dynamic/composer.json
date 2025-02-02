@@ -13,5 +13,11 @@
     "allow-plugins": {
       "php-http/discovery": false
     }
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
   }
 }

@@ -6,5 +6,11 @@
   "require": {
     "flow-php/etl": "1.x-dev",
     "flow-php/etl-adapter-xml": "1.x-dev"
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
   }
 }

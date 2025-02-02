@@ -11,5 +11,11 @@
     "flow-php/filesystem": "1.x-dev",
     "flow-php/snappy": "1.x-dev",
     "flow-php/parquet": "1.x-dev"
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
   }
 }

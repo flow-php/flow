@@ -4,4 +4,3 @@ output/*
 compose.yml
 var
 .env
-composer.lock

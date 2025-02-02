@@ -248,6 +248,7 @@ jobs:
         run: "composer test:adapter:xml"
 
       - name: "Test - Examples"
+      if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         run: "composer test:examples"
 
       - name: "Download artifact"

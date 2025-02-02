@@ -6,5 +6,11 @@
   "require": {
     "flow-php/etl": "1.x-dev",
     "symfony/uid": "^7.2"
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
   }
 }
