@@ -32,7 +32,7 @@ final class Examples
             throw new \RuntimeException(\sprintf('Composer file doesn\'t exists, it should be located in path: "%s".', $path));
         }
 
-        return json_encode(json_decode(\file_get_contents($path), true, 512, JSON_THROW_ON_ERROR), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+        return \file_get_contents($path);
     }
 
     public function description(string $topic, string $example) : ?string

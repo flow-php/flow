@@ -65,7 +65,7 @@
                     <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
                         <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
                     </button>
-                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code id="composer-json" class="language-json" data-controller="syntax-highlight" >{{- composer | escape('html') -}}</code></pre>
+                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code id="composer-json" class="language-json" data-controller="syntax-highlight" >{{- composer | raw -}}</code></pre>
                 </div>
                 {% endif %}
 
