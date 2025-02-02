@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use function Flow\Filesystem\DSL\{fstab, path, protocol};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $filesystem = fstab()->for(protocol('file'));
 $outputStream = $filesystem->writeTo(path(__DIR__ . '/output.txt'));

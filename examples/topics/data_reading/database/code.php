@@ -7,7 +7,7 @@ use function Flow\ETL\DSL\{data_frame, to_stream};
 use Doctrine\DBAL\DriverManager;
 use Flow\ETL\Adapter\Doctrine\{Order, OrderBy};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $connection = DriverManager::getConnection([
     'path' => __DIR__ . '/input/orders.db',

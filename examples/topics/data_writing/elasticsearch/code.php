@@ -6,7 +6,7 @@ use function Flow\ETL\Adapter\Elasticsearch\{entry_id_factory, es_hits_to_rows, 
 use function Flow\ETL\DSL\{data_frame, from_array, to_stream};
 use Symfony\Component\Dotenv\Dotenv;
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 if (!\file_exists(__DIR__ . '/.env')) {
     print 'Example skipped. Please create .env file with Azure Storage Account credentials.' . PHP_EOL;

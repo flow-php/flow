@@ -8,7 +8,7 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table, UniqueConstraint};
 use Doctrine\DBAL\Types\{Type, Types};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 require __DIR__ . '/generate_static_orders.php';
 

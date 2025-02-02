@@ -6,7 +6,7 @@ use function Flow\ETL\DSL\{bool_schema, data_frame, from_array, int_schema, sche
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Schema\Metadata;
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $schema = schema(
     int_schema('id', $nullable = false),

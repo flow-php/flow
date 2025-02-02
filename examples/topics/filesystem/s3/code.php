@@ -8,7 +8,7 @@ use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesyst
 use function Flow\Filesystem\DSL\path;
 use Symfony\Component\Dotenv\Dotenv;
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 if (!\file_exists(__DIR__ . '/.env')) {
     print 'Example skipped. Please create .env file with AWS S3 credentials.' . PHP_EOL;

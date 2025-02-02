@@ -54,6 +54,7 @@ use Flow\Tools\Rector\NewObjectToFunction;
 use Flow\Tools\Rector\NewToFunctionCallRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\StaticCall\RemoveParentCallWithoutParentRector;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Transform\Rector\StaticCall\StaticCallToFuncCallRector;
 use \Rector\Transform\ValueObject\StaticCallToFuncCall;

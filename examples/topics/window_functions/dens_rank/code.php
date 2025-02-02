@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, dense_rank, from_array, ref, to_stream, window};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $df = data_frame()
     ->read(

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/vendor/autoload.php';
+
 use function Flow\ETL\DSL\{
     data_frame,
     from_array,

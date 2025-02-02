@@ -5,7 +5,7 @@ declare(strict_types=1);
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\{data_frame, ref, to_stream};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->read(

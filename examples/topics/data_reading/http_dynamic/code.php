@@ -9,7 +9,7 @@ use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message;
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $factory = new Psr17Factory();
 $client = new Client($factory, $factory);

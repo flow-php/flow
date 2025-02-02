@@ -5,6 +5,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Flow\ETL\Dataset\Statistics\HighResolutionTime;
+use Symfony\Component\Console\Input\{ArgvInput, InputDefinition, InputOption};
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\Finder;
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
@@ -21,23 +25,60 @@ if (false === \in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 
 \ini_set('memory_limit', -1);
 
-print "Running all available examples.\n";
-
 $finder = new Finder();
 $finder->in(__DIR__ . '/topics')
     ->files()
     ->name('*.php');
 
-foreach ($finder as $file) {
-    print "\nExample: {$file->getRelativePathname()}\n";
+$output = new ConsoleOutput();
+$intput = new ArgvInput(definition: new InputDefinition(
+    [
+        new InputOption(name: 'composer-update', shortcut: 'u', mode: InputOption::VALUE_NONE),
+        new InputOption(name: 'composer-archive', shortcut: 'a', mode: InputOption::VALUE_NONE),
+    ]
+));
+$style = new SymfonyStyle($intput, $output);
+$style->setDecorated(true);
 
-    try {
-        if ($file->getBasename() === 'code.php') {
-            include $file->getRealPath();
-        }
-    } catch (Exception $e) {
-        print "Example failed: {$e->getMessage()}\n";
+$style->title('Running Flow PHP Examples');
+
+foreach ($finder as $file) {
+
+    if ($file->getBasename() !== 'code.php') {
+        continue;
+    }
+
+    $start = HighResolutionTime::now();
+
+    $style->info("Running example: {$file->getRelativePathname()}");
+
+    $style->note(($intput->getOption('composer-update') ? 'Updating' : 'Installing') . ' composer dependencies');
+    $composerProcess = new Symfony\Component\Process\Process(['composer', $intput->getOption('composer-update') ? 'update' : 'install'], $file->getPath());
+    $composerProcess->run();
+    $style->info('Composer install finished');
+
+    if (!$composerProcess->isSuccessful()) {
+        print "Composer install failed: {$composerProcess->getErrorOutput()}\n";
 
         exit(1);
+    }
+
+    $codeProcess = new Symfony\Component\Process\Process(['php', $file->getRealPath()]);
+    $codeProcess->run();
+
+    if (!$codeProcess->isSuccessful()) {
+        print "Example failed: {$codeProcess->getOutput()}\n";
+
+        exit(1);
+    }
+    $end = HighResolutionTime::now();
+
+    $style->success('Example finished in ' . $start->diff($end)->toSeconds() . ' seconds');
+
+    if ($intput->getOption('composer-update')) {
+        $style->note('Generating composer archive');
+        $composerProcess = new Symfony\Component\Process\Process(['composer', 'archive', '--format', 'zip', '--file', 'flow_php_example'], $file->getPath());
+        $composerProcess->run();
+        $style->info('Composer archive generated');
     }
 }

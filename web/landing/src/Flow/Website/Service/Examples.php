@@ -21,6 +21,20 @@ final class Examples
         return \file_get_contents($path);
     }
 
+    /**
+     * @throws \JsonException
+     */
+    public function composer(string $topic, string $example) : string
+    {
+        $path = \sprintf('%s/topics/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example);
+
+        if (false === \file_exists($path)) {
+            throw new \RuntimeException(\sprintf('Composer file doesn\'t exists, it should be located in path: "%s".', $path));
+        }
+
+        return json_encode(json_decode(\file_get_contents($path), true, 512, JSON_THROW_ON_ERROR), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+    }
+
     public function description(string $topic, string $example) : ?string
     {
         $path = \sprintf('%s/topics/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example);

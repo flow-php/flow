@@ -9,7 +9,7 @@ use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
 use function Flow\Filesystem\DSL\path;
 use Symfony\Component\Dotenv\Dotenv;
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 if (!\file_exists(__DIR__ . '/.env')) {
     print 'Example skipped. Please create .env file with Azure Storage Account credentials.' . PHP_EOL;
