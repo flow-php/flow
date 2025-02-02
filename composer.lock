@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c6da831bfe8126e896fff9c532d6721a",
+    "content-hash": "5d9b7681b097d8aa26664a0f252ccd35",
     "packages": [
         {
             "name": "async-aws/core",
@@ -5218,9 +5218,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "flow-php/etl-adapter-csv": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
