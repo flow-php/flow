@@ -40,7 +40,7 @@ $rows = (new Flow())
 ```php
 <?php
 
-use Flow\ETL\Adapter\JSON\JsonLoader;
+use function Flow\ETL\Adapter\JSON\{to_json};
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -58,5 +58,34 @@ use Flow\ETL\Rows;
         )
     )
     ->write(to_json(\sys_get_temp_dir() . '/file.json'))
+    ->run();
+```
+
+## Loader - JsonLoader - JSON lines
+
+It is also possible to export the rows using the [json lines](https://jsonlines.org/) format
+
+
+```php
+<?php
+
+use function Flow\ETL\Adapter\JSON\{to_json};
+use Flow\ETL\Flow;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+
+(new Flow())
+    ->process(
+        new Rows(
+            ...\array_map(
+                fn (int $i) : Row => Row::create(
+                    new Row\Entry\IntegerEntry('id', $i),
+                    new Row\Entry\StringEntry('name', 'name_' . $i)
+                ),
+                \range(0, 10)
+            )
+        )
+    )
+    ->write(to_json(\sys_get_temp_dir() . '/file.jsonl')->asJsonl())
     ->run();
 ```
