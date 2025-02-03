@@ -91,6 +91,30 @@ JSON,
         }
     }
 
+    public function test_jsonl_export() : void
+    {
+        df()
+            ->read(from_array([
+                ['name' => 'John', 'age' => 30],
+                ['name' => 'Jane', 'age' => 25],
+                ['name' => 'Jake', 'age' => 30],
+                ['name' => 'Joe', 'age' => 30],
+            ]))
+            ->saveMode(overwrite())
+            ->write(to_json($path = __DIR__ . '/var/test_jsonl_export.jsonl')->asJsonl())
+            ->run();
+
+        self::assertStringContainsString(
+            <<<'JSON'
+{"name":"John","age":30}
+{"name":"Jane","age":25}
+{"name":"Jake","age":30}
+{"name":"Joe","age":30}
+JSON,
+            \file_get_contents($path)
+        );
+    }
+
     public function test_partitioning_json_file() : void
     {
         df()
@@ -176,30 +200,6 @@ JSON,
     "pets_avg": 3
 }
 ]
-JSON,
-            \file_get_contents($path)
-        );
-    }
-
-    public function test_jsonl_export() : void
-    {
-        df()
-            ->read(from_array([
-                ['name' => 'John', 'age' => 30],
-                ['name' => 'Jane', 'age' => 25],
-                ['name' => 'Jake', 'age' => 30],
-                ['name' => 'Joe', 'age' => 30],
-            ]))
-            ->saveMode(overwrite())
-            ->write(to_json($path = __DIR__ . '/var/test_jsonl_export.jsonl')->asJsonl())
-            ->run();
-
-        self::assertStringContainsString(
-            <<<'JSON'
-{"name":"John","age":30}
-{"name":"Jane","age":25}
-{"name":"Jake","age":30}
-{"name":"Joe","age":30}
 JSON,
             \file_get_contents($path)
         );

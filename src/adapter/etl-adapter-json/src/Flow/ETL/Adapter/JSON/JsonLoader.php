@@ -15,9 +15,9 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     private int $flags = JSON_THROW_ON_ERROR;
 
-    private bool $putRowsInNewLines = false;
-
     private bool $jsonl = false;
+
+    private bool $putRowsInNewLines = false;
 
     /**
      * @var array<string, int>
@@ -26,6 +26,13 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function __construct(private readonly Path $path)
     {
+    }
+
+    public function asJsonl() : self
+    {
+        $this->jsonl = true;
+
+        return $this;
     }
 
     public function closure(FlowContext $context) : void
@@ -70,13 +77,6 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
     public function withRowsInNewLines(bool $putRowsInNewLines) : self
     {
         $this->putRowsInNewLines = $putRowsInNewLines;
-
-        return $this;
-    }
-
-    public function asJsonl() : self
-    {
-        $this->jsonl = true;
 
         return $this;
     }
