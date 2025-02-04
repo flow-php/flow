@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{array_to_rows};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Extractor, FlowContext};
-use Flow\Filesystem\Path;
+use Flow\Filesystem\{Path, SourceStream};
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
@@ -16,6 +16,8 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
 {
     use Limitable;
     use PathFiltering;
+
+    private bool $jsonl = false;
 
     private ?string $pointer = null;
 
@@ -29,17 +31,26 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->resetLimit();
     }
 
+    public function asJsonl() : self
+    {
+        $this->jsonl = true;
+
+        return $this;
+    }
+
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
+        $iterator = $this->getIterator();
 
+        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             /**
              * @var array|object $rowData
              */
-            foreach ((new Items($stream->iterate(8 * 1024), $this->readerOptions()))->getIterator() as $rowData) {
-                $row = (array) $rowData;
+            foreach ($iterator($stream) as $rowData) {
+
+                $row = (array)$rowData;
 
                 if ($shouldPutInputIntoRows) {
                     $row['_input_file_uri'] = $stream->path()->uri();
@@ -89,6 +100,30 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->schema = $schema;
 
         return $this;
+    }
+
+    private function getIterator()
+    {
+        if (!$this->jsonl) {
+            return fn (SourceStream $stream) : \Generator => (new Items($stream->iterate(8 * 1024), $this->readerOptions()))->getIterator();
+        }
+
+        // JSONL iterator modes
+        if ($this->pointer !== null) {
+            return function (SourceStream $stream) : \Generator {
+                foreach ($stream->readLines() as $jsonLine) {
+                    return Items::fromString($jsonLine, $this->readerOptions())->getIterator();
+                }
+            };
+        }
+
+        return function (SourceStream $stream) : \Generator {
+            foreach ($stream->readLines() as $jsonLine) {
+                $jsonData = Items::fromString($jsonLine, $this->readerOptions());
+                $row = \iterator_to_array($jsonData);
+                yield $row;
+            }
+        };
     }
 
     /**

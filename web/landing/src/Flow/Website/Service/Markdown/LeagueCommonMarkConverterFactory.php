@@ -9,10 +9,9 @@ use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
 use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
-use League\CommonMark\Extension\HeadingPermalink\{HeadingPermalinkExtension, HeadingPermalinkRenderer};
+use League\CommonMark\Extension\HeadingPermalink\{HeadingPermalinkExtension};
 use League\CommonMark\Extension\Mention\MentionExtension;
 use League\CommonMark\Extension\Table\TableExtension;
-use League\CommonMark\Normalizer\SlugNormalizer;
 
 final class LeagueCommonMarkConverterFactory
 {
