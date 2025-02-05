@@ -40,7 +40,7 @@ final class JsonlExtractor implements Extractor, FileExtractor, LimitableExtract
                 $row = \iterator_to_array($jsonData);
                 yield $row;
             },
-            default => fn(string $jsonLine): \Generator =>
+            default => fn (string $jsonLine) : \Generator =>
                 /** Pointed Iterator */
                 Items::fromString($jsonLine, $this->readerOptions())->getIterator(),
         };
