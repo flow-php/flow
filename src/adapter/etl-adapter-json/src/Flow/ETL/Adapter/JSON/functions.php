@@ -67,3 +67,17 @@ function to_json(
         ->withDateTimeFormat($date_time_format)
         ->withRowsInNewLines($put_rows_in_new_lines);
 }
+
+/**
+ * Used to write to a JSON lines https://jsonlines.org/ formatted file.
+ *
+ * @param Path|string $path
+ *
+ * @return JsonLinesLoader
+ */
+#[DocumentationDSL(module: Module::JSON, type: Type::LOADER)]
+function to_json_lines(
+    string|Path $path,
+) : JsonLinesLoader {
+    return new JsonLinesLoader(\is_string($path) ? Path::realpath($path) : $path);
+}
