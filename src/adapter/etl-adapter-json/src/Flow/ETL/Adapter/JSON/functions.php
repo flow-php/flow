@@ -35,10 +35,12 @@ function from_json(
 }
 
 /**
+ * Used to read from a JSON lines https://jsonlines.org/ formatted file.
+ *
  * @param Path|string $path - string is internally turned into stream
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_reading', example: 'json')]
+#[DocumentationExample(topic: 'data_reading', example: 'jsonl')]
 function from_json_lines(
     string|Path $path,
 ) : JsonLinesExtractor {
