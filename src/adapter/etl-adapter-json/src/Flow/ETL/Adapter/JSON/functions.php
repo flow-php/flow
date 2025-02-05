@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
-use Flow\ETL\Adapter\JSON\JSONMachine\{JsonExtractor, JsonlExtractor};
+use Flow\ETL\Adapter\JSON\JSONMachine\{JsonExtractor, JsonLinesExtractor};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type};
 use Flow\Filesystem\Path;
@@ -41,10 +41,8 @@ function from_json(
 #[DocumentationExample(topic: 'data_reading', example: 'json')]
 function from_json_lines(
     string|Path $path,
-) : JsonlExtractor {
-    $loader = new JsonlExtractor(\is_string($path) ? Path::realpath($path) : $path);
-
-    return $loader;
+) : JsonLinesExtractor {
+    return new JsonLinesExtractor(\is_string($path) ? Path::realpath($path) : $path);
 }
 
 /**

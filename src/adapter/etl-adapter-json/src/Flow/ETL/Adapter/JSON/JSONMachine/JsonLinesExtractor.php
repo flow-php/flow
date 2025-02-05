@@ -12,7 +12,7 @@ use Flow\Filesystem\{Path};
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
-final class JsonlExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
