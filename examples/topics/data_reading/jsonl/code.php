@@ -16,7 +16,7 @@ $schema = schema(
 
 data_frame()
     ->read(
-        from_json_lines(__DIR__ . '/input/dataset.json')
+        from_json_lines(__DIR__ . '/input/dataset.jsonl')
             ->withSchema($schema)
     )
     ->collect()
