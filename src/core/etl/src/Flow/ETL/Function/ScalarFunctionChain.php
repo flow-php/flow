@@ -243,6 +243,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Function\ArrayExpand($this, $expand);
     }
 
+    public function folded() : self
+    {
+        return new Folded($this);
+    }
+
     public function greaterThan(mixed $ref) : self
     {
         return new GreaterThan($this, $ref);
