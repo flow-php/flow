@@ -6,6 +6,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\Filesystem\DSL\path_stdout;
+use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
 use Flow\Parquet\Options;
@@ -15,7 +16,7 @@ if (!function_exists('Flow\ETL\Adapter\Parquet\to_parquet')) {
     throw new \RuntimeException('Flow\ETL\Adapter\Parquet\to_parquet function is not available. Make sure that composer require flow-php/etl-adapter-json dependency is present in your composer.json.');
 }
 
-final readonly class ParquetOutput
+final readonly class ParquetOutput implements Output
 {
     public function __construct(
         private ?Options $options = null,
