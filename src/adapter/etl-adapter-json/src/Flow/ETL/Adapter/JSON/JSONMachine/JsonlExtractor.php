@@ -8,11 +8,11 @@ use function Flow\ETL\DSL\{array_to_rows};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Extractor, FlowContext};
-use Flow\Filesystem\Path;
+use Flow\Filesystem\{Path};
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
-final class JsonExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class JsonlExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
@@ -33,36 +33,50 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
+        // JSONL iterator modes
+        $lineIterator = match ($this->pointer) {
+            null => function (string $jsonLine) : \Generator {
+                $jsonData = Items::fromString($jsonLine, $this->readerOptions());
+                $row = \iterator_to_array($jsonData);
+                yield $row;
+            },
+            default => fn(string $jsonLine): \Generator =>
+                /** Pointed Iterator */
+                Items::fromString($jsonLine, $this->readerOptions())->getIterator(),
+        };
+
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
 
-            /**
-             * @var array|object $rowData
-             */
-            foreach ((new Items($stream->iterate(8 * 1024), $this->readerOptions()))->getIterator() as $rowData) {
-                $row = (array) $rowData;
+            foreach ($stream->readLines() as $jsonLine) {
+                /**
+                 * @var array|object $rowData
+                 */
+                foreach ($lineIterator($jsonLine) as $rowData) {
 
-                if ($shouldPutInputIntoRows) {
-                    $row['_input_file_uri'] = $stream->path()->uri();
-                }
+                    $row = (array) $rowData;
 
-                if ($this->pointer !== null && $this->pointerToEntryName) {
-                    $row = [$this->pointer => $row];
-                }
+                    if ($shouldPutInputIntoRows) {
+                        $row['_input_file_uri'] = $stream->path()->uri();
+                    }
 
-                if (!\count($row)) {
-                    continue;
-                }
+                    if ($this->pointer !== null && $this->pointerToEntryName) {
+                        $row = [$this->pointer => $row];
+                    }
 
-                $signal = yield array_to_rows([$row], $context->entryFactory(), $stream->path()->partitions(), $this->schema);
-                $this->incrementReturnedRows();
+                    if (!\count($row)) {
+                        continue;
+                    }
 
-                if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->closeStreams($this->path);
+                    $signal = yield array_to_rows([$row], $context->entryFactory(), $stream->path()->partitions(), $this->schema);
+                    $this->incrementReturnedRows();
 
-                    return;
+                    if ($signal === Signal::STOP || $this->reachedLimit()) {
+                        $context->streams()->closeStreams($this->path);
+
+                        return;
+                    }
                 }
             }
-
             $stream->close();
         }
     }

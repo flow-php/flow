@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
-use function Flow\ETL\Adapter\JSON\{from_json};
+use function Flow\ETL\Adapter\JSON\{from_json_lines};
 use function Flow\ETL\DSL\{data_frame, flow_context};
 use function Flow\ETL\DSL\{df, print_schema};
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonlExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\Filesystem\Path;
 
 final class JsonlExtractorTest extends FlowTestCase
 {
-    public function test_extracting_jsonl_from_local_file_stream() : void
+    public function test_broken() : void
     {
         $rows = (data_frame(Config::builder()->putInputIntoRows()))
-            ->read(from_json(__DIR__ . '/../../Fixtures/timezones.jsonl')->asJsonl())
+            ->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl'))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -40,7 +40,7 @@ final class JsonlExtractorTest extends FlowTestCase
     public function test_extracting_jsonl_from_local_file_stream_using_pointer() : void
     {
         $rows = (data_frame())
-            ->read(from_json(__DIR__ . '/../../Fixtures/nested_timezones.jsonl')->withPointer('/timezones', true)->asJsonl())
+            ->read(from_json_lines(__DIR__ . '/../../Fixtures/nested_timezones.jsonl')->withPointer('/timezones', true))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -62,14 +62,14 @@ final class JsonlExtractorTest extends FlowTestCase
 
     public function test_extracting_jsonl_from_local_file_stream_with_schema() : void
     {
-        $rows = df()
-            ->read(from_json(
-                __DIR__ . '/../../Fixtures/timezones.jsonl',
-                schema: $schema = df()
-                    ->read(from_json(__DIR__ . '/../../Fixtures/timezones.jsonl')->asJsonl())
+        $schema = df()->read(from_json_lines(__DIR__ . '/../../Fixtures/timezones.jsonl'))
                     ->autoCast()
-                    ->schema()
-            )->asJsonl())
+                    ->schema();
+
+        $rows = df()
+            ->read(from_json_lines(
+                __DIR__ . '/../../Fixtures/timezones.jsonl',
+            )->withSchema($schema))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -104,7 +104,7 @@ SCHEMA
 
     public function test_extracting_jsonl_from_local_file_string_uri() : void
     {
-        $extractor = (new JsonExtractor(Path::realpath(__DIR__ . '/../../Fixtures/timezones.jsonl')))->asJsonl();
+        $extractor = (new JsonlExtractor(Path::realpath(__DIR__ . '/../../Fixtures/timezones.jsonl')));
 
         $total = 0;
 
@@ -131,7 +131,7 @@ SCHEMA
 
     public function test_limit() : void
     {
-        $extractor = (new JsonExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.jsonl')))->asJsonl();
+        $extractor = (new JsonlExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.jsonl')));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -142,7 +142,7 @@ SCHEMA
 
     public function test_signal_stop() : void
     {
-        $extractor = (new JsonExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.jsonl')))->asJsonl();
+        $extractor = (new JsonLExtractor(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.jsonl')));
 
         $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 
