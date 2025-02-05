@@ -50,7 +50,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
              */
             foreach ($iterator($stream) as $rowData) {
 
-                $row = (array)$rowData;
+                $row = (array) $rowData;
 
                 if ($shouldPutInputIntoRows) {
                     $row['_input_file_uri'] = $stream->path()->uri();
@@ -102,7 +102,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         return $this;
     }
 
-    private function getIterator()
+    private function getIterator() : callable
     {
         if (!$this->jsonl) {
             return fn (SourceStream $stream) : \Generator => (new Items($stream->iterate(8 * 1024), $this->readerOptions()))->getIterator();
