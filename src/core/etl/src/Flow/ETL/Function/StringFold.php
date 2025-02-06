@@ -10,7 +10,7 @@ use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class Folded extends ScalarFunctionChain implements TypedScalarFunction
+final class StringFold extends ScalarFunctionChain implements TypedScalarFunction
 {
     public function __construct(private readonly ScalarFunction|string $string)
     {

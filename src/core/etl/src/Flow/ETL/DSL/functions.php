@@ -39,7 +39,6 @@ use Flow\ETL\Function\{All,
     DenseRank,
     Exists,
     First,
-    Folded,
     Greatest,
     Hash,
     Last,
@@ -1688,10 +1687,4 @@ function caster_options() : Options
 function caster(?Options $options = null) : Caster
 {
     return Caster::default($options ?? caster_options());
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function folded(ScalarFunction|string $value) : Folded
-{
-    return new Folded($value);
 }

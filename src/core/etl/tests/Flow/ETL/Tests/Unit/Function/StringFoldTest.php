@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\{folded, lit};
+use function Flow\ETL\DSL\{ref, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 
-final class FoldedTest extends FlowTestCase
+final class StringFoldTest extends FlowTestCase
 {
     public function test_string_folded() : void
     {
         self::assertSame(
             "die o'brian strasse",
-            folded(lit("Die O'Brian Straße"))->eval(row())
+            ref('str')->stringFold()->eval(
+                row(str_entry('str', "Die O'Brian Straße"))
+            )
         );
     }
 }

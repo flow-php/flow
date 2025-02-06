@@ -243,11 +243,6 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Function\ArrayExpand($this, $expand);
     }
 
-    public function folded() : self
-    {
-        return new Folded($this);
-    }
-
     public function greaterThan(mixed $ref) : self
     {
         return new GreaterThan($this, $ref);
@@ -474,6 +469,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function startsWith(ScalarFunction|string $needle) : self
     {
         return new StartsWith($this, $needle);
+    }
+
+    public function stringFold() : self
+    {
+        return new StringFold($this);
     }
 
     public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : self
