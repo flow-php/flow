@@ -16,7 +16,7 @@ final class Folded extends ScalarFunctionChain implements TypedScalarFunction
     {
     }
 
-    public function eval(Row $row): mixed
+    public function eval(Row $row) : mixed
     {
         $string = (new Parameter($this->string))->asString($row);
 
@@ -27,9 +27,8 @@ final class Folded extends ScalarFunctionChain implements TypedScalarFunction
         return u($string)->folded()->toString();
     }
 
-    public function returns(): Type
+    public function returns() : Type
     {
         return type_string();
     }
 }
-

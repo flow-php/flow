@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\{lit, folded};
+use function Flow\ETL\DSL\{folded, lit};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class FoldedTest extends FlowTestCase
