@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-02-05
+## [Unreleased] - 2025-02-06
 
 ### Added
+- [#1447](https://github.com/flow-php/flow/pull/1447) - **Add read support for JSONL files** - [@jmortlock](https://github.com/jmortlock)
 - [0d0601](https://github.com/flow-php/flow/commit/0d060180469dbf279df168da7c0f07de92ef3a18) - **permalinks to headlines rendered from markdown** - [@norberttech](https://github.com/norberttech)
 - [#1442](https://github.com/flow-php/flow/pull/1442) - **Added support for JSONL - https://github.com/jmortlock/flow/pull/new/add-jsonl-support** - [@jmortlock](https://github.com/jmortlock)
 - [#1440](https://github.com/flow-php/flow/pull/1440) - **composer.json file to each example** - [@norberttech](https://github.com/norberttech)
@@ -141,6 +142,7 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [d82381](https://github.com/flow-php/flow/commit/d823813af9be12d5cc21d4b8e2a01171ce0e0c90) - **failing example test** - [@norberttech](https://github.com/norberttech)
 - [#1448](https://github.com/flow-php/flow/pull/1448) - **ParquetOutput didn't implement Output interface** - [@radozato](https://github.com/radozato)
 - [#1441](https://github.com/flow-php/flow/pull/1441) - **Added missing lock files to examples** - [@norberttech](https://github.com/norberttech)
 - [#1437](https://github.com/flow-php/flow/pull/1437) - **Setting up the offset for reading remote parquet files** - [@norberttech](https://github.com/norberttech)

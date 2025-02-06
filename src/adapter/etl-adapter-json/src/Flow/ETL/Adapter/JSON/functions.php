@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
-use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
+use Flow\ETL\Adapter\JSON\JSONMachine\{JsonExtractor, JsonLinesExtractor};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type};
 use Flow\Filesystem\Path;
@@ -35,6 +35,19 @@ function from_json(
 }
 
 /**
+ * Used to read from a JSON lines https://jsonlines.org/ formatted file.
+ *
+ * @param Path|string $path - string is internally turned into stream
+ */
+#[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
+#[DocumentationExample(topic: 'data_reading', example: 'jsonl')]
+function from_json_lines(
+    string|Path $path,
+) : JsonLinesExtractor {
+    return new JsonLinesExtractor(\is_string($path) ? Path::realpath($path) : $path);
+}
+
+/**
  * @param Path|string $path
  * @param int $flags - PHP JSON Flags - @deprecate use withFlags method instead
  * @param string $date_time_format - format for DateTimeInterface::format() - @deprecate use withDateTimeFormat method instead
@@ -53,4 +66,18 @@ function to_json(
         ->withFlags($flags)
         ->withDateTimeFormat($date_time_format)
         ->withRowsInNewLines($put_rows_in_new_lines);
+}
+
+/**
+ * Used to write to a JSON lines https://jsonlines.org/ formatted file.
+ *
+ * @param Path|string $path
+ *
+ * @return JsonLinesLoader
+ */
+#[DocumentationDSL(module: Module::JSON, type: Type::LOADER)]
+function to_json_lines(
+    string|Path $path,
+) : JsonLinesLoader {
+    return new JsonLinesLoader(\is_string($path) ? Path::realpath($path) : $path);
 }

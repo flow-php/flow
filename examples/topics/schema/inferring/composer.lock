@@ -188,12 +188,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-json.git",
-                "reference": "579815d57177c1e6a0f01a6fab08617f2fb0a078"
+                "reference": "d70d93feb4097568b6fd8d7e99241c75409cfe8e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/579815d57177c1e6a0f01a6fab08617f2fb0a078",
-                "reference": "579815d57177c1e6a0f01a6fab08617f2fb0a078",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/d70d93feb4097568b6fd8d7e99241c75409cfe8e",
+                "reference": "d70d93feb4097568b6fd8d7e99241c75409cfe8e",
                 "shasum": ""
             },
             "require": {
@@ -241,7 +241,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-30T16:33:56+00:00"
+            "time": "2025-02-05T23:36:48+00:00"
         },
         {
             "name": "flow-php/filesystem",

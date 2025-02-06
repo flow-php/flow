@@ -9,13 +9,11 @@ use Flow\ETL\Loader\Closure;
 use Flow\ETL\{Adapter\JSON\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
 use Flow\Filesystem\{DestinationStream, Partition, Path};
 
-final class JsonLoader implements Closure, Loader, Loader\FileLoader
+final class JsonLinesLoader implements Closure, Loader, Loader\FileLoader
 {
     private string $dateTimeFormat = \DateTimeInterface::ATOM;
 
     private int $flags = JSON_THROW_ON_ERROR;
-
-    private bool $putRowsInNewLines = false;
 
     /**
      * @var array<string, int>
@@ -28,11 +26,6 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function closure(FlowContext $context) : void
     {
-
-        foreach ($context->streams()->listOpenStreams($this->path) as $stream) {
-            $stream->append($this->putRowsInNewLines ? "\n]" : ']');
-        }
-
         $context->streams()->closeStreams($this->path);
     }
 
@@ -59,14 +52,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function withFlags(int $flags) : self
     {
-        $this->flags = $flags;
-
-        return $this;
-    }
-
-    public function withRowsInNewLines(bool $putRowsInNewLines) : self
-    {
-        $this->putRowsInNewLines = $putRowsInNewLines;
+        $this->flags = $flags &= ~JSON_PRETTY_PRINT;
 
         return $this;
     }
@@ -86,7 +72,6 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
                 $this->writes[$stream->path()->path()] = 0;
             }
 
-            $stream->append($this->putRowsInNewLines ? "[\n" : '[');
         } else {
             $stream = $streams->writeTo($this->path, $partitions);
         }
@@ -107,8 +92,6 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
             return;
         }
 
-        $separator = $this->putRowsInNewLines ? ",\n" : ',';
-
         foreach ($normalizer->normalize($rows) as $normalizedRow) {
             try {
                 $json = json_encode($normalizedRow, $this->flags);
@@ -120,7 +103,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
                 throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
             }
 
-            $json = ($this->writes[$stream->path()->path()] > 0) ? ($separator . $json) : $json;
+            $json = ($this->writes[$stream->path()->path()] > 0) ? ("\n" . $json) : $json;
 
             $stream->append($json);
 
