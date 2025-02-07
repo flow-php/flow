@@ -148,16 +148,16 @@
         },
         {
             "name": "coduo/php-humanizer",
-            "version": "5.0.1",
+            "version": "5.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/coduo/php-humanizer.git",
-                "reference": "a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e"
+                "reference": "8873082ace4660527641d6306513315e45087270"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e",
-                "reference": "a88623964a2f8bdd801a8fa5b7a6e7c56d32d50e",
+                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/8873082ace4660527641d6306513315e45087270",
+                "reference": "8873082ace4660527641d6306513315e45087270",
                 "shasum": ""
             },
             "require": {
@@ -199,7 +199,7 @@
             ],
             "support": {
                 "issues": "https://github.com/coduo/php-humanizer/issues",
-                "source": "https://github.com/coduo/php-humanizer/tree/5.0.1"
+                "source": "https://github.com/coduo/php-humanizer/tree/5.0.2"
             },
             "funding": [
                 {
@@ -211,7 +211,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-25T02:32:49+00:00"
+            "time": "2025-02-06T15:51:17+00:00"
         },
         {
             "name": "composer/semver",
@@ -6342,6 +6342,6 @@
     "platform": {
         "php": "8.2.*"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
