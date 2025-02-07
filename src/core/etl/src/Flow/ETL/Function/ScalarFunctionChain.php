@@ -471,6 +471,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StartsWith($this, $needle);
     }
 
+    public function stringCamel() : self
+    {
+        return new StringCamel($this);
+    }
+
     public function stringFold() : self
     {
         return new StringFold($this);
