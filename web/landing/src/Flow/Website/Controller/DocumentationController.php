@@ -20,6 +20,35 @@ final class DocumentationController extends AbstractController
     ) {
     }
 
+    #[Route('/documentation/api/{page}', name: 'documentation_api', requirements: ['page' => '.*'])]
+    public function apiPage(string $page) : Response
+    {
+        $projectDir = $this->getParameter('kernel.project_dir');
+        $docsDir = $projectDir . '/build/documentation/api';
+
+        if (!\file_exists($docsDir . '/' . $page) || !\is_file($docsDir . '/' . $page)) {
+            if (!\str_ends_with($page, '.html')) {
+                return $this->redirectToRoute('documentation_api', ['page' => $page . '/index.html']);
+            }
+        }
+
+        if (\file_exists($docsDir . '/' . $page)) {
+            $extension = pathinfo($docsDir . '/' . $page, PATHINFO_EXTENSION);
+
+            $contentType = match ($extension) {
+                'css' => 'text/css',
+                'js' => 'application/javascript',
+                default => 'text/html',
+            };
+
+            return new Response(\file_get_contents($docsDir . '/' . $page), 200, [
+                'Content-Type' => $contentType,
+            ]);
+        }
+
+        throw $this->createNotFoundException();
+    }
+
     #[Route('/documentation/dsl/{module}/{function}', name: 'documentation_dsl_function')]
     public function dslFunction(string $module, string $function) : Response
     {

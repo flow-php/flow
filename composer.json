@@ -396,6 +396,36 @@
         "build:docs": [
             "bin/docs.php dsl:dump web/landing/resources/dsl.json"
         ],
+        "build:docs:api": [
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/core.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/cli.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.array-dot.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.azure-sdk.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.doctrine-dbal-bulk.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.filesystem.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet-viewer.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.rdsl.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.snappy.xml",
+
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.chartjs.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.csv.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.doctrine.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.elasticsearch.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.google-sheet.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.http.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.json.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.logger.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.meilisearch.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.parquet.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.text.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.xml.xml",
+
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.filesystem.async-aws.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.filesystem.azure.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.monolog.http.xml"
+        ],
         "build:parquet:thrift": [
             "grep -q 'namespace php Flow.Parquet.Thrift' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
             "rm src/lib/parquet/src/Flow/Parquet/Thrift/*.php",

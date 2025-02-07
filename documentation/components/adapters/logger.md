@@ -1,6 +1,8 @@
 # ETL Adapter: Logger
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/adapter/logger)
+- [📁Files](/documentation/api/adapter/logger/indices/files.html)
 
 ETL Adapter that provides PSR Logger support for ETL.
 

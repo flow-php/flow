@@ -1,6 +1,8 @@
 # Parquet
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/lib/parquet)
+- [📁Files](/documentation/api/lib/parquet/indices/files.html)
 
 ## Installation
 

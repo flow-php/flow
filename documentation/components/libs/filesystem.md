@@ -1,6 +1,8 @@
 # Filesystem
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/lib/filesystem)
+- [📁Files](/documentation/api/lib/filesystem/indices/files.html)
 
 ## Installation
 

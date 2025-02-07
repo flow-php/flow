@@ -238,6 +238,9 @@ jobs:
           GOOGLE_CONVERSION_TAG: '${{ vars.GOOGLE_CONVERSION_TAG }}'
         working-directory: "web/landing"
 
+      - name: "Generate Api References"
+        run: "composer build:docs:api"
+
       - name: Pushes build to website repository
         uses: cpina/github-action-push-to-another-repository@main
         env:
