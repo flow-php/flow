@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_enum, type_string};
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
 use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\PHP\Type\Type;
@@ -19,9 +18,6 @@ final class StringStyle extends ScalarFunctionChain implements TypedScalarFuncti
     ) {
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function eval(Row $row) : mixed
     {
 

@@ -57,6 +57,7 @@ enum StringStyles : string
         return match ($this) {
             self::CAMEL => u($value)->camel()->toString(),
             self::KEBAB => $hasKebabMethod
+                /** @phpstan-ignore-next-line */
                 ? u($value)->kebab()->toString()
                 : u($value)->snake()->replace('_', '-')->toString(),
             self::LOWER => u($value)->lower()->toString(),
