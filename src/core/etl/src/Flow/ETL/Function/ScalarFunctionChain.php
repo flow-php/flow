@@ -477,7 +477,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StringFold($this);
     }
 
-    public function stringStyle(StringStyles $style) : self
+    public function stringStyle(ScalarFunction|string|StringStyles $style) : self
     {
         return new StringStyle($this, $style);
     }

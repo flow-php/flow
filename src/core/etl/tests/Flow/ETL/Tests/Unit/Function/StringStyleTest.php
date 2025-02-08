@@ -27,8 +27,11 @@ final class StringStyleTest extends FlowTestCase
     {
         self::assertSame(
             'fooBarBaz',
-            ref('str')->stringStyle(StringStyles::CAMEL)->eval(
-                row(str_entry('str', 'Foo: Bar-baz.'))
+            ref('str')->stringStyle(ref('style'))->eval(
+                row(
+                    str_entry('str', 'Foo: Bar-baz.'),
+                    str_entry('style', 'camel')
+                )
             )
         );
     }
@@ -37,7 +40,7 @@ final class StringStyleTest extends FlowTestCase
     {
         self::assertSame(
             'foo-bar-baz',
-            ref('str')->stringStyle(StringStyles::KEBAB)->eval(
+            ref('str')->stringStyle('kebab')->eval(
                 row(str_entry('str', 'Foo: Bar-baz.'))
             )
         );
@@ -47,7 +50,7 @@ final class StringStyleTest extends FlowTestCase
     {
         self::assertSame(
             'foo bar bri̇an',
-            ref('str')->stringStyle(StringStyles::LOWER)->eval(
+            ref('str')->stringStyle('lower')->eval(
                 row(str_entry('str', 'FOO Bar Brİan'))
             )
         );
