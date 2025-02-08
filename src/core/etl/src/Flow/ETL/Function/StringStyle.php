@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\type_string;
-use function Symfony\Component\String\u;
 use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
+use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class StringCamel extends ScalarFunctionChain implements TypedScalarFunction
+final class StringStyle extends ScalarFunctionChain implements TypedScalarFunction
 {
-    public function __construct(private readonly ScalarFunction|string $string)
+    public function __construct(private readonly ScalarFunction|string $string, private readonly StringStyles $style)
     {
     }
 
@@ -24,7 +24,7 @@ final class StringCamel extends ScalarFunctionChain implements TypedScalarFuncti
             return null;
         }
 
-        return u($string)->camel()->toString();
+        return $this->style->convert($string);
     }
 
     public function returns() : Type

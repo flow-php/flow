@@ -10,6 +10,7 @@ use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\PHP\Type\Type;
 
@@ -471,14 +472,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StartsWith($this, $needle);
     }
 
-    public function stringCamel() : self
-    {
-        return new StringCamel($this);
-    }
-
     public function stringFold() : self
     {
         return new StringFold($this);
+    }
+
+    public function stringStyle(StringStyles $style) : self
+    {
+        return new StringStyle($this, $style);
     }
 
     public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : self
