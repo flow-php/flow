@@ -11,7 +11,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class SizeTest extends FlowTestCase
 {
-    public function test_size_on_array() : void
+    public function test_count_on_array() : void
     {
         (data_frame())
             ->read(
@@ -21,57 +21,35 @@ final class SizeTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('size', ref('array')->size())
+            ->withEntry('count', ref('array')->size())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         self::assertSame(
             [
-                ['array' => [1, 2, 3], 'size' => 3],
+                ['array' => [1, 2, 3], 'count' => 3],
             ],
             $memory->dump()
         );
     }
 
-    public function test_size_on_non_string_key() : void
+    public function test_count_on_non_countable() : void
     {
         (data_frame())
             ->read(
                 from_array(
                     [
-                        ['id' => 1],
+                        ['key' => 1],
                     ]
                 )
             )
-            ->withEntry('size', ref('id')->size())
+            ->withEntry('count', ref('key')->size())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         self::assertSame(
             [
-                ['id' => 1, 'size' => null],
-            ],
-            $memory->dump()
-        );
-    }
-
-    public function test_size_on_string() : void
-    {
-        (data_frame())
-            ->read(
-                from_array(
-                    [
-                        ['key' => 'value'],
-                    ]
-                )
-            )
-            ->withEntry('size', ref('key')->size())
-            ->write(to_memory($memory = new ArrayMemory()))
-            ->run();
-
-        self::assertSame(
-            [
-                ['key' => 'value', 'size' => 5],
+                ['key' => 1, 'count' => null],
             ],
             $memory->dump()
         );

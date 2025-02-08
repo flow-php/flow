@@ -41,6 +41,22 @@ final class CountTest extends FlowTestCase
         );
     }
 
+    public function test_aggregation_count_without_reference() : void
+    {
+        $aggregator = count();
+
+        $aggregator->aggregate(row(str_entry('int', '10')));
+        $aggregator->aggregate(row(str_entry('int', '20')));
+        $aggregator->aggregate(row(str_entry('int', '55')));
+        $aggregator->aggregate(row(str_entry('int', '25')));
+        $aggregator->aggregate(row(str_entry('not_int', null)));
+
+        self::assertSame(
+            5,
+            $aggregator->result()->value()
+        );
+    }
+
     public function test_aggregation_when_row_does_not_have_entry() : void
     {
         $aggregator = count(ref('int'));

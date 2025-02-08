@@ -79,6 +79,7 @@
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1456](https://github.com/flow-php/flow/pull/1456) - **Count aggregating function does not require reference anymore** - [@norberttech](https://github.com/norberttech)
 - [#1441](https://github.com/flow-php/flow/pull/1441) - **removed archive section from composer.json of examples for readability** - [@norberttech](https://github.com/norberttech)
 - [#1437](https://github.com/flow-php/flow/pull/1437) - **Allow to not pass primary key name to dbal metadata since it's not used in some cases** - [@norberttech](https://github.com/norberttech)
 - [#1435](https://github.com/flow-php/flow/pull/1435) - **Indexes and primary key are added to directly the table instead of being returned** - [@norberttech](https://github.com/norberttech)
