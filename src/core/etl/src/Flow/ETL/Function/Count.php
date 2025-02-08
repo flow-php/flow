@@ -15,7 +15,7 @@ final class Count implements AggregatingFunction, WindowFunction
 
     private ?Window $window;
 
-    public function __construct(private readonly Reference $ref)
+    public function __construct(private readonly ?Reference $ref = null)
     {
         $this->window = null;
         $this->count = 0;
@@ -24,7 +24,9 @@ final class Count implements AggregatingFunction, WindowFunction
     public function aggregate(Row $row) : void
     {
         try {
-            $row->valueOf($this->ref);
+            if ($this->ref) {
+                $row->valueOf($this->ref);
+            }
             $this->count++;
         } catch (InvalidArgumentException) {
         }
@@ -32,6 +34,10 @@ final class Count implements AggregatingFunction, WindowFunction
 
     public function apply(Row $row, Rows $partition) : mixed
     {
+        if ($this->ref === null) {
+            throw new RuntimeException('Count WindowFunction function requires a reference.');
+        }
+
         $count = 0;
         $value = $row->valueOf($this->ref);
 
@@ -58,6 +64,10 @@ final class Count implements AggregatingFunction, WindowFunction
      */
     public function result() : Entry
     {
+        if (!$this->ref) {
+            return int_entry('_count', $this->count);
+        }
+
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_count');
         }

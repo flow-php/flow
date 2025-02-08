@@ -873,7 +873,7 @@ function coalesce(ScalarFunction ...$values) : Coalesce
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function count(EntryReference $function) : Count
+function count(?EntryReference $function = null) : Count
 {
     return new Count($function);
 }
