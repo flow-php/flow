@@ -24,7 +24,7 @@ final class StringStyle extends ScalarFunctionChain implements TypedScalarFuncti
         $string = (new Parameter($this->string))->asString($row);
         $style = (new Parameter($this->style))->as($row, type_string(), type_enum(StringStyles::class));
 
-        if ($string === null) {
+        if ($string === null || $style === null) {
             return null;
         }
 
