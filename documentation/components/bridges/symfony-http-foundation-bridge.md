@@ -1,6 +1,8 @@
 # Symfony Http Foundation Bridge
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/bridge/symfony/http-foundation)
+- [📁Files](/documentation/api/bridge/symfony/http-foundation/indices/files.html)
 
 Http Foundation Bridge provides seamless integration between Symfony Http Foundation and Flow PHP.
 

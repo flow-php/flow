@@ -1,6 +1,8 @@
 # ETL Adapter: Parquet
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/adapter/parquet)
+- [📁Files](/documentation/api/adapter/parquet/indices/files.html)
 
 Flow PHP's Adapter Parquet is a sophisticated library meticulously engineered to enable seamless interaction with
 Parquet data formats within your ETL (Extract, Transform, Load) workflows. This adapter is crucial for developers

@@ -1,6 +1,8 @@
 # Snappy
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/lib/snappy)
+- [📁Files](/documentation/api/lib/snappy/indices/files.html)
 
 Pure PHP implementation of Google [Snappy](https://github.com/google/snappy) compression algorithm.
 

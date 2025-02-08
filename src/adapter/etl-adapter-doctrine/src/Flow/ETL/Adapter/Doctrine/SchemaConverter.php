@@ -89,18 +89,23 @@ final class SchemaConverter
             throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $type::class));
         }
 
-        $dbalType = null;
+        if ($metadata?->has(DbalMetadata::TYPE->value)) {
+            $dbalType = DbalType::getType((string) $metadata->getAs(DbalMetadata::TYPE->value, type_string()));
+        } else {
 
-        foreach (DbalType::getTypesMap() as $typeName => $class) {
-            if ($class === $dbalTypeClass) {
-                $dbalType = DbalType::getType($typeName);
+            $dbalType = null;
 
-                break;
+            foreach (DbalType::getTypesMap() as $typeName => $class) {
+                if ($class === $dbalTypeClass) {
+                    $dbalType = DbalType::getType($typeName);
+
+                    break;
+                }
             }
         }
 
         if ($dbalType === null) {
-            throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $type::class));
+            throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
         }
 
         $options = [

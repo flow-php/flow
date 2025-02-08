@@ -1,6 +1,8 @@
 # Filesystem Async AWS
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/bridge/filesystem/async-aws)
+- [📁Files](/documentation/api/bridge/filesystem/async-aws/indices/files.html)
 
 The Filesystem Async AWS Bridge is a bridge that allows you to use the S3 as a filesystem in your application 
 through [Async AWS SDK](https://github.com/async-aws/s3).

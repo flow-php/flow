@@ -18,6 +18,7 @@ final class SchemaConverterTest extends FlowTestCase
         $flowSchema = schema(
             int_schema('int', nullable: false, metadata: DbalMetadata::primaryKey('pk_test')),
             str_schema('str', nullable: true, metadata: DbalMetadata::primaryKey('pk_test')),
+            int_schema('bigint', nullable: false, metadata: DbalMetadata::type('bigint')),
             str_schema('str_with_length', true, DbalMetadata::length(255)),
             str_schema('str_unique', true, DbalMetadata::indexUnique('idx_str_unique')),
             date_schema('date', nullable: true, metadata: DbalMetadata::index('idx_date')),
@@ -35,6 +36,7 @@ final class SchemaConverterTest extends FlowTestCase
                 [
                     new Column('int', Type::getType('integer'), ['notnull' => true]),
                     new Column('str', Type::getType('string'), ['notnull' => true]), // pk changes nullable true into false
+                    new Column('bigint', Type::getType('bigint'), ['notnull' => true]),
                     new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
                     new Column('str_unique', Type::getType('string'), ['notnull' => false]),
                     new Column('float', Type::getType('float'), ['notnull' => false, 'precision' => 10, 'scale' => 2]),

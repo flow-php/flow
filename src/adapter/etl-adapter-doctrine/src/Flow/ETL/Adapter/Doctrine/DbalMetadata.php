@@ -20,6 +20,7 @@ enum DbalMetadata : string
     case PRECISION = 'precision';
     case PRIMARY_KEY = 'primary';
     case SCALE = 'scale';
+    case TYPE = 'type';
     case UNSIGNED = 'unsigned';
 
     public static function columnDefinition(string $definition) : Metadata
@@ -75,6 +76,11 @@ enum DbalMetadata : string
     public static function scale(int $scale) : Metadata
     {
         return Metadata::with(self::SCALE->value, $scale);
+    }
+
+    public static function type(string $type) : Metadata
+    {
+        return Metadata::with(self::TYPE->value, $type);
     }
 
     public static function unsigned(bool $unsigned = true) : Metadata

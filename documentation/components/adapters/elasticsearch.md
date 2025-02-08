@@ -1,6 +1,8 @@
 # ETL Adapter: Elasticsearch
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/adapter/elasticsearch)
+- [📁Files](/documentation/api/adapter/elasticsearch/indices/files.html)
 
 Flow PHP's Adapter Elasticsearch is a sophisticated library devised to facilitate seamless interaction with
 Elasticsearch within your ETL (Extract, Transform, Load) workflows. This adapter is essential for developers aiming to

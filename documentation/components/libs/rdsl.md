@@ -1,6 +1,8 @@
 # DSL
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/lib/rdsl)
+- [📁Files](/documentation/api/lib/rdsl/indices/files.html)
 
 RDSL - Remote Domain Specific Language 
 
