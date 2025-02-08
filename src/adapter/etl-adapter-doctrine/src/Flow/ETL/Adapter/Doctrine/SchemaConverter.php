@@ -90,7 +90,7 @@ final class SchemaConverter
         }
 
         if ($metadata?->has(DbalMetadata::TYPE->value)) {
-            $dbalType = DbalType::getType($metadata->getAs(DbalMetadata::TYPE->value, type_string()));
+            $dbalType = DbalType::getType((string) $metadata->getAs(DbalMetadata::TYPE->value, type_string()));
         } else {
 
             $dbalType = null;
