@@ -131,6 +131,9 @@
     <testsuite name="adapter-http-integration">
       <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Integration</directory>
     </testsuite>
+    <testsuite name="adapter-json-unit">
+      <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Unit</directory>
+    </testsuite>
     <testsuite name="adapter-json-integration">
       <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Integration</directory>
     </testsuite>

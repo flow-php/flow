@@ -318,6 +318,7 @@
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-integration --log-junit ./var/phpunit/coverage/clover/adapter-http-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-http-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-http-integration"
         ],
         "test:adapter:json": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-json-unit --log-junit ./var/phpunit/logs/adapter-json-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-json-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-json-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-json-integration --log-junit ./var/phpunit/logs/adapter-json-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-json-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-json-integration"
         ],
         "test:adapter:logger": [
