@@ -92,8 +92,8 @@
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
                         </button>
                         <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2">
-                <code id="output" class="language-bash overflow-auto" {{ stimulus_controller('syntax_highlight') }}>
-                    {{- output | escape('html') -}}
+                <code id="output" class="language-{{ output.type}} overflow-auto" {{ stimulus_controller('syntax_highlight') }}>
+                    {{- output.content | escape('html') -}}
                 </code>
             </pre>
                     {% endapply %}

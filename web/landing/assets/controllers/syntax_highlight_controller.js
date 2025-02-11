@@ -7,6 +7,7 @@ import 'prismjs/components/prism-markup-templating.min.js';
 import 'prismjs/components/prism-php.min.js';
 import 'prismjs/components/prism-bash.min.js';
 import 'prismjs/components/prism-json.min.js';
+import 'prismjs/components/prism-csv.min.js';
 
 /* stimulusFetch: 'lazy' */
 export default class extends Controller

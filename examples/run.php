@@ -25,18 +25,34 @@ if (false === \in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 
 \ini_set('memory_limit', -1);
 
-$finder = new Finder();
-$finder->in(__DIR__ . '/topics')
-    ->files()
-    ->name('*.php');
-
 $output = new ConsoleOutput();
 $intput = new ArgvInput(definition: new InputDefinition(
     [
         new InputOption(name: 'composer-update', shortcut: 'u', mode: InputOption::VALUE_NONE),
         new InputOption(name: 'composer-archive', shortcut: 'a', mode: InputOption::VALUE_NONE),
+        new InputOption(name: 'topic', shortcut: 't', mode: InputOption::VALUE_REQUIRED),
+        new InputOption(name: 'example', shortcut: 'e', mode: InputOption::VALUE_REQUIRED),
     ]
 ));
+
+$topic = $intput->getOption('topic');
+$example = $intput->getOption('example');
+
+$path = __DIR__ . '/topics';
+
+if ($topic) {
+    $path .= '/' . $topic;
+}
+
+if ($example) {
+    $path .= '/' . $example;
+}
+
+$finder = new Finder();
+$finder->in($path)
+    ->files()
+    ->name('*.php');
+
 $style = new SymfonyStyle($intput, $output);
 $style->setDecorated(true);
 
