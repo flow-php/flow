@@ -1,6 +1,9 @@
-## [Unreleased] - 2025-02-10
+## [Unreleased] - 2025-02-11
 
 ### Added
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **jsonl writing example** - [@norberttech](https://github.com/norberttech)
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **csv writing example** - [@norberttech](https://github.com/norberttech)
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **xml writing example** - [@norberttech](https://github.com/norberttech)
 - [f7d9d3](https://github.com/flow-php/flow/commit/f7d9d32c761659668cebc4ded1ebac9706f15e08) - **openssf best practices badge** - [@norberttech](https://github.com/norberttech)
 - [566506](https://github.com/flow-php/flow/commit/5665061429cb78f33b5abbccd27b21e9a38336b3) - **documentation/security page** - [@norberttech](https://github.com/norberttech)
 - [#1455](https://github.com/flow-php/flow/pull/1455) - **DbalMetadata::type - allowing to change the type mapping on a specific column level** - [@norberttech](https://github.com/norberttech)
@@ -81,6 +84,7 @@
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **Improved contributing md** - [@norberttech](https://github.com/norberttech)
 - [#1462](https://github.com/flow-php/flow/pull/1462) - **Improve error message when schema definition is duplicated** - [@norberttech](https://github.com/norberttech)
 - [#1453](https://github.com/flow-php/flow/pull/1453) - **Change StringCamel to StringStyle to using with exisitng Enum StringStyles and get's StringStyle as parameter** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1456](https://github.com/flow-php/flow/pull/1456) - **Count aggregating function does not require reference anymore** - [@norberttech](https://github.com/norberttech)
