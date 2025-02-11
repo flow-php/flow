@@ -15,11 +15,6 @@ final class JsonLinesLoader implements Closure, Loader, Loader\FileLoader
 
     private int $flags = JSON_THROW_ON_ERROR;
 
-    /**
-     * @var array<string, int>
-     */
-    private array $writes = [];
-
     public function __construct(private readonly Path $path)
     {
     }
@@ -65,16 +60,7 @@ final class JsonLinesLoader implements Closure, Loader, Loader\FileLoader
         $streams = $context->streams();
         $normalizer = new RowsNormalizer(new EntryNormalizer($this->dateTimeFormat));
 
-        if (!$streams->isOpen($this->path, $partitions)) {
-            $stream = $streams->writeTo($this->path, $partitions);
-
-            if (!\array_key_exists($stream->path()->path(), $this->writes)) {
-                $this->writes[$stream->path()->path()] = 0;
-            }
-
-        } else {
-            $stream = $streams->writeTo($this->path, $partitions);
-        }
+        $stream = $streams->writeTo($this->path, $partitions);
 
         $this->writeJSON($nextRows, $stream, $normalizer);
     }
@@ -103,11 +89,7 @@ final class JsonLinesLoader implements Closure, Loader, Loader\FileLoader
                 throw new RuntimeException('Failed to encode JSON: ' . $e->getMessage(), 0, $e);
             }
 
-            $json = ($this->writes[$stream->path()->path()] > 0) ? ("\n" . $json) : $json;
-
-            $stream->append($json);
-
-            $this->writes[$stream->path()->path()]++;
+            $stream->append($json . "\n");
         }
     }
 }
