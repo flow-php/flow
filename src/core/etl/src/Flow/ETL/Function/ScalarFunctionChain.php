@@ -316,6 +316,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new IsType($this, ...$types);
     }
 
+    public function isUtf8() : IsUtf8
+    {
+        return new IsUtf8($this);
+    }
+
     public function jsonDecode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR) : self
     {
         return new JsonDecode($this, $flags);
