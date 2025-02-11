@@ -74,4 +74,7 @@ return [
         'version' => '2.5.2',
         'type' => 'css',
     ],
+    'prismjs/components/prism-csv.min.js' => [
+        'version' => '1.29.0',
+    ],
 ];

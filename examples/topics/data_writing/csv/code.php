@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\JSON\{to_json_lines};
+use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\{data_frame, from_array, overwrite};
 
 require __DIR__ . '/vendor/autoload.php';
@@ -19,5 +19,5 @@ data_frame()
     )
     ->collect()
     ->mode(overwrite())
-    ->write(to_json_lines(__DIR__ . '/output.json'))
+    ->write(to_csv(__DIR__ . '/output.csv'))
     ->run();

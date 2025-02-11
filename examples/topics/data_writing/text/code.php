@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\JSON\{to_json_lines};
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite};
+use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\DSL\{concat_ws, data_frame, from_array, overwrite, ref};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -17,7 +17,9 @@ data_frame()
             ['id' => 5, 'name' => 'Charlie', 'age' => 32],
         ])
     )
+    ->withEntry('line', concat_ws('_', ref('id'), ref('name'), ref('age')))
+    ->select('line')
     ->collect()
     ->mode(overwrite())
-    ->write(to_json_lines(__DIR__ . '/output.json'))
+    ->write(to_text(__DIR__ . '/output.txt'))
     ->run();

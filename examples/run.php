@@ -25,7 +25,6 @@ if (false === \in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 
 \ini_set('memory_limit', -1);
 
-
 $output = new ConsoleOutput();
 $intput = new ArgvInput(definition: new InputDefinition(
     [

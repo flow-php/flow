@@ -846,9 +846,9 @@ function concat(ScalarFunction|string ...$functions) : Concat
  * Concat all values with separator.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function concat_ws(ScalarFunction|string ...$functions) : ConcatWithSeparator
+function concat_ws(ScalarFunction|string $separator, ScalarFunction|string ...$functions) : ConcatWithSeparator
 {
-    return new ConcatWithSeparator(...$functions);
+    return new ConcatWithSeparator($separator, ...$functions);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
