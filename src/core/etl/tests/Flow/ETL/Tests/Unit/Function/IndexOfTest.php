@@ -16,13 +16,27 @@ final class IndexOfTest extends FlowTestCase
     {
         self::assertSame(
             5,
-            ref('str')->indexOf('x', 5)->eval(
+            ref('str')->indexOf('x', offset: 5)->eval(
+                row(str_entry('str', 'AbBAsxa'))
+            )
+        );
+
+        self::assertSame(
+            0,
+            ref('str')->indexOf('A', ignoreCase: true)->eval(
+                row(str_entry('str', 'abbbbb'))
+            )
+        );
+
+        self::assertSame(
+            5,
+            ref('str')->indexOf('x', offset: 5)->eval(
                 row(str_entry('str', 'AbBAsxa'))
             )
         );
 
         self::assertNull(
-            ref('str')->indexOf('x', 2)->eval(
+            ref('str')->indexOf('x', offset: 2)->eval(
                 row(str_entry('str', 'Abba'))
             )
         );
@@ -30,7 +44,7 @@ final class IndexOfTest extends FlowTestCase
 
     public function test_returns_method_returns_string_int() : void
     {
-        $indexOf = new IndexOf('Abba', 'b', 3);
+        $indexOf = new IndexOf('Abba', 'b', offset: 3);
         $returnType = $indexOf->returns();
 
         self::assertInstanceOf(Type::class, $returnType);

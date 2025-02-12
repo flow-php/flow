@@ -15,7 +15,8 @@ final class IndexOf extends ScalarFunctionChain implements TypedScalarFunction
     public function __construct(
         private readonly ScalarFunction|string $string,
         private readonly ScalarFunction|string $needle,
-        private readonly int $offset = 0,
+        private readonly ScalarFunction|bool $ignoreCase = false,
+        private readonly ScalarFunction|int $offset = 0,
     ) {
     }
 
@@ -23,12 +24,18 @@ final class IndexOf extends ScalarFunctionChain implements TypedScalarFunction
     {
         $string = (new Parameter($this->string))->asString($row);
         $needle = (new Parameter($this->needle))->asString($row);
+        $offset = (new Parameter($this->offset))->as($row, type_int());
+        $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row);
 
         if ($string === null || $needle === null) {
             return false;
         }
 
-        return u($string)->indexOf($needle, $this->offset);
+        if ($ignoreCase) {
+            return u($string)->ignoreCase()->indexOf($needle, $offset);
+        }
+
+        return u($string)->indexOf($needle, $offset);
     }
 
     public function returns() : Type
