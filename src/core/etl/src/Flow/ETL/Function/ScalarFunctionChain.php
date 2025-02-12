@@ -259,6 +259,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Hash($this, $algorithm);
     }
 
+    public function indexOf(ScalarFunction|string $indexSearchString)
+    {
+        return new IndexOf($this, $indexSearchString);
+    }
+
     public function isEven() : self
     {
         return new Equals(new Mod($this, lit(2)), lit(0));
