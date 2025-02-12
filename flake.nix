@@ -27,9 +27,6 @@
         {
           devShells.default = pkgs.mkShell {
             shellHook = ''
-              # Set up Starship
-              figlet "Flow PHP"
-
               if [ -f "./.nix/shell/starship.toml" ]; then
                 export STARSHIP_CONFIG="./.nix/shell/starship.toml"
               else
@@ -38,13 +35,7 @@
 
               eval "$(${pkgs.starship}/bin/starship init bash)"
 
-              echo "$(php -v | head -n 1)"
-              echo "Composer Version: $(composer --version)"
-              echo "Checking compression extensions:"
-              echo "  Snappy: $(php -m | grep -i snappy || echo "not loaded")"
-              echo "  Brotli: $(php -m | grep -i brotli || echo "not loaded")"
-              echo "  LZ4: $(php -m | grep -i lz4 || echo "not loaded")"
-              echo "  Zstd: $(php -m | grep -i zstd || echo "not loaded")"
+              figlet "Flow PHP"
             '';
 
             packages = [
