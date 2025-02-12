@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-02-11
+## [Unreleased] - 2025-02-12
 
 ### Added
+- [#1470](https://github.com/flow-php/flow/pull/1470) - **ByteString IsUTF8 function with Test** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1465](https://github.com/flow-php/flow/pull/1465) - **jsonl writing example** - [@norberttech](https://github.com/norberttech)
 - [#1465](https://github.com/flow-php/flow/pull/1465) - **csv writing example** - [@norberttech](https://github.com/norberttech)
 - [#1465](https://github.com/flow-php/flow/pull/1465) - **xml writing example** - [@norberttech](https://github.com/norberttech)
@@ -155,6 +156,8 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1470](https://github.com/flow-php/flow/pull/1470) - **Add Missing Test for return type of function** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1469](https://github.com/flow-php/flow/pull/1469) - **JSONLines Loader would occasionally write a newline to the start of the file.** - [@jmortlock](https://github.com/jmortlock)
 - [#1457](https://github.com/flow-php/flow/pull/1457) - **missing entry types to JSON/CSV entry normalizers** - [@norberttech](https://github.com/norberttech)
 - [d82381](https://github.com/flow-php/flow/commit/d823813af9be12d5cc21d4b8e2a01171ce0e0c90) - **failing example test** - [@norberttech](https://github.com/norberttech)
 - [#1448](https://github.com/flow-php/flow/pull/1448) - **ParquetOutput didn't implement Output interface** - [@radozato](https://github.com/radozato)
