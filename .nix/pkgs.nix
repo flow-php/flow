@@ -1,0 +1,9 @@
+{ ... }:
+{
+
+  perSystem =
+    { ... }:
+    {
+      pkgsDirectory = ./pkgs;
+    };
+}
