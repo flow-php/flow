@@ -14,20 +14,21 @@ final class IndexOf extends ScalarFunctionChain implements TypedScalarFunction
 {
     public function __construct(
         private readonly ScalarFunction|string $string,
-        private readonly ScalarFunction|string $indexSearchString,
+        private readonly ScalarFunction|string $needle,
+        private readonly int $offset = 0,
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : int|false|null
     {
         $string = (new Parameter($this->string))->asString($row);
-        $indexSearchString = (new Parameter($this->indexSearchString))->asString($row);
+        $needle = (new Parameter($this->needle))->asString($row);
 
-        if ($string === null || $indexSearchString === null) {
-            return null;
+        if ($string === null || $needle === null) {
+            return false;
         }
 
-        return u($string)->indexOf($this->indexSearchString);
+        return u($string)->indexOf($needle, $this->offset);
     }
 
     public function returns() : Type
