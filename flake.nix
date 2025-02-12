@@ -27,6 +27,17 @@
         {
           devShells.default = pkgs.mkShell {
             shellHook = ''
+              # Set up Starship
+              figlet "Flow PHP"
+
+              if [ -f "./.nix/shell/starship.toml" ]; then
+                export STARSHIP_CONFIG="./.nix/shell/starship.toml"
+              else
+                export STARSHIP_CONFIG="./.nix/shell/starship.toml.dist"
+              fi
+
+              eval "$(${pkgs.starship}/bin/starship init bash)"
+
               echo "$(php -v | head -n 1)"
               echo "Composer Version: $(composer --version)"
               echo "Checking compression extensions:"
@@ -39,6 +50,11 @@
             packages = [
               php
               php.packages.composer
+              pkgs.starship
+              pkgs.btop
+              pkgs.bat
+              pkgs.git
+              pkgs.figlet
             ];
           };
         };
