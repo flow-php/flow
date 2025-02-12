@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{df, from_rows, ref, row, rows, xml_element_entry, xml_entry};
+use function Flow\ETL\DSL\{df, from_rows, ref, row, rows, xml_element_entry, xml_entry, type_string};
 
 use DOMDocument;
 use Flow\ETL\Tests\FlowTestCase;
@@ -69,6 +69,31 @@ final class DOMElementValueTest extends FlowTestCase
                 )
             ))
             ->withEntry('html', ref('html_raw')->domElementValue())
+            ->drop('html_raw')
+            ->fetch();
+
+        self::assertSame(
+            [
+                ['html' => '<b>User Name 01</b>'],
+            ],
+            $rows->toArray()
+        );
+    }
+
+    public function test_dom_element_cast_as_string() : void
+    {
+        $document = new DOMDocument();
+        $document->loadHTML('<b>User Name 01</b>');
+
+        $rows = df()
+            ->read(from_rows(
+                rows(
+                    row(
+                        xml_entry('html_raw', $document)
+                    )
+                )
+            ))
+            ->withEntry('html', ref('html_raw')->cast(type_string()))
             ->drop('html_raw')
             ->fetch();
 
