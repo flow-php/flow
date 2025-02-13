@@ -13,7 +13,7 @@ final class DOMElementValueTest extends FlowTestCase
     public function test_dom_element_cast_as_string() : void
     {
         $document = new \DOMDocument();
-        $document->loadHTML('<b>User Name 01</b>');
+        $document->loadXml('<b>User Name 01</b>');
 
         $rows = df()
             ->read(from_rows(
@@ -82,7 +82,7 @@ final class DOMElementValueTest extends FlowTestCase
     public function test_dom_element_value_on_dom_document() : void
     {
         $document = new \DOMDocument();
-        $document->loadHTML('<b>User Name 01</b>');
+        $document->loadXml('<b>User Name 01</b>');
 
         $rows = df()
             ->read(from_rows(

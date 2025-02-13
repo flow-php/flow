@@ -276,13 +276,13 @@ final class DbalLoaderTest extends IntegrationTestCase
         $loader = to_dbal_table_insert($this->connectionParams(), $table);
 
         $documentA = new \DOMDocument();
-        $documentA->loadHTML('Description One');
+        $documentA->loadXml('Description One');
 
         $documentB = new \DOMDocument();
-        $documentB->loadHTML('Description Two');
+        $documentB->loadXml('Description Two');
 
         $documentC = new \DOMDocument();
-        $documentC->loadHTML('<b>Description Three</b>');
+        $documentC->loadXml('<b>Description Three</b>');
 
         (data_frame())
             ->read(

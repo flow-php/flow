@@ -19,7 +19,7 @@ final class JsonTest extends FlowTestCase
     public function test_domdocument_json_file() : void
     {
         $domDocument = new \DOMDocument();
-        $domDocument->loadHtml('<b>red</b>');
+        $domDocument->loadXml('<b>red</b>');
 
         df()
             ->read(from_array([
@@ -31,9 +31,7 @@ final class JsonTest extends FlowTestCase
 
         self::assertStringContainsString(
             <<<'JSON'
-[
-    [{"id":1,"descriptionHtml":"<b>red<\/b>","size":"small"}]
-]
+[{"id":1,"descriptionHtml":"<b>red<\/b>","size":"small"}]
 JSON,
             \file_get_contents($path)
         );
