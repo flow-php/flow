@@ -482,6 +482,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StringStyle($this, $style);
     }
 
+    public function stringTitle(ScalarFunction|bool $allWords = false) : self
+    {
+        return new StringTitle($this, $allWords);
+    }
+
     public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : self
     {
         return new StrPad($this, $length, $pad_string, $type);
