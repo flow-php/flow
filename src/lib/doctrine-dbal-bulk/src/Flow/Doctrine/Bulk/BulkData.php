@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
+use function Flow\ETL\DSL\dom_element_to_string;
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
@@ -131,7 +132,7 @@ final readonly class BulkData
                         default => $entry,
                     },
                     'array' => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
-                        Types::TEXT => \json_encode($entry, JSON_THROW_ON_ERROR),
+                        Types::TEXT, Types::STRING => \json_encode($entry, JSON_THROW_ON_ERROR),
                         default => $entry,
                     },
                     'object' => match ($entry::class) {
@@ -141,6 +142,16 @@ final readonly class BulkData
                         },
                         \DateTime::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
                             Types::DATETIME_IMMUTABLE => \DateTimeImmutable::createFromMutable($entry),
+                            default => $entry,
+                        },
+                        \DOMDocument::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
+                            Types::TEXT,
+                            Types::STRING => $entry->saveXML($entry->documentElement),
+                            default => $entry,
+                        },
+                        \DOMElement::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
+                            Types::TEXT,
+                            Types::STRING => (string) dom_element_to_string($entry),
                             default => $entry,
                         },
                         default => $entry,

@@ -158,7 +158,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
 
     public function concatWithSeparator(ScalarFunction|string $separator, ScalarFunction|string ...$params) : self
     {
-        return new ConcatWithSeparator($separator, ...$params);
+        return new ConcatWithSeparator($separator, $this, ...$params);
     }
 
     public function contains(ScalarFunction|string $needle) : self
@@ -259,6 +259,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Hash($this, $algorithm);
     }
 
+    public function indexOf(ScalarFunction|string $needle, ScalarFunction|bool $ignoreCase = false, ScalarFunction|int $offset = 0) : self
+    {
+        return new IndexOf($this, $needle, $ignoreCase, $offset);
+    }
+
     public function isEven() : self
     {
         return new Equals(new Mod($this, lit(2)), lit(0));
@@ -314,6 +319,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         }
 
         return new IsType($this, ...$types);
+    }
+
+    public function isUtf8() : IsUtf8
+    {
+        return new IsUtf8($this);
     }
 
     public function jsonDecode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR) : self

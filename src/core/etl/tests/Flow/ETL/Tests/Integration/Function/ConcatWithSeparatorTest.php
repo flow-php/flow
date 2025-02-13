@@ -11,6 +11,28 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class ConcatWithSeparatorTest extends FlowTestCase
 {
+    public function test_concat_on_list_of_strings_and_null() : void
+    {
+        (data_frame())
+            ->read(
+                from_array(
+                    [
+                        ['tags' => ['a', 'b', 'c', 'd']],
+                    ]
+                )
+            )
+            ->withEntry('tags', ref('tags')->concatWithSeparator(lit(', '), lit(null)))
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
+
+        self::assertSame(
+            [
+                ['tags' => 'a, b, c, d'],
+            ],
+            $memory->dump()
+        );
+    }
+
     public function test_concat_on_non_string_value() : void
     {
         (data_frame())

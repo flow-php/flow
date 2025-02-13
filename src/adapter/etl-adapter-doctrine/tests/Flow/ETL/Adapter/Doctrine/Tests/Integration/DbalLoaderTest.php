@@ -261,6 +261,96 @@ final class DbalLoaderTest extends IntegrationTestCase
         );
     }
 
+    public function test_inserts_xml_element_entry() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+
+        $documentA = new \DOMDocument();
+        $documentA->loadXml('<xml>Description One</xml>');
+
+        $documentB = new \DOMDocument();
+        $documentB->loadXml('<xml>Description Two</xml>');
+
+        $documentC = new \DOMDocument();
+        $documentC->loadXml('<xml>Description Three</xml>');
+
+        (data_frame())
+            ->read(
+                from_array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => $documentA->getElementsByTagName('xml')[0]],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => $documentB->getElementsByTagName('xml')[0]],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => $documentC->getElementsByTagName('xml')[0]],
+                ]),
+            )
+            ->load($loader)
+            ->run();
+
+        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One', 'description' => '<xml>Description One</xml>'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => '<xml>Description Two</xml>'],
+                ['id' => 3, 'name' => 'Name Three', 'description' => '<xml>Description Three</xml>'],
+            ],
+            $this->pgsqlDatabaseContext->selectAll($table)
+        );
+    }
+
+    public function test_inserts_xml_entry() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+
+        $documentA = new \DOMDocument();
+        $documentA->loadXml('<xml>Description One</xml>');
+
+        $documentB = new \DOMDocument();
+        $documentB->loadXml('<xml>Description Two</xml>');
+
+        $documentC = new \DOMDocument();
+        $documentC->loadXml('<b>Description Three</b>');
+
+        (data_frame())
+            ->read(
+                from_array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => $documentA],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => $documentB],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => $documentC],
+                ]),
+            )
+            ->load($loader)
+            ->run();
+
+        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One', 'description' => '<xml>Description One</xml>'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => '<xml>Description Two</xml>'],
+                ['id' => 3, 'name' => 'Name Three', 'description' => '<b>Description Three</b>'],
+            ],
+            $this->pgsqlDatabaseContext->selectAll($table)
+        );
+    }
+
     public function test_update_multiple_rows_at_once() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(

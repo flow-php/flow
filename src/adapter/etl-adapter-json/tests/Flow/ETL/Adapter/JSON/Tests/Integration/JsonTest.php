@@ -9,12 +9,34 @@ use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\{average, df, from_array, overwrite, ref};
 use function Flow\ETL\DSL\{config, flow_context, rows};
 use function Flow\Filesystem\DSL\path;
+
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\{Tests\FlowTestCase};
 
 final class JsonTest extends FlowTestCase
 {
+    public function test_domdocument_json_file() : void
+    {
+        $domDocument = new \DOMDocument();
+        $domDocument->loadXml('<b>red</b>');
+
+        df()
+            ->read(from_array([
+                ['id' => 1, 'descriptionHtml' => $domDocument, 'size' => 'small'],
+            ]))
+            ->saveMode(overwrite())
+            ->write(to_json($path = __DIR__ . '/var/test_domdocument.json'))
+            ->run();
+
+        self::assertStringContainsString(
+            <<<'JSON'
+[{"id":1,"descriptionHtml":"<b>red<\/b>","size":"small"}]
+JSON,
+            \file_get_contents($path)
+        );
+    }
+
     public function test_json_loader() : void
     {
         $path = __DIR__ . '/var/test_json_loader.json';
