@@ -4,13 +4,15 @@ To run tests locally, please make sure you have [docker](https://www.docker.com/
 You also need [PHP 8.2](https://www.php.net/) and [composer](https://getcomposer.org/) to be available from your CLI.
 Even though we are supporting 3 PHP versions at the time, we are using the lowest supported one for development, currently it's PHP 8.2.
 
-
 ## Before you change anything
 
 Please make sure that you are aware of our [Architecture Decision Records](/documentation/adrs.md).
 It's mandatory to follow all of them without any exceptions unless explicitly overridden by a new ADR.
 
 ## Prepare Project:
+
+**HEADS UP** - instead of using php installed on your host machine, consider using Nix Shell. 
+You can find detailed instructions how to use Nix in the [Nix Development Environment](/documentation/contributing/nix.md) section.
 
 ```shell
 cp compose.yml.dist compose.yml

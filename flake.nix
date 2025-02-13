@@ -26,6 +26,12 @@
         in
         {
           devShells.default = pkgs.mkShell {
+            packages = [
+              php
+              php.packages.composer
+              pkgs.starship
+            ];
+
             shellHook = ''
               echo "=== Flow PHP Development Environment ==="
 
@@ -37,12 +43,6 @@
 
               eval "$(${pkgs.starship}/bin/starship init bash)"
             '';
-
-            packages = [
-              php
-              php.packages.composer
-              pkgs.starship
-            ];
           };
         };
     };
