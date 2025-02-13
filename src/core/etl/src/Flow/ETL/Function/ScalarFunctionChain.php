@@ -158,7 +158,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
 
     public function concatWithSeparator(ScalarFunction|string $separator, ScalarFunction|string ...$params) : self
     {
-        return new ConcatWithSeparator($separator, ...$params);
+        return new ConcatWithSeparator($separator, $this, ...$params);
     }
 
     public function contains(ScalarFunction|string $needle) : self
