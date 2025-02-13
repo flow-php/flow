@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Amp\Socket\SocketAddress\fromString;
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_table_update};
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{from_array, int_schema, ref, str_schema, schema, xml_schema};
+use function Flow\ETL\DSL\{from_array, ref};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
-use DOMDocument;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -84,51 +82,6 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->run();
 
         self::assertEquals(0, $this->pgsqlDatabaseContext->tableCount($table));
-    }
-
-    public function test_inserts_xml_entry() : void
-    {
-        $this->pgsqlDatabaseContext->createTable((new Table(
-            $table = 'flow_doctrine_bulk_test',
-            [
-                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
-                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            ],
-        ))
-            ->setPrimaryKey(['id']));
-
-        $loader = to_dbal_table_insert($this->connectionParams(), $table);
-
-        $documentA = new DOMDocument();
-        $documentA->loadHTML('Description One');
-
-        $documentB = new DOMDocument();
-        $documentB->loadHTML('Description Two');
-
-        $documentC = new DOMDocument();
-        $documentC->loadHTML('<b>Description Three</b>');
-
-        (data_frame())
-            ->read(
-                from_array([
-                    ['id' => 1, 'name' => 'Name One', 'description' => $documentA],
-                    ['id' => 2, 'name' => 'Name Two', 'description' => $documentB],
-                    ['id' => 3, 'name' => 'Name Three', 'description' => $documentC],
-                ]),
-            )
-            ->load($loader)
-            ->run();
-
-        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
-        self::assertEquals(
-            [
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Name Three', 'description' => '<b>Description Three</b>'],
-            ],
-            $this->pgsqlDatabaseContext->selectAll($table)
-        );
     }
 
     public function test_inserts_multiple_rows_at_once() : void
@@ -303,6 +256,51 @@ final class DbalLoaderTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
+            ],
+            $this->pgsqlDatabaseContext->selectAll($table)
+        );
+    }
+
+    public function test_inserts_xml_entry() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+
+        $documentA = new \DOMDocument();
+        $documentA->loadHTML('Description One');
+
+        $documentB = new \DOMDocument();
+        $documentB->loadHTML('Description Two');
+
+        $documentC = new \DOMDocument();
+        $documentC->loadHTML('<b>Description Three</b>');
+
+        (data_frame())
+            ->read(
+                from_array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => $documentA],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => $documentB],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => $documentC],
+                ]),
+            )
+            ->load($loader)
+            ->run();
+
+        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                ['id' => 3, 'name' => 'Name Three', 'description' => '<b>Description Three</b>'],
             ],
             $this->pgsqlDatabaseContext->selectAll($table)
         );
