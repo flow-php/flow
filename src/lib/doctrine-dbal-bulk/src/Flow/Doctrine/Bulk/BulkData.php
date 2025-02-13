@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
+use function Flow\ETL\DSL\dom_element_to_string;
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
@@ -146,6 +147,11 @@ final readonly class BulkData
                         \DOMDocument::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
                             Types::TEXT,
                             Types::STRING => $entry->saveXML($entry->documentElement),
+                            default => $entry,
+                        },
+                        \DOMElement::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
+                            Types::TEXT,
+                            Types::STRING => (string) dom_element_to_string($entry),
                             default => $entry,
                         },
                         default => $entry,
