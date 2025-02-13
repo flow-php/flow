@@ -276,10 +276,10 @@ final class DbalLoaderTest extends IntegrationTestCase
         $loader = to_dbal_table_insert($this->connectionParams(), $table);
 
         $documentA = new \DOMDocument();
-        $documentA->loadXml('Description One');
+        $documentA->loadXml('<xml>Description One</xml>');
 
         $documentB = new \DOMDocument();
-        $documentB->loadXml('Description Two');
+        $documentB->loadXml('<xml>Description Two</xml>');
 
         $documentC = new \DOMDocument();
         $documentC->loadXml('<b>Description Three</b>');
@@ -298,8 +298,8 @@ final class DbalLoaderTest extends IntegrationTestCase
         self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
         self::assertEquals(
             [
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                ['id' => 1, 'name' => 'Name One', 'description' => '<xml>Description One</xml>'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => '<xml>Description Two</xml>'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => '<b>Description Three</b>'],
             ],
             $this->pgsqlDatabaseContext->selectAll($table)

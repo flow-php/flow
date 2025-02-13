@@ -41,7 +41,7 @@ XML;
             'json_pretty' => [[1], 'json_pretty', "[\n    1\n]"],
             'xml_to_array' => [$xml, 'array', ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]]],
             'string_to_xml' => [$xmlString, 'xml', $xml],
-            'xml_to_string' => [$xml, 'string', $fullXMLString],
+            'xml_to_string' => [$xml, 'string', '<root><foo baz="buz">bar</foo></root>'],
             'datetime' => [new \DateTimeImmutable('2023-01-01 00:00:00 UTC'), 'string', '2023-01-01T00:00:00+00:00'],
             'datetime_to_date' => [new \DateTimeImmutable('2023-01-01 00:01:00 UTC'), 'date', new \DateTimeImmutable('2023-01-01T00:00:00+00:00')],
             'uuid' => [Uuid::fromString('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'), 'string', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'],

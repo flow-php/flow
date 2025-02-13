@@ -98,7 +98,7 @@ final class DOMElementValueTest extends FlowTestCase
 
         self::assertSame(
             [
-                ['html' => '<b>User Name 01</b>'],
+                ['html' => 'User Name 01'],
             ],
             $rows->toArray()
         );
