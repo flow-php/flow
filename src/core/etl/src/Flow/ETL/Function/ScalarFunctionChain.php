@@ -487,6 +487,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StringFold($this);
     }
 
+    public function stringLocaleTitle(ScalarFunction|string $locale) : self
+    {
+        return new StringLocaleTitle($this, $locale);
+    }
+
     public function stringStyle(ScalarFunction|string|StringStyles $style) : self
     {
         return new StringStyle($this, $style);
