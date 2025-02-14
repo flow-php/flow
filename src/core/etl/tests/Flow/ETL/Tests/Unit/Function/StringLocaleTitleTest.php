@@ -26,7 +26,7 @@ final class StringLocaleTitleTest extends FlowTestCase
     public function test_string_locale_title_en() : void
     {
         /** @phpstan-ignore-next-line */
-        if (!method_exists(AbstractUnicodeString::class, 'localeTitle')) {
+        if (method_exists(AbstractUnicodeString::class, 'localeTitle')) {
             self::assertSame(
                 'Foo ijssel',
                 ref('str')->stringLocaleTitle('en')->eval(
@@ -46,7 +46,7 @@ final class StringLocaleTitleTest extends FlowTestCase
     public function test_string_locale_title_nl() : void
     {
         /** @phpstan-ignore-next-line */
-        if (!method_exists(AbstractUnicodeString::class, 'localeTitle')) {
+        if (method_exists(AbstractUnicodeString::class, 'localeTitle')) {
             self::assertSame(
                 'Foo IJssel',
                 ref('str')->stringLocaleTitle('nl')->eval(
