@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
-use function Flow\ETL\DSL\{average, df, from_array, overwrite, ref};
+use function Flow\ETL\DSL\{average, df, from_array, from_rows, int_entry, json_entry, overwrite, ref, row};
 use function Flow\ETL\DSL\{config, flow_context, rows};
 use function Flow\Filesystem\DSL\path;
 
@@ -111,6 +111,28 @@ JSON,
         if (\file_exists($path)) {
             \unlink($path);
         }
+    }
+
+    public function test_jsonentry_json_file() : void
+    {
+        $jsonObject = ['short' => 'short_description', 'long' => 'long_description'];
+        df()
+            ->read(from_rows(rows(
+                row(
+                    int_entry('id', 1),
+                    json_entry('nested', $jsonObject),
+                )
+            )))
+            ->saveMode(overwrite())
+            ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json'))
+            ->run();
+
+        self::assertStringContainsString(
+            <<<'JSON'
+[{"id":1,"nested":{"short":"short_description","long":"long_description"}}]
+JSON,
+            \file_get_contents($path)
+        );
     }
 
     public function test_partitioning_json_file() : void
