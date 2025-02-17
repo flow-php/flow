@@ -482,6 +482,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StartsWith($this, $needle);
     }
 
+    public function stringBefore(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
+    {
+        return new StringBefore($this, $needle, $includeNeedle);
+    }
+
     public function stringFold() : self
     {
         return new StringFold($this);
