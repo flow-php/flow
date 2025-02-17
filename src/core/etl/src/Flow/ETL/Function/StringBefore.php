@@ -22,12 +22,13 @@ final class StringBefore extends ScalarFunctionChain implements TypedScalarFunct
     public function eval(Row $row) : mixed
     {
         $string = (new Parameter($this->string))->asString($row);
-        $needle = (new Parameter($this->needle))->as($row, type_string(), type_list(type_string()));
-        $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row);
 
         if ($string === null) {
             return null;
         }
+
+        $needle = (new Parameter($this->needle))->as($row, type_string(), type_list(type_string()));
+        $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row);
 
         return u($string)->before($needle, $includeNeedle)->toString();
     }
