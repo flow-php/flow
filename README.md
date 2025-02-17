@@ -26,7 +26,7 @@ The most up-to-date examples are available at https://flow-php.com
 - [Reading data from Array](https://flow-php.com/documentation/example/data_reading/array/#example)
 - [Reading data from CSV](https://flow-php.com/documentation/example/data_reading/csv/#example)
 - [Joins](https://flow-php.com/documentation/example/join/join/#example)
-- [Aggregatios](https://flow-php.com/documentation/example/aggregations/group_by/#example)
+- [Aggregations](https://flow-php.com/documentation/example/aggregations/group_by/#example)
 - and many more...
 
 ## Community Contributions
