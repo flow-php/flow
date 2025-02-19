@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{ref, str_entry, type_string};
-use Flow\ETL\Function\StringTitle;
+use Flow\ETL\Function\StringBefore;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -14,7 +14,7 @@ final class StringBeforeTest extends FlowTestCase
 {
     public function test_returns_method_returns_string_type() : void
     {
-        $stringTitleFunction = new StringTitle('str');
+        $stringTitleFunction = new StringBefore('str', 't', false);
         $returnType = $stringTitleFunction->returns();
 
         self::assertInstanceOf(Type::class, $returnType);
@@ -52,6 +52,19 @@ final class StringBeforeTest extends FlowTestCase
             ref('str')->stringBefore(ref('needle'), includeNeedle: true)->eval(
                 row(
                     str_entry('str', 'hello world'),
+                    str_entry('needle', 'o')
+                )
+            )
+        );
+    }
+
+    public function test_string_before_returns_empty_string() : void
+    {
+        self::assertSame(
+            '',
+            ref('str')->stringBefore(ref('needle'))->eval(
+                row(
+                    str_entry('str', ''),
                     str_entry('needle', 'o')
                 )
             )

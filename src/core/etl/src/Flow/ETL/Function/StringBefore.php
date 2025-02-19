@@ -19,7 +19,7 @@ final class StringBefore extends ScalarFunctionChain implements TypedScalarFunct
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?string
     {
         $string = (new Parameter($this->string))->asString($row);
 
