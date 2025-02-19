@@ -70,4 +70,16 @@ final class StringBeforeTest extends FlowTestCase
             )
         );
     }
+
+    public function test_string_before_returns_null() : void
+    {
+        self::assertNull(
+            ref('str')->stringBefore(ref('needle'))->eval(
+                row(
+                    str_entry('str', null),
+                    str_entry('needle', 'o')
+                )
+            )
+        );
+    }
 }
