@@ -9,7 +9,7 @@ from_dbal_limit_offset(
     $connection,
     'orders',
     new OrderBy('created_at', Order::DESC),
-)
+);
 // read from a query using limit/offset pagination        
 from_dbal_limit_offset_qb(
     $connection,
@@ -31,4 +31,4 @@ from_dbal_queries(
 );
 ```
 
-Additionally, each of them allows setting dataset schema through  `$extractor->withSchema(Schema $schema)` method.
+Additionally, each of them allows setting a dataset schema through  `$extractor->withSchema(Schema $schema)` method.
