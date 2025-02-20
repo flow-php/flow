@@ -1,6 +1,9 @@
 ## [Unreleased] - 2025-02-20
 
 ### Added
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **DataStream builder** - [@norberttech](https://github.com/norberttech)
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **AddRowIdex Transformation** - [@norberttech](https://github.com/norberttech)
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **Batch Size Transformation** - [@norberttech](https://github.com/norberttech)
 - [#1484](https://github.com/flow-php/flow/pull/1484) - **Added function StringBefore and Tests** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1484](https://github.com/flow-php/flow/pull/1484) - **Including needle is set false by default** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1485](https://github.com/flow-php/flow/pull/1485) - **Added function StringBefore and Tests stringAfter($needle, $includingNeedle including needle is set false by default** - [@f-lapinski](https://github.com/f-lapinski)
@@ -91,6 +94,7 @@
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **Moved Transformations to ETL Core** - [@norberttech](https://github.com/norberttech)
 - [#1476](https://github.com/flow-php/flow/pull/1476) - **Allow to pass single type to is_type() method** - [@norberttech](https://github.com/norberttech)
 - [#1476](https://github.com/flow-php/flow/pull/1476) - **Allow using concat ws on collections** - [@norberttech](https://github.com/norberttech)
 - [#1465](https://github.com/flow-php/flow/pull/1465) - **Improved contributing md** - [@norberttech](https://github.com/norberttech)

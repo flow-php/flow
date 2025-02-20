@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Transformation;
+namespace Flow\ETL;
 
-use Flow\ETL\{DataFrame, Transformation};
-
+/**
+ * Collection of transformations.
+ * Transformations are applied in the order they are passed to the constructor.
+ */
 final readonly class Transformations implements Transformation
 {
     /**
      * @param Transformation ...$transformations
      */
-    private array $transformations;
+    public array $transformations;
 
     public function __construct(Transformation ...$transformations)
     {
