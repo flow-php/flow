@@ -36,4 +36,15 @@ final class IsUtf8Test extends FlowTestCase
 
         self::assertTrue($returnType->isEqual(type_boolean()));
     }
+
+    public function test_is_utf8_returns_null() : void
+    {
+        self::assertNull(
+            ref('str')->isUtf8()->eval(
+                row(
+                    str_entry('str', null),
+                )
+            )
+        );
+    }
 }

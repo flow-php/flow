@@ -41,4 +41,15 @@ final class StringTitleTest extends FlowTestCase
             )
         );
     }
+
+    public function test_string_title_returns_null() : void
+    {
+        self::assertNull(
+            ref('str')->stringTitle()->eval(
+                row(
+                    str_entry('str', null),
+                )
+            )
+        );
+    }
 }
