@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use Flow\ETL\Function\StringFold;
-use Flow\ETL\PHP\Type\Type;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{ref, str_entry, type_string};
+use Flow\ETL\Function\StringFold;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StringFoldTest extends FlowTestCase
@@ -21,6 +21,7 @@ final class StringFoldTest extends FlowTestCase
 
         self::assertTrue($returnType->isEqual(type_string()));
     }
+
     public function test_string_folded() : void
     {
         self::assertSame(

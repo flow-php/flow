@@ -56,6 +56,17 @@ final class StringStyleTest extends FlowTestCase
         );
     }
 
+    public function test_string_style_returns_null() : void
+    {
+        self::assertNull(
+            ref('str')->stringStyle(StringStyles::LOWER)->eval(
+                row(
+                    str_entry('str', null),
+                )
+            )
+        );
+    }
+
     public function test_string_style_snake() : void
     {
         self::assertSame(
@@ -82,17 +93,6 @@ final class StringStyleTest extends FlowTestCase
             'FOO BAR BΆZ',
             ref('str')->stringStyle(StringStyles::UPPER)->eval(
                 row(str_entry('str', 'foo BAR bάz'))
-            )
-        );
-    }
-
-    public function test_string_style_returns_null() : void
-    {
-        self::assertNull(
-            ref('str')->stringStyle(StringStyles::LOWER)->eval(
-                row(
-                    str_entry('str', null),
-                )
             )
         );
     }
