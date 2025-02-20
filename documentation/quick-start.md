@@ -42,7 +42,7 @@ The `data_frame()` function is the entry point to the Flow ETL DSL.
 > [!TIP]
 > To maximize developer experience, Flow exposes a DSL (Domain Specific Language).
 > Flow DSL is a set of functions that can be used to build a data processing pipeline.
-> Entire project is written in Object-Oriented style, but DSL is a more convenient way to build a pipeline.
+> The entire project is written in Object-Oriented style, but DSL is a more convenient way to build a pipeline.
 > Whenever possible, use DSL functions instead of creating objects directly.
 
 It creates a new instance of the `Flow\ETL\Flow` class, which is the main class of the ETL. 
@@ -53,7 +53,7 @@ It creates a new instance of the `Flow\ETL\Flow` class, which is the main class 
 
 The first step in creating a data processing pipeline is to read the data from a data source.
 Extractors are responsible for reading data from a data source and converting it into a format that can be processed by Flow ETL.
-All extractors return \Generator and by design will throw rows one by one, this is to ensure that memory consumption is constant and low.
+All extractors return \Generator and by design will return rows one by one - this is to ensure that memory consumption is constant and low.
 
 ```php
 data_frame()
@@ -94,7 +94,7 @@ The value of the new column can be a literal value, a reference to an existing c
 - `...->cast('date')` - casts column to a date type.
 - `...->dateFormat('Y/m')` - format date using the `Y/m` format, as a result created_at becomes a string `2023/01`.
 
-You can find all available functions in the [DSL](../src/core/etl/src/Flow/ETL/DSL/functions.php).
+You can find all available functions in the [DSL](/src/core/etl/src/Flow/ETL/DSL/functions.php).
 
 > [!TIP]
 > DSL is nothing more than a set of functions that return instances of Flow PHP objects. 
@@ -125,14 +125,14 @@ truncating the output.
 Second write is writing the data to a CSV file, we're using the `mode()` function to set the save mode to `overwrite`.
 There are three save modes available:
 
-- `SaveMode::Append` - If data sink already exists, data will be appended. This solution might cause data duplication since it's not check if given rows already existed.
-- `SaveMode::ExceptionIfExists` - If data sink already exists error will be thrown.
+- `SaveMode::Append` - If data sink already exists, data will be appended. This solution might cause data duplication since it does not check if the given rows already exist.
+- `SaveMode::ExceptionIfExists` - If data sink already exists an error will be thrown.
 - `SaveMode::Ignore` - If data sink already exists, writing will be skipped.
 - `SaveMode::Overwrite` - If data sink already exists, it will be removed and written again.
 
 > [!NOTE]
 > Append mode is not really appending anything to existing files, instead it creates a folder in which it stores outputs under randomized file names. 
-> It can be later read using glob-pattern, for example `from_csv('/path/to/folder/*.csv')`.
+> It can be later read using a glob-pattern, for example `from_csv('/path/to/folder/*.csv')`.
 
 [Loaders Examples](/data_writing/#example)
 
@@ -144,6 +144,6 @@ Flow ETL is using lazy execution, which means that the pipeline will not be exec
     ->run();
 ```
 
-There are few more triggering functions, like `fetch()`, you can find which functions are `@lazy` or `@trigger` looking at
+There are few more triggering functions, like `fetch()`. You can find which functions are `@lazy` or `@trigger` by looking at
 the [DataFrame](/src/core/etl/src/Flow/ETL/DataFrame.php) source code.
       
