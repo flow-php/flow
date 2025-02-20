@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation;
 
 use function Flow\ETL\DSL\df;
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\{Transformations};
 use Flow\ETL\{Config, Extractor, Transformation};
+use Flow\ETL\{Transformations};
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FlowStreamedResponse extends StreamedResponse
