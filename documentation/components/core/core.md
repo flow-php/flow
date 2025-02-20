@@ -13,7 +13,7 @@ Unlike loading an entire dataset at once, a Data Frame processes information in 
 As it moves through the data, it only keeps a limited number of rows in memory at any given time.  
 This approach helps avoid running out of memory, making it efficient and scalable for handling large datasets.
 
-Simple example of reading from php array and writing to stdout.
+Simple example of reading from php a array and writing to stdout.
 
 ```php
 <?php
