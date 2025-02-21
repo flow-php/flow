@@ -72,9 +72,7 @@ data_frame()
                 'driver' => 'pdo_sqlite',
             ]),
             'orders',
-            [
-                'conflict_columns' => ['order_id'],
-            ]
+            postgresql_insert_options(conflict_columns: ['order_id'])
         )
     )
     ->run();
