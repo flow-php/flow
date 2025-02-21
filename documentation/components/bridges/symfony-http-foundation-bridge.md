@@ -28,8 +28,6 @@ files that normally would not fit in memory.
 ```php
 <?php
 
-declare(strict_types=1);
-
 namespace Symfony\Application\Controller;
 
 use Flow\Bridge\Symfony\HttpFoundation\DataStream;
@@ -37,21 +35,21 @@ use Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use function Flow\ETL\Adapter\Parquet\ParquetEtractor;
 use Flow\Bridge\Symfony\HttpFoundation\Transformation\MaskColumns;
 use Flow\Bridge\Symfony\HttpFoundation\Transformation\AddRowIndex;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
 
 final class ReportsController extends AbstractController
 {
     #[Route('/stream/report', name: 'stream-report')]
     public function streamReport() : Response
     {
-        return DataStream()
+        return DataStream
             ::open(from_parquet(__DIR__ . '/reports/orders.parquet'))
             ->underFilename('orders.csv')
             ->transform(
-                 new MaskColumns(['email', 'address']),
-                 new AddRowIndex()
+                new MaskColumns(['email', 'address']),
+                new AddRowIndex()
             )
             ->to(new CSVOutput(withHeader: true));
     }
