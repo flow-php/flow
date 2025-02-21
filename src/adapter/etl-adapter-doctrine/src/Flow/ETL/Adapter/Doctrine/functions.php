@@ -63,7 +63,8 @@ function from_dbal_limit_offset(
 /**
  * @param Connection $connection
  * @param int $page_size
- * @param null|int $maximum
+ * @param null|int $maximum - maximum can also be taken from a query builder, $maximum however is used regardless of the query builder if it's set
+ * @param int $offset - offset can also be taken from a query builder, $offset however is used regardless of the query builder if it's set to non 0 value
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function from_dbal_limit_offset_qb(
@@ -71,11 +72,13 @@ function from_dbal_limit_offset_qb(
     QueryBuilder $queryBuilder,
     int $page_size = 1000,
     ?int $maximum = null,
+    int $offset = 0,
 ) : DbalLimitOffsetExtractor {
     $loader = (new DbalLimitOffsetExtractor(
         $connection,
         $queryBuilder,
-    ))->withPageSize($page_size);
+    ))->withPageSize($page_size)
+        ->withOffset($offset);
 
     if ($maximum !== null) {
         $loader->withMaximum($maximum);

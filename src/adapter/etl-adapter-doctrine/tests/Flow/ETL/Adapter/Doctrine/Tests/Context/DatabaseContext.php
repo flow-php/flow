@@ -11,7 +11,8 @@ final readonly class DatabaseContext
 {
     public function __construct(
         private Connection $connection,
-        private InsertQueryCounter $logger,
+        private InsertQueryCounter $insertQueryCounter,
+        private SelectQueryCounter $selectQueryCounter,
     ) {
     }
 
@@ -40,6 +41,11 @@ final readonly class DatabaseContext
         }
     }
 
+    public function executedSelectQueries() : array
+    {
+        return $this->selectQueryCounter->queries;
+    }
+
     public function insert(string $tableName, array $data, array $types = []) : void
     {
         $this->connection->insert($tableName, $data, $types);
@@ -47,7 +53,22 @@ final readonly class DatabaseContext
 
     public function numberOfExecutedInsertQueries() : int
     {
-        return $this->logger->count;
+        return $this->insertQueryCounter->count;
+    }
+
+    public function numberOfExecutedSelectQueries() : int
+    {
+        return $this->selectQueryCounter->count;
+    }
+
+    public function resetInsertQueryCounter() : void
+    {
+        $this->insertQueryCounter->reset();
+    }
+
+    public function resetSelectQueryCounter() : void
+    {
+        $this->selectQueryCounter->reset();
     }
 
     public function selectAll(string $tableName) : array

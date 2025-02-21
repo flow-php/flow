@@ -6,11 +6,13 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 
 use Psr\Log\{AbstractLogger, LoggerAwareInterface, LoggerAwareTrait, NullLogger};
 
-final class InsertQueryCounter extends AbstractLogger implements LoggerAwareInterface
+final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
     public int $count = 0;
+
+    public array $queries = [];
 
     public function __construct()
     {
@@ -23,13 +25,15 @@ final class InsertQueryCounter extends AbstractLogger implements LoggerAwareInte
             return;
         }
 
-        if (\str_starts_with(\trim((string) $context['sql']), 'INSERT')) {
+        if (\str_starts_with(\trim((string) $context['sql']), 'SELECT')) {
             $this->count++;
+            $this->queries[] = $context['sql'];
         }
     }
 
     public function reset() : void
     {
         $this->count = 0;
+        $this->queries = [];
     }
 }
