@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\generate_random_string;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Tests\SqliteIntegrationTestCase;
-use Flow\Doctrine\Bulk\{Bulk, BulkData};
+use Flow\Doctrine\Bulk\{Bulk, BulkData, Dialect\SqliteInsertOptions};
 
 final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
 {
@@ -86,9 +86,9 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
             ]),
-            [
+            SqliteInsertOptions::fromArray([
                 'skip_conflicts' => true,
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));
@@ -136,9 +136,9 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
             ]),
-            [
+            SqliteInsertOptions::fromArray([
                 'conflict_columns' => ['id'],
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));
@@ -184,10 +184,10 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'DESCRIPTION', 'active' => true],
             ]),
-            [
+            SqliteInsertOptions::fromArray([
                 'conflict_columns' => ['id'],
                 'update_columns' => ['description'],
-            ]
+            ])
         );
 
         self::assertEquals(3, $this->databaseContext->tableCount($table));

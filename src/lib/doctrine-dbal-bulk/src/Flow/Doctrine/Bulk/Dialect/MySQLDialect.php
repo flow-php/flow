@@ -6,7 +6,7 @@ namespace Flow\Doctrine\Bulk\Dialect;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
-use Flow\Doctrine\Bulk\{BulkData, Columns, TableDefinition};
+use Flow\Doctrine\Bulk\{BulkData, Columns, InsertOptions, TableDefinition, UpdateOptions};
 
 final readonly class MySQLDialect implements Dialect
 {
@@ -17,17 +17,20 @@ final readonly class MySQLDialect implements Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  upsert?: boolean,
-     *  update_columns?: array<string>
-     * } $insertOptions
      *
      * @return string
      */
-    public function prepareInsert(TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
-        if (\array_key_exists('skip_conflicts', $insertOptions) && $insertOptions['skip_conflicts'] === true) {
+        if ($options === null) {
+            $options = new MySQLInsertOptions();
+        }
+
+        if (!$options instanceof MySQLInsertOptions) {
+            throw new RuntimeException('Invalid insert options provided, expected MySQLInsertOptions got: ' . $options::class);
+        }
+
+        if ($options->skipConflicts === true) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %4$s=%4$s',
                 $table->name(),
@@ -37,7 +40,7 @@ final readonly class MySQLDialect implements Dialect
             );
         }
 
-        if (\array_key_exists('upsert', $insertOptions) && $insertOptions['upsert'] === true) {
+        if ($options->upsert === true) {
             return \sprintf(
                 'INSERT INTO %s (%s)
                 VALUES %s
@@ -45,8 +48,8 @@ final readonly class MySQLDialect implements Dialect
                 $table->name(),
                 \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
-                \array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns'])
-                    ? $this->updateSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
+                \count($options->updateColumns)
+                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns())
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
@@ -62,13 +65,11 @@ final readonly class MySQLDialect implements Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array $updateOptions
-     *
-     * @throws RuntimeException
+     * @param null|UpdateOptions $options
      *
      * @return string
      */
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
     {
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',

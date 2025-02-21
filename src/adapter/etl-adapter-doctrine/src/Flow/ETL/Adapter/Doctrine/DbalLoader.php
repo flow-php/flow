@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\{Connection, DriverManager};
-use Flow\Doctrine\Bulk\{Bulk, BulkData};
+use Flow\Doctrine\Bulk\{Bulk, BulkData, InsertOptions, UpdateOptions};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Loader, Rows};
 
@@ -15,7 +15,7 @@ final class DbalLoader implements Loader
 
     private string $operation = 'insert';
 
-    private array $operationOptions = [];
+    private InsertOptions|UpdateOptions|null $operationOptions = null;
 
     /**
      * @param array<string, mixed> $connectionParams
@@ -30,20 +30,12 @@ final class DbalLoader implements Loader
      * Since Connection::getParams() is marked as an internal method, please
      * use this constructor with caution.
      *
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  constraint?: string,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>,
-     *  primary_key_columns?: array<string>
-     * } $operationOptions
-     *
      * @throws InvalidArgumentException
      */
     public static function fromConnection(
         Connection $connection,
         string $tableName,
-        array $operationOptions = [],
+        InsertOptions|UpdateOptions|null $operationOptions = null,
         string $operation = 'insert',
     ) : self {
         $loader = (new self($tableName, $connection->getParams()));
@@ -52,7 +44,7 @@ final class DbalLoader implements Loader
             $loader->withOperation($operation);
         }
 
-        if ($operationOptions !== []) {
+        if ($operationOptions) {
             $loader->withOperationOptions($operationOptions);
         }
 
@@ -85,16 +77,7 @@ final class DbalLoader implements Loader
         return $this;
     }
 
-    /**
-     * @param array{
-     *   skip_conflicts?: boolean,
-     *   constraint?: string,
-     *   conflict_columns?: array<string>,
-     *   update_columns?: array<string>,
-     *   primary_key_columns?: array<string>
-     *  } $operationOptions
-     */
-    public function withOperationOptions(array $operationOptions) : self
+    public function withOperationOptions(InsertOptions|UpdateOptions|null $operationOptions) : self
     {
         $this->operationOptions = $operationOptions;
 

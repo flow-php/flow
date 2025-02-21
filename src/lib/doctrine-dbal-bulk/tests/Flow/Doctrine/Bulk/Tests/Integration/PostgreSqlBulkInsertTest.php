@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\generate_random_string;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
-use Flow\Doctrine\Bulk\{Bulk, BulkData};
+use Flow\Doctrine\Bulk\{Bulk, BulkData, Dialect\PostgreSQLInsertOptions};
 
 final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 {
@@ -88,9 +88,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
             ]),
-            [
+            PostgreSQLInsertOptions::fromArray([
                 'skip_conflicts' => true,
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));
@@ -138,9 +138,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
             ]),
-            [
+            PostgreSQLInsertOptions::fromArray([
                 'conflict_columns' => ['id'],
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));
@@ -186,10 +186,10 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'DESCRIPTION', 'active' => true],
             ]),
-            [
+            PostgreSQLInsertOptions::fromArray([
                 'conflict_columns' => ['id'],
                 'update_columns' => ['description'],
-            ]
+            ])
         );
 
         self::assertEquals(3, $this->databaseContext->tableCount($table));
@@ -236,9 +236,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
             ]),
-            [
+            PostgreSQLInsertOptions::fromArray([
                 'constraint' => 'flow_doctrine_bulk_test_pkey',
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));

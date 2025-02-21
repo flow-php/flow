@@ -7,6 +7,12 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Doctrine\DBAL\{ArrayParameterType as DbalArrayType, Connection, ParameterType as DbalParameterType};
+use Flow\Doctrine\Bulk\{Dialect\MySQLInsertOptions,
+    Dialect\PostgreSQLInsertOptions,
+    Dialect\PostgreSQLUpdateOptions,
+    Dialect\SqliteInsertOptions,
+    InsertOptions,
+    UpdateOptions};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
@@ -166,16 +172,17 @@ function dbal_from_query(
 }
 
 /**
+ * Insert new rows into a database table.
+ * Insert can also be used as an upsert with the help of InsertOptions.
+ * InsertOptions are platform specific, so please choose the right one for your database.
+ *
+ *  - MySQLInsertOptions
+ *  - PostgreSQLInsertOptions
+ *  - SqliteInsertOptions
+ *
  * In order to control the size of the single insert, use DataFrame::chunkSize() method just before calling DataFrame::load().
  *
  * @param array<string, mixed>|Connection $connection
- * @param array{
- *  skip_conflicts?: boolean,
- *  constraint?: string,
- *  conflict_columns?: array<string>,
- *  update_columns?: array<string>,
- *  primary_key_columns?: array<string>
- * } $options - @deprecated use DbalLoader::withOperationOptions() instead
  *
  * @throws InvalidArgumentException
  */
@@ -184,7 +191,7 @@ function dbal_from_query(
 function to_dbal_table_insert(
     array|Connection $connection,
     string $table,
-    array $options = [],
+    ?InsertOptions $options = null,
 ) : DbalLoader {
     return \is_array($connection)
         ? (new DbalLoader($table, $connection))->withOperationOptions($options)
@@ -192,16 +199,11 @@ function to_dbal_table_insert(
 }
 
 /**
+ *  Update existing rows in database.
+ *
  *  In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
  *
  * @param array<string, mixed>|Connection $connection
- * @param array{
- *  skip_conflicts?: boolean,
- *  constraint?: string,
- *  conflict_columns?: array<string>,
- *  update_columns?: array<string>,
- *  primary_key_columns?: array<string>
- * } $options - @deprecated use DbalLoader::withOperationOptions() instead
  *
  * @throws InvalidArgumentException
  */
@@ -209,7 +211,7 @@ function to_dbal_table_insert(
 function to_dbal_table_update(
     array|Connection $connection,
     string $table,
-    array $options = [],
+    ?UpdateOptions $options = null,
 ) : DbalLoader {
     return \is_array($connection)
         ? (new DbalLoader($table, $connection))->withOperation('update')->withOperationOptions($options)
@@ -223,4 +225,34 @@ function to_dbal_table_update(
 function to_dbal_schema_table(Schema $schema, string $table_name, array $table_options = [], array $types_map = []) : \Doctrine\DBAL\Schema\Table
 {
     return (new SchemaConverter($types_map))->toDbalTable($schema, $table_name, $table_options);
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+#[DocumentationExample(topic: 'data_writing', example: 'database_upsert')]
+function postgresql_insert_options(?bool $skip_conflicts = null, ?string $constraint = null, array $conflict_columns = [], array $update_columns = []) : PostgreSQLInsertOptions
+{
+    return new PostgreSQLInsertOptions($skip_conflicts, $constraint, $conflict_columns, $update_columns);
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function mysql_insert_options(?bool $skip_conflicts = null, ?bool $upsert = null, array $update_columns = []) : MySQLInsertOptions
+{
+    return new MySQLInsertOptions($skip_conflicts, $upsert, $update_columns);
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function sqlite_insert_options(?bool $skip_conflicts = null, array $conflict_columns = [], array $update_columns = []) : SqliteInsertOptions
+{
+    return new SqliteInsertOptions($skip_conflicts, $conflict_columns, $update_columns);
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function postgresql_update_options(
+    array $primary_key_columns = [],
+    array $update_columns = [],
+) : PostgreSQLUpdateOptions {
+    return new PostgreSQLUpdateOptions(
+        $primary_key_columns,
+        $update_columns,
+    );
 }
