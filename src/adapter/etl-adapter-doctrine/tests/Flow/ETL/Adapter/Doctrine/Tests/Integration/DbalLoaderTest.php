@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_table_update};
+use function Flow\ETL\Adapter\Doctrine\{postgresql_update_options, to_dbal_table_insert, to_dbal_table_update};
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{from_array, ref};
 use Doctrine\DBAL\Schema\{Column, Table};
@@ -365,7 +365,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->setPrimaryKey(['id']));
 
         $insertLoader = to_dbal_table_insert($this->connectionParams(), $table);
-        $updateLoader = to_dbal_table_update($this->connectionParams(), $table, ['primary_key_columns' => ['id'], ['update_columns' => ['name']]]);
+        $updateLoader = to_dbal_table_update($this->connectionParams(), $table, postgresql_update_options(primary_key_columns: ['id'], update_columns: ['name']));
 
         (data_frame())->extract(
             from_array([
