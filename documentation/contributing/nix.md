@@ -7,28 +7,23 @@ If you don't have it installed, you can install it by following official documen
 
 [Nix installation instructions](https://nixos.org/download/)
 
-> Since this project is using Nix Flakes, which are still 
-> considered experimental, you need to enable them first globally.
-
-[Enable Flakes](https://nixos.wiki/wiki/Flakes#Other_Distros,_without_Home-Manager)
-
-Once you have Nix installed and flakes enabled, you can start your development environment
+Once you have Nix installed, you can start your development environment
 by going to the project folder and running following command:
 
 ```bash
-nix develop
+nix-shell
 ```
 
 That's all, after running this command you will have all the necessary tools and dependencies.
 Nix will create a new shell with all the necessary tools and dependencies for the project.
 
-By default we are using [Starship](https://starship.rs/) to provide a nice bash prompt.
+By default, we’re using [Starship](https://starship.rs/) to provide a nice bash prompt.
 You can override it by creating `/.nix/shell/starship.toml` based on `/.nix/shell/starship.toml.dist` 
 file. 
 
-Once you apply your modification you can run `nix develop` again to apply changes.
+Once you apply your modification you can run `nix-shell` again to apply changes.
 
-To use the php version from nix inside your IDE please start a nix shell `nix develop`
+To use the php version from nix inside your IDE please start a nix shell `nix-shell`
 and type: 
 
 ```shell
@@ -41,3 +36,50 @@ It will look like this:
 ```shell
 php is /nix/store/p2m5bamh01ncpwjxscdl11p2m9xy8aq6-php-with-extensions-8.2.27/bin/php
 ```
+
+## php.ini
+
+Nix shell comes with predefined php.ini, but if for any reason
+it wouldn't be enough for you, you can create your own php.ini file in path:
+
+`./.nix/php/lib/php.ini`
+
+If that file is not present, the default php.ini.dist from the same location will be used.
+
+## Pcov
+
+- `pcov` - required for code coverage
+
+To skip installing pcov extension, you can run nix shell with `--arg with-pco false` flag:
+
+```shell
+
+nix-shell --arg with-pcov false
+```
+
+To configure pcov, you can create a file `./.nix/php/lib/pcov.ini` with your xdebug configuration.
+
+## Xdebug
+
+- `xdebug` - required for debugging
+
+To install xdebug extension, you can run nix shell with `--arg with-xdebug true` flag:
+
+```shell
+nix-shell --arg with-xdebug true
+```
+
+To configure xdebug, you can create a file `./.nix/php/lib/xdebug.ini` with your xdebug configuration.
+
+## Blackfire
+
+- `blackfire` - required for profiling
+
+To install blackfire extension, you can run nix shell with `--arg with-blackfire true` flag:
+
+```shell
+nix-shell --arg with-blackfire true
+```
+
+To configure blackfire, you can create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
+
