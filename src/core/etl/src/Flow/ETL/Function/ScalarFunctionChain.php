@@ -487,6 +487,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StringAfter($this, $needle, $includeNeedle);
     }
 
+    public function stringAfterLast(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
+    {
+        return new StringAfterLast($this, $needle, $includeNeedle);
+    }
+
     public function stringBefore(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
     {
         return new StringBefore($this, $needle, $includeNeedle);
