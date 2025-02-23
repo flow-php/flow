@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
+use Flow\Website\Service\Example\Output;
+
 final class Examples
 {
     public function __construct(private readonly string $examplesPath)
@@ -19,6 +21,26 @@ final class Examples
         }
 
         return \file_get_contents($path);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function composer(string $topic, string $example) : string
+    {
+        $path = \sprintf('%s/topics/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example);
+
+        if (false === \file_exists($path)) {
+            throw new \RuntimeException(\sprintf('Composer file doesn\'t exists, it should be located in path: "%s".', $path));
+        }
+
+        $composer = \json_decode(\file_get_contents($path), true, 512, \JSON_THROW_ON_ERROR);
+
+        if (\array_key_exists('archive', $composer)) {
+            unset($composer['archive']);
+        }
+
+        return \json_encode($composer, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES);
     }
 
     public function description(string $topic, string $example) : ?string
@@ -74,11 +96,18 @@ final class Examples
         return \array_keys($priorities);
     }
 
-    public function output(string $topic, string $example) : ?string
+    public function output(string $topic, string $example) : ?Output
     {
         $folder = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
 
-        $paths = \glob(\sprintf('{%s/output.txt,%s/output.*.txt}', $folder, $folder), GLOB_BRACE);
+        $paths = \glob(
+            \sprintf(
+                '{%s/output.{txt,xml,csv,json},%s/output.*.{txt,xml,csv,json}}',
+                $folder,
+                $folder
+            ),
+            GLOB_BRACE
+        );
 
         if (!\count($paths)) {
             return null;
@@ -94,7 +123,17 @@ final class Examples
             }
         }
 
-        return $content;
+        if (\count($paths) > 1) {
+            $extension = 'shell';
+        } else {
+            $extension = \pathinfo($paths[0], \PATHINFO_EXTENSION);
+
+            if ($extension === 'txt') {
+                $extension = 'shell';
+            }
+        }
+
+        return new Output($content, $extension);
     }
 
     /**

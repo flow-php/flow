@@ -48,7 +48,6 @@ parameters:
         - src/lib/parquet-viewer/src
         - src/lib/rdsl/src
         - src/lib/snappy/src
-        - examples/topics
         - src/tools/documentation/src
         - src/core/etl/tests
         - src/cli/tests

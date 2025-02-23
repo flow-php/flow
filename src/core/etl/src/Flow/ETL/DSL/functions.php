@@ -846,9 +846,9 @@ function concat(ScalarFunction|string ...$functions) : Concat
  * Concat all values with separator.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function concat_ws(ScalarFunction|string ...$functions) : ConcatWithSeparator
+function concat_ws(ScalarFunction|string $separator, ScalarFunction|string ...$functions) : ConcatWithSeparator
 {
-    return new ConcatWithSeparator(...$functions);
+    return new ConcatWithSeparator($separator, ...$functions);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -873,7 +873,7 @@ function coalesce(ScalarFunction ...$values) : Coalesce
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function count(EntryReference $function) : Count
+function count(?EntryReference $function = null) : Count
 {
     return new Count($function);
 }
@@ -1550,15 +1550,19 @@ function compare_entries_by_type_and_name(array $priorities = Transformer\OrderE
 }
 
 /**
- * @param array<string|Type<mixed>> $types
+ * @param array<string|Type<mixed>>|Type<mixed> $type
  * @param mixed $value
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function is_type(array $types, mixed $value) : bool
+function is_type(Type|array $type, mixed $value) : bool
 {
-    foreach ($types as $type) {
-        if (\is_string($type)) {
-            if (match (\strtolower($type)) {
+    if ($type instanceof Type) {
+        $type = [$type];
+    }
+
+    foreach ($type as $nextType) {
+        if (\is_string($nextType)) {
+            if (match (\strtolower($nextType)) {
                 'str', 'string' => \is_string($value),
                 'int', 'integer' => \is_int($value),
                 'float' => \is_float($value),
@@ -1566,15 +1570,15 @@ function is_type(array $types, mixed $value) : bool
                 'object' => \is_object($value),
                 'array' => \is_array($value),
                 'list' => \is_array($value) && \array_is_list($value),
-                default => match (\class_exists($type) || \enum_exists($type)) {
-                    true => $value instanceof $type,
-                    false => throw new RuntimeException('Unexpected type: ' . $type),
+                default => match (\class_exists($nextType) || \enum_exists($nextType)) {
+                    true => $value instanceof $nextType,
+                    false => throw new RuntimeException('Unexpected type: ' . $nextType),
                 },
             }) {
                 return true;
             }
         } else {
-            if ($type->isValid($value)) {
+            if ($nextType->isValid($value)) {
                 return true;
             }
         }

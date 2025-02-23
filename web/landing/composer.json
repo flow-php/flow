@@ -10,7 +10,7 @@
         "php-http/curl-client": "^2.3",
         "psr/http-client": "^1.0",
         "symfony/http-kernel": "^6.4",
-        "symfony/http-foundation": "^6.4",
+        "symfony/http-foundation": "^7.2",
         "symfony/routing": "^6.4",
         "symfony/framework-bundle": "^6.4",
         "symfony/config": "^6.4",
@@ -29,7 +29,8 @@
         "twig/extra-bundle": "^3.8",
         "league/commonmark": "^2.4",
         "cocur/slugify": "^4.5",
-        "presta/sitemap-bundle": "^4.1"
+        "presta/sitemap-bundle": "^4.1",
+        "symfony/mime": "^7.2"
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "^6.4",

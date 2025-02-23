@@ -8,7 +8,7 @@ use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
-use Flow\Doctrine\Bulk\{Bulk, BulkData};
+use Flow\Doctrine\Bulk\{Bulk, BulkData, Dialect\PostgreSQLUpdateOptions};
 
 final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 {
@@ -46,12 +46,12 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                 ['id' => 2, 'account' => 'Bob', 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false, 'created_at' => new \DateTime('2021-01-02 10:00:00')],
                 ['id' => 3, 'account' => 'Joe', 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => true, 'created_at' => new \DateTime('2021-01-02 20:00:00')],
             ]),
-            [
+            PostgreSQLUpdateOptions::fromArray([
                 'primary_key_columns' => [
                     'id',
                     'account',
                 ],
-            ]
+            ])
         );
 
         self::assertEquals(
@@ -96,11 +96,11 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false],
                 ['id' => 3, 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => true],
             ]),
-            [
+            PostgreSQLUpdateOptions::fromArray([
                 'primary_key_columns' => [
                     'id',
                 ],
-            ]
+            ])
         );
 
         self::assertEquals(
@@ -145,14 +145,14 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => true],
                 ['id' => 3, 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => false],
             ]),
-            [
+            PostgreSQLUpdateOptions::fromArray([
                 'primary_key_columns' => [
                     'id',
                 ],
                 'update_columns' => [
                     'name',
                 ],
-            ]
+            ])
         );
 
         self::assertEquals(
@@ -200,9 +200,9 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => true],
                 ['id' => 3, 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => false],
             ]),
-            [
+            PostgreSQLUpdateOptions::fromArray([
                 'primary_key_columns' => ['not_existing_column'],
-            ]
+            ])
         );
     }
 

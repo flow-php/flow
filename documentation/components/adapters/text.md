@@ -1,6 +1,8 @@
 # ETL Adapter: Text
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/adapter/text)
+- [📁Files](/documentation/api/adapter/text/indices/files.html)
 
 Flow PHP's Adapter Text is a meticulously crafted library dedicated to enabling seamless handling of text data within
 your ETL (Extract, Transform, Load) workflows. This adapter is pivotal for developers seeking to effortlessly extract

@@ -32,7 +32,7 @@ $finder = Finder::create()
         __DIR__ . '/tools/rector/src',
     ])
     ->exclude([
-        __DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift'
+        'Flow/Parquet/Thrift'
     ]);
 
 return (new Config())

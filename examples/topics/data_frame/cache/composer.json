@@ -1,0 +1,23 @@
+{
+  "name": "flow-php/examples",
+  "description": "Flow PHP - Examples",
+  "license": "MIT",
+  "type": "library",
+  "require": {
+    "flow-php/etl": "1.x-dev",
+    "flow-php/etl-adapter-http": "1.x-dev",
+    "php-http/curl-client": "^2.3",
+    "nyholm/psr7": "^1.8"
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": false
+    }
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
+  }
+}

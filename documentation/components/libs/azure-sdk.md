@@ -1,6 +1,8 @@
 # Azure SDK
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/lib/azure-sdk)
+- [📁Files](/documentation/api/lib/azure-sdk/indices/files.html)
 
 Simple, lightweight, dependency-free and efficient Azure SDK for PHP.
 

@@ -1,6 +1,33 @@
-## [Unreleased] - 2025-01-28
+## [Unreleased] - 2025-02-21
 
 ### Added
+- [#1492](https://github.com/flow-php/flow/pull/1492) - **Respect limit/offset from query builder in dbal query loader** - [@norberttech](https://github.com/norberttech)
+- [#1491](https://github.com/flow-php/flow/pull/1491) - **Added missing tests to string functions** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **DataStream builder** - [@norberttech](https://github.com/norberttech)
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **AddRowIdex Transformation** - [@norberttech](https://github.com/norberttech)
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **Batch Size Transformation** - [@norberttech](https://github.com/norberttech)
+- [#1484](https://github.com/flow-php/flow/pull/1484) - **Added function StringBefore and Tests** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1484](https://github.com/flow-php/flow/pull/1484) - **Including needle is set false by default** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1485](https://github.com/flow-php/flow/pull/1485) - **Added function StringBefore and Tests stringAfter($needle, $includingNeedle including needle is set false by default** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1477](https://github.com/flow-php/flow/pull/1477) - **Add Title function with argument allWords set false as default with Tests** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1475](https://github.com/flow-php/flow/pull/1475) - **Early detection of XML type in dbal bulk** - [@norberttech](https://github.com/norberttech)
+- [#1473](https://github.com/flow-php/flow/pull/1473) - **Added IndexOf function with $offset and $ignoreCase parameters and Tests** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1470](https://github.com/flow-php/flow/pull/1470) - **ByteString IsUTF8 function with Test** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **jsonl writing example** - [@norberttech](https://github.com/norberttech)
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **csv writing example** - [@norberttech](https://github.com/norberttech)
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **xml writing example** - [@norberttech](https://github.com/norberttech)
+- [f7d9d3](https://github.com/flow-php/flow/commit/f7d9d32c761659668cebc4ded1ebac9706f15e08) - **openssf best practices badge** - [@norberttech](https://github.com/norberttech)
+- [566506](https://github.com/flow-php/flow/commit/5665061429cb78f33b5abbccd27b21e9a38336b3) - **documentation/security page** - [@norberttech](https://github.com/norberttech)
+- [#1455](https://github.com/flow-php/flow/pull/1455) - **DbalMetadata::type - allowing to change the type mapping on a specific column level** - [@norberttech](https://github.com/norberttech)
+- [add439](https://github.com/flow-php/flow/commit/add4392aa8c73aa04117a5322da38fbefedd2671) - **missing composer scripts and phpdoc configurations** - [@norberttech](https://github.com/norberttech)
+- [#1454](https://github.com/flow-php/flow/pull/1454) - **Api References to all packages** - [@norberttech](https://github.com/norberttech)
+- [#1449](https://github.com/flow-php/flow/pull/1449) - **string folded function** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1447](https://github.com/flow-php/flow/pull/1447) - **Add read support for JSONL files** - [@jmortlock](https://github.com/jmortlock)
+- [0d0601](https://github.com/flow-php/flow/commit/0d060180469dbf279df168da7c0f07de92ef3a18) - **permalinks to headlines rendered from markdown** - [@norberttech](https://github.com/norberttech)
+- [#1442](https://github.com/flow-php/flow/pull/1442) - **Added support for JSONL - https://github.com/jmortlock/flow/pull/new/add-jsonl-support** - [@jmortlock](https://github.com/jmortlock)
+- [#1440](https://github.com/flow-php/flow/pull/1440) - **composer.json file to each example** - [@norberttech](https://github.com/norberttech)
+- [#1438](https://github.com/flow-php/flow/pull/1438) - **Added file analyze command to CLI** - [@norberttech](https://github.com/norberttech)
+- [#1429](https://github.com/flow-php/flow/pull/1429) - **Flow to Doctrine Dbal schema converter** - [@norberttech](https://github.com/norberttech)
 - [#1413](https://github.com/flow-php/flow/pull/1413) - **Blog Post - Data Processing in PHP** - [@norberttech](https://github.com/norberttech)
 - [#1410](https://github.com/flow-php/flow/pull/1410) - **high resolution time to pipeline report execution time** - [@norberttech](https://github.com/norberttech)
 - [#1408](https://github.com/flow-php/flow/pull/1408) - **Custom transformations into to_branch() loader** - [@norberttech](https://github.com/norberttech)
@@ -69,6 +96,19 @@
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1493](https://github.com/flow-php/flow/pull/1493) - **Doctrine Dbal Adapter loader now expect options as an object** - [@norberttech](https://github.com/norberttech)
+- [#1488](https://github.com/flow-php/flow/pull/1488) - **Moved Transformations to ETL Core** - [@norberttech](https://github.com/norberttech)
+- [#1476](https://github.com/flow-php/flow/pull/1476) - **Allow to pass single type to is_type() method** - [@norberttech](https://github.com/norberttech)
+- [#1476](https://github.com/flow-php/flow/pull/1476) - **Allow using concat ws on collections** - [@norberttech](https://github.com/norberttech)
+- [#1465](https://github.com/flow-php/flow/pull/1465) - **Improved contributing md** - [@norberttech](https://github.com/norberttech)
+- [#1462](https://github.com/flow-php/flow/pull/1462) - **Improve error message when schema definition is duplicated** - [@norberttech](https://github.com/norberttech)
+- [#1453](https://github.com/flow-php/flow/pull/1453) - **Change StringCamel to StringStyle to using with exisitng Enum StringStyles and get's StringStyle as parameter** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1456](https://github.com/flow-php/flow/pull/1456) - **Count aggregating function does not require reference anymore** - [@norberttech](https://github.com/norberttech)
+- [#1441](https://github.com/flow-php/flow/pull/1441) - **removed archive section from composer.json of examples for readability** - [@norberttech](https://github.com/norberttech)
+- [#1437](https://github.com/flow-php/flow/pull/1437) - **Allow to not pass primary key name to dbal metadata since it's not used in some cases** - [@norberttech](https://github.com/norberttech)
+- [#1435](https://github.com/flow-php/flow/pull/1435) - **Indexes and primary key are added to directly the table instead of being returned** - [@norberttech](https://github.com/norberttech)
+- [#1429](https://github.com/flow-php/flow/pull/1429) - **Moved UPGRADE.md to documentation folder to make it available as a static website** - [@norberttech](https://github.com/norberttech)
+- [#1427](https://github.com/flow-php/flow/pull/1427) - **Revert "Bump friendsofphp/php-cs-fixer from 3.68.0 to 3.68.2 in /tools/cs-fixer"** - [@norberttech](https://github.com/norberttech)
 - [#1415](https://github.com/flow-php/flow/pull/1415) - **Significantly reduced complexity of parquet schema converter** - [@norberttech](https://github.com/norberttech)
 - [#1407](https://github.com/flow-php/flow/pull/1407) - **Remove usage of `References::init` in `Row` class** - [@stloyd](https://github.com/stloyd)
 - [#1406](https://github.com/flow-php/flow/pull/1406) - **Improve `Expression::dropDuplicate*Entries` methods** - [@stloyd](https://github.com/stloyd)
@@ -131,6 +171,20 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1482](https://github.com/flow-php/flow/pull/1482) - **JSON was being double encoded.** - [@jmortlock](https://github.com/jmortlock)
+- [#1483](https://github.com/flow-php/flow/pull/1483) - **Fix typo in README.md** - [@jmortlock](https://github.com/jmortlock)
+- [#1475](https://github.com/flow-php/flow/pull/1475) - **Incosistency between XMLEntry::toString and Casting XML's to strings** - [@norberttech](https://github.com/norberttech)
+- [#1470](https://github.com/flow-php/flow/pull/1470) - **Add Missing Test for return type of function** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1469](https://github.com/flow-php/flow/pull/1469) - **JSONLines Loader would occasionally write a newline to the start of the file.** - [@jmortlock](https://github.com/jmortlock)
+- [#1457](https://github.com/flow-php/flow/pull/1457) - **missing entry types to JSON/CSV entry normalizers** - [@norberttech](https://github.com/norberttech)
+- [d82381](https://github.com/flow-php/flow/commit/d823813af9be12d5cc21d4b8e2a01171ce0e0c90) - **failing example test** - [@norberttech](https://github.com/norberttech)
+- [#1448](https://github.com/flow-php/flow/pull/1448) - **ParquetOutput didn't implement Output interface** - [@radozato](https://github.com/radozato)
+- [#1441](https://github.com/flow-php/flow/pull/1441) - **Added missing lock files to examples** - [@norberttech](https://github.com/norberttech)
+- [#1437](https://github.com/flow-php/flow/pull/1437) - **Setting up the offset for reading remote parquet files** - [@norberttech](https://github.com/norberttech)
+- [#1436](https://github.com/flow-php/flow/pull/1436) - **typo in documentation** - [@paul-court](https://github.com/paul-court)
+- [#1435](https://github.com/flow-php/flow/pull/1435) - **Read scale from float type in Dbal Schema Converter** - [@norberttech](https://github.com/norberttech)
+- [#1429](https://github.com/flow-php/flow/pull/1429) - **links in all repos readme** - [@norberttech](https://github.com/norberttech)
+- [#1417](https://github.com/flow-php/flow/pull/1417) - **Removed redundant evaluation of transformer function.** - [@christianc1](https://github.com/christianc1)
 - [#1415](https://github.com/flow-php/flow/pull/1415) - **Date String detection** - [@norberttech](https://github.com/norberttech)
 - [3dee6e](https://github.com/flow-php/flow/commit/3dee6e88d3c268b7e51a8d7c62dd78ce9ea4bf1f) - **article title** - [@norberttech](https://github.com/norberttech)
 - [#1400](https://github.com/flow-php/flow/pull/1400) - **Casting non deterministic values like empty array to list/map will create list/map entry** - [@norberttech](https://github.com/norberttech)
@@ -170,6 +224,9 @@
 - [#1243](https://github.com/flow-php/flow/pull/1243) - **Fixed flow cli autoloading** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [c01992](https://github.com/flow-php/flow/commit/c0199221d27d1c3d17ba376734cab25ca9ae3160) - **composer.json** - [@norberttech](https://github.com/norberttech)
+- [03468f](https://github.com/flow-php/flow/commit/03468f9acc8672447322ee4520dafe35490d58b6) - **dependencies** - [@norberttech](https://github.com/norberttech)
+- [a1731c](https://github.com/flow-php/flow/commit/a1731cb09238bbc8b76be274590b86b74a9d646c) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [5fa15b](https://github.com/flow-php/flow/commit/5fa15bf99f0fefa6294a5e7f4102cbc2f339a3f8) - **SECURITY.md** - [@norberttech](https://github.com/norberttech)
 - [0e18bb](https://github.com/flow-php/flow/commit/0e18bb836c96d4a7166182ed81ad6ac1169a4382) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [716443](https://github.com/flow-php/flow/commit/716443664886ffe8c9f40e168c22b17970afc4d6) - **dependencies** - [@norberttech](https://github.com/norberttech)
@@ -181,6 +238,7 @@
 - [afb55b](https://github.com/flow-php/flow/commit/afb55b8a8d8f7678257b29cbd34737fbbb9f0fce) - **introduction.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1453](https://github.com/flow-php/flow/pull/1453) - **Previous StringCamle function, methods and tests** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1415](https://github.com/flow-php/flow/pull/1415) - **EntryClass from Schema Definition** - [@norberttech](https://github.com/norberttech)
 - [#1402](https://github.com/flow-php/flow/pull/1402) - **EntryFactory interface** - [@mleczakm](https://github.com/mleczakm)
 - [#1343](https://github.com/flow-php/flow/pull/1343) - **MapKey** - [@norberttech](https://github.com/norberttech)
@@ -2154,19 +2212,24 @@
 
 - @alexislefebvre
 - @Bellangelo
+- @christianc1
 - @DawidSajdak
 - @drupol
+- @f-lapinski
 - @flavioheleno
 - @ghost
 - @inmanturbo
 - @jguittard
+- @jmortlock
 - @jpiatko
 - @jwojtyra-aterian
 - @mleczakm
 - @norbertmwk
 - @norberttech
 - @owsiakl
+- @paul-court
 - @peter279k
+- @radozato
 - @rzarno
 - @scyzoryck
 - @stloyd

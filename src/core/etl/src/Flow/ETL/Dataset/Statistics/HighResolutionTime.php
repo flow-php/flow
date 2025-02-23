@@ -53,9 +53,9 @@ final readonly class HighResolutionTime implements \Stringable
         return $this->seconds + $this->nanoseconds / 1_000_000_000;
     }
 
-    public function toString() : string
+    public function toString(int $precision = 9) : string
     {
-        $formatted = number_format($this->toSeconds(), 9, '.', '');
+        $formatted = number_format($this->toSeconds(), $precision, '.', '');
         $formatted = rtrim($formatted, '0');
         $formatted = rtrim($formatted, '.');
 

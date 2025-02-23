@@ -4,3 +4,4 @@ var
 vendor
 compose.yml
 phpunit.xml
+.env

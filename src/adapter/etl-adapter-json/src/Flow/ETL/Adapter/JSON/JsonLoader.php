@@ -28,6 +28,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function closure(FlowContext $context) : void
     {
+
         foreach ($context->streams()->listOpenStreams($this->path) as $stream) {
             $stream->append($this->putRowsInNewLines ? "\n]" : ']');
         }

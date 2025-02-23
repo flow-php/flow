@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_rows, int_entry, max, ref, row, rows, to_stream};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->from(from_rows(rows(

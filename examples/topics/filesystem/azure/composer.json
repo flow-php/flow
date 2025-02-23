@@ -1,0 +1,28 @@
+{
+  "name": "flow-php/examples",
+  "description": "Flow PHP - Examples",
+  "license": "MIT",
+  "type": "library",
+  "require": {
+    "flow-php/etl": "1.x-dev",
+    "symfony/dotenv": "^7.2",
+    "flow-php/filesystem-azure-bridge": "1.x-dev",
+    "flow-php/etl-adapter-parquet": "1.x-dev",
+    "flow-php/filesystem": "1.x-dev",
+    "flow-php/snappy": "1.x-dev",
+    "flow-php/parquet": "1.x-dev",
+    "nyholm/psr7": "^1.8",
+    "php-http/curl-client": "^2.3"
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": false
+    }
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
+  }
+}

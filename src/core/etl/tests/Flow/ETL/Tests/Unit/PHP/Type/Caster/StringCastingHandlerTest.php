@@ -27,6 +27,11 @@ final class StringCastingHandlerTest extends FlowTestCase
             }
         }, 'stringable'];
         yield 'DOMDocument' => [new \DOMDocument(), '<?xml version="1.0"?>'];
+
+        $xml = (new \DOMDocument());
+        $xml->loadXML('<xml>Some Happy XML</xml>');
+
+        yield 'Not Empty DOMDocument' => [$xml, '<xml>Some Happy XML</xml>'];
         yield 'DOMElement' => [new \DOMElement('element'), '<element/>'];
     }
 

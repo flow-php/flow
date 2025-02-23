@@ -6,6 +6,7 @@ namespace Flow\ETL\Function\StyleConverter;
 
 use function Symfony\Component\String\u;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Symfony\Component\String\UnicodeString;
 
 enum StringStyles : string
 {
@@ -51,9 +52,14 @@ enum StringStyles : string
 
     public function convert(string $value) : string
     {
+        /** @phpstan-ignore-next-line */
+        $hasKebabMethod = method_exists(UnicodeString::class, 'kebab');
+
         return match ($this) {
             self::CAMEL => u($value)->camel()->toString(),
-            self::KEBAB => u($value)->kebab()->toString(),
+            self::KEBAB => $hasKebabMethod
+                ? u($value)->kebab()->toString()
+                : u($value)->snake()->replace('_', '-')->toString(),
             self::LOWER => u($value)->lower()->toString(),
             self::SNAKE => u($value)->snake()->toString(),
             self::TITLE => u($value)->title()->toString(),

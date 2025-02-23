@@ -1,6 +1,8 @@
 # Array Dot
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/lib/array-dot)
+- [📁Files](/documentation/api/lib/array-dot/indices/files.html)
 
 Flow PHP's Array Dot is a proficient library engineered to enhance array handling and manipulation in PHP. This library
 embodies a practical solution for accessing and manipulating array elements using dot notation, facilitating a more

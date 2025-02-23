@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rows>
+<row><id>1</id><name>John</name><age>30</age></row>
+<row><id>2</id><name>Jane</name><age>25</age></row>
+<row><id>3</id><name>Bob</name><age>35</age></row>
+<row><id>4</id><name>Alice</name><age>28</age></row>
+<row><id>5</id><name>Charlie</name><age>32</age></row>
+</rows>

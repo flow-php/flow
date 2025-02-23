@@ -31,6 +31,7 @@ final class ExamplesController extends AbstractController
             'currentTopic' => $topic,
             'currentExample' => $example,
             'description' => $this->examples->description($currentTopic, $currentExample),
+            'composer' => $this->examples->composer($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),
             'output' => $this->examples->output($currentTopic, $currentExample),
         ]);
@@ -58,6 +59,7 @@ final class ExamplesController extends AbstractController
             'currentTopic' => $currentTopic,
             'currentExample' => $currentExample,
             'description' => $this->examples->description($currentTopic, $currentExample),
+            'composer' => $this->examples->composer($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),
             'output' => $this->examples->output($currentTopic, $currentExample),
         ]);

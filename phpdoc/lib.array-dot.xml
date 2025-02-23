@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdocumentor
+        configVersion="3"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://www.phpdoc.org"
+>
+    <title>Flow PHP</title>
+    <paths>
+        <output>./../web/landing/build/documentation/api/lib/array-dot</output>
+        <cache>./../var/phpdocumentor/cache/lib/array-dot</cache>
+    </paths>
+    <version number="1.x">
+        <api format="php">
+            <source dsn="./../">
+                <path>src/lib/array-dot/src</path>
+            </source>
+            <output>array-dot</output>
+            <default-package-name>Array Dot</default-package-name>
+            <visibility>public</visibility>
+            <include-source>false</include-source>
+        </api>
+    </version>
+    <setting name="template.color" value="orange"/>
+</phpdocumentor>

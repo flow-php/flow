@@ -10,6 +10,7 @@ use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\PHP\Type\Type;
 
@@ -157,7 +158,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
 
     public function concatWithSeparator(ScalarFunction|string $separator, ScalarFunction|string ...$params) : self
     {
-        return new ConcatWithSeparator($separator, ...$params);
+        return new ConcatWithSeparator($separator, $this, ...$params);
     }
 
     public function contains(ScalarFunction|string $needle) : self
@@ -258,6 +259,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Hash($this, $algorithm);
     }
 
+    public function indexOf(ScalarFunction|string $needle, ScalarFunction|bool $ignoreCase = false, ScalarFunction|int $offset = 0) : self
+    {
+        return new IndexOf($this, $needle, $ignoreCase, $offset);
+    }
+
     public function isEven() : self
     {
         return new Equals(new Mod($this, lit(2)), lit(0));
@@ -313,6 +319,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         }
 
         return new IsType($this, ...$types);
+    }
+
+    public function isUtf8() : IsUtf8
+    {
+        return new IsUtf8($this);
     }
 
     public function jsonDecode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR) : self
@@ -469,6 +480,31 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function startsWith(ScalarFunction|string $needle) : self
     {
         return new StartsWith($this, $needle);
+    }
+
+    public function stringAfter(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
+    {
+        return new StringAfter($this, $needle, $includeNeedle);
+    }
+
+    public function stringBefore(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
+    {
+        return new StringBefore($this, $needle, $includeNeedle);
+    }
+
+    public function stringFold() : self
+    {
+        return new StringFold($this);
+    }
+
+    public function stringStyle(ScalarFunction|string|StringStyles $style) : self
+    {
+        return new StringStyle($this, $style);
+    }
+
+    public function stringTitle(ScalarFunction|bool $allWords = false) : self
+    {
+        return new StringTitle($this, $allWords);
     }
 
     public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : self

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\{data_frame, overwrite, to_stream};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->read(from_csv(__DIR__ . '/input/file.csv'))

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\RowsNormalizer;
 
-use function Flow\ETL\DSL\type_json;
+use function Flow\ETL\DSL\{date_interval_to_microseconds, type_json};
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Entry;
 
@@ -13,6 +13,7 @@ final readonly class EntryNormalizer
     public function __construct(
         private Caster $caster,
         private string $dateTimeFormat = \DateTimeInterface::ATOM,
+        private string $dateFormat = 'Y-m-d',
     ) {
     }
 
@@ -26,6 +27,8 @@ final readonly class EntryNormalizer
             Entry\XMLElementEntry::class,
             Entry\XMLEntry::class => $entry->toString(),
             Entry\DateTimeEntry::class => $entry->value()?->format($this->dateTimeFormat),
+            Entry\DateEntry::class => $entry->value()?->format($this->dateFormat),
+            Entry\TimeEntry::class => $entry->value() ? date_interval_to_microseconds($entry->value()) : null,
             Entry\EnumEntry::class => $entry->value()?->name,
             Entry\ListEntry::class,
             Entry\MapEntry::class,

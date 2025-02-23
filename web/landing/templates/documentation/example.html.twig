@@ -23,15 +23,18 @@
                 <h1>Example: {{ currentExample|humanize }}</h1>
                 <h3>Topic: {{ currentTopic|humanize }}</h3>
                 <div class="mb-5 text-left">
-                    <a class="btn btn-primary" href="https://github.com/flow-php/flow/tree/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}" target="_blank">
+                    <a class="btn btn-primary mr-2" href="https://github.com/flow-php/flow/tree/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}" target="_blank">
                         View
                         <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
+                    </a>
+                    <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
+                        Download
                     </a>
                 </div>
 
                 <hr class="hidden lg:block"/>
                 {% if description %}
-                    <h2 class="text-xl mt-5 mb-5">Description</h2>
+                    <h2 class="text-xl mt-5 mb-5" id="description">Description</h2>
                     <article id="example-description"
                              class="rounded px-4 pt-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative mb-10"
                             {{ stimulus_controller('all_links_external') }}
@@ -55,17 +58,28 @@
                     </script>
                 </section>
 
+                <hr class="hidden lg:block"/>
+                {% if composer %}
+                    <code>composer.json</code>
+                <div id="composer" class="relative">
+                    <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
+                        <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
+                    </button>
+                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code id="composer-json" class="language-json" data-controller="syntax-highlight" >{{- composer | raw -}}</code></pre>
+                </div>
+                {% endif %}
+
                 {% apply spaceless %}
-                    <h2 class="text-xl mt-5 mb-5">Code</h2>
+                    <code>code.php</code>
                     <div id="code" class="relative">
-                        <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
-                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+                        <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#code-php" {{ stimulus_controller('clipboard') }}>
+                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code-php" width="20" height="20" class="inline">
                         </button>
                         <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
-                    <code id="code" class="language-php" data-controller="syntax-highlight" >
-                        {{- code | escape('html') -}}
-                    </code>
-                </pre>
+                            <code id="code-php" class="language-php" data-controller="syntax-highlight" >
+                                {{- code | escape('html') -}}
+                            </code>
+                        </pre>
                     </div>
                 {% endapply %}
             </div>
@@ -78,8 +92,8 @@
                             <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
                         </button>
                         <pre class="rounded p-4 shadow-2xl shadow-gray rounded border-gray border-2">
-                <code id="output" class="language-bash overflow-auto" {{ stimulus_controller('syntax_highlight') }}>
-                    {{- output | escape('html') -}}
+                <code id="output" class="language-{{ output.type}} overflow-auto" {{ stimulus_controller('syntax_highlight') }}>
+                    {{- output.content | escape('html') -}}
                 </code>
             </pre>
                     {% endapply %}

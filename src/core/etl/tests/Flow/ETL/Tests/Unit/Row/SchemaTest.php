@@ -33,6 +33,7 @@ final class SchemaTest extends FlowTestCase
     public function test_adding_duplicated_definitions() : void
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
+        $this->expectExceptionMessage('Entry definitions must be unique, duplicated entries: [str], all: [id, str, str]');
         schema(
             int_schema('id'),
             str_schema('str', true),

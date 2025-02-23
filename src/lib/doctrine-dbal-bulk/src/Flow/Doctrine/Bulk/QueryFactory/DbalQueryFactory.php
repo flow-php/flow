@@ -6,7 +6,7 @@ namespace Flow\Doctrine\Bulk\QueryFactory;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
-use Flow\Doctrine\Bulk\{BulkData, DbalPlatform, QueryFactory, TableDefinition};
+use Flow\Doctrine\Bulk\{BulkData, DbalPlatform, InsertOptions, QueryFactory, TableDefinition, UpdateOptions};
 
 final class DbalQueryFactory implements QueryFactory
 {
@@ -14,37 +14,29 @@ final class DbalQueryFactory implements QueryFactory
      * @param AbstractPlatform $platform
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  constraint?: string,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $insertOptions $insertOptions
+     * @param ?InsertOptions $options
      *
      * @throws RuntimeException
      *
      * @return string
      */
-    public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string
+    public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
-        return (new DbalPlatform($platform))->dialect()->prepareInsert($table, $bulkData, $insertOptions);
+        return (new DbalPlatform($platform))->dialect()->prepareInsert($table, $bulkData, $options);
     }
 
     /**
      * @param AbstractPlatform $platform
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  primary_key_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $updateOptions $updateOptions
+     * @param null|UpdateOptions $options
      *
      * @throws RuntimeException
      *
      * @return string
      */
-    public function update(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string
+    public function update(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
     {
-        return (new DbalPlatform($platform))->dialect()->prepareUpdate($table, $bulkData, $updateOptions);
+        return (new DbalPlatform($platform))->dialect()->prepareUpdate($table, $bulkData, $options);
     }
 }

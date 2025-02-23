@@ -1,6 +1,8 @@
 # Monolog HTTP Bridge
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/bridge/monolog/http)
+- [📁Files](/documentation/api/bridge/monolog/http/indices/files.html)
 
 Monolog HTTP Bridge is a package that iterates through LogRecord context and normalizes all instances of `Request` and `Response` from [PSR7](https://www.php-fig.org/psr/psr-7/).
 

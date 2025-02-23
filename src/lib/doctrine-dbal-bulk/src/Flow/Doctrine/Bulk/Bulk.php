@@ -20,24 +20,19 @@ final readonly class Bulk
     }
 
     /**
-     * @param Connection $connection
-     * @param string $table
-     * @param BulkData $bulkData
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  constraint?: string,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $insertOptions $insertOptions
+     * Insert data into the database in bulk.
+     * Insert should be used whenever you want to insert a large number of rows into a table or upsert them.
+     *
+     * Each database platform has its own way of handling bulk inserts, please make sure to use the correct implementation of InsertOptions for your platform.
      *
      * @throws Exception|RuntimeException
      */
-    public function insert(Connection $connection, string $table, BulkData $bulkData, array $insertOptions = []) : void
+    public function insert(Connection $connection, string $table, BulkData $bulkData, ?InsertOptions $options = null) : void
     {
         $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
 
         $connection->executeStatement(
-            $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $insertOptions),
+            $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
             $bulkData->toSqlParameters($tableDefinition),
             $tableDefinition->dbalTypes($bulkData)
         );
@@ -47,19 +42,15 @@ final readonly class Bulk
      * @param Connection $connection
      * @param string $table
      * @param BulkData $bulkData
-     * @param array{
-     *  primary_key_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $updateOptions $updateOptions
      *
      * @throws Exception|RuntimeException
      */
-    public function update(Connection $connection, string $table, BulkData $bulkData, array $updateOptions = []) : void
+    public function update(Connection $connection, string $table, BulkData $bulkData, ?UpdateOptions $options = null) : void
     {
         $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
 
         $connection->executeQuery(
-            $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $updateOptions),
+            $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
             $bulkData->toSqlParameters($tableDefinition),
             $tableDefinition->dbalTypes($bulkData)
         );

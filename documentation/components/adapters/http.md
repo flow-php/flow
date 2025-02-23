@@ -1,6 +1,8 @@
 # ETL Adapter: HTTP
 
 - [⬅️️ Back](../../introduction.md)
+- [📚API Reference](/documentation/api/adapter/http)
+- [📁Files](/documentation/api/adapter/http/indices/files.html)
 
 Flow PHP's Adapter HTTP is a finely crafted library designed to enable seamless interaction with HTTP protocols within
 your ETL (Extract, Transform, Load) workflows. This adapter is vital for developers aiming to effortlessly send or

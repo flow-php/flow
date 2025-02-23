@@ -338,13 +338,22 @@ final class Schema implements \Countable
     private function setDefinitions(Definition ...$definitions) : void
     {
         $uniqueDefinitions = [];
+        $duplicatedDefinitions = [];
 
         foreach ($definitions as $definition) {
+            if (\array_key_exists($definition->entry()->name(), $uniqueDefinitions)) {
+                $duplicatedDefinitions[] = $definition->entry()->name();
+            }
             $uniqueDefinitions[$definition->entry()->name()] = $definition;
         }
 
         if (\count($uniqueDefinitions) !== \count($definitions)) {
-            throw new SchemaDefinitionNotUniqueException(\sprintf('Entry definitions must be unique, given: [%s]', \implode(', ', \array_map(fn (Definition $d) => $d->entry()->name(), $definitions))));
+
+            throw new SchemaDefinitionNotUniqueException(\sprintf(
+                'Entry definitions must be unique, duplicated entries: [%s], all: [%s]',
+                \implode(', ', $duplicatedDefinitions),
+                \implode(', ', \array_map(fn (Definition $d) => $d->entry()->name(), $definitions)),
+            ));
         }
 
         $this->definitions = $uniqueDefinitions;

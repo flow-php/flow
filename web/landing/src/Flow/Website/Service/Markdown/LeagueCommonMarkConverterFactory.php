@@ -9,6 +9,7 @@ use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
 use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
+use League\CommonMark\Extension\HeadingPermalink\{HeadingPermalinkExtension};
 use League\CommonMark\Extension\Mention\MentionExtension;
 use League\CommonMark\Extension\Table\TableExtension;
 
@@ -33,11 +34,19 @@ final class LeagueCommonMarkConverterFactory
                     'generator' => 'https://github.com/flow-php/flow/issues/%d',
                 ],
             ],
+            'heading_permalink' => [
+                'html_class' => 'mr-2',
+                'id_prefix' => 'flow-php',
+                'insert' => 'before',
+                'title' => 'Permalink',
+                'symbol' => '#',
+            ],
         ];
 
         $converter = new CommonMarkConverter($config);
 
         $converter->getEnvironment()
+            ->addExtension(new HeadingPermalinkExtension())
             ->addExtension(new ExternalLinkExtension())
             ->addExtension(new FrontMatterExtension())
             ->addExtension(new MentionExtension())

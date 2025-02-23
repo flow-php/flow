@@ -50,23 +50,23 @@
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
         "ramsey/uuid": "^4.5",
-        "symfony/http-client": "^5.4.47 || ^6.4 || ^7.0",
         "symfony/cache": "^6.2 || ^7.0",
         "symfony/dotenv": "^6.2 || ^7.0",
         "symfony/finder": "^6.3 || ^7.0",
+        "symfony/http-client": "^5.4.47 || ^6.4 || ^7.0",
+        "symfony/process": "^7.2",
         "symfony/uid": "^6.3 || ^7.0"
     },
     "replace": {
         "flow-php/array-dot": "self.version",
         "flow-php/azure-sdk": "self.version",
         "flow-php/doctrine-dbal-bulk": "self.version",
-        "flow-php/doctrine-dbal-bulk-tools": "self.version",
         "flow-php/dremel": "self.version",
         "flow-php/etl": "self.version",
+        "flow-php/cli": "self.version",
         "flow-php/etl-adapter-avro": "self.version",
         "flow-php/etl-adapter-chartjs": "self.version",
         "flow-php/etl-adapter-csv": "self.version",
-        "flow-php/etl-adapter-dbal-tools": "self.version",
         "flow-php/etl-adapter-doctrine": "self.version",
         "flow-php/etl-adapter-elasticsearch": "self.version",
         "flow-php/etl-adapter-filesystem": "self.version",
@@ -74,7 +74,6 @@
         "flow-php/etl-adapter-http": "self.version",
         "flow-php/etl-adapter-json": "self.version",
         "flow-php/etl-adapter-logger": "self.version",
-        "flow-php/etl-adapter-logger-tools": "self.version",
         "flow-php/etl-adapter-meilisearch": "self.version",
         "flow-php/etl-adapter-parquet": "self.version",
         "flow-php/etl-adapter-text": "self.version",
@@ -218,7 +217,7 @@
             "@test:mutation"
         ],
         "test": [
-            "@test:etl",
+            "@test:core",
             "@test:cli",
             "@test:lib:array-dot",
             "@test:lib:azure-sdk",
@@ -245,7 +244,7 @@
             "@test:adapter:text",
             "@test:adapter:xml"
         ],
-        "test:etl": [
+        "test:core": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=etl-unit --log-junit ./var/phpunit/logs/etl-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/etl-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/etl-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=etl-integration --log-junit ./var/phpunit/logs/etl-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/etl-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/etl-integration"
         ],
@@ -319,6 +318,7 @@
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-integration --log-junit ./var/phpunit/coverage/clover/adapter-http-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-http-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-http-integration"
         ],
         "test:adapter:json": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-json-unit --log-junit ./var/phpunit/logs/adapter-json-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-json-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-json-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-json-integration --log-junit ./var/phpunit/logs/adapter-json-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-json-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-json-integration"
         ],
         "test:adapter:logger": [
@@ -397,6 +397,36 @@
         "build:docs": [
             "bin/docs.php dsl:dump web/landing/resources/dsl.json"
         ],
+        "build:docs:api": [
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/core.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/cli.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.array-dot.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.azure-sdk.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.doctrine-dbal-bulk.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.filesystem.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet-viewer.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.rdsl.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.snappy.xml",
+
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.chartjs.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.csv.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.doctrine.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.elasticsearch.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.google-sheet.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.http.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.json.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.logger.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.meilisearch.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.parquet.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.text.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.xml.xml",
+
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.filesystem.async-aws.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.filesystem.azure.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.monolog.http.xml"
+        ],
         "build:parquet:thrift": [
             "grep -q 'namespace php Flow.Parquet.Thrift' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
             "rm src/lib/parquet/src/Flow/Parquet/Thrift/*.php",
@@ -421,7 +451,8 @@
             "composer install --working-dir=./tools/phpbench",
             "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/phpunit",
-            "composer install --working-dir=./tools/rector"
+            "composer install --working-dir=./tools/rector",
+            "composer install --working-dir=./tools/phpdocumentor"
         ],
         "tools:update": [
             "composer update --working-dir=./tools/blackfire",
@@ -432,7 +463,8 @@
             "composer update --working-dir=./tools/phpbench",
             "composer update --working-dir=./tools/phpstan",
             "composer update --working-dir=./tools/phpunit",
-            "composer update --working-dir=./tools/rector"
+            "composer update --working-dir=./tools/rector",
+            "composer update --working-dir=./tools/phpdocumentor"
         ]
     }
 }

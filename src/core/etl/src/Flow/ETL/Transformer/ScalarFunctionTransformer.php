@@ -53,18 +53,16 @@ final readonly class ScalarFunctionTransformer implements Transformer
                     return $r;
                 }
 
-                $val = $this->function->eval($r);
-
                 return $r->set(
                     $this->function instanceof ScalarFunction\TypedScalarFunction
                      ? $context->entryFactory()->createAs(
                          $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                         $val,
+                         $value,
                          $this->function->returns()
                      )
                      : $context->entryFactory()->create(
                          $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                         $val,
+                         $value,
                          $this->entry instanceof Definition ? $this->entry : null
                      )
                 );

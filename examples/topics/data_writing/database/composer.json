@@ -1,0 +1,19 @@
+{
+  "name": "flow-php/examples",
+  "description": "Flow PHP - Examples",
+  "license": "MIT",
+  "type": "library",
+  "require": {
+    "flow-php/etl": "1.x-dev",
+    "flow-php/etl-adapter-doctrine": "1.x-dev",
+    "fakerphp/faker": "^1.24",
+    "symfony/uid": "^7.2",
+    "flow-php/doctrine-dbal-bulk": "1.x-dev"
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
+  }
+}

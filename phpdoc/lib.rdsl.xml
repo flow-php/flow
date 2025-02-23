@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdocumentor
+        configVersion="3"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://www.phpdoc.org"
+>
+    <title>Flow PHP</title>
+    <paths>
+        <output>./../web/landing/build/documentation/api/lib/rdsl</output>
+        <cache>./../var/phpdocumentor/cache/lib/rdsl</cache>
+    </paths>
+    <version number="1.x">
+        <api format="php">
+            <source dsn="./../">
+                <path>src/lib/rdsl/src</path>
+            </source>
+            <output>rdsl</output>
+            <default-package-name>RDSL</default-package-name>
+            <visibility>public</visibility>
+            <include-source>false</include-source>
+        </api>
+    </version>
+    <setting name="template.color" value="orange"/>
+</phpdocumentor>

@@ -1,6 +1,8 @@
 # Data Frame
 
 - [⬅️️ Back](/documentation/quick-start.md)
+- [📚API Reference](/documentation/api/core)
+- [📁Files](/documentation/api/core/indices/files.html)
 
 A Data Frame is a structured collection of tabular data, similar to a spreadsheet.  
 It organizes information into rows and columns, making it easy to understand, filter, and transform.  

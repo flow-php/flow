@@ -41,7 +41,7 @@ final class StringCastingHandler implements CastingHandler
         }
 
         if ($value instanceof \DOMDocument) {
-            return $value->saveXML() ?: '';
+            return $value->saveXML($value->documentElement) ?: '';
         }
 
         if ($value instanceof \DOMElement) {

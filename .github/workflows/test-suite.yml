@@ -151,7 +151,7 @@ jobs:
         run: "composer install --no-interaction --no-progress --no-suggest"
 
       - name: "Test - ETL "
-        run: "composer test:etl"
+        run: "composer test:core"
 
       - name: "Test - CLI"
         run: "composer test:cli"
@@ -248,6 +248,7 @@ jobs:
         run: "composer test:adapter:xml"
 
       - name: "Test - Examples"
+        if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
         run: "composer test:examples"
 
       - name: "Download artifact"

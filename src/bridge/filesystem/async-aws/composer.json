@@ -30,7 +30,7 @@
             ]
         },
         "files": [
-            "src/Flow/Filesystem/Bridge/Azure/DSL/functions.php"
+            "src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php"
         ]
     },
     "autoload-dev": {

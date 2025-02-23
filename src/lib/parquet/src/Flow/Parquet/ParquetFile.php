@@ -49,16 +49,18 @@ final class ParquetFile
             return $this->metadata;
         }
 
-        if ($this->stream->read(4, -4) !== self::PARQUET_MAGIC_NUMBER) {
+        $fileTotalSize = $this->stream->size();
+
+        if ($this->stream->read(4, $fileTotalSize - 4) !== self::PARQUET_MAGIC_NUMBER) {
             throw new InvalidArgumentException('Given file is not valid Parquet file');
         }
 
         /**
          * @phpstan-ignore-next-line
          */
-        $metadataLength = \unpack($this->byteOrder->value, $this->stream->read(4, -8))[1];
+        $metadataLength = \unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8))[1];
 
-        $metadata = $this->stream->read($metadataLength, -($metadataLength + 8));
+        $metadata = $this->stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 
         $thriftMetadata = new FileMetaData();
         $thriftMetadata->read(

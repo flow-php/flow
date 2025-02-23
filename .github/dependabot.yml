@@ -24,6 +24,8 @@ updates:
     directory: "/tools/cs-fixer"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "friendsofphp/php-cs-fixer"
 
   - package-ecosystem: "composer"
     directory: "/tools/infection"
@@ -54,3 +56,6 @@ updates:
     directory: "/web/landing"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "symfony/*"
+        versions: [">=7.0.0"]

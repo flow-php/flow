@@ -1,0 +1,22 @@
+{
+  "name": "flow-php/examples",
+  "description": "Flow PHP - Examples",
+  "license": "MIT",
+  "type": "library",
+  "require": {
+    "flow-php/etl": "1.x-dev",
+    "symfony/dotenv": "^7.2",
+    "flow-php/etl-adapter-elasticsearch": "1.x-dev"
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": false
+    }
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
+  }
+}

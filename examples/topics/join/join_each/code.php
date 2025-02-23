@@ -6,7 +6,7 @@ use function Flow\ETL\DSL\{data_frame, df, equal, int_entry, join_on, row, rows,
 use Flow\ETL\Join\Join;
 use Flow\ETL\{DataFrame, DataFrameFactory, Extractor, FlowContext, Row, Rows};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $apiExtractor = new class implements Extractor {
     public function extract(FlowContext $context) : Generator

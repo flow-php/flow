@@ -1,0 +1,12 @@
+{
+  "name": "flow-php/flow-tools",
+  "description": "Flow PHP ETL - Tools",
+  "config": {
+    "allow-plugins": {
+      "phpdocumentor/shim": true
+    }
+  },
+  "require": {
+    "phpdocumentor/shim": "^3.6"
+  }
+}

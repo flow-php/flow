@@ -25,6 +25,8 @@ use function Flow\ETL\DSL\{bool_entry,
     type_structure,
     uuid_entry};
 
+require __DIR__ . '/vendor/autoload.php';
+
 data_frame()
     ->read(from_rows(rows(
         row(

@@ -1,0 +1,138 @@
+:root {
+    --color-mirange: #1b1925;
+    --color-gray: #323232;
+
+    --color-blue-100: #806dfe;
+    --color-blue-200: #5945d8;
+    --color-blue-300: #4026ac;
+
+    --color-orange-50: #ff5547;
+    --color-orange-100: #ff5547;
+    --color-orange-200: #DB4B3D;
+    --color-orange-300: #B33D32;
+    --color-orange-400: #9A3227;
+
+    --primary-color-hue: #fff;
+    --primary-color-saturation: 100%;
+    --link-color-primary: #fff;
+
+    --primary-color: var(--color-orange-100);
+    --primary-color-darken: var(--color-orange-100);
+    --primary-color-darker: var(--color-orange-200);
+    --primary-color-darkest: var(--color-orange-300);
+    --primary-color-lighten: var(--color-orange-50);
+    --primary-color-lighter: var(--color-orange-50);
+
+    --dark-gray: var(--color-mirange);
+    --light-gray: var(--color-gray);
+
+    --text-color: #fff;
+
+    --title-text-color: #fff;
+    --sidebar-border-color: #fff;
+
+    --table-separator-color: #fff;
+
+    --header-height: auto;
+    --container-width: 1280px;
+}
+
+body {
+    background-color: var(--color-mirange);
+    color: var(--text-color);
+    font-family: "Cabin Variable", system-ui;
+    font-size: var(--text-md);
+    letter-spacing: var(--letter-spacing--primary);
+    line-height: var(--line-height--primary);
+    width: 100%;
+}
+
+.phpdocumentor-section {
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: var(--container-width);
+    position: relative;
+    width: 100%;
+}
+
+.phpdocumentor-search__fiel {
+    border-bottom: 1px solid #fff;
+}
+
+
+input {
+    color: var(--color-mirange);
+}
+
+.phpdocumentor a {
+    color: #fff;
+}
+
+.phpdocumentor a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.phpdocumentor-header {
+    margin-bottom: 15px;
+    background-color: var(--color-blue-200);
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    height: auto;
+}
+
+.phpdocumentor-search-results__dialog {
+    background: var(--color-mirange);
+}
+
+.phpdocumentor-search-results__header {
+    background: var(--color-mirange);
+}
+
+.phpdocumentor-label span {
+    color: var(--color-mirange);
+}
+
+.phpdocumentor-label--success span:last-of-type {
+    background: var(--color-blue-100);
+    color: var(--text-color);
+}
+
+@media (min-width: {{ breakpoints['md'] }}) {
+    .phpdocumentor .phpdocumentor-signature {
+        margin-left: 0;
+        width: auto;
+    }
+}
+
+.phpdocumentor-search__field:focus,
+.phpdocumentor-search__field {
+    border-bottom: 2px solid #fff;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.phpdocumentor .phpdocumentor-sidebar__category-header {
+    font-size: var(--text-md);
+    margin-top: 0;
+    margin-bottom: var(--spacing-xs);
+    color: var(--link-color-primary);
+    font-weight: 600;
+    border-left: 0;
+}
+
+.phpdocumentor .phpdocumentor-sidebar__category > * {
+    border-left:0;
+}
+.phpdocumentor .phpdocumentor-sidebar__category > * {
+    border-left:0;
+}
+
+.flow-header-wrapper {
+    width: 100%;
+    background: var(--color-blue-200);
+}

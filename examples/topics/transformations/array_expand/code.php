@@ -13,7 +13,7 @@ use function Flow\ETL\DSL\{
     rows,
     to_stream};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
     ->read(from_rows(rows(

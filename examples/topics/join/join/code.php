@@ -5,7 +5,7 @@ declare(strict_types=1);
 use function Flow\ETL\DSL\{data_frame, from_array, join_on, to_stream};
 use Flow\ETL\Join\{Join};
 
-require __DIR__ . '/../../../autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $users = [
     ['id' => 1, 'name' => 'John'],

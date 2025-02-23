@@ -27,4 +27,9 @@ final class InsertQueryCounter extends AbstractLogger implements LoggerAwareInte
             $this->count++;
         }
     }
+
+    public function reset() : void
+    {
+        $this->count = 0;
+    }
 }

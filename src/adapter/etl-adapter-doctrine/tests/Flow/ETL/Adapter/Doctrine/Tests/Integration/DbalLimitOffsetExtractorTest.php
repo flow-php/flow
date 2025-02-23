@@ -98,6 +98,121 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
         );
     }
 
+    public function test_extracting_entire_table_using_qb_with_maximum_and_offset_set_on_extractor() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'tags' => '{"a": 1, "b": 2 }']);
+        }
+
+        $this->pgsqlDatabaseContext->resetSelectQueryCounter();
+
+        $rows = (data_frame())
+            ->extract(
+                from_dbal_limit_offset_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
+                        ->from($table)
+                        ->select('*')
+                        ->orderBy('id', 'ASC')
+                )->withSchema(schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    map_schema('tags', type_map(type_string(), type_int()))
+                ))->withMaximum(5)->withOffset(10)->withPageSize(1)
+            )->fetch()->toArray();
+
+        self::assertSame(5, $this->pgsqlDatabaseContext->numberOfExecutedSelectQueries());
+        self::assertCount(5, $rows);
+        self::assertSame(11, $rows[0]['id']);
+
+    }
+
+    public function test_extracting_entire_table_using_qb_with_maximum_and_offset_set_on_query() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'tags' => '{"a": 1, "b": 2 }']);
+        }
+
+        $rows = (data_frame())
+            ->extract(
+                from_dbal_limit_offset_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
+                        ->from($table)
+                        ->select('*')
+                        ->orderBy('id', 'ASC')
+                        ->setMaxResults(5)
+                        ->setFirstResult(10),
+                )->withSchema(schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    map_schema('tags', type_map(type_string(), type_int()))
+                ))
+            )->fetch()->toArray();
+
+        self::assertCount(5, $rows);
+        self::assertSame(11, $rows[0]['id']);
+    }
+
+    public function test_extracting_entire_table_using_qb_with_maximum_set_on_query() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'tags' => '{"a": 1, "b": 2 }']);
+        }
+
+        $this->pgsqlDatabaseContext->resetSelectQueryCounter();
+
+        $rows = (data_frame())
+            ->extract(
+                from_dbal_limit_offset_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
+                        ->from($table)
+                        ->select('*')
+                        ->orderBy('id', 'ASC')
+                        ->setMaxResults(5)
+                )->withSchema(schema(
+                    int_schema('id'),
+                    str_schema('name'),
+                    map_schema('tags', type_map(type_string(), type_int()))
+                ))
+            )->fetch()->toArray();
+
+        self::assertSame(1, $this->pgsqlDatabaseContext->numberOfExecutedSelectQueries());
+        self::assertCount(5, $rows);
+        self::assertSame(1, $rows[0]['id']);
+    }
+
     public function test_extracting_entire_table_using_qb_with_schema() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(

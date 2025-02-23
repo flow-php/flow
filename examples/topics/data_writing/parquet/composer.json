@@ -1,0 +1,18 @@
+{
+  "name": "flow-php/examples",
+  "description": "Flow PHP - Examples",
+  "license": "MIT",
+  "type": "library",
+  "require": {
+    "flow-php/etl": "1.x-dev",
+    "flow-php/etl-adapter-parquet": "1.x-dev",
+    "flow-php/parquet": "1.x-dev",
+    "flow-php/snappy": "1.x-dev"
+  },
+  "archive": {
+    "exclude": [
+      ".env",
+      "vendor"
+    ]
+  }
+}
