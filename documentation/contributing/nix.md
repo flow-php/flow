@@ -99,4 +99,19 @@ nix-shell --arg php-version 8.3
 > be done on the lowest supported PHP version. 
 >
 > This feature is mostly for testing new integrations
-> or lowest/highest versions of dependencies. 
+> or lowest/highest versions of dependencies.
+
+## Local Webserver
+
+To run the local webserver for Flow Website development, please use Symfony CLI app
+that is also available in nix shell.
+
+```shell
+cd web/landing
+symfony proxy:start
+symfony server:start -d 
+```
+
+You can read more about it here: 
+
+- [How to use .wip domain for development](https://symfony.com/doc/current/setup/symfony_server.html#setting-up-the-local-proxy)

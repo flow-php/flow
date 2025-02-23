@@ -4,3 +4,7 @@ format = 'via [$symbol($version )]($style)'
 
 [aws]
 disabled = true
+[azure]
+disabled = true
+[gcloud]
+disabled = true
