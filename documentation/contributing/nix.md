@@ -14,6 +14,10 @@ by going to the project folder and running following command:
 nix-shell
 ```
 
+> If you are using Nix for the first time, it might take a while to download all the dependencies.
+
+> To achieve full isolation, use `nix-shell --pure` command. This way nix will isolate your development environment from the system.
+
 That's all, after running this command you will have all the necessary tools and dependencies.
 Nix will create a new shell with all the necessary tools and dependencies for the project.
 
@@ -83,3 +87,16 @@ nix-shell --arg with-blackfire true
 
 To configure blackfire, you can create a file `./.nix/php/lib/blackfire.ini` with your blackfire configuration.
 
+## Changing PHP Versions
+
+To change the PHP version, you can run nix shell with `--arg php-version 8.3` flag:
+
+```shell
+nix-shell --arg php-version 8.3
+```
+
+> In general, it's not recommended to change the PHP version, as development should always
+> be done on the lowest supported PHP version. 
+>
+> This feature is mostly for testing new integrations
+> or lowest/highest versions of dependencies. 
