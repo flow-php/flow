@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\Doctrine\{from_dbal_query, postgresql_insert_options, to_dbal_table_insert};
+use function Flow\ETL\Adapter\Doctrine\{from_dbal_query,
+    sqlite_insert_options,
+    to_dbal_table_insert};
 use function Flow\ETL\DSL\{data_frame, from_array, to_stream};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\{Column, Table, UniqueConstraint};
@@ -61,7 +63,7 @@ data_frame()
                 'driver' => 'pdo_sqlite',
             ]),
             'orders',
-            postgresql_insert_options(conflict_columns: ['order_id'])
+            sqlite_insert_options(conflict_columns: ['order_id'])
         )
     )
     // second insert that normally would fail due to Integrity constraint violation
@@ -72,7 +74,7 @@ data_frame()
                 'driver' => 'pdo_sqlite',
             ]),
             'orders',
-            postgresql_insert_options(conflict_columns: ['order_id'])
+            sqlite_insert_options(conflict_columns: ['order_id'])
         )
     )
     ->run();

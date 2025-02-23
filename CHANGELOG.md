@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-02-21
+## [Unreleased] - 2025-02-23
 
 ### Added
+- [#1468](https://github.com/flow-php/flow/pull/1468) - **Nix - for local development environment** - [@norberttech](https://github.com/norberttech)
 - [#1492](https://github.com/flow-php/flow/pull/1492) - **Respect limit/offset from query builder in dbal query loader** - [@norberttech](https://github.com/norberttech)
 - [#1491](https://github.com/flow-php/flow/pull/1491) - **Added missing tests to string functions** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1488](https://github.com/flow-php/flow/pull/1488) - **DataStream builder** - [@norberttech](https://github.com/norberttech)
@@ -171,6 +172,7 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [457164](https://github.com/flow-php/flow/commit/457164b233c9168df44ccf298a777121e1891861) - **broken upsert example** - [@norberttech](https://github.com/norberttech)
 - [#1482](https://github.com/flow-php/flow/pull/1482) - **JSON was being double encoded.** - [@jmortlock](https://github.com/jmortlock)
 - [#1483](https://github.com/flow-php/flow/pull/1483) - **Fix typo in README.md** - [@jmortlock](https://github.com/jmortlock)
 - [#1475](https://github.com/flow-php/flow/pull/1475) - **Incosistency between XMLEntry::toString and Casting XML's to strings** - [@norberttech](https://github.com/norberttech)
