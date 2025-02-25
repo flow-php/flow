@@ -63,7 +63,7 @@ final class ParquetTest extends FlowTestCase
                 ->toArray()
         );
 
-        self::assertTrue($config->fstab()->for($path)->status($path)->isFile());
+        self::assertTrue($config->fstab()->for($path)->status($path)?->isFile());
     }
 
     /**

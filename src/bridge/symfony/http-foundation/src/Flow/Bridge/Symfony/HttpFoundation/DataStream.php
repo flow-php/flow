@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation;
 
 use Flow\Bridge\Symfony\HttpFoundation\Response\{FlowBufferedResponse, FlowStreamedResponse};
-use Flow\ETL\{Extractor, Function\ScalarFunction, Transformation, Transformations};
+use Flow\ETL\{Extractor, Transformation, Transformations};
 use Symfony\Component\HttpFoundation\{HeaderUtils, Response};
 
 /**
@@ -116,7 +116,7 @@ final class DataStream
      * that any resource expensive transformations like for example aggregations or sorting
      * might significantly slow down the streaming process or even cause out of memory errors.
      */
-    public function transform(Transformation|ScalarFunction ...$transformations) : self
+    public function transform(Transformation ...$transformations) : self
     {
         $this->transformations = $transformations;
 
