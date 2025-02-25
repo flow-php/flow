@@ -12,6 +12,17 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class IsUtf8Test extends FlowTestCase
 {
+    public function test_is_utf8_returns_null() : void
+    {
+        self::assertNull(
+            ref('str')->isUtf8()->eval(
+                row(
+                    str_entry('str', null),
+                )
+            )
+        );
+    }
+
     public function test_is_utf_8() : void
     {
         self::assertTrue(

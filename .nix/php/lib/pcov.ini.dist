@@ -1,0 +1,6 @@
+[pcov]
+; pcov.enabled=1
+; pcov.directory=.
+; pcov.exclude=
+; pcov.initial.memory=65536
+; pcov.initial.files=64

@@ -274,12 +274,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
-                "reference": "13fc13826199f5f076a8f2cca72db68368068558"
+                "reference": "3d8ef3d307a6c0e67b8d15b10c82307ab32704be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/13fc13826199f5f076a8f2cca72db68368068558",
-                "reference": "13fc13826199f5f076a8f2cca72db68368068558",
+                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/3d8ef3d307a6c0e67b8d15b10c82307ab32704be",
+                "reference": "3d8ef3d307a6c0e67b8d15b10c82307ab32704be",
                 "shasum": ""
             },
             "require": {
@@ -321,7 +321,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-30T16:34:14+00:00"
+            "time": "2025-02-21T22:33:43+00:00"
         },
         {
             "name": "flow-php/etl",
@@ -329,12 +329,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "2aa95163d5f8a8c087f3812f47c5a2f3e1c35e78"
+                "reference": "646cec39f23cf2b3162ee470918368166755ee92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/2aa95163d5f8a8c087f3812f47c5a2f3e1c35e78",
-                "reference": "2aa95163d5f8a8c087f3812f47c5a2f3e1c35e78",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/646cec39f23cf2b3162ee470918368166755ee92",
+                "reference": "646cec39f23cf2b3162ee470918368166755ee92",
                 "shasum": ""
             },
             "require": {
@@ -390,7 +390,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-01T16:34:51+00:00"
+            "time": "2025-02-20T08:29:50+00:00"
         },
         {
             "name": "flow-php/etl-adapter-doctrine",
@@ -398,12 +398,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-doctrine.git",
-                "reference": "ceb1509e6875a9236139ec25ea3b1564b3af4c52"
+                "reference": "7f07741821799d29a40b720fdfbf9445bca53989"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-doctrine/zipball/ceb1509e6875a9236139ec25ea3b1564b3af4c52",
-                "reference": "ceb1509e6875a9236139ec25ea3b1564b3af4c52",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-doctrine/zipball/7f07741821799d29a40b720fdfbf9445bca53989",
+                "reference": "7f07741821799d29a40b720fdfbf9445bca53989",
                 "shasum": ""
             },
             "require": {
@@ -452,7 +452,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-01T14:30:53+00:00"
+            "time": "2025-02-21T22:33:27+00:00"
         },
         {
             "name": "flow-php/filesystem",

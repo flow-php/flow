@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_table_update};
+use function Flow\ETL\Adapter\Doctrine\{postgresql_update_options, to_dbal_table_insert, to_dbal_table_update};
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{from_array, ref};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
+use Flow\Doctrine\Bulk\Dialect\PostgreSQLInsertOptions;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -51,7 +52,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         DbalLoader::fromConnection(
             $this->pgsqlDatabaseContext->connection(),
             $table,
-            [],
+            PostgreSQLInsertOptions::new(),
             'delete'
         );
     }
@@ -199,7 +200,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
                 ])
             )
-            ->load(to_dbal_table_insert($this->connectionParams(), $table, ['skip_conflicts' => true]))
+            ->load(to_dbal_table_insert($this->connectionParams(), $table, PostgreSQLInsertOptions::new()->skipConflicts()))
             ->run();
 
         self::assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -246,7 +247,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
             ])
         )
-            ->load(to_dbal_table_insert($this->connectionParams(), $table, ['constraint' => 'flow_doctrine_bulk_test_pkey']))
+            ->load(to_dbal_table_insert($this->connectionParams(), $table, PostgreSQLInsertOptions::new()->constraint('flow_doctrine_bulk_test_pkey')))
             ->run();
 
         self::assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -364,7 +365,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->setPrimaryKey(['id']));
 
         $insertLoader = to_dbal_table_insert($this->connectionParams(), $table);
-        $updateLoader = to_dbal_table_update($this->connectionParams(), $table, ['primary_key_columns' => ['id'], ['update_columns' => ['name']]]);
+        $updateLoader = to_dbal_table_update($this->connectionParams(), $table, postgresql_update_options(primary_key_columns: ['id'], update_columns: ['name']));
 
         (data_frame())->extract(
             from_array([

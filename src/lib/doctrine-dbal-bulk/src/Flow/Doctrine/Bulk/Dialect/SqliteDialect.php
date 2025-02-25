@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Dialect;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Flow\Doctrine\Bulk\{BulkData, Columns, TableDefinition};
+use Flow\Doctrine\Bulk\{BulkData, Columns, Exception\RuntimeException, InsertOptions, TableDefinition, UpdateOptions};
 
 final readonly class SqliteDialect implements Dialect
 {
@@ -13,29 +13,30 @@ final readonly class SqliteDialect implements Dialect
     {
     }
 
-    /**
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $insertOptions
-     */
-    public function prepareInsert(TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
-        if (\array_key_exists('conflict_columns', $insertOptions)) {
+        if ($options === null) {
+            $options = new SqliteInsertOptions();
+        }
+
+        if (!$options instanceof SqliteInsertOptions) {
+            throw new RuntimeException('Invalid insert options provided, expected MySQLInsertOptions got: ' . $options::class);
+        }
+
+        if ($options->conflictColumns) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
                 \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
-                \implode(',', $insertOptions['conflict_columns']),
-                (\array_key_exists('update_columns', $insertOptions) && [] !== $insertOptions['update_columns'])
-                    ? $this->updateSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
+                \implode(',', $options->conflictColumns),
+                \count($options->updateColumns)
+                    ? $this->updateSelectedColumns($options->updateColumns, $bulkData->columns())
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
 
-        if (\array_key_exists('skip_conflicts', $insertOptions) && $insertOptions['skip_conflicts'] === true) {
+        if ($options->skipConflicts) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
@@ -52,7 +53,7 @@ final readonly class SqliteDialect implements Dialect
         );
     }
 
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $updateOptions = null) : string
     {
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',

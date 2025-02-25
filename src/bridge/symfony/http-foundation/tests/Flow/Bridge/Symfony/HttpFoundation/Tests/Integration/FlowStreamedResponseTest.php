@@ -6,7 +6,8 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Integration;
 
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\from_array;
-use Flow\Bridge\Symfony\HttpFoundation\{FlowStreamedResponse,
+use Flow\Bridge\Symfony\HttpFoundation\{DataStream,
+    FlowStreamedResponse,
     Output\CSVOutput,
     Output\JsonOutput,
     Output\XMLOutput};
@@ -37,14 +38,14 @@ CSV
 
     public function test_streaming_array_response_to_json() : void
     {
-        $response = new FlowStreamedResponse(
-            from_array([
-                ['id' => 1, 'size' => 'XL', 'color' => 'red', 'ean' => '1234567890123'],
-                ['id' => 2, 'size' => 'M', 'color' => 'blue', 'ean' => '1234567890124'],
-                ['id' => 3, 'size' => 'S', 'color' => 'green', 'ean' => '1234567890125'],
-            ]),
-            new JsonOutput()
-        );
+        $extractor = from_array([
+            ['id' => 1, 'size' => 'XL', 'color' => 'red', 'ean' => '1234567890123'],
+            ['id' => 2, 'size' => 'M', 'color' => 'blue', 'ean' => '1234567890124'],
+            ['id' => 3, 'size' => 'S', 'color' => 'green', 'ean' => '1234567890125'],
+        ]);
+
+        $response = DataStream::open($extractor)
+            ->sendTo(new JsonOutput());
 
         self::assertEquals(<<<'JSON'
 [{"id":1,"size":"XL","color":"red","ean":"1234567890123"},{"id":2,"size":"M","color":"blue","ean":"1234567890124"},{"id":3,"size":"S","color":"green","ean":"1234567890125"}]
@@ -98,6 +99,21 @@ XML
 ]
 JSON
             , $this->sendResponse($response));
+    }
+
+    public function test_streaming_with_disposition() : void
+    {
+        $response = DataStream::open(
+            from_array([
+                ['id' => 1, 'size' => 'XL', 'color' => 'red', 'ean' => '1234567890123'],
+                ['id' => 2, 'size' => 'M', 'color' => 'blue', 'ean' => '1234567890124'],
+                ['id' => 3, 'size' => 'S', 'color' => 'green', 'ean' => '1234567890125'],
+            ])
+        )
+            ->underFilename('products.csv')
+            ->sendTo(new CSVOutput());
+
+        self::assertEquals('attachment; filename=products.csv', $response->headers->get('Content-Disposition'));
     }
 
     private function sendResponse(FlowStreamedResponse $response) : string

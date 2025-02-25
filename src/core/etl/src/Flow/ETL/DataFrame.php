@@ -148,7 +148,7 @@ final class DataFrame
      *
      * In order to merge all Rows into a single batch use DataFrame::collect() method or set size to -1 or 0.
      *
-     * @param int<-1, max> $size
+     * @param int<1, max> $size
      *
      * @lazy
      */
@@ -832,7 +832,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function transform(Transformer|Transformation $transformer) : self
+    public function transform(Transformer|Transformation|Transformations $transformer) : self
     {
         return $this->with($transformer);
     }
@@ -879,10 +879,16 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function with(Transformer|Transformation $transformer) : self
+    public function with(Transformer|Transformation|Transformations $transformer) : self
     {
         if ($transformer instanceof Transformer) {
             $this->pipeline->add($transformer);
+
+            return $this;
+        }
+
+        if ($transformer instanceof Transformations) {
+            $transformer->transform($this);
 
             return $this;
         }

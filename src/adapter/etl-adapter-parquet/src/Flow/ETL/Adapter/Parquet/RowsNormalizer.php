@@ -30,7 +30,7 @@ final readonly class RowsNormalizer
                 $columns[$entry->name()] = match ($entry::class) {
                     UuidEntry::class => $this->caster->to(type_string())->value($entry->value()),
                     XMLEntry::class => $this->caster->to(type_string())->value($entry->value()),
-                    default => $this->caster->to($schema->getDefinition($entry->ref())->type())->value($entry->value()),
+                    default => $this->caster->to($schema->get($entry->ref())->type())->value($entry->value()),
                 };
             }
 

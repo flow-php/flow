@@ -14,6 +14,8 @@ final class DbalLimitOffsetExtractor implements Extractor
 {
     private ?int $maximum = null;
 
+    private int $offset = 0;
+
     private int $pageSize = 1000;
 
     private ?Schema $schema = null;
@@ -52,6 +54,14 @@ final class DbalLimitOffsetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        if ($this->maximum === null && $this->queryBuilder->getMaxResults()) {
+            $this->maximum = $this->queryBuilder->getMaxResults();
+        }
+
+        if ($this->offset === 0 && $this->queryBuilder->getFirstResult()) {
+            $this->offset = $this->queryBuilder->getFirstResult();
+        }
+
         if (isset($this->maximum)) {
             $total = $this->maximum;
         } else {
@@ -76,8 +86,8 @@ final class DbalLimitOffsetExtractor implements Extractor
 
         $totalFetched = 0;
 
-        for ($page = 0; $page <= (new Pages($total, $this->pageSize))->pages(); $page++) {
-            $offset = $page * $this->pageSize;
+        for ($page = 0; $page < (new Pages($total, $this->pageSize))->pages(); $page++) {
+            $offset = $page * $this->pageSize + $this->offset;
 
             $pageQuery = $this->queryBuilder
                 ->setMaxResults($this->pageSize)
@@ -112,6 +122,17 @@ final class DbalLimitOffsetExtractor implements Extractor
         }
 
         $this->maximum = $maximum;
+
+        return $this;
+    }
+
+    public function withOffset(int $offset) : self
+    {
+        if ($offset < 0) {
+            throw new InvalidArgumentException('Offset must be greater than 0, got ' . $offset);
+        }
+
+        $this->offset = $offset;
 
         return $this;
     }

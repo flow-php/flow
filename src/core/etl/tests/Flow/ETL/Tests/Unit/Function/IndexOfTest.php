@@ -42,6 +42,18 @@ final class IndexOfTest extends FlowTestCase
         );
     }
 
+    public function test_needle_null_index_of_returns_false() : void
+    {
+        self::assertFalse(
+            ref('str')->indexOf(ref('needle'))->eval(
+                row(
+                    str_entry('str', 'x'),
+                    str_entry('needle', null)
+                )
+            )
+        );
+    }
+
     public function test_returns_method_returns_string_int() : void
     {
         $indexOf = new IndexOf('Abba', 'b', offset: 3);
@@ -50,5 +62,16 @@ final class IndexOfTest extends FlowTestCase
         self::assertInstanceOf(Type::class, $returnType);
 
         self::assertTrue($returnType->isEqual(type_int()));
+    }
+
+    public function test_string_null_index_of_returns_false() : void
+    {
+        self::assertFalse(
+            ref('str')->indexOf('x')->eval(
+                row(
+                    str_entry('str', null),
+                )
+            )
+        );
     }
 }
