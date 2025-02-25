@@ -540,8 +540,12 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function limit(int $limit) : self
+    public function limit(?int $limit) : self
     {
+        if ($limit === null) {
+            return $this;
+        }
+
         $this->pipeline = $this->context->config->optimizer()->optimize(new LimitTransformer($limit), $this->pipeline);
 
         return $this;

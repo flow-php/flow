@@ -36,6 +36,21 @@ final class LimitTest extends FlowIntegrationTestCase
         self::assertCount(9, $rows);
     }
 
+    public function test_limit_null() : void
+    {
+        $rows = df()
+            ->read(from_array(
+                \array_map(
+                    fn (int $id) : array => ['id' => $id],
+                    \range(1, 10)
+                )
+            ))
+            ->limit(null)
+            ->fetch();
+
+        self::assertCount(10, $rows);
+    }
+
     public function test_fetch_with_limit() : void
     {
         $rows = df()
