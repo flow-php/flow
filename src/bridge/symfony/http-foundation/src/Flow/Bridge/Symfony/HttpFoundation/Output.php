@@ -9,7 +9,9 @@ use Flow\ETL\Loader;
 
 interface Output
 {
-    public function loader() : Loader;
+    public function memoryLoader(string $id) : Loader;
+
+    public function stdoutLoader() : Loader;
 
     public function type() : Type;
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Filesystem\Local\StdOut\Filter;
+namespace Flow\Filesystem\Local\StreamFilter;
 
 final class Intercept extends \php_user_filter
 {

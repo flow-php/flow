@@ -16,7 +16,7 @@ Http Foundation Bridge provides seamless integration between Symfony Http Founda
 ## Installation
 
 ```
-composer require flow-php/symfony-http-foundation-bridge
+composer require flow-php/symfony-http-foundation-bridge:1.x-dev
 ```
 
 ## Usage
@@ -30,87 +30,67 @@ files that normally would not fit in memory.
 
 namespace Symfony\Application\Controller;
 
-use Flow\Bridge\Symfony\HttpFoundation\DataStream;
-use Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput;
+use Flow\Bridge\Symfony\HttpFoundation\Response\FlowBufferedResponse;
+use Flow\Bridge\Symfony\HttpFoundation\Response\FlowStreamedResponse;
+use Flow\ETL\Transformation\AddRowIndex;
+use Flow\ETL\Transformation\Limit;
+use Flow\ETL\Transformation\MaskColumns;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\MaskColumns;
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\AddRowIndex;
+use function Flow\Bridge\Symfony\HttpFoundation\http_csv_output;
+use function Flow\Bridge\Symfony\HttpFoundation\http_stream_open;
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 
 final class ReportsController extends AbstractController
 {
-    #[Route('/stream/report', name: 'stream-report')]
-    public function streamReport() : Response
+    #[Route('/report/stream', name: 'report_stream')]
+    public function streamReport() : FlowStreamedResponse
     {
-        return DataStream
-            ::open(from_parquet(__DIR__ . '/reports/orders.parquet'))
-            ->underFilename('orders.csv')
+        return http_stream_open(from_parquet(__DIR__ . '/reports/orders.parquet'))
+            ->headers(['X-Custom-Header' => 'Custom Value'])
             ->transform(
                 new MaskColumns(['email', 'address']),
                 new AddRowIndex()
             )
-            ->to(new CSVOutput(withHeader: true));
+            ->as('orders.csv')
+            ->status(200)
+            ->streamedResponse(http_csv_output());
+    }
+
+    #[Route('/report', name: 'report')]
+    public function bufferReport() : FlowBufferedResponse
+    {
+        return http_stream_open(from_parquet(__DIR__ . '/reports/orders.parquet'))
+            ->transform(
+                new Limit(100),
+                new MaskColumns(['email', 'address']),
+                new AddRowIndex(),
+            )
+            ->as('orders.csv')
+            ->response(http_csv_output());
     }
 }
 ```
 
 ## Available Outputs
 
-- `Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput` - converts dataset to CSV format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\JSONOutput` - converts dataset to JSON format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\ParquetOutput` - converts dataset to Parquet format.
-- `Flow\Bridge\Symfony\HttpFoundation\Output\XMLOutput` - converts dataset to XML format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput` - `http_csv_output()` - converts dataset to CSV format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\JSONOutput` - `http_json_output()` -converts dataset to JSON format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\ParquetOutput` - `http_parquet_output()` -converts dataset to Parquet format.
+- `Flow\Bridge\Symfony\HttpFoundation\Output\XMLOutput` - `http_xml_output()` -converts dataset to XML format.
 
 ## Modify output on the fly
 
 Sometimes we need to modify the output on the fly. 
-To do that, FlowStreamedResponse allows to pass a Transformation that will be applied on the dataset.
+To do that, FlowStreamedResponse allows passing a Transformation that will be applied on the dataset.
 
 ```php
-return new FlowStreamedResponse(
-    new ParquetEtractor(__DIR__ . '/reports/orders.parquet'),
-    new CSVOutput(withHeader: true),
-    new class implements Transformation {
-        public function transform(DataFrame $dataFrame): DataFrame
-        {
-            return $dataFrame->withColumn('time', \time());
-        }
-    }
-);
-```
-
-Above example will add a new column `time` to the dataset with the current timestamp.
-
-Predefined Transformations: 
-
-- `Flow\Bridge\Symfony\HttpFoundation\Transformation\MaskColumns` - mask columns with `*****` value.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace Symfony\Application\Controller;
-
-use Flow\Bridge\Symfony\HttpFoundation\FlowStreamedResponse;
-use Flow\Bridge\Symfony\HttpFoundation\Output\CSVOutput;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-use function Flow\ETL\Adapter\Parquet\ParquetEtractor;
-
-final class ReportsController extends AbstractController
-{
-    #[Route('/stream/report', name: 'stream-report')]
-    public function streamReport() : Response
+new class implements Transformation {
+    public function transform(DataFrame $dataFrame): DataFrame
     {
-        return new FlowStreamedResponse(
-            new ParquetEtractor(__DIR__ . '/reports/orders.parquet'),
-            new CSVOutput(withHeader: true),
-            new MaskColumns(['email', 'address'])
-        );
+        return $dataFrame->withColumn('time', \time());
     }
 }
 ```
+
+Above example will add a new column `time` to the dataset with the current timestamp.

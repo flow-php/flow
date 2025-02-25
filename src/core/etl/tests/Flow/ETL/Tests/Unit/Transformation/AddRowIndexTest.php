@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Unit\Transformation;
+namespace Flow\ETL\Tests\Unit\Transformation;
 
 use function Flow\ETL\DSL\{df, from_array};
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\AddRowIndex;
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\AddRowIndex\StartFrom;
+use Flow\ETL\AddRowIndex\StartFrom;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Transformation\AddRowIndex;
 
 final class AddRowIndexTest extends FlowTestCase
 {

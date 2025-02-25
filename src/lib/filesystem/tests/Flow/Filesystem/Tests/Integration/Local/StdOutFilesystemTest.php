@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\Filesystem\Tests\Integration;
+namespace Flow\Filesystem\Tests\Integration\Local;
 
 use function Flow\Filesystem\DSL\path_stdout;
-use Flow\Filesystem\Local\StdOut\Filter\Intercept;
 use Flow\Filesystem\Local\StdOutFilesystem;
+use Flow\Filesystem\Local\StreamFilter\Intercept;
 use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 

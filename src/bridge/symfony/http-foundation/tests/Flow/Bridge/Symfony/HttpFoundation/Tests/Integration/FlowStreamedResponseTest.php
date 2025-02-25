@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Integration;
 
+use function Flow\Bridge\Symfony\HttpFoundation\{http_csv_output, http_xml_output};
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\from_array;
-use Flow\Bridge\Symfony\HttpFoundation\{DataStream,
-    FlowStreamedResponse,
+use Flow\Bridge\Symfony\HttpFoundation\{
+    DataStream,
     Output\CSVOutput,
     Output\JsonOutput,
-    Output\XMLOutput};
+    Response\FlowStreamedResponse
+};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class FlowStreamedResponseTest extends FlowTestCase
@@ -45,7 +47,7 @@ CSV
         ]);
 
         $response = DataStream::open($extractor)
-            ->sendTo(new JsonOutput());
+            ->streamedResponse(new JsonOutput());
 
         self::assertEquals(<<<'JSON'
 [{"id":1,"size":"XL","color":"red","ean":"1234567890123"},{"id":2,"size":"M","color":"blue","ean":"1234567890124"},{"id":3,"size":"S","color":"green","ean":"1234567890125"}]
@@ -61,7 +63,7 @@ JSON
                 ['id' => 2, 'size' => 'M', 'color' => 'blue', 'ean' => '1234567890124'],
                 ['id' => 3, 'size' => 'S', 'color' => 'green', 'ean' => '1234567890125'],
             ]),
-            new XMLOutput()
+            http_xml_output()
         );
 
         self::assertEquals(<<<'XML'
@@ -110,8 +112,8 @@ JSON
                 ['id' => 3, 'size' => 'S', 'color' => 'green', 'ean' => '1234567890125'],
             ])
         )
-            ->underFilename('products.csv')
-            ->sendTo(new CSVOutput());
+            ->as('products.csv')
+            ->streamedResponse(http_csv_output());
 
         self::assertEquals('attachment; filename=products.csv', $response->headers->get('Content-Disposition'));
     }
