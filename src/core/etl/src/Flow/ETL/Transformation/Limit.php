@@ -8,7 +8,7 @@ use Flow\ETL\{DataFrame, Transformation};
 
 final readonly class Limit implements Transformation
 {
-    public function __construct(private int $limit)
+    public function __construct(private ?int $limit)
     {
     }
 
