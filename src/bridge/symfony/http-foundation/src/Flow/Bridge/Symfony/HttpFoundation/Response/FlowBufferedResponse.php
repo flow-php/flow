@@ -60,6 +60,17 @@ final class FlowBufferedResponse extends Response
             ->write($this->output->memoryLoader($id = \bin2hex(\random_bytes(16)) . '.memory'))
             ->run();
 
-        $this->content = $config->fstab()->for(protocol('memory'))->readFrom(path_memory($id))->content();
+        $fs = $config->fstab()->for(protocol('memory'));
+
+        if ($fs->status(path_memory($id)) === null) {
+            $this->buffered = true;
+            $this->content = '';
+            $this->statusCode = self::HTTP_NO_CONTENT;
+
+            return;
+        }
+
+        $this->content = $fs->readFrom(path_memory($id))->content();
+        $this->buffered = true;
     }
 }
