@@ -259,6 +259,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Hash($this, $algorithm);
     }
 
+    /**
+     * Returns the index of given $needle in string.
+     */
     public function indexOf(ScalarFunction|string $needle, ScalarFunction|bool $ignoreCase = false, ScalarFunction|int $offset = 0) : self
     {
         return new IndexOf($this, $needle, $ignoreCase, $offset);
@@ -321,6 +324,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new IsType($this, ...$types);
     }
 
+    /**
+     * Check string is utf8 and returns true or false.
+     */
     public function isUtf8() : IsUtf8
     {
         return new IsUtf8($this);
@@ -482,31 +488,50 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new StartsWith($this, $needle);
     }
 
+    /**
+     * Returns the contents found after the first occurrence of the given string
+     */
     public function stringAfter(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
     {
         return new StringAfter($this, $needle, $includeNeedle);
     }
 
+    /**
+     * Returns the contents found after the last occurrence of the given string
+     */
     public function stringAfterLast(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
     {
         return new StringAfterLast($this, $needle, $includeNeedle);
     }
 
+    /**
+     * Returns the contents found before the first occurrence of the given string
+     */
     public function stringBefore(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
     {
         return new StringBefore($this, $needle, $includeNeedle);
     }
 
+    /**
+     * Returns a string that you can use in case-insensitive comparisons.
+     */
     public function stringFold() : self
     {
         return new StringFold($this);
     }
 
+    /**
+     * Covert string to a style from enum list, passed in parameter.
+     * Can be string "upper" or StringStyles::UPPER for Upper (example)
+     */
     public function stringStyle(ScalarFunction|string|StringStyles $style) : self
     {
         return new StringStyle($this, $style);
     }
 
+    /**
+     * Changes all graphemes/code points to "title case".
+     */
     public function stringTitle(ScalarFunction|bool $allWords = false) : self
     {
         return new StringTitle($this, $allWords);
