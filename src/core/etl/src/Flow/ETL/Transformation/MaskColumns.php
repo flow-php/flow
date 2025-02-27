@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Transformation;
+namespace Flow\ETL\Transformation;
 
 use function Flow\ETL\DSL\lit;
 use Flow\ETL\{DataFrame, Transformation};

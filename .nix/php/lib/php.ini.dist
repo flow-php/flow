@@ -1,0 +1,10 @@
+date.timezone = UTC
+max_execution_time = 1800
+max_input_time = 3600
+max_input_nesting_level = 64
+memory_limit = -1
+post_max_size = 200M
+upload_max_filesize = 150M
+file_uploads = On
+max_file_uploads = 20
+short_open_tag = off

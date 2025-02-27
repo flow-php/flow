@@ -24,6 +24,9 @@
     },
     "license": "MIT",
     "autoload": {
+        "files": [
+            "src/Flow/Bridge/Symfony/HttpFoundation/functions.php"
+        ],
         "psr-4": {
             "Flow\\": [
                 "src/Flow"

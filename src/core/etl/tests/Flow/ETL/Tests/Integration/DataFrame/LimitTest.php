@@ -115,6 +115,21 @@ final class LimitTest extends FlowIntegrationTestCase
         df()->read(from_rows(\Flow\ETL\DSL\rows()))->limit(-1);
     }
 
+    public function test_limit_null() : void
+    {
+        $rows = df()
+            ->read(from_array(
+                \array_map(
+                    fn (int $id) : array => ['id' => $id],
+                    \range(1, 10)
+                )
+            ))
+            ->limit(null)
+            ->fetch();
+
+        self::assertCount(10, $rows);
+    }
+
     public function test_limit_when_transformation_is_expanding_rows_extracted_from_extractor() : void
     {
         $rows = df()

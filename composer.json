@@ -152,7 +152,8 @@
             "src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",
             "src/lib/parquet/src/stubs.php",
-            "src/lib/snappy/polyfill.php"
+            "src/lib/snappy/polyfill.php",
+            "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php"
         ]
     },
     "autoload-dev": {

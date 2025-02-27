@@ -73,7 +73,7 @@ final readonly class EntryFactory
         }
 
         if ($schema instanceof Schema) {
-            $definition = $schema->getDefinition($entryName);
+            $definition = $schema->get($entryName);
 
             return $this->createAs($definition->entry()->name(), $value, $definition->type(), $definition->metadata());
         }

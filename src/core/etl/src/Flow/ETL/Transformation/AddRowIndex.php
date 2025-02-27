@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Transformation;
+namespace Flow\ETL\Transformation;
 
 use function Flow\ETL\DSL\int_entry;
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\AddRowIndex\StartFrom;
+use Flow\ETL\AddRowIndex\StartFrom;
 use Flow\ETL\{DataFrame, Row, Transformation};
 
 final readonly class AddRowIndex implements Transformation

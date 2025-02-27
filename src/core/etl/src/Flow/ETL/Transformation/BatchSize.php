@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Transformation;
+namespace Flow\ETL\Transformation;
 
 use Flow\ETL\{DataFrame, Transformation};
 use Flow\Filesystem\Exception\InvalidArgumentException;

@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Loader;
 
 use function Flow\ETL\DSL\{config, rows};
 use function Flow\ETL\DSL\{df, flow_context, from_array, ref, to_memory, to_transformation, type_string};
-use Flow\ETL\{DataFrame, Loader, Memory\ArrayMemory, Tests\FlowTestCase, Transformation, Transformer};
+use Flow\ETL\{DataFrame, FlowContext, Loader, Loader\Closure, Memory\ArrayMemory, Tests\FlowTestCase, Transformation, Transformer};
 
 final class TransformerLoaderTest extends FlowTestCase
 {
@@ -29,23 +29,66 @@ final class TransformerLoaderTest extends FlowTestCase
         $transformer->load(rows(), flow_context(config()));
     }
 
+    /**
+     * Tests that the closure method is called when using a Closure loader.
+     */
+    public function test_transformer_loader_with_closure() : void
+    {
+        $closure_loader = $this->createMockForIntersectionOfInterfaces([Loader::class, Closure::class]);
+
+        $closure_loader->expects(self::once())
+            ->method('closure')
+            ->with(self::isInstanceOf(FlowContext::class));
+
+        $transformer = to_transformation(
+            new class implements Transformation {
+                public function transform(DataFrame $data_frame) : DataFrame
+                {
+                    return $data_frame;
+                }
+            },
+            $closure_loader
+        );
+
+        df()
+            ->read(
+                from_array(
+                    [
+                        ['id' => 1],
+                        ['id' => 2],
+                        ['id' => 3],
+                    ]
+                )
+            )
+            ->write(
+                $transformer
+            )
+            ->run();
+    }
+
     public function test_transformer_loader_with_transformation() : void
     {
         df()
-            ->read(from_array([
-                ['id' => 1],
-                ['id' => 2],
-                ['id' => 3],
-            ]))
-            ->write(to_transformation(
-                new class implements Transformation {
-                    public function transform(DataFrame $dataFrame) : DataFrame
-                    {
-                        return $dataFrame->withEntry('id_string', ref('id')->cast(type_string()));
-                    }
-                },
-                to_memory($memory = new ArrayMemory())
-            ))
+            ->read(
+                from_array(
+                    [
+                        ['id' => 1],
+                        ['id' => 2],
+                        ['id' => 3],
+                    ]
+                )
+            )
+            ->write(
+                to_transformation(
+                    new class implements Transformation {
+                        public function transform(DataFrame $dataFrame) : DataFrame
+                        {
+                            return $dataFrame->withEntry('id_string', ref('id')->cast(type_string()));
+                        }
+                    },
+                    to_memory($memory = new ArrayMemory())
+                )
+            )
             ->run();
 
         self::assertEquals(

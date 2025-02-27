@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use function Flow\ETL\Adapter\XML\to_xml;
-use function Flow\Filesystem\DSL\path_stdout;
+use function Flow\Filesystem\DSL\{path_memory, path_stdout};
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Adapter\XML\XMLWriter;
 use Flow\ETL\Adapter\XML\XMLWriter\DOMDocumentWriter;
@@ -26,7 +26,16 @@ final readonly class XMLOutput implements Output
     ) {
     }
 
-    public function loader() : Loader
+    public function memoryLoader(string $id) : Loader
+    {
+        return to_xml(path_memory($id, ['stream' => 'temp']), xml_writer: $this->xmlWriter)
+            ->withRootElementName($this->rootElementName)
+            ->withRowElementName($this->rowElementName)
+            ->withAttributePrefix($this->attributePrefix)
+            ->withDateTimeFormat($this->dateTimeFormat);
+    }
+
+    public function stdoutLoader() : Loader
     {
         return to_xml(path_stdout(['stream' => 'output']), xml_writer: $this->xmlWriter)
             ->withRootElementName($this->rootElementName)

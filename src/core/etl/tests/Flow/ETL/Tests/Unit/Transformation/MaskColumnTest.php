@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Unit\Transformation;
+namespace Flow\ETL\Tests\Unit\Transformation;
 
 use function Flow\ETL\DSL\{df, from_array};
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\MaskColumns;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Transformation\MaskColumns;
 
-final class MaskColumnTransformationTest extends FlowTestCase
+final class MaskColumnTest extends FlowTestCase
 {
     public function test_masking_columns_transformation() : void
     {

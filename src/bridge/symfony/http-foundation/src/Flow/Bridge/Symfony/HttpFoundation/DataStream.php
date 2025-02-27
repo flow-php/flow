@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation;
 
+use Flow\Bridge\Symfony\HttpFoundation\Response\{FlowBufferedResponse, FlowStreamedResponse};
 use Flow\ETL\{Extractor, Transformation, Transformations};
 use Symfony\Component\HttpFoundation\{HeaderUtils, Response};
 
@@ -20,8 +21,6 @@ final class DataStream
         'X-Accel-Buffering' => 'no', // provides support for Nginx
         'Pragma' => 'no-cache', // Backward compatibility for HTTP/1.0
     ];
-
-    private ?Output $output = null;
 
     private int $status = Response::HTTP_OK;
 
@@ -40,17 +39,70 @@ final class DataStream
     }
 
     /**
+     * Set the filename for the response.
+     * If the attachment flag is set to true, the response will be treated as an attachment meaning that
+     * the browser will prompt the user to download the file.
+     */
+    public function as(string $name, bool $attachment = true) : self
+    {
+        $this->headers['Content-Disposition'] = HeaderUtils::makeDisposition(
+            $attachment ? HeaderUtils::DISPOSITION_ATTACHMENT : HeaderUtils::DISPOSITION_INLINE,
+            $name
+        );
+
+        return $this;
+    }
+
+    /**
+     * Set additional headers.
+     * Headers are merged with the default headers.
+     */
+    public function headers(array $headers) : self
+    {
+        $this->headers = array_merge($this->headers, $headers);
+
+        return $this;
+    }
+
+    /**
+     * Create regular response where whole dataset is loaded into the memory.
+     * It's highly recommended to use limit transformation to avoid loading entire dataset into the memory.
+     * Some extractors like Parquet/Elasticsearch/Doctrine allows also for setting offset directly on the extractor.
+     */
+    public function response(Output $output) : FlowBufferedResponse
+    {
+        $this->headers['Content-Type'] = $output->type()->toContentTypeHeader();
+
+        return new FlowBufferedResponse(
+            $this->extractor,
+            $output,
+            \count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
+            $this->status,
+            $this->headers
+        );
+    }
+
+    /**
+     * Set the HTTP status code. Default is 200.
+     */
+    public function status(int $status) : self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
      * Send the data stream to the output.
      */
-    public function sendTo(Output $output) : FlowStreamedResponse
+    public function streamedResponse(Output $output) : FlowStreamedResponse
     {
-        $this->output = $output;
 
-        $this->headers['Content-Type'] = $this->output->type()->toContentTypeHeader();
+        $this->headers['Content-Type'] = $output->type()->toContentTypeHeader();
 
         return new FlowStreamedResponse(
             $this->extractor,
-            $this->output,
+            $output,
             \count($this->transformations) ? new Transformations(...$this->transformations) : new Transformations(),
             $this->status,
             $this->headers
@@ -72,32 +124,6 @@ final class DataStream
     }
 
     /**
-     * Set the filename for the response.
-     * If the attachment flag is set to true, the response will be treated as an attachment meaning that
-     * the browser will prompt the user to download the file.
-     */
-    public function underFilename(string $name, bool $attachment = true) : self
-    {
-        $this->headers['Content-Disposition'] = HeaderUtils::makeDisposition(
-            $attachment ? HeaderUtils::DISPOSITION_ATTACHMENT : HeaderUtils::DISPOSITION_INLINE,
-            $name
-        );
-
-        return $this;
-    }
-
-    /**
-     * Set additional headers.
-     * Headers are merged with the default headers.
-     */
-    public function withHeaders(array $headers) : self
-    {
-        $this->headers = array_merge($this->headers, $headers);
-
-        return $this;
-    }
-
-    /**
      * Remove a specific header if it exists.
      * If the header does not exist, nothing happens.
      */
@@ -106,16 +132,6 @@ final class DataStream
         if (\array_key_exists($name, $this->headers)) {
             unset($this->headers[$name]);
         }
-
-        return $this;
-    }
-
-    /**
-     * Set the HTTP status code. Default is 200.
-     */
-    public function withStatus(int $status) : self
-    {
-        $this->status = $status;
 
         return $this;
     }

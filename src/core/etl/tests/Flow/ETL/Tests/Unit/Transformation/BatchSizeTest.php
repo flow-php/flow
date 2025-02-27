@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Unit\Transformation;
+namespace Flow\ETL\Tests\Unit\Transformation;
 
 use function Flow\ETL\DSL\{df, from_array};
-use Flow\Bridge\Symfony\HttpFoundation\Transformation\BatchSize;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Transformation\BatchSize;
 
 final class BatchSizeTest extends FlowTestCase
 {

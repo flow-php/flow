@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Bridge\Symfony\HttpFoundation\Transformation\AddRowIndex;
+namespace Flow\ETL\AddRowIndex;
 
 enum StartFrom
 {

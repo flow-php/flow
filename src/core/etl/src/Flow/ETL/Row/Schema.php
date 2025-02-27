@@ -93,6 +93,18 @@ final class Schema implements \Countable
         return $this;
     }
 
+    /**
+     * Adds metadata to a given definition.
+     *
+     * @throws SchemaDefinitionNotFoundException
+     */
+    public function addMetadata(string $definition, string $name, int|string|bool|float|array $value) : self
+    {
+        $this->get($definition)->addMetadata($name, $value);
+
+        return $this;
+    }
+
     public function count() : int
     {
         return \count($this->definitions);
@@ -136,9 +148,19 @@ final class Schema implements \Countable
     /**
      * @throws SchemaDefinitionNotFoundException
      */
-    public function getDefinition(string|Reference $ref) : Definition
+    public function get(string|Reference $ref) : Definition
     {
         return $this->findDefinition($ref) ?: throw new SchemaDefinitionNotFoundException((string) $ref);
+    }
+
+    /**
+     * @deprecated please use Schema::get() instead
+     *
+     * @throw SchemaDefinitionNotFoundException
+     */
+    public function getDefinition(string|Reference $ref) : Definition
+    {
+        return $this->get($ref);
     }
 
     /**
@@ -331,6 +353,18 @@ final class Schema implements \Countable
         }
 
         $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    /**
+     * Overwrites metadata for a given definition.
+     *
+     * @throws SchemaDefinitionNotFoundException
+     */
+    public function setMetadata(string $definition, Metadata $metadata) : self
+    {
+        $this->get($definition)->setMetadata($metadata);
 
         return $this;
     }

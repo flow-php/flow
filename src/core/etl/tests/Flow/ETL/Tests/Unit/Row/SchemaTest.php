@@ -25,11 +25,25 @@ use function Flow\ETL\DSL\{bool_schema,
     uuid_schema};
 use function Flow\ETL\DSL\{integer_schema, string_schema};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
+use Flow\ETL\Row\Schema\Metadata;
 use Flow\ETL\Row\{EntryReference, Schema};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SchemaTest extends FlowTestCase
 {
+    public function test_add_metadata() : void
+    {
+        $schema = schema(
+            int_schema('id'),
+            str_schema('name'),
+        );
+
+        self::assertEquals(
+            int_schema('id', metadata: Metadata::fromArray(['test' => 'test'])),
+            $schema->addMetadata('id', 'test', 'test')->get('id')
+        );
+    }
+
     public function test_adding_duplicated_definitions() : void
     {
         $this->expectException(SchemaDefinitionNotUniqueException::class);
@@ -94,6 +108,19 @@ final class SchemaTest extends FlowTestCase
         $this->expectExceptionMessage('Schema definition "type" must be an array, got: "test"');
 
         schema_from_json('[{"ref": "id", "type": "test", "metadata": []}]');
+    }
+
+    public function test_get() : void
+    {
+        $schema = schema(
+            int_schema('id'),
+            str_schema('name'),
+        );
+
+        self::assertEquals(
+            int_schema('id'),
+            $schema->get('id')
+        );
     }
 
     public function test_graceful_remove_non_existing_definition() : void
@@ -383,6 +410,19 @@ JSON,
         self::assertEquals(
             $schema,
             schema_from_json(schema_to_json($schema))
+        );
+    }
+
+    public function test_set_metadata() : void
+    {
+        $schema = schema(
+            int_schema('id', metadata: Metadata::fromArray(['foo' => 'bar'])),
+            str_schema('name'),
+        );
+
+        self::assertEquals(
+            int_schema('id', metadata: Metadata::fromArray(['test' => 'test'])),
+            $schema->setMetadata('id', Metadata::fromArray(['test' => 'test']))->get('id')
         );
     }
 }

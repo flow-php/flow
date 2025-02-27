@@ -22,18 +22,18 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, ListType, MapType, Struct
 use Flow\ETL\PHP\Type\{Native\FloatType, Native\IntegerType, Native\StringType, Type, TypeFactory};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 
-final readonly class Definition
+final class Definition
 {
     private Metadata $metadata;
 
-    private Reference $ref;
+    private readonly Reference $ref;
 
     /**
      * @param Type<mixed> $type
      */
     public function __construct(
         string|Reference $ref,
-        private Type $type,
+        private readonly Type $type,
         ?Metadata $metadata = null,
     ) {
 
@@ -158,6 +158,13 @@ final readonly class Definition
     public static function xml_element(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_xml_element($nullable), $metadata);
+    }
+
+    public function addMetadata(string $key, int|string|bool|float|array $value) : self
+    {
+        $this->metadata = $this->metadata->add($key, $value);
+
+        return $this;
     }
 
     public function entry() : Reference
@@ -327,6 +334,13 @@ final readonly class Definition
             $this->type,
             $this->metadata
         );
+    }
+
+    public function setMetadata(Metadata $metadata) : self
+    {
+        $this->metadata = $metadata;
+
+        return $this;
     }
 
     /**

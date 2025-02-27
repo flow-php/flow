@@ -6,7 +6,14 @@ namespace Flow\Filesystem\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\{Filesystem, FilesystemTable, Local\StdOutFilesystem, Partition, Partitions, Path, Protocol};
+use Flow\Filesystem\{Filesystem,
+    FilesystemTable,
+    Local\MemoryFilesystem,
+    Local\StdOutFilesystem,
+    Partition,
+    Partitions,
+    Path,
+    Protocol};
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function protocol(string $protocol) : Protocol
@@ -59,6 +66,20 @@ function path_stdout(?array $options = null) : Path
 }
 
 /**
+ * Create a path to php memory stream.
+ *
+ * @param string $path - default = '' - path is used as an identifier in memory filesystem, so we can write multiple files to memory at once, each path is a new handle
+ * @param null|array{'stream': 'memory'|'temp'} $options - when nothing is provided, 'temp' stream is used by default
+ *
+ * @return Path
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function path_memory(string $path = '', ?array $options = null) : Path
+{
+    return new Path('memory://' . (strlen($path) ? $path : \bin2hex(\random_bytes(16)) . '.memory'), $options ?? []);
+}
+
+/**
  * Resolve real path from given path.
  *
  * @param array<string, mixed> $options
@@ -75,10 +96,23 @@ function native_local_filesystem() : NativeLocalFilesystem
     return new NativeLocalFilesystem();
 }
 
+/**
+ * Write-only filesystem useful when we just want to write the output to stdout.
+ * The main use case is for streaming datasets over http.
+ */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function stdout_filesystem() : StdOutFilesystem
 {
     return new StdOutFilesystem();
+}
+
+/**
+ * Create a new memory filesystem and writes data to it in memory.
+ */
+#[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
+function memory_filesystem() : MemoryFilesystem
+{
+    return new MemoryFilesystem();
 }
 
 /**
@@ -92,6 +126,7 @@ function fstab(Filesystem ...$filesystems) : FilesystemTable
     if (!\count($filesystems)) {
         $filesystems[] = native_local_filesystem();
         $filesystems[] = stdout_filesystem();
+        $filesystems[] = memory_filesystem();
     }
 
     return new FilesystemTable(...$filesystems);
