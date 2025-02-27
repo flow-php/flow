@@ -489,7 +489,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * Returns the contents found after the first occurrence of the given string
+     * Returns the contents found after the first occurrence of the given string.
      */
     public function stringAfter(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
     {
@@ -497,7 +497,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * Returns the contents found after the last occurrence of the given string
+     * Returns the contents found after the last occurrence of the given string.
      */
     public function stringAfterLast(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
     {
@@ -505,7 +505,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * Returns the contents found before the first occurrence of the given string
+     * Returns the contents found before the first occurrence of the given string.
      */
     public function stringBefore(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
     {
@@ -522,7 +522,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
 
     /**
      * Covert string to a style from enum list, passed in parameter.
-     * Can be string "upper" or StringStyles::UPPER for Upper (example)
+     * Can be string "upper" or StringStyles::UPPER for Upper (example).
      */
     public function stringStyle(ScalarFunction|string|StringStyles $style) : self
     {
