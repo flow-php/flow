@@ -513,6 +513,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
+     * Returns the contents found before the last occurrence of the given string.
+     */
+    public function stringBeforeLast(ScalarFunction|string $needle, ScalarFunction|bool $includeNeedle = false) : self
+    {
+        return new StringBeforeLast($this, $needle, $includeNeedle);
+    }
+
+    /**
      * Returns a string that you can use in case-insensitive comparisons.
      */
     public function stringFold() : self

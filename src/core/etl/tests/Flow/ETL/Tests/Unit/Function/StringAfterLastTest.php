@@ -14,8 +14,8 @@ final class StringAfterLastTest extends FlowTestCase
 {
     public function test_returns_method_returns_string_type() : void
     {
-        $stringAfterFunction = new StringAfterLast('test', 'e');
-        $returnType = $stringAfterFunction->returns();
+        $stringAfterLastFunction = new StringAfterLast('test', 'e');
+        $returnType = $stringAfterLastFunction->returns();
 
         self::assertInstanceOf(Type::class, $returnType);
 
