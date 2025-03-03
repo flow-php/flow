@@ -1284,16 +1284,16 @@
         },
         {
             "name": "humbug/box",
-            "version": "4.6.3",
+            "version": "4.6.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/box-project/box.git",
-                "reference": "9ec22a45d48ec412db963d35cd37bc73c23a6b80"
+                "reference": "09646041cb2e0963ab6ca109e1b366337617a0f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/box-project/box/zipball/9ec22a45d48ec412db963d35cd37bc73c23a6b80",
-                "reference": "9ec22a45d48ec412db963d35cd37bc73c23a6b80",
+                "url": "https://api.github.com/repos/box-project/box/zipball/09646041cb2e0963ab6ca109e1b366337617a0f2",
+                "reference": "09646041cb2e0963ab6ca109e1b366337617a0f2",
                 "shasum": ""
             },
             "require": {
@@ -1321,7 +1321,7 @@
                 "symfony/polyfill-mbstring": "^1.28",
                 "symfony/process": "^6.4.0 || ^7.0.0",
                 "symfony/var-dumper": "^6.4.0 || ^7.0.0",
-                "thecodingmachine/safe": "^2.5 || 3.0",
+                "thecodingmachine/safe": "^2.5 || ^3.0",
                 "webmozart/assert": "^1.11"
             },
             "replace": {
@@ -1389,9 +1389,9 @@
             ],
             "support": {
                 "issues": "https://github.com/box-project/box/issues",
-                "source": "https://github.com/box-project/box/tree/4.6.3"
+                "source": "https://github.com/box-project/box/tree/4.6.6"
             },
-            "time": "2025-02-19T20:30:32+00:00"
+            "time": "2025-03-02T18:20:45+00:00"
         },
         {
             "name": "humbug/php-scoper",
@@ -3507,16 +3507,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v7.2.0",
+            "version": "v7.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "d34b22ba9390ec19d2dd966c40aa9e8462f27a7e"
+                "reference": "d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/d34b22ba9390ec19d2dd966c40aa9e8462f27a7e",
-                "reference": "d34b22ba9390ec19d2dd966c40aa9e8462f27a7e",
+                "url": "https://api.github.com/repos/symfony/process/zipball/d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf",
+                "reference": "d8f411ff3c7ddc4ae9166fb388d1190a2df5b5cf",
                 "shasum": ""
             },
             "require": {
@@ -3548,7 +3548,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v7.2.0"
+                "source": "https://github.com/symfony/process/tree/v7.2.4"
             },
             "funding": [
                 {
@@ -3564,7 +3564,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-06T14:24:19+00:00"
+            "time": "2025-02-05T08:33:46+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -3821,16 +3821,16 @@
         },
         {
             "name": "thecodingmachine/safe",
-            "version": "v3.0.0",
+            "version": "v3.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thecodingmachine/safe.git",
-                "reference": "1b99e649415872997e43c771c55ba9b08d601329"
+                "reference": "22ffad3248982a784f9870a37aeb2e522bd19645"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thecodingmachine/safe/zipball/1b99e649415872997e43c771c55ba9b08d601329",
-                "reference": "1b99e649415872997e43c771c55ba9b08d601329",
+                "url": "https://api.github.com/repos/thecodingmachine/safe/zipball/22ffad3248982a784f9870a37aeb2e522bd19645",
+                "reference": "22ffad3248982a784f9870a37aeb2e522bd19645",
                 "shasum": ""
             },
             "require": {
@@ -3940,7 +3940,7 @@
             "description": "PHP core functions that throw exceptions instead of returning FALSE on error",
             "support": {
                 "issues": "https://github.com/thecodingmachine/safe/issues",
-                "source": "https://github.com/thecodingmachine/safe/tree/v3.0.0"
+                "source": "https://github.com/thecodingmachine/safe/tree/v3.0.2"
             },
             "funding": [
                 {
@@ -3956,7 +3956,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-11T00:27:22+00:00"
+            "time": "2025-02-19T19:23:00+00:00"
         },
         {
             "name": "webmozart/assert",
