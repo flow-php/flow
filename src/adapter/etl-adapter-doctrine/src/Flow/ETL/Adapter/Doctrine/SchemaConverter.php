@@ -108,6 +108,7 @@ final readonly class SchemaConverter
             $metadata = $metadata->merge(DbalMetadata::fixed($column->getFixed()));
         }
 
+        /** @phpstan-ignore-next-line */
         if ($column->getComment() && $column->getComment() !== '') {
             $metadata = $metadata->merge(DbalMetadata::comment($column->getComment()));
         }
