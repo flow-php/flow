@@ -1283,6 +1283,7 @@ function schema_evolving_matcher() : EvolvingSchemaMatcher
 /**
  * @param array<string, array<bool|float|int|string>|bool|float|int|string> $metadata
  */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function schema_metadata(array $metadata = []) : Schema\Metadata
 {
     return Schema\Metadata::fromArray($metadata);
