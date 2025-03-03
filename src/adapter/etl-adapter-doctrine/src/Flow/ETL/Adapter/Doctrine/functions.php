@@ -227,6 +227,15 @@ function to_dbal_schema_table(Schema $schema, string $table_name, array $table_o
     return (new SchemaConverter($types_map))->toDbalTable($schema, $table_name, $table_options);
 }
 
+/**
+ * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Row\Schema.
+ */
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []) : Schema
+{
+    return (new SchemaConverter($types_map))->toFlowSchema($table);
+}
+
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 #[DocumentationExample(topic: 'data_writing', example: 'database_upsert')]
 function postgresql_insert_options(?bool $skip_conflicts = null, ?string $constraint = null, array $conflict_columns = [], array $update_columns = []) : PostgreSQLInsertOptions

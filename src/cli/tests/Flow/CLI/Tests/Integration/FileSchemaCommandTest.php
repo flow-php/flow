@@ -27,6 +27,55 @@ OUTPUT,
         );
     }
 
+    public function test_run_schema_as_ascii() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-ascii' => true]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'OUTPUT'
+schema
+|-- order_id: uuid
+|-- created_at: string
+|-- updated_at: string
+|-- discount: ?string
+|-- address: json
+|-- notes: json
+|-- items: json
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_php_output() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--output-php' => true]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'OUTPUT'
+\Flow\ETL\DSL\schema(
+    \Flow\ETL\DSL\uuid_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\string_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\string_schema("updated_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\string_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\json_schema("address", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\json_schema("notes", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\json_schema("items", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+);
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
     public function test_run_schema_with_pretty_output() : void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
@@ -109,7 +158,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertEquals(
             <<<'OUTPUT'
 +------------+--------+----------+----------+
 |       name |   type | nullable | metadata |

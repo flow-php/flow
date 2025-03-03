@@ -8,20 +8,20 @@ use Flow\ETL\Row\Schema\Metadata;
 
 enum DbalMetadata : string
 {
-    case COLUMN_DEFINITION = 'column_definition';
-    case COMMENT = 'comment';
-    case CUSTOM_SCHEMA_OPTIONS = 'custom_schema_options';
-    case DEFAULT = 'default';
-    case FIXED = 'fixed';
-    case INDEX = 'index';
-    case INDEX_UNIQUE = 'index_unique';
-    case LENGTH = 'length';
-    case PLATFORM_OPTIONS = 'platform_options';
-    case PRECISION = 'precision';
-    case PRIMARY_KEY = 'primary';
-    case SCALE = 'scale';
-    case TYPE = 'type';
-    case UNSIGNED = 'unsigned';
+    case COLUMN_DEFINITION = 'dbal_column_column_definition';
+    case COMMENT = 'dbal_column_comment';
+    case CUSTOM_SCHEMA_OPTIONS = 'cdbal_column_ustom_schema_options';
+    case DEFAULT = 'dbal_column_default';
+    case FIXED = 'dbal_column_fixed';
+    case INDEX = 'dbal_column_index';
+    case INDEX_UNIQUE = 'dbal_column_index_unique';
+    case LENGTH = 'dbal_column_length';
+    case PLATFORM_OPTIONS = 'dbal_column_platform_options';
+    case PRECISION = 'dbal_column_precision';
+    case PRIMARY_KEY = 'dbal_column_primary';
+    case SCALE = 'dbal_column_scale';
+    case TYPE = 'dbal_column_type';
+    case UNSIGNED = 'dbal_column_unsigned';
 
     public static function columnDefinition(string $definition) : Metadata
     {

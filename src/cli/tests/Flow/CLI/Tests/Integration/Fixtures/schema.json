@@ -1,0 +1,116 @@
+[
+  {
+    "ref": "order_id",
+    "type": {
+      "type": "uuid",
+      "nullable": false
+    },
+    "metadata": []
+  },
+  {
+    "ref": "created_at",
+    "type": {
+      "type": "datetime",
+      "nullable": false
+    },
+    "metadata": []
+  },
+  {
+    "ref": "updated_at",
+    "type": {
+      "type": "datetime",
+      "nullable": false
+    },
+    "metadata": []
+  },
+  {
+    "ref": "discount",
+    "type": {
+      "type": "float",
+      "nullable": true,
+      "precision": 6
+    },
+    "metadata": []
+  },
+  {
+    "ref": "email",
+    "type": {
+      "type": "string",
+      "nullable": false
+    },
+    "metadata": []
+  },
+  {
+    "ref": "customer",
+    "type": {
+      "type": "string",
+      "nullable": false
+    },
+    "metadata": []
+  },
+  {
+    "ref": "address",
+    "type": {
+      "type": "structure",
+      "elements": {
+        "street": {
+          "type": "string",
+          "nullable": false
+        },
+        "city": {
+          "type": "string",
+          "nullable": false
+        },
+        "zip": {
+          "type": "string",
+          "nullable": false
+        },
+        "country": {
+          "type": "string",
+          "nullable": false
+        }
+      },
+      "nullable": false
+    },
+    "metadata": []
+  },
+  {
+    "ref": "notes",
+    "type": {
+      "type": "list",
+      "element": {
+        "type": "string",
+        "nullable": false
+      },
+      "nullable": false
+    },
+    "metadata": []
+  },
+  {
+    "ref": "items",
+    "type": {
+      "type": "list",
+      "element": {
+        "type": "structure",
+        "elements": {
+          "sku": {
+            "type": "string",
+            "nullable": false
+          },
+          "quantity": {
+            "type": "integer",
+            "nullable": false
+          },
+          "price": {
+            "type": "float",
+            "nullable": false,
+            "precision": 6
+          }
+        },
+        "nullable": false
+      },
+      "nullable": false
+    },
+    "metadata": []
+  }
+]

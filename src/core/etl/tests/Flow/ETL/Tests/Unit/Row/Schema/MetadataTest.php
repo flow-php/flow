@@ -87,4 +87,11 @@ final class MetadataTest extends FlowTestCase
             Metadata::empty()->add('id', 1)->add('name', 'test')->remove('id')
         );
     }
+
+    public function test_use_object_in_metadata_array() : void
+    {
+        $this->expectExceptionMessage('Metadata value must be a scalar or an array of scalars');
+
+        Metadata::empty()->add('object', [new \DateTimeImmutable()]);
+    }
 }

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\{FileAnalyzeCommand};
-use PHPUnit\Framework\TestCase;
+use Flow\ETL\Tests\FlowTestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-final class FileAnalyzeCommandTest extends TestCase
+final class FileAnalyzeCommandTest extends FlowTestCase
 {
     public function test_read_rows_csv() : void
     {

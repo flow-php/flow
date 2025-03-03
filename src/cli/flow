@@ -1,12 +1,15 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
+use Flow\CLI\Command\DatabaseTableListCommand;
+use Flow\CLI\Command\DatabaseTableSchemaCommand;
 use Flow\CLI\Command\FileAnalyzeCommand;
 use Flow\CLI\Command\FileConvertCommand;
 use Flow\CLI\Command\FileReadCommand;
 use Flow\CLI\Command\FileRowsCountCommand;
 use Flow\CLI\Command\PipelineRunCommand;
 use Flow\CLI\Command\FileSchemaCommand;
+use Flow\CLI\Command\SchemaFormatCommand;
 use Flow\CLI\FlowVersion;
 use Flow\ParquetViewer\Command\ReadDataCommand;
 use Flow\ParquetViewer\Command\ReadDDLCommand;
@@ -54,5 +57,8 @@ $application->add((new FileSchemaCommand())->setName('file:schema')->setAliases(
 $application->add((new FileRowsCountCommand())->setName('file:rows:count')->setAliases(['count']));
 $application->add((new FileConvertCommand())->setName('file:convert')->setAliases(['convert']));
 $application->add((new FileAnalyzeCommand())->setName('file:analyze')->setAliases(['analyze']));
+$application->add((new SchemaFormatCommand())->setName('schema:format'))->setAliases(['format']);
+$application->add((new DatabaseTableListCommand())->setName('db:table:list'));
+$application->add((new DatabaseTableSchemaCommand())->setName('db:table:schema'));
 
 $application->run();

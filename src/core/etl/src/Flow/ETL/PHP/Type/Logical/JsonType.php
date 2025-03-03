@@ -14,7 +14,7 @@ use Flow\ETL\PHP\Type\Type;
  */
 final readonly class JsonType implements Type
 {
-    public function __construct(private bool $nullable)
+    public function __construct(private bool $nullable = false)
     {
     }
 

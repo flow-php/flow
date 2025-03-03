@@ -4,15 +4,42 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Formatter;
 
+use function Flow\ETL\DSL\{df, from_array, ref, to_output};
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 
-final class ASCIISchemaFormatter implements SchemaFormatter
+final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {
+    public function __construct(private bool $asTable = false)
+    {
+    }
+
     public function format(Schema $schema) : string
     {
+        if ($this->asTable) {
+            ob_start();
+            df()
+                ->read(from_array($schema->normalize()))
+                ->withEntry('type', ref('type')->unpack())
+                ->renameAll('type.', '')
+                ->rename('ref', 'name')
+                ->collect()
+                ->select('name', 'type', 'nullable', 'metadata')
+                ->write(to_output())
+                ->run();
+
+            $content = ob_get_clean();
+
+            if ($content === false) {
+                throw new RuntimeException('Failed to get output buffer content');
+            }
+
+            return $content;
+        }
+
         /** @var array<string, string> $buffer */
         $buffer = [];
 

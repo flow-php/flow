@@ -359,3 +359,98 @@ Help:
       ->collect()
       ->write(to_output());
 ```
+
+## `db:table:schema`
+
+Prints a schema of a dataset from a database table.
+
+> Note: Database connection string can be passed through `FLOW_DB_CONNECTION_STRING` environment variable, otherwise command will ask for it.
+> If you need a custom connection, you can use `--db-connection-file` option which should point to a php file that will be included and should return an instance of `\Doctrine\DBAL\Connection`.
+
+```shell
+flow db:table:schema --help
+Description:
+  Read data schema from a database table.
+
+Usage:
+  db:table:schema [options] [--] [<input-db-table>]
+
+Arguments:
+  input-db-table                               Table name for which we are going to generate schema.
+
+Options:
+      --output-php                             Print schema as PHP code
+      --output-table                           Print schema as ascii table
+      --output-ascii                           Print schema as ascii list
+      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Config
+  -c, --db-connection-file=DB-CONNECTION-FILE  Path to file that returns and instance of \Doctrine\DBAL\Connection
+  -h, --help                                   Display help for the given command. When no command is given display help for the list command
+      --silent                                 Do not output any message
+  -q, --quiet                                  Only errors are displayed. All other output is suppressed
+  -V, --version                                Display this application version
+      --ansi|--no-ansi                         Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                         Do not ask any interactive question
+  -v|vv|vvv, --verbose                         Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+
+Help:
+  Database connection string can be passed through FLOW_DB_CONNECTION_STRING environment variable, otherwise command will ask for it.
+  --db-connection-file option takes priority over FLOW_DB_CONNECTION_STRING environment.
+```
+
+## `db:table:list`
+
+```shell
+flow db:table:list --help  
+Description:
+  Print list of datasets from a database.
+
+Usage:
+  db:table:list [options]
+
+Options:
+      --db-namespace=DB-NAMESPACE              List of namespaces for which this command will list tables, multiple values allowed. When not set, all tables from all namespaces are listed. (multiple values allowed)
+      --config=CONFIG                          Path to a local php file that MUST return instance of: Flow\ETL\Config
+  -c, --db-connection-file=DB-CONNECTION-FILE  Path to file that returns and instance of \Doctrine\DBAL\Connection
+  -h, --help                                   Display help for the given command. When no command is given display help for the list command
+      --silent                                 Do not output any message
+  -q, --quiet                                  Only errors are displayed. All other output is suppressed
+  -V, --version                                Display this application version
+      --ansi|--no-ansi                         Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                         Do not ask any interactive question
+  -v|vv|vvv, --verbose                         Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+
+Help:
+  Database connection string can be passed through FLOW_DB_CONNECTION_STRING environment variable, otherwise command will ask for it.
+  --db-connection-file option takes priority over FLOW_DB_CONNECTION_STRING environment.
+```
+
+## `schema:format`
+
+Take a json schema and print it in another format, including PHP 
+which can be then directly used to validate datasets. 
+
+```shell
+flow schema:format --help
+Description:
+  Print a json schema in one of the available formats.
+
+Usage:
+  schema:format [options] [--] <input-schema-file>
+  format
+
+Arguments:
+  input-schema-file     Path to a json with schema Flow.
+
+Options:
+      --output-php      Print schema as PHP code
+      --output-table    Print schema as ascii table
+      --output-ascii    Print schema as ascii list
+      --config=CONFIG   Path to a local php file that MUST return instance of: Flow\ETL\Config
+  -h, --help            Display help for the given command. When no command is given display help for the list command
+      --silent          Do not output any message
+  -q, --quiet           Only errors are displayed. All other output is suppressed
+  -V, --version         Display this application version
+      --ansi|--no-ansi  Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction  Do not ask any interactive question
+  -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+```
