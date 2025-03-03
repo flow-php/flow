@@ -155,6 +155,8 @@ jobs:
 
       - name: "Test - CLI"
         run: "composer test:cli"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
 
       - name: "Test - Lib - Array Dot"
         run: "composer test:lib:array-dot"

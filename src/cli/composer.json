@@ -13,6 +13,7 @@
         "flow-php/etl": "^0.10.0 || 1.x-dev",
         "flow-php/etl-adapter-csv": "^0.10.0 || 1.x-dev",
         "flow-php/etl-adapter-parquet": "^0.10.0 || 1.x-dev",
+        "flow-php/etl-adapter-doctrine": "^0.10.0 || 1.x-dev",
         "flow-php/etl-adapter-json": "^0.10.0 || 1.x-dev",
         "flow-php/etl-adapter-text": "^0.10.0 || 1.x-dev",
         "flow-php/etl-adapter-xml": "^0.10.0 || 1.x-dev",
