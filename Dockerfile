@@ -11,7 +11,10 @@ RUN apk update && apk add --no-cache \
     $PHPIZE_DEPS \
     gmp-dev \
     git \
- && docker-php-ext-install bcmath gmp \
+    mariadb-dev \
+    postgresql-dev \
+    sqlite-dev \
+ && docker-php-ext-install bcmath gmp pdo_mysql pdo_pgsql pdo_sqlite \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git /tmp/php-ext-snappy \
  && cd /tmp/php-ext-snappy \
  && phpize \
