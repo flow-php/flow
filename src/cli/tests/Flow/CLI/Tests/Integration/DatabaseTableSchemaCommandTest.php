@@ -57,8 +57,14 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
-            <<<'PHP'
+
+        // changeColumn was removed in doctrine/dbal 4.0
+        // We are using it to perform a different assertion since prior to 4.0 all
+        // columns were also getting precision set to 10 due to a bug that was executing precision set
+        // even when precision value was null.
+        if (!\method_exists(Table::class, 'changeColumn')) {
+            self::assertSame(
+                <<<'PHP'
 \Flow\ETL\DSL\schema(
     \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_primary" => "table_01_pkey"])),
     \Flow\ETL\DSL\string_schema("name", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255])),
@@ -66,8 +72,21 @@ final class DatabaseTableSchemaCommandTest extends FlowTestCase
 );
 
 PHP,
-            $tester->getDisplay()
-        );
+                $tester->getDisplay()
+            );
+        } else {
+            self::assertSame(
+                <<<'PHP'
+\Flow\ETL\DSL\schema(
+    \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_precision" => 10, "dbal_column_primary" => "table_01_pkey"])),
+    \Flow\ETL\DSL\string_schema("name", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255, "dbal_column_precision" => 10])),
+    \Flow\ETL\DSL\string_schema("description", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255, "dbal_column_precision" => 10])),
+);
+
+PHP,
+                $tester->getDisplay()
+            );
+        }
     }
 
     protected function dbContext() : DatabaseContext
