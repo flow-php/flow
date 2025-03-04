@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-02-28
+## [Unreleased] - 2025-03-03
 
 ### Added
+- [#1507](https://github.com/flow-php/flow/pull/1507) - **Add string function BeforeLast with Tests** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1494](https://github.com/flow-php/flow/pull/1494) - **afterLast function with test coverage** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1497](https://github.com/flow-php/flow/pull/1497) - **DSL for Symfony Http Bridge** - [@norberttech](https://github.com/norberttech)
 - [#1496](https://github.com/flow-php/flow/pull/1496) - **helper methods on Schema/Definition to manipulate metadata** - [@norberttech](https://github.com/norberttech)
@@ -181,6 +182,7 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1507](https://github.com/flow-php/flow/pull/1507) - **Fix some variable names in previous functions tests** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1494](https://github.com/flow-php/flow/pull/1494) - **Add missing PHPDocs in Chain** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1499](https://github.com/flow-php/flow/pull/1499) - **Prevent double ETL evaluation in buffered response** - [@norberttech](https://github.com/norberttech)
 - [#1497](https://github.com/flow-php/flow/pull/1497) - **Fixed documentation** - [@norberttech](https://github.com/norberttech)

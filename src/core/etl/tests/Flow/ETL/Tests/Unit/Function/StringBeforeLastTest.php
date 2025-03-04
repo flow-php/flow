@@ -6,37 +6,27 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\{ref, str_entry, type_string};
-use Flow\ETL\Function\StringBefore;
+use Flow\ETL\Function\StringBeforeLast;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class StringBeforeTest extends FlowTestCase
+final class StringBeforeLastTest extends FlowTestCase
 {
     public function test_returns_method_returns_string_type() : void
     {
-        $stringBeforeFunction = new StringBefore('str', 't', false);
-        $returnType = $stringBeforeFunction->returns();
+        $stringBeforeLastFunction = new StringBeforeLast('str', 't', false);
+        $returnType = $stringBeforeLastFunction->returns();
 
         self::assertInstanceOf(Type::class, $returnType);
 
         self::assertTrue($returnType->isEqual(type_string()));
     }
 
-    public function test_string_before() : void
+    public function test_string_before_last() : void
     {
         self::assertSame(
-            'hello ',
-            ref('str')->stringBefore(ref('needle'))->eval(
-                row(
-                    str_entry('str', 'hello world'),
-                    str_entry('needle', 'world')
-                )
-            )
-        );
-
-        self::assertSame(
-            'hell',
-            ref('str')->stringBefore(ref('needle'))->eval(
+            'hello w',
+            ref('str')->stringBeforeLast(ref('needle'))->eval(
                 row(
                     str_entry('str', 'hello world'),
                     str_entry('needle', 'o')
@@ -45,11 +35,11 @@ final class StringBeforeTest extends FlowTestCase
         );
     }
 
-    public function test_string_before_including_needle() : void
+    public function test_string_before_last_including_needle() : void
     {
         self::assertSame(
-            'hello',
-            ref('str')->stringBefore(ref('needle'), includeNeedle: true)->eval(
+            'hello wo',
+            ref('str')->stringBeforeLast(ref('needle'), includeNeedle: true)->eval(
                 row(
                     str_entry('str', 'hello world'),
                     str_entry('needle', 'o')
@@ -58,11 +48,11 @@ final class StringBeforeTest extends FlowTestCase
         );
     }
 
-    public function test_string_before_returns_empty_string() : void
+    public function test_string_before_last_returns_empty_string() : void
     {
         self::assertSame(
             '',
-            ref('str')->stringBefore(ref('needle'))->eval(
+            ref('str')->stringBeforeLast(ref('needle'))->eval(
                 row(
                     str_entry('str', ''),
                     str_entry('needle', 'o')
@@ -71,10 +61,10 @@ final class StringBeforeTest extends FlowTestCase
         );
     }
 
-    public function test_string_before_returns_null() : void
+    public function test_string_before_last_returns_null() : void
     {
         self::assertNull(
-            ref('str')->stringBefore(ref('needle'))->eval(
+            ref('str')->stringBeforeLast(ref('needle'))->eval(
                 row(
                     str_entry('str', null),
                     str_entry('needle', 'o')
