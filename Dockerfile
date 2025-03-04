@@ -1,6 +1,6 @@
 # Stage 1: Build stage
-ARG FLOW_PHP_VERSION=8.2.11
-ARG FLOW_BASE_IMAGE_TAG_SUFFIX=cli-alpine3.18
+ARG FLOW_PHP_VERSION=8.2.27
+ARG FLOW_BASE_IMAGE_TAG_SUFFIX=cli-alpine3.20
 ARG FLOW_BASE_IMAGE_TAG=${FLOW_PHP_VERSION}-${FLOW_BASE_IMAGE_TAG_SUFFIX}
 ARG FLOW_BASE_IMAGE=php:${FLOW_BASE_IMAGE_TAG}
 
@@ -14,6 +14,7 @@ RUN apk update && apk add --no-cache \
     mariadb-dev \
     postgresql-dev \
     sqlite-dev \
+    libpq \
  && docker-php-ext-install bcmath gmp pdo_mysql pdo_pgsql pdo_sqlite \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git /tmp/php-ext-snappy \
  && cd /tmp/php-ext-snappy \
@@ -35,6 +36,7 @@ COPY --from=builder /usr/local/etc/php/conf.d /usr/local/etc/php/conf.d
 COPY --from=builder /usr/lib/libgmp.so.10 /usr/lib/
 COPY --from=builder /usr/lib/libstdc++.so.6 /usr/lib/
 COPY --from=builder /usr/lib/libgcc_s.so.1 /usr/lib/
+COPY --from=builder /usr/lib/libpq.so.5 /usr/lib/
 
 # Copy your PHP application
 COPY build/flow.phar /flow-php/flow.phar
