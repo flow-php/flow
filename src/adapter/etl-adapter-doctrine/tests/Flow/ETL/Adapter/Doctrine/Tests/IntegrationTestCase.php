@@ -12,6 +12,8 @@ use Flow\ETL\Tests\FlowTestCase;
 
 abstract class IntegrationTestCase extends FlowTestCase
 {
+    protected DatabaseContext $mysqlDatabaseContext;
+
     protected DatabaseContext $pgsqlDatabaseContext;
 
     protected function setUp() : void
@@ -21,7 +23,16 @@ abstract class IntegrationTestCase extends FlowTestCase
 
         $this->pgsqlDatabaseContext = new DatabaseContext(
             DriverManager::getConnection(
-                $this->connectionParams(),
+                $this->postgresqlConnectionParams(),
+                (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
+            ),
+            $insertQueryCounter,
+            $selectQueryCounter
+        );
+
+        $this->mysqlDatabaseContext = new DatabaseContext(
+            DriverManager::getConnection(
+                $this->mysqlConnectionParams(),
                 (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
             ),
             $insertQueryCounter,
@@ -34,7 +45,12 @@ abstract class IntegrationTestCase extends FlowTestCase
         $this->pgsqlDatabaseContext->dropAllTables();
     }
 
-    protected function connectionParams() : array
+    protected function mysqlConnectionParams() : array
+    {
+        return (new DsnParser(['mysql' => 'mysqli']))->parse(\getenv('MYSQL_DATABASE_URL') ?: '');
+    }
+
+    protected function postgresqlConnectionParams() : array
     {
         return (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(\getenv('PGSQL_DATABASE_URL') ?: '');
     }

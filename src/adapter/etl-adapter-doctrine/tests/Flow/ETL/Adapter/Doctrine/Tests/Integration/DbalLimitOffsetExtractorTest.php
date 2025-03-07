@@ -285,6 +285,62 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
         );
     }
 
+    public function test_extracting_entire_table_with_group_by() : void
+    {
+        $this->mysqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('type', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        for ($i = 1; $i <= 10; $i++) {
+            $this->mysqlDatabaseContext->insert(
+                $table,
+                [
+                    'id' => $i,
+                    'name' => 'name_' . $i,
+                    'type' => 'group_' . str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+                    'description' => 'description_' . $i,
+                ]
+            );
+        }
+
+        $data = df()
+            ->read(
+                from_dbal_limit_offset_qb(
+                    $this->mysqlDatabaseContext->connection(),
+                    $this->mysqlDatabaseContext->connection()->createQueryBuilder()
+                        ->from($table)
+                        ->select('type, COUNT(id)')
+                        ->groupBy('type')
+                        ->orderBy('type', 'ASC'),
+                    5
+                )
+            )
+            ->fetch();
+
+        self::assertSame(
+            [
+                ['type' => 'group_01', 'COUNT(id)' => 1],
+                ['type' => 'group_02', 'COUNT(id)' => 1],
+                ['type' => 'group_03', 'COUNT(id)' => 1],
+                ['type' => 'group_04', 'COUNT(id)' => 1],
+                ['type' => 'group_05', 'COUNT(id)' => 1],
+                ['type' => 'group_06', 'COUNT(id)' => 1],
+                ['type' => 'group_07', 'COUNT(id)' => 1],
+                ['type' => 'group_08', 'COUNT(id)' => 1],
+                ['type' => 'group_09', 'COUNT(id)' => 1],
+                ['type' => 'group_10', 'COUNT(id)' => 1],
+            ],
+            $data->toArray()
+        );
+    }
+
     public function test_extracting_limited_number_of_rows_from_table() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(

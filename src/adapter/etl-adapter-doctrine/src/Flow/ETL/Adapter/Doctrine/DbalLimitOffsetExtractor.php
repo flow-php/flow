@@ -65,23 +65,36 @@ final class DbalLimitOffsetExtractor implements Extractor
         if (isset($this->maximum)) {
             $total = $this->maximum;
         } else {
-            $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
 
-            // @phpstan-ignore-next-line
-            if (\method_exists($countQuery, 'resetOrderBy')) {
-                $countQuery->resetOrderBy();
-            } else {
+            $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
+            $nonGroupByQuery = (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy();
+
+            if ($countQuery->getSQL() === $nonGroupByQuery->getSQL()) {
                 /**
                  * @phpstan-ignore-next-line
                  */
-                $countQuery->resetQueryPart('orderBy');
-            }
+                if (\method_exists($countQuery, 'resetOrderBy')) {
+                    $countQuery->resetOrderBy();
+                } else {
+                    /**
+                     * @phpstan-ignore-next-line
+                     */
+                    $countQuery->resetQueryPart('orderBy');
+                }
 
-            $total = (int) $this->connection->fetchOne(
-                $countQuery->getSQL(),
-                $countQuery->getParameters(),
-                $countQuery->getParameterTypes()
-            );
+                $total = (int) $this->connection->fetchOne(
+                    $countQuery->getSQL(),
+                    $countQuery->getParameters(),
+                    $countQuery->getParameterTypes()
+                );
+            } else {
+                // For grouped queries, wrap in a subquery to get accurate count
+                $total = (int) $this->connection->executeQuery(
+                    'SELECT COUNT(*) FROM (' . $countQuery->getSQL() . ') as count_query',
+                    $countQuery->getParameters(),
+                    $countQuery->getParameterTypes()
+                )->fetchOne();
+            }
         }
 
         $totalFetched = 0;

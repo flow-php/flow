@@ -31,7 +31,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Operation can be insert or update, delete given.');
 
-        (new DbalLoader($table, $this->connectionParams()))->withOperation('delete');
+        (new DbalLoader($table, $this->postgresqlConnectionParams()))->withOperation('delete');
     }
 
     public function test_create_loader_with_invalid_operation_from_connection() : void
@@ -69,7 +69,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+        $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
         (data_frame())
             ->read(from_array([
@@ -97,7 +97,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+        $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
         (data_frame())
             ->read(
@@ -164,7 +164,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
-            ->load(to_dbal_table_insert($this->connectionParams(), $table))
+            ->load(to_dbal_table_insert($this->postgresqlConnectionParams(), $table))
             ->run();
 
         self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
@@ -189,7 +189,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
-            ->load(to_dbal_table_insert($this->connectionParams(), $table))
+            ->load(to_dbal_table_insert($this->postgresqlConnectionParams(), $table))
             ->run();
 
         (data_frame())
@@ -200,7 +200,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
                 ])
             )
-            ->load(to_dbal_table_insert($this->connectionParams(), $table, PostgreSQLInsertOptions::new()->skipConflicts()))
+            ->load(to_dbal_table_insert($this->postgresqlConnectionParams(), $table, PostgreSQLInsertOptions::new()->skipConflicts()))
             ->run();
 
         self::assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -237,7 +237,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
-            ->load(to_dbal_table_insert($this->connectionParams(), $table))
+            ->load(to_dbal_table_insert($this->postgresqlConnectionParams(), $table))
             ->run();
 
         (data_frame())->extract(
@@ -247,7 +247,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
             ])
         )
-            ->load(to_dbal_table_insert($this->connectionParams(), $table, PostgreSQLInsertOptions::new()->constraint('flow_doctrine_bulk_test_pkey')))
+            ->load(to_dbal_table_insert($this->postgresqlConnectionParams(), $table, PostgreSQLInsertOptions::new()->constraint('flow_doctrine_bulk_test_pkey')))
             ->run();
 
         self::assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -274,7 +274,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+        $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
         $documentA = new \DOMDocument();
         $documentA->loadXml('<xml>Description One</xml>');
@@ -319,7 +319,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $loader = to_dbal_table_insert($this->connectionParams(), $table);
+        $loader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
 
         $documentA = new \DOMDocument();
         $documentA->loadXml('<xml>Description One</xml>');
@@ -364,8 +364,8 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $insertLoader = to_dbal_table_insert($this->connectionParams(), $table);
-        $updateLoader = to_dbal_table_update($this->connectionParams(), $table, postgresql_update_options(primary_key_columns: ['id'], update_columns: ['name']));
+        $insertLoader = to_dbal_table_insert($this->postgresqlConnectionParams(), $table);
+        $updateLoader = to_dbal_table_update($this->postgresqlConnectionParams(), $table, postgresql_update_options(primary_key_columns: ['id'], update_columns: ['name']));
 
         (data_frame())->extract(
             from_array([
