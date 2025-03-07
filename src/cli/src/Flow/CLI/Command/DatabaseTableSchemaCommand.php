@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Command;
 
-use function Flow\CLI\{argument_string_nullable, option_bool, option_include_file};
+use function Flow\CLI\{argument_string_nullable, option_bool, option_include_file, option_list_of_strings_nullable};
 use function Flow\ETL\Adapter\Doctrine\table_schema_to_flow_schema;
 use function Flow\ETL\DSL\schema_to_json;
 use Doctrine\DBAL\Tools\DsnParser;
@@ -37,7 +37,8 @@ final class DatabaseTableSchemaCommand extends Command
             ->addArgument('input-db-table', InputArgument::OPTIONAL, 'Table name for which we are going to generate schema.')
             ->addOption('output-php', null, InputOption::VALUE_NONE, 'Print schema as PHP code')
             ->addOption('output-table', null, InputOption::VALUE_NONE, 'Print schema as ascii table')
-            ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list');
+            ->addOption('output-ascii', null, InputOption::VALUE_NONE, 'Print schema as ascii list')
+            ->addOption('db-column', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Filter schema by column name(s)');
 
         $this->addConfigOptions($this);
         $this->addDbOptions($this);
@@ -75,6 +76,20 @@ final class DatabaseTableSchemaCommand extends Command
         }
 
         $schema = table_schema_to_flow_schema($table);
+
+        $columns = option_list_of_strings_nullable('db-column', $input);
+
+        if ($columns) {
+            foreach ($columns as $column) {
+                if (!$schema->findDefinition($column)) {
+                    $style->error("Column \"{$column}\" not found in table \"{$tableName}\".");
+
+                    return Command::FAILURE;
+                }
+            }
+
+            $schema->keep(...$columns);
+        }
 
         if (option_bool('output-ascii', $input)) {
             $style->write((new ASCIISchemaFormatter())->format($schema));

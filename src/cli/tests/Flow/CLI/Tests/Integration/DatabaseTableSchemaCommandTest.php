@@ -89,6 +89,86 @@ PHP,
         }
     }
 
+    public function test_selecting_specific_columns_only() : void
+    {
+        // We don't need to test this edge case on doctrine/dbal below version 4.0 since the logic does not change.
+        if (\method_exists(Table::class, 'changeColumn')) {
+            $this->markTestSkipped('This test is not supported in doctrine/dbal 4.0');
+        }
+
+        $this->dbContext()->createTable(
+            (new Table(
+                'table_01',
+                [
+                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                ],
+            ))->setPrimaryKey(['id'])
+        );
+
+        $tester = new CommandTester(new DatabaseTableSchemaCommand('db:table:schema'));
+
+        $tester->execute([
+            'input-db-table' => 'table_01',
+            '--db-connection-file' => __DIR__ . '/Fixtures/connection.php',
+            '--db-column' => ['id', 'name'],
+            '--output-php' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame(
+            <<<'PHP'
+\Flow\ETL\DSL\schema(
+    \Flow\ETL\DSL\integer_schema("id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_primary" => "table_01_pkey"])),
+    \Flow\ETL\DSL\string_schema("name", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata(["dbal_column_length" => 255])),
+);
+
+PHP,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_selecting_not_existing_column() : void
+    {
+        // We don't need to test this edge case on doctrine/dbal below version 4.0 since the logic does not change.
+        if (\method_exists(Table::class, 'changeColumn')) {
+            $this->markTestSkipped('This test is not supported in doctrine/dbal 4.0');
+        }
+
+        $this->dbContext()->createTable(
+            (new Table(
+                'table_01',
+                [
+                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                ],
+            ))->setPrimaryKey(['id'])
+        );
+
+        $tester = new CommandTester(new DatabaseTableSchemaCommand('db:table:schema'));
+
+        $tester->execute([
+            'input-db-table' => 'table_01',
+            '--db-connection-file' => __DIR__ . '/Fixtures/connection.php',
+            '--db-column' => ['not_existing_one'],
+            '--output-php' => true,
+        ]);
+
+        self::assertEquals(1, $tester->getStatusCode());
+        self::assertSame(
+            <<<'PHP'
+
+ [ERROR] Column "not_existing_one" not found in table "table_01".                                                       
+
+
+PHP,
+            $tester->getDisplay()
+        );
+    }
+
     protected function dbContext() : DatabaseContext
     {
         if (null === $this->dbContext) {
