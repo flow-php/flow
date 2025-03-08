@@ -71,7 +71,7 @@ final class DbalLimitOffsetExtractor implements Extractor
             /**
              * @phpstan-ignore-next-line
              */
-            $nonGroupByQuery = \method_exists($countQuery, 'resetGroupBy') ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy() : $countQuery->resetQueryPart('orderBy');
+            $nonGroupByQuery = \method_exists($countQuery, 'resetGroupBy') ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy() : $countQuery->resetQueryPart('groupBy');
 
             if ($countQuery->getSQL() === $nonGroupByQuery->getSQL()) {
                 /**
