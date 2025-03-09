@@ -40,8 +40,6 @@ jobs:
             split_repository: 'dremel'
           - local_path: 'src/lib/filesystem'
             split_repository: 'filesystem'
-          - local_path: 'src/lib/rdsl'
-            split_repository: 'rdsl'
           - local_path: 'src/lib/snappy'
             split_repository: 'snappy'
 

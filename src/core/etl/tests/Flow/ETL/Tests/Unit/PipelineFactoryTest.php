@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\config;
 use function Flow\Filesystem\DSL\path;
 use Flow\CLI\PipelineFactory;
 use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException};
@@ -16,7 +15,7 @@ final class PipelineFactoryTest extends FlowTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/empty.php'), config());
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/empty.php'));
         $factory->fromPHP();
     }
 
@@ -24,7 +23,7 @@ final class PipelineFactoryTest extends FlowTestCase
     {
         $this->expectException(InvalidFileFormatException::class);
 
-        $factory = new PipelineFactory(path('fake'), config());
+        $factory = new PipelineFactory(path('fake'));
         $factory->fromPHP();
     }
 
@@ -33,13 +32,13 @@ final class PipelineFactoryTest extends FlowTestCase
         $this->expectExceptionMessage('Expected "php" file format, "txt" given.');
         $this->expectException(InvalidFileFormatException::class);
 
-        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/empty.txt'), config());
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/empty.txt'));
         $factory->fromPHP();
     }
 
     public function test_with_data_frame_in_file() : void
     {
-        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/with-dataframe.php'), config());
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/with-dataframe.php'));
         $factory->fromPHP();
 
         $this->addToAssertionCount(1);
@@ -50,7 +49,7 @@ final class PipelineFactoryTest extends FlowTestCase
         $this->expectExceptionMessage('Expecting Flow-PHP DataFrame, received: ');
         $this->expectException(InvalidArgumentException::class);
 
-        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/without-dataframe.php'), config());
+        $factory = new PipelineFactory(path(__DIR__ . '/../Fixtures/without-dataframe.php'));
         $factory->fromPHP();
     }
 }

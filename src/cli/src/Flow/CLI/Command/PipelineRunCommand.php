@@ -60,8 +60,7 @@ HELP
         try {
             ob_start();
             $df = match ($this->pipelinePath->extension()) {
-                'php' => (new PipelineFactory($this->pipelinePath, $this->flowConfig))->fromPHP(),
-                'json' => (new PipelineFactory($this->pipelinePath, $this->flowConfig))->fromJson(),
+                'php' => (new PipelineFactory($this->pipelinePath))->fromPHP(),
             };
             $report = $df->run(analyze: option_bool('analyze', $input));
 

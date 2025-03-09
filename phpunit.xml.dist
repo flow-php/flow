@@ -71,12 +71,6 @@
     <testsuite name="lib-parquet-viewer-integration">
       <directory>src/lib/parquet-viewer/tests/Flow/ParquetViewer/Tests/Integration</directory>
     </testsuite>
-    <testsuite name="lib-rdsl-unit">
-      <directory>src/lib/rdsl/tests/Flow/RDSL/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="lib-rdsl-integration">
-      <directory>src/lib/rdsl/tests/Flow/RDSL/Tests/Integration</directory>
-    </testsuite>
     <testsuite name="snappy-integration">
       <directory>src/lib/snappy/tests/Flow/Snappy/Tests/Integration</directory>
     </testsuite>
@@ -164,7 +158,6 @@
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
       <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
       <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
-      <directory>src/lib/rdsl/tests/Flow/RDSL/Tests/Unit</directory>
     </testsuite>
   </testsuites>
   <source>

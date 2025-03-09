@@ -84,7 +84,6 @@
         "flow-php/monolog-http-bridge": "self.version",
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
-        "flow-php/rdsl": "self.version",
         "flow-php/snappy": "self.version",
         "flow-php/symfony-http-foundation-bridge": "self.version"
     },
@@ -119,7 +118,6 @@
                 "src/lib/filesystem/src/Flow",
                 "src/lib/parquet-viewer/src/Flow",
                 "src/lib/parquet/src/Flow",
-                "src/lib/rdsl/src/Flow",
                 "src/lib/snappy/src/Flow",
                 "src/tools/documentation/src/Flow"
             ],
@@ -185,7 +183,6 @@
                 "src/lib/filesystem/tests/Flow",
                 "src/lib/parquet-viewer/tests/Flow",
                 "src/lib/parquet/tests/Flow",
-                "src/lib/rdsl/tests/Flow",
                 "src/lib/snappy/tests/Flow",
                 "src/tools/documentation/tests/Flow"
             ],
@@ -226,7 +223,6 @@
             "@test:lib:filesystem",
             "@test:lib:parquet",
             "@test:lib:parquet-viewer",
-            "@test:lib:rdsl",
             "@test:lib:snappy",
             "@test:bridge:filesystem-azure",
             "@test:bridge:filesystem-async-aws",
@@ -273,10 +269,6 @@
         ],
         "test:lib:parquet-viewer": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-parquet-viewer-integration --log-junit ./var/phpunit/logs/lib-parquet-viewer-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-parquet-viewer-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-parquet-viewer-integration"
-        ],
-        "test:lib:rdsl": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-unit --log-junit ./var/phpunit/logs/lib-rdsl-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-rdsl-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-rdsl-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-rdsl-integration --log-junit ./var/phpunit/logs/lib-rdsl-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-rdsl-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-rdsl-integration"
         ],
         "test:lib:snappy": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-snappy-integration --log-junit ./var/phpunit/logs/lib-snappy-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-snappy-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-snappy-integration"
@@ -407,7 +399,6 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.filesystem.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet-viewer.xml",
-            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.rdsl.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.snappy.xml",
 
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.chartjs.xml",

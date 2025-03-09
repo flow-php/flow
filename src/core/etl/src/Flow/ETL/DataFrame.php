@@ -7,7 +7,7 @@ namespace Flow\ETL;
 use function Flow\ETL\DSL\{refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
-use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, RuntimeException};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -49,9 +49,6 @@ use Flow\ETL\Transformer\{
     WindowFunctionTransformer
 };
 use Flow\Filesystem\Path\Filter;
-use Flow\RDSL\AccessControl\{AllowAll, AllowList, DenyAll};
-use Flow\RDSL\Attribute\DSLMethod;
-use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
 
 final class DataFrame
 {
@@ -60,64 +57,6 @@ final class DataFrame
     public function __construct(private Pipeline $pipeline, Config|FlowContext $context)
     {
         $this->context = $context instanceof FlowContext ? $context : new FlowContext($context);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public static function fromArray(array $definition) : self
-    {
-        $namespaces = [
-            DSLNamespace::global(new DenyAll()),
-            new DSLNamespace('\Flow\ETL\DSL\Adapter\Avro', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\ChartJS', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\CSV', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\Doctrine', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\Elasticsearch', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\GoogleSheet', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\JSON', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\Meilisearch', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\Parquet', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\Text', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\Adapter\XML', new AllowAll()),
-            new DSLNamespace('\Flow\ETL\DSL', new AllowAll()),
-        ];
-
-        try {
-            $builder = new Builder(
-                new Finder(
-                    $namespaces,
-                    entryPointACL: new AllowList(['data_frame', 'df']),
-                    methodACL: new AllowAll()
-                )
-            );
-
-            $results = (new Executor())->execute($builder->parse($definition));
-
-            if (\count($results) !== 1) {
-                throw new InvalidArgumentException('Invalid JSON, please make sure that there is only one data_frame function');
-            }
-
-            if (!$results[0] instanceof self) {
-                throw new InvalidArgumentException('Invalid JSON, expected DataFrame instance but got ' . $results[0]::class);
-            }
-
-            return $results[0];
-        } catch (\Flow\RDSL\Exception\InvalidArgumentException $e) {
-            throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
-        }
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public static function fromJson(string $json) : self
-    {
-        try {
-            return self::fromArray(\json_decode($json, true, 512, JSON_THROW_ON_ERROR));
-        } catch (\JsonException $exception) {
-            throw new InvalidFileFormatException('json', 'unknown', $exception);
-        }
     }
 
     /**
@@ -219,7 +158,6 @@ final class DataFrame
      *
      * @lazy
      */
-    #[DSLMethod(exclude: true)]
     public function collectRefs(References $references) : self
     {
         $this->with(new CallbackRowTransformer(function (Row $row) use ($references) : Row {
@@ -237,7 +175,6 @@ final class DataFrame
      * @trigger
      * Return total count of rows processed by this pipeline.
      */
-    #[DSLMethod(exclude: true)]
     public function count() : int
     {
         $clone = clone $this;
@@ -270,7 +207,6 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    #[DSLMethod(exclude: true)]
     public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
     {
         $clone = clone $this;
@@ -336,7 +272,6 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    #[DSLMethod(exclude: true)]
     public function fetch(?int $limit = null) : Rows
     {
         $clone = clone $this;
@@ -413,7 +348,6 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows) : void $callback
      */
-    #[DSLMethod(exclude: true)]
     public function forEach(?callable $callback = null) : void
     {
         $clone = clone $this;
@@ -427,7 +361,6 @@ final class DataFrame
      *
      * @return \Generator<Rows>
      */
-    #[DSLMethod(exclude: true)]
     public function get() : \Generator
     {
         $clone = clone $this;
@@ -442,7 +375,6 @@ final class DataFrame
      *
      * @return \Generator<array<array>>
      */
-    #[DSLMethod(exclude: true)]
     public function getAsArray() : \Generator
     {
         $clone = clone $this;
@@ -459,7 +391,6 @@ final class DataFrame
      *
      * @return \Generator<Row>
      */
-    #[DSLMethod(exclude: true)]
     public function getEach() : \Generator
     {
         $clone = clone $this;
@@ -478,7 +409,6 @@ final class DataFrame
      *
      * @return \Generator<array>
      */
-    #[DSLMethod(exclude: true)]
     public function getEachAsArray() : \Generator
     {
         $clone = clone $this;
@@ -566,7 +496,6 @@ final class DataFrame
      *
      * @param callable(Row $row) : Row $callback
      */
-    #[DSLMethod(exclude: true)]
     public function map(callable $callback) : self
     {
         $this->pipeline->add(new CallbackRowTransformer($callback));
@@ -627,7 +556,6 @@ final class DataFrame
     /**
      * @trigger
      */
-    #[DSLMethod(exclude: true)]
     public function printRows(?int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
         $clone = clone $this;
@@ -644,7 +572,6 @@ final class DataFrame
     /**
      * @trigger
      */
-    #[DSLMethod(exclude: true)]
     public function printSchema(?int $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
     {
         $clone = clone $this;
@@ -752,7 +679,6 @@ final class DataFrame
      * @param null|callable(Rows $rows, FlowContext $context): void $callback
      * @param bool $analyze - when set to true, run will return Report
      */
-    #[DSLMethod(exclude: true)]
     public function run(?callable $callback = null, bool $analyze = false) : ?Report
     {
         $clone = clone $this;
