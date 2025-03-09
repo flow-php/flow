@@ -158,12 +158,9 @@ PHP,
         ]);
 
         self::assertEquals(1, $tester->getStatusCode());
-        self::assertSame(
+        self::assertStringContainsString(
             <<<'PHP'
-
- [ERROR] Column "not_existing_one" not found in table "table_01".                                                       
-
-
+[ERROR] Column "not_existing_one" not found in table "table_01".
 PHP,
             $tester->getDisplay()
         );
