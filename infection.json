@@ -5,8 +5,7 @@
       "src/lib/array-dot/src",
       "src/lib/doctrine-dbal-bulk/src",
       "src/lib/filesystem/src",
-      "src/lib/parquet/src",
-      "src/lib/rdsl/src"
+      "src/lib/parquet/src"
     ]
   },
   "logs": {

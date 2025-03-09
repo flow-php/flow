@@ -182,9 +182,6 @@ jobs:
       - name: "Test - Lib - Parquet Viewer"
         run: "composer test:lib:parquet-viewer"
 
-      - name: "Test - Lib - RDSL"
-        run: "composer test:lib:rdsl"
-
       - name: "Test - Lib - Snappy"
         run: "composer test:lib:snappy"
 
