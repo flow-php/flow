@@ -45,12 +45,12 @@ final class StrictSchemaMatcherTest extends FlowTestCase
     {
         $left = schema(
             str_schema('id'),
-            str_schema('name', nullable: true),
+            str_schema('name'),
         );
 
         $right = schema(
             str_schema('id'),
-            str_schema('name'),
+            str_schema('name', nullable: true),
         );
 
         self::assertFalse((new StrictSchemaMatcher())->match($left, $right));

@@ -20,8 +20,16 @@ interface Type
     public function isComparableWith(self $type) : bool;
 
     /**
-     * Checks if another type is equal to this type.
-     * Nullability is not considered in this comparison.
+     * Checks if another type is compatible with this type. Nullability is validated from a schema evolution perspective.
+     * This means that when current type is nullable and ther other type is not nullable, it is still compatible.
+     * When given type is not nullable and current type is nullable, it is not compatible.
+     *
+     * @param Type<mixed> $type
+     */
+    public function isCompatibleWith(self $type) : bool;
+
+    /**
+     * Checks if another type is equal to this type. Nullability is not considered in this comparison.
      *
      * @param Type<mixed> $type
      */

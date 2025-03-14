@@ -8,5 +8,5 @@ use Flow\ETL\Row\Schema;
 
 interface SchemaValidator
 {
-    public function isValid(Rows $rows, Schema $schema) : bool;
+    public function isValid(Schema $given, Schema $expected) : bool;
 }

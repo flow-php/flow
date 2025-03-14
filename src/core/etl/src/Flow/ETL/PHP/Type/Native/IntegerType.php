@@ -41,6 +41,15 @@ final readonly class IntegerType implements Type
         return false;
     }
 
+    public function isCompatibleWith(Type $type) : bool
+    {
+        if (!$this->nullable && $type->nullable()) {
+            return false;
+        }
+
+        return $this->isEqual($type);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;

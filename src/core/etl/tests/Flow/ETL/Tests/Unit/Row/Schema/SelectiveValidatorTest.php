@@ -18,7 +18,7 @@ final class SelectiveValidatorTest extends FlowTestCase
 
         self::assertFalse(
             (new SelectiveValidator())->isValid(
-                rows(row(int_entry('id', 1), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), bool_entry('active', true)))->schema(),
                 $schema
             )
         );
@@ -30,7 +30,7 @@ final class SelectiveValidatorTest extends FlowTestCase
 
         self::assertTrue(
             (new SelectiveValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)))->schema(),
                 $schema
             )
         );
@@ -42,7 +42,7 @@ final class SelectiveValidatorTest extends FlowTestCase
 
         self::assertFalse(
             (new SelectiveValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)))->schema(),
                 $schema
             )
         );
@@ -52,9 +52,12 @@ final class SelectiveValidatorTest extends FlowTestCase
     {
         $schema = schema(string_schema('name'), bool_schema('active'));
 
-        self::assertFalse(
+        self::assertTrue(
             (new SelectiveValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)), row(int_entry('id', 1), bool_entry('active', true))),
+                rows(
+                    row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)),
+                    row(int_entry('id', 1), bool_entry('active', true))
+                )->schema(),
                 $schema
             )
         );

@@ -47,6 +47,20 @@ final readonly class ListType implements Type
         return false;
     }
 
+    public function isCompatibleWith(Type $type) : bool
+    {
+        if (!$this->isEqual($type)) {
+            return false;
+        }
+
+        /** @var self $type */
+        if (!$this->nullable && $type->nullable()) {
+            return false;
+        }
+
+        return $this->element->isCompatibleWith($type->element());
+    }
+
     public function isEqual(Type $type) : bool
     {
         if (!$type instanceof self) {

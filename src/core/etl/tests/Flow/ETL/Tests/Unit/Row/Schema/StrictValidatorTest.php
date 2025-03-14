@@ -18,7 +18,7 @@ final class StrictValidatorTest extends FlowTestCase
 
         self::assertFalse(
             (new StrictValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)))->schema(),
                 $schema
             )
         );
@@ -30,7 +30,7 @@ final class StrictValidatorTest extends FlowTestCase
 
         self::assertTrue(
             (new StrictValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)))->schema(),
                 $schema
             )
         );
@@ -42,7 +42,7 @@ final class StrictValidatorTest extends FlowTestCase
 
         self::assertFalse(
             (new StrictValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)))->schema(),
                 $schema
             )
         );
@@ -54,7 +54,7 @@ final class StrictValidatorTest extends FlowTestCase
 
         self::assertFalse(
             (new StrictValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)))->schema(),
                 $schema
             )
         );
@@ -66,7 +66,7 @@ final class StrictValidatorTest extends FlowTestCase
 
         self::assertFalse(
             (new StrictValidator())->isValid(
-                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)), row(int_entry('id', 1), bool_entry('active', true))),
+                rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)), row(int_entry('id', 1), bool_entry('active', true)))->schema(),
                 $schema
             )
         );

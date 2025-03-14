@@ -4,30 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\{Rows, SchemaValidator};
+use Flow\ETL\{SchemaValidator};
 
 /**
- * Matches only entries defined in the schema, ignoring every other entries in the row.
+ * Matches only entries defined in the expected schema allowing for extra entries in given schema.
  */
 final class SelectiveValidator implements SchemaValidator
 {
-    public function isValid(Rows $rows, Schema $schema) : bool
+    public function isValid(Schema $given, Schema $expected) : bool
     {
-        foreach ($schema->references() as $ref) {
-            $definition = $schema->get($ref);
+        foreach ($expected->definitions() as $expectedDefinition) {
+            $givenDefinition = $given->findDefinition($expectedDefinition->entry());
 
-            foreach ($rows as $row) {
-                try {
-                    $entry = $row->entries()->get($ref);
+            if (!$givenDefinition) {
+                return false;
+            }
 
-                    if (!$definition->matches($entry)) {
-                        return false;
-                    }
-                } catch (InvalidArgumentException) {
-                    return false;
-                }
+            if (!$givenDefinition->isEqual($expectedDefinition)) {
+                return false;
             }
         }
 

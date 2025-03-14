@@ -39,6 +39,15 @@ final readonly class ArrayType implements Type
         return false;
     }
 
+    public function isCompatibleWith(Type $type) : bool
+    {
+        if (!$this->nullable && $type->nullable()) {
+            return false;
+        }
+
+        return $this->isEqual($type);
+    }
+
     /**
      * @psalm
      */

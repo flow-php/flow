@@ -47,6 +47,24 @@ final readonly class MapType implements Type
         return false;
     }
 
+    public function isCompatibleWith(Type $type) : bool
+    {
+        if (!$this->isEqual($type)) {
+            return false;
+        }
+
+        /** @var self $type */
+        if (!$this->nullable && $type->nullable()) {
+            return false;
+        }
+
+        if (!$this->key->isCompatibleWith($type->key())) {
+            return false;
+        }
+
+        return $this->value->isCompatibleWith($type->value());
+    }
+
     public function isEqual(Type $type) : bool
     {
         if (!$type instanceof self) {

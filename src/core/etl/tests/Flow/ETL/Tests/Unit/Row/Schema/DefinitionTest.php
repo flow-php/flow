@@ -26,7 +26,7 @@ final class DefinitionTest extends FlowTestCase
     {
         $def = integer_schema('id', nullable: true);
 
-        self::assertFalse(
+        self::assertTrue(
             $def->isEqual(
                 integer_schema('id', nullable: false)
             )

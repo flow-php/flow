@@ -14,19 +14,14 @@ use Flow\ETL\{Tests\FlowTestCase};
 
 final class SchemaValidationLoaderTest extends FlowTestCase
 {
-    public function test_schema_validation_failed() : void
+    public function test_schema_validation_failed_by_mismatching() : void
     {
         $this->expectException(SchemaValidationException::class);
         $this->expectExceptionMessage(
             <<<'EXCEPTION'
-Given schema:
-schema
-|-- id: integer
-
-Does not match rows:
-schema
-|-- id: string
-
+Schema validation failed:
+  Mismatched Definitions:
+    |-- expected: id<integer>, given: id<string>
 EXCEPTION
         );
 
@@ -36,6 +31,27 @@ EXCEPTION
         );
 
         $loader->load(rows(row(str_entry('id', '1'))), flow_context(config()));
+    }
+
+    public function test_schema_validation_failed_by_unexpected() : void
+    {
+        $this->expectException(SchemaValidationException::class);
+        $this->expectExceptionMessage(
+            <<<'EXCEPTION'
+Schema validation failed:
+  Missing Definitions:
+    |-- id<integer>
+  Unexpected Definitions:
+    |-- name<string>
+EXCEPTION
+        );
+
+        $loader = new SchemaValidationLoader(
+            schema(integer_schema('id')),
+            new StrictValidator()
+        );
+
+        $loader->load(rows(row(str_entry('name', '1'))), flow_context(config()));
     }
 
     public function test_schema_validation_succeed() : void

@@ -11,15 +11,17 @@ use Flow\ETL\{FlowContext, Loader, Rows, SchemaValidator};
 final readonly class SchemaValidationLoader implements Loader
 {
     public function __construct(
-        private Schema $schema,
+        private Schema $expected,
         private SchemaValidator $validator,
     ) {
     }
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if (!$this->validator->isValid($rows, $this->schema)) {
-            throw new SchemaValidationException($this->schema, $rows);
+        $given = $rows->schema();
+
+        if (!$this->validator->isValid($given, $this->expected)) {
+            throw new SchemaValidationException($this->expected, $given);
         }
     }
 }

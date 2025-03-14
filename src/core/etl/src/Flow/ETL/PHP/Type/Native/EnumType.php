@@ -58,6 +58,15 @@ final readonly class EnumType implements Type
         return false;
     }
 
+    public function isCompatibleWith(Type $type) : bool
+    {
+        if (!$this->nullable && $type->nullable()) {
+            return false;
+        }
+
+        return $this->isEqual($type);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->class === $type->class;

@@ -79,6 +79,28 @@ final readonly class StructureType implements Type
         return false;
     }
 
+    public function isCompatibleWith(Type $type) : bool
+    {
+        if (!$this->isEqual($type)) {
+            return false;
+        }
+
+        /** @var self $type */
+        if (!$this->nullable && $type->nullable()) {
+            return false;
+        }
+
+        foreach ($this->elements as $internalElementName => $internalElement) {
+            foreach ($type->elements as $elementName => $element) {
+                if ($elementName === $internalElementName && !$element->isCompatibleWith($internalElement)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public function isEqual(Type $type) : bool
     {
         if (!$type instanceof self) {

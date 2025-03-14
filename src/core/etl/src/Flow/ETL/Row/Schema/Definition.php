@@ -174,7 +174,7 @@ final class Definition
 
     public function isEqual(self $definition) : bool
     {
-        if ($this->type->isSame($definition->type) === false) {
+        if ($this->type->isCompatibleWith($definition->type) === false) {
             return false;
         }
 
