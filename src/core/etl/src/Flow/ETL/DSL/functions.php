@@ -605,7 +605,7 @@ function type_object(string $class, bool $nullable = false) : ObjectType
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_resource(bool $nullable = true) : ResourceType
+function type_resource(bool $nullable = false) : ResourceType
 {
     return new ResourceType($nullable);
 }
@@ -617,7 +617,7 @@ function type_array(bool $empty = false, bool $nullable = false) : ArrayType
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_callable(bool $nullable = true) : CallableType
+function type_callable(bool $nullable = false) : CallableType
 {
     return new CallableType($nullable);
 }
@@ -1257,12 +1257,9 @@ function schema(Definition ...$definitions) : Schema
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function schema_to_json(Schema $schema, int $json_flags = JSON_THROW_ON_ERROR) : string
+function schema_to_json(Schema $schema, bool $pretty = false) : string
 {
-    /**
-     * @phpstan-ignore-next-line
-     */
-    return \json_encode($schema->normalize(), $json_flags);
+    return (new Schema\Formatter\JsonSchemaFormatter($pretty))->format($schema);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -1281,6 +1278,15 @@ function schema_strict_matcher() : StrictSchemaMatcher
 function schema_evolving_matcher() : EvolvingSchemaMatcher
 {
     return new EvolvingSchemaMatcher();
+}
+
+/**
+ * @param array<string, array<bool|float|int|string>|bool|float|int|string> $metadata
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function schema_metadata(array $metadata = []) : Schema\Metadata
+{
+    return Schema\Metadata::fromArray($metadata);
 }
 
 /**

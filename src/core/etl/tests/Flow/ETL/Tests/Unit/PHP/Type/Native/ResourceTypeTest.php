@@ -22,7 +22,7 @@ final class ResourceTypeTest extends FlowTestCase
             (type_resource(false))->isEqual(type_float())
         );
         self::assertFalse(
-            (type_resource(false))->isSame(type_resource())
+            (type_resource(false))->isSame(type_resource(true))
         );
     }
 
@@ -34,7 +34,7 @@ final class ResourceTypeTest extends FlowTestCase
         );
         self::assertSame(
             '?resource',
-            (type_resource())->toString()
+            (type_resource(true))->toString()
         );
     }
 

@@ -7,23 +7,36 @@ namespace Flow\ETL\Adapter\Doctrine\Tests;
 use Doctrine\DBAL\Logging\Middleware;
 use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\DBAL\{Configuration, DriverManager};
-use Flow\ETL\Adapter\Doctrine\Tests\Context\{DatabaseContext, InsertQueryCounter};
+use Flow\ETL\Adapter\Doctrine\Tests\Context\{DatabaseContext, InsertQueryCounter, SelectQueryCounter};
 use Flow\ETL\Tests\FlowTestCase;
 
 abstract class IntegrationTestCase extends FlowTestCase
 {
+    protected DatabaseContext $mysqlDatabaseContext;
+
     protected DatabaseContext $pgsqlDatabaseContext;
 
     protected function setUp() : void
     {
-        $logger = new InsertQueryCounter();
+        $insertQueryCounter = new InsertQueryCounter();
+        $selectQueryCounter = new SelectQueryCounter();
 
         $this->pgsqlDatabaseContext = new DatabaseContext(
             DriverManager::getConnection(
-                $this->connectionParams(),
-                (new Configuration())->setMiddlewares([new Middleware($logger)])
+                $this->postgresqlConnectionParams(),
+                (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
             ),
-            $logger
+            $insertQueryCounter,
+            $selectQueryCounter
+        );
+
+        $this->mysqlDatabaseContext = new DatabaseContext(
+            DriverManager::getConnection(
+                $this->mysqlConnectionParams(),
+                (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
+            ),
+            $insertQueryCounter,
+            $selectQueryCounter
         );
     }
 
@@ -32,7 +45,12 @@ abstract class IntegrationTestCase extends FlowTestCase
         $this->pgsqlDatabaseContext->dropAllTables();
     }
 
-    protected function connectionParams() : array
+    protected function mysqlConnectionParams() : array
+    {
+        return (new DsnParser(['mysql' => 'mysqli']))->parse(\getenv('MYSQL_DATABASE_URL') ?: '');
+    }
+
+    protected function postgresqlConnectionParams() : array
     {
         return (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(\getenv('PGSQL_DATABASE_URL') ?: '');
     }

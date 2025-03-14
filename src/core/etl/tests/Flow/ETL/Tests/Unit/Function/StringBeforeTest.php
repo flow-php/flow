@@ -14,8 +14,8 @@ final class StringBeforeTest extends FlowTestCase
 {
     public function test_returns_method_returns_string_type() : void
     {
-        $stringTitleFunction = new StringBefore('str', 't', false);
-        $returnType = $stringTitleFunction->returns();
+        $stringBeforeFunction = new StringBefore('str', 't', false);
+        $returnType = $stringBeforeFunction->returns();
 
         self::assertInstanceOf(Type::class, $returnType);
 

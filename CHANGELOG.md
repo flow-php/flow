@@ -1,6 +1,24 @@
-## [Unreleased] - 2025-02-20
+## [Unreleased] - 2025-03-10
+
+### Changed
+- [#1521](https://github.com/flow-php/flow/pull/1521) - **Update Homebrew TAP formula: flow-php to version: 0.11.0** - [@norberttech](https://github.com/norberttech)
+
+## [0.11.0] - 2025-03-09
 
 ### Added
+- [#1519](https://github.com/flow-php/flow/pull/1519) - **Allow to select specific column in db:table:schema** - [@norberttech](https://github.com/norberttech)
+- [6182e5](https://github.com/flow-php/flow/commit/6182e50e6adeb0b80313c7e7f47de74a266e7a42) - **instructions how to use Flow CLI through docker** - [@norberttech](https://github.com/norberttech)
+- [#1511](https://github.com/flow-php/flow/pull/1511) - **Databas to Flow schema converter** - [@norberttech](https://github.com/norberttech)
+- [#1511](https://github.com/flow-php/flow/pull/1511) - **Database table list in CLI** - [@norberttech](https://github.com/norberttech)
+- [#1511](https://github.com/flow-php/flow/pull/1511) - **Database table schema in CLI** - [@norberttech](https://github.com/norberttech)
+- [#1511](https://github.com/flow-php/flow/pull/1511) - **Schema conversion in CLI** - [@norberttech](https://github.com/norberttech)
+- [#1507](https://github.com/flow-php/flow/pull/1507) - **Add string function BeforeLast with Tests** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1494](https://github.com/flow-php/flow/pull/1494) - **afterLast function with test coverage** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1497](https://github.com/flow-php/flow/pull/1497) - **DSL for Symfony Http Bridge** - [@norberttech](https://github.com/norberttech)
+- [#1496](https://github.com/flow-php/flow/pull/1496) - **helper methods on Schema/Definition to manipulate metadata** - [@norberttech](https://github.com/norberttech)
+- [#1495](https://github.com/flow-php/flow/pull/1495) - **Adds method `TransformerLoader::closure()` to delegate generator stop signals to proxied loaders.** - [@christianc1](https://github.com/christianc1)
+- [#1468](https://github.com/flow-php/flow/pull/1468) - **Nix - for local development environment** - [@norberttech](https://github.com/norberttech)
+- [#1492](https://github.com/flow-php/flow/pull/1492) - **Respect limit/offset from query builder in dbal query loader** - [@norberttech](https://github.com/norberttech)
 - [#1491](https://github.com/flow-php/flow/pull/1491) - **Added missing tests to string functions** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1488](https://github.com/flow-php/flow/pull/1488) - **DataStream builder** - [@norberttech](https://github.com/norberttech)
 - [#1488](https://github.com/flow-php/flow/pull/1488) - **AddRowIdex Transformation** - [@norberttech](https://github.com/norberttech)
@@ -95,6 +113,13 @@
 - [#1244](https://github.com/flow-php/flow/pull/1244) - **Added CLI command to read schema from a file** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [60267a](https://github.com/flow-php/flow/commit/60267affe4001da3137a591af04218d7a01735bd) - **Prepare release 0.11.0** - [@norberttech](https://github.com/norberttech)
+- [#1499](https://github.com/flow-php/flow/pull/1499) - **Return 204 for buffered response when dataset is empty** - [@norberttech](https://github.com/norberttech)
+- [#1498](https://github.com/flow-php/flow/pull/1498) - **Allow to pass limit as null to avoid breaking a pipeline** - [@norberttech](https://github.com/norberttech)
+- [#1497](https://github.com/flow-php/flow/pull/1497) - **Renamed API of Http Bridge Stream Builder** - [@norberttech](https://github.com/norberttech)
+- [#1497](https://github.com/flow-php/flow/pull/1497) - **Moved generic Transformations from bridge to Core** - [@norberttech](https://github.com/norberttech)
+- [#1496](https://github.com/flow-php/flow/pull/1496) - **Removed readonly from Schema Definition** - [@norberttech](https://github.com/norberttech)
+- [#1493](https://github.com/flow-php/flow/pull/1493) - **Doctrine Dbal Adapter loader now expect options as an object** - [@norberttech](https://github.com/norberttech)
 - [#1488](https://github.com/flow-php/flow/pull/1488) - **Moved Transformations to ETL Core** - [@norberttech](https://github.com/norberttech)
 - [#1476](https://github.com/flow-php/flow/pull/1476) - **Allow to pass single type to is_type() method** - [@norberttech](https://github.com/norberttech)
 - [#1476](https://github.com/flow-php/flow/pull/1476) - **Allow using concat ws on collections** - [@norberttech](https://github.com/norberttech)
@@ -169,6 +194,15 @@
 - [#1240](https://github.com/flow-php/flow/pull/1240) - **Update Homebrew TAP formula: flow-php to version: 0.10.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1518](https://github.com/flow-php/flow/pull/1518) - **Fixed pagination for queries with group by in dbal extractor** - [@norberttech](https://github.com/norberttech)
+- [#1513](https://github.com/flow-php/flow/pull/1513) - **Added missing library for postgresql into docker** - [@norberttech](https://github.com/norberttech)
+- [#1512](https://github.com/flow-php/flow/pull/1512) - **Add missing db drivers to docker image** - [@norberttech](https://github.com/norberttech)
+- [#1511](https://github.com/flow-php/flow/pull/1511) - **Too generic names of DbalMetadata keys** - [@norberttech](https://github.com/norberttech)
+- [#1507](https://github.com/flow-php/flow/pull/1507) - **Fix some variable names in previous functions tests** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1494](https://github.com/flow-php/flow/pull/1494) - **Add missing PHPDocs in Chain** - [@f-lapinski](https://github.com/f-lapinski)
+- [#1499](https://github.com/flow-php/flow/pull/1499) - **Prevent double ETL evaluation in buffered response** - [@norberttech](https://github.com/norberttech)
+- [#1497](https://github.com/flow-php/flow/pull/1497) - **Fixed documentation** - [@norberttech](https://github.com/norberttech)
+- [457164](https://github.com/flow-php/flow/commit/457164b233c9168df44ccf298a777121e1891861) - **broken upsert example** - [@norberttech](https://github.com/norberttech)
 - [#1482](https://github.com/flow-php/flow/pull/1482) - **JSON was being double encoded.** - [@jmortlock](https://github.com/jmortlock)
 - [#1483](https://github.com/flow-php/flow/pull/1483) - **Fix typo in README.md** - [@jmortlock](https://github.com/jmortlock)
 - [#1475](https://github.com/flow-php/flow/pull/1475) - **Incosistency between XMLEntry::toString and Casting XML's to strings** - [@norberttech](https://github.com/norberttech)
@@ -236,6 +270,7 @@
 - [afb55b](https://github.com/flow-php/flow/commit/afb55b8a8d8f7678257b29cbd34737fbbb9f0fce) - **introduction.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1520](https://github.com/flow-php/flow/pull/1520) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 - [#1453](https://github.com/flow-php/flow/pull/1453) - **Previous StringCamle function, methods and tests** - [@f-lapinski](https://github.com/f-lapinski)
 - [#1415](https://github.com/flow-php/flow/pull/1415) - **EntryClass from Schema Definition** - [@norberttech](https://github.com/norberttech)
 - [#1402](https://github.com/flow-php/flow/pull/1402) - **EntryFactory interface** - [@mleczakm](https://github.com/mleczakm)

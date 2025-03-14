@@ -6,7 +6,7 @@ namespace Flow\Doctrine\Bulk\Dialect;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
-use Flow\Doctrine\Bulk\{BulkData, Columns, TableDefinition};
+use Flow\Doctrine\Bulk\{BulkData, Columns, InsertOptions, TableDefinition, UpdateOptions};
 
 final readonly class PostgreSQLDialect implements Dialect
 {
@@ -17,44 +17,46 @@ final readonly class PostgreSQLDialect implements Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  constraint?: string,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $insertOptions
      *
      * @return string
      */
-    public function prepareInsert(TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
-        if (\array_key_exists('conflict_columns', $insertOptions)) {
+        if ($options === null) {
+            $options = new PostgreSQLInsertOptions();
+        }
+
+        if (!$options instanceof PostgreSQLInsertOptions) {
+            throw new RuntimeException('Invalid insert options provided, expected PostgreSQLInsertOptions got: ' . $options::class);
+        }
+
+        if (\count($options->conflictColumns)) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
                 \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
-                \implode(',', $insertOptions['conflict_columns']),
-                (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
-                    ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
+                \implode(',', $options->conflictColumns),
+                \count($options->updateColumns)
+                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns())
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
 
-        if (\array_key_exists('constraint', $insertOptions)) {
+        if ($options->constraint) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s',
                 $table->name(),
                 \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
-                $insertOptions['constraint'],
-                (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
-                    ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
+                $options->constraint,
+                \count($options->updateColumns)
+                    ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns())
                     : $this->updateAllColumns($bulkData->columns())
             );
         }
 
-        if (\array_key_exists('skip_conflicts', $insertOptions) && $insertOptions['skip_conflicts'] === true) {
+        if ($options->skipConflicts === true) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
@@ -74,34 +76,38 @@ final readonly class PostgreSQLDialect implements Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  primary_key_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $updateOptions $updateOptions
      *
      * @throws RuntimeException
      *
      * @return string
      */
-    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
     {
-        if (false === \array_key_exists('primary_key_columns', $updateOptions)) {
+        if ($options === null) {
+            $options = new PostgreSQLUpdateOptions();
+        }
+
+        if (!$options instanceof PostgreSQLUpdateOptions) {
+            throw new RuntimeException('Invalid update options provided, expected UpdateOptions got: ' . $options::class);
+        }
+
+        if (!\count($options->primaryKeyColumns)) {
             throw new RuntimeException('primary_key_columns option is required for update.');
         }
 
-        if (false === $bulkData->columns()->has(...$updateOptions['primary_key_columns'])) {
+        if (false === $bulkData->columns()->has(...$options->primaryKeyColumns)) {
             throw new RuntimeException('All columns from primary_key_columns must be in bulk data columns.');
         }
 
         return \sprintf(
             'UPDATE %s as existing_table SET %s FROM (VALUES %s) as excluded (%s) WHERE %s',
             $table->name(),
-            (\array_key_exists('update_columns', $updateOptions) && \count($updateOptions['update_columns']))
-                ? $this->updatedSelectedColumns($updateOptions['update_columns'], $bulkData->columns()->without(...$updateOptions['primary_key_columns']))
-                : $this->updateAllColumns($bulkData->columns()->without(...$updateOptions['primary_key_columns'])),
+            \count($options->updateColumns)
+                ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns()->without(...$options->primaryKeyColumns))
+                : $this->updateAllColumns($bulkData->columns()->without(...$options->primaryKeyColumns)),
             $table->toSqlCastedPlaceholders($bulkData, $this->platform),
             \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
-            $this->updatedIndexColumns($updateOptions['primary_key_columns'])
+            $this->updatedIndexColumns($options->primaryKeyColumns)
         );
     }
 

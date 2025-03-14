@@ -32,7 +32,8 @@ $finder = Finder::create()
         __DIR__ . '/tools/rector/src',
     ])
     ->exclude([
-        'Flow/Parquet/Thrift'
+        'Flow/Parquet/Thrift',
+        'Flow/CLI/Tests/Integration'
     ]);
 
 return (new Config())

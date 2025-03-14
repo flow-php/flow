@@ -263,6 +263,17 @@ final class DefinitionTest extends FlowTestCase
         self::assertFalse($def->matches(int_entry('not-test', 1)));
     }
 
+    public function test_set_metadata() : void
+    {
+        $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
+
+        self::assertEquals(
+            integer_schema('id', false, Metadata::fromArray(['description' => 'some_random_description'])),
+            $definition->setMetadata(Metadata::fromArray(['description' => 'some_random_description']))
+        );
+
+    }
+
     public function test_structure_definition_metadata() : void
     {
         $address = struct_entry(

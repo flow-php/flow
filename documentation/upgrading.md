@@ -25,6 +25,26 @@ type_structure([
 ]);
 ```
 
+### 2) Doctrine DBAL Adapter
+
+From now options for: 
+
+- to_dbal_table_insert()
+- to_db_table_update()
+
+are passed as an objects (instance of UpdateOptions|InsertOptions interfaces) and they are platform specific,
+so please use the proper class for the platform you are using.
+
+- PostgreSQL
+  - PostgreSQLInsertOptions
+  - PostgreSQLUpdateOptions
+- MySQL
+  - MySQLInsertOptions
+  - MySQLUpdateOptions
+- Sqlite 
+  - SQLiteInsertOptions
+  - SQLiteUpdateOptions
+
 ## Upgrading from 0.8.x to 0.10.x
 
 

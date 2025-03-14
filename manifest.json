@@ -132,11 +132,6 @@
       "type": "lib"
     },
     {
-      "name" : "flow-php/rdsl",
-      "path": "src/lib/rdsl",
-      "type": "lib"
-    },
-    {
       "name" : "flow-php/snappy",
       "path": "src/lib/snappy",
       "type": "lib"

@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\generate_random_string;
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Tests\MysqlIntegrationTestCase;
-use Flow\Doctrine\Bulk\{Bulk, BulkData};
+use Flow\Doctrine\Bulk\{Bulk, BulkData, Dialect\MySQLInsertOptions};
 
 final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
 {
@@ -86,9 +86,9 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
             ]),
-            [
+            MySQLInsertOptions::fromArray([
                 'skip_conflicts' => true,
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));
@@ -137,9 +137,9 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
             ]),
-            [
+            MySQLInsertOptions::fromArray([
                 'upsert' => true,
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));
@@ -188,10 +188,10 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
             ]),
-            [
+            MySQLInsertOptions::fromArray([
                 'upsert' => true,
                 'update_columns' => ['description'],
-            ]
+            ])
         );
 
         self::assertEquals(4, $this->databaseContext->tableCount($table));

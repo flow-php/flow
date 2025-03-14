@@ -12,7 +12,7 @@ use Flow\ETL\PHP\Type\Type;
  */
 final readonly class ArrayType implements Type
 {
-    public function __construct(private bool $empty = false, private bool $nullable = false)
+    public function __construct(public bool $empty = false, private bool $nullable = false)
     {
     }
 

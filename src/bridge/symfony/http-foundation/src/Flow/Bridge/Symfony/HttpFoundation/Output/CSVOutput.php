@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\Filesystem\DSL\path_stdout;
+use function Flow\Filesystem\DSL\{path_memory, path_stdout};
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
 
@@ -26,7 +26,18 @@ final readonly class CSVOutput implements Output
 
     }
 
-    public function loader() : Loader
+    public function memoryLoader(string $id) : Loader
+    {
+        return to_csv(path_memory($id, ['stream' => 'temp']))
+            ->withHeader($this->withHeader)
+            ->withSeparator($this->separator)
+            ->withEnclosure($this->enclosure)
+            ->withEscape($this->escape)
+            ->withNewLineSeparator($this->newLineSeparator)
+            ->withDateTimeFormat($this->datetimeFormat);
+    }
+
+    public function stdoutLoader() : Loader
     {
         return to_csv(path_stdout(['stream' => 'output']))
             ->withHeader($this->withHeader)

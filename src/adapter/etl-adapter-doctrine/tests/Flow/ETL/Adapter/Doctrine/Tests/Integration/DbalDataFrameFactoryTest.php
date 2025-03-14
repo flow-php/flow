@@ -43,7 +43,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
 
         $rows = (
             dbal_dataframe_factory(
-                $this->connectionParams(),
+                $this->postgresqlConnectionParams(),
                 'SELECT * FROM flow_doctrine_data_factory_test WHERE id IN (:ids) AND name = :name',
                 Parameter::ints('ids', ref('id')),
                 new LiteralParameter('name', 'Name 1')
@@ -86,7 +86,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
 
         $schema = (
             dbal_dataframe_factory(
-                $this->connectionParams(),
+                $this->postgresqlConnectionParams(),
                 'SELECT * FROM flow_doctrine_data_factory_test WHERE id IN (:ids) AND name = :name',
                 Parameter::ints('ids', ref('id')),
                 new LiteralParameter('name', 'Name 1')

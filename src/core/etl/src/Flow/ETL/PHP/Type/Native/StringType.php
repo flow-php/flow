@@ -12,7 +12,7 @@ use Flow\ETL\PHP\Type\Type;
  */
 final readonly class StringType implements Type
 {
-    public function __construct(private readonly bool $nullable = false)
+    public function __construct(private bool $nullable = false)
     {
     }
 

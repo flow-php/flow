@@ -16,7 +16,7 @@ final class DbalPlatformTest extends TestCase
 {
     public static function provideSQLitePlatform() : iterable
     {
-        yield 'legacy' => ['Doctrine\DBAL\Platforms\SqlitePlatform'];
+        yield 'legacy' => [\Doctrine\DBAL\Platforms\SqlitePlatform::class];
         yield 'new' => [SQLitePlatform::class];
     }
 

@@ -411,7 +411,7 @@ TXT
         $fs->writeTo($fs->getSystemTmpDir());
     }
 
-    public function test_writing_to_azure_blob_storage() : void
+    public function test_writing_to_file() : void
     {
         $fs = native_local_filesystem();
 
@@ -426,7 +426,7 @@ TXT
         $fs->rm(new Path(__DIR__ . '/var/file.txt'));
     }
 
-    public function test_writing_to_to_azure_from_resources() : void
+    public function test_writing_to_file_from_resources() : void
     {
         $fs = native_local_filesystem();
 

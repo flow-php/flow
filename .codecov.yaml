@@ -35,10 +35,6 @@ component_management:
       name: lib-parquet-viewer
       paths:
         - src/lib/parquet-viewer/**
-    - component_id: lib-rdsl
-      name: lib-rdsl
-      paths:
-        - src/lib/rdsl/**
     - component_id: lib-snappy
       name: lib-snappy
       paths:

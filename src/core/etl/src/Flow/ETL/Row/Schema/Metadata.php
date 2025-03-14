@@ -17,6 +17,7 @@ final class Metadata
      */
     private function __construct(private array $map)
     {
+        $this->assertArray($this->map);
     }
 
     public static function empty() : self
@@ -47,6 +48,10 @@ final class Metadata
      */
     public function add(string $key, int|string|bool|float|array $value) : self
     {
+        if (\is_array($value)) {
+            $this->assertArray($value);
+        }
+
         return new self(\array_merge($this->map, [$key => $value]));
     }
 
@@ -89,6 +94,11 @@ final class Metadata
         return \array_key_exists($key, $this->map);
     }
 
+    public function isEmpty() : bool
+    {
+        return !\count($this->map);
+    }
+
     public function isEqual(self $metadata) : bool
     {
         return (new ArrayComparison())->equals($this->map, $metadata->map);
@@ -118,5 +128,18 @@ final class Metadata
         }
 
         return new self($map);
+    }
+
+    private function assertArray(array $array) : void
+    {
+        foreach ($array as $value) {
+            if (is_array($value)) {
+                $this->assertArray($value);
+            } else {
+                if (!is_bool($value) && !is_float($value) && !is_int($value) && !is_string($value)) {
+                    throw new InvalidArgumentException('Metadata value must be a scalar or an array of scalars');
+                }
+            }
+        }
     }
 }

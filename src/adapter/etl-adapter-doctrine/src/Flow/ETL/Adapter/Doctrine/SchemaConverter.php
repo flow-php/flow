@@ -13,7 +13,7 @@ use Flow\ETL\PHP\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema;
 
-final class SchemaConverter
+final readonly class SchemaConverter
 {
     public const DEFAULT_TYPES = [
         StringType::class => \Doctrine\DBAL\Types\StringType::class,
@@ -32,31 +32,14 @@ final class SchemaConverter
         StructureType::class => \Doctrine\DBAL\Types\JsonType::class,
     ];
 
-    /**
-     * @var array<class-string<Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>>
-     */
-    private array $typesMap;
+    private TypesMap $typesMap;
 
     /**
-     * @param array<class-string<Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $typesMap
+     * @param array<class-string<Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $map
      */
-    public function __construct(array $typesMap = [])
+    public function __construct(array $map = [])
     {
-        foreach ($typesMap as $flowType => $dbalType) {
-            if (!\is_a($flowType, Type::class, true)) {
-                throw new InvalidArgumentException(\sprintf('"%s" is not a valid type.', $flowType));
-            }
-
-            if (!\is_a($dbalType, DbalType::class, true)) {
-                throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType::class));
-            }
-        }
-
-        if (!\count($typesMap)) {
-            $this->typesMap = self::DEFAULT_TYPES;
-        } else {
-            $this->typesMap = $typesMap;
-        }
+        $this->typesMap = new TypesMap($map);
     }
 
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
@@ -74,25 +57,92 @@ final class SchemaConverter
         return $table;
     }
 
+    public function toFlowSchema(Table $table) : Schema
+    {
+        $definitions = [];
+
+        foreach ($table->getColumns() as $column) {
+            $definitions[] = $this->columnToFlow($column, $table);
+        }
+
+        return new Schema(...$definitions);
+    }
+
+    private function columnToFlow(Column $column, Table $table) : Schema\Definition
+    {
+        $type = $this->typesMap->toFlowType($column->getType()::class);
+
+        $metadata = Schema\Metadata::empty();
+
+        $type = $type->makeNullable(!$column->getNotnull());
+
+        if ($column->getLength() !== null) {
+            $metadata = $metadata->merge(DbalMetadata::length($column->getLength()));
+        }
+
+        if ($column->getDefault() !== null) {
+            $metadata = $metadata->merge(DbalMetadata::default($column->getDefault()));
+        }
+
+        if ($column->getPrecision() !== null) {
+            $metadata = $metadata->merge(DbalMetadata::precision($column->getPrecision()));
+        }
+
+        if ($column->getScale() !== 0) {
+            $metadata = $metadata->merge(DbalMetadata::scale($column->getScale()));
+        }
+
+        if ($column->getPlatformOptions() !== []) {
+            $metadata = $metadata->merge(DbalMetadata::platformOptions($column->getPlatformOptions()));
+        }
+
+        if ($column->getColumnDefinition() !== null) {
+            $metadata = $metadata->merge(DbalMetadata::columnDefinition($column->getColumnDefinition()));
+        }
+
+        if ($column->getUnsigned() !== false) {
+            $metadata = $metadata->merge(DbalMetadata::unsigned($column->getUnsigned()));
+        }
+
+        if ($column->getFixed() !== false) {
+            $metadata = $metadata->merge(DbalMetadata::fixed($column->getFixed()));
+        }
+
+        /** @phpstan-ignore-next-line */
+        if ($column->getComment() && $column->getComment() !== '') {
+            $metadata = $metadata->merge(DbalMetadata::comment($column->getComment()));
+        }
+
+        foreach ($table->getPrimaryKey()?->getColumns() ?? [] as $primaryKeyColumn) {
+            if ($primaryKeyColumn === $column->getName()) {
+                $metadata = $metadata->merge(DbalMetadata::primaryKey($table->getPrimaryKey()?->getName() ?? ''));
+                $type = $type->makeNullable(false);
+            }
+        }
+
+        foreach ($table->getIndexes() as $index) {
+            if ($index->isUnique() && !$index->isPrimary() && \in_array($column->getName(), $index->getColumns(), true)) {
+                $metadata = $metadata->merge(DbalMetadata::indexUnique($index->getName()));
+            }
+
+            if (!$index->isUnique() && !$index->isPrimary() && \in_array($column->getName(), $index->getColumns(), true)) {
+                $metadata = $metadata->merge(DbalMetadata::index($index->getName()));
+            }
+        }
+
+        return new Schema\Definition($column->getName(), $type, $metadata);
+    }
+
     /**
      * @param Type<mixed> $type
      */
     private function flowToColumn(string $name, Type $type, ?Schema\Metadata $metadata = null) : Column
     {
-        if (!\array_key_exists($type::class, $this->typesMap)) {
-            throw new InvalidArgumentException(\sprintf('"%s" is not a valid type.', $type::class));
-        }
-
-        $dbalTypeClass = $this->typesMap[$type::class] ?? null;
-
-        if ($dbalTypeClass === null) {
-            throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $type::class));
-        }
+        $dbalTypeClass = $this->typesMap->toDbalType($type::class);
 
         if ($metadata?->has(DbalMetadata::TYPE->value)) {
             $dbalType = DbalType::getType((string) $metadata->getAs(DbalMetadata::TYPE->value, type_string()));
         } else {
-
             $dbalType = null;
 
             foreach (DbalType::getTypesMap() as $typeName => $class) {

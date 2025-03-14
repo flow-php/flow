@@ -52,3 +52,18 @@ function argument_string(string $name, InputInterface $input) : string
 {
     return (new TypedArgument($name))->asString($input);
 }
+
+function argument_string_nullable(string $name, InputInterface $input) : ?string
+{
+    return (new TypedArgument($name))->asStringNullable($input);
+}
+
+/**
+ * @template ExpextedClass
+ *
+ * @param class-string<ExpextedClass> $expectedClass
+ */
+function option_include_file(string $name, InputInterface $input, string $expectedClass) : object
+{
+    return (new Options\IncludeFileOption($name, $expectedClass))->include($input);
+}

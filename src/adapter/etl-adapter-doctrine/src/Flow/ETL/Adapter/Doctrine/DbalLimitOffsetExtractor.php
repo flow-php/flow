@@ -14,6 +14,8 @@ final class DbalLimitOffsetExtractor implements Extractor
 {
     private ?int $maximum = null;
 
+    private int $offset = 0;
+
     private int $pageSize = 1000;
 
     private ?Schema $schema = null;
@@ -52,32 +54,57 @@ final class DbalLimitOffsetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        if ($this->maximum === null && $this->queryBuilder->getMaxResults()) {
+            $this->maximum = $this->queryBuilder->getMaxResults();
+        }
+
+        if ($this->offset === 0 && $this->queryBuilder->getFirstResult()) {
+            $this->offset = $this->queryBuilder->getFirstResult();
+        }
+
         if (isset($this->maximum)) {
             $total = $this->maximum;
         } else {
+
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
 
-            // @phpstan-ignore-next-line
-            if (\method_exists($countQuery, 'resetOrderBy')) {
-                $countQuery->resetOrderBy();
-            } else {
+            /**
+             * @phpstan-ignore-next-line
+             */
+            $nonGroupByQuery = \method_exists($countQuery, 'resetGroupBy') ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy() : $countQuery->resetQueryPart('groupBy');
+
+            if ($countQuery->getSQL() === $nonGroupByQuery->getSQL()) {
                 /**
                  * @phpstan-ignore-next-line
                  */
-                $countQuery->resetQueryPart('orderBy');
-            }
+                if (\method_exists($countQuery, 'resetOrderBy')) {
+                    $countQuery->resetOrderBy();
+                } else {
+                    /**
+                     * @phpstan-ignore-next-line
+                     */
+                    $countQuery->resetQueryPart('orderBy');
+                }
 
-            $total = (int) $this->connection->fetchOne(
-                $countQuery->getSQL(),
-                $countQuery->getParameters(),
-                $countQuery->getParameterTypes()
-            );
+                $total = (int) $this->connection->fetchOne(
+                    $countQuery->getSQL(),
+                    $countQuery->getParameters(),
+                    $countQuery->getParameterTypes()
+                );
+            } else {
+                // For grouped queries, wrap in a subquery to get accurate count
+                $total = (int) $this->connection->executeQuery(
+                    'SELECT COUNT(*) FROM (' . $countQuery->getSQL() . ') as count_query',
+                    $countQuery->getParameters(),
+                    $countQuery->getParameterTypes()
+                )->fetchOne();
+            }
         }
 
         $totalFetched = 0;
 
-        for ($page = 0; $page <= (new Pages($total, $this->pageSize))->pages(); $page++) {
-            $offset = $page * $this->pageSize;
+        for ($page = 0; $page < (new Pages($total, $this->pageSize))->pages(); $page++) {
+            $offset = $page * $this->pageSize + $this->offset;
 
             $pageQuery = $this->queryBuilder
                 ->setMaxResults($this->pageSize)
@@ -112,6 +139,17 @@ final class DbalLimitOffsetExtractor implements Extractor
         }
 
         $this->maximum = $maximum;
+
+        return $this;
+    }
+
+    public function withOffset(int $offset) : self
+    {
+        if ($offset < 0) {
+            throw new InvalidArgumentException('Offset must be greater than 0, got ' . $offset);
+        }
+
+        $this->offset = $offset;
 
         return $this;
     }

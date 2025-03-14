@@ -222,16 +222,16 @@
         },
         {
             "name": "phpdocumentor/shim",
-            "version": "v3.6.0",
+            "version": "v3.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/shim.git",
-                "reference": "d26c20857d2841554dce050bc3a48aafd9269718"
+                "reference": "0eb695503a5ad73eff5722d71a48317275dc2615"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/shim/zipball/d26c20857d2841554dce050bc3a48aafd9269718",
-                "reference": "d26c20857d2841554dce050bc3a48aafd9269718",
+                "url": "https://api.github.com/repos/phpDocumentor/shim/zipball/0eb695503a5ad73eff5722d71a48317275dc2615",
+                "reference": "0eb695503a5ad73eff5722d71a48317275dc2615",
                 "shasum": ""
             },
             "require": {
@@ -252,9 +252,9 @@
                 "MIT"
             ],
             "support": {
-                "source": "https://github.com/phpDocumentor/shim/tree/v3.6.0"
+                "source": "https://github.com/phpDocumentor/shim/tree/v3.7.1"
             },
-            "time": "2024-12-20T21:14:06+00:00"
+            "time": "2025-02-15T11:13:17+00:00"
         }
     ],
     "packages-dev": [],

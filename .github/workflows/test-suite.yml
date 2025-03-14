@@ -7,6 +7,7 @@ on:
       - 'src/adapter/**'
       - 'src/bridge/**'
       - 'src/core/**'
+      - 'src/cli/**'
       - 'src/lib/**'
       - 'tools/**'
       - 'examples/**'
@@ -155,6 +156,8 @@ jobs:
 
       - name: "Test - CLI"
         run: "composer test:cli"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
 
       - name: "Test - Lib - Array Dot"
         run: "composer test:lib:array-dot"
@@ -178,9 +181,6 @@ jobs:
 
       - name: "Test - Lib - Parquet Viewer"
         run: "composer test:lib:parquet-viewer"
-
-      - name: "Test - Lib - RDSL"
-        run: "composer test:lib:rdsl"
 
       - name: "Test - Lib - Snappy"
         run: "composer test:lib:snappy"
@@ -253,7 +253,7 @@ jobs:
 
       - name: "Download artifact"
         if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: dawidd6/action-download-artifact@v8
+        uses: dawidd6/action-download-artifact@v9
         with:
           workflow: test-suite.yml
           name: codecov-base-commit-sha-1.x
