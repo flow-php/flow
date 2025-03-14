@@ -6,7 +6,8 @@ namespace Flow\CLI\Command;
 
 use function Flow\CLI\option_bool;
 use Flow\CLI\Arguments\FilePathArgument;
-use Flow\CLI\Command\Traits\ConfigOptions;
+use Flow\CLI\Command\Traits\{ConfigOptions, StatisticsOptions};
+use Flow\CLI\Formatter\PipelineReportFormatter;
 use Flow\CLI\Options\ConfigOption;
 use Flow\CLI\PipelineFactory;
 use Flow\ETL\Exception\{Exception};
@@ -20,6 +21,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class PipelineRunCommand extends Command
 {
     use ConfigOptions;
+    use StatisticsOptions;
 
     private ?Config $flowConfig = null;
 
@@ -29,7 +31,7 @@ final class PipelineRunCommand extends Command
     {
         $this
             ->setName('run')
-            ->setDescription('Execute ETL pipeline from a php/json file.')
+            ->setDescription('Execute data processing pipeline from a php file.')
             ->setHelp(
                 <<<'HELP'
 <info>pipeline-file</info> argument must point to a valid php file that returns DataFrame instance.
@@ -51,6 +53,7 @@ HELP
             ->addOption('analyze', null, InputOption::VALUE_OPTIONAL, 'Collect processing statistics and print them.', false);
 
         $this->addConfigOptions($this);
+        $this->addStatisticsOptions($this);
     }
 
     public function execute(InputInterface $input, OutputInterface $output) : int
@@ -67,7 +70,7 @@ HELP
             $style->writeln(ob_get_clean());
 
             if ($report !== null) {
-                $style->writeln('Total Processed Rows: <info>' . \number_format($report->statistics()->totalRows()) . '</info>');
+                (new PipelineReportFormatter($report, $style, $input))->format();
             }
 
         } catch (Exception $exception) {

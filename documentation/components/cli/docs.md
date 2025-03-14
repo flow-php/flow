@@ -215,6 +215,8 @@ Options:
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
       --input-parquet-offset=INPUT-PARQUET-OFFSET          Offset to start reading from
+      --stats-schema[=STATS-SCHEMA]                        Prints schema of executed data transformation pipeline. [default: false]
+      --stats-columns[=STATS-COLUMNS]                      Prints number of rows in dataset. [default: false]
   -h, --help                                               Display help for the given command. When no command is given display help for the list command
       --silent                                             Do not output any message
   -q, --quiet                                              Only errors are displayed. All other output is suppressed
@@ -333,24 +335,27 @@ Options:
 ```shell
 $ flow pipeline:run --help
 Description:
-  Execute ETL pipeline from a php/json file.
+  Execute data processing pipeline from a php file.
 
 Usage:
   pipeline:run [options] [--] <pipeline-file>
   run
 
 Arguments:
-  pipeline-file          Path to a php/json with DataFrame definition.
+  pipeline-file                        Path to a php/json with DataFrame definition.
 
 Options:
-      --analyze=ANALYZE  Collect processing statistics and print them. [default: false]
-      --config=CONFIG Path to a local php file that MUST return instance of: Flow\ETL\Config      
-  -h, --help             Display help for the given command. When no command is given display help for the list command
-  -q, --quiet            Do not output any message
-  -V, --version          Display this application version
-      --ansi|--no-ansi   Force (or disable --no-ansi) ANSI output
-  -n, --no-interaction   Do not ask any interactive question
-  -v|vv|vvv, --verbose   Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+      --analyze[=ANALYZE]              Collect processing statistics and print them. [default: false]
+      --config=CONFIG                  Path to a local php file that MUST return instance of: Flow\ETL\Config
+      --stats-schema[=STATS-SCHEMA]    Prints schema of executed data transformation pipeline. [default: false]
+      --stats-columns[=STATS-COLUMNS]  Prints number of rows in dataset. [default: false]
+  -h, --help                           Display help for the given command. When no command is given display help for the list command
+      --silent                         Do not output any message
+  -q, --quiet                          Only errors are displayed. All other output is suppressed
+  -V, --version                        Display this application version
+      --ansi|--no-ansi                 Force (or disable --no-ansi) ANSI output
+  -n, --no-interaction                 Do not ask any interactive question
+  -v|vv|vvv, --verbose                 Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 
 Help:
   pipeline-file argument must point to a valid php file that returns DataFrame instance.

@@ -7,14 +7,9 @@ namespace Flow\CLI\Command;
 use function Flow\CLI\{option_int, option_int_nullable};
 use function Flow\ETL\DSL\{df};
 use Flow\CLI\Arguments\{FilePathArgument};
-use Flow\CLI\Command\Traits\{
-    CSVOptions,
-    ConfigOptions,
-    JSONOptions,
-    ParquetOptions,
-    XMLOptions
-};
+use Flow\CLI\Command\Traits\{CSVOptions, ConfigOptions, JSONOptions, ParquetOptions, StatisticsOptions, XMLOptions};
 use Flow\CLI\Factory\ExtractorFactory;
+use Flow\CLI\Formatter\{PipelineReportFormatter};
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\CLI\Style\FlowStyle;
 use Flow\ETL\{Config, Rows};
@@ -29,6 +24,7 @@ final class FileAnalyzeCommand extends Command
     use CSVOptions;
     use JSONOptions;
     use ParquetOptions;
+    use StatisticsOptions;
     use XMLOptions;
 
     private const DEFAULT_BATCH_SIZE = 1_000;
@@ -54,6 +50,7 @@ final class FileAnalyzeCommand extends Command
         $this->addCSVInputOptions($this);
         $this->addXMLInputOptions($this);
         $this->addParquetInputOptions($this);
+        $this->addStatisticsOptions($this);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) : int
@@ -104,48 +101,7 @@ final class FileAnalyzeCommand extends Command
 
         $style->clear();
 
-        $style->section('Schema');
-
-        $normalizedSchema = [];
-
-        foreach ($report->schema()->definitions() as $definition) {
-            $normalizedSchema[] = [
-                'name' => $definition->entry()->name(),
-                'type' => $definition->type()->toString(),
-                'nullable' => $definition->isNullable() ? 'true' : 'false',
-                'metadata' => $definition->metadata() !== null ? json_encode($definition->metadata(), JSON_PRETTY_PRINT) : null,
-            ];
-        }
-
-        $style->createTable()
-            ->setHeaders(['Name', 'Type', 'Nullable', 'Metadata'])
-            ->setRows($normalizedSchema)
-            ->setStyle('box')
-            ->render();
-
-        $formatter = $this->getHelper('formatter');
-
-        $style->section('Statistics');
-
-        $output->writeln(
-            $formatter->formatBlock(
-                [
-                    'Analyzed Rows: ' . \number_format($report->statistics()->totalRows()),
-                ],
-                'blue-block',
-                true
-            )
-        );
-
-        $output->writeln(
-            $formatter->formatBlock(
-                [
-                    'Execution Time: ' . $report->statistics()->executionTime->highResolutionTime->toString(),
-                ],
-                'blue-block',
-                true
-            )
-        );
+        (new PipelineReportFormatter($report, $style, $input))->format();
 
         return Command::SUCCESS;
     }

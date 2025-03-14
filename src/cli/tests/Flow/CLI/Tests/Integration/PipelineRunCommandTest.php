@@ -15,7 +15,7 @@ final class PipelineRunCommandTest extends TestCase
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));
 
-        $tester->execute(['pipeline-file' => __DIR__ . '/Fixtures/pipeline.php', '--analyze' => true]);
+        $tester->execute(['pipeline-file' => __DIR__ . '/Fixtures/pipeline.php', '--analyze' => true, '--stats-schema' => true, '--stats-columns' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -30,7 +30,34 @@ final class PipelineRunCommandTest extends TestCase
 +----+---------+--------+
 3 rows
 
-Total Processed Rows: 3
+
+Schema
+------
+
+┌────────┬─────────┬──────────┬──────────┐
+│ Name   │ Type    │ Nullable │ Metadata │
+├────────┼─────────┼──────────┼──────────┤
+│ id     │ integer │ false    │ {}       │
+│ name   │ string  │ false    │ {}       │
+│ active │ boolean │ false    │ {}       │
+└────────┴─────────┴──────────┴──────────┘
+
+Columns
+-------
+
+┌────────┬─────────┬───────┬─────────────────┬───────┬──────┬────────────┬────────────┬────────────────────┬────────────────────┐
+│ Name   │ Type    │ Nulls │ Distinct Values │ Min   │ Max  │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
+├────────┼─────────┼───────┼─────────────────┼───────┼──────┼────────────┼────────────┼────────────────────┼────────────────────┤
+│ id     │ integer │ 0     │ 3               │ 1     │ 3    │ -          │ -          │ -                  │ -                  │
+│ name   │ string  │ 0     │ 3               │ -     │ -    │ 7          │ 7          │ -                  │ -                  │
+│ active │ boolean │ 0     │ 2               │ false │ true │ -          │ -          │ -                  │ -                  │
+└────────┴─────────┴───────┴─────────────────┴───────┴──────┴────────────┴────────────┴────────────────────┴────────────────────┘
+
+ ---------------- -------------- 
+  Statistics                     
+ ---------------- -------------- 
+  Analyzed Rows    3             
+  Execution Time
 OUTPUT,
             $tester->getDisplay()
         );

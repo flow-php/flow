@@ -17,7 +17,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
         $application->add(new FileAnalyzeCommand());
         $tester = new CommandTester($application->get('file:analyze'));
 
-        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--input-file-limit' => 5]);
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--input-file-limit' => 5, '--stats-schema' => true, '--stats-columns' => true]);
 
         $tester->assertCommandIsSuccessful();
 
@@ -44,20 +44,38 @@ OUTPUT,
 │ notes      │ list<string>                                                  │ false    │ {}       │
 │ items      │ list<structure{sku: string, quantity: integer, price: float}> │ false    │ {}       │
 └────────────┴───────────────────────────────────────────────────────────────┴──────────┴──────────┘
+
+Columns
+-------
+
+┌────────────┬───────────────────────────────────────────────────────────────┬───────┬─────────────────┬───────────────────────────┬───────────────────────────┬────────────┬────────────┬────────────────────┬────────────────────┐
+│ Name       │ Type                                                          │ Nulls │ Distinct Values │ Min                       │ Max                       │ Min Length │ Max Length │ Min Elements Count │ Max Elements Count │
+├────────────┼───────────────────────────────────────────────────────────────┼───────┼─────────────────┼───────────────────────────┼───────────────────────────┼────────────┼────────────┼────────────────────┼────────────────────┤
+│ order_id   │ uuid                                                          │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
+│ created_at │ datetime                                                      │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
+│ updated_at │ datetime                                                      │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
+│ discount   │ float                                                         │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
+│ address    │ map<string, string>                                           │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 4                  │ 4                  │
+│ notes      │ list<string>                                                  │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 1                  │ 5                  │
+│ items      │ list<structure{sku: string, quantity: integer, price: float}> │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 2                  │ 4                  │
+└────────────┴───────────────────────────────────────────────────────────────┴───────┴─────────────────┴───────────────────────────┴───────────────────────────┴────────────┴────────────┴────────────────────┴────────────────────┘
 OUTPUT,
             $tester->getDisplay()
         );
 
         self::assertStringContainsString(
             <<<'OUTPUT'
-Analyzed Rows: 5
+ ---------------- -------------- 
+  Statistics                     
+ ---------------- -------------- 
+  Analyzed Rows    5             
 OUTPUT,
             $tester->getDisplay()
         );
 
         self::assertStringContainsString(
             <<<'OUTPUT'
-Execution Time:
+Execution Time
 OUTPUT,
             $tester->getDisplay()
         );
