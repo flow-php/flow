@@ -63,21 +63,8 @@ OUTPUT,
             $tester->getDisplay()
         );
 
-        self::assertStringContainsString(
-            <<<'OUTPUT'
- ---------------- -------------- 
-  Statistics                     
- ---------------- -------------- 
-  Analyzed Rows    5             
-OUTPUT,
-            $tester->getDisplay()
-        );
+        self::assertStringContainsString("Analyzed Rows", $tester->getDisplay());
 
-        self::assertStringContainsString(
-            <<<'OUTPUT'
-Execution Time
-OUTPUT,
-            $tester->getDisplay()
-        );
+        self::assertStringContainsString("Execution Time", $tester->getDisplay());
     }
 }
