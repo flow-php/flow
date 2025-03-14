@@ -19,8 +19,8 @@ final class SchemaValidationLoaderTest extends FlowTestCase
         $this->expectException(SchemaValidationException::class);
         $this->expectExceptionMessage(
             <<<'EXCEPTION'
-Schema validation failed:
-  Mismatched Definitions:
+Schema validation failed: 
+  Mismatched Definitions: 
     |-- expected: id<integer>, given: id<string>
 EXCEPTION
         );
@@ -38,10 +38,10 @@ EXCEPTION
         $this->expectException(SchemaValidationException::class);
         $this->expectExceptionMessage(
             <<<'EXCEPTION'
-Schema validation failed:
-  Missing Definitions:
+Schema validation failed: 
+  Missing Definitions: 
     |-- id<integer>
-  Unexpected Definitions:
+  Unexpected Definitions: 
     |-- name<string>
 EXCEPTION
         );
