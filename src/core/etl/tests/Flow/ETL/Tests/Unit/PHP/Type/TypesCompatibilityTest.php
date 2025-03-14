@@ -65,7 +65,7 @@ final class TypesCompatibilityTest extends FlowTestCase
     #[DataProvider('list_compatibility_provider')]
     public function test_list_type_compatibility(Type $given, Type $expected, bool $compatible) : void
     {
-        self::assertSame($compatible, $given->isCompatibleWith($expected));
+        self::assertSame($compatible, $given->isCompatible($expected));
     }
 
     /**
@@ -75,7 +75,7 @@ final class TypesCompatibilityTest extends FlowTestCase
     #[DataProvider('map_compatibility_provider')]
     public function test_map_type_compatibility(Type $given, Type $expected, bool $compatible) : void
     {
-        self::assertSame($compatible, $given->isCompatibleWith($expected));
+        self::assertSame($compatible, $given->isCompatible($expected));
     }
 
     /**
@@ -85,6 +85,6 @@ final class TypesCompatibilityTest extends FlowTestCase
     #[DataProvider('scalar_types_compatibility_provider')]
     public function test_scalar_type_compatibility(Type $given, Type $expected, bool $compatible) : void
     {
-        self::assertSame($compatible, $given->isCompatibleWith($expected));
+        self::assertSame($compatible, $given->isCompatible($expected));
     }
 }

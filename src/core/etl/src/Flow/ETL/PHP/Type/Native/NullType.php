@@ -21,7 +21,7 @@ final class NullType implements Type
         return true;
     }
 
-    public function isCompatibleWith(Type $type) : bool
+    public function isCompatible(Type $type) : bool
     {
         return $this->isEqual($type);
     }

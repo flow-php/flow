@@ -26,7 +26,7 @@ interface Type
      *
      * @param Type<mixed> $type
      */
-    public function isCompatibleWith(self $type) : bool;
+    public function isCompatible(self $type) : bool;
 
     /**
      * Checks if another type is equal to this type. Nullability is not considered in this comparison.

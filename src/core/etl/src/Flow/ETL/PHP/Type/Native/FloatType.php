@@ -41,7 +41,7 @@ final readonly class FloatType implements Type
         return false;
     }
 
-    public function isCompatibleWith(Type $type) : bool
+    public function isCompatible(Type $type) : bool
     {
         if (!$this->nullable && $type->nullable()) {
             return false;

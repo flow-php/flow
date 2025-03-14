@@ -79,7 +79,7 @@ final readonly class StructureType implements Type
         return false;
     }
 
-    public function isCompatibleWith(Type $type) : bool
+    public function isCompatible(Type $type) : bool
     {
         if (!$this->isEqual($type)) {
             return false;
@@ -92,7 +92,7 @@ final readonly class StructureType implements Type
 
         foreach ($this->elements as $internalElementName => $internalElement) {
             foreach ($type->elements as $elementName => $element) {
-                if ($elementName === $internalElementName && !$element->isCompatibleWith($internalElement)) {
+                if ($elementName === $internalElementName && !$element->isCompatible($internalElement)) {
                     return false;
                 }
             }

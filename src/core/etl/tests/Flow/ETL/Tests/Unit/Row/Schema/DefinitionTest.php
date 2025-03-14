@@ -22,6 +22,28 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class DefinitionTest extends FlowTestCase
 {
+    public function test_compatibility_with_differences_in_metadat() : void
+    {
+        $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
+
+        self::assertTrue(
+            $definition->isCompatible(
+                integer_schema('id', false, Metadata::fromArray(['description' => 'some_random_description']))
+            )
+        );
+    }
+
+    public function test_compatibility_with_differences_in_nullability_that_is_a_backward_compatibility_break() : void
+    {
+        $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
+
+        self::assertFalse(
+            $definition->isCompatible(
+                integer_schema('id', true, Metadata::fromArray(['description' => 'some_random_description']))
+            )
+        );
+    }
+
     public function test_equals_nullability() : void
     {
         $def = integer_schema('id', nullable: true);

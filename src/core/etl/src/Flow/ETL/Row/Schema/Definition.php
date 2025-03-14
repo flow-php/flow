@@ -172,9 +172,14 @@ final class Definition
         return $this->ref;
     }
 
+    public function isCompatible(self $definition) : bool
+    {
+        return $this->type->isCompatible($definition->type);
+    }
+
     public function isEqual(self $definition) : bool
     {
-        if ($this->type->isCompatibleWith($definition->type) === false) {
+        if ($this->type->isEqual($definition->type) === false) {
             return false;
         }
 

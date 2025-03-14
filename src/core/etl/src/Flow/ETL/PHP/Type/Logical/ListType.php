@@ -47,7 +47,7 @@ final readonly class ListType implements Type
         return false;
     }
 
-    public function isCompatibleWith(Type $type) : bool
+    public function isCompatible(Type $type) : bool
     {
         if (!$this->isEqual($type)) {
             return false;
@@ -58,7 +58,7 @@ final readonly class ListType implements Type
             return false;
         }
 
-        return $this->element->isCompatibleWith($type->element());
+        return $this->element->isCompatible($type->element());
     }
 
     public function isEqual(Type $type) : bool

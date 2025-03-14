@@ -25,7 +25,7 @@ final class StrictValidator implements SchemaValidator
                 return false;
             }
 
-            if (!$expectedDefinition->isEqual($definition)) {
+            if (!$expectedDefinition->isCompatible($definition)) {
                 return false;
             }
         }

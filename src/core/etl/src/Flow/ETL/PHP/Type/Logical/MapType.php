@@ -47,7 +47,7 @@ final readonly class MapType implements Type
         return false;
     }
 
-    public function isCompatibleWith(Type $type) : bool
+    public function isCompatible(Type $type) : bool
     {
         if (!$this->isEqual($type)) {
             return false;
@@ -58,11 +58,11 @@ final readonly class MapType implements Type
             return false;
         }
 
-        if (!$this->key->isCompatibleWith($type->key())) {
+        if (!$this->key->isCompatible($type->key())) {
             return false;
         }
 
-        return $this->value->isCompatibleWith($type->value());
+        return $this->value->isCompatible($type->value());
     }
 
     public function isEqual(Type $type) : bool
