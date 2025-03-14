@@ -33,7 +33,8 @@ $finder = Finder::create()
     ])
     ->exclude([
         'Flow/Parquet/Thrift',
-        'Flow/CLI/Tests/Integration'
+        'Flow/CLI/Tests/Integration',
+        'Flow/ETL/Tests/Unit/Loader'
     ]);
 
 return (new Config())
