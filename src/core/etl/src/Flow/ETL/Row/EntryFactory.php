@@ -110,27 +110,23 @@ final readonly class EntryFactory
         if ($valueType instanceof ObjectType) {
             if ($valueType->class === \DOMDocument::class) {
                 $valueType = type_xml($valueType->nullable());
-            }
-
-            if ($valueType->class === \DOMElement::class) {
+            } elseif ($valueType->class === \DOMElement::class) {
                 $valueType = type_xml_element($valueType->nullable());
-            }
-
-            if ($valueType->class === \DateInterval::class) {
+            } elseif ($valueType->class === \DateInterval::class) {
                 $valueType = type_time($valueType->nullable());
-            }
-
-            if (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
+            } elseif (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
                 if ($value->format('H:i:s') === '00:00:00') {
                     $valueType = type_date($valueType->nullable());
                 } else {
                     $valueType = type_datetime($valueType->nullable());
                 }
-            }
+            } else {
+                foreach ([\Ramsey\Uuid\UuidInterface::class, \Flow\ETL\PHP\Value\Uuid::class, \Symfony\Component\Uid\Uuid::class] as $uuidClass) {
+                    if (\is_a($valueType->class, $uuidClass, true)) {
+                        $valueType = type_uuid($valueType->nullable());
 
-            foreach ([\Ramsey\Uuid\UuidInterface::class, \Flow\ETL\PHP\Value\Uuid::class, \Symfony\Component\Uid\Uuid::class] as $uuidClass) {
-                if (\is_a($valueType->class, $uuidClass, true)) {
-                    $valueType = type_uuid($valueType->nullable());
+                        break;
+                    }
                 }
             }
         }
@@ -182,10 +178,6 @@ final readonly class EntryFactory
 
             if ($type instanceof FloatType) {
                 return float_entry($entryName, is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value), $type->precision, $type, $metadata);
-            }
-
-            if ($type instanceof XMLType) {
-                return xml_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
 
             if ($type instanceof UuidType) {
