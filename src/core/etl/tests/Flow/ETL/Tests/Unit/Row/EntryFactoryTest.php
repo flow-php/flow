@@ -39,7 +39,7 @@ use function Flow\ETL\DSL\{bool_schema,
     type_structure,
     uuid_schema,
     xml_schema};
-use Flow\ETL\Exception\{CastingException, SchemaDefinitionNotFoundException};
+use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\{TimeEntry};
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Schema\Metadata;
@@ -179,8 +179,8 @@ final class EntryFactoryTest extends FlowTestCase
 
     public function test_enum_invalid_value_with_schema() : void
     {
-        $this->expectException(CastingException::class);
-        $this->expectExceptionMessage("Can't cast \"string\" into \"enum<Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum>\" type");
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry "e" conversion exception. Can\'t cast "string" into "enum<Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum>" type');
 
         (new EntryFactory())
             ->create('e', 'invalid', schema(enum_schema('e', BackedIntEnum::class)));

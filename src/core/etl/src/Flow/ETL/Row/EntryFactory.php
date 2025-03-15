@@ -18,14 +18,23 @@ use function Flow\ETL\DSL\{bool_entry,
     struct_entry,
     time_entry,
     type_boolean,
+    type_date,
+    type_datetime,
     type_float,
     type_int,
     type_json,
     type_string,
+    type_time,
+    type_uuid,
+    type_xml,
+    type_xml_element,
     uuid_entry,
     xml_element_entry,
     xml_entry};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
+use Flow\ETL\Exception\{CastingException,
+    InvalidArgumentException,
+    RuntimeException,
+    SchemaDefinitionNotFoundException};
 use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
@@ -47,8 +56,6 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     StringType};
 use Flow\ETL\PHP\Type\{Caster, Type, TypeDetector};
 use Flow\ETL\Row\{Schema\Definition, Schema\Metadata};
-use Ramsey\Uuid\UuidInterface;
-use Symfony\Component\Uid\Uuid;
 
 final readonly class EntryFactory
 {
@@ -88,113 +95,47 @@ final readonly class EntryFactory
             $stringChecker = new StringTypeChecker($value);
 
             if ($stringChecker->isJson()) {
-                return json_entry($entryName, $value);
+                $valueType = type_json($valueType->nullable());
             }
 
             if ($stringChecker->isUuid()) {
-                return uuid_entry($entryName, \Flow\ETL\PHP\Value\Uuid::fromString($value));
+                $valueType = type_uuid($valueType->nullable());
             }
 
             if ($stringChecker->isXML()) {
-                return xml_entry($entryName, $value);
+                $valueType = type_xml($valueType->nullable());
             }
-
-            return str_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof FloatType) {
-            return float_entry($entryName, $value, $valueType->precision);
-        }
-
-        if ($valueType instanceof IntegerType) {
-            return int_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof BooleanType) {
-            return bool_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof JsonType || $valueType instanceof ArrayType) {
-            return json_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof UuidType) {
-            if ($value instanceof \Flow\ETL\PHP\Value\Uuid) {
-                return uuid_entry($entryName, $value);
-            }
-
-            return uuid_entry($entryName, (string) $value);
-        }
-
-        if ($valueType instanceof TimeType) {
-            return time_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof DateType) {
-            return date_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof DateTimeType) {
-            return datetime_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof XMLType) {
-            return xml_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof XMLElementType) {
-            return xml_element_entry($entryName, $value);
         }
 
         if ($valueType instanceof ObjectType) {
             if ($valueType->class === \DOMDocument::class) {
-                return xml_entry($entryName, $value);
+                $valueType = type_xml($valueType->nullable());
             }
 
             if ($valueType->class === \DOMElement::class) {
-                return xml_element_entry($entryName, $value);
+                $valueType = type_xml_element($valueType->nullable());
             }
 
             if ($valueType->class === \DateInterval::class) {
-                return time_entry($entryName, $value);
+                $valueType = type_time($valueType->nullable());
             }
 
             if (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
                 if ($value->format('H:i:s') === '00:00:00') {
-                    return date_entry($entryName, $value);
+                    $valueType = type_date($valueType->nullable());
+                } else {
+                    $valueType = type_datetime($valueType->nullable());
                 }
-
-                return datetime_entry($entryName, $value);
             }
 
-            if (\in_array($valueType->class, [\Flow\ETL\PHP\Value\Uuid::class, UuidInterface::class, Uuid::class], true)) {
-                if (\in_array($valueType->class, [UuidInterface::class, Uuid::class], true)) {
-                    return uuid_entry($entryName, new \Flow\ETL\PHP\Value\Uuid($value));
+            foreach ([\Ramsey\Uuid\UuidInterface::class, \Flow\ETL\PHP\Value\Uuid::class, \Symfony\Component\Uid\Uuid::class] as $uuidClass) {
+                if (\is_a($valueType->class, $uuidClass, true)) {
+                    $valueType = type_uuid($valueType->nullable());
                 }
-
-                return uuid_entry($entryName, $value);
             }
-
-            throw new InvalidArgumentException("{$entryName}: {$valueType->toString()} can't be converted to any known Entry, please normalize that object first.");
         }
 
-        if ($valueType instanceof EnumType) {
-            return enum_entry($entryName, $value);
-        }
-
-        if ($valueType instanceof ListType) {
-            return new Entry\ListEntry($entryName, $value, $valueType);
-        }
-
-        if ($valueType instanceof MapType) {
-            return new Entry\MapEntry($entryName, $value, $valueType);
-        }
-
-        if ($valueType instanceof StructureType) {
-            return new Entry\StructureEntry($entryName, $value, $valueType);
-        }
-
-        throw new InvalidArgumentException("{$valueType->toString()} can't be converted to any known Entry");
+        return $this->createAs($entryName, $value, $valueType);
     }
 
     /**
@@ -220,6 +161,8 @@ final readonly class EntryFactory
                 EnumType::class => enum_entry($entryName, null, $type, $metadata),
                 ArrayType::class, JsonType::class => json_entry($entryName, null, type_json($type->nullable()), $metadata),
                 NullType::class => Entry\StringEntry::fromNull($entryName, $metadata),
+                XMLType::class => xml_entry($entryName, null, $type, $metadata),
+                XMLElementType::class => xml_element_entry($entryName, null, $type, $metadata),
                 default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
             };
         }
@@ -273,6 +216,14 @@ final readonly class EntryFactory
                 }
             }
 
+            if ($type instanceof XMLType) {
+                return xml_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+            }
+
+            if ($type instanceof XMLElementType) {
+                return xml_element_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+            }
+
             if ($type instanceof ArrayType) {
                 return json_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), type_json($type->nullable()), $metadata);
             }
@@ -292,8 +243,8 @@ final readonly class EntryFactory
             if ($type instanceof ListType) {
                 return new Entry\ListEntry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
             }
-        } catch (InvalidArgumentException|\TypeError $e) {
-            throw new InvalidArgumentException("Field \"{$entryName}\" conversion exception. {$e->getMessage()}", previous: $e);
+        } catch (InvalidArgumentException|CastingException|\TypeError $e) {
+            throw new InvalidArgumentException("Entry \"{$entryName}\" conversion exception. {$e->getMessage()}", previous: $e);
         }
 
         throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\"");
