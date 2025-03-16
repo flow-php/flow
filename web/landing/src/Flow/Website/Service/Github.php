@@ -71,13 +71,17 @@ final class Github
         }
     }
 
-    public function version(string $project) : string
+    public function version(string $project, bool $refresh = false) : string
     {
         if ($this->parameters->get('kernel.environment') === 'test') {
             return 'v0.0.0';
         }
 
         $cache = $this->cache('flow-github-version');
+
+        if ($refresh) {
+            $cache->delete('version');
+        }
 
         if ($cache->has('version')) {
             return $cache->get('version');

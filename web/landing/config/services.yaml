@@ -20,6 +20,10 @@ services:
         exclude:
             - '../src/Flow/Website/Kernel.php'
 
+    Flow\Website\Command\:
+        resource: '../src/Flow/Website/Command/'
+        tags: ['console.command']
+
     Flow\Website\Service\:
         resource: '../src/Flow/Website/Service/'
 
