@@ -23,7 +23,7 @@ final class FlowCache extends Command
     {
         $style = new SymfonyStyle($input, $output);
 
-        $style->note('Flow Version: ' . $this->github->version('flow-php/flow', true));
+        //$style->note('Flow Version: ' . $this->github->version('flow-php/flow', true));
 
         return Command::SUCCESS;
     }

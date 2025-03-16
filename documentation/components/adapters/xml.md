@@ -18,7 +18,7 @@ aligning perfectly with the robust and adaptable nature of the Flow PHP ecosyste
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-xml:~--FLOW_PHP_VERSION--
+composer require flow-php/etl-adapter-xml
 ```
 
 ## Extractor - XMLExtractor

@@ -58,8 +58,8 @@ final class LeagueCommonMarkConverterFactory
             ->addExtension(new MentionExtension())
             ->addExtension(new TableExtension())
             ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
-            ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
-            ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->github->version('flow-php/flow')));
+            ->addRenderer(Link::class, new FlowLinkRenderer(), 0);
+        // ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->github->version('flow-php/flow')))
 
         return $converter;
     }
