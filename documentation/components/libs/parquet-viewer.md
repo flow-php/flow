@@ -7,7 +7,7 @@
 ## Installation
 
 ```
-composer require flow-php/parquet-viewer
+composer require flow-php/parquet-viewer:~--FLOW_PHP_VERSION--
 ```
 
 Parquet Viewer is a simple CLI tool to inspect and view the content and metadata of parquet files. 

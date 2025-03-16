@@ -7,7 +7,7 @@
 ## Installation
 
 ```
-composer require flow-php/parquet
+composer require flow-php/parquet:~--FLOW_PHP_VERSION--
 ```
 
 ## What is Parquet

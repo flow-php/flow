@@ -19,7 +19,7 @@ with the robust and adaptable nature of the Flow PHP ecosystem.
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-google-sheet
+composer require flow-php/etl-adapter-google-sheet:~--FLOW_PHP_VERSION--
 ```
 
 ## Extractor

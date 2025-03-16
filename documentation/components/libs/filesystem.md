@@ -7,7 +7,7 @@
 ## Installation
 
 ```
-composer require flow-php/filesystem
+composer require flow-php/filesystem:~--FLOW_PHP_VERSION--
 ```
 
 Flow Filesystem is a unified solution to store and retrieve data at remote and local filesystems. 

@@ -7,13 +7,13 @@
 ## Installation
 
 ``` 
-composer require flow-php/cli
+composer require flow-php/cli:~--FLOW_PHP_VERSION--
 ```
 
 In some cases, it might make sense to install the CLI globally:
 
 ```
-composer global require flow-php/cli
+composer global require flow-php/cli:~--FLOW_PHP_VERSION--
 ```
 
 Now you can run the CLI using the `flow` command.

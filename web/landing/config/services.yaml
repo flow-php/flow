@@ -9,6 +9,7 @@ parameters:
     router.request_context.base_url: '%env(SCHEME)%://%env(BASE_URL)%'
     router.request_context.host: '%env(DOMAIN)%'
     router.request_context.scheme: '%env(SCHEME)%'
+    flow_version: '%env(FLOW_VERSION)%'
 
 services:
     _defaults:

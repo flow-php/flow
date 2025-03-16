@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Markdown;
 
-use Flow\Website\Service\Github;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Event\DocumentParsedEvent;
 use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
@@ -14,10 +13,11 @@ use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
 use League\CommonMark\Extension\HeadingPermalink\{HeadingPermalinkExtension};
 use League\CommonMark\Extension\Mention\MentionExtension;
 use League\CommonMark\Extension\Table\TableExtension;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 final class LeagueCommonMarkConverterFactory
 {
-    public function __construct(private readonly Github $github)
+    public function __construct(private readonly ContainerBagInterface $parameters)
     {
     }
 
@@ -58,8 +58,8 @@ final class LeagueCommonMarkConverterFactory
             ->addExtension(new MentionExtension())
             ->addExtension(new TableExtension())
             ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
-            ->addRenderer(Link::class, new FlowLinkRenderer(), 0);
-        // ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->github->version('flow-php/flow')))
+            ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
+            ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->parameters->get('flow_version')));
 
         return $converter;
     }

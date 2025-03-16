@@ -24,8 +24,6 @@ final class LayoutController extends AbstractController
 
     public function hero() : Response
     {
-        return $this->render('main/_hero.html.twig', [
-            'version' => $this->github->version('flow-php/flow'),
-        ]);
+        return $this->render('main/_hero.html.twig');
     }
 }

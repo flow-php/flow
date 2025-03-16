@@ -16,7 +16,7 @@ toolkit.
 ## Installation
 
 ```
-composer require flow-php/doctrine-dbal-bulk
+composer require flow-php/doctrine-dbal-bulk:~--FLOW_PHP_VERSION--
 ```
 
 ## Usage Examples

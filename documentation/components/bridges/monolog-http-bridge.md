@@ -9,7 +9,7 @@ Monolog HTTP Bridge is a package that iterates through LogRecord context and nor
 ## Installation
 
 ```
-composer require flow-php/monolog-http-bridge
+composer require flow-php/monolog-http-bridge:~--FLOW_PHP_VERSION--
 ```
 
 ## Usage

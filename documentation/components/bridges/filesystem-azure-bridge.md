@@ -9,7 +9,7 @@ The Filesystem Azure Bridge is a bridge that allows you to use the Azure Blob St
 ## Installation
 
 ```bash
-composer require flow-php/filesystem-azure-bridge
+composer require flow-php/filesystem-azure-bridge:~--FLOW_PHP_VERSION--
 ```
 
 ## Usage

@@ -19,7 +19,7 @@ robust and adaptable nature of the Flow PHP ecosystem.
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-doctrine
+composer require flow-php/etl-adapter-doctrine:~--FLOW_PHP_VERSION--
 ```
 
 ## Description

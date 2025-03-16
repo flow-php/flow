@@ -36,14 +36,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Get Latest Version"
-        id: latest_version
+      - name: "Get Flow Version"
+        id: flow_version
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
         with:
           fallback: 1.x-dev
-
-      - name: "Print Latest Version"
-        run: echo "Latest version is ${{ steps.latest_version.outputs.tag }}"
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
@@ -81,4 +78,5 @@ jobs:
         env:
           SCHEME: https
           DOMAIN: flow-php.com
+          FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
 

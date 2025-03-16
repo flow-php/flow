@@ -23,7 +23,7 @@ seo_description: >
 If you want to work with JSON/CSV files here are the dependencies you will need to install:
 
 ```bash
-composer require flow-php/etl flow-php/etl-adapter-csv flow-php/etl-adapter-json
+composer require flow-php/etl:~--FLOW_PHP_VERSION-- flow-php/etl-adapter-csv~--FLOW_PHP_VERSION-- flow-php/etl-adapter-json~--FLOW_PHP_VERSION--
 ```
 
 Flow is developed as

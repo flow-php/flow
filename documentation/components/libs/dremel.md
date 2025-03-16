@@ -5,7 +5,7 @@
 ## Installation
 
 ```
-composer require flow-php/dremel
+composer require flow-php/dremel:~--FLOW_PHP_VERSION--
 ```
 
 Dremel is a php implementation of the [Google Dremel](https://static.googleusercontent.com/media/research.google.com/pl//pubs/archive/36632.pdf) paper. 

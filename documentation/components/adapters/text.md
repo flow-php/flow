@@ -19,7 +19,7 @@ the Flow PHP ecosystem.
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-text
+composer require flow-php/etl-adapter-text:~--FLOW_PHP_VERSION--
 ```
 
 ## Extractor

@@ -9,7 +9,7 @@ Simple, lightweight, dependency-free and efficient Azure SDK for PHP.
 ## Installation
 
 ```bash
-composer require flow-php/azure-sdk
+composer require flow-php/azure-sdk:~--FLOW_PHP_VERSION--
 ```
 
 > [!NOTE]  

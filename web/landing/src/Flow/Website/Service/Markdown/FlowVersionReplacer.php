@@ -41,7 +41,7 @@ final class FlowVersionReplacer
         if (str_contains($html, self::VERSION_PLACEHOLDER)) {
             $node->setLiteral(str_replace(
                 self::VERSION_PLACEHOLDER,
-                self::FLOW_VERSION,
+                $this->flowVersion,
                 $html
             ));
         }

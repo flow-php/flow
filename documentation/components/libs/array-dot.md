@@ -17,7 +17,7 @@ companion for achieving cleaner and more efficient array operations.
 ## Installation
 
 ```
-composer require flow-php/array-dot
+composer require flow-php/array-dot:~--FLOW_PHP_VERSION--
 ```
 
 ## Available Functions

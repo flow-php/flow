@@ -8,7 +8,7 @@ The Filesystem Async AWS Bridge is a bridge that allows you to use the S3 as a f
 through [Async AWS SDK](https://github.com/async-aws/s3).
 
 ```bash
-composer require flow-php/filesystem-async-aws-bridge
+composer require flow-php/filesystem-async-aws-bridge:~--FLOW_PHP_VERSION--
 ```
 
 ```php

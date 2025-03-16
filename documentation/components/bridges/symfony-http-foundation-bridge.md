@@ -16,7 +16,7 @@ Http Foundation Bridge provides seamless integration between Symfony Http Founda
 ## Installation
 
 ```
-composer require flow-php/symfony-http-foundation-bridge:1.x-dev
+composer require flow-php/symfony-http-foundation-bridge:~--FLOW_PHP_VERSION--
 ```
 
 ## Usage

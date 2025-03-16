@@ -71,47 +71,6 @@ final class Github
         }
     }
 
-    public function version(string $project, bool $refresh = false) : string
-    {
-        if ($this->parameters->get('kernel.environment') === 'test') {
-            return 'v0.0.0';
-        }
-
-        $cache = $this->cache('flow-github-version');
-
-        if ($refresh) {
-            $cache->delete('version');
-        }
-
-        if ($cache->has('version')) {
-            return $cache->get('version');
-        }
-
-        $factory = new Psr17Factory();
-        $client = new Client($factory, $factory);
-
-        $request = $factory
-            ->createRequest('GET', 'https://api.github.com/repos/' . $project . '/releases/latest')
-            ->withHeader('Accept', 'application/vnd.github+json')
-            ->withHeader('Authorization', 'Bearer ' . $this->requestFactory->githubToken)
-            ->withHeader('X-GitHub-Api-Version', '2022-11-28')
-            ->withHeader('User-Agent', 'flow-website-fetch');
-
-        $response = $client->sendRequest($request);
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException('Failed to fetch version from Github: ' . $response->getBody()->getContents());
-        }
-
-        $data = \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
-
-        $version = $data['tag_name'];
-
-        $cache->set('version', $version);
-
-        return $version;
-    }
-
     private function cache(string $directoryName) : Psr16Cache
     {
         return new Psr16Cache(

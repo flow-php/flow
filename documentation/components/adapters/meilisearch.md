@@ -20,7 +20,7 @@ aligning with the robust and adaptable framework of the Flow PHP ecosystem.
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-meilisearch
+composer require flow-php/etl-adapter-meilisearch:~--FLOW_PHP_VERSION--
 ```
 
 ### Extractor

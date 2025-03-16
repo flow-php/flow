@@ -196,6 +196,14 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+
+      - name: "Get Flow Version"
+        id: flow_version
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: 1.x-dev
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
@@ -236,6 +244,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GOOGLE_ANALYTICS_ID: '${{ vars.GOOGLE_ANALYTICS_ID }}'
           GOOGLE_CONVERSION_TAG: '${{ vars.GOOGLE_CONVERSION_TAG }}'
+          FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
         working-directory: "web/landing"
 
       - name: "Generate Api References"
