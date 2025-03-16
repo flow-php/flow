@@ -1,0 +1,140 @@
+{% extends 'blog/post.html.twig' %}
+{% block article %}
+    <article id="blog-post">
+        <h1>Flow PHP - Release Cycle</h1>
+        <hr/>
+        <p>
+            As of writing this article, Flow PHP is at version <code>0.11.0</code>, consisting of over 26 independent repositories, developed within a monorepo. <br/>
+        </p>
+        {{ '> Version `--FLOW_PHP_VERSION--` is current stable release.'|markdown_to_html  }}
+        <p>
+            Up until now, the release cycle hasn’t been standardized in any way and has largely relied on gut feeling.
+            A gut feeling of "that’s enough" or "not yet"...
+        </p>
+
+        <h2>New Release Cycle</h2>
+        <hr/>
+        <p>
+            From this point onward, we will aim to release Flow PHP once every <strong>2 weeks</strong>.<br/>
+            This cycle won’t change until the release of version <code>1.0</code>, which doesn’t yet have a scheduled
+            date.
+        </p>
+        <blockquote>
+            Although Flow PHP doesn’t yet have a stable <code>1.0</code> release, there shouldn’t be any issues with using it in production.<br/>
+            The only recommendation is to avoid relying on the <code>1.x-dev</code> version.
+        </blockquote>
+        <p>
+            Exceptions to the rule of releasing a new version every 2 weeks are critical security fixes and bug fixes.<br/>
+            In the case of critical security patches, a new version will be released immediately.<br/>
+            The same applies to more problematic bugs.
+        </p>
+        <p>
+            For now, all <code>0.x.x</code> tags are published on the <code>1.x</code> branch. As a result, if
+            several changes are introduced and are awaiting the next release, a situation might arise that
+            forces us to release a new version earlier than planned. <br/>
+            This will shift the next release to realign with the 2-week cycle.
+        </p>
+        <p>
+            In the case of critical bugs or security issues that can’t wait for the next release,
+            we’ll aim to publish them as <code>patch</code> releases, such as <code>0.11.1</code> or <code>0.11.2</code>.
+        </p>
+
+        <h2>Upcoming Releases</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Version</th>
+                <th>Branch</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>2024-03-17</td>
+                <td>0.12.0</td>
+                <td>1.x</td>
+            </tr>
+            <tr>
+                <td>2024-03-31</td>
+                <td>0.13.0</td>
+                <td>1.x</td>
+            </tr>
+            <tr>
+                <td>2024-04-14</td>
+                <td>0.14.0</td>
+                <td>1.x</td>
+            </tr>
+            <tr>
+                <td>2024-04-28</td>
+                <td>0.15.0</td>
+                <td>1.x</td>
+            </tr>
+            <tr>
+                <td>2024-05-12</td>
+                <td>0.16.0</td>
+                <td>1.x</td>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>0.x.0</td>
+                <td>1.x</td>
+            </tr>
+            <tr>
+                <td>....</td>
+                <td>1.0.0</td>
+                <td>1.0</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2>How to Treat Specific Releases</h2>
+
+        <blockquote>
+            Until the release of version <code>1.0</code>, all releases are considered <strong>beta</strong>.
+            This means the API may still change. <br/>
+            We’re doing our best to minimize API changes and maintain documentation of those changes, which should make
+            migrations between versions smoother.
+        </blockquote>
+
+        <h3>How to understand releases</h3>
+        <ul>
+            <li>
+                <code>x.0.0</code> - A major release that introduces new features and API changes.<br/>
+                After the <code>1.0</code> release, only major releases will be allowed to introduce API changes.
+            </li>
+            <li>
+                <code>0.x.0</code> - A minor release that introduces new features, <s>but doesn’t change the API</s>.
+                <strong>These releases will occur every 2 weeks.</strong><br/>
+                Until the <code>1.0</code> release, all <code>x.1.0</code> releases may introduce API changes.
+
+            </li>
+            <li>
+                <code>0.0.x</code> - A patch release that introduces bug fixes.<br/>
+                If a bug is critical or involves a security issue, a <code>0.0.x</code> release will be published
+                immediately.
+                For minor bugs, fixes will be published every 2 weeks with the next stable release.
+            </li>
+        </ul>
+        <h3>Heads up</h3>
+        <p>
+            If you still decide to use the <code>1.x-dev</code> version, you should be aware that
+            changes introduced between the two-week releases might be completely removed or entirely altered.
+        </p>
+        <p>
+            We recommend setting the requirement in your <code>composer.json</code> file to <code>~0.11.0</code>, which
+            will prevent
+            automatic updates beyond the <code>0.11.x</code> versions.
+        </p>
+        <p>
+            To automate the update process, you can use tools like Dependabot or Renovate.
+            These tools will automatically create a pull request with the update to version <code>0.12.0</code> once
+            it’s released,
+            also showing the changes introduced between versions.
+        </p>
+        <p>
+            If you decide to use the <code>1.x-dev</code> version, you should be aware that you should also require
+            all dependencies of given package to be on the <code>1.x-dev</code> version.<br/>
+            Otherwise you might get <code>flow-php/etl:1.x-dev</code> but <code>flow-php/filesystem:0.11.0</code>.
+        </p>
+    </article>
+{% endblock %}

@@ -18,7 +18,7 @@ aligning with the robust and adaptable framework of the Flow PHP ecosystem.
 ## Installation
 
 ``` 
-composer require flow-php/etl-adapter-csv
+composer require flow-php/etl-adapter-csv:~--FLOW_PHP_VERSION--
 ```
 
 ## Extractor

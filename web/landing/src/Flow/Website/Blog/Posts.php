@@ -25,6 +25,12 @@ final class Posts
             'date' => '2025-01-25',
             'slug' => 'data-processing-in-php',
         ],
+        [
+            'title' => 'Flow PHP Release Cycle',
+            'description' => 'Explanation of the updated Flow PHP release cycle that improves adaptability of new features.',
+            'date' => '2025-03-16',
+            'slug' => 'flow-php-release-cycle',
+        ],
     ];
 
     /**
