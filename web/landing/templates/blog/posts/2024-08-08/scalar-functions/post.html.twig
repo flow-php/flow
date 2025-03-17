@@ -23,20 +23,6 @@
         It's worth noticing that the execution context of scalar functions is the entire row, even though the operation usually takes place on a single cell.
         This relationship allows using values from other cells as function arguments, for example.
     </p>
-    <section class="google-ad">
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2364202911639369" crossorigin="anonymous"></script>
-        <ins class="adsbygoogle"
-             style="display:block; text-align:center;"
-             data-ad-layout="in-article"
-             data-ad-format="fluid"
-             data-ad-client="ca-pub-2364202911639369"
-             data-ad-slot="7201592389">
-
-        </ins>
-        <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-    </section>
     <p>
         Each scalar function implements a very simple interface.
     </p>
@@ -56,20 +42,6 @@
     <p>
         The <code>ref(string $entry) : EntryReference</code> function returns an instance of the <code>EntryReference</code> object, which implements the <code>ScalarFunction</code> interface. This implementation involves returning the value from the cell that the reference points to.
     </p>
-    <section class="google-ad">
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2364202911639369" crossorigin="anonymous"></script>
-        <ins class="adsbygoogle"
-             style="display:block; text-align:center;"
-             data-ad-layout="in-article"
-             data-ad-format="fluid"
-             data-ad-client="ca-pub-2364202911639369"
-             data-ad-slot="7201592389">
-
-        </ins>
-        <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-    </section>
     <p>
         It's worth mentioning another very frequently used scalar function, <code>lit(mixed $value) : Literal</code>. The <code>lit</code> function has a very similar operation to <code>ref</code>, with the difference that instead of extracting a value from a cell, it returns the value passed as an argument.
     </p>

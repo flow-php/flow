@@ -28,21 +28,6 @@
         This should give us the following schema:
     </p>
 
-    <section class="google-ad">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2364202911639369" crossorigin="anonymous"></script>
-    <ins class="adsbygoogle"
-         style="display:block; text-align:center;"
-         data-ad-layout="in-article"
-         data-ad-format="fluid"
-         data-ad-client="ca-pub-2364202911639369"
-         data-ad-slot="7201592389">
-
-    </ins>
-    <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-    </section>
-
     {% apply spaceless %}
         <pre>
             <code class="language-shell" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/schema.txt'  %}{% endapply %}</code>
@@ -80,21 +65,6 @@
         <code>FlowContext $context</code> is a container for all parameters/services that are shared between all the stages of the ETL process.<br/>
         We can use it to access things like <code>EntryFactory</code> or <code>Config</code> however we are not going to use it in this example.
     </p>
-
-    <section class="google-ad">
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2364202911639369" crossorigin="anonymous"></script>
-        <ins class="adsbygoogle"
-             style="display:block; text-align:center;"
-             data-ad-layout="in-article"
-             data-ad-format="fluid"
-             data-ad-client="ca-pub-2364202911639369"
-             data-ad-slot="7201592389">
-
-        </ins>
-        <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-    </section>
 
     <p>
         Let's start by fetching the list of Account Summaries from Google Analytics API, iterating over the list and yield each Account Summary.

@@ -18,8 +18,6 @@
     <meta property="og:image:type" content="image/svg+xml" />
     <meta property="og:image:alt" content="Flow PHP - Unified data processing framework" />
 
-    <meta name="google-adsense-account" content="ca-pub-2364202911639369">
-
     <meta name="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="{{ url(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) }}" />
     <meta name="twitter:image" content="{{ absolute_url(asset('images/banner.png')) }}">
@@ -39,6 +37,7 @@
     {% endblock %}
 
     {% block tracking %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() {
@@ -53,7 +52,6 @@
         gtag('js', new Date());
         gtag('config', '{{ google_analytics_id }}');
     </script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}">gtag('config', '{{ google_conversion_tag }}');</script>
     {% endblock %}
 
     {% block javascripts %}
@@ -163,6 +161,7 @@
                 It helps us improve this open-source project and keep it awesome!<br/>
                 Care to help out?
             </span>
+            <span data-cookie-consent-target="status">Status: Undecided</span>
 
             <div class="flex space-x-4 mt-2 md:mt-0">
                 <button

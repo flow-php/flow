@@ -243,7 +243,6 @@ jobs:
           DOMAIN: flow-php.com
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GOOGLE_ANALYTICS_ID: '${{ vars.GOOGLE_ANALYTICS_ID }}'
-          GOOGLE_CONVERSION_TAG: '${{ vars.GOOGLE_CONVERSION_TAG }}'
           FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
         working-directory: "web/landing"
 

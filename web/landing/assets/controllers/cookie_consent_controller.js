@@ -2,21 +2,26 @@ import { Controller } from "@hotwired/stimulus";
 
 /* stimulusFetch: 'lazy' */
 export default class extends Controller {
-    static targets = ["banner", "button"];
+    static targets = ["banner", "button", "status"];
     static values = {
         gaId: String
     }
 
     connect() {
+        if (!this.isLocalStorageAvailable()) {
+            return ;
+        }
+
         const consentStatus = localStorage.getItem("cookie-consent");
+
         if (consentStatus) {
             this.bannerTarget.classList.add("hidden");
             // If accepted previously, inject GA
             if (consentStatus === "accepted") {
                 this.consentGranted();
-            } else {
-                this.showButton();
             }
+
+            this.showButton();
         } else {
             this.showBanner();
         }
@@ -26,14 +31,12 @@ export default class extends Controller {
         localStorage.setItem("cookie-consent", "accepted");
         this.consentGranted();
         this.hideBanner();
+        this.showButton();
     }
 
     reject() {
         localStorage.setItem("cookie-consent", "rejected");
         gtag("consent", "update", {
-            ad_user_data: 'denied',
-            ad_personalization: 'denied',
-            ad_storage: 'denied',
             analytics_storage: 'denied'
         });
         this.hideBanner();
@@ -43,14 +46,26 @@ export default class extends Controller {
 
     consentGranted() {
         gtag("consent", "update", {
-            ad_user_data: 'granted',
-            ad_personalization: 'granted',
-            ad_storage: 'granted',
             analytics_storage: 'granted'
         });
     }
 
     showBanner() {
+        const status = localStorage.getItem("cookie-consent") === "accepted";
+
+        if (status === true) {
+            this.statusTarget.innerHTML = "Cookies Status: <strong class=\"text-green-600\">Accepted</strong>";
+        }
+
+        if (status === false) {
+            this.statusTarget.innerHTML = "Cookies Status: <strong class=\"text-orange-600\">Rejected</strong>";
+        }
+
+        if (status === undefined) {
+            this.statusTarget.innerHTML = "Cookies Status: <strong class=\"text-slate-400\">Undecided</strong>";
+        }
+
+
         this.bannerTarget.classList.remove("hidden");
         this.hideButton();
     }
@@ -66,5 +81,21 @@ export default class extends Controller {
 
     hideButton() {
         this.buttonTarget.classList.add("hidden");
+    }
+
+    isLocalStorageAvailable() {
+        try {
+            localStorage.setItem('flow_test_local_storage', 'test');
+
+            if (localStorage.getItem('flow_test_local_storage') !== 'test') {
+                localStorage.removeItem('flow_test_local_storage');
+                return false;
+            }
+
+            localStorage.removeItem('flow_test_local_storage');
+            return true;
+        } catch(e) {
+            return false;
+        }
     }
 }
