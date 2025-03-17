@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5db8cc359e2602e472f038e1aa313921",
+    "content-hash": "e3115c5281acca5117d78642e1c1a5c0",
     "packages": [
         {
             "name": "async-aws/core",
@@ -1393,16 +1393,16 @@
         },
         {
             "name": "packaged/thrift",
-            "version": "0.15.0",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/packaged/thrift.git",
-                "reference": "dbf4e5ff5c85d56ccae62265ed25424b366ce269"
+                "reference": "f7fce15fc12ef73b195b6a2a49acda565b352dbe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/packaged/thrift/zipball/dbf4e5ff5c85d56ccae62265ed25424b366ce269",
-                "reference": "dbf4e5ff5c85d56ccae62265ed25424b366ce269",
+                "url": "https://api.github.com/repos/packaged/thrift/zipball/f7fce15fc12ef73b195b6a2a49acda565b352dbe",
+                "reference": "f7fce15fc12ef73b195b6a2a49acda565b352dbe",
                 "shasum": ""
             },
             "require": {
@@ -1426,9 +1426,9 @@
             ],
             "support": {
                 "issues": "https://github.com/packaged/thrift/issues",
-                "source": "https://github.com/packaged/thrift/tree/0.15.0"
+                "source": "https://github.com/packaged/thrift/tree/0.16.0"
             },
-            "time": "2021-09-23T10:34:40+00:00"
+            "time": "2025-03-10T16:15:15+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -5205,7 +5205,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -5221,6 +5221,6 @@
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
