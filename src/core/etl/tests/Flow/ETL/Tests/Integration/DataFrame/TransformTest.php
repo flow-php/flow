@@ -22,14 +22,13 @@ final class TransformTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertEqualsWithDelta(
+        self::assertEquals(
             [
                 ['id' => 1, 'status' => 'active', 'amount' => 410.00, 'currency' => 'PLN'],
                 ['id' => 2, 'status' => 'inactive', 'amount' => 2.5, 'currency' => 'PLN'],
                 ['id' => 3, 'status' => 'active', 'amount' => 10.00, 'currency' => 'PLN'],
             ],
             $rows,
-            0.01
         );
     }
 
@@ -48,14 +47,13 @@ final class TransformTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertEqualsWithDelta(
+        self::assertEquals(
             [
                 ['id' => 1, 'status' => 'active', 'amount' => 410.00, 'currency' => 'PLN'],
                 ['id' => 2, 'status' => 'inactive', 'amount' => 2.5, 'currency' => 'PLN'],
                 ['id' => 3, 'status' => 'active', 'amount' => 10.00, 'currency' => 'PLN'],
             ],
             $rows,
-            0.01
         );
     }
 
@@ -74,14 +72,13 @@ final class TransformTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertEqualsWithDelta(
+        self::assertEquals(
             [
                 ['id' => 1, 'status' => 'active', 'amount' => 410.00, 'currency' => 'PLN'],
                 ['id' => 2, 'status' => 'inactive', 'amount' => 2.5, 'currency' => 'PLN'],
                 ['id' => 3, 'status' => 'active', 'amount' => 10.00, 'currency' => 'PLN'],
             ],
             $rows,
-            0.01
         );
     }
 
@@ -122,14 +119,13 @@ final class TransformTest extends FlowTestCase
             ->fetch()
             ->toArray();
 
-        self::assertEqualsWithDelta(
+        self::assertEquals(
             [
                 ['id' => 1, 'status' => 'active', 'amount' => 410.00, 'currency' => 'PLN'],
                 ['id' => 2, 'status' => 'inactive', 'amount' => 2.5, 'currency' => 'PLN'],
                 ['id' => 3, 'status' => 'active', 'amount' => 10.00, 'currency' => 'PLN'],
             ],
-            $rows,
-            0.01
+            $rows
         );
     }
 }
