@@ -127,6 +127,28 @@ XML);
         self::assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = xml_entry('xml', <<<'XML'
+<xml>
+    <root>
+        <item>
+            <id>1</id>
+            <name>Foo</name>
+        </item>
+        <item>
+            <id>2</id>
+            <name>Bar</name>
+        </item>
+    </root>
+</xml>
+XML);
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, XMLEntry $entry, XMLEntry $nextEntry) : void
     {

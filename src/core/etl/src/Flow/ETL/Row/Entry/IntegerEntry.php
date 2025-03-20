@@ -20,10 +20,7 @@ final class IntegerEntry implements Entry
 
     private Metadata $metadata;
 
-    /**
-     * @var Type<?int>
-     */
-    private readonly Type $type;
+    private readonly IntegerType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -51,6 +48,11 @@ final class IntegerEntry implements Entry
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->metadata);
+    }
+
+    public function duplicate() : Entry
+    {
+        return new self($this->name, $this->value, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

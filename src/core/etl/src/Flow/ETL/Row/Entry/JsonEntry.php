@@ -86,6 +86,14 @@ final class JsonEntry implements Entry
         return new Definition($this->name, $this->type, $this->metadata);
     }
 
+    public function duplicate() : Entry
+    {
+        $entry = new self($this->name, $this->value, $this->type, $this->metadata);
+        $entry->object = $this->object;
+
+        return $entry;
+    }
+
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {

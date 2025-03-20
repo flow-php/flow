@@ -64,7 +64,7 @@ final readonly class BooleanType implements Type
         return \is_bool($value);
     }
 
-    public function makeNullable(bool $nullable) : Type
+    public function makeNullable(bool $nullable) : self
     {
         return new self($nullable);
     }

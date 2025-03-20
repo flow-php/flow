@@ -17,6 +17,11 @@ interface Entry extends \Stringable
 
     public function definition() : Definition;
 
+    /**
+     * @return Entry<TValue, TType>
+     */
+    public function duplicate() : self;
+
     public function is(string|Reference $name) : bool;
 
     /**

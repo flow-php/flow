@@ -61,6 +61,12 @@ final class FloatEntry implements Entry
         return new Definition($this->name, $this->type, $this->metadata);
     }
 
+    public function duplicate() : Entry
+    {
+        /** @phpstan-ignore-next-line */
+        return new self($this->name, $this->value, $this->precision, $this->type, $this->metadata);
+    }
+
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {

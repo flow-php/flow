@@ -42,6 +42,11 @@ final readonly class Row
         return new self($this->entries->add(...$entries));
     }
 
+    public function duplicate() : self
+    {
+        return new self($this->entries()->duplicate());
+    }
+
     public function entries() : Entries
     {
         return $this->entries;

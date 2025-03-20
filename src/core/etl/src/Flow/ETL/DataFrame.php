@@ -26,13 +26,13 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     SortingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema, Schema\Definition};
-use Flow\ETL\Transformer\{
-    AutoCastTransformer,
+use Flow\ETL\Transformer\{AutoCastTransformer,
     CallbackRowTransformer,
     CrossJoinRowsTransformer,
     DropDuplicatesTransformer,
     DropEntriesTransformer,
     DropPartitionsTransformer,
+    DuplicateRowTransformer,
     EntryNameStyleConverterTransformer,
     JoinEachRowsTransformer,
     LimitTransformer,
@@ -46,8 +46,7 @@ use Flow\ETL\Transformer\{
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
     UntilTransformer,
-    WindowFunctionTransformer
-};
+    WindowFunctionTransformer};
 use Flow\Filesystem\Path\Filter;
 
 final class DataFrame
@@ -255,6 +254,13 @@ final class DataFrame
     public function dropPartitions(bool $dropPartitionColumns = false) : self
     {
         $this->pipeline->add(new DropPartitionsTransformer($dropPartitionColumns));
+
+        return $this;
+    }
+
+    public function duplicateRow(mixed $condition, WithEntry ...$entries) : self
+    {
+        $this->pipeline->add(new DuplicateRowTransformer($condition, ...$entries));
 
         return $this;
     }
@@ -776,7 +782,7 @@ final class DataFrame
      *
      * @lazy
      */
-    public function transform(Transformer|Transformation|Transformations $transformer) : self
+    public function transform(Transformer|Transformation|Transformations|WithEntry $transformer) : self
     {
         return $this->with($transformer);
     }
@@ -823,7 +829,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function with(Transformer|Transformation|Transformations $transformer) : self
+    public function with(Transformer|Transformation|Transformations|WithEntry $transformer) : self
     {
         if ($transformer instanceof Transformer) {
             $this->pipeline->add($transformer);
@@ -837,18 +843,28 @@ final class DataFrame
             return $this;
         }
 
+        if ($transformer instanceof WithEntry) {
+            $this->withEntry($transformer->name, $transformer->function);
+
+            return $this;
+        }
+
         return $transformer->transform($this);
     }
 
     /**
      * @lazy
      *
-     * @param array<string, ScalarFunction|WindowFunction> $references
+     * @param array<string, ScalarFunction|WindowFunction|WithEntry> $references
      */
     public function withEntries(array $references) : self
     {
         foreach ($references as $entryName => $ref) {
-            $this->withEntry($entryName, $ref);
+            if ($ref instanceof WithEntry) {
+                $this->withEntry($ref->name, $ref->function);
+            } else {
+                $this->withEntry($entryName, $ref);
+            }
         }
 
         return $this;

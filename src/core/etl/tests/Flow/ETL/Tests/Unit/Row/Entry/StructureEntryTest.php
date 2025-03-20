@@ -90,6 +90,19 @@ final class StructureEntryTest extends FlowTestCase
         );
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = structure_entry('name', ['1' => 1, '2' => 2, '3' => 3], type_structure([
+            '1' => type_int(),
+            '2' => type_int(),
+            '3' => type_int(),
+        ]));
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame(

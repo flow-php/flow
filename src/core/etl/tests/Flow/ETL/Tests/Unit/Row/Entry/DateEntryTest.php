@@ -23,6 +23,15 @@ final class DateEntryTest extends FlowTestCase
         yield 'equal names and equal values for given format' => [true, date_entry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00')), date_entry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00'))];
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = date_entry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00'));
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame('0', (date_entry('0', new \DateTimeImmutable('2020-07-13 12:00')))->name());

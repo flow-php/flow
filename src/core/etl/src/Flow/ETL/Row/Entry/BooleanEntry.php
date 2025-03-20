@@ -20,10 +20,7 @@ final class BooleanEntry implements Entry
 
     private Metadata $metadata;
 
-    /**
-     * @var Type<?bool>
-     */
-    private readonly Type $type;
+    private readonly BooleanType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -47,6 +44,11 @@ final class BooleanEntry implements Entry
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->metadata);
+    }
+
+    public function duplicate() : Entry
+    {
+        return new self($this->name, $this->value, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

@@ -59,6 +59,15 @@ final class UuidEntryTest extends FlowTestCase
         self::assertEquals($value, $entry->value()?->toString());
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = uuid_entry('entry-name', $uuid = Uuid::fromString('00000000-0000-0000-0000-000000000000'));
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, UuidEntry $entry, UuidEntry $nextEntry) : void
     {

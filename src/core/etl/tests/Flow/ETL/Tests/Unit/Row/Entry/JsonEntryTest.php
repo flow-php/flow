@@ -81,6 +81,15 @@ final class JsonEntryTest extends FlowTestCase
         ];
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = json_entry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_empty_entry() : void
     {
         $jsonEntry = json_entry('empty', []);

@@ -59,6 +59,11 @@ final class StructureEntry implements Entry
         return new Definition($this->name, $this->type, $this->metadata);
     }
 
+    public function duplicate() : self
+    {
+        return new self($this->name, $this->value, $this->type, $this->metadata);
+    }
+
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {

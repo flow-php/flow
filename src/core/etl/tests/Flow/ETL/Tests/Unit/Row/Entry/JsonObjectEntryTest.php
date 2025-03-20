@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\integer_entry;
+use function Flow\ETL\DSL\{integer_entry, json_object_entry};
 use Flow\ETL\Row\Entry\{JsonEntry};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -53,6 +53,15 @@ final class JsonObjectEntryTest extends FlowTestCase
             JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => integer_entry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
             JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => integer_entry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
         ];
+    }
+
+    public function test_duplicating_entry() : void
+    {
+        $entry = json_object_entry('entry-name', ['id' => 1, 'name' => 'one']);
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
     }
 
     #[DataProvider('is_equal_data_provider')]

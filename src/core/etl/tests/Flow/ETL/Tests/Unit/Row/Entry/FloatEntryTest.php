@@ -27,6 +27,15 @@ final class FloatEntryTest extends FlowTestCase
         self::assertSame(3, float_entry('name', 1.0, 3)->precision);
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = float_entry('float', 1.0);
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame('0', (float_entry('0', 0))->name());

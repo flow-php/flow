@@ -34,6 +34,15 @@ final class StringEntryTest extends FlowTestCase
         self::assertEquals('IT SHOULD BE UPPERCASE', $entry->value());
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = string_entry('str', 'value');
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, StringEntry $entry, StringEntry $nextEntry) : void
     {

@@ -69,7 +69,7 @@ final readonly class IntegerType implements Type
         return \is_int($value);
     }
 
-    public function makeNullable(bool $nullable) : Type
+    public function makeNullable(bool $nullable) : self
     {
         return new self($nullable);
     }

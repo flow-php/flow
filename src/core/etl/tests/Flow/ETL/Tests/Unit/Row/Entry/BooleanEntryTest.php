@@ -19,6 +19,15 @@ final class BooleanEntryTest extends FlowTestCase
         yield 'different names characters and equal values' => [false, boolean_entry('NAME', true), boolean_entry('name', true)];
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = boolean_entry('entry-name', true);
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame('0', (boolean_entry('0', true))->name());

@@ -22,10 +22,7 @@ final class StringEntry implements Entry
 
     private Metadata $metadata;
 
-    /**
-     * @var Type<?string>
-     */
-    private readonly Type $type;
+    private readonly StringType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -83,6 +80,11 @@ final class StringEntry implements Entry
                 ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
                 : $this->metadata
         );
+    }
+
+    public function duplicate() : Entry
+    {
+        return new self($this->name, $this->value, $this->type, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

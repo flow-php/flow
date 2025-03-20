@@ -26,6 +26,15 @@ final class XMLElementEntryTest extends FlowTestCase
         xml_element_entry('node', 'test');
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = xml_element_entry('node', '<node attr="test">value</node>');
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry->toString(), $duplicated->toString());
+    }
+
     public function test_serialization() : void
     {
         $element = (new \DOMDocument())->createElement('testElement', 'This is a test');

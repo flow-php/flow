@@ -78,6 +78,17 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return \count($this->entries);
     }
 
+    public function duplicate() : self
+    {
+        $entries = [];
+
+        foreach ($this->all() as $entry) {
+            $entries[$entry->name()] = $entry->duplicate();
+        }
+
+        return self::recreate($entries);
+    }
+
     /**
      * @throws InvalidArgumentException
      *

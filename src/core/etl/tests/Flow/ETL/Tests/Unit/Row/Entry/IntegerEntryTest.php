@@ -19,6 +19,15 @@ final class IntegerEntryTest extends FlowTestCase
         yield 'different names characters and equal values' => [false, integer_entry('NAME', 1), integer_entry('name', 1)];
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = integer_entry('int', 1);
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame('0', (integer_entry('0', 0))->name());

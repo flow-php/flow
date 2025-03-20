@@ -78,6 +78,15 @@ final class TimeEntryTest extends FlowTestCase
         );
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = time_entry('name', new \DateInterval('P1D'));
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_entry_name_can_be_zero() : void
     {
         self::assertSame('0', (time_entry('0', new \DateInterval('PT10S')))->name());

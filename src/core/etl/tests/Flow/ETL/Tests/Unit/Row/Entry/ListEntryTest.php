@@ -75,6 +75,15 @@ final class ListEntryTest extends FlowTestCase
         );
     }
 
+    public function test_duplicating_entry() : void
+    {
+        $entry = list_entry('strings', ['one', 'two', 'three'], type_list(type_string()));
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
     public function test_is_equal() : void
     {
         self::assertTrue(

@@ -131,7 +131,8 @@ use Flow\ETL\{Attribute\DocumentationDSL,
     Rows,
     Transformation,
     Transformer,
-    Window};
+    Window,
+    WithEntry};
 use Flow\Filesystem\Stream\Mode;
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
 use Flow\Serializer\{NativePHPSerializer, Serializer};
@@ -1697,4 +1698,10 @@ function caster_options() : Options
 function caster(?Options $options = null) : Caster
 {
     return Caster::default($options ?? caster_options());
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function with_entry(string $name, ScalarFunction $function) : WithEntry
+{
+    return new WithEntry($name, $function);
 }

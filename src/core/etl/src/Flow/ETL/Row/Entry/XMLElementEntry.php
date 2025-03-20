@@ -95,6 +95,11 @@ final class XMLElementEntry implements Entry
         return new Definition($this->name, $this->type, $this->metadata);
     }
 
+    public function duplicate() : Entry
+    {
+        return new self($this->name, $this->value ? $this->value->cloneNode(true) : null, $this->type, $this->metadata);
+    }
+
     public function is(Reference|string $name) : bool
     {
         if ($name instanceof Reference) {

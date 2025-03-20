@@ -94,6 +94,11 @@ final class XMLEntry implements Entry
         return new Definition($this->name, $this->type, $this->metadata);
     }
 
+    public function duplicate() : Entry
+    {
+        return new self($this->name, $this->value ? clone $this->value : null, $this->type, $this->metadata);
+    }
+
     public function is(Reference|string $name) : bool
     {
         if ($name instanceof Reference) {

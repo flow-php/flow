@@ -62,6 +62,11 @@ final class DateEntry implements Entry
         return new Definition($this->name, $this->type, $this->metadata);
     }
 
+    public function duplicate() : Entry
+    {
+        return new self($this->name, $this->value ? clone $this->value : null, $this->type, $this->metadata);
+    }
+
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {

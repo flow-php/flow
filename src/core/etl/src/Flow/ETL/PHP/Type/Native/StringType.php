@@ -64,7 +64,7 @@ final readonly class StringType implements Type
         return \is_string($value);
     }
 
-    public function makeNullable(bool $nullable) : Type
+    public function makeNullable(bool $nullable) : self
     {
         return new self($nullable);
     }
