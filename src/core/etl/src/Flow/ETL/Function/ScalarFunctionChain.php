@@ -372,6 +372,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Mod($this, $value);
     }
 
+    public function modifyDateTime(string|ScalarFunction $modifier) : self
+    {
+        return new ModifyDateTime($this, $modifier);
+    }
+
     public function multiply(ScalarFunction|int|float $value) : self
     {
         return new Multiply($this, $value);
