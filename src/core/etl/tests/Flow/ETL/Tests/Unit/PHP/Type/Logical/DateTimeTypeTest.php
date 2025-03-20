@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\{type_datetime, type_int};
+use function Flow\ETL\DSL\{type_date, type_datetime, type_int, type_null};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class DateTimeTypeTest extends FlowTestCase
@@ -17,6 +17,14 @@ final class DateTimeTypeTest extends FlowTestCase
         self::assertFalse(
             type_datetime()->isEqual(type_int())
         );
+    }
+
+    public function test_is_comparable() : void
+    {
+        self::assertTrue(type_datetime()->isComparableWith(type_datetime()));
+        self::assertTrue(type_datetime()->isComparableWith(type_date()));
+        self::assertTrue(type_datetime()->isComparableWith(type_null()));
+        self::assertFalse(type_datetime()->isComparableWith(type_int()));
     }
 
     public function test_is_valid() : void

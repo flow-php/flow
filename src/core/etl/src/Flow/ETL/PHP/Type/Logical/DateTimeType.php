@@ -32,6 +32,10 @@ final readonly class DateTimeType implements Type
             return true;
         }
 
+        if ($type instanceof DateType) {
+            return true;
+        }
+
         return false;
     }
 
