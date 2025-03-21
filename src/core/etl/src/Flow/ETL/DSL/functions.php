@@ -111,6 +111,7 @@ use Flow\ETL\{Attribute\DocumentationDSL,
     Cache\Implementation\FilesystemCache,
     Config,
     Config\ConfigBuilder,
+    Constraint\UniqueConstraint,
     DataFrame,
     Extractor,
     Extractor\ArrayExtractor,
@@ -1704,4 +1705,10 @@ function caster(?Options $options = null) : Caster
 function with_entry(string $name, ScalarFunction $function) : WithEntry
 {
     return new WithEntry($name, $function);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function constraint_unique(string $reference, string ...$references) : UniqueConstraint
+{
+    return new UniqueConstraint($reference, ...$references);
 }

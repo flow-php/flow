@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformation;
 
 use function Flow\ETL\DSL\{df, from_array};
-use Flow\ETL\AddRowIndex\StartFrom;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformation\AddRowIndex;
+use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 
 final class AddRowIndexTest extends FlowTestCase
 {

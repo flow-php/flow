@@ -19,6 +19,7 @@ use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Pipeline\{BatchingPipeline,
     CachingPipeline,
     CollectingPipeline,
+    ConstrainedPipeline,
     GroupByPipeline,
     HashJoinPipeline,
     LinkedPipeline,
@@ -166,6 +167,15 @@ final class DataFrame
 
             return $row;
         }));
+
+        return $this;
+    }
+
+    public function constrain(Constraint $constraint, Constraint ...$constraints) : self
+    {
+        $constraints = \array_merge([$constraint], $constraints);
+
+        $this->pipeline = new LinkedPipeline(new ConstrainedPipeline($this->pipeline, $constraints));
 
         return $this;
     }

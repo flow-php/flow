@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\AddRowIndex;
+namespace Flow\ETL\Transformation\AddRowIndex;
 
 enum StartFrom
 {
