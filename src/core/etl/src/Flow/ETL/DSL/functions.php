@@ -104,7 +104,8 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References, Schema};
-use Flow\ETL\{Attribute\DocumentationDSL,
+use Flow\ETL\{Analyze,
+    Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
     Attribute\Type as DSLType,
@@ -1711,4 +1712,10 @@ function with_entry(string $name, ScalarFunction $function) : WithEntry
 function constraint_unique(string $reference, string ...$references) : UniqueConstraint
 {
     return new UniqueConstraint($reference, ...$references);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function analyze() : Analyze
+{
+    return new Analyze();
 }

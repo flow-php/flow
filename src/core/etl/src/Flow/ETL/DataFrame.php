@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{refs, to_output};
+use function Flow\ETL\DSL\{analyze, refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
@@ -692,20 +692,29 @@ final class DataFrame
     /**
      * @trigger
      *
+     * When analyzing pipeline execution we can chose to collect various metrics through analyze()->with*() method
+     *
+     * - column statistics - analyze()->withColumnStatistics()
+     * - schema - analyze()->withSchema()
+     *
      * @param null|callable(Rows $rows, FlowContext $context): void $callback
-     * @param bool $analyze - when set to true, run will return Report
+     * @param Analyze|bool $analyze - when set run will return Report
+     *
+     * @return ($analyze is Analyze|true ? Report : null)
      */
-    public function run(?callable $callback = null, bool $analyze = false) : ?Report
+    public function run(?callable $callback = null, bool|Analyze $analyze = false) : ?Report
     {
         $clone = clone $this;
 
         $totalRows = 0;
-        $schema = new Schema();
+
+        $analyze = $analyze === true ? analyze() : $analyze;
 
         if ($analyze) {
             $startedAt = $this->context->config->clock()->now();
             $startTime = Statistics\HighResolutionTime::now();
-            $columnStatistics = new Statistics\Columns();
+            $columnStatistics = $analyze->collectColumnStatistics() ? new Statistics\Columns() : null;
+            $schema = $analyze->collectSchema() ? new Schema() : null;
         }
 
         foreach ($clone->pipeline->process($clone->context) as $rows) {
@@ -714,12 +723,17 @@ final class DataFrame
             }
 
             if ($analyze) {
-                $schema = $schema->merge($rows->schema());
                 $totalRows += $rows->count();
 
-                foreach ($rows->all() as $row) {
-                    foreach ($row->entries()->all() as $entry) {
-                        $columnStatistics->add($entry);
+                if ($schema !== null) {
+                    $schema = $schema->merge($rows->schema());
+                }
+
+                if ($columnStatistics !== null) {
+                    foreach ($rows->all() as $row) {
+                        foreach ($row->entries()->all() as $entry) {
+                            $columnStatistics->add($entry);
+                        }
                     }
                 }
             }

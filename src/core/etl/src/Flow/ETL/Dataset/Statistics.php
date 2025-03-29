@@ -11,7 +11,7 @@ final readonly class Statistics
     public function __construct(
         private int $totalRows,
         public ExecutionTime $executionTime,
-        public Columns $columns,
+        public ?Columns $columns,
     ) {
     }
 

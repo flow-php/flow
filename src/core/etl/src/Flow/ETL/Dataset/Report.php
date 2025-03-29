@@ -9,13 +9,13 @@ use Flow\ETL\Row\Schema;
 final readonly class Report
 {
     public function __construct(
-        private Schema $schema,
+        private ?Schema $schema,
         private Statistics $statistics,
     ) {
 
     }
 
-    public function schema() : Schema
+    public function schema() : ?Schema
     {
         return $this->schema;
     }

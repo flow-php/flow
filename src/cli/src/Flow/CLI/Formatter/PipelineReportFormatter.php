@@ -19,13 +19,15 @@ final readonly class PipelineReportFormatter
 
     public function format() : void
     {
-        if (option_bool('stats-schema', $this->input)) {
+        $schema = $this->report->schema();
+
+        if (option_bool('stats-schema', $this->input) && $schema) {
             $this->style->newLine();
             $this->style->section('Schema');
 
             $normalizedSchema = [];
 
-            foreach ($this->report->schema()->definitions() as $definition) {
+            foreach ($schema->definitions() as $definition) {
                 $normalizedSchema[] = [
                     'name' => $definition->entry()->name(),
                     'type' => $definition->type()->toString(),
@@ -41,12 +43,14 @@ final readonly class PipelineReportFormatter
                 ->render();
         }
 
-        if (option_bool('stats-columns', $this->input)) {
+        $columnsStatistics = $this->report->statistics()->columns;
+
+        if (option_bool('stats-columns', $this->input) && $columnsStatistics) {
             $normalizedColumnStatistics = [];
 
             $valueFormatter = new ValueFormatter();
 
-            foreach ($this->report->statistics()->columns->all() as $columnStatistics) {
+            foreach ($columnsStatistics->all() as $columnStatistics) {
                 $normalizedColumnStatistics[] = [
                     'name' => $columnStatistics->name(),
                     'type' => $columnStatistics->type()->toString(),

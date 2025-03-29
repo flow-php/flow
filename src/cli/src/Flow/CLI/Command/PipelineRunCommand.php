@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use function Flow\CLI\option_bool;
+use function Flow\ETL\DSL\analyze;
 use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\{ConfigOptions, StatisticsOptions};
 use Flow\CLI\Formatter\PipelineReportFormatter;
@@ -60,12 +61,22 @@ HELP
     {
         $style = new SymfonyStyle($input, $output);
 
+        $analyze = option_bool('analyze', $input) ? analyze() : null;
+
+        if ($analyze && option_bool('stats-schema', $input)) {
+            $analyze->withSchema();
+        }
+
+        if ($analyze && option_bool('stats-columns', $input)) {
+            $analyze->withColumnStatistics();
+        }
+
         try {
             ob_start();
             $df = match ($this->pipelinePath->extension()) {
                 'php' => (new PipelineFactory($this->pipelinePath))->fromPHP(),
             };
-            $report = $df->run(analyze: option_bool('analyze', $input));
+            $report = $df->run(analyze: $analyze);
 
             $style->writeln(ob_get_clean());
 

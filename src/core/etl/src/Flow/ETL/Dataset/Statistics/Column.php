@@ -84,7 +84,14 @@ final class Column
             return;
         }
 
-        if ($entry instanceof Entry\DateTimeEntry || $entry instanceof Entry\DateEntry || $entry instanceof Entry\IntegerEntry || $entry instanceof Entry\FloatEntry || $entry instanceof Entry\BooleanEntry) {
+        if ($entry instanceof Entry\DateEntry || $entry instanceof Entry\DateTimeEntry) {
+            $this->max = \max($this->max ?? $value, $value);
+            $this->min = \min($this->min ?? $value, $value);
+
+            return;
+        }
+
+        if ($entry instanceof Entry\IntegerEntry || $entry instanceof Entry\FloatEntry || $entry instanceof Entry\BooleanEntry) {
             $this->min = \min($this->min ?? $value, $value);
             $this->max = \max($this->max ?? $value, $value);
         }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\CLI\Command;
 
-use function Flow\CLI\{option_int, option_int_nullable};
-use function Flow\ETL\DSL\{df};
+use function Flow\CLI\{option_bool, option_int, option_int_nullable};
+use function Flow\ETL\DSL\{analyze, df};
 use Flow\CLI\Arguments\{FilePathArgument};
 use Flow\CLI\Command\Traits\{CSVOptions, ConfigOptions, JSONOptions, ParquetOptions, StatisticsOptions, XMLOptions};
 use Flow\CLI\Factory\ExtractorFactory;
@@ -82,11 +82,21 @@ final class FileAnalyzeCommand extends Command
         $progress = $style->createProgressBar();
         $progress->setFormat('Analyzed Rows: %current% %bar%');
 
+        $analyze = analyze();
+
+        if (option_bool('stats-schema', $input)) {
+            $analyze->withSchema();
+        }
+
+        if (option_bool('stats-columns', $input)) {
+            $analyze->withColumnStatistics();
+        }
+
         $report = $df->run(
             static function (Rows $rows) use ($progress) : void {
                 $progress->advance($rows->count());
             },
-            analyze: true
+            analyze: $analyze
         );
 
         if ($report === null) {
