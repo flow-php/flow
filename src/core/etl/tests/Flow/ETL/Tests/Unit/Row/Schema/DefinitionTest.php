@@ -191,6 +191,15 @@ final class DefinitionTest extends FlowTestCase
         );
     }
 
+    public function test_merging_two_definitions_created_from_null() : void
+    {
+        self::assertTrue(
+            string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true]))
+                ->merge(string_schema('id', true, Metadata::fromArray([Metadata::FROM_NULL => true])))
+                ->metadata()->has(Metadata::FROM_NULL)
+        );
+    }
+
     public function test_merging_two_different_lists() : void
     {
         self::assertEquals(

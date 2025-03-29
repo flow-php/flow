@@ -23,6 +23,7 @@ use function Flow\ETL\DSL\{array_to_rows,
     string_entry};
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\Schema\Metadata;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class SchemaTest extends FlowIntegrationTestCase
@@ -84,7 +85,7 @@ final class SchemaTest extends FlowIntegrationTestCase
             schema(
                 int_schema('id'),
                 str_schema('name'),
-                str_schema('active', nullable: true)
+                str_schema('active', nullable: true, metadata: Metadata::fromArray([Metadata::FROM_NULL => true]))
             ),
             $rows->schema()
         );

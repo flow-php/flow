@@ -218,6 +218,14 @@ final class Definition
             throw new RuntimeException(\sprintf('Cannot merge different definitions, %s and %s', $this->ref->name(), $definition->ref->name()));
         }
 
+        if ($this->metadata->has(Metadata::FROM_NULL) && $definition->metadata()->has(Metadata::FROM_NULL)) {
+            return new self(
+                $this->ref,
+                $this->type()->makeNullable($this->isNullable() || $definition->isNullable()),
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
         if ($this->metadata->has(Metadata::FROM_NULL)) {
             return new self(
                 $this->ref,
