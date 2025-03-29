@@ -53,7 +53,7 @@ final readonly class PipelineReportFormatter
             foreach ($columnsStatistics->all() as $columnStatistics) {
                 $normalizedColumnStatistics[] = [
                     'name' => $columnStatistics->name(),
-                    'type' => $columnStatistics->type()->toString(),
+                    'type' => $schema ? $schema->get($columnStatistics->reference())->type()->toString() : 'N/A',
                     'nulls_count' => $valueFormatter->format($columnStatistics->nullCount()),
                     'distinct_count' => $valueFormatter->format($columnStatistics->distinctCount()),
                     'min' => $valueFormatter->format($columnStatistics->min()),

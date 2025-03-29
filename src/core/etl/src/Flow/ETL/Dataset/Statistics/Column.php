@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
-use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\{Entry, Reference};
 
 final class Column
 {
@@ -25,15 +24,18 @@ final class Column
 
     private int $nullsCount = 0;
 
+    private readonly Reference $reference;
+
     /**
      * @param Entry<mixed, mixed> $entry
      *
      * @throws \JsonException
      */
-    public function __construct(public readonly Entry $entry)
+    public function __construct(Entry $entry)
     {
+        $this->reference = $entry->ref();
         $this->distinctCounter = new DistinctCounter();
-        $this->calculate($this->entry);
+        $this->calculate($entry);
     }
 
     /**
@@ -41,7 +43,7 @@ final class Column
      */
     public function calculate(Entry $entry) : void
     {
-        if (!$entry->is($this->entry->name())) {
+        if (!$this->reference->is($entry->ref())) {
             return;
         }
 
@@ -134,7 +136,7 @@ final class Column
 
     public function name() : string
     {
-        return $this->entry->name();
+        return $this->reference->name();
     }
 
     public function nullCount() : int
@@ -142,11 +144,8 @@ final class Column
         return $this->nullsCount;
     }
 
-    /**
-     * @return Type<mixed>
-     */
-    public function type() : Type
+    public function reference() : Reference
     {
-        return $this->entry->type();
+        return $this->reference;
     }
 }
