@@ -1,6 +1,5 @@
 <!-- 
-    Bellow section will be used to automatically generate changelog, please do not modify HTML code structure 
-
+    Below section will be used to automatically generate changelog, please do not modify HTML code structure
     DO NOT REMOVE that HTML STRUCTURE, INSTEAD ADD YOUR CHANGES INSIDE THE LISTS 
     PULL REQUESTS WITHOUT CHANGELOG CAN'T BE MERGED 
 -->
