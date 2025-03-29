@@ -1,4 +1,9 @@
-<!-- Bellow section will be used to automatically generate changelog, please do not modify HTML code structure -->
+<!-- 
+    Bellow section will be used to automatically generate changelog, please do not modify HTML code structure 
+
+    DO NOT REMOVE that HTML STRUCTURE, INSTEAD ADD YOUR CHANGES INSIDE THE LISTS 
+    PULL REQUESTS WITHOUT CHANGELOG CAN'T BE MERGED 
+-->
 <h2>Change Log</h2>
 <div id="change-log">
   <h4>Added</h4>
