@@ -61,7 +61,7 @@ HELP
     {
         $style = new SymfonyStyle($input, $output);
 
-        $analyze = option_bool('analyze', $input) ? analyze() : null;
+        $analyze = option_bool('analyze', $input) ? analyze() : false;
 
         if ($analyze && option_bool('stats-schema', $input)) {
             $analyze->withSchema();
