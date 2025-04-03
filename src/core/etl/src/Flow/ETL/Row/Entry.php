@@ -8,8 +8,8 @@ use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @template TValue
- * @template TType
+ * @template-covariant TValue of mixed
+ * @template-covariant TType of mixed
  */
 interface Entry extends \Stringable
 {
@@ -25,12 +25,12 @@ interface Entry extends \Stringable
     public function is(string|Reference $name) : bool;
 
     /**
-     * @param Entry<TValue, TType> $entry
+     * @param Entry<mixed, mixed> $entry
      */
     public function isEqual(self $entry) : bool;
 
     /**
-     * @param callable(TValue) : TValue $mapper
+     * @param callable(mixed) : mixed $mapper
      *
      * @return Entry<TValue, TType>
      */
@@ -58,8 +58,6 @@ interface Entry extends \Stringable
     public function value();
 
     /**
-     * @param TValue $value
-     *
      * @return Entry<TValue, TType>
      */
     public function withValue(mixed $value) : self;
