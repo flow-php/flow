@@ -47,7 +47,8 @@ final class ArrayExpandTest extends FlowTestCase
 
     public function test_for_not_array_entry() : void
     {
-        self::assertNull(
+        self::assertEquals(
+            [],
             array_expand(ref('integer_entry'))->eval(row(int_entry('integer_entry', 1)))
         );
     }

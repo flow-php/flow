@@ -16,7 +16,7 @@ final class MathTest extends FlowTestCase
 
         self::assertSame(
             10,
-            (new Divide(ref('a'), ref('b')))->eval($row)
+            (new Divide(ref('a'), ref('b')))->eval($row)?->value
         );
     }
 
@@ -26,7 +26,7 @@ final class MathTest extends FlowTestCase
 
         self::assertSame(
             0,
-            (new Minus(ref('a'), ref('b')))->eval($row)
+            (new Minus(ref('a'), ref('b')))->eval($row)?->value
         );
     }
 
@@ -36,7 +36,7 @@ final class MathTest extends FlowTestCase
 
         self::assertSame(
             10,
-            (new Mod(ref('a'), ref('b')))->eval($row)
+            (new Mod(ref('a'), ref('b')))->eval($row)?->value
         );
     }
 
@@ -44,7 +44,7 @@ final class MathTest extends FlowTestCase
     {
         self::assertSame(
             200,
-            ref('a')->plus(lit(100))->plus(lit(100))->minus(ref('b'))->eval(row(int_entry('a', 100), int_entry('b', 100)))
+            ref('a')->plus(lit(100))->plus(lit(100))->minus(ref('b'))->eval(row(int_entry('a', 100), int_entry('b', 100)))?->value
         );
     }
 
@@ -54,7 +54,7 @@ final class MathTest extends FlowTestCase
 
         self::assertSame(
             10_000,
-            (new Multiply(ref('a'), ref('b')))->eval($row)
+            (new Multiply(ref('a'), ref('b')))->eval($row)?->value
         );
     }
 
@@ -64,7 +64,7 @@ final class MathTest extends FlowTestCase
 
         self::assertSame(
             200,
-            (new Plus(ref('a'), ref('b')))->eval($row)
+            (new Plus(ref('a'), ref('b')))->eval($row)?->value
         );
     }
 
@@ -74,7 +74,7 @@ final class MathTest extends FlowTestCase
 
         self::assertSame(
             1,
-            (new Power(ref('a'), ref('b')))->eval($row)
+            (new Power(ref('a'), ref('b')))->eval($row)?->value
         );
     }
 

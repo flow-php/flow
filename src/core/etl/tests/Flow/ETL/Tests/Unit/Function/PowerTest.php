@@ -24,7 +24,7 @@ final class PowerTest extends FlowTestCase
     {
         self::assertSame(
             100,
-            ref('int')->power(lit(2))->eval(row(int_entry('int', 10)))
+            ref('int')->power(lit(2))->eval(row(int_entry('int', 10)))->value
         );
     }
 }

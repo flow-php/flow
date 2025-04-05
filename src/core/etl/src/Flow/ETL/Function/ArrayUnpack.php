@@ -15,14 +15,14 @@ final class ArrayUnpack extends ScalarFunctionChain implements ScalarFunction\Un
     ) {
     }
 
-    public function eval(Row $row) : ?array
+    public function eval(Row $row) : array
     {
         $array = (new Parameter($this->array))->asArray($row);
         $skipKeys = (new Parameter($this->skipKeys))->asArray($row);
         $entryPrefix = (new Parameter($this->entryPrefix))->asString($row);
 
         if ($array === null || $skipKeys === null) {
-            return null;
+            return [];
         }
 
         $values = [];

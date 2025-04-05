@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer\ScalarFunctionTransformer;
 
-use function Flow\ETL\DSL\{float_entry, flow_context, ref, row, rows};
+use function Flow\ETL\DSL\{float_entry, flow_context, int_entry, integer_entry, ref, row, rows};
 use Flow\ETL\Row\Entry\{FloatEntry, IntegerEntry};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
@@ -80,15 +80,15 @@ final class MathTest extends FlowTestCase
     public static function power_data_provider() : \Generator
     {
         yield [
-            float_entry('a', 0.3),
-            float_entry('b', -0.1),
-            ['result' => 1.127945, 'a' => 0.3, 'b' => -0.1],
+            float_entry('a', -0.3, 1),
+            int_entry('b', -1),
+            ['result' => -3.3, 'a' => -0.3, 'b' => -1],
         ];
 
         yield [
-            float_entry('a', 0.3, 8),
-            float_entry('b', -0.1, 3),
-            ['result' => 1.12794487, 'a' => 0.3, 'b' => -0.1],
+            float_entry('a', -0.3, 8),
+            integer_entry('b', 10),
+            ['result' => 5.9E-6, 'a' => -0.3, 'b' => 10],
         ];
     }
 

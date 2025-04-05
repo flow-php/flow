@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\{type_float, type_integer};
 use Flow\Calculator\Calculator;
+use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 
 final class Mod extends ScalarFunctionChain
@@ -16,7 +18,7 @@ final class Mod extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?ScalarResult
     {
         $leftValue = (new Parameter($this->left))->asNumber($row);
         $rightValue = (new Parameter($this->right))->asNumber($row);
@@ -41,6 +43,12 @@ final class Mod extends ScalarFunctionChain
             );
         }
 
-        return (new Calculator())->modulus($leftValue, $rightValue, $scale);
+        $result = (new Calculator())->modulus($leftValue, $rightValue, $scale);
+
+        if (\is_int($result)) {
+            return new ScalarResult($result, type_integer());
+        }
+
+        return new ScalarResult($result, type_float(precision: $scale));
     }
 }

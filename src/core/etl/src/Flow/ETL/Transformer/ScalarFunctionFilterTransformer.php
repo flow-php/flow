@@ -16,6 +16,14 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        return $rows->filter(fn (Row $r) : bool => (bool) $this->function->eval($r));
+        return $rows->filter(function (Row $r) : bool {
+            $value = $this->function->eval($r);
+
+            if ($value instanceof ScalarFunction\ScalarResult) {
+                $value = $value->value;
+            }
+
+            return (bool) $value;
+        });
     }
 }

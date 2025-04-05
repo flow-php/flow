@@ -13,12 +13,12 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
     {
     }
 
-    public function eval(Row $row) : ?array
+    public function eval(Row $row) : array
     {
         $array = (new Parameter($this->ref))->asArray($row);
 
         if ($array === null) {
-            return null;
+            return [];
         }
 
         if ($this->expand === ArrayExpand\ArrayExpand::KEYS) {
@@ -26,7 +26,7 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
         }
 
         if ($this->expand === ArrayExpand\ArrayExpand::BOTH) {
-            return \array_map(fn ($key, $value) => [$key => $value], \array_keys($array), $array);
+            return \array_map(static fn ($key, $value) => [$key => $value], \array_keys($array), $array);
         }
 
         return $array;

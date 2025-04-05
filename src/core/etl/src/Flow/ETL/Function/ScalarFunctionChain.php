@@ -176,9 +176,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new DateTimeFormat($this, $format);
     }
 
-    public function divide(ScalarFunction|int|float|string $ref) : self
+    public function divide(ScalarFunction|int|float|string $ref, ScalarFunction|int $scale = 6) : self
     {
-        return new Divide($this, $ref);
+        return new Divide($this, $ref, $scale);
     }
 
     /**
@@ -362,14 +362,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ToLower($this);
     }
 
-    public function minus(ScalarFunction|int|float $ref) : self
+    public function minus(ScalarFunction|int|float $ref, ScalarFunction|int $scale = 0) : self
     {
-        return new Minus($this, $ref);
+        return new Minus($this, $ref, $scale);
     }
 
-    public function mod(ScalarFunction|int|float $value) : self
+    public function mod(ScalarFunction|int|float $value, ScalarFunction|int $scale = 0) : self
     {
-        return new Mod($this, $value);
+        return new Mod($this, $value, $scale);
     }
 
     public function modifyDateTime(string|ScalarFunction $modifier) : self
@@ -418,14 +418,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Any($this, new Not($function));
     }
 
-    public function plus(ScalarFunction|int|float $ref) : self
+    public function plus(ScalarFunction|int|float $ref, ScalarFunction|int $scale = 0) : self
     {
-        return new Plus($this, $ref);
+        return new Plus($this, $ref, $scale);
     }
 
-    public function power(ScalarFunction|int|float $value) : self
+    public function power(ScalarFunction|int|float $value, ScalarFunction|int $scale = 0) : self
     {
-        return new Power($this, $value instanceof ScalarFunction ? $value : lit($value));
+        return new Power($this, $value instanceof ScalarFunction ? $value : lit($value), $scale);
     }
 
     public function regex(ScalarFunction|string $pattern, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : self

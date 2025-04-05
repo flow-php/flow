@@ -52,8 +52,8 @@ XML;
     #[DataProvider('cast_provider')]
     public function test_cast(mixed $from, string $to, mixed $expected) : void
     {
-        $resultRefCast = ref('value')->cast($to)->eval(row((new EntryFactory())->create('value', $from)));
-        $resultCastRef = cast(ref('value'), $to)->eval(row((new EntryFactory())->create('value', $from)));
+        $resultRefCast = ref('value')->cast($to)->eval(row((new EntryFactory())->create('value', $from)))->value;
+        $resultCastRef = cast(ref('value'), $to)->eval(row((new EntryFactory())->create('value', $from)))->value;
 
         if (\is_object($expected) || \is_object($from)) {
             self::assertEquals($expected, $resultRefCast);

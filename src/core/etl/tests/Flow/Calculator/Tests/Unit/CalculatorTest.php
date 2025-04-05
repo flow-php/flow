@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Calculator\Unit;
+namespace Flow\Calculator\Tests\Unit;
 
 use Flow\Calculator\{Calculator, NumberNormalizer};
 use Flow\Calculator\Exception\InvalidExponentException;

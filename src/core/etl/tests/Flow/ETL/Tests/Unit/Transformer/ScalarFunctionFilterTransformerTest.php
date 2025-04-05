@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use function Flow\ETL\DSL\{config, flow_context, row, rows};
-use function Flow\ETL\DSL\{int_entry, lit, ref};
-use Flow\ETL\{Tests\FlowTestCase};
+use function Flow\ETL\DSL\{int_entry, lit, ref, string_entry};
+use Flow\ETL\{Function\ScalarFunction\ScalarResult, Tests\FlowTestCase};
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 
 final class ScalarFunctionFilterTransformerTest extends FlowTestCase
@@ -22,6 +22,21 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
             (new ScalarFunctionFilterTransformer(
                 ref('a')->equals(ref('b'))
             ))->transform($rows, flow_context(config()))->toArray()
+        );
+    }
+
+    public function test_on_scalar_result() : void
+    {
+        self::assertSame(
+            [],
+            (new ScalarFunctionFilterTransformer(lit(ScalarResult::from(false))))->transform(rows(row(string_entry('a', 'a'))), flow_context(config()))->toArray()
+        );
+
+        self::assertSame(
+            [
+                ['a' => 'a']
+            ],
+            (new ScalarFunctionFilterTransformer(lit(ScalarResult::from(true))))->transform(rows(row(string_entry('a', 'a'))), flow_context(config()))->toArray()
         );
     }
 

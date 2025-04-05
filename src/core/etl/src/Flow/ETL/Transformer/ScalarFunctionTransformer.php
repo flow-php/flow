@@ -24,43 +24,51 @@ final readonly class ScalarFunctionTransformer implements Transformer
                     fn ($val) : Row => new Row(
                         $r->entries()
                             ->set(
-                                $context->entryFactory()->create(
-                                    $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                                    $val,
-                                    $this->entry instanceof Definition ? $this->entry : null
-                                )
+                                $context->entryFactory()->create($this->entryName(), $val, $this->entry instanceof Definition ? $this->entry : null)
                             )
                     ),
-                    (array) $this->function->eval($r)
+                    $this->function->eval($r)
                 )
+            );
+        }
+
+        if ($this->function instanceof ScalarFunction\UnpackResults) {
+            return $rows->map(
+                function (Row $r) use ($context) : Row {
+                    /**
+                     * @var array-key $key
+                     * @var mixed $val
+                     */
+                    foreach ($this->function->eval($r) as $key => $val) {
+                        $r = $r->set($context->entryFactory()->create($this->entryName() . '.' . $key, $val));
+                    }
+
+                    return $r;
+                }
             );
         }
 
         return $rows->map(
             function (Row $r) use ($context) : Row {
-                /** @var mixed $value */
                 $value = $this->function->eval($r);
+                $type = $this->entry instanceof Definition ? $this->entry->type() : null;
 
-                if ($this->function instanceof ScalarFunction\UnpackResults) {
-                    /**
-                     * @var array-key $key
-                     * @var mixed $val
-                     */
-                    foreach ($value as $key => $val) {
-                        $r = $r->set($context->entryFactory()->create(($this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry) . '.' . $key, $val));
-                    }
-
-                    return $r;
+                if ($value instanceof ScalarFunction\ScalarResult) {
+                    $type = $value->type;
+                    $value = $value->value;
                 }
 
                 return $r->set(
-                    $context->entryFactory()->create(
-                        $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                        $value,
-                        $this->entry instanceof Definition ? $this->entry : null
-                    )
+                    $type
+                        ? $context->entryFactory()->createAs($this->entryName(), $value, $type)
+                        : $context->entryFactory()->create($this->entryName(), $value, $this->entry instanceof Definition ? $this->entry : null)
                 );
             }
         );
+    }
+
+    private function entryName() : string
+    {
+        return $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry;
     }
 }

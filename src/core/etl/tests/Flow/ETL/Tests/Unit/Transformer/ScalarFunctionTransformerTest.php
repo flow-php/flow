@@ -14,11 +14,25 @@ use function Flow\ETL\DSL\{int_entry,
     type_xml_element,
     xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\{Function\ArrayExpand, Function\ArrayUnpack, Tests\FlowTestCase};
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 
 final class ScalarFunctionTransformerTest extends FlowTestCase
 {
+    public function test_expand_results() : void
+    {
+        self::assertEquals(
+            [
+                ['array' => 1],
+                ['array' => 2],
+                ['array' => 3],
+            ],
+            (new ScalarFunctionTransformer('array', new ArrayExpand(lit([1, 2, 3]), ArrayExpand\ArrayExpand::VALUES)))
+                ->transform(rows(row()), flow_context(config()))
+                ->toArray()
+        );
+    }
+
     public function test_lit_expression_on_empty_rows() : void
     {
         self::assertEquals(
@@ -82,6 +96,18 @@ final class ScalarFunctionTransformerTest extends FlowTestCase
                     rows(row(int_entry('a', 1))),
                     flow_context(config())
                 )
+                ->toArray()
+        );
+    }
+
+    public function test_unpack_results() : void
+    {
+        self::assertEquals(
+            [
+                ['array.id' => 1, 'array.name' => 'Norbert'],
+            ],
+            (new ScalarFunctionTransformer('array', new ArrayUnpack(lit(['id' => 1, 'name' => 'Norbert']))))
+                ->transform(rows(row()), flow_context(config()))
                 ->toArray()
         );
     }
