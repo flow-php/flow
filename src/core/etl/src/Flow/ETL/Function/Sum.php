@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{float_entry, int_entry};
+use Flow\Calculator\Calculator;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\{Row, Rows, Window};
@@ -35,7 +36,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             $value = $entry->value();
 
             if (\is_numeric($value)) {
-                $this->sum += $value;
+                $this->sum = (new Calculator())->add($this->sum, $value, $this->precision);
             }
 
         } catch (InvalidArgumentException) {
@@ -58,12 +59,8 @@ final class Sum implements AggregatingFunction, WindowFunction
             $value = $entry->value();
 
             if (\is_numeric($value)) {
-                $sum += $value;
+                $sum = (new Calculator())->add($sum, $value, $precision);
             }
-        }
-
-        if ($precision > 0) {
-            return round($sum, $precision);
         }
 
         return $sum;
@@ -85,9 +82,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             $this->ref->as($this->ref->to() . '_sum');
         }
 
-        $resultInt = (int) $this->sum;
-
-        if ($this->sum - $resultInt === 0) {
+        if ($this->precision === 0) {
             return int_entry($this->ref->name(), (int) $this->sum);
         }
 

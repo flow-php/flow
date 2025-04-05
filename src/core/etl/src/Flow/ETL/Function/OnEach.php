@@ -31,13 +31,13 @@ final class OnEach extends ScalarFunctionChain
         foreach ($value as $key => $item) {
             if ($preserveKeys) {
                 try {
-                    $output[$key] = $this->function->eval(array_to_row(['element' => $item]));
+                    $output[$key] = (new Parameter($this->function))->eval(array_to_row(['element' => $item]));
                 } catch (InvalidArgumentException) {
                     $output[$key] = null;
                 }
             } else {
                 try {
-                    $output[] = $this->function->eval(array_to_row(['element' => $item]));
+                    $output[] = (new Parameter($this->function))->eval(array_to_row(['element' => $item]));
                 } catch (InvalidArgumentException) {
                     $output[] = null;
                 }

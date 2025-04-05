@@ -32,7 +32,7 @@ final readonly class All implements ScalarFunction
     public function eval(Row $row) : mixed
     {
         foreach ($this->functions as $ref) {
-            if (!$ref->eval($row)) {
+            if (!(new Parameter($ref))->eval($row)) {
                 return false;
             }
         }

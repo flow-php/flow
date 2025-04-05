@@ -23,7 +23,7 @@ final class Exists extends ScalarFunctionChain implements TypedScalarFunction
                 return $row->has($this->ref->name());
             }
 
-            $this->ref->eval($row);
+            (new Parameter($this->ref))->eval($row);
 
             return true;
         } catch (\Exception) {

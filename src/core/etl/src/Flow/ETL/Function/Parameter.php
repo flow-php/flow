@@ -7,6 +7,7 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\lit;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
+use Flow\ETL\Row\{Entry, Reference};
 
 final readonly class Parameter
 {
@@ -44,6 +45,18 @@ final readonly class Parameter
     public function asBoolean(Row $row) : bool
     {
         return (bool) $this->function->eval($row);
+    }
+
+    /**
+     * @return null|Entry<mixed, mixed>
+     */
+    public function asEntry(Row $row) : ?Entry
+    {
+        if ($this->function instanceof Reference) {
+            return $row->has($this->function) ? $row->get($this->function) : null;
+        }
+
+        return null;
     }
 
     /**

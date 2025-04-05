@@ -28,7 +28,7 @@ final class Concat extends ScalarFunctionChain implements TypedScalarFunction
         $concatValues = [];
 
         foreach ($this->refs as $value) {
-            $value = \is_string($value) ? $value : Caster::default()->to(type_string(true))->value($value->eval($row));
+            $value = \is_string($value) ? $value : Caster::default()->to(type_string(true))->value((new Parameter($value))->eval($row));
 
             if (\is_string($value)) {
                 $concatValues[] = $value;

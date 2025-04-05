@@ -34,6 +34,7 @@
       <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
       <directory>src/core/etl/tests/Flow/ArrayComparison/Tests/Unit</directory>
       <directory>src/core/etl/tests/Flow/Serializer/Tests/Unit</directory>
+      <directory>src/core/etl/tests/Flow/Calculator/Tests/Unit</directory>
     </testsuite>
     <testsuite name="etl-integration">
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>

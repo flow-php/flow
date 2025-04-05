@@ -15,7 +15,7 @@ final class Optional extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         try {
-            return $this->function->eval($row);
+            return (new Parameter($this->function))->eval($row);
         } catch (\Exception) {
             return null;
         }

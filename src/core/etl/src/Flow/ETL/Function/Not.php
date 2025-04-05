@@ -14,6 +14,6 @@ final class Not extends ScalarFunctionChain
 
     public function eval(Row $row) : mixed
     {
-        return !$this->value->eval($row);
+        return !(new Parameter($this->value))->eval($row);
     }
 }

@@ -1,0 +1,179 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Transformer\ScalarFunctionTransformer;
+
+use function Flow\ETL\DSL\{float_entry, flow_context, ref, row, rows};
+use Flow\ETL\Row\Entry\{FloatEntry, IntegerEntry};
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use PHPUnit\Framework\Attributes\{DataProvider};
+
+final class MathTest extends FlowTestCase
+{
+    public static function divide_data_provider() : \Generator
+    {
+        yield [
+            float_entry('a', 0.3),
+            float_entry('b', -0.1),
+            ['result' => -3, 'a' => 0.3, 'b' => -0.1],
+        ];
+
+        yield [
+            float_entry('a', 0.0003, 14),
+            float_entry('b', 0.00000017, 14),
+            ['result' => 1764.7058823529412, 'a' => 0.0003, 'b' => 0.00000017],
+        ];
+    }
+
+    public static function minus_data_provider() : \Generator
+    {
+        yield [
+            float_entry('a', 0.3),
+            float_entry('b', 0.1),
+            ['result' => 0.2, 'a' => 0.3, 'b' => 0.1],
+        ];
+
+        yield [
+            float_entry('a', 0.0000003, 7),
+            float_entry('b', 0.0000001, 7),
+            ['result' => 0.0000002, 'a' => 0.0000003, 'b' => 0.0000001],
+        ];
+        yield [
+            float_entry('a', 0.3, 16),
+            float_entry('b', 0.1, 16),
+            ['result' => 0.2, 'a' => 0.3_0000_0000_0000_000, 'b' => 0.1_0000_0000_0000_000],
+        ];
+    }
+
+    public static function multiply_data_provider() : \Generator
+    {
+        yield [
+            float_entry('a', 0.3),
+            float_entry('b', -0.1),
+            ['result' => -0.03, 'a' => 0.3, 'b' => -0.1],
+        ];
+
+        yield [
+            float_entry('a', 0.0000003, 14),
+            float_entry('b', -0.0000001, 14),
+            ['result' => -0.00000000000003, 'a' => 0.0000003, 'b' => -0.0000001],
+        ];
+    }
+
+    public static function plus_data_provider() : \Generator
+    {
+        yield [
+            float_entry('a', 0.3),
+            float_entry('b', -0.1),
+            ['result' => 0.2, 'a' => 0.3, 'b' => -0.1],
+        ];
+
+        yield [
+            float_entry('a', 0.0000003, 7),
+            float_entry('b', -0.0000001, 7),
+            ['result' => 0.0000002, 'a' => 0.0000003, 'b' => -0.0000001],
+        ];
+    }
+
+    public static function power_data_provider() : \Generator
+    {
+        yield [
+            float_entry('a', 0.3),
+            float_entry('b', -0.1),
+            ['result' => 1.127945, 'a' => 0.3, 'b' => -0.1],
+        ];
+
+        yield [
+            float_entry('a', 0.3, 8),
+            float_entry('b', -0.1, 3),
+            ['result' => 1.12794487, 'a' => 0.3, 'b' => -0.1],
+        ];
+    }
+
+    #[DataProvider('divide_data_provider')]
+    public function test_divide(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    {
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->divide(ref($b->name()))))
+            ->transform(
+                rows(row($a, $b)),
+                flow_context()
+            );
+
+        self::assertEquals(
+            [
+                $result,
+            ],
+            $rows->toArray()
+        );
+    }
+
+    #[DataProvider('minus_data_provider')]
+    public function test_minus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    {
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->minus(ref($b->name()))))
+            ->transform(
+                rows(row($a, $b)),
+                flow_context()
+            );
+
+        self::assertEquals(
+            [
+                $result,
+            ],
+            $rows->toArray()
+        );
+    }
+
+    #[DataProvider('multiply_data_provider')]
+    public function test_multiply(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    {
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->multiply(ref($b->name()))))
+            ->transform(
+                rows(row($a, $b)),
+                flow_context()
+            );
+
+        self::assertEquals(
+            [
+                $result,
+            ],
+            $rows->toArray()
+        );
+    }
+
+    #[DataProvider('plus_data_provider')]
+    public function test_plus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    {
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->plus(ref($b->name()))))
+            ->transform(
+                rows(row($a, $b)),
+                flow_context()
+            );
+
+        self::assertEquals(
+            [
+                $result,
+            ],
+            $rows->toArray()
+        );
+    }
+
+    #[DataProvider('power_data_provider')]
+    public function test_power(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    {
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->power(ref($b->name()))))
+            ->transform(
+                rows(row($a, $b)),
+                flow_context()
+            );
+
+        self::assertEquals(
+            [
+                $result,
+            ],
+            $rows->toArray()
+        );
+    }
+}
