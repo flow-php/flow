@@ -27,7 +27,7 @@ final class UuidTest extends FlowTestCase
         $expression = uuid_v4();
         self::assertTrue(
             Uuid::isValid(
-                $expression->eval(row())->toString()
+                $expression->eval(row())->value->toString()
             )
         );
         self::assertNotSame(
@@ -54,7 +54,7 @@ final class UuidTest extends FlowTestCase
 
         self::assertTrue(
             Uuid::isValid(
-                uuid_v7(lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC'))))->eval(row())->toString()
+                uuid_v7(lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC'))))->eval(row())->value->toString()
             )
         );
     }
@@ -71,7 +71,7 @@ final class UuidTest extends FlowTestCase
     public function test_uuid7_return_null_for_non_datetime_interface() : void
     {
         self::assertNull(
-            uuid_v7(lit(''))->eval(row())
+            uuid_v7(lit(''))->eval(row())->value
         );
     }
 }

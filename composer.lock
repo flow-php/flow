@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5db8cc359e2602e472f038e1aa313921",
+    "content-hash": "a86a2427620353282fb22cc92fcd7c82",
     "packages": [
         {
             "name": "async-aws/core",
@@ -1734,6 +1734,68 @@
                 "source": "https://github.com/php-http/promise/tree/1.3.1"
             },
             "time": "2024-03-15T13:55:21+00:00"
+        },
+        {
+            "name": "phpseclib/bcmath_compat",
+            "version": "2.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpseclib/bcmath_compat.git",
+                "reference": "ae8f87ea0c96b2ef08ecf0d291d45372d0f7bc5a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpseclib/bcmath_compat/zipball/ae8f87ea0c96b2ef08ecf0d291d45372d0f7bc5a",
+                "reference": "ae8f87ea0c96b2ef08ecf0d291d45372d0f7bc5a",
+                "shasum": ""
+            },
+            "require": {
+                "phpseclib/phpseclib": "^3.0"
+            },
+            "provide": {
+                "ext-bcmath": "8.1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8.35|^5.7|^6.0|^9.4",
+                "squizlabs/php_codesniffer": "^3.0"
+            },
+            "suggest": {
+                "ext-gmp": "Will enable faster math operations"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "lib/bcmath.php"
+                ],
+                "psr-4": {
+                    "bcmath_compat\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jim Wigginton",
+                    "email": "terrafrost@php.net",
+                    "homepage": "http://phpseclib.sourceforge.net"
+                }
+            ],
+            "description": "PHP 5.x-8.x polyfill for bcmath extension",
+            "keywords": [
+                "BigInteger",
+                "bcmath",
+                "bigdecimal",
+                "math",
+                "polyfill"
+            ],
+            "support": {
+                "email": "terrafrost@php.net",
+                "issues": "https://github.com/phpseclib/bcmath_compat/issues",
+                "source": "https://github.com/phpseclib/bcmath_compat"
+            },
+            "time": "2024-06-06T14:17:54+00:00"
         },
         {
             "name": "phpseclib/phpseclib",

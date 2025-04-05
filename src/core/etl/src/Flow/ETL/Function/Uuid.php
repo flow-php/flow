@@ -34,7 +34,7 @@ final class Uuid extends ScalarFunctionChain
         return new self('uuid7', $value);
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ScalarResult
     {
         $param = (new Parameter($this->value))->as($row, type_string(), type_object(\DateTimeInterface::class));
 
