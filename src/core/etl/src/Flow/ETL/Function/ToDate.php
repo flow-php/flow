@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\type_date;
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class ToDate extends ScalarFunctionChain implements TypedScalarFunction
+final class ToDate extends ScalarFunctionChain
 {
     public function __construct(
         private readonly mixed $value,
@@ -18,7 +15,7 @@ final class ToDate extends ScalarFunctionChain implements TypedScalarFunction
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?\DateTimeInterface
     {
         $value = (new Parameter($this->value))->eval($row);
         $format = (new Parameter($this->format))->asString($row);
@@ -47,10 +44,5 @@ final class ToDate extends ScalarFunctionChain implements TypedScalarFunction
         }
 
         return null;
-    }
-
-    public function returns() : Type
-    {
-        return type_date();
     }
 }

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_array, type_boolean, type_string};
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
-use Flow\ETL\PHP\Type\Type;
+use function Flow\ETL\DSL\{type_array, type_string};
 use Flow\ETL\Row;
 
-final class Contains extends ScalarFunctionChain implements TypedScalarFunction
+final class Contains extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $haystack,
@@ -35,10 +33,5 @@ final class Contains extends ScalarFunctionChain implements TypedScalarFunction
         }
 
         return false;
-    }
-
-    public function returns() : Type
-    {
-        return type_boolean();
     }
 }

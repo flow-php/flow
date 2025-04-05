@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\type_boolean;
 use Flow\ETL\Function\Comparison\Comparable;
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class Equals extends ScalarFunctionChain implements TypedScalarFunction
+final class Equals extends ScalarFunctionChain
 {
     use Comparable;
 
@@ -28,10 +25,5 @@ final class Equals extends ScalarFunctionChain implements TypedScalarFunction
         $this->assertComparable($left, $right, '==');
 
         return $left == $right;
-    }
-
-    public function returns() : Type
-    {
-        return type_boolean();
     }
 }

@@ -6,7 +6,6 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_array,
     type_boolean,
-    type_date,
     type_datetime,
     type_float,
     type_integer,
@@ -15,11 +14,10 @@ use function Flow\ETL\DSL\{type_array,
     type_string,
     type_xml};
 use Flow\ETL\Exception\{CastingException, InvalidArgumentException};
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
 use Flow\ETL\PHP\Type\{Caster, Type};
 use Flow\ETL\Row;
 
-final class Cast extends ScalarFunctionChain implements TypedScalarFunction
+final class Cast extends ScalarFunctionChain
 {
     /**
      * @param mixed $value
@@ -77,30 +75,5 @@ final class Cast extends ScalarFunctionChain implements TypedScalarFunction
         } catch (CastingException) {
             return null;
         }
-    }
-
-    /**
-     * @returns Type<mixed>
-     */
-    public function returns() : Type
-    {
-        if ($this->type instanceof Type) {
-            return $this->type;
-        }
-
-        return match (\mb_strtolower($this->type)) {
-            'datetime' => type_datetime(),
-            'date' => type_date(),
-            'int', 'integer' => type_integer(),
-            'float', 'double', 'real' => type_float(),
-            'string' => type_string(),
-            'bool', 'boolean' => type_boolean(),
-            'array' => type_array(),
-            'object' => type_object(\stdClass::class),
-            'json' => type_json(),
-            'json_pretty' => type_json(),
-            'xml' => type_xml(),
-            default => type_string(),
-        };
     }
 }

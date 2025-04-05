@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_enum, type_string};
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
 use Flow\ETL\Function\StyleConverter\StringStyles;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class StringStyle extends ScalarFunctionChain implements TypedScalarFunction
+final class StringStyle extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $string,
@@ -18,7 +16,7 @@ final class StringStyle extends ScalarFunctionChain implements TypedScalarFuncti
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?string
     {
 
         $string = (new Parameter($this->string))->asString($row);
@@ -33,10 +31,5 @@ final class StringStyle extends ScalarFunctionChain implements TypedScalarFuncti
         }
 
         return $style->convert($string);
-    }
-
-    public function returns() : Type
-    {
-        return type_string();
     }
 }

@@ -6,11 +6,9 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_list, type_string};
 use function Symfony\Component\String\u;
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class StringBefore extends ScalarFunctionChain implements TypedScalarFunction
+final class StringBefore extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $string,
@@ -31,10 +29,5 @@ final class StringBefore extends ScalarFunctionChain implements TypedScalarFunct
         $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row);
 
         return u($string)->before($needle, $includeNeedle)->toString();
-    }
-
-    public function returns() : Type
-    {
-        return type_string();
     }
 }

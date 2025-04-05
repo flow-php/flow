@@ -54,17 +54,11 @@ final readonly class ScalarFunctionTransformer implements Transformer
                 }
 
                 return $r->set(
-                    $this->function instanceof ScalarFunction\TypedScalarFunction
-                     ? $context->entryFactory()->createAs(
-                         $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                         $value,
-                         $this->function->returns()
-                     )
-                     : $context->entryFactory()->create(
-                         $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
-                         $value,
-                         $this->entry instanceof Definition ? $this->entry : null
-                     )
+                    $context->entryFactory()->create(
+                        $this->entry instanceof Definition ? $this->entry->entry()->name() : $this->entry,
+                        $value,
+                        $this->entry instanceof Definition ? $this->entry : null
+                    )
                 );
             }
         );

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_object, type_string, type_uuid};
+use function Flow\ETL\DSL\{type_object, type_string};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\PHP\Value\Uuid as FlowUuid;
 use Flow\ETL\Row;
 use Ramsey\Uuid\UuidInterface;
@@ -17,7 +15,7 @@ if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Componen
     throw new RuntimeException("\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.");
 }
 
-final class Uuid extends ScalarFunctionChain implements TypedScalarFunction
+final class Uuid extends ScalarFunctionChain
 {
     private function __construct(
         private readonly ScalarFunction|string $uuidVersion,
@@ -46,11 +44,6 @@ final class Uuid extends ScalarFunctionChain implements TypedScalarFunction
             'uuid7' => $param instanceof \DateTimeInterface ? new FlowUuid($this->generateV7($param)) : null,
             default => null,
         };
-    }
-
-    public function returns() : Type
-    {
-        return type_uuid();
     }
 
     private function generateV4() : UuidV4|UuidInterface

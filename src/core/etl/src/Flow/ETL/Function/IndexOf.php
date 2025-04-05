@@ -6,11 +6,9 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_int};
 use function Symfony\Component\String\u;
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
-final class IndexOf extends ScalarFunctionChain implements TypedScalarFunction
+final class IndexOf extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $string,
@@ -36,10 +34,5 @@ final class IndexOf extends ScalarFunctionChain implements TypedScalarFunction
         }
 
         return u($string)->indexOf($needle, $offset);
-    }
-
-    public function returns() : Type
-    {
-        return type_int();
     }
 }

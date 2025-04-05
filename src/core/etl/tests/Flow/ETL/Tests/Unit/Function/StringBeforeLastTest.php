@@ -4,24 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry, type_string};
+use function Flow\ETL\DSL\{ref, str_entry};
 use function Flow\ETL\DSL\row;
-use Flow\ETL\Function\StringBeforeLast;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StringBeforeLastTest extends FlowTestCase
 {
-    public function test_returns_method_returns_string_type() : void
-    {
-        $stringBeforeLastFunction = new StringBeforeLast('str', 't', false);
-        $returnType = $stringBeforeLastFunction->returns();
-
-        self::assertInstanceOf(Type::class, $returnType);
-
-        self::assertTrue($returnType->isEqual(type_string()));
-    }
-
     public function test_string_before_last() : void
     {
         self::assertSame(

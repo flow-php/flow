@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\type_boolean;
-use Flow\ETL\Function\ScalarFunction\TypedScalarFunction;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
-final class Exists extends ScalarFunctionChain implements TypedScalarFunction
+final class Exists extends ScalarFunctionChain
 {
     public function __construct(private readonly ScalarFunction $ref)
     {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : bool
     {
         try {
             if ($this->ref instanceof Reference) {
@@ -29,10 +26,5 @@ final class Exists extends ScalarFunctionChain implements TypedScalarFunction
         } catch (\Exception) {
             return false;
         }
-    }
-
-    public function returns() : Type
-    {
-        return type_boolean();
     }
 }
