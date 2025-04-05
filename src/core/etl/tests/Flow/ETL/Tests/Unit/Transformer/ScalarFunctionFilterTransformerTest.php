@@ -25,21 +25,6 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
         );
     }
 
-    public function test_on_scalar_result() : void
-    {
-        self::assertSame(
-            [],
-            (new ScalarFunctionFilterTransformer(lit(ScalarResult::from(false))))->transform(rows(row(string_entry('a', 'a'))), flow_context(config()))->toArray()
-        );
-
-        self::assertSame(
-            [
-                ['a' => 'a']
-            ],
-            (new ScalarFunctionFilterTransformer(lit(ScalarResult::from(true))))->transform(rows(row(string_entry('a', 'a'))), flow_context(config()))->toArray()
-        );
-    }
-
     public function test_equal_on_literal() : void
     {
         $rows = rows(row(int_entry('a', 1), int_entry('b', 1)), row(int_entry('a', 1), int_entry('b', 2)));
@@ -123,6 +108,21 @@ final class ScalarFunctionFilterTransformerTest extends FlowTestCase
                 ['a' => 1, 'b' => 2],
             ],
             (new ScalarFunctionFilterTransformer(ref('a')->notSame(ref('b'))))->transform($rows, flow_context(config()))->toArray()
+        );
+    }
+
+    public function test_on_scalar_result() : void
+    {
+        self::assertSame(
+            [],
+            (new ScalarFunctionFilterTransformer(lit(ScalarResult::from(false))))->transform(rows(row(string_entry('a', 'a'))), flow_context(config()))->toArray()
+        );
+
+        self::assertSame(
+            [
+                ['a' => 'a'],
+            ],
+            (new ScalarFunctionFilterTransformer(lit(ScalarResult::from(true))))->transform(rows(row(string_entry('a', 'a'))), flow_context(config()))->toArray()
         );
     }
 

@@ -6,11 +6,11 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_object, type_string, type_uuid};
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\PHP\Value\Uuid as FlowUuid;
 use Flow\ETL\Row;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\{UuidV4, UuidV7};
-use Flow\ETL\Function\ScalarFunction\ScalarResult;
 
 if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Component\Uid\Uuid::class)) {
     throw new RuntimeException("\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.");
