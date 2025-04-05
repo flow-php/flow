@@ -71,6 +71,20 @@ final class DefinitionTest extends FlowTestCase
         );
     }
 
+    public function test_float_definitions_with_different_precisions() : void
+    {
+        self::assertEquals(
+            float_schema('id', true),
+            float_schema('id')->merge(float_schema('id', true, 3))
+        );
+
+        // always take max precision
+        self::assertEquals(
+            float_schema('id', true, 12),
+            float_schema('id', false, 1)->merge(float_schema('id', true, 12))
+        );
+    }
+
     public function test_matches_when_type_and_name_match() : void
     {
         $def = integer_schema('test');

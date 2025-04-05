@@ -277,7 +277,7 @@ final class ChartJSLoaderTest extends FlowTestCase
                                 32555.32,
                                 13853.8,
                                 7854.33,
-                                10853,
+                                10853.0,
                                 4760.31,
                             ],
                             'label' => '2023-01-01',

@@ -41,8 +41,8 @@ final class FloatEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($precision < 0 && $this->precision >= 15) {
-            throw InvalidArgumentException::because('Precision must be greater or equal to 0 and less than 15');
+        if ($precision < 0 || $precision > 16) {
+            throw InvalidArgumentException::because('Precision must be greater or equal to 0 and less than 16');
         }
 
         $this->metadata = $metadata ?: Metadata::empty();

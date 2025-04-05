@@ -273,6 +273,16 @@ final class Definition
             );
         }
 
+        if ($this->type instanceof FloatType && $definition->type instanceof FloatType) {
+            $precision = \max($this->type->precision, $definition->type->precision);
+
+            return new self(
+                $this->ref,
+                type_float($this->isNullable() || $definition->isNullable(), $precision),
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
         $types = [$this->type::class, $definition->type::class];
 
         if (\in_array(StringType::class, $types, true)) {
