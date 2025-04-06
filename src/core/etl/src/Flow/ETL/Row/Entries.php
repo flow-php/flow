@@ -94,22 +94,22 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return Entry<mixed, mixed>
      */
-    public function get(string|Reference $name) : Entry
+    public function get(string|Reference $reference) : Entry
     {
-        $entry = $this->find($name);
+        $entry = $this->find($reference);
 
         if ($entry === null) {
-            throw new InvalidArgumentException("Entry \"{$name}\" does not exist. Did you mean one of the following? [\"" . \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)) . '"]');
+            throw new InvalidArgumentException("Entry \"{$reference}\" does not exist. Did you mean one of the following? [\"" . \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)) . '"]');
         }
 
         return $entry;
     }
 
-    public function getAll(string|Reference ...$names) : self
+    public function getAll(string|Reference ...$references) : self
     {
         $entries = [];
 
-        foreach ($names as $ref) {
+        foreach ($references as $ref) {
             $entries[] = $this->get($ref);
         }
 
@@ -124,11 +124,11 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return new \ArrayIterator($this->all());
     }
 
-    public function has(string|Reference ...$refs) : bool
+    public function has(string|Reference ...$references) : bool
     {
-        foreach ($refs as $ref) {
+        foreach ($references as $ref) {
             if ($ref instanceof Reference) {
-                if (!\array_key_exists($ref->name(), $this->entries)) {
+                if (!\array_key_exists($ref->base(), $this->entries)) {
                     return false;
                 }
             } else {
@@ -246,33 +246,33 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');
     }
 
-    public function order(string|Reference ...$entries) : self
+    public function order(string|Reference ...$references) : self
     {
         $sortedEntries = [];
 
-        if (\count($entries) !== \count($this->entries)) {
+        if (\count($references) !== \count($this->entries)) {
             throw InvalidArgumentException::because(
                 \sprintf(
                     'In order to sort entries in a given order you need to provide all entry names, given: "%s", expected: "%s"',
-                    \implode('", "', \array_map(static fn (Reference|string $ref) : string => $ref instanceof Reference ? $ref->name() : $ref, $entries)),
+                    \implode('", "', \array_map(static fn (Reference|string $ref) : string => $ref instanceof Reference ? $ref->base() : $ref, $references)),
                     \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
                 )
             );
         }
 
-        foreach ($entries as $ref) {
+        foreach ($references as $ref) {
             if (!$this->has($ref)) {
                 throw InvalidArgumentException::because(
                     \sprintf(
                         'There is no entry with name \"%s\" in the dataset, available names: \"%s\"',
-                        $ref instanceof Reference ? $ref->name() : $ref,
+                        $ref instanceof Reference ? $ref->base() : $ref,
                         \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
                     )
                 );
             }
 
             if ($ref instanceof Reference) {
-                $sortedEntries[$ref->name()] = $this->entries[$ref->name()];
+                $sortedEntries[$ref->base()] = $this->entries[$ref->base()];
             } else {
                 $sortedEntries[$ref] = $this->entries[$ref];
             }
@@ -281,21 +281,21 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::recreate($sortedEntries);
     }
 
-    public function remove(string|Reference ...$names) : self
+    public function remove(string|Reference ...$references) : self
     {
         $entries = $this->entries;
 
-        foreach ($names as $ref) {
+        foreach ($references as $ref) {
             if ($this->has($ref) === false) {
                 if ($ref instanceof Reference) {
-                    throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $ref->name()));
+                    throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $ref->base()));
                 }
 
                 throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $ref));
             }
 
             if ($ref instanceof Reference) {
-                unset($entries[$ref->name()]);
+                unset($entries[$ref->base()]);
             } else {
                 unset($entries[$ref]);
             }
@@ -304,26 +304,26 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::recreate($entries);
     }
 
-    public function rename(string|Reference $currentName, string|Reference $newName) : self
+    public function rename(string|Reference $current, string|Reference $new) : self
     {
-        if (!$this->has($currentName)) {
-            throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $currentName instanceof Reference ? $currentName->name() : $currentName));
+        if (!$this->has($current)) {
+            throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $current instanceof Reference ? $current->base() : $current));
         }
 
         $entries = $this->entries;
 
-        $entry = $this->get($currentName);
+        $entry = $this->get($current);
 
-        if ($currentName instanceof Reference) {
-            unset($entries[$currentName->name()]);
+        if ($current instanceof Reference) {
+            unset($entries[$current->base()]);
         } else {
-            unset($entries[$currentName]);
+            unset($entries[$current]);
         }
 
-        if ($newName instanceof Reference) {
-            $entries[$newName->name()] = $entry->rename($newName->name());
+        if ($new instanceof Reference) {
+            $entries[$new->name()] = $entry->rename($new->name());
         } else {
-            $entries[$newName] = $entry->rename($newName);
+            $entries[$new] = $entry->rename($new);
         }
 
         return self::recreate($entries);
@@ -370,10 +370,10 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return ?Entry<string, mixed>
      */
-    private function find(string|Reference $entry) : ?Entry
+    private function find(string|Reference $reference) : ?Entry
     {
-        if ($this->has($entry)) {
-            return $entry instanceof Reference ? $this->entries[$entry->name()] : $this->entries[$entry];
+        if ($this->has($reference)) {
+            return $reference instanceof Reference ? $this->entries[$reference->base()] : $this->entries[$reference];
         }
 
         return null;

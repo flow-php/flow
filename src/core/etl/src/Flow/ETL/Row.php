@@ -57,14 +57,14 @@ final readonly class Row
      *
      * @return Entry<mixed, mixed>
      */
-    public function get(string|Reference $ref) : Entry
+    public function get(string|Reference $reference) : Entry
     {
-        return $this->entries->get($ref);
+        return $this->entries->get($reference);
     }
 
-    public function has(string|Reference $ref) : bool
+    public function has(string|Reference $reference) : bool
     {
-        return $this->entries->has($ref);
+        return $this->entries->has($reference);
     }
 
     public function hash(Algorithm $algorithm = new NativePHPHash()) : string
@@ -83,11 +83,11 @@ final readonly class Row
         return $this->entries->isEqual($row->entries());
     }
 
-    public function keep(string|Reference ...$names) : self
+    public function keep(string|Reference ...$references) : self
     {
         $entries = [];
 
-        foreach ($names as $name) {
+        foreach ($references as $name) {
             $entries[] = $this->entries->get($name);
         }
 
@@ -114,11 +114,11 @@ final readonly class Row
         );
     }
 
-    public function remove(string|Reference ...$names) : self
+    public function remove(string|Reference ...$references) : self
     {
         $namesToRemove = [];
 
-        foreach ($names as $name) {
+        foreach ($references as $name) {
             if ($this->entries->has($name)) {
                 $namesToRemove[] = $name;
             }
@@ -167,8 +167,8 @@ final readonly class Row
     /**
      * @throws InvalidArgumentException
      */
-    public function valueOf(string|Reference $name) : mixed
+    public function valueOf(string|Reference $references) : mixed
     {
-        return $this->get($name)->value();
+        return $this->get($references)->value();
     }
 }

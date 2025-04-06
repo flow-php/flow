@@ -259,6 +259,34 @@ final class GroupByTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_group_by_single_column_with_an_alias() : void
+    {
+        $rows = df()
+            ->read(from_rows(
+                rows(
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                )
+            ))
+            ->groupBy('country')
+            ->aggregate(sum(ref('age')->as('total_age')))
+            ->fetch();
+
+        self::assertEquals(
+            [
+                ['country' => 'PL', 'total_age' => 95],
+                ['country' => 'US', 'total_age' => 175],
+            ],
+            $rows->toArray()
+        );
+    }
+
     public function test_group_by_twice() : void
     {
         $dataset = [

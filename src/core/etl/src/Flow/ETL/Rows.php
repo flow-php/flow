@@ -541,16 +541,16 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @param Reference|string $entry
-     * @param Reference|string ...$entries
+     * @param Reference|string $reference
+     * @param Reference|string ...$references
      *
      * @throws InvalidArgumentException
      *
      * @return array<Rows>
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : array
+    public function partitionBy(string|Reference $reference, string|Reference ...$references) : array
     {
-        $refs = References::init($entry, ...$entries);
+        $refs = References::init($reference, ...$references);
 
         /** @var array<string, array<mixed>> $partitions */
         $partitions = [];
@@ -610,11 +610,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return array<mixed>
      */
-    public function reduceToArray(string|Reference $ref) : array
+    public function reduceToArray(string|Reference $reference) : array
     {
         return $this->reduce(
-            function (array $ids, Row $row) use ($ref) : array {
-                $ids[] = $row->get($ref)->value();
+            function (array $ids, Row $row) use ($reference) : array {
+                $ids[] = $row->get($reference)->value();
 
                 return $ids;
             },
@@ -672,10 +672,10 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
-    public function sortAscending(string|Reference $ref) : self
+    public function sortAscending(string|Reference $reference) : self
     {
         $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($ref) <=> $b->valueOf($ref));
+        \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($reference) <=> $b->valueOf($reference));
 
         return self::partitioned($rows, $this->partitions);
     }
@@ -683,11 +683,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
-    public function sortBy(Reference ...$refs) : self
+    public function sortBy(Reference ...$references) : self
     {
         $rows = $this;
 
-        foreach (\array_reverse($refs) as $ref) {
+        foreach (\array_reverse($references) as $ref) {
             $rows = $ref->sort() === SortOrder::ASC ? $rows->sortAscending($ref) : $rows->sortDescending($ref);
         }
 
@@ -697,10 +697,10 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
-    public function sortDescending(string|Reference $ref) : self
+    public function sortDescending(string|Reference $reference) : self
     {
         $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($ref) <=> $b->valueOf($ref)));
+        \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($reference) <=> $b->valueOf($reference)));
 
         return self::partitioned($rows, $this->partitions);
     }

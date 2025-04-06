@@ -45,6 +45,11 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return $this;
     }
 
+    public function base() : string
+    {
+        return $this->entry;
+    }
+
     public function desc() : self
     {
         $this->sort = SortOrder::DESC;
