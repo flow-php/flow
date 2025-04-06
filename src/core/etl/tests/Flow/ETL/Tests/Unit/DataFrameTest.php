@@ -461,7 +461,7 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = (data_frame())->process(
             rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), json_entry('tags', ['foo', 'bar'])), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
-        )->validate(
+        )->match(
             schema(integer_schema('id', $nullable = false)),
             new SelectiveValidator()
         )->fetch();
@@ -476,7 +476,7 @@ final class DataFrameTest extends FlowTestCase
     {
         $rows = (data_frame())->process(
             rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
-        )->validate(
+        )->match(
             schema(integer_schema('id', $nullable = false), string_schema('name', $nullable = true), bool_schema('active', $nullable = false))
         )->fetch();
 

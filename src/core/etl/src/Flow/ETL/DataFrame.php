@@ -520,6 +520,18 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
+     * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
+     */
+    public function match(Schema $schema, ?SchemaValidator $validator = null) : self
+    {
+        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new Schema\StrictValidator()));
+
+        return $this;
+    }
+
+    /**
      * SaveMode defines how Flow should behave when writing to a file/files that already exists.
      * For more details please see SaveMode enum.
      *
@@ -825,13 +837,15 @@ final class DataFrame
     }
 
     /**
+     * @deprecated Please use DataFrame::match instead
+     *
      * @lazy
      *
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      */
     public function validate(Schema $schema, ?SchemaValidator $validator = null) : self
     {
-        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new Schema\StrictValidator()));
+        $this->match($schema, $validator);
 
         return $this;
     }

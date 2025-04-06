@@ -5,6 +5,18 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.11.x to 0.14.x
+
+### 1) Replaced `Flow\ETL\DataFrame::validate()` with `Flow\ETL\DataFrame::match()`
+
+The old method is now deprecated and will be removed in the next release. 
+
+### 2) Replaced `Flow\ETL\Function\ScalarFunction\TypedScalarFunction` with `Flow\ETL\Function\ScalarFunction\ScalarResult`.
+
+The old interface was used to allow define the return type of the ScalarFunctions. 
+It was replaced with a ScalarResult value object that is much more flexible than the interface,
+because it's allowing to return any type dynamically without making the scalar function stateful. 
+
 ## Upgrading from 0.10.x to 0.11.x
 
 ### 1) Removed StructureElement/struct_element/structure_element from StructureType Definition
