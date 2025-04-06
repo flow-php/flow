@@ -38,7 +38,7 @@ final class ListEntryTest extends FlowTestCase
     public function test_creating_float_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<float> got different types: array<mixed>');
+        $this->expectExceptionMessage('Expected list<float(precision: 6)> got different types: array<mixed>');
 
         list_entry('list', ['string', 1.3], type_list(type_float()));
     }

@@ -26,7 +26,7 @@ final class MapCastingHandlerTest extends FlowTestCase
     public function test_casting_map_of_string_to_ints_into_map_of_int_to_float() : void
     {
         $this->expectException(CastingException::class);
-        $this->expectExceptionMessage('Can\'t cast "array" into "map<integer, float>"');
+        $this->expectExceptionMessage('Can\'t cast "array" into "map<integer, float(precision: 6)>"');
 
         self::assertSame(
             [

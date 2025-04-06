@@ -100,6 +100,11 @@ final readonly class StringTypeChecker
             return false;
         }
 
+        // scientific notation
+        if (\is_numeric($this->string) && (\str_contains($this->string, 'e') || \str_contains($this->string, 'E'))) {
+
+        }
+
         return \is_numeric($this->string) && \str_contains($this->string, '.');
     }
 

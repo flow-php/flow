@@ -132,7 +132,7 @@ final class StructureTypeTest extends FlowTestCase
         ]);
 
         self::assertSame(
-            'structure{string: string, float: float, map: map<string, list<datetime>>}',
+            'structure{string: string, float: float(precision: 6), map: map<string, list<datetime>>}',
             $struct->toString()
         );
     }

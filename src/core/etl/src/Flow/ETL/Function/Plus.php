@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_float, type_integer};
 use Flow\Calculator\Calculator;
+use Flow\ETL\Function\Math\FloatScale;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 
@@ -14,7 +15,7 @@ final class Plus extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction|int|float $left,
         private readonly ScalarFunction|int|float $right,
-        private readonly ScalarFunction|int $scale = 0,
+        private readonly ScalarFunction|int|null $scale = null,
     ) {
     }
 
@@ -22,30 +23,23 @@ final class Plus extends ScalarFunctionChain
     {
         $leftValue = (new Parameter($this->left))->asNumber($row);
         $rightValue = (new Parameter($this->right))->asNumber($row);
-        $scale = (new Parameter($this->scale))->asInt($row, 0);
 
         if ($leftValue === null || $rightValue === null) {
             return null;
         }
 
-        $leftEntry = (new Parameter($this->left))->asEntry($row);
-        $rightEntry = (new Parameter($this->right))->asEntry($row);
-
-        if ($leftEntry instanceof Row\Entry\FloatEntry || $rightEntry instanceof Row\Entry\FloatEntry) {
-            $scale = max(
-                $leftEntry instanceof Row\Entry\FloatEntry ? $leftEntry->precision : 0,
-                $rightEntry instanceof Row\Entry\FloatEntry ? $rightEntry->precision : 0,
-                $scale
-            );
-        }
-
-        if ($scale === 0) {
+        if (\is_int($leftValue) && \is_int($rightValue)) {
             return new ScalarResult($leftValue + $rightValue, type_integer());
         }
 
+        $leftScale = (new FloatScale($this->left, $this->scale))->scale($row);
+        $rightScale = (new FloatScale($this->left, $this->scale))->scale($row);
+
+        $scale = max($leftScale, $rightScale);
+
         $result = (new Calculator())->add($leftValue, $rightValue, $scale);
 
-        if (\is_int($result)) {
+        if ($scale === 0) {
             return new ScalarResult($result, type_integer());
         }
 

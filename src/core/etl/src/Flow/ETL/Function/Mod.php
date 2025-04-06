@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{type_float, type_integer};
 use Flow\Calculator\Calculator;
+use Flow\ETL\Function\Math\FloatScale;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 
@@ -14,7 +15,7 @@ final class Mod extends ScalarFunctionChain
     public function __construct(
         private readonly ScalarFunction|int|float $left,
         private readonly ScalarFunction|int|float $right,
-        private readonly ScalarFunction|int $scale = 0,
+        private readonly ScalarFunction|int|null $scale = null,
     ) {
     }
 
@@ -32,20 +33,18 @@ final class Mod extends ScalarFunctionChain
             return null;
         }
 
-        $leftEntry = (new Parameter($this->left))->asEntry($row);
-        $rightEntry = (new Parameter($this->right))->asEntry($row);
-
-        if ($leftEntry instanceof Row\Entry\FloatEntry || $rightEntry instanceof Row\Entry\FloatEntry) {
-            $scale = max(
-                $leftEntry instanceof Row\Entry\FloatEntry ? $leftEntry->precision : 6,
-                $rightEntry instanceof Row\Entry\FloatEntry ? $rightEntry->precision : 6,
-                $scale
-            );
+        if (\is_int($leftValue) && \is_int($rightValue)) {
+            return new ScalarResult($leftValue % $rightValue, type_integer());
         }
+
+        $leftScale = (new FloatScale($this->left, $this->scale))->scale($row);
+        $rightScale = (new FloatScale($this->left, $this->scale))->scale($row);
+
+        $scale = max($leftScale, $rightScale);
 
         $result = (new Calculator())->modulus($leftValue, $rightValue, $scale);
 
-        if (\is_int($result)) {
+        if ($scale === 0) {
             return new ScalarResult($result, type_integer());
         }
 

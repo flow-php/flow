@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\{get_type,
     type_json,
     type_uuid};
 use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
+use Flow\ETL\PHP\Type\Native\{FloatType, IntegerType};
 
 final readonly class AutoCaster
 {
@@ -41,11 +42,11 @@ final readonly class AutoCaster
         foreach ($value as $key => $item) {
             $keyType = get_type($key);
             $valueType = get_type($item);
-            $keyTypes[$keyType->toString()] = $keyType;
-            $valueTypes[$valueType->toString()] = $valueType;
+            $keyTypes[$keyType::class] = $keyType;
+            $valueTypes[$valueType::class] = $valueType;
         }
 
-        if (isset($valueTypes['integer'], $valueTypes['float']) && \count($valueTypes) === 2) {
+        if (isset($valueTypes[IntegerType::class], $valueTypes[FloatType::class]) && \count($valueTypes) === 2) {
             $castedArray = [];
 
             foreach ($value as $key => $item) {

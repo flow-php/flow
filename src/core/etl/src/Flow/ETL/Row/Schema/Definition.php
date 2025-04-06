@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
-use function Flow\ETL\DSL\{type_boolean,
+use function Flow\ETL\DSL\{
+    type_boolean,
     type_date,
     type_datetime,
     type_enum,
@@ -243,13 +244,34 @@ final class Definition
         }
 
         if ($this->type instanceof ListType && $definition->type instanceof ListType && !$this->type->isEqual($definition->type)) {
-            $thisTypeString = $this->type->element()->toString();
-            $definitionTypeString = $definition->type->element()->toString();
+            $thisTypeClass = $this->type->element()::class;
+            $definitionTypeClass = $definition->type->element()::class;
 
-            if (\in_array($thisTypeString, ['integer', 'float', '?integer', '?float'], true) && \in_array($definitionTypeString, ['integer', 'float', '?integer', '?float'], true)) {
+            if (\in_array($thisTypeClass, [IntegerType::class, FloatType::class], true) && \in_array($definitionTypeClass, [IntegerType::class, FloatType::class], true)) {
+
+                if ($thisTypeClass === IntegerType::class && $definitionTypeClass === IntegerType::class) {
+                    return new self(
+                        $this->ref,
+                        type_list(
+                            type_int(
+                                $this->type->element()->nullable() || $definition->type->element()->nullable(),
+                            )
+                        ),
+                        $this->metadata->merge($definition->metadata)
+                    );
+                }
+
                 return new self(
                     $this->ref,
-                    type_list(type_float($this->type->element()->nullable() || $definition->type->element()->nullable())),
+                    type_list(
+                        type_float(
+                            $this->type->element()->nullable() || $definition->type->element()->nullable(),
+                            precision: \max(
+                                $this->type->element() instanceof FloatType ? $this->type->element()->precision : 0,
+                                $definition->type->element() instanceof FloatType ? $definition->type->element()->precision : 0
+                            )
+                        )
+                    ),
                     $this->metadata->merge($definition->metadata)
                 );
             }
@@ -318,9 +340,14 @@ final class Definition
         }
 
         if (\in_array(IntegerType::class, $types, true) && \in_array(FloatType::class, $types, true)) {
+            $precision = \max(
+                $this->type instanceof FloatType ? $this->type->precision : 0,
+                $definition->type instanceof FloatType ? $definition->type->precision : 0
+            );
+
             return new self(
                 $this->ref,
-                type_float($this->isNullable() || $definition->isNullable()),
+                type_float($this->isNullable() || $definition->isNullable(), $precision),
                 $this->metadata->merge($definition->metadata)
             );
         }

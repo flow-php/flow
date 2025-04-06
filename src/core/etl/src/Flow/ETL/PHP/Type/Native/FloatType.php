@@ -105,6 +105,6 @@ final readonly class FloatType implements Type
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'float';
+        return ($this->nullable ? '?' : '') . 'float(precision: ' . $this->precision . ')';
     }
 }

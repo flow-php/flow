@@ -369,7 +369,7 @@ final class TypeDetectorTest extends FlowTestCase
 
         yield 'float' => [
             1.666,
-            'float',
+            'float(precision: 6)',
             type_float(),
         ];
 

@@ -45,6 +45,8 @@ final class StringTypeCheckerTest extends FlowTestCase
     public function test_detecting_float() : void
     {
         self::assertTrue((new StringTypeChecker('1.0'))->isFloat());
+        self::assertTrue((new StringTypeChecker('2.1E-5'))->isFloat());
+        self::assertTrue((new StringTypeChecker('2.1e-5'))->isFloat());
         self::assertTrue((new StringTypeChecker('0.0'))->isFloat());
         self::assertFalse((new StringTypeChecker('not float'))->isFloat());
         self::assertFalse((new StringTypeChecker('1'))->isFloat());
