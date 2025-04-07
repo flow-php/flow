@@ -171,10 +171,10 @@ final class DefinitionTest extends FlowTestCase
 
     public function test_merging_float_definitions_with_different_precisions() : void
     {
-        //        self::assertEquals(
-        //            float_schema('id', true, precision: 3),
-        //            float_schema('id')->merge(float_schema('id', true, 3))
-        //        );
+        self::assertEquals(
+            float_schema('id', true),
+            float_schema('id')->merge(float_schema('id', true, 3))
+        );
 
         self::assertEquals(
             float_schema('id', true, 12),
