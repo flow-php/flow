@@ -68,11 +68,11 @@ final readonly class Parameter
      *
      * @return null|T
      */
-    public function asEnum(Row $row, string $enumClass) : ?\UnitEnum
+    public function asEnum(Row $row, string $enumClass, ?\UnitEnum $default = null) : ?\UnitEnum
     {
         $result = $this->eval($row);
 
-        return \is_a($result, $enumClass) ? $result : null;
+        return \is_a($result, $enumClass) ? $result : $default;
     }
 
     public function asFloat(Row $row) : ?float

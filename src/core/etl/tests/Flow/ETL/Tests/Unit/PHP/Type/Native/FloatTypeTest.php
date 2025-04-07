@@ -94,7 +94,7 @@ final class FloatTypeTest extends FlowTestCase
             type_float(true, 6)->merge(type_float(true, 3))->isEqual(type_float(true, 3))
         );
 
-        $this->expectExceptionMessage('Cannot merge different types, float(precision: 6) and string');
+        $this->expectExceptionMessage('Cannot merge different types, float and string');
         type_float(false)->merge(type_string());
     }
 
@@ -121,11 +121,11 @@ final class FloatTypeTest extends FlowTestCase
     public function test_to_string() : void
     {
         self::assertSame(
-            'float(precision: 6)',
+            'float',
             type_float(false)->toString()
         );
         self::assertSame(
-            '?float(precision: 6)',
+            '?float',
             type_float(true)->toString()
         );
     }

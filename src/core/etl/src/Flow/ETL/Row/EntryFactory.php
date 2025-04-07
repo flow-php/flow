@@ -143,81 +143,81 @@ final readonly class EntryFactory
     {
         if (null === $value && $type->nullable()) {
             return match ($type::class) {
-                StringType::class => str_entry($entryName, null, $type, $metadata),
-                IntegerType::class => int_entry($entryName, null, $type, $metadata),
-                FloatType::class => float_entry($entryName, null, $type->precision, $type, $metadata),
-                BooleanType::class => bool_entry($entryName, null, $type, $metadata),
+                StringType::class => str_entry($entryName, null, $metadata),
+                IntegerType::class => int_entry($entryName, null, $metadata),
+                FloatType::class => float_entry($entryName, null, $metadata),
+                BooleanType::class => bool_entry($entryName, null, $metadata),
                 MapType::class => map_entry($entryName, null, $type, $metadata),
                 StructureType::class => struct_entry($entryName, null, $type, $metadata),
                 ListType::class => new Entry\ListEntry($entryName, null, $type, $metadata),
-                UuidType::class => uuid_entry($entryName, null, $type, $metadata),
-                DateTimeType::class => datetime_entry($entryName, null, $type, $metadata),
-                TimeType::class => time_entry($entryName, null, $type, $metadata),
-                DateType::class => date_entry($entryName, null, $type, $metadata),
-                EnumType::class => enum_entry($entryName, null, $type, $metadata),
-                ArrayType::class, JsonType::class => json_entry($entryName, null, type_json($type->nullable()), $metadata),
+                UuidType::class => uuid_entry($entryName, null, $metadata),
+                DateTimeType::class => datetime_entry($entryName, null, $metadata),
+                TimeType::class => time_entry($entryName, null, $metadata),
+                DateType::class => date_entry($entryName, null, $metadata),
+                EnumType::class => enum_entry($entryName, null, $metadata),
+                ArrayType::class, JsonType::class => json_entry($entryName, null, $metadata),
                 NullType::class => Entry\StringEntry::fromNull($entryName, $metadata),
-                XMLType::class => xml_entry($entryName, null, $type, $metadata),
-                XMLElementType::class => xml_element_entry($entryName, null, $type, $metadata),
+                XMLType::class => xml_entry($entryName, null, $metadata),
+                XMLElementType::class => xml_element_entry($entryName, null, $metadata),
                 default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
             };
         }
 
         try {
             if ($type instanceof StringType) {
-                return str_entry($entryName, is_type([type_string()], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return str_entry($entryName, is_type([type_string()], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof IntegerType) {
-                return int_entry($entryName, is_type([type_int()], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return int_entry($entryName, is_type([type_int()], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof BooleanType) {
-                return bool_entry($entryName, is_type([type_boolean()], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return bool_entry($entryName, is_type([type_boolean()], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof FloatType) {
-                return float_entry($entryName, is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value), $type->precision, $type, $metadata);
+                return float_entry($entryName, is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof UuidType) {
-                return uuid_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return uuid_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof DateType) {
-                return date_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return date_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof TimeType) {
-                return time_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return time_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof DateTimeType) {
-                return datetime_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return datetime_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof EnumType) {
-                return enum_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return enum_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof JsonType) {
                 try {
-                    return json_object_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                    return json_object_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
                 } catch (InvalidArgumentException) {
-                    return json_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                    return json_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
                 }
             }
 
             if ($type instanceof XMLType) {
-                return xml_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return xml_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof XMLElementType) {
-                return xml_element_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type, $metadata);
+                return xml_element_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof ArrayType) {
-                return json_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), type_json($type->nullable()), $metadata);
+                return json_entry($entryName, is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $metadata);
             }
 
             if ($type instanceof ObjectType) {

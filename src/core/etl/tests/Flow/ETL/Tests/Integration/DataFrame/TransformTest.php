@@ -17,7 +17,7 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->transform(with_entry('amount', ref('amount')->divide(100)))
+            ->transform(with_entry('amount', ref('amount')->divide(100, scale: 2)))
             ->transform(with_entry('currency', lit('PLN')))
             ->fetch()
             ->toArray();
@@ -41,7 +41,7 @@ final class TransformTest extends FlowTestCase
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
             ->withEntries([
-                'amount' => ref('amount')->divide(100),
+                'amount' => ref('amount')->divide(100, scale: 2),
                 'currency' => lit('PLN'),
             ])
             ->fetch()
@@ -66,7 +66,7 @@ final class TransformTest extends FlowTestCase
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
             ->withEntries([
-                with_entry('amount', ref('amount')->divide(100)),
+                with_entry('amount', ref('amount')->divide(100, scale: 2)),
                 with_entry('currency', lit('PLN')),
             ])
             ->fetch()
@@ -90,7 +90,7 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->withEntry('amount', ref('amount')->divide(100))
+            ->withEntry('amount', ref('amount')->divide(100, scale: 2))
             ->withEntry('currency', lit('PLN'))
             ->fetch()
             ->toArray();
@@ -114,7 +114,7 @@ final class TransformTest extends FlowTestCase
                 ['id' => 2, 'status' => 'inactive', 'amount' => 250],
                 ['id' => 3, 'status' => 'active', 'amount' => 1_000],
             ]))
-            ->with(with_entry('amount', ref('amount')->divide(100)))
+            ->with(with_entry('amount', ref('amount')->divide(100, scale: 2)))
             ->with(with_entry('currency', lit('PLN')))
             ->fetch()
             ->toArray();

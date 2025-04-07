@@ -30,7 +30,6 @@ final class DateTimeEntry implements Entry
     public function __construct(
         private readonly string $name,
         \DateTimeInterface|string|null $value,
-        ?DateTimeType $type = null,
         ?Metadata $metadata = null,
     ) {
         if ($name === '') {
@@ -50,8 +49,7 @@ final class DateTimeEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_datetime();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_datetime($this->value === null);
     }
 
     public function __toString() : string
@@ -66,7 +64,7 @@ final class DateTimeEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->type, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

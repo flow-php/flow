@@ -30,7 +30,6 @@ final class StringEntry implements Entry
     public function __construct(
         private readonly string $name,
         private readonly ?string $value,
-        ?StringType $type = null,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -38,13 +37,12 @@ final class StringEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_string();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_string($this->value === null);
     }
 
     public static function fromNull(string $name, ?Metadata $metadata = null) : self
     {
-        $entry = new self($name, null, type_string(true), $metadata);
+        $entry = new self($name, null, $metadata);
         $entry->fromNull = true;
 
         return $entry;
@@ -84,7 +82,7 @@ final class StringEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value, $this->type, $this->metadata);
+        return new self($this->name, $this->value, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

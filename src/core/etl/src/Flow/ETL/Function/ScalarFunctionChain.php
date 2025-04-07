@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\lit;
+use Flow\Calculator\Rounding;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
@@ -176,20 +177,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new DateTimeFormat($this, $format);
     }
 
-    /**
-     * Divide the value by a number. Scale is determined by the following logic:
-     *
-     * 1) when $scale is provided and is not null, it will be used as scale
-     * 2) determine the scale based on values when scale is not provided:
-     *  a) first check if any of the values is a FloatEntry, and we take partial scale from there
-     *  b) then check if any of the values is float type, and if it's float, we set default scale to be 6
-     *  c) take the higher scale from two values and use it as a scale for the result
-     *
-     * $scale parameter always takes precedence over the scale from the values.
-     */
-    public function divide(ScalarFunction|int|float|string $value, ScalarFunction|int|null $scale = null) : self
+    public function divide(ScalarFunction|int|float|string $value, ScalarFunction|int|null $scale = null, ScalarFunction|Rounding|null $rounding = null) : self
     {
-        return new Divide($this, $value, $scale);
+        return new Divide($this, $value, $scale, $rounding);
     }
 
     /**
@@ -373,36 +363,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ToLower($this);
     }
 
-    /**
-     * Subtract the value from a number. Scale is determined by the following logic:
-     *
-     * 1) when $scale is provided and is not null, it will be used as scale
-     * 2) determine the scale based on values when scale is not provided:
-     *  a) first check if any of the values is a FloatEntry, and we take partial scale from there
-     *  b) then check if any of the values is float type, and if it's float, we set default scale to be 6
-     *  c) take the higher scale from two values and use it as a scale for the result
-     *
-     * $scale parameter always takes precedence over the scale from the values.
-     */
-    public function minus(ScalarFunction|int|float $ref, ScalarFunction|int|null $scale = null) : self
+    public function minus(ScalarFunction|int|float $ref) : self
     {
-        return new Minus($this, $ref, $scale);
+        return new Minus($this, $ref);
     }
 
-    /**
-     * Modulus (or remainder) from two numbers. Scale is determined by the following logic:
-     *
-     * 1) when $scale is provided and is not null, it will be used as scale
-     * 2) determine the scale based on values when scale is not provided:
-     *  a) first check if any of the values is a FloatEntry, and we take partial scale from there
-     *  b) then check if any of the values is float type, and if it's float, we set default scale to be 6
-     *  c) take the higher scale from two values and use it as a scale for the result
-     *
-     * $scale parameter always takes precedence over the scale from the values.
-     */
-    public function mod(ScalarFunction|int|float $value, ScalarFunction|int|null $scale = null) : self
+    public function mod(ScalarFunction|int $value) : self
     {
-        return new Mod($this, $value, $scale);
+        return new Mod($this, $value);
     }
 
     public function modifyDateTime(string|ScalarFunction $modifier) : self
@@ -410,20 +378,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ModifyDateTime($this, $modifier);
     }
 
-    /**
-     * Multiply the value by a number. Scale is determined by the following logic:
-     *
-     * 1) when $scale is provided and is not null, it will be used as scale
-     * 2) determine the scale based on values when scale is not provided:
-     *  a) first check if any of the values is a FloatEntry, and we take partial scale from there
-     *  b) then check if any of the values is float type, and if it's float, we set default scale to be 6
-     *  c) take the higher scale from two values and use it as a scale for the result
-     *
-     * $scale parameter always takes precedence over the scale from the values.
-     */
-    public function multiply(ScalarFunction|int|float $value, ScalarFunction|int|null $scale = null) : self
+    public function multiply(ScalarFunction|int|float $value) : self
     {
-        return new Multiply($this, $value, $scale);
+        return new Multiply($this, $value);
     }
 
     public function notEquals(mixed $value) : self
@@ -462,36 +419,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Any($this, new Not($function));
     }
 
-    /**
-     * Adds the value to a number. Scale is determined by the following logic:
-     *
-     * 1) when $scale is provided and is not null, it will be used as scale
-     * 2) determine the scale based on values when scale is not provided:
-     *  a) first check if any of the values is a FloatEntry, and we take partial scale from there
-     *  b) then check if any of the values is float type, and if it's float, we set default scale to be 6
-     *  c) take the higher scale from two values and use it as a scale for the result
-     *
-     * $scale parameter always takes precedence over the scale from the values.
-     */
-    public function plus(ScalarFunction|int|float $ref, ScalarFunction|int|null $scale = null) : self
+    public function plus(ScalarFunction|int|float $ref) : self
     {
-        return new Plus($this, $ref, $scale);
+        return new Plus($this, $ref);
     }
 
-    /**
-     * Power a number. Scale is determined by the following logic:
-     *
-     * 1) when $scale is provided and is not null, it will be used as scale
-     * 2) determine the scale based on values when scale is not provided:
-     *  a) first check if any of the values is a FloatEntry, and we take partial scale from there
-     *  b) then check if any of the values is float type, and if it's float, we set default scale to be 6
-     *  c) take the higher scale from two values and use it as a scale for the result
-     *
-     * $scale parameter always takes precedence over the scale from the values.
-     */
-    public function power(ScalarFunction|int $value, ScalarFunction|int|null $scale = null) : self
+    public function power(ScalarFunction|int $value) : self
     {
-        return new Power($this, $value, $scale);
+        return new Power($this, $value);
     }
 
     public function regex(ScalarFunction|string $pattern, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : self

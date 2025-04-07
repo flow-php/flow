@@ -7,8 +7,8 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\{float_entry, int_entry};
 use Flow\Calculator\Calculator;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{PHP\Type\Native\FloatType, Row, Rows, Window};
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\ETL\{Row, Rows, Window};
 
 final class Sum implements AggregatingFunction, WindowFunction
 {
@@ -28,15 +28,16 @@ final class Sum implements AggregatingFunction, WindowFunction
     {
         try {
             $entry = $row->get($this->ref);
+            $type = $entry->type();
 
-            if ($entry instanceof Entry\FloatEntry) {
-                $this->precision = max($this->precision, $entry->precision);
+            if ($type instanceof FloatType) {
+                $this->precision = max($this->precision, $type->precision);
             }
 
             $value = $entry->value();
 
             if (\is_numeric($value)) {
-                $this->sum = (new Calculator())->add($this->sum, $value, $this->precision);
+                $this->sum = (new Calculator())->add($this->sum, $value);
             }
 
         } catch (InvalidArgumentException) {
@@ -51,15 +52,16 @@ final class Sum implements AggregatingFunction, WindowFunction
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
             $entry = $partitionRow->get($this->ref);
+            $type = $entry->type();
 
-            if ($entry instanceof Entry\FloatEntry) {
-                $precision = max($precision, $entry->precision);
+            if ($type instanceof FloatType) {
+                $precision = max($precision, $type->precision);
             }
 
             $value = $entry->value();
 
             if (\is_numeric($value)) {
-                $sum = (new Calculator())->add($sum, $value, $precision);
+                $sum = (new Calculator())->add($sum, $value);
             }
         }
 
@@ -86,7 +88,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             return int_entry($this->ref->name(), (int) $this->sum);
         }
 
-        return float_entry($this->ref->name(), $this->sum, $this->precision);
+        return float_entry($this->ref->name(), $this->sum);
     }
 
     public function toString() : string

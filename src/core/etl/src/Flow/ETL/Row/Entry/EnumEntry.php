@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_enum;
 use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
@@ -23,12 +24,10 @@ final class EnumEntry implements Entry
     public function __construct(
         private readonly string $name,
         private readonly ?\UnitEnum $value,
-        ?EnumType $type = null,
         ?Metadata $metadata = null,
     ) {
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: EnumType::of($value === null ? \UnitEnum::class : $value::class);
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class, $this->value === null);
     }
 
     public function __toString() : string
@@ -47,7 +46,7 @@ final class EnumEntry implements Entry
 
     public function duplicate() : self
     {
-        return new self($this->name, $this->value, $this->type, $this->metadata);
+        return new self($this->name, $this->value, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

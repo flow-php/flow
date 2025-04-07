@@ -79,3 +79,17 @@ parameters:
         - src/lib/parquet/src/Flow/Parquet/ParquetFile/RowGroupBuilder/ColumnData/DefinitionConverter.php
 
     tmpDir: var/phpstan/cache
+
+    disallowedFunctionCalls:
+        -
+            function: 'var_dump()'
+        -
+            function: 'print_r()'
+        -
+            function: 'dd()'
+        -
+            function: 'ddj()'
+        -
+            function: 'dj()'
+includes:
+    - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon

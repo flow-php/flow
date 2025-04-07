@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer\ScalarFunctionTransformer;
 
 use function Flow\ETL\DSL\{float_entry, flow_context, int_entry, integer_entry, ref, row, rows};
+use Flow\Calculator\Rounding;
 use Flow\ETL\Row\Entry\{FloatEntry, IntegerEntry};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
@@ -17,13 +18,17 @@ final class MathTest extends FlowTestCase
         yield [
             float_entry('a', 0.3),
             float_entry('b', -0.1),
+            null,
+            null,
             ['result' => -3, 'a' => 0.3, 'b' => -0.1],
         ];
 
         yield [
-            float_entry('a', 0.0003, 14),
-            float_entry('b', 0.00000017, 14),
-            ['result' => 1764.7058823529412, 'a' => 0.0003, 'b' => 0.00000017],
+            float_entry('a', 0.0003),
+            float_entry('b', 0.00000017),
+            6,
+            Rounding::HALF_UP,
+            ['result' => 1764.705882, 'a' => 0.0003, 'b' => 0.00000017],
         ];
     }
 
@@ -36,13 +41,13 @@ final class MathTest extends FlowTestCase
         ];
 
         yield [
-            float_entry('a', 0.0000003, 7),
-            float_entry('b', 0.0000001, 7),
+            float_entry('a', 0.0000003),
+            float_entry('b', 0.0000001),
             ['result' => 0.0000002, 'a' => 0.0000003, 'b' => 0.0000001],
         ];
         yield [
-            float_entry('a', 0.3, 16),
-            float_entry('b', 0.1, 16),
+            float_entry('a', 0.3),
+            float_entry('b', 0.1),
             ['result' => 0.2, 'a' => 0.3_0000_0000_0000_000, 'b' => 0.1_0000_0000_0000_000],
         ];
     }
@@ -56,8 +61,8 @@ final class MathTest extends FlowTestCase
         ];
 
         yield [
-            float_entry('a', 0.0000003, 14),
-            float_entry('b', -0.0000001, 14),
+            float_entry('a', 0.0000003),
+            float_entry('b', -0.0000001),
             ['result' => -0.00000000000003, 'a' => 0.0000003, 'b' => -0.0000001],
         ];
     }
@@ -71,8 +76,8 @@ final class MathTest extends FlowTestCase
         ];
 
         yield [
-            float_entry('a', 0.0000003, 7),
-            float_entry('b', -0.0000001, 7),
+            float_entry('a', 0.0000003),
+            float_entry('b', -0.0000001),
             ['result' => 0.0000002, 'a' => 0.0000003, 'b' => -0.0000001],
         ];
     }
@@ -80,22 +85,22 @@ final class MathTest extends FlowTestCase
     public static function power_data_provider() : \Generator
     {
         yield [
-            float_entry('a', -0.3, 1),
-            int_entry('b', -1),
-            ['result' => -3.3, 'a' => -0.3, 'b' => -1],
+            float_entry('a', -0.3),
+            int_entry('b', 1),
+            ['result' => -0.3, 'a' => -0.3, 'b' => 1],
         ];
 
         yield [
-            float_entry('a', -0.3, 8),
+            float_entry('a', -0.3),
             integer_entry('b', 10),
-            ['result' => 5.9E-6, 'a' => -0.3, 'b' => 10],
+            ['result' => 5.9049E-6, 'a' => -0.3, 'b' => 10],
         ];
     }
 
     #[DataProvider('divide_data_provider')]
-    public function test_divide(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
+    public function test_divide(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, ?int $scale, ?Rounding $rounding, array $result) : void
     {
-        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->divide(ref($b->name()))))
+        $rows = (new ScalarFunctionTransformer('result', ref($a->name())->divide(ref($b->name()), $scale, $rounding)))
             ->transform(
                 rows(row($a, $b)),
                 flow_context()

@@ -35,7 +35,6 @@ final class TimeEntry implements Entry
     public function __construct(
         private readonly string $name,
         \DateInterval|string|null $value,
-        ?TimeType $type = null,
         ?Metadata $metadata = null,
     ) {
         if ($name === '') {
@@ -85,8 +84,7 @@ final class TimeEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_time($this->value === null);
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_time($this->value === null);
     }
 
     public static function fromDays(string $name, int $days) : self
@@ -148,7 +146,7 @@ final class TimeEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->type, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

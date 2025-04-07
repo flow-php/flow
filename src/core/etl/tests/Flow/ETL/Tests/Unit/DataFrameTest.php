@@ -149,7 +149,7 @@ final class DataFrameTest extends FlowTestCase
                 {
                     return $dataFrame
                         ->withEntry('country', ref('country')->lower())
-                        ->withEntry('age', ref('age')->divide(lit(10)));
+                        ->withEntry('age', ref('age')->divide(lit(10), scale: 2));
                 }
             })
             ->rows(

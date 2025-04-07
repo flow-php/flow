@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\float_entry;
+use Flow\ETL\PHP\Type\Native\FloatType;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Tests\FlowTestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
 
 final class FloatEntryTest extends FlowTestCase
 {
@@ -21,10 +22,16 @@ final class FloatEntryTest extends FlowTestCase
         yield 'different names characters and different values with high precision' => [false, float_entry('NAME', 1.205502), float_entry('name', 1.205501)];
     }
 
-    public function test_accessing_precision() : void
+    #[TestWith([1.0, 0])]
+    #[TestWith([1.1, 1])]
+    #[TestWith([2.1E-5, 6])]
+    public function test_accessing_precision(float $value, int $precision) : void
     {
-        self::assertSame(6, float_entry('name', 1.0)->precision);
-        self::assertSame(3, float_entry('name', 1.0, 3)->precision);
+        $float = float_entry('name', $value);
+        $type = $float->type();
+
+        self::assertInstanceOf(FloatType::class, $type);
+        self::assertSame($precision, $type->precision);
     }
 
     public function test_duplicating_entry() : void

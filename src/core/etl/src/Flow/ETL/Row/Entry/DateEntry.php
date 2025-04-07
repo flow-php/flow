@@ -27,7 +27,7 @@ final class DateEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, \DateTimeInterface|string|null $value, ?DateType $type = null, ?Metadata $metadata = null)
+    public function __construct(private readonly string $name, \DateTimeInterface|string|null $value, ?Metadata $metadata = null)
     {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -48,8 +48,7 @@ final class DateEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_date();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_date($this->value === null);
     }
 
     public function __toString() : string
@@ -64,7 +63,7 @@ final class DateEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->type, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

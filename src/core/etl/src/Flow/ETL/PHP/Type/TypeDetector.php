@@ -19,6 +19,7 @@ use function Flow\ETL\DSL\{type_array,
     type_uuid,
     type_xml,
     type_xml_element};
+use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType};
@@ -51,7 +52,7 @@ final class TypeDetector
         }
 
         if (\is_float($value)) {
-            return type_float();
+            return type_float(precision: BigDecimal::of($value)->getScale());
         }
 
         if (\is_array($value)) {

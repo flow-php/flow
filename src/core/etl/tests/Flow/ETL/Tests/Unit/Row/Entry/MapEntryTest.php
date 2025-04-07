@@ -37,7 +37,7 @@ final class MapEntryTest extends FlowTestCase
     public function test_creating_float_map_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map<integer, float(precision: 6)> got different types: array<mixed>');
+        $this->expectExceptionMessage('Expected map<integer, float> got different types: array<mixed>');
 
         map_entry('map', ['string', 1.3], type_map(type_integer(), type_float()));
     }

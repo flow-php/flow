@@ -91,7 +91,7 @@ final class JsonExtractorTest extends FlowTestCase
             <<<'SCHEMA'
 schema
 |-- timezones: list<string>
-|-- latlng: list<float(precision: 6)>
+|-- latlng: list<float>
 |-- name: string
 |-- country_code: string
 |-- capital: ?string

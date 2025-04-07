@@ -59,14 +59,14 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         self::assertEquals(
-            schema(list_schema('array', type_list(type_string())), int_schema('score_sum'), float_schema('score_avg')),
+            schema(list_schema('array', type_list(type_string())), int_schema('score_sum'), float_schema('score_avg', precision: 2)),
             $rows->schema()
         );
         self::assertEquals(
             [
                 ['array' => ['a', 'b', 'c', 'd'], 'score_sum' => 40, 'score_avg' => 20.0],
                 ['array' => ['a', 'b', 'c'], 'score_sum' => 55, 'score_avg' => 27.5],
-                ['array' => ['a', 'b'], 'score_sum' => 125, 'score_avg' => 41.666667],
+                ['array' => ['a', 'b'], 'score_sum' => 125, 'score_avg' => 41.67],
                 ['array' => ['a'], 'score_sum' => 50, 'score_avg' => 50.0],
             ],
             $rows->toArray()
@@ -91,14 +91,14 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         self::assertEquals(
-            schema(datetime_schema('date'), int_schema('score_sum'), float_schema('score_avg')),
+            schema(datetime_schema('date'), int_schema('score_sum'), float_schema('score_avg', precision: 2)),
             $rows->schema()
         );
         self::assertEquals(
             [
                 ['date' => new \DateTimeImmutable('2024-01-01 10:00:00'), 'score_sum' => 40, 'score_avg' => 20.0],
                 ['date' => new \DateTimeImmutable('2024-01-02 10:00:00'), 'score_sum' => 55, 'score_avg' => 27.5],
-                ['date' => new \DateTimeImmutable('2024-01-03 10:00:00'), 'score_sum' => 125, 'score_avg' => 41.666667],
+                ['date' => new \DateTimeImmutable('2024-01-03 10:00:00'), 'score_sum' => 125, 'score_avg' => 41.67],
                 ['date' => new \DateTimeImmutable('2024-01-04 10:00:00'), 'score_sum' => 50, 'score_avg' => 50.0],
             ],
             $rows->toArray()
@@ -163,7 +163,7 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         self::assertEquals(
             rows(
-                row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.666666666666668)),
+                row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
                 row(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
                 row(str_entry('country', 'US'), str_entry('gender', 'female'), float_entry('age_avg', 42.5)),
                 row(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
@@ -193,7 +193,7 @@ final class GroupByTest extends FlowIntegrationTestCase
 
         self::assertEquals(
             rows(
-                row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.666666666666668)),
+                row(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.67)),
                 row(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
                 row(str_entry('country', 'US'), str_entry('gender', 'female'), int_entry('age_avg', 40)),
                 row(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
@@ -315,14 +315,14 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         self::assertEquals(
-            schema(uuid_schema('uuid'), int_schema('score_sum'), float_schema('score_avg')),
+            schema(uuid_schema('uuid'), int_schema('score_sum'), float_schema('score_avg', precision: 2)),
             $rows->schema()
         );
         self::assertEquals(
             [
                 ['uuid' => Uuid::fromString('b97a23ab-ba84-4d8f-9d9a-abd32cc58110'), 'score_sum' => 40, 'score_avg' => 20.0],
                 ['uuid' => Uuid::fromString('28fc1a5f-25eb-40e2-88b8-7a0cdc5d18ae'), 'score_sum' => 55, 'score_avg' => 27.5],
-                ['uuid' => Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'), 'score_sum' => 125, 'score_avg' => 41.666667],
+                ['uuid' => Uuid::fromString('5085fabf-15f7-4467-9076-61547afbbdc9'), 'score_sum' => 125, 'score_avg' => 41.67],
                 ['uuid' => Uuid::fromString('c7c22b40-45ad-46d1-a47b-0d1dd389ae41'), 'score_sum' => 50, 'score_avg' => 50.0],
             ],
             $rows->toArray()

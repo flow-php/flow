@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{float_entry, integer_entry};
+use Flow\Calculator\{Calculator, Rounding};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\{Row, Rows, Window};
@@ -17,7 +18,7 @@ final class Average implements AggregatingFunction, WindowFunction
 
     private ?Window $window;
 
-    public function __construct(private readonly Reference $ref)
+    public function __construct(private readonly Reference $ref, private readonly int $scale = 2, private readonly Rounding $rounding = Rounding::HALF_UP)
     {
         $this->window = null;
         $this->count = 0;
@@ -31,7 +32,7 @@ final class Average implements AggregatingFunction, WindowFunction
             $value = $row->valueOf($this->ref);
 
             if (\is_numeric($value)) {
-                $this->sum += $value;
+                $this->sum = (new Calculator())->add($this->sum, $value);
                 $this->count++;
             }
         } catch (InvalidArgumentException) {
@@ -49,12 +50,12 @@ final class Average implements AggregatingFunction, WindowFunction
             $value = $partitionRow->valueOf($this->ref);
 
             if (\is_numeric($value)) {
-                $sum += $value;
+                $sum = (new Calculator())->add($sum, $value);
                 $count++;
             }
         }
 
-        return $sum / $count;
+        return (new Calculator())->divide($sum, $count, $this->scale, $this->rounding);
     }
 
     public function over(Window $window) : WindowFunction
@@ -71,15 +72,14 @@ final class Average implements AggregatingFunction, WindowFunction
         }
 
         if (0 !== $this->count) {
-            $result = $this->sum / $this->count;
+            $result = (new Calculator())->divide($this->sum, $this->count, $this->scale, $this->rounding);
             $resultInt = (int) $result;
         } else {
-            $result = 0.0;
-            $resultInt = 0;
+            $result = 0;
         }
 
-        if ($result - $resultInt === 0.0) {
-            return integer_entry($this->ref->name(), (int) $result);
+        if (\is_int($result)) {
+            return integer_entry($this->ref->name(), $result);
         }
 
         return float_entry($this->ref->name(), $result);

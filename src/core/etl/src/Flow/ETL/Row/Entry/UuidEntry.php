@@ -31,7 +31,6 @@ final class UuidEntry implements Entry
     public function __construct(
         private readonly string $name,
         Uuid|string|null $value,
-        ?UuidType $type = null,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -45,8 +44,7 @@ final class UuidEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_uuid($this->value === null);
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_uuid($this->value === null);
     }
 
     public static function from(string $name, string $value) : self
@@ -66,7 +64,7 @@ final class UuidEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value ? new Uuid($this->value->toString()) : null, $this->type, $this->metadata);
+        return new self($this->name, $this->value ? new Uuid($this->value->toString()) : null, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

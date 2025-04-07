@@ -27,7 +27,6 @@ final class XMLEntry implements Entry
     public function __construct(
         private readonly string $name,
         \DOMDocument|string|null $value,
-        ?XMLType $type = null,
         ?Metadata $metadata = null,
     ) {
         if (\is_string($value)) {
@@ -43,8 +42,7 @@ final class XMLEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_xml();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_xml($this->value === null);
     }
 
     public function __serialize() : array
@@ -96,7 +94,7 @@ final class XMLEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value ? clone $this->value : null, $this->type, $this->metadata);
+        return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
     public function is(Reference|string $name) : bool

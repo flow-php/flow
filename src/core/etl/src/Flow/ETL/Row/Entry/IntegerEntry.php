@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\{type_integer};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\IntegerType;
 use Flow\ETL\PHP\Type\Type;
@@ -28,7 +28,6 @@ final class IntegerEntry implements Entry
     public function __construct(
         private readonly string $name,
         private readonly ?int $value,
-        ?IntegerType $type = null,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -36,8 +35,7 @@ final class IntegerEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_int();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_integer($this->value === null);
     }
 
     public function __toString() : string
@@ -52,7 +50,7 @@ final class IntegerEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value, $this->type, $this->metadata);
+        return new self($this->name, $this->value, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

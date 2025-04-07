@@ -15,16 +15,16 @@ final class MathTest extends FlowTestCase
         $rows = rows();
         $report = df()
             ->read(from_rows(rows(
-                row(integer_entry('id', 1), float_entry('price', 29.39, precision: 2), integer_entry('quantity', 2), float_entry('weight', 1.5, precision: 2)),
-                row(integer_entry('id', 2), float_entry('price', 19.3, precision: 2), integer_entry('quantity', 1), float_entry('weight', 0.5, precision: 2)),
-                row(integer_entry('id', 3), float_entry('price', 39.1, precision: 2), integer_entry('quantity', 3), float_entry('weight', 2.0, precision: 2)),
-                row(integer_entry('id', 4), float_entry('price', 49.9, precision: 2), integer_entry('quantity', 4), float_entry('weight', 2.1284, precision: 4)),
-                row(integer_entry('id', 5), float_entry('price', 15.0, precision: 2), integer_entry('quantity', 1), float_entry('weight', 0.3, precision: 2)),
-                row(integer_entry('id', 6), float_entry('price', 30.0, precision: 2), integer_entry('quantity', 2), float_entry('weight', 1.0, precision: 2)),
-                row(integer_entry('id', 7), float_entry('price', 25.0, precision: 2), integer_entry('quantity', 3), float_entry('weight', 1.8, precision: 2)),
-                row(integer_entry('id', 8), float_entry('price', 20.0, precision: 2), integer_entry('quantity', 1), float_entry('weight', 0.8, precision: 2)),
-                row(integer_entry('id', 9), float_entry('price', 35.0, precision: 2), integer_entry('quantity', 4), float_entry('weight', 2.2, precision: 2)),
-                row(integer_entry('id', 10), float_entry('price', 45.0, precision: 2), integer_entry('quantity', 5), float_entry('weight', 3.0, precision: 2)),
+                row(integer_entry('id', 1), float_entry('price', 29.39), integer_entry('quantity', 2), float_entry('weight', 1.5)),
+                row(integer_entry('id', 2), float_entry('price', 19.3), integer_entry('quantity', 1), float_entry('weight', 0.5)),
+                row(integer_entry('id', 3), float_entry('price', 39.1), integer_entry('quantity', 3), float_entry('weight', 2.0)),
+                row(integer_entry('id', 4), float_entry('price', 49.9), integer_entry('quantity', 4), float_entry('weight', 2.1284)),
+                row(integer_entry('id', 5), float_entry('price', 15.0), integer_entry('quantity', 1), float_entry('weight', 0.3)),
+                row(integer_entry('id', 6), float_entry('price', 30.0), integer_entry('quantity', 2), float_entry('weight', 1.0)),
+                row(integer_entry('id', 7), float_entry('price', 25.0), integer_entry('quantity', 3), float_entry('weight', 1.8)),
+                row(integer_entry('id', 8), float_entry('price', 20.0), integer_entry('quantity', 1), float_entry('weight', 0.8)),
+                row(integer_entry('id', 9), float_entry('price', 35.0), integer_entry('quantity', 4), float_entry('weight', 2.2)),
+                row(integer_entry('id', 10), float_entry('price', 45.0), integer_entry('quantity', 5), float_entry('weight', 3.0)),
             )))
             ->aggregate(sum(ref('price')), sum(ref('weight')))
             ->run(
@@ -33,11 +33,6 @@ final class MathTest extends FlowTestCase
                 },
                 analyze: analyze()->withSchema()
             );
-
-        /** @phpstan-ignore-next-line */
-        self::assertSame(2, $report->schema()?->get('price_sum')->type()?->precision);
-        /** @phpstan-ignore-next-line */
-        self::assertSame(4, $report->schema()?->get('weight_sum')->type()?->precision);
 
         self::assertSame(
             [
@@ -52,16 +47,16 @@ final class MathTest extends FlowTestCase
         $rows = rows();
         $report = df()
             ->read(from_rows(rows(
-                row(integer_entry('id', 1), float_entry('price', 29.39, precision: 2), integer_entry('quantity', 2), float_entry('weight', 1.5, precision: 2)),
-                row(integer_entry('id', 2), float_entry('price', 19.3, precision: 2), integer_entry('quantity', 1), float_entry('weight', 0.5, precision: 2)),
-                row(integer_entry('id', 3), float_entry('price', 39.1, precision: 2), integer_entry('quantity', 3), float_entry('weight', 2.0, precision: 2)),
-                row(integer_entry('id', 4), float_entry('price', 49.9, precision: 2), integer_entry('quantity', 4), float_entry('weight', 2.1284, precision: 4)),
-                row(integer_entry('id', 5), float_entry('price', 15.0, precision: 2), integer_entry('quantity', 1), float_entry('weight', 0.3, precision: 2)),
-                row(integer_entry('id', 6), float_entry('price', 30.0, precision: 2), integer_entry('quantity', 2), float_entry('weight', 1.0, precision: 2)),
-                row(integer_entry('id', 7), float_entry('price', 25.0, precision: 2), integer_entry('quantity', 3), float_entry('weight', 1.8, precision: 2)),
-                row(integer_entry('id', 8), float_entry('price', 20.0, precision: 2), integer_entry('quantity', 1), float_entry('weight', 0.8, precision: 2)),
-                row(integer_entry('id', 9), float_entry('price', 35.0, precision: 2), integer_entry('quantity', 4), float_entry('weight', 2.2, precision: 2)),
-                row(integer_entry('id', 10), float_entry('price', 45.0, precision: 2), integer_entry('quantity', 5), float_entry('weight', 3.0, precision: 2)),
+                row(integer_entry('id', 1), float_entry('price', 29.39), integer_entry('quantity', 2), float_entry('weight', 1.5)),
+                row(integer_entry('id', 2), float_entry('price', 19.3), integer_entry('quantity', 1), float_entry('weight', 0.5)),
+                row(integer_entry('id', 3), float_entry('price', 39.1), integer_entry('quantity', 3), float_entry('weight', 2.0)),
+                row(integer_entry('id', 4), float_entry('price', 49.9), integer_entry('quantity', 4), float_entry('weight', 2.1284)),
+                row(integer_entry('id', 5), float_entry('price', 15.0), integer_entry('quantity', 1), float_entry('weight', 0.3)),
+                row(integer_entry('id', 6), float_entry('price', 30.0), integer_entry('quantity', 2), float_entry('weight', 1.0)),
+                row(integer_entry('id', 7), float_entry('price', 25.0), integer_entry('quantity', 3), float_entry('weight', 1.8)),
+                row(integer_entry('id', 8), float_entry('price', 20.0), integer_entry('quantity', 1), float_entry('weight', 0.8)),
+                row(integer_entry('id', 9), float_entry('price', 35.0), integer_entry('quantity', 4), float_entry('weight', 2.2)),
+                row(integer_entry('id', 10), float_entry('price', 45.0), integer_entry('quantity', 5), float_entry('weight', 3.0)),
             )))
             ->withEntry('discount', ref('price')->multiply(-0.1))
             ->withEntry('total_weight', ref('weight')->multiply(ref('quantity')))
@@ -72,14 +67,9 @@ final class MathTest extends FlowTestCase
                 analyze: analyze()->withSchema()
             );
 
-        /** @phpstan-ignore-next-line */
-        self::assertSame(2, $report->schema()?->get('discount')->type()?->precision);
-        /** @phpstan-ignore-next-line */
-        self::assertSame(4, $report->schema()?->get('total_weight')->type()?->precision);
-
         self::assertEquals(
             [
-                ['id' => 1, 'price' => 29.39, 'quantity' => 2, 'weight' => 1.5, 'discount' => -2.93, 'total_weight' => 3.0],
+                ['id' => 1, 'price' => 29.39, 'quantity' => 2, 'weight' => 1.5, 'discount' => -2.939, 'total_weight' => 3.0],
                 ['id' => 2, 'price' => 19.3, 'quantity' => 1, 'weight' => 0.5, 'discount' => -1.93, 'total_weight' => 0.5],
                 ['id' => 3, 'price' => 39.1, 'quantity' => 3, 'weight' => 2.0, 'discount' => -3.91, 'total_weight' => 6.0],
                 ['id' => 4, 'price' => 49.9, 'quantity' => 4, 'weight' => 2.1284, 'discount' => -4.99, 'total_weight' => 8.5136],

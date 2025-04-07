@@ -25,15 +25,14 @@ final class BooleanEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly ?bool $value, ?BooleanType $type = null, ?Metadata $metadata = null)
+    public function __construct(private readonly string $name, private readonly ?bool $value, ?Metadata $metadata = null)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_boolean();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_boolean($this->value === null);
     }
 
     public function __toString() : string
@@ -48,7 +47,7 @@ final class BooleanEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value, $this->type, $this->metadata);
+        return new self($this->name, $this->value, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool

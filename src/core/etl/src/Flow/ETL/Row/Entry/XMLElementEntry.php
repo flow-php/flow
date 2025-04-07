@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_xml_element;
+use function Flow\ETL\DSL\{type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\XMLElementType;
 use Flow\ETL\PHP\Type\Type;
@@ -27,7 +27,6 @@ final class XMLElementEntry implements Entry
     public function __construct(
         private readonly string $name,
         \DOMElement|string|null $value,
-        ?XMLElementType $type = null,
         ?Metadata $metadata = null,
     ) {
         if (\is_string($value)) {
@@ -45,8 +44,7 @@ final class XMLElementEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value;
-        $type = $type ?: type_xml_element($value === null);
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_xml_element($this->value === null);
     }
 
     public function __serialize() : array
@@ -97,7 +95,7 @@ final class XMLElementEntry implements Entry
 
     public function duplicate() : Entry
     {
-        return new self($this->name, $this->value ? $this->value->cloneNode(true) : null, $this->type, $this->metadata);
+        return new self($this->name, $this->value ? $this->value->cloneNode(true) : null, $this->metadata);
     }
 
     public function is(Reference|string $name) : bool

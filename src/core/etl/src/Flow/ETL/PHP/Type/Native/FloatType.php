@@ -12,7 +12,7 @@ use Flow\ETL\PHP\Type\Type;
  */
 final readonly class FloatType implements Type
 {
-    public function __construct(private readonly bool $nullable = false, public readonly int $precision = 6)
+    public function __construct(private bool $nullable = false, public int $precision = 6)
     {
     }
 
@@ -52,7 +52,7 @@ final readonly class FloatType implements Type
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $this->precision === $type->precision;
+        return $type instanceof self;
     }
 
     public function isSame(Type $type) : bool
@@ -105,6 +105,6 @@ final readonly class FloatType implements Type
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'float(precision: ' . $this->precision . ')';
+        return ($this->nullable ? '?' : '') . 'float';
     }
 }

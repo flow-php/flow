@@ -290,6 +290,19 @@ final class TypeDetectorTest extends FlowTestCase
             'list<list<integer>>',
         ];
 
+        yield 'list of floats' => [
+            [
+                [
+                    1.2, 2.15414, 3.13,
+                ],
+                [
+                    4.0, 5, 6,
+                ],
+            ],
+            ListType::class,
+            'list<list<float>>',
+        ];
+
         yield 'list of lists with null' => [
             [
                 [
@@ -369,7 +382,7 @@ final class TypeDetectorTest extends FlowTestCase
 
         yield 'float' => [
             1.666,
-            'float(precision: 6)',
+            'float',
             type_float(),
         ];
 

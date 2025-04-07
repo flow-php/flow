@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use Flow\Calculator\Rounding;
 use Flow\ETL\{Analyze,
     Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
@@ -345,82 +346,82 @@ function to_branch(ScalarFunction $condition, Loader $loader) : Loader\Branching
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function bool_entry(string $name, ?bool $value, ?BooleanType $type = null, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
+function bool_entry(string $name, ?bool $value, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
 {
-    return new Entry\BooleanEntry($name, $value, $type);
+    return new Entry\BooleanEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function boolean_entry(string $name, ?bool $value, ?BooleanType $type = null, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
+function boolean_entry(string $name, ?bool $value, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
 {
-    return bool_entry($name, $value, $type, $metadata);
+    return bool_entry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function datetime_entry(string $name, \DateTimeInterface|string|null $value, ?DateTimeType $type = null, ?Schema\Metadata $metadata = null) : Entry\DateTimeEntry
+function datetime_entry(string $name, \DateTimeInterface|string|null $value, ?Schema\Metadata $metadata = null) : Entry\DateTimeEntry
 {
-    return new Entry\DateTimeEntry($name, $value, $type, $metadata);
+    return new Entry\DateTimeEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function time_entry(string $name, \DateInterval|string|null $value, ?TimeType $type = null, ?Schema\Metadata $metadata = null) : Entry\TimeEntry
+function time_entry(string $name, \DateInterval|string|null $value, ?Schema\Metadata $metadata = null) : Entry\TimeEntry
 {
-    return new Entry\TimeEntry($name, $value, $type, $metadata);
+    return new Entry\TimeEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function date_entry(string $name, \DateTimeInterface|string|null $value, ?DateType $type = null, ?Schema\Metadata $metadata = null) : Entry\DateEntry
+function date_entry(string $name, \DateTimeInterface|string|null $value, ?Schema\Metadata $metadata = null) : Entry\DateEntry
 {
-    return new Entry\DateEntry($name, $value, $type, $metadata);
+    return new Entry\DateEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function int_entry(string $name, ?int $value, ?IntegerType $type = null, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
+function int_entry(string $name, ?int $value, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
 {
-    return new Entry\IntegerEntry($name, $value, $type, $metadata);
+    return new Entry\IntegerEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function integer_entry(string $name, ?int $value, ?IntegerType $type = null, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
+function integer_entry(string $name, ?int $value, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
 {
-    return int_entry($name, $value, $type, $metadata);
+    return int_entry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function enum_entry(string $name, ?\UnitEnum $enum, ?EnumType $type = null, ?Schema\Metadata $metadata = null) : Entry\EnumEntry
+function enum_entry(string $name, ?\UnitEnum $enum, ?Schema\Metadata $metadata = null) : Entry\EnumEntry
 {
-    return new Entry\EnumEntry($name, $enum, $type, $metadata);
+    return new Entry\EnumEntry($name, $enum, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function float_entry(string $name, ?float $value, int $precision = 6, ?FloatType $type = null, ?Schema\Metadata $metadata = null) : Entry\FloatEntry
+function float_entry(string $name, float|int|string|null $value, ?Schema\Metadata $metadata = null) : Entry\FloatEntry
 {
-    return new Entry\FloatEntry($name, $value, $precision, $type, $metadata);
+    return new Entry\FloatEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_entry(string $name, array|string|null $data, ?JsonType $type = null, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
+function json_entry(string $name, array|string|null $data, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
 {
-    return new Entry\JsonEntry($name, $data, $type, $metadata);
+    return new Entry\JsonEntry($name, $data, $metadata);
 }
 
 /**
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_object_entry(string $name, array|string|null $data, ?JsonType $type = null, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
+function json_object_entry(string $name, array|string|null $data, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
 {
     if (\is_string($data)) {
-        return new Entry\JsonEntry($name, $data, $type, $metadata);
+        return new Entry\JsonEntry($name, $data, $metadata);
     }
 
-    return Entry\JsonEntry::object($name, $data, $type, $metadata);
+    return Entry\JsonEntry::object($name, $data, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function str_entry(string $name, ?string $value, ?StringType $type = null, ?Schema\Metadata $metadata = null) : Entry\StringEntry
+function str_entry(string $name, ?string $value, ?Schema\Metadata $metadata = null) : Entry\StringEntry
 {
-    return new Entry\StringEntry($name, $value, $type, $metadata);
+    return new Entry\StringEntry($name, $value, $metadata);
 }
 
 /**
@@ -440,27 +441,27 @@ function null_entry(string $name, ?Schema\Metadata $metadata = null) : Entry\Str
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function string_entry(string $name, ?string $value, ?StringType $type = null, ?Schema\Metadata $metadata = null) : Entry\StringEntry
+function string_entry(string $name, ?string $value, ?Schema\Metadata $metadata = null) : Entry\StringEntry
 {
-    return str_entry($name, $value, $type, $metadata);
+    return str_entry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function uuid_entry(string $name, \Flow\ETL\PHP\Value\Uuid|string|null $value, ?UuidType $type = null, ?Schema\Metadata $metadata = null) : Entry\UuidEntry
+function uuid_entry(string $name, \Flow\ETL\PHP\Value\Uuid|string|null $value, ?Schema\Metadata $metadata = null) : Entry\UuidEntry
 {
-    return new Entry\UuidEntry($name, $value, $type, $metadata);
+    return new Entry\UuidEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, \DOMDocument|string|null $value, ?XMLType $type = null, ?Schema\Metadata $metadata = null) : Entry\XMLEntry
+function xml_entry(string $name, \DOMDocument|string|null $value, ?Schema\Metadata $metadata = null) : Entry\XMLEntry
 {
-    return new Entry\XMLEntry($name, $value, $type, $metadata);
+    return new Entry\XMLEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, \DOMElement|string|null $value, ?XMLElementType $type = null, ?Schema\Metadata $metadata = null) : Entry\XMLElementEntry
+function xml_element_entry(string $name, \DOMElement|string|null $value, ?Schema\Metadata $metadata = null) : Entry\XMLElementEntry
 {
-    return new Entry\XMLElementEntry($name, $value, $type, $metadata);
+    return new Entry\XMLElementEntry($name, $value, $metadata);
 }
 
 /**
@@ -1176,9 +1177,9 @@ function dense_rank() : DenseRank
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function average(EntryReference|string $ref) : Average
+function average(EntryReference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP) : Average
 {
-    return new Average(is_string($ref) ? ref($ref) : $ref);
+    return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]

@@ -50,11 +50,11 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             schema(
                 int_schema('Index'),
                 date_schema('Date'),
-                float_schema('Close'),
-                float_schema('Volume'),
-                float_schema('Open'),
-                float_schema('High'),
-                float_schema('Low'),
+                float_schema('Close', precision: 1),
+                float_schema('Volume', precision: 0),
+                float_schema('Open', precision: 1),
+                float_schema('High', precision: 1),
+                float_schema('Low', precision: 1),
             ),
             $report->schema()
         );
@@ -128,11 +128,11 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             schema(
                 int_schema('Index'),
                 date_schema('Date'),
-                float_schema('Close'),
-                float_schema('Volume'),
-                float_schema('Open'),
-                float_schema('High'),
-                float_schema('Low'),
+                float_schema('Close', precision: 1),
+                float_schema('Volume', precision: 0),
+                float_schema('Open', precision: 1),
+                float_schema('High', precision: 1),
+                float_schema('Low', precision: 1),
             ),
             $report->schema()
         );

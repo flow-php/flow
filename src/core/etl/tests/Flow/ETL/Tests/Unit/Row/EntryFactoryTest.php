@@ -344,7 +344,7 @@ final class EntryFactoryTest extends FlowTestCase
                 'zip' => '31-021',
             ], type_structure([
                 'city' => type_string(),
-                'geo' => type_map(type_string(), type_float()),
+                'geo' => type_map(type_string(), type_float(precision: 5)),
                 'street' => type_string(),
                 'zip' => type_string(),
             ])),

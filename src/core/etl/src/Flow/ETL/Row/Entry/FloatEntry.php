@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\type_float;
+use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\FloatType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
 use Flow\ETL\Row\Schema\Definition;
@@ -27,28 +27,18 @@ final class FloatEntry implements Entry
 
     private readonly ?float $value;
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function __construct(
         private readonly string $name,
-        ?float $value,
-        public readonly int $precision = 6,
-        ?FloatType $type = null,
+        float|int|string|null $value,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ($precision < 0 || $precision > 16) {
-            throw InvalidArgumentException::because('Precision must be greater or equal to 0 and less than 16');
-        }
-
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->value = $value !== null ? round($value, $this->precision) : null;
-        $type = $type ?: type_float(false, $this->precision);
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->value = $value !== null ? BigDecimal::of($value)->toFloat() : null;
+        $this->type = type_float($this->value === null, $value ? BigDecimal::of($value)->getScale() : 1);
     }
 
     public function __toString() : string
@@ -63,8 +53,7 @@ final class FloatEntry implements Entry
 
     public function duplicate() : Entry
     {
-        /** @phpstan-ignore-next-line */
-        return new self($this->name, $this->value, $this->precision, $this->type, $this->metadata);
+        return new self($this->name, $this->value, $this->metadata);
     }
 
     public function is(string|Reference $name) : bool
@@ -99,7 +88,7 @@ final class FloatEntry implements Entry
             && $entry instanceof self
             && $this->type->isEqual($entry->type)
             /** @phpstan-ignore-next-line */
-            && \bccomp((string) $thisValue, (string) $entryValue, $this->precision) === 0;
+            && \bccomp((string) $thisValue, (string) $entryValue) === 0;
     }
 
     public function map(callable $mapper) : Entry
@@ -126,7 +115,7 @@ final class FloatEntry implements Entry
             return '';
         }
 
-        return \number_format($this->value, $this->precision, '.', '');
+        return \number_format($this->value, 6, '.', '');
     }
 
     public function type() : Type

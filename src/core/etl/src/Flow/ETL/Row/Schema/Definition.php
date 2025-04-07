@@ -244,12 +244,12 @@ final class Definition
         }
 
         if ($this->type instanceof ListType && $definition->type instanceof ListType && !$this->type->isEqual($definition->type)) {
-            $thisTypeClass = $this->type->element()::class;
-            $definitionTypeClass = $definition->type->element()::class;
+            $thisElementTypeString = $this->type->element()->toString();
+            $definitionElementTypeString = $definition->type->element()->toString();
 
-            if (\in_array($thisTypeClass, [IntegerType::class, FloatType::class], true) && \in_array($definitionTypeClass, [IntegerType::class, FloatType::class], true)) {
+            if (\in_array($thisElementTypeString, ['integer', 'float', '?integer', '?float'], true) && \in_array($definitionElementTypeString, ['integer', 'float', '?integer', '?float'], true)) {
 
-                if ($thisTypeClass === IntegerType::class && $definitionTypeClass === IntegerType::class) {
+                if (\in_array($thisElementTypeString, ['integer', '?integer'], true) && \in_array($definitionElementTypeString, ['integer', '?integer'], true)) {
                     return new self(
                         $this->ref,
                         type_list(
@@ -287,20 +287,20 @@ final class Definition
             }
         }
 
-        if ($this->type->isEqual($definition->type)) {
-            return new self(
-                $this->ref,
-                $this->type()->merge($definition->type()),
-                $this->metadata->merge($definition->metadata)
-            );
-        }
-
         if ($this->type instanceof FloatType && $definition->type instanceof FloatType) {
             $precision = \max($this->type->precision, $definition->type->precision);
 
             return new self(
                 $this->ref,
                 type_float($this->isNullable() || $definition->isNullable(), $precision),
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        if ($this->type->isEqual($definition->type)) {
+            return new self(
+                $this->ref,
+                $this->type()->merge($definition->type()),
                 $this->metadata->merge($definition->metadata)
             );
         }

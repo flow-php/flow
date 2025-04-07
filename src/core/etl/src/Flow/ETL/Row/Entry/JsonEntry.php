@@ -33,7 +33,6 @@ final class JsonEntry implements Entry
     public function __construct(
         private readonly string $name,
         array|string|null $value,
-        ?JsonType $type = null,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -53,14 +52,13 @@ final class JsonEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $type = $type ?: type_json();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = type_json($this->value === null);
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public static function object(string $name, ?array $value, ?JsonType $type = null, ?Metadata $metadata = null) : self
+    public static function object(string $name, ?array $value, ?Metadata $metadata = null) : self
     {
         if (\is_array($value)) {
             foreach (\array_keys($value) as $key) {
@@ -70,7 +68,7 @@ final class JsonEntry implements Entry
             }
         }
 
-        $entry = new self($name, $value, $type, $metadata);
+        $entry = new self($name, $value, $metadata);
         $entry->object = true;
 
         return $entry;
@@ -88,7 +86,7 @@ final class JsonEntry implements Entry
 
     public function duplicate() : Entry
     {
-        $entry = new self($this->name, $this->value, $this->type, $this->metadata);
+        $entry = new self($this->name, $this->value, $this->metadata);
         $entry->object = $this->object;
 
         return $entry;

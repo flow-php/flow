@@ -156,7 +156,7 @@ schema
 |-- order_id: uuid
 |-- created_at: datetime
 |-- updated_at: datetime
-|-- discount: ?float(precision: 6)
+|-- discount: ?float
 |-- email: string
 |-- customer: string
 |-- address: structure
@@ -165,7 +165,7 @@ schema
 |    |-- zip: string
 |    |-- country: string
 |-- notes: list<string>
-|-- items: list<structure{sku: string, quantity: integer, price: float(precision: 6)}>
+|-- items: list<structure{sku: string, quantity: integer, price: float}>
 
 OUTPUT,
             $tester->getDisplay()
