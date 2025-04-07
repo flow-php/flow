@@ -18,7 +18,7 @@ final class Power extends ScalarFunctionChain
     public function eval(Row $row) : float|int|null
     {
         $leftValue = (new Parameter($this->left))->asNumber($row);
-        $rightValue = (new Parameter($this->right))->asNumber($row);
+        $rightValue = (new Parameter($this->right))->asInt($row);
 
         if ($leftValue === null || $rightValue === null) {
             return null;
