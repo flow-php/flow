@@ -75,7 +75,7 @@ final class RowTest extends FlowTestCase
     {
         $row = row(
             int_entry('id', generate_random_int(100, 100000)),
-            float_entry('price', generate_random_int(100, 100000) / 100),
+            float_entry('price', \number_format(generate_random_int(100, 100000) / 100, 2, '.', '')),
             bool_entry('deleted', false),
             datetime_entry('created-at', new \DateTimeImmutable('now')),
             str_entry('phase', null),
