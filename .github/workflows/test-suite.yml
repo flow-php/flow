@@ -257,6 +257,7 @@ jobs:
         with:
           workflow: test-suite.yml
           name: codecov-base-commit-sha-1.x
+          search_artifacts: true
 
       - name: Read artifact content into variable
         if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}

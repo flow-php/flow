@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use function Flow\ETL\DSL\{bool_entry, int_entry, str_entry, type_list, type_string};
 use function Flow\ETL\DSL\{bool_schema, integer_schema, list_schema, schema, string_schema};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{row, rows, string_entry};
+use Flow\ETL\{Row\Schema\Metadata, Tests\FlowTestCase};
 use Flow\ETL\Row\Schema\StrictValidator;
-use Flow\ETL\{Tests\FlowTestCase};
 
 final class StrictValidatorTest extends FlowTestCase
 {
@@ -43,6 +43,29 @@ final class StrictValidatorTest extends FlowTestCase
         self::assertFalse(
             (new StrictValidator())->isValid(
                 rows(row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)))->schema(),
+                $schema
+            )
+        );
+    }
+
+    public function test_rows_with_from_null_metadata() : void
+    {
+        $schema = schema(integer_schema('id', nullable: true));
+
+        self::assertTrue(
+            (new StrictValidator())->isValid(
+                rows(
+                    row(string_entry('id', null, Metadata::with(Metadata::FROM_NULL, true))),
+                )->schema(),
+                $schema
+            )
+        );
+
+        self::assertFalse(
+            (new StrictValidator())->isValid(
+                rows(
+                    row(string_entry('id', null)),
+                )->schema(),
                 $schema
             )
         );

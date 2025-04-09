@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-04-07
+## [Unreleased] - 2025-04-09
 
 ### Added
 - [#1584](https://github.com/flow-php/flow/pull/1584) - **spaze/phpstan-disallowed-calls** - [@norberttech](https://github.com/norberttech)
@@ -13,10 +13,14 @@
 - [#1575](https://github.com/flow-php/flow/pull/1575) - **Update Homebrew TAP formula: flow-php to version: 0.13.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1587](https://github.com/flow-php/flow/pull/1587) - **respecting fields created from null values by schema validators** - [@norberttech](https://github.com/norberttech)
 - [#1581](https://github.com/flow-php/flow/pull/1581) - **accessing entries through reference alias** - [@norberttech](https://github.com/norberttech)
 - [#1577](https://github.com/flow-php/flow/pull/1577) - **Merging float definitions with different precisions** - [@norberttech](https://github.com/norberttech)
 - [#1577](https://github.com/flow-php/flow/pull/1577) - **Merging floats and integer to use float precision** - [@norberttech](https://github.com/norberttech)
 - [#1577](https://github.com/flow-php/flow/pull/1577) - **Merging lists/maps of floats to use higher precision** - [@norberttech](https://github.com/norberttech)
+
+### Updated
+- [673ad4](https://github.com/flow-php/flow/commit/673ad462af446aef4987abc7f98a3772a6b1c925) - **test-suite.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [#1584](https://github.com/flow-php/flow/pull/1584) - **FloatType::toString will no longer print precision** - [@norberttech](https://github.com/norberttech)
