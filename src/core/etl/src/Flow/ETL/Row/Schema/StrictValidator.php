@@ -18,14 +18,18 @@ final class StrictValidator implements SchemaValidator
             return false;
         }
 
-        foreach ($given->definitions() as $definition) {
-            $expectedDefinition = $expected->findDefinition($definition->entry());
+        foreach ($given->definitions() as $givenDefinition) {
+            $definition = $expected->findDefinition($givenDefinition->entry());
 
-            if ($expectedDefinition === null) {
+            if ($definition === null) {
                 return false;
             }
 
-            if (!$expectedDefinition->isCompatible($definition)) {
+            if ($definition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL)) {
+                return true;
+            }
+
+            if (!$definition->isCompatible($givenDefinition)) {
                 return false;
             }
         }
