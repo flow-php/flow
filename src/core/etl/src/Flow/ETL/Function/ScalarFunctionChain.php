@@ -13,6 +13,7 @@ use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
+use Flow\ETL\PHP\Type\Caster\Options;
 use Flow\ETL\PHP\Type\Type;
 
 abstract class ScalarFunctionChain implements ScalarFunction
@@ -142,9 +143,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
     /**
      * @param string|Type<mixed> $type
      */
-    public function cast(string|Type $type) : self
+    public function cast(string|Type $type, ?Options $options = null) : self
     {
-        return new Cast($this, $type);
+        return new Cast($this, $type, $options);
     }
 
     public function coalesce(ScalarFunction ...$params) : self

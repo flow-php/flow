@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\{caster, caster_options, type_float};
-use Flow\ETL\PHP\Type\Caster\{FloatCastingHandler};
+use Flow\ETL\PHP\Type\Caster\FloatCastingHandler\RoundingMode;
+use Flow\ETL\PHP\Type\Caster\{FloatCastingHandler, Options};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
 
@@ -35,5 +36,16 @@ final class FloatCastingHandlerTest extends FlowTestCase
     public function test_casting_float_with_precision(mixed $intput, int $precision, float $output) : void
     {
         self::assertSame($output, (new FloatCastingHandler())->value($intput, type_float(precision: $precision), caster(), caster_options()));
+    }
+
+    #[TestWith([1.2345678, 2, 1.23])]
+    #[TestWith(['1.125', 2, 1.12])]
+    #[TestWith([1.234567, 6, 1.234567])]
+    public function test_casting_float_with_precision_and_rounding_mode(mixed $intput, int $precision, float $output) : void
+    {
+        $options = caster_options();
+        $options->set(Options::FLOAT_ROUNDING_MODE, RoundingMode::ROUND_HALF_DOWN);
+
+        self::assertSame($output, (new FloatCastingHandler())->value($intput, type_float(precision: $precision), caster(), $options));
     }
 }

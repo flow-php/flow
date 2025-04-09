@@ -865,9 +865,9 @@ function hash(mixed $value, Algorithm $algorithm = new NativePHPHash()) : Hash
  * @param string|Type<mixed> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function cast(mixed $value, string|Type $type) : Cast
+function cast(mixed $value, string|Type $type, ?Options $options = null) : Cast
 {
-    return new Cast($value, $type);
+    return new Cast($value, $type, $options);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
