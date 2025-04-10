@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de82aef9cd77300940b0a463ba2e2c0f",
+    "content-hash": "49648aecee55ada62f569a2e00c726b9",
     "packages": [
         {
             "name": "clue/stream-filter",
@@ -6339,16 +6339,16 @@
         },
         {
             "name": "symfonycasts/tailwind-bundle",
-            "version": "v0.8.0",
+            "version": "v0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SymfonyCasts/tailwind-bundle.git",
-                "reference": "43100c1ad793a1574a675aaf8a1f633fd7fe6e4a"
+                "reference": "380502c39bf403f772d050ff9904932040de8cf1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/43100c1ad793a1574a675aaf8a1f633fd7fe6e4a",
-                "reference": "43100c1ad793a1574a675aaf8a1f633fd7fe6e4a",
+                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/380502c39bf403f772d050ff9904932040de8cf1",
+                "reference": "380502c39bf403f772d050ff9904932040de8cf1",
                 "shasum": ""
             },
             "require": {
@@ -6389,9 +6389,9 @@
             ],
             "support": {
                 "issues": "https://github.com/SymfonyCasts/tailwind-bundle/issues",
-                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.8.0"
+                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.10.0"
             },
-            "time": "2025-03-04T15:35:32+00:00"
+            "time": "2025-04-09T15:18:46+00:00"
         }
     ],
     "aliases": [],
@@ -6406,6 +6406,6 @@
     "platform": {
         "php": "8.2.*"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
