@@ -26,7 +26,7 @@ final class CacheConfigBuilder
         $cachePath = $cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache';
 
         if (!is_dir($cachePath)) {
-            if (false === @mkdir($cachePath, 0777, true) && !is_dir($cachePath)) {
+            if (true === @mkdir($cachePath, 0777, true) || is_dir($cachePath)) {
                 // Directory either was created or already exists, proceed
             } else {
                 throw new RuntimeException(sprintf('Can\'t create cache directory: "%s" Please use a different one through %s environment variable', $cachePath, CacheConfig::CACHE_DIR_ENV));
