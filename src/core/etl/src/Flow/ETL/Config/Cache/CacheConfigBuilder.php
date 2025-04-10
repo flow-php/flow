@@ -31,6 +31,8 @@ final class CacheConfigBuilder
             } else {
                 throw new RuntimeException(sprintf('Can\'t create cache directory: "%s" Please use a different one through %s environment variable', $cachePath, CacheConfig::CACHE_DIR_ENV));
             }
+        } elseif (!is_writable($cachePath)) {
+            throw new \RuntimeException(\sprintf('Unable to write in the "cache" directory (%s).', $cachePath));
         }
 
         return new CacheConfig(
