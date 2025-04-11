@@ -175,7 +175,12 @@ final class Definition
 
     public function isEqual(self $definition) : bool
     {
-        return $this->type->isSame($definition->type);
+        return $this->type->isCompatible($definition->type);
+    }
+
+    public function isNullable() : bool
+    {
+        return $this->type->nullable();
     }
 
     public function isSame(self $definition) : bool
@@ -185,11 +190,6 @@ final class Definition
         }
 
         return $this->metadata->isEqual($definition->metadata);
-    }
-
-    public function isNullable() : bool
-    {
-        return $this->type->nullable();
     }
 
     public function makeNullable(bool $nullable = true) : self

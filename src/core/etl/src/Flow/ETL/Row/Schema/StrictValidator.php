@@ -19,17 +19,17 @@ final class StrictValidator implements SchemaValidator
         }
 
         foreach ($given->definitions() as $givenDefinition) {
-            $definition = $expected->findDefinition($givenDefinition->entry());
+            $expectedDefinition = $expected->findDefinition($givenDefinition->entry());
 
-            if ($definition === null) {
+            if ($expectedDefinition === null) {
                 return false;
             }
 
-            if ($definition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL)) {
+            if ($expectedDefinition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL)) {
                 continue;
             }
 
-            if (!$definition->isEqual($givenDefinition)) {
+            if (!$expectedDefinition->isEqual($givenDefinition)) {
                 return false;
             }
         }

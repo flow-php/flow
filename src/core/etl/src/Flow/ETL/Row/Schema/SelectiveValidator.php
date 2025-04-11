@@ -17,7 +17,7 @@ final class SelectiveValidator implements SchemaValidator
         foreach ($expected->definitions() as $expectedDefinition) {
             $givenDefinition = $given->findDefinition($expectedDefinition->entry());
 
-            if (!$givenDefinition) {
+            if ($givenDefinition === null) {
                 return false;
             }
 
@@ -25,7 +25,7 @@ final class SelectiveValidator implements SchemaValidator
                 continue;
             }
 
-            if (!$givenDefinition->isEqual($expectedDefinition)) {
+            if (!$expectedDefinition->isEqual($givenDefinition)) {
                 return false;
             }
         }
