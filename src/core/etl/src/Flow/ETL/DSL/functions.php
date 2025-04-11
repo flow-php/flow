@@ -134,7 +134,7 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     StringType};
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References, Schema};
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
+use Flow\ETL\Row\Schema\{Definition, SchemaFormatter};
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
 use Flow\Filesystem\Stream\Mode;
@@ -1270,18 +1270,6 @@ function schema_to_json(Schema $schema, bool $pretty = false) : string
 function schema_from_json(string $schema) : Schema
 {
     return Schema::fromArray(\json_decode($schema, true, 512, JSON_THROW_ON_ERROR));
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function schema_strict_matcher() : StrictSchemaMatcher
-{
-    return new StrictSchemaMatcher();
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function schema_evolving_matcher() : EvolvingSchemaMatcher
-{
-    return new EvolvingSchemaMatcher();
 }
 
 /**

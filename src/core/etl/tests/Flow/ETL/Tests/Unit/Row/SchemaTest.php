@@ -11,9 +11,7 @@ use function Flow\ETL\DSL\{bool_schema,
     map_schema,
     refs,
     schema,
-    schema_evolving_matcher,
     schema_from_json,
-    schema_strict_matcher,
     schema_to_json,
     str_schema,
     structure_schema,
@@ -176,38 +174,6 @@ final class SchemaTest extends FlowTestCase
             schema(integer_schema('id', $nullable = true), string_schema('name', $nullable = true)),
             $schema->makeNullable()
         );
-    }
-
-    public function test_matching_schema_with_evolving_schema_matcher() : void
-    {
-        $left = schema(
-            int_schema('id'),
-            str_schema('name'),
-        );
-
-        $right = schema(
-            int_schema('id'),
-            str_schema('name'),
-            str_schema('surname'),
-        );
-
-        self::assertTrue($left->matches($right, schema_evolving_matcher()));
-    }
-
-    public function test_matching_schema_with_strict_schema_matcher() : void
-    {
-        $left = schema(
-            int_schema('id'),
-            str_schema('name'),
-        );
-
-        $right = schema(
-            int_schema('id'),
-            str_schema('name'),
-            str_schema('surname'),
-        );
-
-        self::assertFalse($left->matches($right, schema_strict_matcher()));
     }
 
     public function test_normalizing_and_recreating_schema() : void

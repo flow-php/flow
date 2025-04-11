@@ -7,7 +7,7 @@ namespace Flow\ETL\Row;
 use function Flow\ETL\DSL\schema;
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
 use Flow\ETL\{FlowContext, Pipeline};
-use Flow\ETL\Row\Schema\{Definition, Matcher\StrictSchemaMatcher, Metadata, SchemaMatcher};
+use Flow\ETL\Row\Schema\{Definition, Metadata};
 
 final class Schema implements \Countable
 {
@@ -224,11 +224,6 @@ final class Schema implements \Countable
         $this->setDefinitions(...$definitions);
 
         return $this;
-    }
-
-    public function matches(self $schema, SchemaMatcher $matcher = new StrictSchemaMatcher()) : bool
-    {
-        return $matcher->match($this, $schema);
     }
 
     public function merge(self $schema) : self
