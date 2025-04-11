@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{SchemaValidator};
 
@@ -19,17 +20,17 @@ final class StrictValidator implements SchemaValidator
         }
 
         foreach ($given->definitions() as $givenDefinition) {
-            $definition = $expected->findDefinition($givenDefinition->entry());
+            $expectedDefinition = $expected->findDefinition($givenDefinition->entry());
 
-            if ($definition === null) {
+            if ($expectedDefinition === null) {
                 return false;
             }
 
-            if ($definition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL)) {
-                return true;
+            if ($expectedDefinition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL) && $givenDefinition->type()->isSame(type_string(true))) {
+                continue;
             }
 
-            if (!$definition->isCompatible($givenDefinition)) {
+            if (!$expectedDefinition->isCompatible($givenDefinition)) {
                 return false;
             }
         }

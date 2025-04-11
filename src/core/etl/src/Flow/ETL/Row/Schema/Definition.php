@@ -178,18 +178,18 @@ final class Definition
         return $this->type->isCompatible($definition->type);
     }
 
-    public function isEqual(self $definition) : bool
+    public function isNullable() : bool
     {
-        if ($this->type->isEqual($definition->type) === false) {
+        return $this->type->nullable();
+    }
+
+    public function isSame(self $definition) : bool
+    {
+        if ($this->type->isSame($definition->type) === false) {
             return false;
         }
 
         return $this->metadata->isEqual($definition->metadata);
-    }
-
-    public function isNullable() : bool
-    {
-        return $this->type->nullable();
     }
 
     public function makeNullable(bool $nullable = true) : self

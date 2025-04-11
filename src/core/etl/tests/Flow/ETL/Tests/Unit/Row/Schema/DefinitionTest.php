@@ -49,13 +49,13 @@ final class DefinitionTest extends FlowTestCase
     {
         $def = integer_schema('id', nullable: true);
 
-        self::assertTrue(
-            $def->isEqual(
+        self::assertFalse(
+            $def->isSame(
                 integer_schema('id', nullable: false)
             )
         );
         self::assertTrue(
-            $def->isEqual(
+            $def->isSame(
                 integer_schema('id', nullable: true)
             )
         );
@@ -66,7 +66,7 @@ final class DefinitionTest extends FlowTestCase
         $def = list_schema('list', type_list(type_integer()));
 
         self::assertTrue(
-            $def->isEqual(
+            $def->isSame(
                 list_schema('list', type_list(type_integer()))
             )
         );

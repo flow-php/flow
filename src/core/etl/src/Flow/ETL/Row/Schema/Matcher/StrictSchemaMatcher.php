@@ -22,7 +22,7 @@ final class StrictSchemaMatcher implements SchemaMatcher
                 return false;
             }
 
-            if (!$leftDefinition->isEqual($rightDefinition)) {
+            if (!$leftDefinition->isSame($rightDefinition)) {
                 return false;
             }
         }
