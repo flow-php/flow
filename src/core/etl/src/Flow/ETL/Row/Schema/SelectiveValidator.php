@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{SchemaValidator};
 
@@ -21,7 +22,7 @@ final class SelectiveValidator implements SchemaValidator
                 return false;
             }
 
-            if ($expectedDefinition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL)) {
+            if ($expectedDefinition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL) && $givenDefinition->type()->isSame(type_string(true))) {
                 continue;
             }
 

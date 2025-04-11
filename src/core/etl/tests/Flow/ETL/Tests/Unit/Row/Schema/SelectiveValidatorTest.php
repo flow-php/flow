@@ -118,4 +118,14 @@ final class SelectiveValidatorTest extends FlowTestCase
             )
         );
     }
+
+    public function test_with_from_null_metadata_but_non_string_type() : void
+    {
+        self::assertFalse(
+            (new SelectiveValidator())->isValid(
+                given: schema(bool_schema('id', nullable: true, metadata: Metadata::with(Metadata::FROM_NULL, true))),
+                expected: schema(integer_schema('id', nullable: true)),
+            )
+        );
+    }
 }
