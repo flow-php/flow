@@ -34,7 +34,7 @@ final class SchemaValidationException extends RuntimeException
                 continue;
             }
 
-            if (!$expectedDefinition->isEqual($givenDefinition)) {
+            if (!$expectedDefinition->isCompatible($givenDefinition)) {
                 $mismatchedDefinitions[] = 'expected: ' . $expectedDefinition->entry()->name() . '<' . $expectedDefinition->type()->toString() . '>, ' .
                     'given: ' . $givenDefinition->entry()->name() . '<' . $givenDefinition->type()->toString() . '>';
             }

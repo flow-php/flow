@@ -173,7 +173,7 @@ final class Definition
         return $this->ref;
     }
 
-    public function isEqual(self $definition) : bool
+    public function isCompatible(self $definition) : bool
     {
         return $this->type->isCompatible($definition->type);
     }

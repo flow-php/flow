@@ -28,7 +28,7 @@ final class DefinitionTest extends FlowTestCase
         $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
 
         self::assertTrue(
-            $definition->isEqual(
+            $definition->isCompatible(
                 integer_schema('id', false, Metadata::fromArray(['description' => 'some_random_description']))
             )
         );
@@ -39,7 +39,7 @@ final class DefinitionTest extends FlowTestCase
         $definition = integer_schema('id', metadata: Metadata::fromArray(['test' => 'test']));
 
         self::assertFalse(
-            $definition->isEqual(
+            $definition->isCompatible(
                 integer_schema('id', true, Metadata::fromArray(['description' => 'some_random_description']))
             )
         );

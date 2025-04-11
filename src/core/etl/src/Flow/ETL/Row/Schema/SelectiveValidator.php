@@ -25,7 +25,7 @@ final class SelectiveValidator implements SchemaValidator
                 continue;
             }
 
-            if (!$expectedDefinition->isEqual($givenDefinition)) {
+            if (!$expectedDefinition->isCompatible($givenDefinition)) {
                 return false;
             }
         }

@@ -29,7 +29,7 @@ final class StrictValidator implements SchemaValidator
                 continue;
             }
 
-            if (!$expectedDefinition->isEqual($givenDefinition)) {
+            if (!$expectedDefinition->isCompatible($givenDefinition)) {
                 return false;
             }
         }
