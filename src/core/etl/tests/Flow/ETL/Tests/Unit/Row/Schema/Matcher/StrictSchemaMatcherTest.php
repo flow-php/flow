@@ -53,7 +53,7 @@ final class StrictSchemaMatcherTest extends FlowTestCase
             str_schema('name', nullable: true),
         );
 
-        self::assertTrue((new StrictSchemaMatcher())->match($left, $right));
+        self::assertFalse((new StrictSchemaMatcher())->match($left, $right));
     }
 
     public function test_matching_the_same_schema() : void

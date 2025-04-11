@@ -22,10 +22,10 @@ final class SelectiveValidator implements SchemaValidator
             }
 
             if ($expectedDefinition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL)) {
-                return true;
+                continue;
             }
 
-            if (!$givenDefinition->isCompatible($expectedDefinition)) {
+            if (!$givenDefinition->isEqual($expectedDefinition)) {
                 return false;
             }
         }

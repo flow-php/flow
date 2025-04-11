@@ -26,10 +26,10 @@ final class StrictValidator implements SchemaValidator
             }
 
             if ($definition->isNullable() && $givenDefinition->metadata()->has(Metadata::FROM_NULL)) {
-                return true;
+                continue;
             }
 
-            if (!$definition->isCompatible($givenDefinition)) {
+            if (!$definition->isEqual($givenDefinition)) {
                 return false;
             }
         }

@@ -59,6 +59,38 @@ final class SelectiveValidatorTest extends FlowTestCase
         );
     }
 
+    public function test_rows_with_multiple_columns_with_from_null_metadata() : void
+    {
+        $schema = schema(
+            integer_schema('id', nullable: true),
+            string_schema('name')
+        );
+
+        self::assertFalse(
+            (new SelectiveValidator())->isValid(
+                rows(
+                    row(
+                        string_entry('id', null, Metadata::with(Metadata::FROM_NULL, true)),
+                        string_entry('name', null)
+                    ),
+                )->schema(),
+                $schema
+            )
+        );
+
+        self::assertTrue(
+            (new SelectiveValidator())->isValid(
+                rows(
+                    row(
+                        string_entry('id', null, Metadata::with(Metadata::FROM_NULL, true)),
+                        string_entry('name', 'Norbert')
+                    ),
+                )->schema(),
+                $schema
+            )
+        );
+    }
+
     public function test_rows_with_single_invalid_entry() : void
     {
         $schema = schema(integer_schema('id'), bool_schema('name'), bool_schema('active'));
@@ -73,13 +105,13 @@ final class SelectiveValidatorTest extends FlowTestCase
 
     public function test_rows_with_single_invalid_row() : void
     {
-        $schema = schema(string_schema('name'), bool_schema('active'));
+        $schema = schema(string_schema('name'), bool_schema('active', true));
 
-        self::assertTrue(
+        self::assertFalse(
             (new SelectiveValidator())->isValid(
                 rows(
                     row(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)),
-                    row(int_entry('id', 1), bool_entry('active', true))
+                    row(bool_entry('active', true))
                 )->schema(),
                 $schema
             )

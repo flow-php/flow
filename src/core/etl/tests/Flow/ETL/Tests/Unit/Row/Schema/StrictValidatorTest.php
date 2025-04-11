@@ -71,6 +71,38 @@ final class StrictValidatorTest extends FlowTestCase
         );
     }
 
+    public function test_rows_with_multiple_columns_with_from_null_metadata() : void
+    {
+        $schema = schema(
+            integer_schema('id', nullable: true),
+            string_schema('name')
+        );
+
+        self::assertFalse(
+            (new StrictValidator())->isValid(
+                rows(
+                    row(
+                        string_entry('id', null, Metadata::with(Metadata::FROM_NULL, true)),
+                        string_entry('name', null)
+                    ),
+                )->schema(),
+                $schema
+            )
+        );
+
+        self::assertTrue(
+            (new StrictValidator())->isValid(
+                rows(
+                    row(
+                        string_entry('id', null, Metadata::with(Metadata::FROM_NULL, true)),
+                        string_entry('name', 'Norbert')
+                    ),
+                )->schema(),
+                $schema
+            )
+        );
+    }
+
     public function test_rows_with_single_invalid_entry() : void
     {
         $schema = schema(integer_schema('id'), bool_schema('name'), bool_schema('active'));
