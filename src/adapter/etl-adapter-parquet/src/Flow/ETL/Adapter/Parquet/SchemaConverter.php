@@ -32,7 +32,7 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     XMLType};
 use Flow\ETL\PHP\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\{Schema};
+use Flow\ETL\{Schema};
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
 

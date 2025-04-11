@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\Calculator\Rounding;
-use Flow\ETL\{Analyze,
+use Flow\ETL\{
+    Analyze,
     Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
@@ -32,10 +33,13 @@ use Flow\ETL\{Analyze,
     RandomValueGenerator,
     Row,
     Rows,
+    Schema,
+    Schema\SchemaFormatter,
     Transformation,
     Transformer,
     Window,
-    WithEntry};
+    WithEntry
+};
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Extractor\FilesExtractor;
@@ -132,10 +136,10 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     ObjectType,
     ResourceType,
     StringType};
-use Flow\ETL\Row\{Entry, EntryReference, Reference, References, Schema};
+use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Schema\{Definition, SchemaFormatter};
-use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Schema\{Definition};
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
 use Flow\Filesystem\Stream\Mode;
 use Flow\Serializer\{NativePHPSerializer, Serializer};

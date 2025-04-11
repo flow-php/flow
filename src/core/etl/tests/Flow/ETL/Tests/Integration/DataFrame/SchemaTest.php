@@ -22,8 +22,8 @@ use function Flow\ETL\DSL\{array_to_rows,
     str_schema,
     string_entry};
 use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class SchemaTest extends FlowIntegrationTestCase

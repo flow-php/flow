@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Parquet;
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\PHP\Type\Caster;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Parquet\{Options, Writer};
 use Flow\Parquet\ParquetFile\Compressions;

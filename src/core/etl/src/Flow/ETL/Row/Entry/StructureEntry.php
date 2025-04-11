@@ -8,8 +8,8 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\{Type, TypeDetector};
-use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
-use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
  * @implements Entry<?array<string, mixed>, ?array<string, mixed>>

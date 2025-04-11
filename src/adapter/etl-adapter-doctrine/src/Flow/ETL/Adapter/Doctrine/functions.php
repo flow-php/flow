@@ -17,7 +17,7 @@ use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
     Attribute\Type as DSLType,
-    Row\Schema};
+    Schema};
 use Flow\ETL\Exception\InvalidArgumentException;
 
 /**
@@ -219,7 +219,7 @@ function to_dbal_table_update(
 }
 
 /**
- * Converts a Flow\ETL\Row\Schema to a Doctrine\DBAL\Schema\Table.
+ * Converts a Flow\ETL\Schema to a Doctrine\DBAL\Schema\Table.
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function to_dbal_schema_table(Schema $schema, string $table_name, array $table_options = [], array $types_map = []) : \Doctrine\DBAL\Schema\Table
@@ -228,7 +228,7 @@ function to_dbal_schema_table(Schema $schema, string $table_name, array $table_o
 }
 
 /**
- * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Row\Schema.
+ * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Schema.
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []) : Schema

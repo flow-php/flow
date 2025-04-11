@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Schema\Metadata;
 
 enum DbalMetadata : string
 {

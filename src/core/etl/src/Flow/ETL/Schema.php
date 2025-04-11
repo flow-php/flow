@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row;
+namespace Flow\ETL;
 
 use function Flow\ETL\DSL\schema;
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
-use Flow\ETL\{FlowContext, Pipeline};
-use Flow\ETL\Row\Schema\{Definition, Metadata};
+use Flow\ETL\{Row\EntryReference, Row\Reference, Row\References, Schema\Metadata};
+use Flow\ETL\Schema\{Definition};
 
 final class Schema implements \Countable
 {

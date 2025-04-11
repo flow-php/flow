@@ -7,8 +7,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Output;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\Filesystem\DSL\{path_memory, path_stdout};
 use Flow\Bridge\Symfony\HttpFoundation\Output;
-use Flow\ETL\Loader;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\{Loader, Schema};
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 

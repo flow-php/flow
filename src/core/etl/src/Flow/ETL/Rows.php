@@ -10,7 +10,7 @@ use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Row\{CartesianProduct, EntryFactory};
 use Flow\ETL\Row\Comparator\NativeComparator;
-use Flow\ETL\Row\{Comparator, Entries, Reference, References, Schema, SortOrder};
+use Flow\ETL\Row\{Comparator, Entries, Reference, References, SortOrder};
 use Flow\Filesystem\{Partition, Partitions};
 
 /**

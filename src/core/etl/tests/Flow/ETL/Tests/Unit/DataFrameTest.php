@@ -33,7 +33,7 @@ use Flow\ETL\{DataFrame,
     Transformer};
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Row\Entry\{DateTimeEntry};
-use Flow\ETL\Row\Schema\SelectiveValidator;
+use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use PHPUnit\Framework\{Assert};
 

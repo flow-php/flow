@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Schema\Formatter\PHPFormatter;
 
 use function Flow\ETL\DSL\{type_array, type_boolean, type_callable, type_date, type_datetime, type_float, type_int, type_json, type_list, type_map, type_null, type_resource, type_string, type_structure, type_time, type_uuid, type_xml, type_xml_element};
-use Flow\ETL\Row\Schema\Formatter\PHPFormatter\TypeFormatter;
+use Flow\ETL\Schema\Formatter\PHPFormatter\TypeFormatter;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class FlowTypeFormatterTest extends FlowTestCase

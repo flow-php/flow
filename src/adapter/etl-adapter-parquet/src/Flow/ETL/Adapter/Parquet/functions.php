@@ -9,7 +9,7 @@ use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\Module,
     Attribute\Type as DSLType
 };
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Parquet\{ByteOrder, Options};
 use Flow\Parquet\ParquetFile\Compressions;

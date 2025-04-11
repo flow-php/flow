@@ -8,8 +8,8 @@ use function Flow\ETL\DSL\{type_integer};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\IntegerType;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
-use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
  * @implements Entry<?int, ?int>

@@ -23,8 +23,8 @@ use function Flow\ETL\DSL\{bool_schema,
     uuid_schema};
 use function Flow\ETL\DSL\{integer_schema, string_schema};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
-use Flow\ETL\Row\{EntryReference, Schema};
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Row\{EntryReference};
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SchemaTest extends FlowTestCase
@@ -193,7 +193,7 @@ final class SchemaTest extends FlowTestCase
 
         self::assertEquals(
             $schema,
-            Schema::fromArray($schema->normalize())
+            \Flow\ETL\Schema::fromArray($schema->normalize())
         );
     }
 

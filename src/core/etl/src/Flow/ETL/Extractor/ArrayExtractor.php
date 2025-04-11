@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\{Extractor, FlowContext, Row\Schema};
+use Flow\ETL\{Extractor, FlowContext, Schema};
 
 final class ArrayExtractor implements Extractor
 {

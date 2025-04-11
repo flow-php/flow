@@ -17,7 +17,8 @@ use Flow\CLI\Command\Traits\{
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\ETL\Config;
-use Flow\ETL\Row\Schema\Formatter\{ASCIISchemaFormatter, PHPSchemaFormatter};
+use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Schema\Formatter\{PHPSchemaFormatter};
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};

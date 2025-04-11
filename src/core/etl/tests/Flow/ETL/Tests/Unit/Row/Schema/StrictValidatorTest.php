@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use function Flow\ETL\DSL\{bool_schema, integer_schema, list_schema, schema, string_schema};
 use function Flow\ETL\DSL\{type_list, type_string};
-use Flow\ETL\{Row\Schema\Metadata, Tests\FlowTestCase};
-use Flow\ETL\Row\Schema\StrictValidator;
+use Flow\ETL\{Schema\Metadata, Tests\FlowTestCase};
+use Flow\ETL\Schema\Validator\StrictValidator;
 
 final class StrictValidatorTest extends FlowTestCase
 {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset;
 
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Schema;
 
 final readonly class Report
 {

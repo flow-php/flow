@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use function Flow\ETL\DSL\{bool_schema, integer_schema, schema, string_schema};
-use Flow\ETL\{Row\Schema\Metadata, Tests\FlowTestCase};
-use Flow\ETL\Row\Schema\SelectiveValidator;
+use Flow\ETL\{Schema\Metadata, Tests\FlowTestCase};
+use Flow\ETL\Schema\Validator\SelectiveValidator;
 
 final class SelectiveValidatorTest extends FlowTestCase
 {

@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{flow_context, integer_schema, schema};
 use function Flow\ETL\DSL\{int_entry, str_entry};
 use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\Loader\SchemaValidationLoader;
-use Flow\ETL\Row\Schema\StrictValidator;
+use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\{Tests\FlowTestCase};
 
 final class SchemaValidationLoaderTest extends FlowTestCase

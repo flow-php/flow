@@ -8,8 +8,8 @@ use function Flow\ETL\DSL\{date_interval_to_microseconds, type_time};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\TimeType;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
-use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
  * @implements Entry<?\DateInterval, ?\DateInterval>

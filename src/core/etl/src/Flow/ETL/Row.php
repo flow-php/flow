@@ -6,7 +6,7 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
-use Flow\ETL\Row\{Entries, Entry, Reference, Schema};
+use Flow\ETL\Row\{Entries, Entry, Reference};
 
 final readonly class Row
 {

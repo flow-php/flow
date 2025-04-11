@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\{ArrayParameterType, Connection, ParameterType};
 use Doctrine\DBAL\Types\Type;
-use Flow\ETL\{Extractor, FlowContext, Row\Schema};
+use Flow\ETL\{Extractor, FlowContext, Schema};
 
 final class DbalQueryExtractor implements Extractor
 {

@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use function Flow\ETL\DSL\df;
 use Doctrine\DBAL\{Connection, DriverManager};
-use Flow\ETL\{DataFrame, DataFrameFactory, Row\Schema, Rows};
+use Flow\ETL\{DataFrame, DataFrameFactory, Rows, Schema};
 
 final class DbalDataFrameFactory implements DataFrameFactory
 {

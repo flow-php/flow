@@ -7,8 +7,7 @@ namespace Flow\ETL\Adapter\Parquet;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Entry\{UuidEntry, XMLEntry};
-use Flow\ETL\Row\Schema;
-use Flow\ETL\Rows;
+use Flow\ETL\{Rows, Schema};
 
 final readonly class RowsNormalizer
 {
