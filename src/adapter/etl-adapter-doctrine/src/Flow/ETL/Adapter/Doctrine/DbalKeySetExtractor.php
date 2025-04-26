@@ -33,7 +33,10 @@ final class DbalKeySetExtractor implements Extractor
     ) {
         $qb = clone $this->queryBuilder;
 
-        if ($qb->resetOrderBy()->getSQL() !== $this->queryBuilder->getSQL()) {
+        /** @phpstan-ignore-next-line */
+        $cleanQuery = \method_exists($qb, 'resetOrderBy') ? (clone $this->queryBuilder)->resetOrderBy() : (clone $qb)->resetQueryPart('orderBy');
+
+        if ($cleanQuery->getSQL() !== $this->queryBuilder->getSQL()) {
             throw new InvalidArgumentException('Keyset pagination cannot be used with an ORDER BY clause, please remove OrderBy from Query Builder');
         }
 
