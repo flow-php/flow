@@ -26,7 +26,8 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     PartitioningPipeline,
     SortingPipeline,
     VoidPipeline};
-use Flow\ETL\Row\{Reference, References, Schema, Schema\Definition};
+use Flow\ETL\Row\{Formatter\ASCIISchemaFormatter, Reference, References};
+use Flow\ETL\Schema\Definition;
 use Flow\ETL\Transformer\{AutoCastTransformer,
     CallbackRowTransformer,
     CrossJoinRowsTransformer,
@@ -526,7 +527,7 @@ final class DataFrame
      */
     public function match(Schema $schema, ?SchemaValidator $validator = null) : self
     {
-        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new Schema\StrictValidator()));
+        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new Schema\Validator\StrictValidator()));
 
         return $this;
     }
@@ -600,7 +601,7 @@ final class DataFrame
     /**
      * @trigger
      */
-    public function printSchema(?int $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
+    public function printSchema(?int $limit = 20, Schema\SchemaFormatter $formatter = new ASCIISchemaFormatter()) : void
     {
         $clone = clone $this;
 

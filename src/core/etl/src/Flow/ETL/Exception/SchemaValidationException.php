@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Exception;
 
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Schema;
 
 final class SchemaValidationException extends RuntimeException
 {

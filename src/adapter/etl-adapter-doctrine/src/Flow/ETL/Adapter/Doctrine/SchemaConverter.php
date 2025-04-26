@@ -11,7 +11,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, StructureType, TimeType, UuidType, XMLElementType, XMLType};
 use Flow\ETL\PHP\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Schema;
 
 final readonly class SchemaConverter
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema\Formatter\PHPFormatter;
+namespace Flow\ETL\Schema\Formatter\PHPFormatter;
 
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, StructureType, TimeType, UuidType, XMLElementType, XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, BooleanType, CallableType, FloatType, IntegerType, NullType, ResourceType, StringType};

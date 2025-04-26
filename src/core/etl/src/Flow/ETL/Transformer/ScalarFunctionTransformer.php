@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\{FlowContext, Row, Row\Schema\Definition, Rows, Transformer};
+use Flow\ETL\{FlowContext, Row, Rows, Schema\Definition, Transformer};
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 

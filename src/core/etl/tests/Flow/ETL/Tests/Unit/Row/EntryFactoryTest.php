@@ -41,8 +41,8 @@ use function Flow\ETL\DSL\{bool_schema,
     xml_schema};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\{TimeEntry};
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Row\{EntryFactory};
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;

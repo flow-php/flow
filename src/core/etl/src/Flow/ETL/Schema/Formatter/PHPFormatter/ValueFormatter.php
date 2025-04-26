@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema\Formatter\PHPFormatter;
+namespace Flow\ETL\Schema\Formatter\PHPFormatter;
 
 use Flow\ETL\Exception\RuntimeException;
 

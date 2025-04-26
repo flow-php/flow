@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema;
+namespace Flow\ETL\Schema;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;

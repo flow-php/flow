@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema\Formatter;
+namespace Flow\ETL\Schema\Formatter;
 
-use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Schema\SchemaFormatter;
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\SchemaFormatter;
 
 final readonly class JsonSchemaFormatter implements SchemaFormatter
 {

@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\{ArrayParameterType as DbalArrayType, Connection, ParameterType as DbalParameterType};
+use Doctrine\DBAL\{
+    ArrayParameterType as DbalArrayType,
+    Connection,
+    ParameterType,
+    ParameterType as DbalParameterType,
+    Types\Type
+};
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\Doctrine\Bulk\{Dialect\MySQLInsertOptions,
@@ -13,11 +19,14 @@ use Flow\Doctrine\Bulk\{Dialect\MySQLInsertOptions,
     Dialect\SqliteInsertOptions,
     InsertOptions,
     UpdateOptions};
-use Flow\ETL\{Attribute\DocumentationDSL,
+use Flow\ETL\{Adapter\Doctrine\Pagination\Key,
+    Adapter\Doctrine\Pagination\KeySet,
+    Adapter\Doctrine\Pagination\Order,
+    Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
     Attribute\Type as DSLType,
-    Row\Schema};
+    Schema};
 use Flow\ETL\Exception\InvalidArgumentException;
 
 /**
@@ -91,6 +100,15 @@ function from_dbal_limit_offset_qb(
     }
 
     return $loader;
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
+function from_dbal_key_set_qb(
+    Connection $connection,
+    QueryBuilder $queryBuilder,
+    KeySet $key_set,
+) : DbalKeySetExtractor {
+    return new DbalKeySetExtractor($connection, $queryBuilder, $key_set);
 }
 
 /**
@@ -219,7 +237,7 @@ function to_dbal_table_update(
 }
 
 /**
- * Converts a Flow\ETL\Row\Schema to a Doctrine\DBAL\Schema\Table.
+ * Converts a Flow\ETL\Schema to a Doctrine\DBAL\Schema\Table.
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function to_dbal_schema_table(Schema $schema, string $table_name, array $table_options = [], array $types_map = []) : \Doctrine\DBAL\Schema\Table
@@ -228,7 +246,7 @@ function to_dbal_schema_table(Schema $schema, string $table_name, array $table_o
 }
 
 /**
- * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Row\Schema.
+ * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Schema.
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []) : Schema
@@ -264,4 +282,22 @@ function postgresql_update_options(
         $primary_key_columns,
         $update_columns,
     );
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function pagination_key_asc(string $column, string|int|ParameterType|Type $type = ParameterType::STRING) : Key
+{
+    return new Key($column, Order::ASC, $type);
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function pagination_key_desc(string $column, string|int|ParameterType|Type $type = ParameterType::STRING) : Key
+{
+    return new Key($column, Order::DESC, $type);
+}
+
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
+function pagination_key_set(Key ...$keys) : KeySet
+{
+    return new KeySet(...$keys);
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema\Formatter;
+namespace Flow\ETL\Schema\Formatter;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
@@ -16,9 +16,10 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     XMLElementType,
     XMLType};
 use Flow\ETL\PHP\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
-use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Schema\Formatter\PHPFormatter\{TypeFormatter, ValueFormatter};
-use Flow\ETL\Row\Schema\SchemaFormatter;
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\Formatter\PHPFormatter\{TypeFormatter};
+use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
+use Flow\ETL\Schema\SchemaFormatter;
 
 final readonly class PHPSchemaFormatter implements SchemaFormatter
 {

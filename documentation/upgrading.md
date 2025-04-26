@@ -5,6 +5,17 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.14.x to 0.15.x
+
+### 1) Removed `Flow\ETL\Row\Schema\Matcher` and implementations 
+Schema Matcher was the initial attempt to implement a schema evolution next to schema validation that over 
+time got replaced with different implementation of Schema Validator. 
+
+### 2) Renamed `Flow\ETL\Row\Schema` namespace into `Flow\ETL\Schema`. 
+This means all classes related to Schema now live under `Flow\ETL\Schema` namespace.
+
+---
+
 ## Upgrading from 0.11.x to 0.14.x
 
 ### 1) Replaced `Flow\ETL\DataFrame::validate()` with `Flow\ETL\DataFrame::match()`

@@ -1,7 +1,14 @@
-## [Unreleased] - 2025-04-14
+## [Unreleased] - 2025-04-26
+
+### Added
+- [#1603](https://github.com/flow-php/flow/pull/1603) - **Dbal KeySet extractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1599](https://github.com/flow-php/flow/pull/1599) - **cleanup schema namespace** - [@norberttech](https://github.com/norberttech)
 - [#1596](https://github.com/flow-php/flow/pull/1596) - **Update Homebrew TAP formula: flow-php to version: 0.14.0** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#1599](https://github.com/flow-php/flow/pull/1599) - **SchemaMatcher replaced by SchemaValidator** - [@norberttech](https://github.com/norberttech)
 
 ## [0.14.0] - 2025-04-14
 

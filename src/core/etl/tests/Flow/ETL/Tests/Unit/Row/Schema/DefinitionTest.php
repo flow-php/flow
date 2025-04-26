@@ -18,7 +18,8 @@ use function Flow\ETL\DSL\{datetime_schema,
     type_string,
     type_structure};
 use Flow\ETL\Exception\{RuntimeException};
-use Flow\ETL\Row\Schema\{Definition, Metadata};
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\{Metadata};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class DefinitionTest extends FlowTestCase

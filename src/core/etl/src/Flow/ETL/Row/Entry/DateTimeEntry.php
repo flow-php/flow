@@ -8,8 +8,8 @@ use function Flow\ETL\DSL\type_datetime;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\{Entry, Reference, Schema\Metadata};
-use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
  * @implements Entry<?\DateTimeInterface, ?\DateTimeInterface>

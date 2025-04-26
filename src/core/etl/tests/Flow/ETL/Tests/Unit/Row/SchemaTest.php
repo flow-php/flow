@@ -11,9 +11,7 @@ use function Flow\ETL\DSL\{bool_schema,
     map_schema,
     refs,
     schema,
-    schema_evolving_matcher,
     schema_from_json,
-    schema_strict_matcher,
     schema_to_json,
     str_schema,
     structure_schema,
@@ -25,8 +23,8 @@ use function Flow\ETL\DSL\{bool_schema,
     uuid_schema};
 use function Flow\ETL\DSL\{integer_schema, string_schema};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
-use Flow\ETL\Row\{EntryReference, Schema};
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Row\{EntryReference};
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SchemaTest extends FlowTestCase
@@ -178,38 +176,6 @@ final class SchemaTest extends FlowTestCase
         );
     }
 
-    public function test_matching_schema_with_evolving_schema_matcher() : void
-    {
-        $left = schema(
-            int_schema('id'),
-            str_schema('name'),
-        );
-
-        $right = schema(
-            int_schema('id'),
-            str_schema('name'),
-            str_schema('surname'),
-        );
-
-        self::assertTrue($left->matches($right, schema_evolving_matcher()));
-    }
-
-    public function test_matching_schema_with_strict_schema_matcher() : void
-    {
-        $left = schema(
-            int_schema('id'),
-            str_schema('name'),
-        );
-
-        $right = schema(
-            int_schema('id'),
-            str_schema('name'),
-            str_schema('surname'),
-        );
-
-        self::assertFalse($left->matches($right, schema_strict_matcher()));
-    }
-
     public function test_normalizing_and_recreating_schema() : void
     {
         $schema = schema(
@@ -227,7 +193,7 @@ final class SchemaTest extends FlowTestCase
 
         self::assertEquals(
             $schema,
-            Schema::fromArray($schema->normalize())
+            \Flow\ETL\Schema::fromArray($schema->normalize())
         );
     }
 

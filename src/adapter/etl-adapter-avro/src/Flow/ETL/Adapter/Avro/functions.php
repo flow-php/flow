@@ -6,8 +6,7 @@ namespace Flow\ETL\DSL\Adapter\Avro;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Adapter\Avro\FlixTech\{AvroExtractor, AvroLoader};
-use Flow\ETL\Extractor;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\{Extractor, Schema};
 use Flow\Filesystem\Path;
 
 function from_avro(Path|string|array $path) : Extractor

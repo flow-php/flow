@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Schema;
 use function Flow\ETL\DSL\{type_int, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\{DataProvider};
 

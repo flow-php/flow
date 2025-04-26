@@ -7,8 +7,8 @@ namespace Flow\ETL\Loader;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\{FlowContext, Formatter, Loader, Loader\StreamLoader\Type, Rows};
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Row\Schema\SchemaFormatter;
+use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Schema\SchemaFormatter;
 use Flow\Filesystem\Stream\Mode;
 
 final class StreamLoader implements Closure, Loader

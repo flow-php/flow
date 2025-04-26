@@ -26,8 +26,8 @@ use function Flow\ETL\DSL\{bool_schema,
     uuid_schema,
     xml_element_schema,
     xml_schema};
-use Flow\ETL\Row\Schema\Formatter\PHPSchemaFormatter;
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
+use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Unit\Row\Schema\Formatter\Fixtures\StringEnum;
 

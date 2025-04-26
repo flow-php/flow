@@ -55,7 +55,8 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     NullType,
     ObjectType,
     StringType};
-use Flow\ETL\Row\{Schema\Definition, Schema\Metadata};
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\{Definition, Metadata};
 
 final readonly class EntryFactory
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema;
+namespace Flow\ETL\Schema;
 
 use function Flow\ETL\DSL\{
     type_boolean,

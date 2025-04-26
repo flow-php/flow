@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{schema_from_json, schema_to_json};
 use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\ConfigOptions;
 use Flow\CLI\Options\ConfigOption;
-use Flow\ETL\{Config, Row\Schema\Formatter\ASCIISchemaFormatter, Row\Schema\Formatter\PHPSchemaFormatter};
+use Flow\ETL\{Config, Row\Formatter\ASCIISchemaFormatter, Schema\Formatter\PHPSchemaFormatter};
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};

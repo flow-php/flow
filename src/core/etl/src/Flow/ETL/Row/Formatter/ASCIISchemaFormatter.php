@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema\Formatter;
+namespace Flow\ETL\Row\Formatter;
 
 use function Flow\ETL\DSL\{df, from_array, ref, to_output};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Schema\SchemaFormatter;
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\SchemaFormatter;
 
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {

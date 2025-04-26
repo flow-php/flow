@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema\Formatter\PHPFormatter;
 
-use Flow\ETL\Row\Schema\Formatter\PHPFormatter\ValueFormatter;
+use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 

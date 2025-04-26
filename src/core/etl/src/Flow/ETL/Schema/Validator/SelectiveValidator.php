@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Schema;
+namespace Flow\ETL\Schema\Validator;
 
 use function Flow\ETL\DSL\type_string;
-use Flow\ETL\Row\Schema;
-use Flow\ETL\{SchemaValidator};
+use Flow\ETL\Schema;
+use Flow\ETL\{SchemaValidator, Schema\Metadata};
 
 /**
  * Matches only entries defined in the expected schema allowing for extra entries in given schema.
