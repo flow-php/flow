@@ -637,6 +637,16 @@ final class DataFrame
     /**
      * @lazy
      */
+    public function renameAllCallback(\Closure $callback) : self
+    {
+        $this->pipeline->add(new RenameAllCaseTransformer(callback: $callback));
+
+        return $this;
+    }
+
+    /**
+     * @lazy
+     */
     public function renameAllLowerCase() : self
     {
         $this->pipeline->add(new RenameAllCaseTransformer(lower: true));

@@ -46,6 +46,28 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_rename_all_callback() : void
+    {
+        if (!\function_exists('transliterator_transliterate')) {
+            $this->markTestSkipped('Transliterator is not installed');
+        }
+
+        $rows = rows(row(int_entry('ósmy', 8)), row(int_entry('dziewiąty', 9)));
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameAllCallback(fn (string $value) : string => \transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $value) ?: '')
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['osmy' => 8],
+                ['dziewiaty' => 9],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
     public function test_rename_all_lower_case() : void
     {
         $rows = rows(row(int_entry('ID', 1), str_entry('NAME', 'name'), bool_entry('ACTIVE', true)), row(int_entry('ID', 2), str_entry('NAME', 'name'), bool_entry('ACTIVE', false)));

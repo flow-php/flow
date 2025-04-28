@@ -13,6 +13,7 @@ final readonly class RenameAllCaseTransformer implements Transformer
         private bool $lower = false,
         private bool $ucfirst = false,
         private bool $ucwords = false,
+        private ?\Closure $callback = null,
     ) {
     }
 
@@ -20,21 +21,14 @@ final readonly class RenameAllCaseTransformer implements Transformer
     {
         return $rows->map(function (Row $row) : Row {
             foreach ($row->entries()->all() as $entry) {
-                if ($this->upper) {
-                    $row = $row->rename($entry->name(), \mb_strtoupper($entry->name()));
-                }
-
-                if ($this->lower) {
-                    $row = $row->rename($entry->name(), \mb_strtolower($entry->name()));
-                }
-
-                if ($this->ucfirst) {
-                    $row = $row->rename($entry->name(), $this->ucFirst($entry->name()));
-                }
-
-                if ($this->ucwords) {
-                    $row = $row->rename($entry->name(), $this->ucWords($entry->name()));
-                }
+                $row = match (true) {
+                    $this->upper => $row->rename($entry->name(), \mb_strtoupper($entry->name())),
+                    $this->lower => $row->rename($entry->name(), \mb_strtolower($entry->name())),
+                    $this->ucfirst => $row->rename($entry->name(), $this->ucFirst($entry->name())),
+                    $this->ucwords => $row->rename($entry->name(), $this->ucWords($entry->name())),
+                    $this->callback !== null => $row->rename($entry->name(), ($this->callback)($entry->name())),
+                    default => $row,
+                };
             }
 
             return $row;
