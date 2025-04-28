@@ -52,7 +52,7 @@ final class RenameTest extends FlowIntegrationTestCase
             self::markTestSkipped('Transliterator is not installed');
         }
 
-        $rows = rows(row(int_entry('ósmy', 8)), row(int_entry('dziewiąty', 9)));
+        $rows = rows(row(int_entry('ÓSMY', 8)), row(int_entry('DZIEWIĄTY', 9)));
 
         $ds = df()
             ->read(from_rows($rows))
