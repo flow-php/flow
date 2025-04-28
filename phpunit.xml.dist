@@ -120,6 +120,9 @@
     <testsuite name="adapter-google-sheet-unit">
       <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Unit</directory>
     </testsuite>
+    <testsuite name="adapter-google-sheet-integration">
+      <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Integration</directory>
+    </testsuite>
     <testsuite name="adapter-http-unit">
       <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Unit</directory>
     </testsuite>

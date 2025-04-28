@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
-use Flow\ETL\Extractor;
 use Google\Client;
 use Google\Service\Sheets;
 
@@ -25,7 +24,7 @@ function from_google_sheet(
     bool $with_header = true,
     int $rows_per_page = 1000,
     array $options = [],
-) : Extractor {
+) : GoogleSheetExtractor {
     if ($auth_config instanceof Sheets) {
         $sheets = $auth_config;
     } else {
@@ -64,7 +63,7 @@ function from_google_sheet_columns(
     bool $with_header = true,
     int $rows_per_page = 1000,
     array $options = [],
-) : Extractor {
+) : GoogleSheetExtractor {
     if ($auth_config instanceof Sheets) {
         $sheets = $auth_config;
     } else {

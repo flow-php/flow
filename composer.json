@@ -307,7 +307,8 @@
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-integration --log-junit ./var/phpunit/logs/adapter-elasticsearch-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-elasticsearch-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-elasticsearch-integration"
         ],
         "test:adapter:google-sheet": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-google-sheet-unit --log-junit ./var/phpunit/logs/adapter-google-sheet-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-google-sheet-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-google-sheet-unit"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-google-sheet-unit --log-junit ./var/phpunit/logs/adapter-google-sheet-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-google-sheet-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-google-sheet-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-google-sheet-integration --log-junit ./var/phpunit/coverage/clover/adapter-google-sheet-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-google-sheet-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-google-sheet-integration"
         ],
         "test:adapter:http": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-http-unit --log-junit ./var/phpunit/logs/adapter-http-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-http-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-http-unit",

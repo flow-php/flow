@@ -14,6 +14,8 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 {
     use Limitable;
 
+    private bool $dropExtraColumns = true;
+
     /**
      * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
      */
@@ -57,24 +59,31 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
             $totalRows = 0;
         }
 
+        $headersCount = \count($headers);
+
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         while (\count($values)) {
             $rows = \array_map(
-                function (array $rowData) use ($headers, $shouldPutInputIntoRows) {
-                    if (\count($headers) > \count($rowData)) {
+                function (array $rowData) use ($headers, $headersCount, $shouldPutInputIntoRows) {
+                    $rowDataCount = \count($rowData);
+
+                    if ($headersCount > $rowDataCount) {
                         \array_push(
                             $rowData,
                             ...\array_map(
                                 static fn (int $i) => null,
-                                \range(1, \count($headers) - \count($rowData))
+                                \range(1, $headersCount - $rowDataCount)
                             )
                         );
                     }
 
-                    if (\count($rowData) > \count($headers)) {
-                        /** @phpstan-ignore-next-line */
-                        $rowData = \array_chunk($rowData, \count($headers));
+                    if ($rowDataCount > $headersCount) {
+                        if (!$this->dropExtraColumns) {
+                            throw InvalidArgumentException::because('Row has more columns (%d) than headers (%d)', $rowDataCount, $headersCount);
+                        }
+
+                        $rowData = \array_slice($rowData, 0, $headersCount);
                     }
 
                     $row = \array_combine($headers, $rowData);
@@ -105,13 +114,20 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
             }
 
             $cellsRange = $cellsRange->nextRows($this->rowsPerPage);
-            /** @var Sheets\ValueRange $response */
+
             $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
             /**
              * @var array<array> $values
              */
             $values = $response->getValues() ?? [];
         }
+    }
+
+    public function withDropExtraColumns(bool $dropExtraColumns) : self
+    {
+        $this->dropExtraColumns = $dropExtraColumns;
+
+        return $this;
     }
 
     public function withHeader(bool $withHeader) : self

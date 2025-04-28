@@ -23,9 +23,8 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             $sheetName = 'sheet',
             'A',
             'B',
-            true,
-            2,
-        );
+        )->withHeader(true)
+            ->withRowsPerPage(2);
         $spreadSheetIdEntry = string_entry('_spread_sheet_id', $spreadSheetId);
         $sheetNameEntry = string_entry('_sheet_name', $sheetName);
         $firstValueRangeMock = $this->createMock(ValueRange::class);
@@ -63,9 +62,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             'sheet',
             'A',
             'B',
-            true,
-            0
-        );
+        )->withRowsPerPage(0);
     }
 
     public function test_works_for_no_data() : void
@@ -76,9 +73,8 @@ final class GoogleSheetExtractorTest extends FlowTestCase
             'sheet',
             'A',
             'B',
-            true,
-            20
-        );
+        )->withHeader(true)
+            ->withRowsPerPage(20);
         $ValueRangeMock = $this->createMock(ValueRange::class);
         $ValueRangeMock->method('getValues')->willReturn(null);
 
