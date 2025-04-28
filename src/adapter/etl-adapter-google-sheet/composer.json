@@ -28,7 +28,7 @@
             ]
         },
         "files": [
-            "src/Flow/ETL/Adapter/GoogleSheet/functions.php"
+            "src/Flow/ETL/Adapter/GoogleSheet/DSL/functions.php"
         ]
     },
     "autoload-dev": {
@@ -38,6 +38,7 @@
     },
     "extra": {
         "google/apiclient-services": [
+            "Drive",
             "Sheets"
         ]
     },

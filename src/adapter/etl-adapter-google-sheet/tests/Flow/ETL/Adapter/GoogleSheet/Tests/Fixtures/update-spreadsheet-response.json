@@ -1,0 +1,17 @@
+{
+  "spreadsheetId": "1234567890",
+  "updatedRange": "Sheet!A1:D4",
+  "updatedRows": 4,
+  "updatedColumns": 2,
+  "updatedCells": 8,
+  "updatedData": {
+    "range": "Sheet!A1:C4",
+    "majorDimension": "ROWS",
+    "values": [
+      ["id", "name"],
+      [12345, "Norbert"],
+      [54321, "Joseph"],
+      [666, "Dominik"]
+    ]
+  }
+}

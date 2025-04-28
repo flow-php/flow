@@ -15,19 +15,19 @@ final class SheetRangeTest extends FlowTestCase
     {
         yield 'one cell' => [
             new SheetRange(new Columns('Sheet2', 'B', 'B'), 2, 2),
-            'Sheet2!B2:B2',
+            "'Sheet2'!B2:B2",
         ];
         yield 'one line range' => [
             new SheetRange(new Columns('Sheet1', 'A', 'C'), 1, 1),
-            'Sheet1!A1:C1',
+            "'Sheet1'!A1:C1",
         ];
         yield 'multiple line range' => [
             new SheetRange(new Columns('Sheet1', 'B', 'D'), 2, 30),
-            'Sheet1!B2:D30',
+            "'Sheet1'!B2:D30",
         ];
         yield 'multi letter columns' => [
             new SheetRange(new Columns('Sheet1', 'ABC', 'CBA'), 101, 999),
-            'Sheet1!ABC101:CBA999',
+            "'Sheet1'!ABC101:CBA999",
         ];
     }
 
@@ -59,8 +59,8 @@ final class SheetRangeTest extends FlowTestCase
     public function test_next_rows_range() : void
     {
         $range = new SheetRange(new Columns('Sheet2', 'A', 'B'), 1, 10);
-        self::assertSame('Sheet2!A11:B20', $range->nextRows(10)->toString());
-        self::assertSame('Sheet2!A21:B40', $range->nextRows(10)->nextRows(20)->toString());
+        self::assertSame("'Sheet2'!A11:B20", $range->nextRows(10)->toString());
+        self::assertSame("'Sheet2'!A21:B40", $range->nextRows(10)->nextRows(20)->toString());
     }
 
     #[DataProvider('example_string_ranges')]

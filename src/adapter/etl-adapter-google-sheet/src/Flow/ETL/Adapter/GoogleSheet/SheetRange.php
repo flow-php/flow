@@ -42,7 +42,7 @@ final readonly class SheetRange
     public function toString() : string
     {
         return \sprintf(
-            '%s!%s%d:%s%d',
+            "'%s'!%s%d:%s%d",
             $this->columnRange->sheetName,
             $this->columnRange->startColumn,
             $this->startRow,

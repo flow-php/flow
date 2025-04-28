@@ -41,7 +41,7 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php',
-            __DIR__ . '/../src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php',
+            __DIR__ . '/../src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/DSL/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php',

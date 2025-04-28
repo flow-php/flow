@@ -9,7 +9,7 @@ use Symfony\Component\Dotenv\Dotenv;
 require __DIR__ . '/vendor/autoload.php';
 
 if (!\file_exists(__DIR__ . '/.env')) {
-    print 'Example skipped. Please create .env file with Azure Storage Account credentials.' . PHP_EOL;
+    print 'Example skipped. Please create .env file with Elasticsearch credentials.' . PHP_EOL;
 
     return;
 }

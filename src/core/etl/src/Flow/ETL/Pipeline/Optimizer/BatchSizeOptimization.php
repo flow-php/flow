@@ -29,13 +29,14 @@ final class BatchSizeOptimization implements Optimization
 
     /**
      * We can't use DbalLoader::class here because that would create a circular dependency between ETL and Adapters.
-     * All adapters requires ETL, but ELT does not require a single adapter to be present.
+     * All adapters require ETL, but ELT does not require a single adapter to be present.
      *
      * @var array<class-string<Loader>>
      */
     private array $supportedLoaders = [
         'Flow\ETL\Adapter\Doctrine\DbalLoader',
         'Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader',
+        'Flow\ETL\Adapter\GoogleSheet\GoogleSheetLoader',
         'Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader',
     ];
 
@@ -51,7 +52,7 @@ final class BatchSizeOptimization implements Optimization
 
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
     {
-        // Pipeline is already batching so we don't need to optimize it
+        // Pipeline is already batching, so we don't need to optimize it
         if (\in_array($pipeline::class, $this->batchingPipelines, true)) {
             return false;
         }

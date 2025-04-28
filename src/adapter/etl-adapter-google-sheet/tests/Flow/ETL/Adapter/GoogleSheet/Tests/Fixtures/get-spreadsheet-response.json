@@ -1,0 +1,23 @@
+{
+  "spreadsheetId": "1234567890",
+  "properties": {
+    "title": "Test Spreadsheet",
+    "locale": "en_US",
+    "timeZone": "America/Los_Angeles"
+  },
+  "sheets": [
+    {
+      "properties": {
+        "sheetId": 0,
+        "title": "Sheet",
+        "index": 0,
+        "sheetType": "GRID",
+        "gridProperties": {
+          "rowCount": 1000,
+          "columnCount": 26
+        }
+      }
+    }
+  ],
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1234567890/edit"
+}

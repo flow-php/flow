@@ -139,7 +139,7 @@
             "src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php",
             "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php",
             "src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php",
-            "src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php",
+            "src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/DSL/functions.php",
             "src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php",
             "src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php",
             "src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php",
@@ -208,6 +208,7 @@
     },
     "extra": {
         "google/apiclient-services": [
+            "Drive",
             "Sheets"
         ]
     },

@@ -38,7 +38,6 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsPerPage);
         $headers = [];
 
-        /** @var Sheets\ValueRange $response */
         $response = $this->service->spreadsheets_values->get(
             $this->spreadsheetId,
             $cellsRange->toString(),

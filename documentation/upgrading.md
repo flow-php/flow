@@ -58,6 +58,10 @@ Selected transformers were deprecated in favor of using `DataFrame::renameEach()
 - `RenameAllCaseTransformer` -> `RenameCaseTransformer`,
 - `RenameStrReplaceAllEntriesTransformer` -> `RenameReplaceStrategy`,
 
+### 3) Moved `src/Flow/ETL/Adapter/GoogleSheet/functions.php` file
+
+The file was moved to subfolder and now is located at: `src/Flow/ETL/Adapter/GoogleSheet/DSL/functions.php`
+
 ---
 
 ## Upgrading from 0.14.x to 0.15.x
