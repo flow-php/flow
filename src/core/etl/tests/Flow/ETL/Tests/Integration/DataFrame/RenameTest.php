@@ -61,6 +61,24 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_rename_all_lower_case_i18n() : void
+    {
+        $rows = rows(row(int_entry('ILOŚĆ PRZEDMIOTÓW', 0)), row(int_entry('ILOŚĆ PRZEDMIOTÓW', 10)));
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameAllLowerCase()
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['ilość przedmiotów' => 0],
+                ['ilość przedmiotów' => 10],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
     public function test_rename_all_to_snake_case() : void
     {
         $rows = rows(row(int_entry('id', 1), str_entry('UserName', 'name'), bool_entry('isActive', true)), row(int_entry('id', 2), str_entry('UserName', 'name'), bool_entry('isActive', false)));
@@ -129,6 +147,24 @@ final class RenameTest extends FlowIntegrationTestCase
             [
                 ['Id' => 1, 'Name' => 'name', 'Active' => true],
                 ['Id' => 2, 'Name' => 'name', 'Active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_upper_case_word_i18n() : void
+    {
+        $rows = rows(row(int_entry('ósmy', 8)), row(int_entry('dziewiąty', 9)));
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameAllUpperCaseWord()
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['Ósmy' => 8],
+                ['Dziewiąty' => 9],
             ],
             \iterator_to_array($ds)
         );
