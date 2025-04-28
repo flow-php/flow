@@ -49,7 +49,7 @@ final class RenameTest extends FlowIntegrationTestCase
     public function test_rename_all_callback() : void
     {
         if (!\function_exists('transliterator_transliterate')) {
-            $this->markTestSkipped('Transliterator is not installed');
+            self::markTestSkipped('Transliterator is not installed');
         }
 
         $rows = rows(row(int_entry('ósmy', 8)), row(int_entry('dziewiąty', 9)));
