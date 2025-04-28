@@ -36,7 +36,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
     public function test_extract_without_cut_extra_columns() : void
     {
         $extractor = new GoogleSheetExtractor(
-            $this->context->sheet(__DIR__ . '/../Fixtures/extra-columns.json'),
+            $this->context->sheets(__DIR__ . '/../Fixtures/extra-columns.json'),
             '1234567890',
             new Columns('Sheet', 'A', 'Z'),
         );
