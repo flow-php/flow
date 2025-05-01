@@ -20,6 +20,8 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
  */
 final class DbalKeySetExtractor implements Extractor
 {
+    private string $keyAliasSuffix = '_previous';
+
     private ?int $maximum = null;
 
     private int $pageSize = 1000;
@@ -56,6 +58,7 @@ final class DbalKeySetExtractor implements Extractor
 
             foreach ($this->keySet->keys as $key) {
                 $qb->addOrderBy($key->column, $key->order->value);
+                $qb->addSelect($key->column . ' AS ' . $this->keyAlias($key));
             }
 
             if ($lastRow !== null) {
@@ -64,28 +67,30 @@ final class DbalKeySetExtractor implements Extractor
                 $parameterTypes = [];
 
                 foreach ($this->keySet->keys as $index => $key) {
-                    if (!\array_key_exists($key->column, $lastRow)) {
+                    $keyAlias = $this->keyAlias($key);
+
+                    if (!\array_key_exists($keyAlias, $lastRow)) {
                         throw new RuntimeException(sprintf('Column "%s" not found in last row for keyset pagination', $key->column));
                     }
 
-                    $lastValue = $lastRow[$key->column];
+                    $lastValue = $lastRow[$keyAlias];
 
                     if ($lastValue === null) {
                         throw new RuntimeException(sprintf('NULL value found in column "%s" for keyset pagination; key columns must be non-null', $key->column));
                     }
 
-                    $paramName = $key->column . '_previous';
-                    $parameters[$paramName] = $lastValue;
-                    $parameterTypes[$paramName] = $key->type;
+                    $parameters[$keyAlias] = $lastValue;
+                    $parameterTypes[$keyAlias] = $key->type;
 
                     $subConditions = [];
 
                     for ($i = 0; $i < $index; $i++) {
                         $prevKey = $this->keySet->keys[$i];
-                        $subConditions[] = $qb->expr()->eq($prevKey->column, ':' . $prevKey->column . '_previous');
+                        $subConditions[] = $qb->expr()->eq($prevKey->column, ':' . $keyAlias);
                     }
+
                     $operator = $key->order->value === 'DESC' ? 'lt' : 'gt';
-                    $subConditions[] = $qb->expr()->{$operator}($key->column, ':' . $paramName);
+                    $subConditions[] = $qb->expr()->{$operator}($key->column, ':' . $keyAlias);
 
                     $conditions[] = $qb->expr()->and(...$subConditions);
                 }
@@ -112,6 +117,14 @@ final class DbalKeySetExtractor implements Extractor
                 $hasRows = true;
                 $lastRow = $row;
 
+                foreach ($this->keySet->keys as $key) {
+                    $keyAlias = $this->keyAlias($key);
+
+                    if (\array_key_exists($keyAlias, $row)) {
+                        unset($row[$keyAlias]);
+                    }
+                }
+
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
                 if ($signal === Extractor\Signal::STOP) {
@@ -129,6 +142,13 @@ final class DbalKeySetExtractor implements Extractor
                 break;
             }
         }
+    }
+
+    public function withKeyAliasSuffix(string $keyAliasSuffix) : self
+    {
+        $this->keyAliasSuffix = $keyAliasSuffix;
+
+        return $this;
     }
 
     /**
@@ -183,5 +203,10 @@ final class DbalKeySetExtractor implements Extractor
         $this->schema = $schema;
 
         return $this;
+    }
+
+    private function keyAlias(Pagination\Key $key) : string
+    {
+        return (string) preg_replace('/[^a-zA-Z0-9_]/', '_', str_replace('.', '_', $key->column . $this->keyAliasSuffix));
     }
 }

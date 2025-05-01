@@ -266,6 +266,127 @@ final class DbalKeySetExtractorTest extends IntegrationTestCase
         );
     }
 
+    public function test_extraction_when_key_is_ambiguous_column() : void
+    {
+        $this->pgsqlDatabaseContext->createTable(
+            to_dbal_schema_table(
+                schema(
+                    int_schema('id', metadata: DbalMetadata::primaryKey()),
+                    str_schema('name', metadata: DbalMetadata::length(255)),
+                ),
+                $table = 'flow_key_set_extractor_test_01',
+            )
+        );
+
+        $this->pgsqlDatabaseContext->createTable(
+            to_dbal_schema_table(
+                schema(
+                    int_schema('id', metadata: DbalMetadata::primaryKey()),
+                    int_schema('id_01'),
+                    str_schema('name', metadata: DbalMetadata::length(255)),
+                ),
+                'flow_key_set_extractor_test_02',
+            )
+        );
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i]);
+
+            $this->pgsqlDatabaseContext->insert('flow_key_set_extractor_test_02', ['id' => $i, 'id_01' => $i, 'name' => 'name_' . $i]);
+        }
+
+        $rows = data_frame()
+            ->extract(
+                from_dbal_key_set_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
+                        ->from($table)
+                        ->select('flow_key_set_extractor_test_01.id as id')
+                        ->leftJoin(
+                            'flow_key_set_extractor_test_01',
+                            'flow_key_set_extractor_test_02',
+                            'flow_key_set_extractor_test_02',
+                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01'
+                        ),
+                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id'))
+                )
+                ->withSchema(schema(int_schema('id')))
+                ->withPageSize(5)
+                ->withMaximum(5)
+            )
+            ->fetch()
+            ->toArray();
+
+        self::assertSame([
+            ['id' => 25],
+            ['id' => 24],
+            ['id' => 23],
+            ['id' => 22],
+            ['id' => 21],
+        ], $rows);
+    }
+
+    public function test_extraction_when_key_is_ambiguous_column_with_custom_key_column_alias_suffix() : void
+    {
+        $this->pgsqlDatabaseContext->createTable(
+            to_dbal_schema_table(
+                schema(
+                    int_schema('id', metadata: DbalMetadata::primaryKey()),
+                    str_schema('name', metadata: DbalMetadata::length(255)),
+                ),
+                $table = 'flow_key_set_extractor_test_01',
+            )
+        );
+
+        $this->pgsqlDatabaseContext->createTable(
+            to_dbal_schema_table(
+                schema(
+                    int_schema('id', metadata: DbalMetadata::primaryKey()),
+                    int_schema('id_01'),
+                    str_schema('name', metadata: DbalMetadata::length(255)),
+                ),
+                'flow_key_set_extractor_test_02',
+            )
+        );
+
+        for ($i = 1; $i <= 25; $i++) {
+            $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i]);
+
+            $this->pgsqlDatabaseContext->insert('flow_key_set_extractor_test_02', ['id' => $i, 'id_01' => $i, 'name' => 'name_' . $i]);
+        }
+
+        $rows = data_frame()
+            ->extract(
+                from_dbal_key_set_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
+                        ->from($table)
+                        ->select('flow_key_set_extractor_test_01.id as id')
+                        ->leftJoin(
+                            'flow_key_set_extractor_test_01',
+                            'flow_key_set_extractor_test_02',
+                            'flow_key_set_extractor_test_02',
+                            'flow_key_set_extractor_test_01.id = flow_key_set_extractor_test_02.id_01'
+                        ),
+                    pagination_key_set(pagination_key_desc('flow_key_set_extractor_test_01.id'))
+                )
+                    ->withKeyAliasSuffix('_something_custom')
+                    ->withSchema(schema(int_schema('id')))
+                    ->withPageSize(5)
+                    ->withMaximum(5)
+            )
+            ->fetch()
+            ->toArray();
+
+        self::assertSame([
+            ['id' => 25],
+            ['id' => 24],
+            ['id' => 23],
+            ['id' => 22],
+            ['id' => 21],
+        ], $rows);
+    }
+
     public function test_throws_exception_for_empty_key_set() : void
     {
         $this->pgsqlDatabaseContext->createTable(
