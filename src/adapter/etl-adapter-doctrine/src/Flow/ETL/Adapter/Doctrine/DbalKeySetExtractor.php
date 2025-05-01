@@ -100,11 +100,7 @@ final class DbalKeySetExtractor implements Extractor
 
                     foreach ($parameters as $param => $value) {
                         /** @phpstan-ignore-next-line */
-                        if ($parameterTypes[$param] !== null) {
-                            $qb->setParameter($param, $value, $parameterTypes[$param]);
-                        } else {
-                            $qb->setParameter($param, $value);
-                        }
+                        $qb->setParameter($param, $value, $parameterTypes[$param]);
                     }
                 }
             }
