@@ -86,7 +86,7 @@ final class DbalKeySetExtractor implements Extractor
 
                     for ($i = 0; $i < $index; $i++) {
                         $prevKey = $this->keySet->keys[$i];
-                        $subConditions[] = $qb->expr()->eq($prevKey->column, ':' . $keyAlias);
+                        $subConditions[] = $qb->expr()->eq($prevKey->column, ':' . $this->keyAlias($prevKey));
                     }
 
                     $operator = $key->order->value === 'DESC' ? 'lt' : 'gt';
@@ -100,7 +100,11 @@ final class DbalKeySetExtractor implements Extractor
 
                     foreach ($parameters as $param => $value) {
                         /** @phpstan-ignore-next-line */
-                        $qb->setParameter($param, $value, $parameterTypes[$param]);
+                        if ($parameterTypes[$param] !== null) {
+                            $qb->setParameter($param, $value, $parameterTypes[$param]);
+                        } else {
+                            $qb->setParameter($param, $value);
+                        }
                     }
                 }
             }
