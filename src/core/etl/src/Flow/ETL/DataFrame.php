@@ -41,12 +41,13 @@ use Flow\ETL\Transformer\{AutoCastTransformer,
     OrderEntriesTransformer,
     OrderEntries\Comparator,
     OrderEntries\TypeComparator,
-    RenameAllCaseTransformer,
+    RenameEachTransformer,
     RenameEntryTransformer,
     RenameStrReplaceAllEntriesTransformer,
     ScalarFunctionFilterTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
+    StyleConverter\RenameStrategy,
     UntilTransformer,
     WindowFunctionTransformer};
 use Flow\Filesystem\Path\Filter;
@@ -84,7 +85,8 @@ final class DataFrame
      * Merge/Split Rows yielded by Extractor into batches of given size.
      * For example, when Extractor is yielding one row at time, this method will merge them into batches of given size
      * before passing them to the next pipeline element.
-     * Similarly when Extractor is yielding batches of rows, this method will split them into smaller batches of given size.
+     * Similarly when Extractor is yielding batches of rows, this method will split them into smaller batches of given
+     * size.
      *
      * In order to merge all Rows into a single batch use DataFrame::collect() method or set size to -1 or 0.
      *
@@ -210,7 +212,8 @@ final class DataFrame
 
     /**
      * @param int $limit maximum numbers of rows to display
-     * @param bool|int $truncate false or if set to 0 columns are not truncated, otherwise default truncate to 20 characters
+     * @param bool|int $truncate false or if set to 0 columns are not truncated, otherwise default truncate to 20
+     *                           characters
      * @param Formatter $formatter
      *
      * @trigger
@@ -258,7 +261,8 @@ final class DataFrame
     }
 
     /**
-     * Drop all partitions from Rows, additionally when $dropPartitionColumns is set to true, partition columns are also removed.
+     * Drop all partitions from Rows, additionally when $dropPartitionColumns is set to true, partition columns are
+     * also removed.
      *
      * @lazy
      */
@@ -636,10 +640,12 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
      */
     public function renameAllLowerCase() : self
     {
-        $this->pipeline->add(new RenameAllCaseTransformer(lower: true));
+        $this->renameEach(RenameStrategy::LOWER);
 
         return $this;
     }
@@ -658,30 +664,43 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
      */
     public function renameAllUpperCase() : self
     {
-        $this->pipeline->add(new RenameAllCaseTransformer(upper: true));
+        $this->renameEach(RenameStrategy::UPPER);
 
         return $this;
     }
 
     /**
      * @lazy
+     *
+     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
      */
     public function renameAllUpperCaseFirst() : self
     {
-        $this->pipeline->add(new RenameAllCaseTransformer(ucfirst: true));
+        $this->renameEach(RenameStrategy::UCFIRST);
 
         return $this;
     }
 
     /**
      * @lazy
+     *
+     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
      */
     public function renameAllUpperCaseWord() : self
     {
-        $this->pipeline->add(new RenameAllCaseTransformer(ucwords: true));
+        $this->renameEach(RenameStrategy::UCWORDS);
+
+        return $this;
+    }
+
+    public function renameEach(RenameStrategy $strategy) : self
+    {
+        $this->pipeline->add(new RenameEachTransformer($strategy));
 
         return $this;
     }
@@ -825,8 +844,8 @@ final class DataFrame
     }
 
     /**
-     * The difference between filter and until is that filter will keep filtering rows until extractors finish yielding rows.
-     * Until will send a STOP signal to the Extractor when the condition is not met.
+     * The difference between filter and until is that filter will keep filtering rows until extractors finish yielding
+     * rows. Until will send a STOP signal to the Extractor when the condition is not met.
      *
      * @lazy
      */

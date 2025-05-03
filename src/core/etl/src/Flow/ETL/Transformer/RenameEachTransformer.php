@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\{FlowContext, Row, Rows, Transformer};
+use Flow\ETL\{FlowContext, Row, Rows, Transformer, Transformer\StyleConverter\RenameStrategy};
 
-/**
- * @deprecated use RenameEachTransformer with a selected RenameStrategy
- */
-final readonly class RenameAllCaseTransformer implements Transformer
+final readonly class RenameEachTransformer implements Transformer
 {
     public function __construct(
-        private bool $upper = false,
-        private bool $lower = false,
-        private bool $ucfirst = false,
-        private bool $ucwords = false,
+        private RenameStrategy $strategy,
     ) {
     }
 
@@ -23,25 +17,26 @@ final readonly class RenameAllCaseTransformer implements Transformer
     {
         return $rows->map(function (Row $row) : Row {
             foreach ($row->entries()->all() as $entry) {
-                if ($this->upper) {
-                    $row = $row->rename($entry->name(), \mb_strtoupper($entry->name()));
-                }
-
-                if ($this->lower) {
-                    $row = $row->rename($entry->name(), \mb_strtolower($entry->name()));
-                }
-
-                if ($this->ucfirst) {
-                    $row = $row->rename($entry->name(), $this->ucFirst($entry->name()));
-                }
-
-                if ($this->ucwords) {
-                    $row = $row->rename($entry->name(), $this->ucWords($entry->name()));
-                }
+                $row = match ($this->strategy) {
+                    RenameStrategy::LOWER => $row->rename($entry->name(), \mb_strtolower($entry->name())),
+                    RenameStrategy::UPPER => $row->rename($entry->name(), \mb_strtoupper($entry->name())),
+                    RenameStrategy::UCFIRST => $row->rename($entry->name(), $this->ucFirst($entry->name())),
+                    RenameStrategy::UCWORDS => $row->rename($entry->name(), $this->ucWords($entry->name())),
+                    RenameStrategy::TRANSLITERATE => $row->rename($entry->name(), $this->transliterate($entry->name())),
+                };
             }
 
             return $row;
         });
+    }
+
+    private function transliterate(string $string) : string
+    {
+        if (\function_exists('transliterator_transliterate')) {
+            return (string) \transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $string);
+        }
+
+        return $string;
     }
 
     private function ucFirst(string $string) : string

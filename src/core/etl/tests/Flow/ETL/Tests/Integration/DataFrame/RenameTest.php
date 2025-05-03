@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, ref, str_entry};
 use function Flow\ETL\DSL\{row, rows};
-use Flow\ETL\{Function\StyleConverter\StringStyles};
+use Flow\ETL\{Function\StyleConverter\StringStyles, Transformer\StyleConverter\RenameStrategy};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class RenameTest extends FlowIntegrationTestCase
@@ -93,6 +93,24 @@ final class RenameTest extends FlowIntegrationTestCase
             [
                 ['id' => 1, 'user_name' => 'name', 'is_active' => true],
                 ['id' => 2, 'user_name' => 'name', 'is_active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_transliterate() : void
+    {
+        $rows = rows(row(int_entry('ÓSMY', 8)), row(int_entry('DZIEWIĄTY', 9)));
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameEach(RenameStrategy::TRANSLITERATE)
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['osmy' => 8],
+                ['dziewiaty' => 9],
             ],
             \iterator_to_array($ds)
         );
