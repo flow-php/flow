@@ -5,13 +5,34 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.15.x to 0.16.x
+
+### 1) Deprecated `Flow\ETL\DataFrame::renameAll*` methods
+
+Methods:
+- `Flow\ETL\DataFrame::renameAll()`,
+- `Flow\ETL\DataFrame::renameAllLowerCase()`,
+- `Flow\ETL\DataFrame::renameAllUpperCase()`,
+- `Flow\ETL\DataFrame::renameAllUpperCaseFirst()`,
+- `Flow\ETL\DataFrame::renameAllUpperCaseWord()`,
+
+Were deprecated in favor of using new method: `DataFrame::renameEach()` with proper `RenameEntryStrategy` object.
+
+### 2) Deprecated `RenameAllCaseTransformer` & `RenameStrReplaceAllEntriesTransformer`
+
+Selected transformers were deprecated in favor of using `DataFrame::renameEach()` with related `RenameEntryStrategy`:
+- `RenameAllCaseTransformer` -> `RenameCaseTransformer`,
+- `RenameStrReplaceAllEntriesTransformer` -> `RenameReplaceStrategy`,
+
+---
+
 ## Upgrading from 0.14.x to 0.15.x
 
-### 1) Removed `Flow\ETL\Row\Schema\Matcher` and implementations 
-Schema Matcher was the initial attempt to implement a schema evolution next to schema validation that over 
-time got replaced with different implementation of Schema Validator. 
+### 1) Removed `Flow\ETL\Row\Schema\Matcher` and implementations
+Schema Matcher was the initial attempt to implement a schema evolution next to schema validation that over
+time got replaced with a different implementation of Schema Validator.
 
-### 2) Renamed `Flow\ETL\Row\Schema` namespace into `Flow\ETL\Schema`. 
+### 2) Renamed `Flow\ETL\Row\Schema` namespace into `Flow\ETL\Schema`.
 This means all classes related to Schema now live under `Flow\ETL\Schema` namespace.
 
 ---
@@ -24,7 +45,7 @@ The old method is now deprecated and will be removed in the next release.
 
 ### 2) Replaced `Flow\ETL\Function\ScalarFunction\TypedScalarFunction` with `Flow\ETL\Function\ScalarFunction\ScalarResult`.
 
-The old interface was used to allow define the return type of the ScalarFunctions. 
+The old interface was used to allow defining the return type of the ScalarFunctions. 
 It was replaced with a ScalarResult value object that is much more flexible than the interface,
 because it's allowing to return any type dynamically without making the scalar function stateful. 
 
@@ -52,10 +73,10 @@ type_structure([
 
 From now options for: 
 
-- to_dbal_table_insert()
-- to_db_table_update()
+- `to_dbal_table_insert()`
+- `to_db_table_update()`
 
-are passed as an objects (instance of UpdateOptions|InsertOptions interfaces) and they are platform specific,
+are passed as objects (instance of UpdateOptions|InsertOptions interfaces) and they are platform specific,
 so please use the proper class for the platform you are using.
 
 - PostgreSQL
@@ -71,9 +92,9 @@ so please use the proper class for the platform you are using.
 ## Upgrading from 0.8.x to 0.10.x
 
 
-### 1) Providing multiple paths to single extractor
+### 1) Providing multiple paths to a single extractor
 
-From now in order to read from multiple locations use `from_all(Extractor ...$extractors) : Exctractor` extractor.
+From now to read from multiple locations use `from_all(Extractor ...$extractors) : Exctractor` extractor.
 
 Before:
 ```php
@@ -118,7 +139,7 @@ from_parquet(path(__DIR__ . '/data/1.parquet'))->withSchema($schema);
 
 ### 1) Joins
 
-In order to support joining bigger datasets, we had to move from initial NestedLoop join algorithm into Hash Join algorithm.
+To support joining bigger datasets, we had to move from initial NestedLoop join algorithm into Hash Join algorithm.
 
 - the only supported coin expression is `=` (equals) that can be grouped with `AND` and `OR` operators.
 - `joinPrefix` is now always required, and by default is set to 'joined_'
@@ -134,8 +155,8 @@ Above changes were introduced in all 3 types of joins:
 
 ### 2) GroupBy
 
-From now on, DataFrame::groupBy() method will return GroupedDataFrame object, which is nothing more than a GroupBy
-statement Builder. In order to get the results you first need to define the aggregation functions or optionally pivot the data.
+From now on, `DataFrame::groupBy()` method will return `GroupedDataFrame` object, which is nothing more than a GroupBy
+statement Builder. To get the results, you first need to define the aggregation functions or optionally pivot the data.
 
 ## Upgrading from 0.6.x to 0.7.x
 
@@ -188,7 +209,7 @@ DataFrame::parallelize() method is deprecated, and it will be removed, instead u
 
 ### 6) Rows in batch - Extractors
 
-From now, file based Extractors will always throw one Row at time, in order to merge them into bigger groups
+From now, file-based Extractors will always throw one Row at time, in order to merge them into bigger groups
 use `DataFrame::batchSize(int $size)` just after extractor method.
 
 Before:
@@ -218,7 +239,7 @@ Affected extractors:
 - Text
 - XML
 - Avro
-- DoctrineDBAL - rows_in_batch wasn't removed but now results are thrown row by row, instead of whole page.
+- DoctrineDBAL - `rows_in_batch` wasn't removed, but now results are thrown row by row, instead of whole page.
 - GoogleSheet
 
 ### 7) `GoogleSheetExtractor`

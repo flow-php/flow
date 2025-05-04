@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\Calculator\Rounding;
-use Flow\ETL\{
-    Analyze,
+use Flow\ETL\{Analyze,
     Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
@@ -37,9 +36,9 @@ use Flow\ETL\{
     Schema\SchemaFormatter,
     Transformation,
     Transformer,
+    Transformer\StyleConverter\Style,
     Window,
-    WithEntry
-};
+    WithEntry};
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Extractor\FilesExtractor;
@@ -347,6 +346,24 @@ function to_transformation(Transformer|Transformation $transformer, Loader $load
 function to_branch(ScalarFunction $condition, Loader $loader) : Loader\BranchingLoader
 {
     return new Loader\BranchingLoader($condition, $loader);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function rename_style(Style $style) : Transformer\StyleConverter\RenameCaseEntryStrategy
+{
+    return new Transformer\StyleConverter\RenameCaseEntryStrategy($style);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function rename_replace(string $search, string $replace) : Transformer\StyleConverter\RenameReplaceEntryStrategy
+{
+    return new Transformer\StyleConverter\RenameReplaceEntryStrategy($search, $replace);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function rename_transliterate(string $transliterator = 'Any-Latin; Latin-ASCII; Lower()') : Transformer\StyleConverter\RenameTransliterateEntryStrategy
+{
+    return new Transformer\StyleConverter\RenameTransliterateEntryStrategy($transliterator);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]

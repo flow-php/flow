@@ -28,7 +28,8 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Formatter\ASCIISchemaFormatter, Reference, References};
 use Flow\ETL\Schema\Definition;
-use Flow\ETL\Transformer\{AutoCastTransformer,
+use Flow\ETL\Transformer\{
+    AutoCastTransformer,
     CallbackRowTransformer,
     CrossJoinRowsTransformer,
     DropDuplicatesTransformer,
@@ -43,13 +44,16 @@ use Flow\ETL\Transformer\{AutoCastTransformer,
     OrderEntries\TypeComparator,
     RenameEachTransformer,
     RenameEntryTransformer,
-    RenameStrReplaceAllEntriesTransformer,
     ScalarFunctionFilterTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
-    StyleConverter\RenameStrategy,
+    StyleConverter\RenameCaseEntryStrategy,
+    StyleConverter\RenameEntryStrategy,
+    StyleConverter\RenameReplaceEntryStrategy,
+    StyleConverter\Style,
     UntilTransformer,
-    WindowFunctionTransformer};
+    WindowFunctionTransformer
+};
 use Flow\Filesystem\Path\Filter;
 
 final class DataFrame
@@ -629,11 +633,13 @@ final class DataFrame
 
     /**
      * @lazy
-     * Iterate over all entry names and replace given search string with replace string.
+     * Iterate over all entry names and replace the given search string with replace string.
+     *
+     * @deprecated use DataFrame::renameEach() with a RenameReplaceStrategy
      */
     public function renameAll(string $search, string $replace) : self
     {
-        $this->pipeline->add(new RenameStrReplaceAllEntriesTransformer($search, $replace));
+        $this->renameEach(new RenameReplaceEntryStrategy($search, $replace));
 
         return $this;
     }
@@ -641,18 +647,18 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
+     * @deprecated use DataFrame::renameEach() with a selected Style
      */
     public function renameAllLowerCase() : self
     {
-        $this->renameEach(RenameStrategy::LOWER);
+        $this->renameEach(new RenameCaseEntryStrategy(Style::LOWER));
 
         return $this;
     }
 
     /**
      * @lazy
-     * Rename all entries to given style.
+     * Rename all entries to a given style.
      * Please look into \Flow\ETL\Function\StyleConverter\StringStyles class for all available styles.
      */
     public function renameAllStyle(StringStyles|string $style) : self
@@ -665,11 +671,11 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
+     * @deprecated use DataFrame::renameEach() with a selected Style
      */
     public function renameAllUpperCase() : self
     {
-        $this->renameEach(RenameStrategy::UPPER);
+        $this->renameEach(new RenameCaseEntryStrategy(Style::UPPER));
 
         return $this;
     }
@@ -677,11 +683,11 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
+     * @deprecated use DataFrame::renameEach() with a selected Style
      */
     public function renameAllUpperCaseFirst() : self
     {
-        $this->renameEach(RenameStrategy::UCFIRST);
+        $this->renameEach(new RenameCaseEntryStrategy(Style::UCFIRST));
 
         return $this;
     }
@@ -689,16 +695,16 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @deprecated use DataFrame::renameEach() with a selected RenameStrategy
+     * @deprecated use DataFrame::renameEach() with a selected Style
      */
     public function renameAllUpperCaseWord() : self
     {
-        $this->renameEach(RenameStrategy::UCWORDS);
+        $this->renameEach(new RenameCaseEntryStrategy(Style::UCWORDS));
 
         return $this;
     }
 
-    public function renameEach(RenameStrategy $strategy) : self
+    public function renameEach(RenameEntryStrategy $strategy) : self
     {
         $this->pipeline->add(new RenameEachTransformer($strategy));
 

@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Transformer\StyleConverter;
+
+use Flow\ETL\{FlowContext, Row};
+use Flow\ETL\Row\Entry;
+
+interface RenameEntryStrategy
+{
+    public function rename(Row $row, Entry $entry, FlowContext $context) : Row;
+}
