@@ -6,9 +6,14 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, ref, str_entry};
 use function Flow\ETL\DSL\{rename_transliterate, row, rows};
-use Flow\ETL\{Function\StyleConverter\StringStyles};
+use Flow\ETL\{Function\StyleConverter\StringStyles,
+    Transformer\RenameAllCaseTransformer,
+    Transformer\RenameStrReplaceAllEntriesTransformer};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
 
+#[CoversClass(RenameAllCaseTransformer::class)]
+#[CoversClass(RenameStrReplaceAllEntriesTransformer::class)]
 final class RenameTest extends FlowIntegrationTestCase
 {
     public function test_rename() : void
