@@ -109,6 +109,7 @@ final class RenameTest extends FlowIntegrationTestCase
         $ds = df()
             ->read(from_rows($rows))
             ->renameEach(rename_transliterate())
+            ->renameEach(rename_style(Style::LOWER))
             ->getEachAsArray();
 
         self::assertEquals(

@@ -361,9 +361,9 @@ function rename_replace(string $search, string $replace) : Transformer\Rename\Re
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_transliterate(string $transliterator = 'Any-Latin; Latin-ASCII; Lower()') : Transformer\Rename\RenameTransliterateEntryStrategy
+function rename_transliterate() : Transformer\Rename\RenameTransliterateEntryStrategy
 {
-    return new Transformer\Rename\RenameTransliterateEntryStrategy($transliterator);
+    return new Transformer\Rename\RenameTransliterateEntryStrategy();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
