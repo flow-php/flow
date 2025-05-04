@@ -9,5 +9,8 @@ use Flow\ETL\Row\Entry;
 
 interface RenameEntryStrategy
 {
+    /**
+     * @param Entry<mixed, mixed> $entry
+     */
     public function rename(Row $row, Entry $entry, FlowContext $context) : Row;
 }
