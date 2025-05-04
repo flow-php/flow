@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\{FlowContext, Row, Rows, Transformer, Transformer\StyleConverter\RenameReplaceEntryStrategy};
+use Flow\ETL\{FlowContext, Row, Rows, Transformer, Transformer\Rename\RenameReplaceEntryStrategy};
 
 /**
  * @deprecated Use `DataFrame::renameEach()` and `RenameReplaceStrategy`

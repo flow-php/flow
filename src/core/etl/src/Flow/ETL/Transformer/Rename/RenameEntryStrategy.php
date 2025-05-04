@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Transformer\StyleConverter;
+namespace Flow\ETL\Transformer\Rename;
 
 use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Row\Entry;

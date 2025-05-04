@@ -8,8 +8,8 @@ use Flow\ETL\{FlowContext,
     Row,
     Rows,
     Transformer,
-    Transformer\StyleConverter\RenameCaseEntryStrategy,
-    Transformer\StyleConverter\Style};
+    Transformer\Rename\RenameCaseEntryStrategy,
+    Transformer\Rename\Style};
 
 /**
  * @deprecated Use `DataFrame::renameEach()` and `RenameCaseTransformer`

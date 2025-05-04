@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\{FlowContext,
-    Row,
-    Rows,
-    Transformer,
-    Transformer\StyleConverter\RenameEntryStrategy
-};
+use Flow\ETL\{FlowContext, Row, Rows, Transformer, Transformer\Rename\RenameEntryStrategy};
 
-final readonly class RenameEachTransformer implements Transformer
+final readonly class RenameEachEntryTransformer implements Transformer
 {
     public function __construct(
         private RenameEntryStrategy $strategy,

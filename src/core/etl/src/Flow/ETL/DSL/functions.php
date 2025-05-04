@@ -36,7 +36,7 @@ use Flow\ETL\{Analyze,
     Schema\SchemaFormatter,
     Transformation,
     Transformer,
-    Transformer\StyleConverter\Style,
+    Transformer\Rename\Style,
     Window,
     WithEntry};
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
@@ -349,21 +349,21 @@ function to_branch(ScalarFunction $condition, Loader $loader) : Loader\Branching
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_style(Style $style) : Transformer\StyleConverter\RenameCaseEntryStrategy
+function rename_style(Style $style) : Transformer\Rename\RenameCaseEntryStrategy
 {
-    return new Transformer\StyleConverter\RenameCaseEntryStrategy($style);
+    return new Transformer\Rename\RenameCaseEntryStrategy($style);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_replace(string $search, string $replace) : Transformer\StyleConverter\RenameReplaceEntryStrategy
+function rename_replace(string $search, string $replace) : Transformer\Rename\RenameReplaceEntryStrategy
 {
-    return new Transformer\StyleConverter\RenameReplaceEntryStrategy($search, $replace);
+    return new Transformer\Rename\RenameReplaceEntryStrategy($search, $replace);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_transliterate(string $transliterator = 'Any-Latin; Latin-ASCII; Lower()') : Transformer\StyleConverter\RenameTransliterateEntryStrategy
+function rename_transliterate(string $transliterator = 'Any-Latin; Latin-ASCII; Lower()') : Transformer\Rename\RenameTransliterateEntryStrategy
 {
-    return new Transformer\StyleConverter\RenameTransliterateEntryStrategy($transliterator);
+    return new Transformer\Rename\RenameTransliterateEntryStrategy($transliterator);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]

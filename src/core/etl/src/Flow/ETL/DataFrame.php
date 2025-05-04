@@ -42,15 +42,15 @@ use Flow\ETL\Transformer\{
     OrderEntriesTransformer,
     OrderEntries\Comparator,
     OrderEntries\TypeComparator,
-    RenameEachTransformer,
+    RenameEachEntryTransformer,
     RenameEntryTransformer,
+    Rename\RenameCaseEntryStrategy,
+    Rename\RenameEntryStrategy,
+    Rename\RenameReplaceEntryStrategy,
+    Rename\Style,
     ScalarFunctionFilterTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
-    StyleConverter\RenameCaseEntryStrategy,
-    StyleConverter\RenameEntryStrategy,
-    StyleConverter\RenameReplaceEntryStrategy,
-    StyleConverter\Style,
     UntilTransformer,
     WindowFunctionTransformer
 };
@@ -706,7 +706,7 @@ final class DataFrame
 
     public function renameEach(RenameEntryStrategy $strategy) : self
     {
-        $this->pipeline->add(new RenameEachTransformer($strategy));
+        $this->pipeline->add(new RenameEachEntryTransformer($strategy));
 
         return $this;
     }

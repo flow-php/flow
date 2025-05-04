@@ -4,56 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, ref, str_entry};
-use function Flow\ETL\DSL\{rename_replace, rename_style, rename_transliterate, row, rows};
-use Flow\ETL\{Function\StyleConverter\StringStyles,
-    Transformer\Rename\Style};
+use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, str_entry};
+use function Flow\ETL\DSL\{row, rows};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\{Transformer\RenameAllCaseTransformer};
+use PHPUnit\Framework\Attributes\{IgnoreDeprecations};
 
-final class RenameTest extends FlowIntegrationTestCase
+#[IgnoreDeprecations]
+final class RenameAllCaseTransformerTest extends FlowIntegrationTestCase
 {
-    public function test_rename() : void
-    {
-        $rows = df()
-            ->read(from_rows(
-                rows(row(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)), row(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)))
-            ))
-            ->rename('name', 'new_name')
-            ->fetch();
-
-        self::assertEquals(
-            rows(row(int_entry('id', 1), str_entry('new_name', 'foo'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('new_name', null), bool_entry('active', false)), row(int_entry('id', 2), str_entry('new_name', 'bar'), bool_entry('active', false))),
-            $rows
-        );
-    }
-
-    public function test_rename_all() : void
-    {
-        $rows = rows(row(json_entry('array', ['id' => 1, 'name' => 'name', 'active' => true])), row(json_entry('array', ['id' => 2, 'name' => 'name', 'active' => false])));
-
-        $ds = df()
-            ->read(from_rows($rows))
-            ->withEntry('row', ref('array')->unpack())
-            ->renameEach(rename_replace('row.', ''))
-            ->drop('array')
-            ->getEachAsArray();
-
-        self::assertEquals(
-            [
-                ['id' => 1, 'name' => 'name', 'active' => true],
-                ['id' => 2, 'name' => 'name', 'active' => false],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
     public function test_rename_all_lower_case() : void
     {
         $rows = rows(row(int_entry('ID', 1), str_entry('NAME', 'name'), bool_entry('ACTIVE', true)), row(int_entry('ID', 2), str_entry('NAME', 'name'), bool_entry('ACTIVE', false)));
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::LOWER))
+            ->transform(new RenameAllCaseTransformer(lower: true))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -71,7 +37,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::LOWER))
+            ->transform(new RenameAllCaseTransformer(lower: true))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -83,50 +49,13 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_rename_all_to_snake_case() : void
-    {
-        $rows = rows(row(int_entry('id', 1), str_entry('UserName', 'name'), bool_entry('isActive', true)), row(int_entry('id', 2), str_entry('UserName', 'name'), bool_entry('isActive', false)));
-
-        $ds = df()
-            ->read(from_rows($rows))
-            ->renameAllStyle(StringStyles::SNAKE)
-            ->renameEach(rename_style(Style::LOWER))
-            ->getEachAsArray();
-
-        self::assertEquals(
-            [
-                ['id' => 1, 'user_name' => 'name', 'is_active' => true],
-                ['id' => 2, 'user_name' => 'name', 'is_active' => false],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
-    public function test_rename_all_transliterate() : void
-    {
-        $rows = rows(row(int_entry('ÓSMY', 8)), row(int_entry('DZIEWIĄTY', 9)));
-
-        $ds = df()
-            ->read(from_rows($rows))
-            ->renameEach(rename_transliterate())
-            ->getEachAsArray();
-
-        self::assertEquals(
-            [
-                ['osmy' => 8],
-                ['dziewiaty' => 9],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
     public function test_rename_all_upper_case() : void
     {
         $rows = rows(row(int_entry('id', 1), str_entry('name', 'name'), bool_entry('active', true)), row(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)));
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UPPER))
+            ->transform(new RenameAllCaseTransformer(upper: true))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -144,7 +73,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UCFIRST))
+            ->transform(new RenameAllCaseTransformer(ucfirst: true))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -162,7 +91,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UCWORDS))
+            ->transform(new RenameAllCaseTransformer(ucwords: true))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -180,7 +109,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UCWORDS))
+            ->transform(new RenameAllCaseTransformer(ucwords: true))
             ->getEachAsArray();
 
         self::assertEquals(
