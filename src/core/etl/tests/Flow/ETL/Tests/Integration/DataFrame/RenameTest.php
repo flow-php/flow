@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, ref, str_entry};
-use function Flow\ETL\DSL\{rename_replace, rename_style, rename_transliterate, row, rows};
+use function Flow\ETL\DSL\{rename_replace, rename_style, row, rows};
 use Flow\ETL\{Function\StyleConverter\StringStyles,
     Transformer\Rename\Style};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -83,6 +83,60 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_rename_all_to_ascii() : void
+    {
+        $rows = rows(row(int_entry('ÓSMY', 8)), row(int_entry('DZIEWIĄTY', 9)));
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameEach(rename_style(Style::ASCII))
+            ->renameEach(rename_style(Style::LOWER))
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['osmy' => 8],
+                ['dziewiaty' => 9],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_to_camel() : void
+    {
+        $rows = rows(row(int_entry('ósmy i dziewiąty', 89)));
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameEach(rename_style(Style::CAMEL))
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['ósmyIDziewiąty' => 89],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_to_slug() : void
+    {
+        $rows = rows(row(int_entry('ÓSMY I DZIEWIĄTY', 89)));
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameEach(rename_style(Style::SLUG))
+            ->renameEach(rename_style(Style::LOWER))
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['osmy-i-dziewiaty' => 89],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
     public function test_rename_all_to_snake_case() : void
     {
         $rows = rows(row(int_entry('id', 1), str_entry('UserName', 'name'), bool_entry('isActive', true)), row(int_entry('id', 2), str_entry('UserName', 'name'), bool_entry('isActive', false)));
@@ -102,20 +156,18 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_rename_all_transliterate() : void
+    public function test_rename_all_to_title() : void
     {
-        $rows = rows(row(int_entry('ÓSMY', 8)), row(int_entry('DZIEWIĄTY', 9)));
+        $rows = rows(row(int_entry('ósmy i dziewiąty', 89)));
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_transliterate())
-            ->renameEach(rename_style(Style::LOWER))
+            ->renameEach(rename_style(Style::TITLE))
             ->getEachAsArray();
 
         self::assertEquals(
             [
-                ['osmy' => 8],
-                ['dziewiaty' => 9],
+                ['Ósmy i dziewiąty' => 89],
             ],
             \iterator_to_array($ds)
         );

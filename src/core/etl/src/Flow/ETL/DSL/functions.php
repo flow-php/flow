@@ -360,12 +360,6 @@ function rename_replace(string $search, string $replace) : Transformer\Rename\Re
     return new Transformer\Rename\RenameReplaceEntryStrategy($search, $replace);
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_transliterate() : Transformer\Rename\RenameTransliterateEntryStrategy
-{
-    return new Transformer\Rename\RenameTransliterateEntryStrategy();
-}
-
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function bool_entry(string $name, ?bool $value, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
 {
