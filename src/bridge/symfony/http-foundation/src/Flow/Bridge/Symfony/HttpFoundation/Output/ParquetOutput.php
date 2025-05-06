@@ -12,7 +12,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 
 if (!function_exists('Flow\ETL\Adapter\Parquet\to_parquet')) {
-    throw new \RuntimeException('Flow\ETL\Adapter\Parquet\to_parquet function is not available. Make sure that composer require flow-php/etl-adapter-json dependency is present in your composer.json.');
+    throw new \RuntimeException('Flow\ETL\Adapter\Parquet\to_parquet function is not available. Make sure that composer require flow-php/etl-adapter-parquet dependency is present in your composer.json.');
 }
 
 final readonly class ParquetOutput implements Output
