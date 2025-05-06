@@ -10,7 +10,7 @@ use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Loader;
 
 if (!function_exists('Flow\ETL\Adapter\CSV\to_csv')) {
-    throw new \RuntimeException('Flow\ETL\Adapter\CSV\to_csv function is not available. Make sure that composer require flow-php/etl-adapter-json dependency is present in your composer.json.');
+    throw new \RuntimeException('Flow\ETL\Adapter\CSV\to_csv function is not available. Make sure that composer require flow-php/etl-adapter-csv dependency is present in your composer.json.');
 }
 
 final readonly class CSVOutput implements Output
