@@ -13,7 +13,7 @@ data_frame()
         ['id' => 3, 'name' => 'Jane', 'joined_id' => 3, 'joined_status' => 'active'],
     ]))
     ->rename('id', 'user_id')
-    ->renameEach(rename_replace('joined.', ''))
+    ->renameEach(rename_replace('joined_', ''))
     ->collect()
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
