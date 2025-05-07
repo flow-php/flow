@@ -36,7 +36,6 @@ use Flow\ETL\{Analyze,
     Schema\SchemaFormatter,
     Transformation,
     Transformer,
-    Transformer\Rename\Style,
     Window,
     WithEntry};
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
@@ -349,7 +348,7 @@ function to_branch(ScalarFunction $condition, Loader $loader) : Loader\Branching
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_style(Style $style) : Transformer\Rename\RenameCaseEntryStrategy
+function rename_style(StringStyles $style) : Transformer\Rename\RenameCaseEntryStrategy
 {
     return new Transformer\Rename\RenameCaseEntryStrategy($style);
 }

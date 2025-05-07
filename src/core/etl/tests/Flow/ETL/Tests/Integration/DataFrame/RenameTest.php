@@ -6,8 +6,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, json_entry, ref, str_entry};
 use function Flow\ETL\DSL\{rename_replace, rename_style, row, rows};
-use Flow\ETL\{Function\StyleConverter\StringStyles,
-    Transformer\Rename\Style};
+use Flow\ETL\{Function\StyleConverter\StringStyles};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class RenameTest extends FlowIntegrationTestCase
@@ -53,7 +52,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::LOWER))
+            ->renameEach(rename_style(StringStyles::LOWER))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -71,7 +70,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::LOWER))
+            ->renameEach(rename_style(StringStyles::LOWER))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -112,7 +111,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::ASCII))
+            ->renameEach(rename_style(StringStyles::ASCII))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -130,7 +129,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::CAMEL))
+            ->renameEach(rename_style(StringStyles::CAMEL))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -147,8 +146,8 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::SLUG))
-            ->renameEach(rename_style(Style::LOWER))
+            ->renameEach(rename_style(StringStyles::SLUG))
+            ->renameEach(rename_style(StringStyles::LOWER))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -166,7 +165,7 @@ final class RenameTest extends FlowIntegrationTestCase
         $ds = df()
             ->read(from_rows($rows))
             ->renameAllStyle(StringStyles::SNAKE)
-            ->renameEach(rename_style(Style::LOWER))
+            ->renameEach(rename_style(StringStyles::LOWER))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -184,7 +183,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::TITLE))
+            ->renameEach(rename_style(StringStyles::TITLE))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -201,7 +200,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UPPER))
+            ->renameEach(rename_style(StringStyles::UPPER))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -219,7 +218,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UCFIRST))
+            ->renameEach(rename_style(StringStyles::UCFIRST))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -237,7 +236,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UCWORDS))
+            ->renameEach(rename_style(StringStyles::UCWORDS))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -255,7 +254,7 @@ final class RenameTest extends FlowIntegrationTestCase
 
         $ds = df()
             ->read(from_rows($rows))
-            ->renameEach(rename_style(Style::UCWORDS))
+            ->renameEach(rename_style(StringStyles::UCWORDS))
             ->getEachAsArray();
 
         self::assertEquals(
@@ -267,7 +266,7 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
-    public function test_rename_all_with_multiple() : void
+    public function test_rename_each_with_multiple_strategies() : void
     {
         $rows = rows(
             row(int_entry('ÓSMY', 8)),
@@ -278,8 +277,9 @@ final class RenameTest extends FlowIntegrationTestCase
         $ds = df()
             ->read(from_rows($rows))
             ->renameEach(
-                rename_style(Style::LOWER),
-                rename_style(Style::SLUG),
+                rename_style(StringStyles::ASCII),
+                rename_style(StringStyles::LOWER),
+                rename_style(StringStyles::KEBAB),
             )
             ->getEachAsArray();
 

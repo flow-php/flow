@@ -36,7 +36,6 @@ use Flow\ETL\Transformer\{
     DropEntriesTransformer,
     DropPartitionsTransformer,
     DuplicateRowTransformer,
-    EntryNameStyleConverterTransformer,
     JoinEachRowsTransformer,
     LimitTransformer,
     OrderEntriesTransformer,
@@ -47,7 +46,6 @@ use Flow\ETL\Transformer\{
     Rename\RenameCaseEntryStrategy,
     Rename\RenameEntryStrategy,
     Rename\RenameReplaceEntryStrategy,
-    Rename\Style,
     ScalarFunctionFilterTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
@@ -647,11 +645,11 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @deprecated use DataFrame::renameEach() with a selected Style
+     * @deprecated use DataFrame::renameEach() with a selected StringStyles
      */
     public function renameAllLowerCase() : self
     {
-        $this->renameEach(new RenameCaseEntryStrategy(Style::LOWER));
+        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::LOWER));
 
         return $this;
     }
@@ -660,10 +658,12 @@ final class DataFrame
      * @lazy
      * Rename all entries to a given style.
      * Please look into \Flow\ETL\Function\StyleConverter\StringStyles class for all available styles.
+     *
+     * @deprecated use DataFrame::renameEach() with a selected Style
      */
     public function renameAllStyle(StringStyles|string $style) : self
     {
-        $this->pipeline->add(new EntryNameStyleConverterTransformer(\is_string($style) ? StringStyles::fromString($style) : $style));
+        $this->renameEach(new RenameCaseEntryStrategy(\is_string($style) ? StringStyles::fromString($style) : $style));
 
         return $this;
     }
@@ -675,7 +675,7 @@ final class DataFrame
      */
     public function renameAllUpperCase() : self
     {
-        $this->renameEach(new RenameCaseEntryStrategy(Style::UPPER));
+        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::UPPER));
 
         return $this;
     }
@@ -687,7 +687,7 @@ final class DataFrame
      */
     public function renameAllUpperCaseFirst() : self
     {
-        $this->renameEach(new RenameCaseEntryStrategy(Style::UCFIRST));
+        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::UCFIRST));
 
         return $this;
     }
@@ -699,7 +699,7 @@ final class DataFrame
      */
     public function renameAllUpperCaseWord() : self
     {
-        $this->renameEach(new RenameCaseEntryStrategy(Style::UCWORDS));
+        $this->renameEach(new RenameCaseEntryStrategy(StringStyles::UCWORDS));
 
         return $this;
     }

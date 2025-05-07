@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext,
+    Function\StyleConverter\StringStyles,
     Row,
     Rows,
     Transformer,
-    Transformer\Rename\RenameCaseEntryStrategy,
-    Transformer\Rename\Style};
+    Transformer\Rename\RenameCaseEntryStrategy};
 
 /**
  * @deprecated Use `DataFrame::renameEach()` and `RenameCaseTransformer`
@@ -25,19 +25,19 @@ final class RenameAllCaseTransformer implements Transformer
         bool $ucwords = false,
     ) {
         if ($upper) {
-            $this->transformer = new RenameCaseEntryStrategy(Style::UPPER);
+            $this->transformer = new RenameCaseEntryStrategy(StringStyles::UPPER);
         }
 
         if ($lower) {
-            $this->transformer = new RenameCaseEntryStrategy(Style::LOWER);
+            $this->transformer = new RenameCaseEntryStrategy(StringStyles::LOWER);
         }
 
         if ($ucfirst) {
-            $this->transformer = new RenameCaseEntryStrategy(Style::UCFIRST);
+            $this->transformer = new RenameCaseEntryStrategy(StringStyles::UCFIRST);
         }
 
         if ($ucwords) {
-            $this->transformer = new RenameCaseEntryStrategy(Style::UCWORDS);
+            $this->transformer = new RenameCaseEntryStrategy(StringStyles::UCWORDS);
         }
     }
 
