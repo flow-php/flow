@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Formatter;
 
-use function Flow\ETL\DSL\{df, from_array, ref, to_output};
+use function Flow\ETL\DSL\{df, from_array, ref, rename_replace, to_output};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Type;
@@ -24,7 +24,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
             df()
                 ->read(from_array($schema->normalize()))
                 ->withEntry('type', ref('type')->unpack())
-                ->renameAll('type.', '')
+                ->renameEach(rename_replace('type.', ''))
                 ->rename('ref', 'name')
                 ->collect()
                 ->select('name', 'type', 'nullable', 'metadata')

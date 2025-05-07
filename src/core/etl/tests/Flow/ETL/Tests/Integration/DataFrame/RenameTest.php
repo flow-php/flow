@@ -83,6 +83,29 @@ final class RenameTest extends FlowIntegrationTestCase
         );
     }
 
+    public function test_rename_all_multiple() : void
+    {
+        $rows = rows(
+            row(json_entry('array', ['id' => 1, 'name' => 'name', 'isActive' => true])),
+            row(json_entry('array', ['id' => 2, 'name' => 'name', 'isActive' => false])),
+        );
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->withEntry('row', ref('array')->unpack())
+            ->renameEach(rename_replace(['row.', 'isActive'], ['', 'active']))
+            ->drop('array')
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'name', 'active' => true],
+                ['id' => 2, 'name' => 'name', 'active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
     public function test_rename_all_to_ascii() : void
     {
         $rows = rows(row(int_entry('ÓSMY', 8)), row(int_entry('DZIEWIĄTY', 9)));

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
-use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, to_memory};
+use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, rename_replace, to_memory};
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Cache\Implementation\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;
@@ -55,7 +55,7 @@ final class Github
                 ->select('unpacked')
                 ->withEntry('data', ref('unpacked')->expand())
                 ->withEntry('data', ref('data')->unpack())
-                ->renameAll('data.', '')
+                ->renameEach(rename_replace('data.', ''))
                 ->drop('unpacked', 'data')
                 ->filter(not(ref('login')->endsWith(lit('[bot]'))))
                 ->filter(not(ref('login')->equals(lit('aeon-automation'))))

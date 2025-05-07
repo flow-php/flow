@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{config_builder, data_frame, filesystem_cache, from_cache, ref, to_stream};
+use function Flow\ETL\DSL\{config_builder, data_frame, filesystem_cache, from_cache, ref, rename_replace, to_stream};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;
@@ -41,7 +41,7 @@ data_frame(config_builder()->cache(filesystem_cache(__DIR__ . '/output/cache')))
     ->withEntry('unpacked', ref('response_body')->jsonDecode())
     ->select('unpacked')
     ->withEntry('unpacked', ref('unpacked')->unpack())
-    ->renameAll('unpacked.', '')
+    ->renameEach(rename_replace('unpacked.', ''))
     ->drop('unpacked')
     ->select('name', 'html_url', 'blog', 'login', 'public_repos', 'followers', 'created_at')
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))

@@ -8,9 +8,13 @@ use Flow\ETL\{FlowContext, Row, Row\Entry};
 
 final readonly class RenameReplaceEntryStrategy implements RenameEntryStrategy
 {
+    /**
+     * @param array<string>|string $search
+     * @param array<string>|string $replace
+     */
     public function __construct(
-        private string $search,
-        private string $replace,
+        private string|array $search,
+        private string|array $replace,
     ) {
     }
 

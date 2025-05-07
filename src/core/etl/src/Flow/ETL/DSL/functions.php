@@ -354,8 +354,12 @@ function rename_style(Style $style) : Transformer\Rename\RenameCaseEntryStrategy
     return new Transformer\Rename\RenameCaseEntryStrategy($style);
 }
 
+/**
+ * @param array<string>|string $search
+ * @param array<string>|string $replace
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_replace(string $search, string $replace) : Transformer\Rename\RenameReplaceEntryStrategy
+function rename_replace(string|array $search, string|array $replace) : Transformer\Rename\RenameReplaceEntryStrategy
 {
     return new Transformer\Rename\RenameReplaceEntryStrategy($search, $replace);
 }

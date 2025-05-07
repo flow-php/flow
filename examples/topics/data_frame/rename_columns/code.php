@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_stream};
+use function Flow\ETL\DSL\{data_frame, from_array, rename_replace, to_stream};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -13,7 +13,7 @@ data_frame()
         ['id' => 3, 'name' => 'Jane', 'joined_id' => 3, 'joined_status' => 'active'],
     ]))
     ->rename('id', 'user_id')
-    ->renameAll('joined_', '')
+    ->renameEach(rename_replace('joined.', ''))
     ->collect()
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

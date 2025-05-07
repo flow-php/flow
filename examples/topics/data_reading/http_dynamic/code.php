@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, ref, to_stream};
+use function Flow\ETL\DSL\{data_frame, ref, rename_replace, to_stream};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;
@@ -34,7 +34,7 @@ data_frame()
     ->read($from_github_api)
     ->withEntry('unpacked', ref('response_body')->jsonDecode())
     ->withEntry('unpacked', ref('unpacked')->unpack())
-    ->renameAll('unpacked.', '')
+    ->renameEach(rename_replace('unpacked.', ''))
     ->drop('unpacked')
     ->select('name', 'html_url', 'blog', 'login', 'public_repos', 'followers', 'created_at')
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{from_array, ref, to_memory};
+use function Flow\ETL\DSL\{from_array, ref, rename_replace, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -23,7 +23,7 @@ final class ArrayUnpackTest extends FlowTestCase
                 )
             )
             ->withEntry('array', ref('array')->unpack())
-            ->renameAll('array.', '')
+            ->renameEach(rename_replace('array.', ''))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
