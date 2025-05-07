@@ -704,9 +704,11 @@ final class DataFrame
         return $this;
     }
 
-    public function renameEach(RenameEntryStrategy $strategy) : self
+    public function renameEach(RenameEntryStrategy ...$strategies) : self
     {
-        $this->pipeline->add(new RenameEachEntryTransformer($strategy));
+        foreach ($strategies as $strategy) {
+            $this->pipeline->add(new RenameEachEntryTransformer($strategy));
+        }
 
         return $this;
     }

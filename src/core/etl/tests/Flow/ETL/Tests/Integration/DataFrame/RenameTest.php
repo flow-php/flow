@@ -113,13 +113,12 @@ final class RenameTest extends FlowIntegrationTestCase
         $ds = df()
             ->read(from_rows($rows))
             ->renameEach(rename_style(Style::ASCII))
-            ->renameEach(rename_style(Style::LOWER))
             ->getEachAsArray();
 
         self::assertEquals(
             [
-                ['osmy' => 8],
-                ['dziewiaty' => 9],
+                ['OSMY' => 8],
+                ['DZIEWIATY' => 9],
             ],
             \iterator_to_array($ds)
         );
@@ -263,6 +262,32 @@ final class RenameTest extends FlowIntegrationTestCase
             [
                 ['Ósmy' => 8],
                 ['Dziewiąty' => 9],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_with_multiple() : void
+    {
+        $rows = rows(
+            row(int_entry('ÓSMY', 8)),
+            row(int_entry('DZIEWIĄTY', 9)),
+            row(int_entry('ÓSMY I DZIEWIĄTY', 89)),
+        );
+
+        $ds = df()
+            ->read(from_rows($rows))
+            ->renameEach(
+                rename_style(Style::LOWER),
+                rename_style(Style::SLUG),
+            )
+            ->getEachAsArray();
+
+        self::assertEquals(
+            [
+                ['osmy' => 8],
+                ['dziewiaty' => 9],
+                ['osmy-i-dziewiaty' => 89],
             ],
             \iterator_to_array($ds)
         );
