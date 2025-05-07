@@ -7,6 +7,66 @@
     "content-hash": "de82aef9cd77300940b0a463ba2e2c0f",
     "packages": [
         {
+            "name": "brick/math",
+            "version": "0.13.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/brick/math.git",
+                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/brick/math/zipball/fc7ed316430118cc7836bf45faff18d5dfc8de04",
+                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^2.2",
+                "phpunit/phpunit": "^10.1",
+                "vimeo/psalm": "6.8.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Brick\\Math\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Arbitrary-precision arithmetic library",
+            "keywords": [
+                "Arbitrary-precision",
+                "BigInteger",
+                "BigRational",
+                "arithmetic",
+                "bigdecimal",
+                "bignum",
+                "bignumber",
+                "brick",
+                "decimal",
+                "integer",
+                "math",
+                "mathematics",
+                "rational"
+            ],
+            "support": {
+                "issues": "https://github.com/brick/math/issues",
+                "source": "https://github.com/brick/math/tree/0.13.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/BenMorel",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-03-29T13:50:30+00:00"
+        },
+        {
             "name": "clue/stream-filter",
             "version": "v1.7.0",
             "source": {
@@ -371,7 +431,7 @@
         },
         {
             "name": "flow-php/array-dot",
-            "version": "0.12.0",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
@@ -413,7 +473,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/0.12.0"
+                "source": "https://github.com/flow-php/array-dot/tree/0.15.1"
             },
             "funding": [
                 {
@@ -433,19 +493,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "6f981566dc4c58cba5aa9bbeb2f39cc81e7c9a95"
+                "reference": "c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/6f981566dc4c58cba5aa9bbeb2f39cc81e7c9a95",
-                "reference": "6f981566dc4c58cba5aa9bbeb2f39cc81e7c9a95",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa",
+                "reference": "c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa",
                 "shasum": ""
             },
             "require": {
+                "brick/math": "^0.11 || ^0.12 || ^0.13",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "flow-php/array-dot": "^0.12.0 || 1.x-dev",
-                "flow-php/filesystem": "^0.12.0 || 1.x-dev",
+                "flow-php/array-dot": "^0.15.0 || 1.x-dev",
+                "flow-php/filesystem": "^0.15.0 || 1.x-dev",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/clock": "^1.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
@@ -455,6 +516,9 @@
             "require-dev": {
                 "ramsey/uuid": "^4.5",
                 "symfony/uid": "^6.3 || ^7.0"
+            },
+            "suggest": {
+                "ext-bcmath": "BCMath extension for PHP for more precise calculations"
             },
             "default-branch": true,
             "type": "library",
@@ -493,7 +557,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-29T20:51:57+00:00"
+            "time": "2025-05-04T19:16:47+00:00"
         },
         {
             "name": "flow-php/etl-adapter-http",
@@ -558,16 +622,16 @@
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.12.0",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
-                "reference": "ce5177cf24b9c63e6cec53ddf66bc2a73c21ca0f"
+                "reference": "edb3f60d002edff5b3914f676b21de32271c487b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/ce5177cf24b9c63e6cec53ddf66bc2a73c21ca0f",
-                "reference": "ce5177cf24b9c63e6cec53ddf66bc2a73c21ca0f",
+                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/edb3f60d002edff5b3914f676b21de32271c487b",
+                "reference": "edb3f60d002edff5b3914f676b21de32271c487b",
                 "shasum": ""
             },
             "require": {
@@ -603,7 +667,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.12.0"
+                "source": "https://github.com/flow-php/filesystem/tree/0.15.1"
             },
             "funding": [
                 {
@@ -615,7 +679,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-25T12:59:19+00:00"
+            "time": "2025-04-28T19:24:46+00:00"
         },
         {
             "name": "league/commonmark",
@@ -6407,6 +6471,6 @@
     "platform": {
         "php": "8.2.*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }
