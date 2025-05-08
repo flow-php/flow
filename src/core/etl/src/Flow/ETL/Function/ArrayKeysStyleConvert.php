@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Function\StyleConverter\StringStyles;
+use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
 use Flow\ETL\Row;
+use Flow\ETL\String\StringStyles;
 
 final class ArrayKeysStyleConvert extends ScalarFunctionChain
 {
+    private StringStyles $style;
+
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly StringStyles $style,
+        OldStringStyles|StringStyles $style,
     ) {
+        if ($style instanceof OldStringStyles) {
+            $this->style = StringStyles::fromString($style->value);
+        } else {
+            $this->style = $style;
+        }
     }
 
     public function eval(Row $row) : mixed

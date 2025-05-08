@@ -4,13 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Rename;
 
-use Flow\ETL\{FlowContext, Function\StyleConverter\StringStyles, Row, Row\Entry};
+use Flow\ETL\{FlowContext,
+    Function\StyleConverter\StringStyles as OldStringStyles,
+    Row,
+    Row\Entry,
+    String\StringStyles};
 
-final readonly class RenameCaseEntryStrategy implements RenameEntryStrategy
+final class RenameCaseEntryStrategy implements RenameEntryStrategy
 {
+    private StringStyles $style;
+
     public function __construct(
-        private StringStyles $style,
+        OldStringStyles|StringStyles $style,
     ) {
+        if ($style instanceof OldStringStyles) {
+            $this->style = StringStyles::fromString($style->value);
+        } else {
+            $this->style = $style;
+        }
     }
 
     public function rename(Row $row, Entry $entry, FlowContext $context) : Row

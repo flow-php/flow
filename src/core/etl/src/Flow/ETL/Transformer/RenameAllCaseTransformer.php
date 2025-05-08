@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\{FlowContext,
-    Function\StyleConverter\StringStyles,
-    Row,
-    Rows,
-    Transformer,
-    Transformer\Rename\RenameCaseEntryStrategy};
+use Flow\ETL\{FlowContext, Row, Rows, String\StringStyles, Transformer, Transformer\Rename\RenameCaseEntryStrategy};
 
 /**
  * @deprecated Use `DataFrame::renameEach()` and `RenameCaseTransformer`

@@ -6,11 +6,77 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{ref, str_entry};
 use function Flow\ETL\DSL\row;
-use Flow\ETL\Function\StyleConverter\StringStyles;
+use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
+use Flow\ETL\String\StringStyles;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\{DataProvider, IgnoreDeprecations};
 
+#[IgnoreDeprecations]
 final class StringStyleTest extends FlowTestCase
 {
+    public static function provideStringStyles() : iterable
+    {
+        yield 'null new' => [
+            StringStyles::LOWER,
+            null,
+            null,
+        ];
+
+        yield 'null old' => [
+            OldStringStyles::LOWER,
+            null,
+            null,
+        ];
+
+        yield 'camel new' => [
+            StringStyles::CAMEL,
+            'Foo: Bar-baz.',
+            'fooBarBaz',
+        ];
+
+        yield 'camel old' => [
+            OldStringStyles::CAMEL,
+            'Foo: Bar-baz.',
+            'fooBarBaz',
+        ];
+
+        yield 'snake new' => [
+            StringStyles::SNAKE,
+            'Foo: Bar-baz.',
+            'foo_bar_baz',
+        ];
+
+        yield 'snake old' => [
+            OldStringStyles::SNAKE,
+            'Foo: Bar-baz.',
+            'foo_bar_baz',
+        ];
+
+        yield 'title new' => [
+            StringStyles::TITLE,
+            'foo ijssel',
+            'Foo ijssel',
+        ];
+
+        yield 'title old' => [
+            OldStringStyles::TITLE,
+            'foo ijssel',
+            'Foo ijssel',
+        ];
+
+        yield 'upper new' => [
+            StringStyles::UPPER,
+            'foo ijssel',
+            'FOO IJSSEL',
+        ];
+
+        yield 'upper old' => [
+            OldStringStyles::UPPER,
+            'foo ijssel',
+            'FOO IJSSEL',
+        ];
+    }
+
     public function test_string_style_camel() : void
     {
         self::assertSame(
@@ -44,43 +110,18 @@ final class StringStyleTest extends FlowTestCase
         );
     }
 
-    public function test_string_style_returns_null() : void
-    {
-        self::assertNull(
-            ref('str')->stringStyle(StringStyles::LOWER)->eval(
+    #[DataProvider('provideStringStyles')]
+    public function test_string_styles(
+        OldStringStyles|StringStyles $style,
+        ?string $value,
+        ?string $expected,
+    ) : void {
+        self::assertSame(
+            $expected,
+            ref('str')->stringStyle($style)->eval(
                 row(
-                    str_entry('str', null),
+                    str_entry('str', $value),
                 )
-            )
-        );
-    }
-
-    public function test_string_style_snake() : void
-    {
-        self::assertSame(
-            'foo_bar_baz',
-            ref('str')->stringStyle(StringStyles::SNAKE)->eval(
-                row(str_entry('str', 'Foo: Bar-baz.'))
-            )
-        );
-    }
-
-    public function test_string_style_title() : void
-    {
-        self::assertSame(
-            'Foo ijssel',
-            ref('str')->stringStyle(StringStyles::TITLE)->eval(
-                row(str_entry('str', 'foo ijssel'))
-            )
-        );
-    }
-
-    public function test_string_style_upper() : void
-    {
-        self::assertSame(
-            'FOO BAR BΆZ',
-            ref('str')->stringStyle(StringStyles::UPPER)->eval(
-                row(str_entry('str', 'foo BAR bάz'))
             )
         );
     }

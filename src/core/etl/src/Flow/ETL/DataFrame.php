@@ -11,7 +11,10 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Function\{AggregatingFunction, ScalarFunction, StyleConverter\StringStyles, WindowFunction};
+use Flow\ETL\Function\{AggregatingFunction,
+    ScalarFunction,
+    StyleConverter\StringStyles as OldStringStyles,
+    WindowFunction};
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
@@ -28,6 +31,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Formatter\ASCIISchemaFormatter, Reference, References};
 use Flow\ETL\Schema\Definition;
+use Flow\ETL\String\StringStyles;
 use Flow\ETL\Transformer\{
     AutoCastTransformer,
     CallbackRowTransformer,
@@ -661,8 +665,12 @@ final class DataFrame
      *
      * @deprecated use DataFrame::renameEach() with a selected Style
      */
-    public function renameAllStyle(StringStyles|string $style) : self
+    public function renameAllStyle(OldStringStyles|StringStyles|string $style) : self
     {
+        if ($style instanceof OldStringStyles) {
+            $style = StringStyles::fromString($style->value);
+        }
+
         $this->renameEach(new RenameCaseEntryStrategy(\is_string($style) ? StringStyles::fromString($style) : $style));
 
         return $this;
