@@ -8,8 +8,10 @@ use function Flow\ETL\DSL\{chunks_from, from_pipeline};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
-final readonly class BatchingPipeline implements Pipeline
+final readonly class BatchingPipeline implements OverridingPipeline, Pipeline
 {
+    use RecursivePipelineIterator;
+
     /**
      * @param Pipeline $pipeline
      * @param int<1, max> $size
@@ -33,6 +35,11 @@ final readonly class BatchingPipeline implements Pipeline
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
+    }
+
+    public function pipelines() : array
+    {
+        return $this->allPipelines($this->pipeline);
     }
 
     public function pipes() : Pipes

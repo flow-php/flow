@@ -11,8 +11,10 @@ use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Row\References;
 use Flow\ETL\Sort\{ExternalSort, MemorySort};
 
-final readonly class SortingPipeline implements Pipeline
+final readonly class SortingPipeline implements OverridingPipeline, Pipeline
 {
+    use RecursivePipelineIterator;
+
     public function __construct(private Pipeline $pipeline, private References $refs)
     {
     }
@@ -27,6 +29,11 @@ final readonly class SortingPipeline implements Pipeline
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
+    }
+
+    public function pipelines() : array
+    {
+        return $this->allPipelines($this->pipeline);
     }
 
     public function pipes() : Pipes

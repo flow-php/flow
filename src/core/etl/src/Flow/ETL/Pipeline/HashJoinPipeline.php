@@ -12,8 +12,10 @@ use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Pipeline\HashJoin\HashTable;
 use Flow\ETL\Row\Entry;
 
-final readonly class HashJoinPipeline implements Pipeline
+final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
 {
+    use RecursivePipelineIterator;
+
     private Extractor $extractor;
 
     public function __construct(
@@ -36,6 +38,11 @@ final readonly class HashJoinPipeline implements Pipeline
     public function has(string $transformerClass) : bool
     {
         return $this->left->has($transformerClass);
+    }
+
+    public function pipelines() : array
+    {
+        return $this->allPipelines($this->left);
     }
 
     public function pipes() : Pipes

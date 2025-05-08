@@ -10,7 +10,18 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, UuidEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry,
+    DateTimeEntry,
+    EnumEntry,
+    FloatEntry,
+    IntegerEntry,
+    JsonEntry,
+    ListEntry,
+    MapEntry,
+    StringEntry,
+    StructureEntry,
+    UuidEntry,
+    XMLEntry};
 
 final readonly class EntryNormalizer
 {
@@ -50,6 +61,7 @@ final readonly class EntryNormalizer
             EnumEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             JsonEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             UuidEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
+            XMLEntry::class => XMLNode::flatNode($entry->name(), $entry->toString()),
             default => throw new InvalidArgumentException("Given entry type can't be converted to node, given entry type: " . $entry::class),
         };
     }

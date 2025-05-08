@@ -7,8 +7,10 @@ namespace Flow\ETL\Pipeline;
 use Flow\ETL\{Constraint, Extractor, FlowContext, Loader, Pipeline, Transformer};
 use Flow\ETL\Exception\{ConstraintViolationException, InvalidArgumentException};
 
-final class ConstrainedPipeline implements Pipeline
+final class ConstrainedPipeline implements OverridingPipeline, Pipeline
 {
+    use RecursivePipelineIterator;
+
     private int $rowIndex = 0;
 
     /**
@@ -36,6 +38,14 @@ final class ConstrainedPipeline implements Pipeline
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
+    }
+
+    /**
+     * @return array<Pipeline>
+     */
+    public function pipelines() : array
+    {
+        return $this->allPipelines($this->pipeline);
     }
 
     public function pipes() : Pipes

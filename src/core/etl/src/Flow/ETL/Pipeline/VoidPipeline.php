@@ -6,8 +6,10 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
-final readonly class VoidPipeline implements Pipeline
+final readonly class VoidPipeline implements OverridingPipeline, Pipeline
 {
+    use RecursivePipelineIterator;
+
     public function __construct(private Pipeline $pipeline)
     {
     }
@@ -20,6 +22,11 @@ final readonly class VoidPipeline implements Pipeline
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
+    }
+
+    public function pipelines() : array
+    {
+        return $this->allPipelines($this->pipeline);
     }
 
     public function pipes() : Pipes

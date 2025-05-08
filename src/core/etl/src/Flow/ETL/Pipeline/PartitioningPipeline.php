@@ -18,7 +18,7 @@ use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\Row\Reference;
 use Flow\Filesystem\Partition;
 
-final readonly class PartitioningPipeline implements Pipeline
+final readonly class PartitioningPipeline implements OverridingPipeline, Pipeline
 {
     private Algorithm $hashAlgorithm;
 
@@ -50,6 +50,30 @@ final readonly class PartitioningPipeline implements Pipeline
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
+    }
+
+    /**
+     * @return array<Pipeline>
+     */
+    public function pipelines() : array
+    {
+        $pipelines = [];
+
+        $recursivelyAddPipelines = function (Pipeline $pipeline, array &$pipelines) use (&$recursivelyAddPipelines) : void {
+            if ($pipeline instanceof OverridingPipeline) {
+                $pipelines[] = $pipeline;
+
+                foreach ($pipeline->pipelines() as $p) {
+                    $recursivelyAddPipelines($p, $pipelines);
+                }
+            } else {
+                $pipelines[] = $pipeline;
+            }
+        };
+
+        $pipelines[] = $this->pipeline;
+
+        return $pipelines;
     }
 
     public function pipes() : Pipes

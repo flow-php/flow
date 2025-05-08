@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use function Flow\ETL\DSL\{bool_entry, int_entry, lit};
-use function Flow\ETL\DSL\{config, flow_context, from_rows, row, rows};
-use Flow\ETL\Pipeline\{LinkedPipeline, SynchronousPipeline};
-use Flow\ETL\{Tests\FlowTestCase};
+use function Flow\ETL\DSL\{config, flow_context, from_rows, ref, row, rows};
+use Flow\ETL\Pipeline\{BatchingPipeline, LinkedPipeline, PartitioningPipeline, SynchronousPipeline};
+use Flow\ETL\{Pipeline, Tests\FlowTestCase};
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 
 final class LinkedPipelineTest extends FlowTestCase
@@ -23,6 +23,34 @@ final class LinkedPipelineTest extends FlowTestCase
                 rows(row(int_entry('id', 1), bool_entry('active', true)), row(int_entry('id', 2), bool_entry('active', true))),
             ],
             \iterator_to_array($pipeline->process(flow_context(config())))
+        );
+    }
+
+    public function test_list_of_all_pipelines_linked_by_linked_pipeline() : void
+    {
+        $pipeline = new LinkedPipeline(
+            new PartitioningPipeline(
+                new LinkedPipeline(new BatchingPipeline(new SynchronousPipeline(), 100)),
+                [ref('id')]
+            )
+        );
+
+        $pipelines = \array_map(
+            fn (Pipeline $pipeline) => $pipeline::class,
+            $pipeline->pipelines()
+        );
+
+        self::assertEquals(
+            [
+                PartitioningPipeline::class,
+                LinkedPipeline::class,
+                BatchingPipeline::class,
+                SynchronousPipeline::class,
+                SynchronousPipeline::class,
+                SynchronousPipeline::class,
+                SynchronousPipeline::class,
+            ],
+            $pipelines
         );
     }
 }

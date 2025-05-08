@@ -16,6 +16,8 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
  */
 final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
 {
+    use RecursivePipelineIterator;
+
     private Pipeline $nextPipeline;
 
     public function __construct(
@@ -41,18 +43,7 @@ final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
      */
     public function pipelines() : array
     {
-        $pipelines = [];
-
-        if ($this->pipeline instanceof OverridingPipeline) {
-            $pipelines = $this->pipeline->pipelines();
-        }
-
-        $pipelines[] = $this->pipeline;
-
-        //        if ($this->nextPipeline instanceof OverridingPipeline) {
-        //            $pipelines = \array_merge($pipelines, $this->nextPipeline->pipelines());
-        //        }
-
+        $pipelines = $this->allPipelines($this->pipeline);
         $pipelines[] = $this->nextPipeline;
 
         return $pipelines;
