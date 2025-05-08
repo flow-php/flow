@@ -49,6 +49,78 @@ SCHEMA,
         );
     }
 
+    public function test_format_nested_schema_as_table() : void
+    {
+        $schema = schema(integer_schema('integer', true), integer_schema('float'), structure_schema('user', type_structure([
+            'name' => type_string(true),
+            'age' => type_int(),
+            'address' => type_structure([
+                'street' => type_string(true),
+                'city' => type_string(true),
+                'country' => type_string(true),
+            ]),
+        ])), string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), xml_element_schema('xml_element'), json_schema('json'), uuid_schema('uuid'), datetime_schema('datetime'));
+
+        self::assertSame(
+            <<<'SCHEMA'
++-------------+-------------+----------+----------+
+|        name |        type | nullable | metadata |
++-------------+-------------+----------+----------+
+|     integer |     integer |     true |       [] |
+|       float |     integer |    false |       [] |
+|        user |   structure |    false |       [] |
+|        name |      string |     true |       [] |
+|        tags |        list |    false |       [] |
+|      active |     boolean |    false |       [] |
+|         xml |         xml |    false |       [] |
+| xml_element | xml_element |    false |       [] |
+|        json |        json |    false |       [] |
+|        uuid |        uuid |    false |       [] |
+|    datetime |    datetime |    false |       [] |
++-------------+-------------+----------+----------+
+11 rows
+
+SCHEMA,
+            (new ASCIISchemaFormatter(true, true))->format($schema)
+        );
+    }
+
+    public function test_format_nested_schema_as_table_without_metadata() : void
+    {
+        $schema = schema(integer_schema('integer', true), integer_schema('float'), structure_schema('user', type_structure([
+            'name' => type_string(true),
+            'age' => type_int(),
+            'address' => type_structure([
+                'street' => type_string(true),
+                'city' => type_string(true),
+                'country' => type_string(true),
+            ]),
+        ])), string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), xml_element_schema('xml_element'), json_schema('json'), uuid_schema('uuid'), datetime_schema('datetime'));
+
+        self::assertSame(
+            <<<'SCHEMA'
++-------------+-------------+----------+
+|        name |        type | nullable |
++-------------+-------------+----------+
+|     integer |     integer |     true |
+|       float |     integer |    false |
+|        user |   structure |    false |
+|        name |      string |     true |
+|        tags |        list |    false |
+|      active |     boolean |    false |
+|         xml |         xml |    false |
+| xml_element | xml_element |    false |
+|        json |        json |    false |
+|        uuid |        uuid |    false |
+|    datetime |    datetime |    false |
++-------------+-------------+----------+
+11 rows
+
+SCHEMA,
+            (new ASCIISchemaFormatter(true, false))->format($schema)
+        );
+    }
+
     public function test_format_schema() : void
     {
         $schema = schema(string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), map_schema('map', type_map(type_string(), type_string())), list_schema('list', type_list(type_map(type_string(), type_integer()))));

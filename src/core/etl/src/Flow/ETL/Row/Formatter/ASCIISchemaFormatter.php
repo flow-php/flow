@@ -13,7 +13,7 @@ use Flow\ETL\Schema\SchemaFormatter;
 
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {
-    public function __construct(private bool $asTable = false)
+    public function __construct(private bool $asTable = false, private bool $withMetadata = true)
     {
     }
 
@@ -21,14 +21,19 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
     {
         if ($this->asTable) {
             ob_start();
-            df()
+            $df = df()
                 ->read(from_array($schema->normalize()))
                 ->withEntry('type', ref('type')->unpack())
                 ->renameEach(rename_replace('type.', ''))
                 ->rename('ref', 'name')
                 ->collect()
-                ->select('name', 'type', 'nullable', 'metadata')
-                ->write(to_output())
+                ->select('name', 'type', 'nullable', 'metadata');
+
+            if (!$this->withMetadata) {
+                $df->drop('metadata');
+            }
+
+            $df->write(to_output(false))
                 ->run();
 
             $content = ob_get_clean();
