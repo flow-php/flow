@@ -117,7 +117,7 @@ SCHEMA,
 11 rows
 
 SCHEMA,
-            (new ASCIISchemaFormatter(true))->format($schema)
+            (new ASCIISchemaFormatter(true, false))->format($schema)
         );
     }
 
