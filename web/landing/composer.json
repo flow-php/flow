@@ -88,7 +88,6 @@
             "rm -rf public/assets",
             "rm -rf build",
             "APP_ENV=prod bin/console cache:clear",
-            "APP_ENV=prod bin/console flow:cache:refresh",
             "APP_ENV=prod bin/console importmap:install",
             "APP_ENV=prod bin/console tailwind:build --minify",
             "APP_ENV=prod bin/console asset-map:compile",
