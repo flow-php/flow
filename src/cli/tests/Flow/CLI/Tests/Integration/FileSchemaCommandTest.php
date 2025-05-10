@@ -234,6 +234,34 @@ OUTPUT,
         );
     }
 
+    public function test_run_schema_with_table_output_on_excel() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xlsx', '--output-table' => true]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertEquals(
+            <<<'OUTPUT'
++------------+--------+----------+----------+
+|       name |   type | nullable | metadata |
++------------+--------+----------+----------+
+|   order_id |   uuid |    false |       [] |
+| created_at | string |    false |       [] |
+| updated_at | string |    false |       [] |
+|   discount | string |     true |       [] |
+|    address |   json |    false |       [] |
+|      notes |   json |    false |       [] |
+|      items |   json |    false |       [] |
++------------+--------+----------+----------+
+7 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
     public function test_run_schema_with_table_output_on_json() : void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));

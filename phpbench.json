@@ -17,6 +17,7 @@
   },
   "runner.path": [
     "src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Benchmark/",
+    "src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Benchmark/",
     "src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Benchmark/",
     "src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Benchmark/",
     "src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Benchmark/",

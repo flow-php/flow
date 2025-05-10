@@ -26,6 +26,7 @@ parameters:
         - src/adapter/etl-adapter-csv/src
         - src/adapter/etl-adapter-doctrine/src
         - src/adapter/etl-adapter-elasticsearch/src
+        - src/adapter/etl-adapter-excel/src
         - src/adapter/etl-adapter-google-sheet/src
         - src/adapter/etl-adapter-http/src
         - src/adapter/etl-adapter-json/src
@@ -54,6 +55,7 @@ parameters:
         - src/adapter/etl-adapter-chartjs/tests
         - src/adapter/etl-adapter-csv/tests
         - src/adapter/etl-adapter-doctrine/tests
+        - src/adapter/etl-adapter-excel/tests
         - src/adapter/etl-adapter-google-sheet/tests
         - src/adapter/etl-adapter-http/tests
         - src/adapter/etl-adapter-json/tests
@@ -74,6 +76,7 @@ parameters:
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php
+        - src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/Sheet/SheetsManager.php
         - src/lib/parquet/src/Flow/Parquet/ThriftStream/*
         - src/lib/parquet/src/Flow/Parquet/Thrift/*
         - src/lib/parquet/src/Flow/Parquet/BinaryReader/*
@@ -92,5 +95,6 @@ parameters:
             function: 'ddj()'
         -
             function: 'dj()'
+
 includes:
     - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon

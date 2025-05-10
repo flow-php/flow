@@ -223,6 +223,9 @@ jobs:
       - name: "Test - Adapter - Elasticsearch"
         run: "composer test:adapter:elasticsearch"
 
+      - name: "Test - Adapter - Excel"
+        run: "composer test:adapter:excel"
+
       - name: "Test - Adapter - Google Sheet"
         run: "composer test:adapter:google-sheet"
 

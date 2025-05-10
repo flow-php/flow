@@ -1,0 +1,14 @@
++----+---------+-------------------+
+| id |    name |             email |
++----+---------+-------------------+
+|  1 | user-01 | user-01@email.com |
+|  2 | user-02 | user-02@email.com |
+|  3 | user-03 | user-01@email.com |
+|  4 | user-04 | user-02@email.com |
+|  5 | user-05 | user-01@email.com |
+|  6 | user-06 | user-02@email.com |
+|  7 | user-07 | user-01@email.com |
+|  8 | user-08 | user-02@email.com |
+|  9 | user-09 | user-01@email.com |
++----+---------+-------------------+
+9 rows

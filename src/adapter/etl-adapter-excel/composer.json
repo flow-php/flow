@@ -1,0 +1,41 @@
+{
+    "name": "flow-php/etl-adapter-excel",
+    "type": "library",
+    "description": "PHP ETL - Adapter - Excel",
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "text",
+        "excel",
+        "adapter"
+    ],
+    "require": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+        "flow-php/etl": "^0.16.0 || 1.x-dev",
+        "openspout/openspout": "^4.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Excel/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

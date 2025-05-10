@@ -21,6 +21,17 @@ final class FileRowsCountCommandTest extends TestCase
         self::assertSame('43', $tester->getDisplay());
     }
 
+    public function test_count_rows_excel() : void
+    {
+        $tester = new CommandTester(new FileRowsCountCommand('count'));
+
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xlsx']);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertSame('43', $tester->getDisplay());
+    }
+
     public function test_count_rows_json() : void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));

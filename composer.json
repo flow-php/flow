@@ -30,6 +30,7 @@
         "halaxa/json-machine": "^1.1",
         "meilisearch/meilisearch-php": "^1.11",
         "monolog/monolog": "^2.0||^3.0",
+        "openspout/openspout": "^4.0",
         "packaged/thrift": "^0.15.0",
         "php-http/discovery": "^1.0",
         "psr/clock": "^1.0",
@@ -70,6 +71,7 @@
         "flow-php/etl-adapter-csv": "self.version",
         "flow-php/etl-adapter-doctrine": "self.version",
         "flow-php/etl-adapter-elasticsearch": "self.version",
+        "flow-php/etl-adapter-excel": "self.version",
         "flow-php/etl-adapter-filesystem": "self.version",
         "flow-php/etl-adapter-google-sheet": "self.version",
         "flow-php/etl-adapter-http": "self.version",
@@ -101,6 +103,7 @@
                 "src/adapter/etl-adapter-csv/src/Flow",
                 "src/adapter/etl-adapter-doctrine/src/Flow",
                 "src/adapter/etl-adapter-elasticsearch/src/Flow",
+                "src/adapter/etl-adapter-excel/src/Flow",
                 "src/adapter/etl-adapter-google-sheet/src/Flow",
                 "src/adapter/etl-adapter-http/src/Flow",
                 "src/adapter/etl-adapter-json/src/Flow",
@@ -139,6 +142,7 @@
             "src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php",
             "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php",
             "src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php",
+            "src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/DSL/functions.php",
             "src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php",
             "src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php",
             "src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php",
@@ -168,6 +172,7 @@
                 "src/adapter/etl-adapter-csv/tests/Flow",
                 "src/adapter/etl-adapter-doctrine/tests/Flow",
                 "src/adapter/etl-adapter-elasticsearch/tests/Flow",
+                "src/adapter/etl-adapter-excel/tests/Flow",
                 "src/adapter/etl-adapter-google-sheet/tests/Flow",
                 "src/adapter/etl-adapter-http/tests/Flow",
                 "src/adapter/etl-adapter-json/tests/Flow",
@@ -240,6 +245,7 @@
             "@test:adapter:csv",
             "@test:adapter:doctrine",
             "@test:adapter:elasticsearch",
+            "@test:adapter:excel",
             "@test:adapter:google-sheet",
             "@test:adapter:http",
             "@test:adapter:json",
@@ -313,6 +319,10 @@
         "test:adapter:elasticsearch": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-unit --log-junit ./var/phpunit/logs/adapter-elasticsearch-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-elasticsearch-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-elasticsearch-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-elasticsearch-integration --log-junit ./var/phpunit/logs/adapter-elasticsearch-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-elasticsearch-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-elasticsearch-integration"
+        ],
+        "test:adapter:excel": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-excel-unit --log-junit ./var/phpunit/logs/adapter-excel-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-excel-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-excel-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-excel-integration --log-junit ./var/phpunit/logs/adapter-excel-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-excel-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-excel-integration"
         ],
         "test:adapter:google-sheet": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=adapter-google-sheet-unit --log-junit ./var/phpunit/logs/adapter-google-sheet-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/adapter-google-sheet-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/adapter-google-sheet-unit",
@@ -416,6 +426,7 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.csv.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.doctrine.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.elasticsearch.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.excel.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.google-sheet.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.http.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.json.xml",

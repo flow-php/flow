@@ -8,8 +8,10 @@ enum FileFormat : string
 {
     case CSV = 'csv';
     case JSON = 'json';
+    case ODS = 'ods';
     case PARQUET = 'parquet';
     case TEXT = 'txt';
+    case XLSX = 'xlsx';
     case XML = 'xml';
 
     public function isValid(string $format) : bool
@@ -23,8 +25,10 @@ enum FileFormat : string
             self::CSV,
             self::JSON,
             self::XML,
+            self::ODS,
             self::PARQUET,
             self::TEXT,
+            self::XLSX,
         ];
     }
 }

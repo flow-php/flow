@@ -120,6 +120,12 @@
     <testsuite name="adapter-elasticsearch-integration">
       <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Integration</directory>
     </testsuite>
+    <testsuite name="adapter-excel-unit">
+      <directory>src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Unit</directory>
+    </testsuite>
+    <testsuite name="adapter-excel-integration">
+      <directory>src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Integration</directory>
+    </testsuite>
     <testsuite name="adapter-google-sheet-unit">
       <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Unit</directory>
     </testsuite>

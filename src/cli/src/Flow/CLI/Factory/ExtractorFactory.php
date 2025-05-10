@@ -23,9 +23,11 @@ final readonly class ExtractorFactory
         return match ($this->format) {
             FileFormat::CSV => (new CSVExtractorFactory($this->path))->get($input),
             FileFormat::JSON => (new JsonExtractorFactory($this->path))->get($input),
-            FileFormat::XML => (new XMLExtractorFactory($this->path))->get($input),
             FileFormat::PARQUET => (new ParquetExtractorFactory($this->path))->get($input),
             FileFormat::TEXT => from_text($this->path),
+            FileFormat::XML => (new XMLExtractorFactory($this->path))->get($input),
+            FileFormat::ODS,
+            FileFormat::XLSX => (new ExcelExtractorFactory($this->path))->get($input),
         };
     }
 }

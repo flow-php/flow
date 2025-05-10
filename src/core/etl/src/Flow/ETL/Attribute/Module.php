@@ -15,6 +15,7 @@ enum Module : string
     case DEPRECATED = 'DEPRECATED';
     case DOCTRINE = 'DOCTRINE';
     case ELASTIC_SEARCH = 'ELASTIC_SEARCH';
+    case EXCEL = 'EXCEL';
     case FILESYSTEM = 'FILESYSTEM';
     case GOOGLE_SHEET = 'GOOGLE_SHEET';
     case JSON = 'JSON';

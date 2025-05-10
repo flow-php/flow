@@ -35,6 +35,31 @@ OUTPUT,
         );
     }
 
+    public function test_read_rows_excel() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.xlsx', '--input-file-limit' => 5]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
++----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
+|             order_id |           created_at |           updated_at | discount |              address |                notes |                items |
++----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
+| e13d7098-5a78-3389-9 | 2024-06-17T19:24:49+ | 2024-06-17T19:24:49+ |    12.45 | {"street":"9742 Jask | ["Doloremque cum et  | [{"sku":"SKU_0003"," |
+| 947df050-3abb-3f5a-9 | 2024-02-23T19:18:53+ | 2024-02-23T19:18:53+ |          | {"street":"37051 Ale | ["Neque dolor et min | [{"sku":"SKU_0004"," |
+| 6315f9e2-86bf-3321-a | 2024-04-02T11:30:25+ | 2024-04-02T11:30:25+ |     47.1 | {"street":"792 Golda | ["Et porro fugiat fu | [{"sku":"SKU_0003"," |
+| 4cccb632-fade-34e2-8 | 2024-05-06T00:17:57+ | 2024-05-06T00:17:57+ |    19.76 | {"street":"30203 Wal | ["Aliquam saepe iste | [{"sku":"SKU_0004"," |
+| 82384f8c-9adb-38be-9 | 2024-05-10T11:17:41+ | 2024-05-10T11:17:41+ |          | {"street":"757 Tobin | ["Beatae nesciunt au | [{"sku":"SKU_0005"," |
++----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
+5 rows
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
     public function test_read_rows_json() : void
     {
         $tester = new CommandTester(new FileReadCommand('read'));

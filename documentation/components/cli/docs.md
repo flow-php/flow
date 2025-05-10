@@ -6,13 +6,13 @@
 
 ## Installation
 
-``` 
+```shell
 composer require flow-php/cli:~--FLOW_PHP_VERSION--
 ```
 
 In some cases, it might make sense to install the CLI globally:
 
-```
+```shell
 composer global require flow-php/cli:~--FLOW_PHP_VERSION--
 ```
 
@@ -30,7 +30,7 @@ docker run -v $(pwd):/flow-workspace -it ghcr.io/flow-php/flow:latest --version
 
 ### Config 
 
-All Flow CLI Commands can be configured using `--config` option. The option accepts a path to a configuration file in php that returns an Config or ConfigBuilder instance.
+All Flow CLI Commands can be configured using `--config` option. The option accepts a path to a configuration file in php that returns a Config or ConfigBuilder instance.
 
 `.flow.php`
 
@@ -45,7 +45,7 @@ return config_builder()
 
 `flow read --config .flow.php orders.csv`
 
-One of the most common use cases is to mount custom filesystem into Flow fstab to access remote files through CLI.
+One of the most common use cases is to mount a custom filesystem into Flow fstab to access remote files through CLI.
 
 ```shell
 $ flow
@@ -114,6 +114,9 @@ Options:
       --output-csv-enclosure=OUTPUT-CSV-ENCLOSURE                    CSV enclosure character
       --output-csv-escape=OUTPUT-CSV-ESCAPE                          CSV escape character
       --output-csv-date-time-format=OUTPUT-CSV-DATE-TIME-FORMAT      DateTime format for CSV output
+      --input-excel-header=INPUT-EXCEL-HEADER                        When set, Excel header will be used as a schema
+      --input-excel-sheet-name=INPUT-EXCEL-SHEETNAME                 When set, Excel sheet name will be selected for reading
+      --input-excel-offset=INPUT-EXCEL-OFFSET                        Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH                      XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE                  XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS                  Columns to read from parquet file (multiple values allowed)
@@ -154,6 +157,9 @@ Options:
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
       --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-excel-header=INPUT-EXCEL-HEADER              When set, Excel header will be used as a schema
+      --input-excel-sheet-name=INPUT-EXCEL-SHEETNAME       When set, Excel sheet name will be selected for reading
+      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
@@ -184,10 +190,9 @@ $ flow schema orders.csv --table --auto-cast
 7 rows
 ```
 
-
 ### `file:analyze` alias `analyze`
 
-```
+```shell
 file:analyze --help                         
 Description:
   Analyze a file.
@@ -211,6 +216,9 @@ Options:
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
       --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-excel-header=INPUT-EXCEL-HEADER              When set, Excel header will be used as a schema
+      --input-excel-sheet-name=INPUT-EXCEL-SHEETNAME       When set, Excel sheet name will be selected for reading
+      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
@@ -254,6 +262,9 @@ Options:
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
       --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-excel-header=INPUT-EXCEL-HEADER              When set, Excel header will be used as a schema
+      --input-excel-sheet-name=INPUT-EXCEL-SHEETNAME       When set, Excel sheet name will be selected for reading
+      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
@@ -266,9 +277,9 @@ Options:
   -v|vv|vvv, --verbose                                     Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
 ```
 
-### `file:rows:count` alis `count`
+### `file:rows:count` alias `count`
 
-```php
+```shell
 $ flow count --help
 Description:
   Read data schema from a file.
@@ -291,6 +302,9 @@ Options:
       --input-csv-separator=INPUT-CSV-SEPARATOR            CSV separator character
       --input-csv-enclosure=INPUT-CSV-ENCLOSURE            CSV enclosure character
       --input-csv-escape=INPUT-CSV-ESCAPE                  CSV escape character
+      --input-excel-header=INPUT-EXCEL-HEADER              When set, Excel header will be used as a schema
+      --input-excel-sheet-name=INPUT-EXCEL-SHEETNAME       When set, Excel sheet name will be selected for reading
+      --input-excel-offset=INPUT-EXCEL-OFFSET              Offset to start reading from
       --input-xml-node-path=INPUT-XML-NODE-PATH            XML node path to a subtree from which schema should be extracted, for example /root/element This is not xpath, just a node names separated by slash
       --input-xml-buffer-size=INPUT-XML-BUFFER-SIZE        XML buffer size in bytes
       --input-parquet-columns=INPUT-PARQUET-COLUMNS        Columns to read from parquet file (multiple values allowed)
@@ -439,7 +453,7 @@ Help:
 
 ## `schema:format`
 
-Take a json schema and print it in another format, including PHP 
+Take a JSON schema and print it in another format, including PHP,  
 which can be then directly used to validate datasets. 
 
 ```shell

@@ -6,6 +6,7 @@ namespace Flow\CLI\Factory;
 
 use function Flow\ETL\Adapter\Text\to_text;
 use Flow\CLI\Options\FileFormat;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,6 +28,8 @@ final readonly class LoaderFactory
             FileFormat::XML => (new XMLLoaderFactory($this->path))->get($input),
             FileFormat::PARQUET => (new ParquetLoaderFactory($this->path))->get($input),
             FileFormat::TEXT => to_text($this->path),
+            FileFormat::ODS,
+            FileFormat::XLSX => throw new InvalidArgumentException('To be implemented'),
         };
     }
 }

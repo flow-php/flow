@@ -7,7 +7,7 @@ namespace Flow\CLI\Command;
 use function Flow\CLI\{option_bool, option_int, option_int_nullable};
 use function Flow\ETL\DSL\{df};
 use Flow\CLI\Arguments\{FilePathArgument};
-use Flow\CLI\Command\Traits\{CSVOptions, ConfigOptions, JSONOptions, ParquetOptions, XMLOptions};
+use Flow\CLI\Command\Traits\{CSVOptions, ConfigOptions, ExcelOptions, JSONOptions, ParquetOptions, XMLOptions};
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\ETL\{Config, Rows};
@@ -22,6 +22,7 @@ final class FileReadCommand extends Command
 {
     use ConfigOptions;
     use CSVOptions;
+    use ExcelOptions;
     use JSONOptions;
     use ParquetOptions;
     use XMLOptions;
@@ -49,6 +50,7 @@ final class FileReadCommand extends Command
         $this->addConfigOptions($this);
         $this->addJSONInputOptions($this);
         $this->addCSVInputOptions($this);
+        $this->addExcelInputOptions($this);
         $this->addXMLInputOptions($this);
         $this->addParquetInputOptions($this);
     }

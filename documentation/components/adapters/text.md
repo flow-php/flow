@@ -39,7 +39,7 @@ $rows = (new Flow())
 
 > :warning: Heads up, TextLoader expects rows to have single entry in order to properly write them into file.
 
-```php 
+```php
 <?php
 
 use Flow\ETL\DSL\Text;
