@@ -103,7 +103,7 @@ final class RowTest extends FlowTestCase
         );
 
         self::assertEquals(
-            schema(integer_schema('id'), float_schema('price', precision: 2), bool_schema('deleted'), datetime_schema('created-at'), string_schema('phase', nullable: true), json_schema('array'), structure_schema('items', type_structure([
+            schema(integer_schema('id'), float_schema('price'), bool_schema('deleted'), datetime_schema('created-at'), string_schema('phase', nullable: true), json_schema('array'), structure_schema('items', type_structure([
                 'item-id' => type_int(),
                 'name' => type_string(),
             ])), map_schema('statuses', type_map(type_integer(), type_string())), list_schema('list', type_list(type_integer()))),

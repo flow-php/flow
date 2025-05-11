@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{type_integer};
+use function Flow\ETL\DSL\{type_equals, type_integer};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\IntegerType;
 use Flow\ETL\PHP\Type\Type;
@@ -12,7 +12,7 @@ use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?int, ?int>
+ * @implements Entry<?int, int>
  */
 final class IntegerEntry implements Entry
 {
@@ -35,7 +35,7 @@ final class IntegerEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_integer($this->value === null);
+        $this->type = type_integer();
     }
 
     public function __toString() : string
@@ -45,7 +45,7 @@ final class IntegerEntry implements Entry
 
     public function definition() : Definition
     {
-        return new Definition($this->name, $this->type, $this->metadata);
+        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry
@@ -64,7 +64,7 @@ final class IntegerEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value() === $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
     }
 
     public function map(callable $mapper) : Entry

@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\PHP\Type\Logical;
+
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\UnionType;
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
+
+/**
+ * @template T
+ *
+ * @implements Type<?T>
+ */
+final readonly class OptionalType implements Type
+{
+    /**
+     * @param Type<T> $base
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __construct(private Type $base)
+    {
+        if ($base instanceof UnionType) {
+            throw new InvalidArgumentException('Optional type cannot be created from a union type');
+        }
+
+        if ($base instanceof self) {
+            throw new InvalidArgumentException('Optional type cannot be created from an optional type');
+        }
+    }
+
+    public static function fromArray(array $data) : Type
+    {
+        return new self(TypeFactory::fromArray($data['base']));
+    }
+
+    public function assert(mixed $value) : mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->base->assert($value);
+    }
+
+    /**
+     * @return Type<T>
+     */
+    public function base() : Type
+    {
+        return $this->base;
+    }
+
+    public function cast(mixed $value) : mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->base->cast($value);
+    }
+
+    public function isValid(mixed $value) : bool
+    {
+        if ($value === null) {
+            return true;
+        }
+
+        return $this->base->isValid($value);
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'optional',
+            'base' => $this->base->normalize(),
+        ];
+    }
+
+    public function toString() : string
+    {
+        return '?' . $this->base->toString();
+    }
+}

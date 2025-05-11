@@ -192,7 +192,7 @@ final class TypeDetectorTest extends FlowTestCase
         yield 'empty array' => [
             [],
             ArrayType::class,
-            'array<empty, empty>',
+            'array<mixed>',
         ];
 
         yield 'list with null' => [

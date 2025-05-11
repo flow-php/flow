@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\{is_type, type_equals, type_float};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Logical\OptionalType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?float, ?float>
+ * @implements Entry<?float, float>
  */
 final class FloatEntry implements Entry
 {
@@ -21,9 +22,9 @@ final class FloatEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var Type<?float>
+     * @var OptionalType<float>|Type<float>
      */
-    private readonly Type $type;
+    private readonly Type|OptionalType $type;
 
     private readonly ?float $value;
 
@@ -38,7 +39,7 @@ final class FloatEntry implements Entry
 
         $this->metadata = $metadata ?: Metadata::empty();
         $this->value = $value !== null ? BigDecimal::of($value)->toFloat() : null;
-        $this->type = type_float($this->value === null, $value ? BigDecimal::of($value)->getScale() : 1);
+        $this->type = type_float();
     }
 
     public function __toString() : string
@@ -48,7 +49,7 @@ final class FloatEntry implements Entry
 
     public function definition() : Definition
     {
-        return new Definition($this->name, $this->type, $this->metadata);
+        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry
@@ -81,12 +82,12 @@ final class FloatEntry implements Entry
         if ($entryValue === null && $thisValue === null) {
             return $this->is($entry->name())
                 && $entry instanceof self
-                && $this->type->isEqual($entry->type);
+                && is_type($this->type, $entry->type);
         }
 
         return $this->is($entry->name())
             && $entry instanceof self
-            && $this->type->isEqual($entry->type)
+            && type_equals($this->type, $entry->type)
             /** @phpstan-ignore-next-line */
             && \bccomp((string) $thisValue, (string) $entryValue) === 0;
     }

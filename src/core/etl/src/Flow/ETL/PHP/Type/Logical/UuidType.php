@@ -4,63 +4,51 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\NullType;
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\PHP\Value\Uuid;
 
 /**
- * @implements Type<?Uuid>
+ * @implements Type<Uuid>
  */
 final readonly class UuidType implements Type
 {
-    public function __construct(private bool $nullable = false)
+    public function assert(mixed $value) : Uuid
     {
-    }
-
-    public static function fromArray(array $data) : Type
-    {
-        return new self($data['nullable'] ?? false);
-    }
-
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof NullType) {
-            return true;
+        throw InvalidTypeException::value($value, $this);
+    }
+
+    public function cast(mixed $value) : mixed
+    {
+        if ($value instanceof Uuid) {
+            return $value;
         }
 
-        return false;
-    }
-
-    public function isCompatible(Type $type) : bool
-    {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
+        if ($value instanceof \DOMElement) {
+            $value = $value->nodeValue;
         }
 
-        return $this->isEqual($type);
-    }
+        if (\is_string($value)) {
+            return new Uuid($value);
+        }
 
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self;
-    }
+        if (\is_a($value, 'Ramsey\Uuid\UuidInterface')) {
+            return new Uuid($value);
+        }
 
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+        if (\is_a($value, 'Symfony\Component\Uid\Uuid')) {
+            return new Uuid($value->toRfc4122());
+        }
+
+        throw new CastingException($value, $this);
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         if (\is_object($value)) {
             if ($value instanceof Uuid) {
                 return true;
@@ -70,39 +58,15 @@ final readonly class UuidType implements Type
         return false;
     }
 
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->nullable || $type->nullable());
-    }
-
     public function normalize() : array
     {
         return [
             'type' => 'uuid',
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'uuid';
+        return 'uuid';
     }
 }

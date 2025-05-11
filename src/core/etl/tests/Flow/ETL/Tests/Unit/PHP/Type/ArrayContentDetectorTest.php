@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
+use function Flow\ETL\DSL\{type_array, type_integer, type_list, type_map, type_structure};
 use function Flow\ETL\DSL\{type_int, type_null, type_string};
-use function Flow\ETL\DSL\{type_integer, type_list, type_map, type_structure};
 use Flow\ETL\PHP\Type\{ArrayContentDetector, Types};
-use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -234,9 +233,9 @@ final class ArrayContentDetectorTest extends FlowTestCase
                 type_string(),
             ],
             [
-                ArrayType::empty(),
-                ArrayType::empty(),
-                ArrayType::empty(),
+                type_array(),
+                type_array(),
+                type_array(),
             ],
             false,
             false,

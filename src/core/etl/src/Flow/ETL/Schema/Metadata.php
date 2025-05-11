@@ -6,7 +6,7 @@ namespace Flow\ETL\Schema;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\{Caster, Type};
+use Flow\ETL\PHP\Type\{Type};
 
 final class Metadata
 {
@@ -86,7 +86,7 @@ final class Metadata
             return $default;
         }
 
-        return Caster::default()->to($type)->value($this->map[$key]);
+        return $type->cast($this->map[$key]);
     }
 
     public function has(string $key) : bool

@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\CSV\Tests\Unit;
 
 use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, float_entry, int_entry, null_entry, str_entry, time_entry, uuid_entry};
 use Flow\ETL\Adapter\CSV\RowsNormalizer\EntryNormalizer;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -32,6 +31,6 @@ final class EntryNormalizerTest extends FlowTestCase
     #[DataProvider('entries_provider')]
     public function test_normalizing_entries(Entry $entry, mixed $expected) : void
     {
-        self::assertEquals($expected, (new EntryNormalizer(Caster::default()))->normalize($entry));
+        self::assertEquals($expected, (new EntryNormalizer())->normalize($entry));
     }
 }

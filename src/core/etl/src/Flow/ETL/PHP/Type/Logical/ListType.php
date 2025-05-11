@@ -4,26 +4,56 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\NullType;
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<?list<mixed>>
+ * @implements Type<list<mixed>>
  */
 final readonly class ListType implements Type
 {
     /**
      * @param Type<mixed> $element
-     * @param bool $nullable
      */
-    public function __construct(private Type $element, private bool $nullable = false)
+    public function __construct(private Type $element)
     {
     }
 
     public static function fromArray(array $data) : self
     {
         return new self(TypeFactory::fromArray($data['element']), $data['nullable'] ?? false);
+    }
+
+    public function assert(mixed $value) : array
+    {
+        if ($this->isValid($value)) {
+            return $value;
+        }
+
+        throw InvalidTypeException::value($value, $this);
+    }
+
+    public function cast(mixed $value) : array
+    {
+        try {
+            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
+                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+            }
+
+            if (!\is_array($value)) {
+                return [$this->element()->cast($value)];
+            }
+
+            $castedList = [];
+
+            foreach ($value as $key => $item) {
+                $castedList[$key] = $this->element()->cast($item);
+            }
+
+            return $castedList;
+        } catch (\Throwable) {
+            throw new CastingException($value, $this);
+        }
     }
 
     /**
@@ -34,59 +64,10 @@ final readonly class ListType implements Type
         return $this->element;
     }
 
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof self) {
-            return true;
-        }
-
-        if ($type instanceof NullType) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function isCompatible(Type $type) : bool
-    {
-        if (!$this->isEqual($type)) {
-            return false;
-        }
-
-        /** @var self $type */
-        if (!$this->nullable && $type->nullable()) {
-            return false;
-        }
-
-        return $this->element->isCompatible($type->element());
-    }
-
-    public function isEqual(Type $type) : bool
-    {
-        if (!$type instanceof self) {
-            return false;
-        }
-
-        return $this->element->isEqual($type->element());
-    }
-
-    public function isSame(Type $type) : bool
-    {
-        if (!$this->isEqual($type)) {
-            return false;
-        }
-
-        /** @var self $type */
-        return $this->nullable() === $type->nullable() && $this->element->isSame($type->element());
-    }
-
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         if (!\is_array($value)) {
+
             return false;
         }
 
@@ -103,40 +84,16 @@ final readonly class ListType implements Type
         return true;
     }
 
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($this->element, $nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->element, $this->nullable || $type->nullable());
-    }
-
     public function normalize() : array
     {
         return [
             'type' => 'list',
             'element' => $this->element->normalize(),
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'list<' . $this->element->toString() . '>';
+        return 'list<' . $this->element->toString() . '>';
     }
 }

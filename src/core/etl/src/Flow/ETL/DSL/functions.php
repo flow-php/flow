@@ -117,12 +117,13 @@ use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\Memory;
-use Flow\ETL\PHP\Type\{Caster, Caster\Options, Type, TypeDetector};
+use Flow\ETL\PHP\Type\{Comparator, Type, TypeDetector, TypeFactory, Types};
 use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
     MapType,
+    OptionalType,
     StructureType,
     TimeType,
     UuidType,
@@ -137,7 +138,8 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     NullType,
     ObjectType,
     ResourceType,
-    StringType};
+    StringType,
+    UnionType};
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
@@ -511,36 +513,127 @@ function structure_entry(string $name, ?array $value, StructureType $type, ?Sche
  * @param array<string, Type<mixed>> $elements
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_structure(array $elements, bool $nullable = false) : StructureType
+function type_structure(array $elements, bool $nullable = false) : StructureType|OptionalType
 {
-    return new StructureType($elements, $nullable);
+    if ($nullable) {
+        return new OptionalType(new StructureType($elements));
+    }
+
+    return new StructureType($elements);
+}
+
+/**
+ * @param Type<mixed> $first
+ * @param Type<mixed> $second
+ * @param Type<mixed> ...$types
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+function type_union(Type $first, Type $second, Type ...$types) : UnionType|OptionalType
+{
+    $type = new UnionType($first, $second);
+
+    foreach ($types as $t) {
+        $type = new UnionType($type, $t);
+    }
+
+    return $type;
+}
+
+/**
+ * @param Type<mixed> $type
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+function type_optional(Type $type) : OptionalType
+{
+    return new OptionalType($type);
+}
+
+/**
+ * @param array<mixed> $data
+ *
+ * @return Type<mixed>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function type_from_array(array $data) : Type
+{
+    return TypeFactory::fromArray($data);
+}
+
+/**
+ * @param array<mixed> $data
+ *
+ * @return Type<mixed>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function is_nullable(Type $type) : bool
+{
+    if ($type instanceof OptionalType) {
+        return true;
+    }
+
+    if ($type instanceof UnionType) {
+        foreach ($type->types()->all() as $nextType) {
+            if ($nextType instanceof NullType) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * @param Type<mixed> $left
+ * @param Type<mixed> $right
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function type_equals(Type $left, Type $right) : bool
+{
+    return (new Comparator())->equals($left, $right);
+}
+
+/**
+ * @param Type<mixed> $type
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function types(Type ...$types) : Types
+{
+    return new Types(...$types);
 }
 
 /**
  * @param list<mixed> $value
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function list_entry(string $name, ?array $value, ListType $type) : Entry\ListEntry
+function list_entry(string $name, ?array $value, ListType $type, ?Schema\Metadata $metadata = null) : Entry\ListEntry
 {
-    return new Entry\ListEntry($name, $value, $type);
+    return new Entry\ListEntry($name, $value, $type, $metadata);
 }
 
 /**
  * @param Type<mixed> $element
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_list(Type $element, bool $nullable = false) : ListType
+function type_list(Type $element, bool $nullable = false) : ListType|OptionalType
 {
-    return new ListType($element, $nullable);
+    if ($nullable) {
+        return new OptionalType(new ListType($element));
+    }
+
+    return new ListType($element);
 }
 
 /**
  * @param Type<mixed> $value_type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_map(StringType|IntegerType $key_type, Type $value_type, bool $nullable = false) : MapType
+function type_map(StringType|IntegerType $key_type, Type $value_type, bool $nullable = false) : MapType|OptionalType
 {
-    return new MapType($key_type, $value_type, $nullable);
+    if ($nullable) {
+        return new OptionalType(new MapType($key_type, $value_type));
+    }
+
+    return new MapType($key_type, $value_type);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
@@ -550,102 +643,166 @@ function map_entry(string $name, ?array $value, MapType $mapType, ?Schema\Metada
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_json(bool $nullable = false) : JsonType
+function type_json(bool $nullable = false) : JsonType|OptionalType
 {
-    return new JsonType($nullable);
+    if ($nullable) {
+        return new OptionalType(new JsonType());
+    }
+
+    return new JsonType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_datetime(bool $nullable = false) : DateTimeType
+function type_datetime(bool $nullable = false) : DateTimeType|OptionalType
 {
-    return new DateTimeType($nullable);
+    if ($nullable) {
+        return new OptionalType(new DateTimeType());
+    }
+
+    return new DateTimeType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_date(bool $nullable = false) : DateType
+function type_date(bool $nullable = false) : DateType|OptionalType
 {
-    return new DateType($nullable);
+    if ($nullable) {
+        return new OptionalType(new DateType());
+    }
+
+    return new DateType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_time(bool $nullable = false) : TimeType
+function type_time(bool $nullable = false) : TimeType|OptionalType
 {
-    return new TimeType($nullable);
+    if ($nullable) {
+        return new OptionalType(new TimeType());
+    }
+
+    return new TimeType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_xml(bool $nullable = false) : XMLType
+function type_xml(bool $nullable = false) : XMLType|OptionalType
 {
-    return new XMLType($nullable);
+    if ($nullable) {
+        return new OptionalType(new XMLType());
+    }
+
+    return new XMLType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_xml_element(bool $nullable = false) : XMLElementType
+function type_xml_element(bool $nullable = false) : XMLElementType|OptionalType
 {
-    return new XMLElementType($nullable);
+    if ($nullable) {
+        return new OptionalType(new XMLElementType());
+    }
+
+    return new XMLElementType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_uuid(bool $nullable = false) : UuidType
+function type_uuid(bool $nullable = false) : UuidType|OptionalType
 {
-    return new UuidType($nullable);
+    if ($nullable) {
+        return new OptionalType(new UuidType());
+    }
+
+    return new UuidType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_int(bool $nullable = false) : IntegerType
+function type_int(bool $nullable = false) : IntegerType|OptionalType
 {
-    return new IntegerType($nullable);
+    if ($nullable) {
+        return new OptionalType(new IntegerType());
+    }
+
+    return new IntegerType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_integer(bool $nullable = false) : IntegerType
+function type_integer(bool $nullable = false) : IntegerType|OptionalType
 {
-    return new IntegerType($nullable);
+    if ($nullable) {
+        return new OptionalType(new IntegerType());
+    }
+
+    return new IntegerType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_string(bool $nullable = false) : StringType
+function type_string(bool $nullable = false) : StringType|OptionalType
 {
-    return new StringType($nullable);
+    if ($nullable) {
+        return new OptionalType(new StringType());
+    }
+
+    return new StringType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_float(bool $nullable = false, int $precision = 6) : FloatType
+function type_float(bool $nullable = false) : FloatType|OptionalType
 {
-    return new FloatType($nullable, $precision);
+    if ($nullable) {
+        return new OptionalType(new FloatType());
+    }
+
+    return new FloatType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_boolean(bool $nullable = false) : BooleanType
+function type_boolean(bool $nullable = false) : BooleanType|OptionalType
 {
-    return new BooleanType($nullable);
+    if ($nullable) {
+        return new OptionalType(new BooleanType());
+    }
+
+    return new BooleanType();
 }
 
 /**
  * @param class-string $class
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_object(string $class, bool $nullable = false) : ObjectType
+function type_object(string $class, bool $nullable = false) : ObjectType|OptionalType
 {
-    return new ObjectType($class, $nullable);
+    if ($nullable) {
+        return new OptionalType(new ObjectType($class));
+    }
+
+    return new ObjectType($class);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_resource(bool $nullable = false) : ResourceType
+function type_resource(bool $nullable = false) : ResourceType|OptionalType
 {
-    return new ResourceType($nullable);
+    if ($nullable) {
+        return new OptionalType(new ResourceType());
+    }
+
+    return new ResourceType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_array(bool $empty = false, bool $nullable = false) : ArrayType
+function type_array(bool $nullable = false) : ArrayType|OptionalType
 {
-    return new ArrayType($empty, $nullable);
+    if ($nullable) {
+        return new OptionalType(new ArrayType());
+    }
+
+    return new ArrayType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_callable(bool $nullable = false) : CallableType
+function type_callable(bool $nullable = false) : CallableType|OptionalType
 {
-    return new CallableType($nullable);
+    if ($nullable) {
+        return new OptionalType(new CallableType());
+    }
+
+    return new CallableType();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
@@ -658,9 +815,13 @@ function type_null() : NullType
  * @param class-string<\UnitEnum> $class
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_enum(string $class, bool $nullable = false) : EnumType
+function type_enum(string $class, bool $nullable = false) : EnumType|OptionalType
 {
-    return new EnumType($class, $nullable);
+    if ($nullable) {
+        return new OptionalType(new EnumType($class));
+    }
+
+    return new EnumType($class);
 }
 
 /**
@@ -891,9 +1052,9 @@ function hash(mixed $value, Algorithm $algorithm = new NativePHPHash()) : Hash
  * @param string|Type<mixed> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function cast(mixed $value, string|Type $type, ?Options $options = null) : Cast
+function cast(mixed $value, string|Type $type) : Cast
 {
-    return new Cast($value, $type, $options);
+    return new Cast($value, $type);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1368,21 +1529,21 @@ function bool_schema(string $name, bool $nullable = false, ?Schema\Metadata $met
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function float_schema(string $name, bool $nullable = false, int $precision = 6, ?Schema\Metadata $metadata = null) : Definition
+function float_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::float($name, $nullable, $precision, $metadata);
+    return Definition::float($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function map_schema(string $name, MapType $type, ?Schema\Metadata $metadata = null) : Definition
+function map_schema(string $name, MapType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::map($name, $type, $metadata);
+    return Definition::map($name, $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function list_schema(string $name, ListType $type, ?Schema\Metadata $metadata = null) : Definition
+function list_schema(string $name, ListType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::list($name, $type, $metadata);
+    return Definition::list($name, $type, $nullable, $metadata);
 }
 
 /**
@@ -1437,15 +1598,15 @@ function xml_element_schema(string $name, bool $nullable = false, ?Schema\Metada
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function struct_schema(string $name, StructureType $type, ?Schema\Metadata $metadata = null) : Definition
+function struct_schema(string $name, StructureType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::structure($name, $type, $metadata);
+    return Definition::structure($name, $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function structure_schema(string $name, StructureType $type, ?Schema\Metadata $metadata = null) : Definition
+function structure_schema(string $name, StructureType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::structure($name, $type, $metadata);
+    return Definition::structure($name, $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -1635,6 +1796,32 @@ function is_type(Type|array $type, mixed $value) : bool
     return false;
 }
 
+/**
+ * @template T
+ *
+ * @param Type<T> $type
+ * @param class-string<Type> $typeClass
+ *
+ * @phpstan-assert-if-true Type<T> $type
+ */
+function type_is(Type $type, string $typeClass) : bool
+{
+    return (new Comparator())->is($type, $typeClass);
+}
+
+/**
+ * @template T
+ *
+ * @param Type<T> $type
+ * @param class-string<Type> $typeClass
+ *
+ * @phpstan-assert-if-true Type<T> $type
+ */
+function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool
+{
+    return (new Comparator())->isAny($type, $typeClass, ...$typeClasses);
+}
+
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function generate_random_string(int $length = 32, NativePHPRandomValueGenerator $generator = new NativePHPRandomValueGenerator()) : string
 {
@@ -1717,28 +1904,6 @@ function date_interval_to_microseconds(\DateInterval $interval) : int
     return $interval->invert
         ? -(int) ($absoluteSeconds * 1000000 + $interval->f * 1000000)
         : (int) ($absoluteSeconds * 1000000 + $interval->f * 1000000);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function caster_options() : Options
-{
-    return new Options();
-}
-
-/**
- * Advanced type casting mechanism.
- * Usage:
- *
- * caster()->to(type_float(precision: 2))->value("1.1234") // 1.12
- *
- * Options can be also passed to "to" function to override default options.
- *
- * caster()->to(type_float(precision: 2), caster_options())->value("1.1234") // 1.12
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function caster(?Options $options = null) : Caster
-{
-    return Caster::default($options ?? caster_options());
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

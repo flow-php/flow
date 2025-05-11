@@ -64,7 +64,6 @@ final class XMLLoader implements Closure, Loader, Loader\FileLoader
         $normalizer = new RowsNormalizer(
             new EntryNormalizer(
                 new PHPValueNormalizer(
-                    $context->config->caster(),
                     $this->attributePrefix,
                     $this->dateTimeFormat,
                     $this->listElementName,

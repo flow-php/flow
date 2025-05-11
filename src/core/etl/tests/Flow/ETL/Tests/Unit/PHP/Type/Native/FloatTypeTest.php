@@ -4,98 +4,58 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
-use function Flow\ETL\DSL\{type_callable, type_float, type_int, type_map, type_string};
+use function Flow\ETL\DSL\{type_float};
+use Flow\ETL\Exception\InvalidTypeException;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class FloatTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function float_castable_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_float(false)->isEqual(type_float(false))
-        );
-        self::assertFalse(
-            type_float(false)->isEqual(type_map(type_string(), type_int()))
-        );
-        self::assertFalse(
-            type_float(false)->isEqual(type_callable(false))
-        );
-        self::assertFalse(
-            type_float(false)->isSame(type_float(true))
-        );
+        yield 'string' => ['string', 0.0];
+        yield 'int' => [1, 1.0];
+        yield 'float' => [1.1, 1.1];
+        yield 'bool' => [true, 1.0];
+        yield 'array' => [[1, 2, 3], 1.0];
+        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), 1609459200000000.0];
+        yield 'DateInterval' => [new \DateInterval('P1D'), 86400000000.0];
+        yield 'DOMElement' => [new \DOMElement('element', '1.1'), 1.1];
     }
 
-    public function test_from_array() : void
+    public static function invalid_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_float(false)->isEqual(type_float(false)->fromArray(['type' => 'float', 'nullable' => false, 'precision' => 6]))
-        );
-        self::assertTrue(
-            type_float(true, 12)->isEqual(type_float(true)->fromArray(['type' => 'float', 'nullable' => true, 'precision' => 12]))
-        );
+        yield ['string'];
+        yield [false];
+        yield [123];
+        yield [[1, 2]];
+        yield [new \stdClass()];
+        yield [new \DateTimeImmutable()];
+        yield [new \DateTime()];
+        yield [new \DateTimeZone('UTC')];
     }
 
-    public function test_is_comparable_with() : void
+    public static function successful_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_float(false)->isComparableWith(type_float(false))
-        );
-        self::assertTrue(
-            type_float(false)->isComparableWith(type_float(true))
-        );
-        self::assertTrue(
-            type_float(true)->isComparableWith(type_float(false))
-        );
-        self::assertTrue(
-            type_float(true)->isComparableWith(type_float(true))
-        );
-        self::assertTrue(
-            type_float(false)->isComparableWith(type_int())
-        );
-        self::assertFalse(
-            type_float(false)->isComparableWith(type_string())
-        );
-        self::assertFalse(
-            type_float(false)->isComparableWith(type_callable(false))
-        );
-        self::assertFalse(
-            type_float(false)->isComparableWith(type_map(type_string(), type_int()))
-        );
+        yield [1234.52];
+        yield [-1234.52];
+        yield [1.22e-15];
+        yield [-1.22e-15];
+        yield [.25];
+        yield [-.25];
     }
 
-    public function test_is_equal() : void
+    #[DataProvider('float_castable_data_provider')]
+    public function test_casting_different_data_types_to_float(mixed $value, float $expected) : void
     {
-        self::assertTrue(
-            type_float(false)->isEqual(type_float(false))
-        );
-        self::assertFalse(
-            type_float(false)->isSame(type_float(true))
-        );
-        self::assertFalse(
-            type_float(false)->isEqual(type_int())
-        );
+        self::assertSame($expected, type_float()->cast($value));
     }
 
-    public function test_merge() : void
+    #[DataProvider('invalid_assert_data_provider')]
+    public function test_invalid_assert(mixed $value) : void
     {
-        self::assertTrue(
-            type_float(false)->merge(type_float(false))->isEqual(type_float(false))
-        );
-        self::assertTrue(
-            type_float(false)->merge(type_float(true))->isEqual(type_float(true))
-        );
-        self::assertTrue(
-            type_float(true)->merge(type_float(false))->isEqual(type_float(true))
-        );
-        self::assertTrue(
-            type_float(true)->merge(type_float(true))->isEqual(type_float(true))
-        );
-        self::assertTrue(
-            type_float(true, 6)->merge(type_float(true, 3))->isEqual(type_float(true, 3))
-        );
-
-        $this->expectExceptionMessage('Cannot merge different types, float and string');
-        type_float(false)->merge(type_string());
+        $this->expectException(InvalidTypeException::class);
+        type_float()->assert($value);
     }
 
     public function test_normalize() : void
@@ -103,49 +63,38 @@ final class FloatTypeTest extends FlowTestCase
         self::assertSame(
             [
                 'type' => 'float',
-                'nullable' => false,
-                'precision' => 6,
             ],
-            type_float(false)->normalize()
+            type_float()->normalize()
         );
-        self::assertSame(
-            [
-                'type' => 'float',
-                'nullable' => true,
-                'precision' => 6,
-            ],
-            type_float(true)->normalize()
-        );
+    }
+
+    #[DataProvider('successful_assert_data_provider')]
+    public function test_successful_assert(mixed $value) : void
+    {
+        self::assertIsFloat(type_float()->assert($value));
     }
 
     public function test_to_string() : void
     {
         self::assertSame(
             'float',
-            type_float(false)->toString()
-        );
-        self::assertSame(
-            '?float',
-            type_float(true)->toString()
+            type_float()->toString()
         );
     }
 
     public function test_valid() : void
     {
         self::assertTrue(
-            type_float(false)->isValid(1.0)
-        );
-        self::assertTrue(
-            type_float(true)->isValid(null)
+            type_float()->isValid(1.0)
         );
         self::assertFalse(
-            type_float(false)->isValid('one')
+            type_float()->isValid('one')
         );
         self::assertFalse(
-            type_float(false)->isValid([1, 2])
+            type_float()->isValid([1, 2])
         );
         self::assertFalse(
-            type_float(false)->isValid(123)
+            type_float()->isValid(123)
         );
     }
 }

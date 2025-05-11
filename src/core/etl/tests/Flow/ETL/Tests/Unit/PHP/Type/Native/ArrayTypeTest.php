@@ -4,30 +4,69 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
-use function Flow\ETL\DSL\{type_array, type_float};
-use function Flow\ETL\DSL\{type_map, type_string};
-use Flow\ETL\PHP\Type\Native\ArrayType;
+use function Flow\ETL\DSL\{type_array};
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\TestWith;
 
 final class ArrayTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public function test_casting_boolean_to_array() : void
     {
-        self::assertTrue(
-            (type_array())->isEqual(type_array())
+        self::assertEquals(
+            [true],
+            type_array()->cast(true)
         );
-        self::assertTrue(
-            ArrayType::empty()->isEqual(ArrayType::empty())
+    }
+
+    public function test_casting_datetime_to_array() : void
+    {
+        self::assertEquals(
+            ['date' => '2021-01-01 00:00:00.000000', 'timezone_type' => 3, 'timezone' => 'UTC'],
+            type_array()->cast(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'))
         );
-        self::assertFalse(
-            (type_array())->isEqual(type_map(type_string(), type_float()))
+    }
+
+    public function test_casting_float_to_array() : void
+    {
+        self::assertEquals(
+            [1.1],
+            type_array()->cast(1.1)
         );
-        self::assertFalse(
-            (type_array())->isEqual(type_float())
+    }
+
+    public function test_casting_integer_to_array() : void
+    {
+        self::assertEquals(
+            [1],
+            type_array()->cast(1)
         );
-        self::assertFalse(
-            ArrayType::empty()->isSame(type_array())
+    }
+
+    public function test_casting_string_to_array() : void
+    {
+        self::assertSame(
+            ['items' => ['item' => 1]],
+            type_array()->cast('{"items":{"item":1}}')
         );
+    }
+
+    public function test_casting_xml_document_to_array() : void
+    {
+        $xml = new \DOMDocument();
+        $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
+
+        self::assertSame(
+            ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
+            type_array()->cast($xml)
+        );
+    }
+
+    #[TestWith(['[]', 'Expected type "array<mixed>", got "json"'])]
+    public function test_invalid_assertion(mixed $value, string $exception) : void
+    {
+        $this->expectExceptionMessage($exception);
+
+        type_array()->assert($value);
     }
 
     public function test_to_string() : void
@@ -35,10 +74,6 @@ final class ArrayTypeTest extends FlowTestCase
         self::assertSame(
             'array<mixed>',
             type_array()->toString()
-        );
-        self::assertSame(
-            'array<empty, empty>',
-            ArrayType::empty()->toString()
         );
     }
 
@@ -53,9 +88,6 @@ final class ArrayTypeTest extends FlowTestCase
         self::assertTrue(
             type_array()->isValid([1])
         );
-        self::assertTrue(
-            type_array(nullable: true)->isValid(null)
-        );
         self::assertFalse(
             type_array()->isValid(null)
         );
@@ -68,5 +100,13 @@ final class ArrayTypeTest extends FlowTestCase
         self::assertFalse(
             type_array()->isValid(123)
         );
+    }
+
+    #[TestWith([[1]])]
+    #[TestWith([['a' => 'b']])]
+    #[TestWith([[]])]
+    public function test_valid_assertion(array $value) : void
+    {
+        self::assertIsArray(type_array()->assert($value));
     }
 }

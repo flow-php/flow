@@ -47,7 +47,7 @@ final readonly class SchemaConverter
         $columns = [];
 
         foreach ($schema->definitions() as $definition) {
-            $column = $this->flowToColumn($definition->entry()->name(), $definition->type(), $definition->metadata());
+            $column = $this->flowToColumn($definition->entry()->name(), $definition->type(), $definition->isNullable(), $definition->metadata());
             $columns[$column->getName()] = $column;
         }
 
@@ -72,9 +72,9 @@ final readonly class SchemaConverter
     {
         $type = $this->typesMap->toFlowType($column->getType()::class);
 
-        $metadata = Schema\Metadata::empty();
+        $nullable = !$column->getNotnull();
 
-        $type = $type->makeNullable(!$column->getNotnull());
+        $metadata = Schema\Metadata::empty();
 
         if ($column->getLength() !== null) {
             $metadata = $metadata->merge(DbalMetadata::length($column->getLength()));
@@ -116,7 +116,7 @@ final readonly class SchemaConverter
         foreach ($table->getPrimaryKey()?->getColumns() ?? [] as $primaryKeyColumn) {
             if ($primaryKeyColumn === $column->getName()) {
                 $metadata = $metadata->merge(DbalMetadata::primaryKey($table->getPrimaryKey()?->getName() ?? ''));
-                $type = $type->makeNullable(false);
+                $nullable = false;
             }
         }
 
@@ -130,13 +130,13 @@ final readonly class SchemaConverter
             }
         }
 
-        return new Schema\Definition($column->getName(), $type, $metadata);
+        return new Schema\Definition($column->getName(), $type, $nullable, $metadata);
     }
 
     /**
      * @param Type<mixed> $type
      */
-    private function flowToColumn(string $name, Type $type, ?Schema\Metadata $metadata = null) : Column
+    private function flowToColumn(string $name, Type $type, bool $nullable, ?Schema\Metadata $metadata = null) : Column
     {
         $dbalTypeClass = $this->typesMap->toDbalType($type::class);
 
@@ -159,13 +159,13 @@ final readonly class SchemaConverter
         }
 
         $options = [
-            'notnull' => !$type->nullable(),
+            'notnull' => !$nullable,
         ];
 
         if ($type instanceof FloatType) {
             // with decimals precision and scale are confusing, in float precision is number of digits, not digits before/after decimal point
             // with decimals precision is total number of digits, and scale is number of digits after decimal point
-            $options['scale'] = $type->precision;
+            $options['scale'] = 6;
         }
 
         if ($metadata?->has(DbalMetadata::LENGTH->value)) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\ScalarFunction;
 
+use function Flow\ETL\DSL\type_optional;
 use Flow\ETL\PHP\Type\{Type, TypeDetector};
 
 final readonly class ScalarResult
@@ -22,7 +23,7 @@ final readonly class ScalarResult
         Type $type,
     ) {
         if ($value === null) {
-            $this->type = $type->makeNullable(true);
+            $this->type = type_optional($type);
         } else {
             $this->type = $type;
         }

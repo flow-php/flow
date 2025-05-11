@@ -11,7 +11,6 @@ use Flow\ETL\Config\Cache\CacheConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{Filesystem, FilesystemTable};
@@ -23,8 +22,6 @@ final class ConfigBuilder
     public readonly CacheConfigBuilder $cache;
 
     public readonly SortConfigBuilder $sort;
-
-    private ?Caster $caster;
 
     private ?ClockInterface $clock;
 
@@ -47,7 +44,6 @@ final class ConfigBuilder
         $this->fstab = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
-        $this->caster = null;
         $this->clock = null;
         $this->cache = new CacheConfigBuilder();
         $this->sort = new SortConfigBuilder();
@@ -65,8 +61,6 @@ final class ConfigBuilder
             new Optimizer\BatchSizeOptimization(batchSize: 1000)
         );
 
-        $this->caster ??= Caster::default();
-
         return new Config(
             $this->id,
             $this->serializer,
@@ -74,7 +68,6 @@ final class ConfigBuilder
             $this->fstab(),
             new FilesystemStreams($this->fstab()),
             $this->optimizer,
-            $this->caster,
             $this->putInputIntoRows,
             $entryFactory,
             $this->cache->build($this->fstab(), $this->serializer),

@@ -79,7 +79,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
 
         self::assertEquals(
             \Flow\ETL\DSL\schema(
-                list_schema('list', type_list(type_string(true), true))
+                list_schema('list', type_list(type_string(true)), true)
             ),
             $flowSchema,
         );
@@ -95,7 +95,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
 
         self::assertEquals(
             \Flow\ETL\DSL\schema(
-                map_schema('map', type_map(type_string(), type_int(true), true))
+                map_schema('map', type_map(type_string(), type_int(true)), true)
             ),
             $flowSchema,
         );
@@ -126,8 +126,8 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
                             'name' => type_string(true),
                             'active' => type_boolean(true),
                         ],
-                        true
                     ),
+                    true
                 )
             ),
             $flowSchema,

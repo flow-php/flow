@@ -252,16 +252,16 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                     'ref' => 'id',
                     'type' => [
                         'type' => 'integer',
-                        'nullable' => false,
                     ],
+                    'nullable' => false,
                     'metadata' => [],
                 ],
                 [
                     'ref' => 'name',
                     'type' => [
                         'type' => 'string',
-                        'nullable' => false,
                     ],
+                    'nullable' => false,
                     'metadata' => [],
                 ],
                 [
@@ -270,14 +270,12 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                         'type' => 'map',
                         'key' => [
                             'type' => 'string',
-                            'nullable' => false,
                         ],
                         'value' => [
                             'type' => 'integer',
-                            'nullable' => false,
                         ],
-                        'nullable' => false,
                     ],
+                    'nullable' => false,
                     'metadata' => [],
                 ],
             ],

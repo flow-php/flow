@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
+use Flow\ETL\Exception\{InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
@@ -11,29 +12,18 @@ use Flow\ETL\PHP\Type\Type;
  */
 final class NullType implements Type
 {
-    public static function fromArray(array $data) : self
+    public function assert(mixed $value) : null
     {
-        return new self();
+        if ($this->isValid($value)) {
+            return $value;
+        }
+
+        throw InvalidTypeException::value($value, $this);
     }
 
-    public function isComparableWith(Type $type) : bool
+    public function cast(mixed $value) : null
     {
-        return true;
-    }
-
-    public function isCompatible(Type $type) : bool
-    {
-        return $this->isEqual($type);
-    }
-
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self;
-    }
-
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type);
+        return null;
     }
 
     public function isValid(mixed $value) : bool
@@ -41,27 +31,11 @@ final class NullType implements Type
         return null === $value;
     }
 
-    public function makeNullable(bool $nullable) : self
-    {
-        return $this;
-    }
-
-    public function merge(Type $type) : self
-    {
-        /** @phpstan-ignore-next-line  */
-        return $type->makeNullable(true);
-    }
-
     public function normalize() : array
     {
         return [
             'type' => 'null',
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return true;
     }
 
     public function toString() : string

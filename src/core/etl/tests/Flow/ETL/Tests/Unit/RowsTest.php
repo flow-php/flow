@@ -823,7 +823,7 @@ final class RowsTest extends FlowTestCase
         );
 
         self::assertEquals(
-            schema(integer_schema('id'), string_schema('name', true), list_schema('tags', type_list(type_string(), true)), list_schema('list', type_list(type_integer(), true))),
+            schema(integer_schema('id'), string_schema('name', true), list_schema('tags', type_list(type_string()), true), list_schema('list', type_list(type_integer()), true)),
             $rows->schema()
         );
     }

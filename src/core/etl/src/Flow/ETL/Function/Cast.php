@@ -16,7 +16,7 @@ use function Flow\ETL\DSL\{type_array,
     type_xml};
 use Flow\ETL\Exception\{CastingException, InvalidArgumentException};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\PHP\Type\{Caster, Caster\Options, Type};
+use Flow\ETL\PHP\Type\{Type};
 use Flow\ETL\Row;
 
 final class Cast extends ScalarFunctionChain
@@ -28,7 +28,6 @@ final class Cast extends ScalarFunctionChain
     public function __construct(
         private readonly mixed $value,
         private readonly Type|string $type,
-        private readonly ?Options $options = null,
     ) {
     }
 
@@ -39,7 +38,6 @@ final class Cast extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         $value = (new Parameter($this->value))->eval($row);
-        $options = (new Parameter($this->options))->asInstanceOf($row, Options::class);
 
         $type = $this->type;
 
@@ -47,16 +45,14 @@ final class Cast extends ScalarFunctionChain
             return null;
         }
 
-        $caster = Caster::default();
-
         if ($type instanceof Type) {
-            return new ScalarResult($caster->to($type, $options)->value($value), $type);
+            return new ScalarResult($type->cast($value), $type);
         }
 
         /** @var string $type */
         try {
             return match (\mb_strtolower($type)) {
-                'datetime' => new ScalarResult($caster->to(type_datetime(), $options)->value($value), type_datetime()),
+                'datetime' => new ScalarResult(type_datetime()->cast($value), type_datetime()),
                 'date' => new ScalarResult(
                     match (\gettype($value)) {
                         'string' => (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0),
@@ -69,15 +65,15 @@ final class Cast extends ScalarFunctionChain
                     },
                     type_date()
                 ),
-                'int', 'integer' => new ScalarResult($caster->to(type_integer(), $options)->value($value), type_integer()),
-                'float', 'double', 'real' => new ScalarResult($caster->to(type_float(), $options)->value($value), type_float()),
-                'string' => new ScalarResult($caster->to(type_string(), $options)->value($value), type_string()),
-                'bool', 'boolean' => new ScalarResult($caster->to(type_boolean(), $options)->value($value), type_boolean()),
-                'array' => new ScalarResult($caster->to(type_array(), $options)->value($value), type_array()),
-                'object' => new ScalarResult($caster->to(type_object(\stdClass::class), $options)->value($value), type_object(\stdClass::class)),
-                'json' => new ScalarResult($caster->to(type_json(), $options)->value($value), type_json()),
+                'int', 'integer' => new ScalarResult(type_integer()->cast($value), type_integer()),
+                'float', 'double', 'real' => new ScalarResult(type_float()->cast($value), type_float()),
+                'string' => new ScalarResult(type_string()->cast($value), type_string()),
+                'bool', 'boolean' => new ScalarResult(type_boolean()->cast($value), type_boolean()),
+                'array' => new ScalarResult(type_array()->cast($value), type_array()),
+                'object' => new ScalarResult(type_object(\stdClass::class)->cast($value), type_object(\stdClass::class)),
+                'json' => new ScalarResult(type_json()->cast($value), type_json()),
                 'json_pretty' => new ScalarResult(\json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT), type_json()),
-                'xml' => new ScalarResult($caster->to(type_xml(), $options)->value($value), type_xml()),
+                'xml' => new ScalarResult(type_xml()->cast($value), type_xml()),
                 default => null,
             };
         } catch (CastingException) {

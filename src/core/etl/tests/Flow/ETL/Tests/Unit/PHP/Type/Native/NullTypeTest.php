@@ -4,23 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
-use function Flow\ETL\DSL\{type_float, type_null};
-use function Flow\ETL\DSL\{type_map, type_string};
+use function Flow\ETL\DSL\{type_null};
+use Flow\ETL\Exception\InvalidTypeException;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class NullTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function invalid_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_null()->isEqual(type_null())
-        );
-        self::assertFalse(
-            type_null()->isEqual(type_map(type_string(), type_float()))
-        );
-        self::assertFalse(
-            type_null()->isEqual(type_float())
-        );
+        yield ['string'];
+        yield [false];
+        yield [124.25];
+        yield [124];
+        yield [[1, 2]];
+        yield [new \stdClass()];
+        yield [new \DateTimeImmutable()];
+        yield [new \DateTime()];
+        yield [new \DateTimeZone('UTC')];
+    }
+
+    #[DataProvider('invalid_assert_data_provider')]
+    public function test_invalid_assert(mixed $value) : void
+    {
+        $this->expectException(InvalidTypeException::class);
+        (type_null())->assert($value);
     }
 
     public function test_to_string() : void

@@ -4,23 +4,79 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\{type_float, type_integer, type_list, type_map, type_string};
-use Flow\ETL\Exception\InvalidArgumentException;
+use function Flow\ETL\DSL\{type_float, type_int, type_integer, type_list, type_map, type_string};
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class MapTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function invalid_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            (type_map(type_string(), type_float()))->isEqual(type_map(type_string(), type_float()))
+        yield ['string'];
+        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
+        yield [false];
+        yield [124.25];
+        yield [['a' => 'a', 'b' => 'b']];
+        yield [new \stdClass()];
+        yield [new \DateTimeZone('UTC')];
+    }
+
+    public static function successful_assert_data_provider() : \Generator
+    {
+        yield [[1 => 'a', 2 => 'b']];
+        yield [[0 => 'a', 1 => 'b']];
+        yield [[100 => 'a', 99 => 'b']];
+    }
+
+    public function test_casting_map_of_ints_into_map_of_floats() : void
+    {
+        self::assertSame(
+            [
+                'a' => 1.0,
+                'b' => 2.0,
+                'c' => 3.0,
+            ],
+            type_map(type_string(), type_float())->cast(['a' => 1, 'b' => 2, 'c' => 3])
         );
-        self::assertFalse(
-            (type_map(type_string(), type_float()))->isEqual(type_list(type_integer()))
+    }
+
+    public function test_casting_map_of_string_to_ints_into_map_of_int_to_float() : void
+    {
+        $this->expectException(CastingException::class);
+        $this->expectExceptionMessage('Can\'t cast "array" into "map<integer, float>"');
+
+        self::assertSame(
+            [
+                'a' => 1.0,
+                'b' => 2.0,
+                'c' => 3.0,
+            ],
+            type_map(type_int(), type_float())->cast(['a' => 1, 'b' => 2, 'c' => 3])
         );
-        self::assertFalse(
-            (type_map(type_string(), type_float()))->isEqual(type_map(type_string(), type_integer()))
+    }
+
+    public function test_casting_scalar_to_map() : void
+    {
+        self::assertSame(
+            [
+                '0' => 2,
+            ],
+            type_map(type_string(), type_integer())->cast('2')
         );
+    }
+
+    #[DataProvider('invalid_assert_data_provider')]
+    public function test_invalid_assert(mixed $value) : void
+    {
+        $this->expectException(InvalidTypeException::class);
+        type_map(type_int(), type_string())->assert($value);
+    }
+
+    #[DataProvider('successful_assert_data_provider')]
+    public function test_successful_assert(mixed $value) : void
+    {
+        self::assertIsArray((type_map(type_int(), type_string()))->assert($value));
     }
 
     public function test_to_string() : void
@@ -31,21 +87,10 @@ final class MapTypeTest extends FlowTestCase
         );
     }
 
-    public function test_using_nullable_map_key() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Key cannot be nullable');
-
-        type_map(type_string(true), type_string());
-    }
-
     public function test_valid() : void
     {
         self::assertTrue(
             (type_map(type_string(), type_string()))->isValid(['one' => 'two'])
-        );
-        self::assertTrue(
-            (type_map(type_string(), type_string(), true))->isValid(null)
         );
         self::assertTrue(
             (type_map(type_integer(), type_list(type_integer())))->isValid([[1, 2], [3, 4]])

@@ -38,7 +38,6 @@ final readonly class Config
         private FilesystemTable $filesystemTable,
         private FilesystemStreams $filesystemStreams,
         private Optimizer $optimizer,
-        private Caster $caster,
         private bool $putInputIntoRows,
         private EntryFactory $entryFactory,
         public CacheConfig $cache,

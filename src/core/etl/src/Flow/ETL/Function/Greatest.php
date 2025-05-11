@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Function\Comparison\Comparable;
+use Flow\ETL\PHP\Type\ValueComparator;
 use Flow\ETL\Row;
 
 final class Greatest extends ScalarFunctionChain
 {
-    use Comparable;
-
     public function __construct(
         private readonly array $values,
     ) {
@@ -28,7 +26,7 @@ final class Greatest extends ScalarFunctionChain
             return null;
         }
 
-        $this->assertAllComparable($extractedValues, '>');
+        (new ValueComparator())->assertAllComparable($extractedValues, '>');
 
         return max($extractedValues);
     }

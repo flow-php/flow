@@ -7,14 +7,13 @@ namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer\PHPValu
 use function Flow\ETL\DSL\{type_integer, type_list, type_map, type_string};
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class MapNormalizationTest extends FlowTestCase
 {
     public function test_normalizing_empty_map_of_int_to_str() : void
     {
-        $normalizer = new PHPValueNormalizer(Caster::default());
+        $normalizer = new PHPValueNormalizer();
 
         self::assertEquals(
             XMLNode::nestedNode('map'),
@@ -24,7 +23,7 @@ final class MapNormalizationTest extends FlowTestCase
 
     public function test_normalizing_map_of_int_to_str() : void
     {
-        $normalizer = new PHPValueNormalizer(Caster::default());
+        $normalizer = new PHPValueNormalizer();
 
         self::assertEquals(
             XMLNode::nestedNode('map')
@@ -49,7 +48,7 @@ final class MapNormalizationTest extends FlowTestCase
 
     public function test_normalizing_map_of_str_to_list_of_ints() : void
     {
-        $normalizer = new PHPValueNormalizer(Caster::default());
+        $normalizer = new PHPValueNormalizer();
 
         self::assertEquals(
             XMLNode::nestedNode('map')

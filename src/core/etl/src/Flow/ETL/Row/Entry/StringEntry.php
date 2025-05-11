@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{type_equals, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\StringType;
 use Flow\ETL\PHP\Type\Type;
@@ -12,7 +12,7 @@ use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?string, ?string>
+ * @implements Entry<?string, string>
  */
 final class StringEntry implements Entry
 {
@@ -37,7 +37,7 @@ final class StringEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_string($this->value === null);
+        $this->type = type_string();
     }
 
     public static function fromNull(string $name, ?Metadata $metadata = null) : self
@@ -74,6 +74,7 @@ final class StringEntry implements Entry
         return new Definition(
             $this->name,
             $this->type,
+            $this->value === null,
             $this->fromNull
                 ? $this->metadata->merge(Metadata::fromArray([Metadata::FROM_NULL => true]))
                 : $this->metadata
@@ -96,7 +97,7 @@ final class StringEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value() === $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
     }
 
     public function map(callable $mapper) : Entry

@@ -4,104 +4,80 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?\UnitEnum>
+ * @implements Type<\UnitEnum>
  */
 final readonly class EnumType implements Type
 {
     /**
      * @param class-string<\UnitEnum> $class
      */
-    public function __construct(public string $class, private bool $nullable)
+    public function __construct(public string $class)
     {
         if (!\enum_exists($class)) {
             throw new InvalidArgumentException("Enum {$class} not found");
         }
     }
 
+    /**
+     * @template ClassType
+     *
+     * @param array{class: class-string<ClassType>} $data
+     *
+     * @return EnumType<ClassType>
+     */
     public static function fromArray(array $data) : self
     {
         if (!\array_key_exists('class', $data)) {
             throw new InvalidArgumentException("Missing 'class' key in enum type definition");
         }
 
-        $nullable = $data['nullable'] ?? false;
-
-        return new self($data['class'], $nullable);
+        return new self($data['class']);
     }
 
     /**
      * @param class-string<\UnitEnum> $class
      */
-    public static function of(string $class, bool $nullable = false) : self
+    public static function of(string $class) : self
     {
-        return new self($class, $nullable);
+        return new self($class);
     }
 
-    public function isComparableWith(Type $type) : bool
+    public function assert(mixed $value) : \UnitEnum
     {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof NullType) {
-            return true;
-        }
-
-        if (($type instanceof StringType || $type instanceof IntegerType) && \is_a($this->class, \BackedEnum::class, true)) {
-            return true;
-        }
-
-        return false;
+        throw InvalidTypeException::value($value, $this);
     }
 
-    public function isCompatible(Type $type) : bool
+    public function cast(mixed $value) : \UnitEnum
     {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
+        if ($value instanceof $this->class) {
+            return $value;
         }
 
-        return $this->isEqual($type);
-    }
+        try {
+            /** @var EnumType $type */
+            $enumClass = $this->class;
 
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self && $this->class === $type->class;
-    }
+            if (\is_a($enumClass, \BackedEnum::class, true)) {
+                return $enumClass::from($value);
+            }
 
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+            throw new CastingException($value, $this);
+        } catch (\Throwable) {
+            throw new CastingException($value, $this);
+        }
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         return \is_a($value, $this->class, true);
-    }
-
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($this->class, $nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->class, $this->nullable || $type->nullable());
     }
 
     public function normalize() : array
@@ -109,17 +85,11 @@ final readonly class EnumType implements Type
         return [
             'type' => 'enum',
             'class' => $this->class,
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'enum<' . $this->class . '>';
+        return 'enum<' . $this->class . '>';
     }
 }

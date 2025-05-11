@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{get_type,
+use function Flow\ETL\DSL\{
+    get_type,
     type_boolean,
     type_date,
     type_datetime,
@@ -12,14 +13,9 @@ use function Flow\ETL\DSL\{get_type,
     type_integer,
     type_json,
     type_uuid};
-use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 
 final readonly class AutoCaster
 {
-    public function __construct(private Caster $caster)
-    {
-    }
-
     public function cast(mixed $value) : mixed
     {
         if (\is_string($value)) {
@@ -49,7 +45,7 @@ final readonly class AutoCaster
             $castedArray = [];
 
             foreach ($value as $key => $item) {
-                $castedArray[$key] = $this->caster->to(type_float())->value($item);
+                $castedArray[$key] = type_float()->cast($item);
             }
 
             return $castedArray;
@@ -60,38 +56,38 @@ final readonly class AutoCaster
 
     private function castToString(string $value) : mixed
     {
-        $typeChecker = new StringTypeChecker($value);
+        $typeChecker = new Native\String\StringTypeChecker($value);
 
         if ($typeChecker->isNull()) {
             return null;
         }
 
         if ($typeChecker->isInteger()) {
-            return $this->caster->to(type_integer())->value($value);
+            return type_integer()->cast($value);
         }
 
         if ($typeChecker->isFloat()) {
-            return $this->caster->to(type_float())->value($value);
+            return type_float()->cast($value);
         }
 
         if ($typeChecker->isBoolean()) {
-            return $this->caster->to(type_boolean())->value($value);
+            return type_boolean()->cast($value);
         }
 
         if ($typeChecker->isJson()) {
-            return $this->caster->to(type_json())->value($value);
+            return type_json()->cast($value);
         }
 
         if ($typeChecker->isUuid()) {
-            return $this->caster->to(type_uuid())->value($value);
+            return type_uuid()->cast($value);
         }
 
         if ($typeChecker->isDate()) {
-            return $this->caster->to(type_date())->value($value);
+            return type_date()->cast($value);
         }
 
         if ($typeChecker->isDateTime()) {
-            return $this->caster->to(type_datetime())->value($value);
+            return type_datetime()->cast($value);
         }
 
         return $value;

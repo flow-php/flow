@@ -159,7 +159,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 str_schema('string', true),
                 bool_schema('bool', true),
                 int_schema('int', true),
-                float_schema('float', true, precision: 2),
+                float_schema('float', true),
             ),
             $rows->schema()
         );
@@ -181,7 +181,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 str_schema('string', true),
                 bool_schema('bool', true),
                 int_schema('int', true),
-                float_schema('float', true, precision: 2),
+                float_schema('float', true),
             ),
             Schema::fromPipeline($pipeline, $context = flow_context())
         );

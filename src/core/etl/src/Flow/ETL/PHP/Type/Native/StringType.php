@@ -4,99 +4,81 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use function Flow\ETL\DSL\dom_element_to_string;
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?string>
+ * @implements Type<string>
  */
 final readonly class StringType implements Type
 {
-    public function __construct(private bool $nullable = false)
+    public function assert(mixed $value) : string
     {
-    }
-
-    public static function fromArray(array $data) : Type
-    {
-        $nullable = $data['nullable'] ?? false;
-
-        return new self($nullable);
-    }
-
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof NullType) {
-            return true;
+        throw InvalidTypeException::value($value, $this);
+    }
+
+    public function cast(mixed $value) : string
+    {
+        if (\is_string($value)) {
+            return $value;
         }
 
-        return false;
-    }
-
-    public function isCompatible(Type $type) : bool
-    {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
+        if (\is_bool($value)) {
+            return $value ? 'true' : 'false';
         }
 
-        return $this->isEqual($type);
+        if (\is_array($value)) {
+            return \json_encode($value, JSON_THROW_ON_ERROR);
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format(\DateTimeInterface::RFC3339);
+        }
+
+        if ($value instanceof \Stringable) {
+            return (string) $value;
+        }
+
+        if ($value instanceof \DOMDocument) {
+            return $value->saveXML($value->documentElement) ?: '';
+        }
+
+        if ($value instanceof \DOMElement) {
+            return (string) dom_element_to_string($value);
+        }
+
+        try {
+            return (string) $value;
+            /* @phpstan-ignore-next-line */
+        } catch (\Throwable) {
+            throw new CastingException($value, $type);
+        }
     }
 
-    public function isEqual(Type $type) : bool
+    public function isStringable(mixed $value) : bool
     {
-        return $type instanceof self;
-    }
-
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+        return \is_string($value) || (\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable;
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         return \is_string($value);
-    }
-
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($nullable);
-    }
-
-    public function merge(Type $type) : Type
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->nullable || $type->nullable());
     }
 
     public function normalize() : array
     {
         return [
             'type' => 'string',
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'string';
+        return 'string';
     }
 }

@@ -4,115 +4,67 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\ETL\PHP\Type\Logical\XML\XMLConverter;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?array>
+ * @implements Type<array>
  */
 final readonly class ArrayType implements Type
 {
-    public function __construct(public bool $empty = false, private bool $nullable = false)
+    public function assert(mixed $value) : array
     {
-    }
-
-    public static function empty() : self
-    {
-        return new self(true);
-    }
-
-    public static function fromArray(array $data) : self
-    {
-        return new self($data['empty'] ?? false, $data['nullable'] ?? false);
-    }
-
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof NullType) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof self) {
-            return true;
-        }
-
-        return false;
+        throw InvalidTypeException::value($value, $this);
     }
 
-    public function isCompatible(Type $type) : bool
+    public function cast(mixed $value) : array
     {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
+        try {
+            if (\is_array($value)) {
+                return $value;
+            }
+
+            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
+                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+            }
+
+            if ($value instanceof \DOMDocument) {
+                return (new XMLConverter())->toArray($value);
+            }
+
+            if (\is_object($value)) {
+                return \json_decode(\json_encode($value, JSON_THROW_ON_ERROR), true, 512, \JSON_THROW_ON_ERROR);
+            }
+
+            return (array) $value;
+        } catch (\Throwable) {
+            throw new CastingException($value, $this);
         }
-
-        return $this->isEqual($type);
-    }
-
-    /**
-     * @psalm
-     */
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self;
-    }
-
-    public function isSame(Type $type) : bool
-    {
-        if (!$this->isEqual($type)) {
-            return false;
-        }
-
-        /** @var self $type */
-        return $this->nullable() === $type->nullable() && $this->empty === $type->empty;
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
+        if (!\is_array($value)) {
+            return false;
         }
 
-        return \is_array($value);
-    }
-
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($this->empty, $nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->empty || $type->empty, $this->nullable || $type->nullable());
+        return true;
     }
 
     public function normalize() : array
     {
         return [
             'type' => 'array',
-            'empty' => $this->empty,
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        if ($this->empty) {
-            return ($this->nullable ? '?' : '') . 'array<empty, empty>';
-        }
-
-        return ($this->nullable ? '?' : '') . 'array<mixed>';
+        return 'array<mixed>';
     }
 }

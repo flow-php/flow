@@ -4,98 +4,70 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
-use function Flow\ETL\DSL\{type_boolean, type_callable, type_int, type_map, type_string};
+use function Flow\ETL\DSL\{type_boolean, type_from_array};
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class BooleanTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function boolean_castable_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_boolean(false)->isEqual(type_boolean(false))
-        );
-        self::assertFalse(
-            type_boolean(false)->isEqual(type_map(type_string(), type_int()))
-        );
-        self::assertFalse(
-            type_boolean(false)->isEqual(type_callable(false))
-        );
-        self::assertFalse(
-            type_boolean(false)->isSame(type_boolean(true))
-        );
+        yield 'string' => ['string', true];
+        yield 'string true' => ['true', true];
+        yield 'string 1' => ['1', true];
+        yield 'string yes' => ['yes', true];
+        yield 'string on' => ['on', true];
+        yield 'string false' => ['false', false];
+        yield 'string 0' => ['0', false];
+        yield 'string no' => ['no', false];
+        yield 'string off' => ['off', false];
+        yield 'int' => [1, true];
+        yield 'float' => [1.1, true];
+        yield 'bool' => [true, true];
+        yield 'array' => [[1, 2, 3], true];
+        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), true];
+        yield 'DateInterval' => [new \DateInterval('P1D'), true];
+        yield 'DOMDocument' => [new \DOMDocument(), true];
+        yield 'DOMElement - true' => [new \DOMElement('element', 'true'), true];
+        yield 'DOMElement - false' => [new \DOMElement('element', 'false'), false];
     }
 
-    public function test_from_array() : void
+    #[DataProvider('boolean_castable_data_provider')]
+    public function test_casting_different_data_types_to_integer(mixed $value, bool $expected) : void
     {
-        self::assertTrue(
-            type_boolean(false)->isEqual(type_boolean(false)->fromArray(['type' => 'boolean', 'nullable' => false]))
-        );
-        self::assertTrue(
-            type_boolean(true)->isEqual(type_boolean(true)->fromArray(['type' => 'boolean', 'nullable' => true]))
-        );
+        self::assertSame($expected, type_boolean()->cast($value));
     }
 
-    public function test_is_comparable_with() : void
+    public function test_invalid_assertion() : void
     {
-        self::assertTrue(
-            type_boolean(false)->isComparableWith(type_boolean(false))
-        );
-        self::assertTrue(
-            type_boolean(false)->isComparableWith(type_boolean(true))
-        );
-        self::assertTrue(
-            type_boolean(true)->isComparableWith(type_boolean(false))
-        );
-        self::assertTrue(
-            type_boolean(true)->isComparableWith(type_boolean(true))
-        );
+        $this->expectExceptionMessage('Expected type "boolean", got "string".');
+        self::assertIsBool(type_boolean()->assert('true'));
     }
 
-    public function test_is_equal() : void
+    public function test_normalization() : void
     {
-        self::assertTrue(
-            type_boolean(false)->isEqual(type_boolean(false))
+        self::assertEquals(
+            [
+                'type' => 'boolean',
+            ],
+            type_boolean()->normalize()
         );
-        self::assertFalse(
-            type_boolean(false)->isSame(type_boolean(true))
-        );
-    }
 
-    public function test_make_nullable() : void
-    {
-        self::assertTrue(
-            type_boolean(false)->makeNullable(true)->isEqual(type_boolean(true))
-        );
-        self::assertTrue(
-            type_boolean(true)->makeNullable(false)->isEqual(type_boolean(false))
-        );
-    }
-
-    public function test_merge() : void
-    {
-        self::assertTrue(
-            type_boolean(false)->merge(type_boolean(false))->isEqual(type_boolean(false))
-        );
-        self::assertTrue(
-            type_boolean(false)->merge(type_boolean(true))->isEqual(type_boolean(true))
-        );
-        self::assertTrue(
-            type_boolean(true)->merge(type_boolean(false))->isEqual(type_boolean(true))
-        );
-        self::assertTrue(
-            type_boolean(true)->merge(type_boolean(true))->isEqual(type_boolean(true))
+        self::assertEquals(
+            type_boolean(),
+            type_from_array(type_boolean()->normalize())
         );
     }
 
     public function test_normalize() : void
     {
         self::assertSame(
-            ['type' => 'boolean', 'nullable' => false],
-            type_boolean(false)->normalize()
+            ['type' => 'boolean'],
+            type_boolean()->normalize()
         );
         self::assertSame(
-            ['type' => 'boolean', 'nullable' => true],
-            type_boolean(true)->normalize()
+            ['type' => 'boolean'],
+            type_boolean()->normalize()
         );
     }
 
@@ -103,30 +75,30 @@ final class BooleanTypeTest extends FlowTestCase
     {
         self::assertSame(
             'boolean',
-            type_boolean(false)->toString()
-        );
-        self::assertSame(
-            '?boolean',
-            type_boolean(true)->toString()
+            type_boolean()->toString()
         );
     }
 
     public function test_valid() : void
     {
         self::assertTrue(
-            type_boolean(false)->isValid(true)
+            type_boolean()->isValid(true)
         );
-        self::assertTrue(
-            type_boolean(true)->isValid(null)
+
+        self::assertFalse(
+            type_boolean()->isValid('one')
         );
         self::assertFalse(
-            type_boolean(false)->isValid('one')
+            type_boolean()->isValid([1, 2])
         );
         self::assertFalse(
-            type_boolean(false)->isValid([1, 2])
+            type_boolean()->isValid(123)
         );
-        self::assertFalse(
-            type_boolean(false)->isValid(123)
-        );
+    }
+
+    public function test_valid_assertion() : void
+    {
+        self::assertIsBool(type_boolean()->assert(true));
+        self::assertIsBool(type_boolean()->assert(false));
     }
 }

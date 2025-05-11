@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use function Flow\ETL\DSL\{
-    type_array,
+use function Flow\ETL\DSL\{type_array,
     type_boolean,
     type_callable,
     type_datetime,
     type_enum,
     type_float,
+    type_from_array,
     type_integer,
     type_json,
     type_list,
@@ -24,7 +24,6 @@ use function Flow\ETL\DSL\{
     type_uuid,
     type_xml,
     type_xml_element};
-use Flow\ETL\PHP\Type\TypeFactory;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Tests\Unit\PHP\Type\Fixtures\SomeEnum;
 
@@ -33,73 +32,73 @@ final class TypeFactoryTest extends FlowTestCase
     public function test_normalizing_and_creating_all_scalar() : void
     {
         $string = type_string();
-        self::assertEquals($string, TypeFactory::fromArray($string->normalize()));
+        self::assertEquals($string, type_from_array($string->normalize()));
         $integer = type_integer();
-        self::assertEquals($integer, TypeFactory::fromArray($integer->normalize()));
+        self::assertEquals($integer, type_from_array($integer->normalize()));
         $boolean = type_boolean();
-        self::assertEquals($boolean, TypeFactory::fromArray($boolean->normalize()));
+        self::assertEquals($boolean, type_from_array($boolean->normalize()));
         $float = type_float();
-        self::assertEquals($float, TypeFactory::fromArray($float->normalize()));
+        self::assertEquals($float, type_from_array($float->normalize()));
     }
 
     public function test_normalizing_and_creating_array_type() : void
     {
         $array = type_array();
-        self::assertEquals($array, TypeFactory::fromArray($array->normalize()));
+        self::assertEquals($array, type_from_array($array->normalize()));
     }
 
     public function test_normalizing_and_creating_callable_type() : void
     {
         $callable = type_callable();
-        self::assertEquals($callable, TypeFactory::fromArray($callable->normalize()));
+        self::assertEquals($callable, type_from_array($callable->normalize()));
     }
 
     public function test_normalizing_and_creating_datetime_type() : void
     {
         $datetime = type_datetime();
-        self::assertEquals($datetime, TypeFactory::fromArray($datetime->normalize()));
+        self::assertEquals($datetime, type_from_array($datetime->normalize()));
     }
 
     public function test_normalizing_and_creating_enum_type() : void
     {
         $enum = type_enum(SomeEnum::class);
-        self::assertEquals($enum, TypeFactory::fromArray($enum->normalize()));
+        self::assertEquals($enum, type_from_array($enum->normalize()));
     }
 
     public function test_normalizing_and_creating_json_type() : void
     {
         $json = type_json();
-        self::assertEquals($json, TypeFactory::fromArray($json->normalize()));
+        self::assertEquals($json, type_from_array($json->normalize()));
     }
 
     public function test_normalizing_and_creating_list_type() : void
     {
         $list = type_list(type_string());
-        self::assertEquals($list, TypeFactory::fromArray($list->normalize()));
+        self::assertEquals($list, type_from_array($list->normalize()));
     }
 
     public function test_normalizing_and_creating_map_type() : void
     {
         $map = type_map(type_string(), type_integer());
-        self::assertEquals($map, TypeFactory::fromArray($map->normalize()));
+        self::assertEquals($map, type_from_array($map->normalize()));
     }
 
     public function test_normalizing_and_creating_null_type() : void
     {
         $null = type_null();
-        self::assertEquals($null, TypeFactory::fromArray($null->normalize()));
+        self::assertEquals($null, type_from_array($null->normalize()));
     }
 
     public function test_normalizing_and_creating_object_type() : void
     {
         $object = type_object(\stdClass::class);
-        self::assertEquals($object, TypeFactory::fromArray($object->normalize()));
+        self::assertEquals($object, type_from_array($object->normalize()));
     }
 
     public function test_normalizing_and_creating_resource_type() : void
     {
         $resource = type_resource();
-        self::assertEquals($resource, TypeFactory::fromArray($resource->normalize()));
+        self::assertEquals($resource, type_from_array($resource->normalize()));
     }
 
     public function test_normalizing_and_creating_structure_type() : void
@@ -114,42 +113,42 @@ final class TypeFactoryTest extends FlowTestCase
             ]
         );
 
-        self::assertEquals($structure, TypeFactory::fromArray($structure->normalize()));
+        self::assertEquals($structure, type_from_array($structure->normalize()));
     }
 
     public function test_normalizing_and_creating_uuid_type() : void
     {
         $uuid = type_uuid();
-        self::assertEquals($uuid, TypeFactory::fromArray($uuid->normalize()));
+        self::assertEquals($uuid, type_from_array($uuid->normalize()));
     }
 
     public function test_normalizing_and_creating_xml_element_type() : void
     {
         $xmlElement = type_xml_element();
-        self::assertEquals($xmlElement, TypeFactory::fromArray($xmlElement->normalize()));
+        self::assertEquals($xmlElement, type_from_array($xmlElement->normalize()));
     }
 
     public function test_normalizing_and_creating_xml_type() : void
     {
         $xml = type_xml();
-        self::assertEquals($xml, TypeFactory::fromArray($xml->normalize()));
+        self::assertEquals($xml, type_from_array($xml->normalize()));
     }
 
     public function test_normalizing_date() : void
     {
         $date = type_datetime();
-        self::assertEquals($date, TypeFactory::fromArray($date->normalize()));
+        self::assertEquals($date, type_from_array($date->normalize()));
     }
 
     public function test_normalizing_date_time() : void
     {
         $dateTime = type_datetime();
-        self::assertEquals($dateTime, TypeFactory::fromArray($dateTime->normalize()));
+        self::assertEquals($dateTime, type_from_array($dateTime->normalize()));
     }
 
     public function test_normalizing_time() : void
     {
         $time = type_time();
-        self::assertEquals($time, TypeFactory::fromArray($time->normalize()));
+        self::assertEquals($time, type_from_array($time->normalize()));
     }
 }

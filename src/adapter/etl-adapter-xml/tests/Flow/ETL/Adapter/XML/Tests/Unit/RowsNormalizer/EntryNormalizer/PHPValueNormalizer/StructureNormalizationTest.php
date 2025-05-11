@@ -7,14 +7,13 @@ namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer\PHPValu
 use function Flow\ETL\DSL\{type_datetime, type_integer, type_list, type_string, type_structure};
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StructureNormalizationTest extends FlowTestCase
 {
     public function test_normalization_of_flat_structure() : void
     {
-        $normalizer = new PHPValueNormalizer(Caster::default());
+        $normalizer = new PHPValueNormalizer();
 
         $normalized = $normalizer->normalize(
             'structure',
@@ -37,7 +36,7 @@ final class StructureNormalizationTest extends FlowTestCase
 
     public function test_normalization_of_structure_with_list_of_int() : void
     {
-        $normalizer = new PHPValueNormalizer(Caster::default());
+        $normalizer = new PHPValueNormalizer();
 
         $normalized = $normalizer->normalize(
             'structure',
@@ -67,7 +66,7 @@ final class StructureNormalizationTest extends FlowTestCase
 
     public function test_normalization_of_structure_with_nested_structure() : void
     {
-        $normalizer = new PHPValueNormalizer(Caster::default());
+        $normalizer = new PHPValueNormalizer();
 
         $normalized = $normalizer->normalize(
             'structure',

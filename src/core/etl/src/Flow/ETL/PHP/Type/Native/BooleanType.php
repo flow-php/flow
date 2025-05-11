@@ -4,99 +4,65 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?boolean>
+ * @implements Type<boolean>
  */
 final readonly class BooleanType implements Type
 {
-    public function __construct(private bool $nullable = false)
+    public function assert(mixed $value) : bool
     {
-    }
-
-    public static function fromArray(array $data) : Type
-    {
-        $nullable = $data['nullable'] ?? false;
-
-        return new self($nullable);
-    }
-
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof NullType) {
-            return true;
+        throw InvalidTypeException::value($value, $this);
+    }
+
+    public function cast(mixed $value) : bool
+    {
+        if (\is_bool($value)) {
+            return $value;
         }
 
-        return false;
-    }
-
-    public function isCompatible(Type $type) : bool
-    {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
+        if ($value instanceof \DOMElement) {
+            $value = $value->nodeValue;
         }
 
-        return $this->isEqual($type);
-    }
+        if (\is_string($value)) {
+            if (\in_array(\mb_strtolower($value), ['true', '1', 'yes', 'on'], true)) {
+                return true;
+            }
 
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self;
-    }
+            if (\in_array(\mb_strtolower($value), ['false', '0', 'no', 'off'], true)) {
+                return false;
+            }
+        }
 
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+        try {
+            return (bool) $value;
+            /* @phpstan-ignore-next-line */
+        } catch (\Throwable) {
+            throw new CastingException($value, $this);
+        }
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         return \is_bool($value);
-    }
-
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($nullable);
-    }
-
-    public function merge(Type $type) : Type
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->nullable || $type->nullable());
     }
 
     public function normalize() : array
     {
         return [
             'type' => 'boolean',
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'boolean';
+        return 'boolean';
     }
 }

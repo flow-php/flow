@@ -4,62 +4,44 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
-use Flow\ETL\PHP\Type\Native\NullType;
+use function Flow\ETL\DSL\type_json;
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\ETL\PHP\Type\Native\String\StringTypeChecker;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?string>
+ * @implements Type<string>
  */
 final readonly class JsonType implements Type
 {
-    public function __construct(private bool $nullable = false)
+    public function assert(mixed $value) : string
     {
-    }
-
-    public static function fromArray(array $data) : self
-    {
-        return new self($data['nullable'] ?? false);
-    }
-
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof NullType) {
-            return true;
+        throw InvalidTypeException::value($value, $this);
+    }
+
+    public function cast(mixed $value) : string
+    {
+        try {
+            if (\is_string($value)) {
+                return \json_encode(\json_decode($value, true, 512, \JSON_THROW_ON_ERROR), JSON_THROW_ON_ERROR);
+            }
+
+            if (\is_scalar($value)) {
+                throw new CastingException($value, type_json());
+            }
+
+            return \json_encode($value, JSON_THROW_ON_ERROR);
+        } catch (\Throwable) {
+            throw new CastingException($value, $this);
         }
-
-        return false;
-    }
-
-    public function isCompatible(Type $type) : bool
-    {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
-        }
-
-        return $this->isEqual($type);
-    }
-
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self;
-    }
-
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
 
         if (!\is_string($value)) {
             return false;
@@ -68,39 +50,15 @@ final readonly class JsonType implements Type
         return (new StringTypeChecker($value))->isJson();
     }
 
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->nullable || $type->nullable());
-    }
-
     public function normalize() : array
     {
         return [
             'type' => 'json',
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'json';
+        return 'json';
     }
 }

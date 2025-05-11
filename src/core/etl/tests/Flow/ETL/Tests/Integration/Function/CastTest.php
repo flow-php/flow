@@ -40,10 +40,11 @@ final class CastTest extends FlowTestCase
             ))
             ->withEntry('list_int', ref('array')->cast(type_list(type_integer(), true)))
             ->drop('array')
-            ->fetch()->first();
+            ->fetch()
+            ->first();
 
         self::assertEquals(
-            type_list(type_integer(), true),
+            type_list(type_integer()),
             $row->get('list_int')->type()
         );
     }

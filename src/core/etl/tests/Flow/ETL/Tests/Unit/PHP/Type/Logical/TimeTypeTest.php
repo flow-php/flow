@@ -4,19 +4,49 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\{type_int, type_time};
+use function Flow\ETL\DSL\{type_time};
+use Flow\ETL\Exception\InvalidTypeException;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class TimeTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function invalid_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_time()->isEqual(type_time())
-        );
-        self::assertFalse(
-            type_time()->isEqual(type_int())
-        );
+        yield ['string'];
+        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
+        yield [false];
+        yield [124.25];
+        yield [[1, 2]];
+        yield [new \stdClass()];
+        yield [new \DateTimeZone('UTC')];
+        yield [new \DateTimeImmutable()];
+    }
+
+    public static function successful_assert_data_provider() : \Generator
+    {
+        yield [new \DateInterval('PT10S')];
+    }
+
+    public static function time_castable_data_provider() : \Generator
+    {
+        yield 'string' => ['PT1S', new \DateInterval('PT1S')];
+        yield 'datetime' => [new \DateTimeImmutable('2021-01-01 00:00:01'), new \DateInterval('PT1S')];
+        yield 'date' => [new \DateTimeImmutable('2021-01-01'), new \DateInterval('PT0S')];
+        yield 'time' => [new \DateInterval('PT10S'), new \DateInterval('PT10S')];
+    }
+
+    #[DataProvider('time_castable_data_provider')]
+    public function test_casting_different_time_types_to_time(mixed $value, \DateInterval $expextedInterval) : void
+    {
+        self::assertEquals($expextedInterval, type_time()->cast($value));
+    }
+
+    #[DataProvider('invalid_assert_data_provider')]
+    public function test_invalid_assert(mixed $value) : void
+    {
+        $this->expectException(InvalidTypeException::class);
+        type_time()->assert($value);
     }
 
     public function test_is_valid() : void
@@ -27,20 +57,10 @@ final class TimeTypeTest extends FlowTestCase
         self::assertFalse(type_time()->isValid('PT10S'));
     }
 
-    public function test_merge_non_nullable_with_non_nullable() : void
+    #[DataProvider('successful_assert_data_provider')]
+    public function test_successful_assert(mixed $value) : void
     {
-        self::assertFalse(type_time()->merge(type_time())->nullable());
-    }
-
-    public function test_merge_non_nullable_with_nullable() : void
-    {
-        self::assertTrue(type_time()->merge(type_time(true))->nullable());
-        self::assertTrue(type_time(true)->merge(type_time(false))->nullable());
-    }
-
-    public function test_merge_nullable_with_nullable() : void
-    {
-        self::assertTrue(type_time(true)->merge(type_time(true))->nullable());
+        self::assertInstanceOf(\DateInterval::class, type_time()->assert($value));
     }
 
     public function test_to_string() : void
@@ -48,10 +68,6 @@ final class TimeTypeTest extends FlowTestCase
         self::assertSame(
             'time',
             type_time()->toString()
-        );
-        self::assertSame(
-            '?time',
-            type_time(true)->toString()
         );
     }
 }

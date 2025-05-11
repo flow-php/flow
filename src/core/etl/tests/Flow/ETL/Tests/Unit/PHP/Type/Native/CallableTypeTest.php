@@ -4,56 +4,49 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
-use function Flow\ETL\DSL\{type_callable, type_float};
-use function Flow\ETL\DSL\{type_map, type_string};
+use function Flow\ETL\DSL\{type_callable};
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\TestWith;
 
 final class CallableTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    #[TestWith(['some_string', 'Expected type "callable", got "string"'])]
+    public function test_invalid_assertion(mixed $value, string $exception) : void
     {
-        self::assertTrue(
-            type_callable(false)->isEqual(type_callable(false))
-        );
-        self::assertFalse(
-            type_callable(false)->isEqual(type_map(type_string(), type_float()))
-        );
-        self::assertFalse(
-            type_callable(false)->isEqual(type_float())
-        );
-        self::assertFalse(
-            type_callable(false)->isSame(type_callable(true))
-        );
+        $this->expectExceptionMessage($exception);
+
+        type_callable()->assert($value);
     }
 
     public function test_to_string() : void
     {
         self::assertSame(
             'callable',
-            type_callable(false)->toString()
+            type_callable()->toString()
         );
-        self::assertSame(
-            '?callable',
-            type_callable(true)->toString()
-        );
+
     }
 
     public function test_valid() : void
     {
         self::assertTrue(
-            type_callable(false)->isValid('printf')
+            type_callable()->isValid('printf')
         );
-        self::assertTrue(
-            type_callable(true)->isValid(null)
+
+        self::assertFalse(
+            type_callable()->isValid('one')
         );
         self::assertFalse(
-            type_callable(false)->isValid('one')
+            type_callable()->isValid([1, 2])
         );
         self::assertFalse(
-            type_callable(false)->isValid([1, 2])
+            type_callable()->isValid(123)
         );
-        self::assertFalse(
-            type_callable(false)->isValid(123)
-        );
+    }
+
+    #[TestWith(['count'])]
+    public function test_valid_assertion(mixed $value) : void
+    {
+        self::assertIsCallable(type_callable()->assert($value));
     }
 }

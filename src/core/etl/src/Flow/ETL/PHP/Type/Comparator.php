@@ -1,0 +1,154 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\PHP\Type;
+
+use function Flow\ETL\DSL\type_equals;
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, ListType, MapType, OptionalType, StructureType, TimeType};
+use Flow\ETL\PHP\Type\Native\{FloatType, IntegerType, NullType, StringType, UnionType};
+
+final class Comparator
+{
+    /**
+     * @param Type<mixed> $left
+     * @param Type<mixed> $right
+     */
+    public function comparable(Type $left, Type $right) : bool
+    {
+        if ($left instanceof UnionType && $left->isOptionalType()) {
+            return $this->comparable($left->types()->reduceOptionals()->first(), $right);
+        }
+
+        if ($right instanceof UnionType && $right->isOptionalType()) {
+            return $this->comparable($left, $right->types()->reduceOptionals()->first());
+        }
+
+        if ($left instanceof UnionType || $right instanceof UnionType) {
+            return false;
+        }
+
+        if ($left instanceof OptionalType) {
+            return $this->comparable($left->base(), $right) || $right instanceof NullType;
+        }
+
+        if ($right instanceof OptionalType) {
+            return $this->comparable($left, $right->base()) || $left instanceof NullType;
+        }
+
+        if ($left instanceof NullType || $right instanceof NullType) {
+            return true;
+        }
+
+        if ($left instanceof IntegerType || $left instanceof FloatType) {
+            return $right instanceof IntegerType || $right instanceof FloatType || $right instanceof StringType;
+        }
+
+        if ($right instanceof IntegerType || $right instanceof FloatType) {
+            return $left instanceof IntegerType || $left instanceof FloatType || $left instanceof StringType;
+        }
+
+        if ($left instanceof DateTimeType || $left instanceof DateType) {
+            return $right instanceof DateTimeType || $right instanceof DateType;
+        }
+
+        if ($left instanceof TimeType && $right instanceof TimeType) {
+            return true;
+        }
+
+        return type_equals($left, $right);
+    }
+
+    /**
+     * @param Type<mixed> $left
+     * @param Type<mixed> $right
+     */
+    public function equals(Type $left, Type $right) : bool
+    {
+        if ($left::class !== $right::class) {
+            return false;
+        }
+
+        if ($left instanceof MapType && $right instanceof MapType) {
+            return $this->equals($left->key(), $right->key()) && $this->equals($left->value(), $right->value());
+        }
+
+        if ($left instanceof ListType && $right instanceof ListType) {
+            return $this->equals($left->element(), $right->element());
+        }
+
+        if ($left instanceof StructureType && $right instanceof StructureType) {
+            if (\count($left->elements()) !== \count($right->elements())) {
+                return false;
+            }
+
+            $rightElements = $right->elements();
+
+            foreach ($left->elements() as $name => $field) {
+                if (!\array_key_exists($name, $rightElements)) {
+                    return false;
+                }
+
+                if (!$this->equals($field, $rightElements[$name])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return $left->toString() === $right->toString();
+    }
+
+    /**
+     * @template T
+     *
+     * @param Type<T> $type
+     * @param class-string<Type> $typeClass
+     *
+     * @phpstan-assert-if-true Type<T> $type
+     */
+    public function is(Type $type, string $typeClass) : bool
+    {
+        if ($type instanceof $typeClass) {
+            return true;
+        }
+
+        if ($type instanceof OptionalType) {
+            return $this->is($type->base(), $typeClass);
+        }
+
+        if ($type instanceof UnionType) {
+            foreach ($type->types()->all() as $nextType) {
+                if ($nextType instanceof $typeClass) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
+    /**
+     * @template T
+     *
+     * @param Type<T> $type
+     * @param class-string<Type> $typeClass
+     *
+     * @phpstan-assert-if-true Type<T> $type
+     */
+    public function isAny(Type $type, string $typeClass, string ...$typeClasses) : bool
+    {
+        $classes = [$typeClass, ...$typeClasses];
+
+        foreach ($classes as $class) {
+            if ($this->is($type, $class)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

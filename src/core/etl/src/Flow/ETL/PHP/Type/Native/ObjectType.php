@@ -4,92 +4,73 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use function Flow\ETL\DSL\type_object;
+use _PHPStan_95d365e52\Nette\PhpGenerator\ClassType;
+use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?object>
+ * @template ClassType
+ *
+ * @implements Type<object<ClassType>>
  */
 final readonly class ObjectType implements Type
 {
     /**
-     * @param class-string $class
+     * @param class-string<ClassType> $class
      */
-    public function __construct(public string $class, private bool $nullable = false)
+    public function __construct(public string $class)
     {
         if (!\class_exists($class) && !\interface_exists($class)) {
             throw new InvalidArgumentException("Class {$class} not found");
         }
     }
 
+    /**
+     * @param array{class: class-string<ClassType>} $data
+     *
+     * @return ObjectType<ClassType>
+     */
     public static function fromArray(array $data) : self
     {
         if (!\array_key_exists('class', $data)) {
             throw new InvalidArgumentException("Missing 'class' key in object type definition");
         }
 
-        $nullable = $data['nullable'] ?? false;
-
-        return new self($data['class'], $nullable);
+        return new self($data['class']);
     }
 
-    public function isComparableWith(Type $type) : bool
+    public function assert(mixed $value) : object
     {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        return false;
+        throw InvalidTypeException::value($value, $this);
     }
 
-    public function isCompatible(Type $type) : bool
+    public function cast(mixed $value) : object
     {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
+        if (\is_object($value)) {
+            return $value;
         }
 
-        return $this->isEqual($type);
-    }
+        try {
+            $object = (object) $value;
 
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self && $this->class === $type->class;
-    }
+            if (!$object instanceof $this->class) {
+                throw new CastingException($value, type_object($this->class));
+            }
 
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+            return $object;
+        } catch (\Throwable) {
+            throw new CastingException($value, $this);
+        }
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         return \is_a($value, $this->class, true);
-    }
-
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($this->class, $nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        if ($this->class !== $type->class) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->class, $this->nullable || $type->nullable());
     }
 
     public function normalize() : array
@@ -97,17 +78,11 @@ final readonly class ObjectType implements Type
         return [
             'type' => 'object',
             'class' => $this->class,
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'object<' . $this->class . '>';
+        return 'object<' . $this->class . '>';
     }
 }

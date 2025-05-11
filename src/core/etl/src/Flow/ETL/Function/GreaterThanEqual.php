@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Function\Comparison\Comparable;
+use Flow\ETL\PHP\Type\ValueComparator;
 use Flow\ETL\Row;
 
 final class GreaterThanEqual extends ScalarFunctionChain
 {
-    use Comparable;
-
     public function __construct(
         private readonly mixed $left,
         private readonly mixed $right,
@@ -22,7 +20,7 @@ final class GreaterThanEqual extends ScalarFunctionChain
         $left = (new Parameter($this->left))->eval($row);
         $right = (new Parameter($this->right))->eval($row);
 
-        $this->assertComparable($left, $right, '>=');
+        (new ValueComparator())->assertComparable($left, $right, '>=');
 
         if ($left === null || $right === null) {
             return false;

@@ -30,7 +30,7 @@ final class MapTest extends FlowIntegrationTestCase
                 )->withSchema(
                     schema(
                         int_schema('id'),
-                        list_schema('tags', type_list(type_string(), true))
+                        list_schema('tags', type_list(type_string()), true)
                     )
                 )
             )

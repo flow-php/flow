@@ -2,50 +2,49 @@
   {
     "ref": "order_id",
     "type": {
-      "type": "uuid",
-      "nullable": false
+      "type": "uuid"
     },
+    "nullable": false,
     "metadata": []
   },
   {
     "ref": "created_at",
     "type": {
-      "type": "datetime",
-      "nullable": false
+      "type": "datetime"
     },
+    "nullable": false,
     "metadata": []
   },
   {
     "ref": "updated_at",
     "type": {
-      "type": "datetime",
-      "nullable": false
+      "type": "datetime"
     },
+    "nullable": false,
     "metadata": []
   },
   {
     "ref": "discount",
     "type": {
-      "type": "float",
-      "nullable": true,
-      "precision": 6
+      "type": "float"
     },
+    "nullable": true,
     "metadata": []
   },
   {
     "ref": "email",
     "type": {
-      "type": "string",
-      "nullable": false
+      "type": "string"
     },
+    "nullable": false,
     "metadata": []
   },
   {
     "ref": "customer",
     "type": {
-      "type": "string",
-      "nullable": false
+      "type": "string"
     },
+    "nullable": false,
     "metadata": []
   },
   {
@@ -54,24 +53,20 @@
       "type": "structure",
       "elements": {
         "street": {
-          "type": "string",
-          "nullable": false
+          "type": "string"
         },
         "city": {
-          "type": "string",
-          "nullable": false
+          "type": "string"
         },
         "zip": {
-          "type": "string",
-          "nullable": false
+          "type": "string"
         },
         "country": {
-          "type": "string",
-          "nullable": false
+          "type": "string"
         }
-      },
-      "nullable": false
+      }
     },
+    "nullable": false,
     "metadata": []
   },
   {
@@ -79,11 +74,10 @@
     "type": {
       "type": "list",
       "element": {
-        "type": "string",
-        "nullable": false
-      },
-      "nullable": false
+        "type": "string"
+      }
     },
+    "nullable": false,
     "metadata": []
   },
   {
@@ -94,23 +88,18 @@
         "type": "structure",
         "elements": {
           "sku": {
-            "type": "string",
-            "nullable": false
+            "type": "string"
           },
           "quantity": {
-            "type": "integer",
-            "nullable": false
+            "type": "integer"
           },
           "price": {
-            "type": "float",
-            "nullable": false,
-            "precision": 6
+            "type": "float"
           }
-        },
-        "nullable": false
-      },
-      "nullable": false
+        }
+      }
     },
+    "nullable": false,
     "metadata": []
   }
 ]

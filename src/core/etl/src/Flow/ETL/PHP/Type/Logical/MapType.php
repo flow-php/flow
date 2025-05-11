@@ -4,23 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
+use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
+use Flow\ETL\PHP\Type\Native\{IntegerType, StringType};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<?array<array-key, mixed>>
+ * @implements Type<array<array-key, mixed>>
  */
 final readonly class MapType implements Type
 {
     /**
      * @param Type<mixed> $value
      */
-    public function __construct(private StringType|IntegerType $key, private Type $value, private bool $nullable = false)
+    public function __construct(private StringType|IntegerType $key, private Type $value)
     {
-        if ($this->key->nullable()) {
-            throw new InvalidArgumentException('Key cannot be nullable');
-        }
     }
 
     public static function fromArray(array $data) : self
@@ -31,65 +28,55 @@ final readonly class MapType implements Type
             throw new InvalidArgumentException('Map key must be string or integer');
         }
 
-        return new self($keyType, TypeFactory::fromArray($data['value']), $data['nullable'] ?? false);
+        return new self($keyType, TypeFactory::fromArray($data['value']));
     }
 
-    public function isComparableWith(Type $type) : bool
+    public function assert(mixed $value) : array
     {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof NullType) {
-            return true;
-        }
-
-        return false;
+        throw InvalidTypeException::value($value, $this);
     }
 
-    public function isCompatible(Type $type) : bool
+    public function cast(mixed $value) : array
     {
-        if (!$this->isEqual($type)) {
-            return false;
+        try {
+            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
+                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+            }
+
+            if (!\is_array($value)) {
+                return [
+                    $this->key->cast(0) => $this->value->cast($value),
+                ];
+            }
+
+            $castedMap = [];
+
+            foreach ($value as $key => $item) {
+                $castedKey = $this->key->cast($key);
+
+                if ($castedKey === null) {
+                    continue;
+                }
+
+                if (\array_key_exists($castedKey, $castedMap)) {
+                    throw new CastingException($value, $this);
+                }
+
+                $castedMap[$this->key->cast($key)] = $this->value->cast($item);
+            }
+
+            return $castedMap;
+        } catch (\Throwable $e) {
+            throw new CastingException($value, $this, $e);
         }
-
-        /** @var self $type */
-        if (!$this->nullable && $type->nullable()) {
-            return false;
-        }
-
-        if (!$this->key->isCompatible($type->key())) {
-            return false;
-        }
-
-        return $this->value->isCompatible($type->value());
-    }
-
-    public function isEqual(Type $type) : bool
-    {
-        if (!$type instanceof self) {
-            return false;
-        }
-
-        return $this->key->isEqual($type->key()) && $this->value->isEqual($type->value());
-    }
-
-    public function isSame(Type $type) : bool
-    {
-        if (!$this->isEqual($type)) {
-            return false;
-        }
-
-        /** @var self $type */
-        return $this->nullable() === $type->nullable() && $this->key->isSame($type->key()) && $this->value->isSame($type->value());
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         if (!\is_array($value)) {
             return false;
         }
@@ -112,46 +99,18 @@ final readonly class MapType implements Type
         return $this->key;
     }
 
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($this->key, $this->value, $nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        if (!$this->key->isEqual($type->key()) || !$this->value->isEqual($type->value())) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->key, $this->value, $this->nullable || $type->nullable());
-    }
-
     public function normalize() : array
     {
         return [
             'type' => 'map',
             'key' => $this->key->normalize(),
             'value' => $this->value->normalize(),
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';
+        return 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';
     }
 
     /**

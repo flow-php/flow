@@ -63,11 +63,10 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\float_schema");
 
         return \sprintf(
-            '\%s("%s", nullable: %s, precision: %d, metadata: %s)',
+            '\%s("%s", nullable: %s, metadata: %s)',
             $reflection->getName(),
             $definition->entry()->name(),
             $definition->isNullable() ? 'true' : 'false',
-            $type->precision,
             $this->formatMetadata($definition->metadata())
         );
     }

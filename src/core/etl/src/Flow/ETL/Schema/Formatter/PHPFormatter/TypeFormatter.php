@@ -4,7 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Formatter\PHPFormatter;
 
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, StructureType, TimeType, UuidType, XMLElementType, XMLType};
+use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+    DateType,
+    JsonType,
+    ListType,
+    MapType,
+    OptionalType,
+    StructureType,
+    TimeType,
+    UuidType,
+    XMLElementType,
+    XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, BooleanType, CallableType, FloatType, IntegerType, NullType, ResourceType, StringType};
 use Flow\ETL\PHP\Type\Type;
 
@@ -13,30 +23,30 @@ final class TypeFormatter
     /**
      * @param Type<mixed> $type
      */
-    public function format(Type $type) : string
+    public function format(Type $type, bool $nullable = false) : string
     {
         return match ($type::class) {
-            MapType::class => $this->formatMapType($type),
-            ListType::class => $this->formatListType($type),
-            StructureType::class => $this->formatStructureType($type),
-            ArrayType::class => $this->formatArrayType($type),
-            default => $this->formatSimpleType($type),
+            MapType::class => $this->formatMapType($type, $nullable),
+            ListType::class => $this->formatListType($type, $nullable),
+            StructureType::class => $this->formatStructureType($type, $nullable),
+            ArrayType::class => $this->formatArrayType($type, $nullable),
+            OptionalType::class => $this->format($type->base(), true),
+            default => $this->formatSimpleType($type, $nullable),
         };
     }
 
-    private function formatArrayType(ArrayType $type) : string
+    private function formatArrayType(ArrayType $type, bool $nullable) : string
     {
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_array');
 
         return \sprintf(
-            '\%s(empty: %s, nullable: %s)',
+            '\%s(nullable: %s)',
             $reflection->getName(),
-            $type->empty ? 'true' : 'false',
-            $type->nullable() ? 'true' : 'false'
+            $nullable ? 'true' : 'false'
         );
     }
 
-    private function formatListType(ListType $type) : string
+    private function formatListType(ListType $type, bool $nullable) : string
     {
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_list');
 
@@ -44,11 +54,11 @@ final class TypeFormatter
             '\%s(element: %s, nullable: %s)',
             $reflection->getName(),
             $this->format($type->element()),
-            $type->nullable() ? 'true' : 'false'
+            $nullable ? 'true' : 'false'
         );
     }
 
-    private function formatMapType(MapType $type) : string
+    private function formatMapType(MapType $type, bool $nullable) : string
     {
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_map');
 
@@ -57,14 +67,14 @@ final class TypeFormatter
             $reflection->getName(),
             $this->format($type->key()),
             $this->format($type->value()),
-            $type->nullable() ? 'true' : 'false'
+            $nullable ? 'true' : 'false'
         );
     }
 
     /**
      * @param Type<mixed> $type
      */
-    private function formatSimpleType(Type $type) : string
+    private function formatSimpleType(Type $type, bool $nullable) : string
     {
         $reflection = match ($type::class) {
             StringType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_string'),
@@ -91,11 +101,11 @@ final class TypeFormatter
         return \sprintf(
             '\%s(nullable: %s)',
             $reflection->getName(),
-            $type->nullable() ? 'true' : 'false'
+            $nullable ? 'true' : 'false'
         );
     }
 
-    private function formatStructureType(StructureType $type) : string
+    private function formatStructureType(StructureType $type, bool $nullable) : string
     {
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_structure');
 
@@ -109,7 +119,7 @@ final class TypeFormatter
             '\%s(elements: [%s], nullable: %s)',
             $reflection->getName(),
             \implode(', ', $fields),
-            $type->nullable() ? 'true' : 'false'
+            $nullable ? 'true' : 'false'
         );
     }
 }

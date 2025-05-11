@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_json;
+use function Flow\ETL\DSL\{type_equals, type_json};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\JsonType;
@@ -13,7 +13,7 @@ use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?array<mixed>, ?string>
+ * @implements Entry<?array<mixed>, string>
  */
 final class JsonEntry implements Entry
 {
@@ -52,7 +52,7 @@ final class JsonEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_json($this->value === null);
+        $this->type = type_json();
     }
 
     /**
@@ -81,7 +81,7 @@ final class JsonEntry implements Entry
 
     public function definition() : Definition
     {
-        return new Definition($this->name, $this->type, $this->metadata);
+        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry
@@ -117,10 +117,10 @@ final class JsonEntry implements Entry
         if ($entryValue === null && $thisValue === null) {
             return $this->is($entry->name())
                 && $entry instanceof self
-                && $this->type->isEqual($entry->type);
+                && type_equals($this->type, $entry->type);
         }
 
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($thisValue, $entryValue);
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function map(callable $mapper) : Entry

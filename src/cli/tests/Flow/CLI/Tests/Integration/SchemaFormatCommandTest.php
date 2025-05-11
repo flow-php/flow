@@ -24,50 +24,49 @@ final class SchemaFormatCommandTest extends TestCase
     {
         "ref": "order_id",
         "type": {
-            "type": "uuid",
-            "nullable": false
+            "type": "uuid"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "created_at",
         "type": {
-            "type": "datetime",
-            "nullable": false
+            "type": "datetime"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "updated_at",
         "type": {
-            "type": "datetime",
-            "nullable": false
+            "type": "datetime"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "discount",
         "type": {
-            "type": "float",
-            "nullable": true,
-            "precision": 6
+            "type": "float"
         },
+        "nullable": true,
         "metadata": []
     },
     {
         "ref": "email",
         "type": {
-            "type": "string",
-            "nullable": false
+            "type": "string"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "customer",
         "type": {
-            "type": "string",
-            "nullable": false
+            "type": "string"
         },
+        "nullable": false,
         "metadata": []
     },
     {
@@ -76,24 +75,20 @@ final class SchemaFormatCommandTest extends TestCase
             "type": "structure",
             "elements": {
                 "street": {
-                    "type": "string",
-                    "nullable": false
+                    "type": "string"
                 },
                 "city": {
-                    "type": "string",
-                    "nullable": false
+                    "type": "string"
                 },
                 "zip": {
-                    "type": "string",
-                    "nullable": false
+                    "type": "string"
                 },
                 "country": {
-                    "type": "string",
-                    "nullable": false
+                    "type": "string"
                 }
-            },
-            "nullable": false
+            }
         },
+        "nullable": false,
         "metadata": []
     },
     {
@@ -101,11 +96,10 @@ final class SchemaFormatCommandTest extends TestCase
         "type": {
             "type": "list",
             "element": {
-                "type": "string",
-                "nullable": false
-            },
-            "nullable": false
+                "type": "string"
+            }
         },
+        "nullable": false,
         "metadata": []
     },
     {
@@ -116,23 +110,18 @@ final class SchemaFormatCommandTest extends TestCase
                 "type": "structure",
                 "elements": {
                     "sku": {
-                        "type": "string",
-                        "nullable": false
+                        "type": "string"
                     },
                     "quantity": {
-                        "type": "integer",
-                        "nullable": false
+                        "type": "integer"
                     },
                     "price": {
-                        "type": "float",
-                        "nullable": false,
-                        "precision": 6
+                        "type": "float"
                     }
-                },
-                "nullable": false
-            },
-            "nullable": false
+                }
+            }
         },
+        "nullable": false,
         "metadata": []
     }
 ]
@@ -186,7 +175,7 @@ OUTPUT,
     \Flow\ETL\DSL\uuid_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\datetime_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\datetime_schema("updated_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\float_schema("discount", nullable: true, precision: 6, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\float_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("email", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("customer", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\structure_schema("address", type: \Flow\ETL\DSL\type_structure(elements: ["street" => \Flow\ETL\DSL\type_string(nullable: false), "city" => \Flow\ETL\DSL\type_string(nullable: false), "zip" => \Flow\ETL\DSL\type_string(nullable: false), "country" => \Flow\ETL\DSL\type_string(nullable: false)], nullable: false), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),

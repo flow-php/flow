@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{type_array, type_null, type_string};
+use function Flow\ETL\DSL\{type_array, type_null, type_optional, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\{IntegerType, NullType, StringType};
 
@@ -28,8 +28,8 @@ final readonly class ArrayContentDetector
     {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
-        $this->uniqueKeysTypeCount = $uniqueKeysType->count();
-        $this->uniqueValuesTypeCount = $uniqueValuesType->without(type_array(true), type_null())->count();
+        $this->uniqueKeysTypeCount = $uniqueKeysType->reduceOptionals()->without(type_array(), type_null())->count();
+        $this->uniqueValuesTypeCount = $this->uniqueValuesType->reduceOptionals()->without(type_array(), type_null())->count();
     }
 
     public function firstKeyType() : IntegerType|StringType|null
@@ -85,13 +85,13 @@ final readonly class ArrayContentDetector
             }
 
             if ($type instanceof NullType) {
-                $type = $nextType->makeNullable(true);
+                $type = type_optional($nextType);
 
                 continue;
             }
 
             if ($nextType instanceof NullType) {
-                $type = $type->makeNullable(true);
+                $type = type_optional($type);
             }
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_equals;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\MapType;
@@ -12,7 +13,7 @@ use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?array<array-key, mixed>, ?array<array-key, mixed>>
+ * @implements Entry<?array<array-key, mixed>, array<array-key, mixed>>
  */
 final class MapEntry implements Entry
 {
@@ -37,12 +38,12 @@ final class MapEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (!$type->isValid($value)) {
+        if ($value !== null && !$type->isValid($value)) {
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = $value === null ? $type->makeNullable(true) : $type;
+        $this->type = $type;
     }
 
     public function __toString() : string
@@ -52,7 +53,7 @@ final class MapEntry implements Entry
 
     public function definition() : Definition
     {
-        return new Definition($this->name, $this->type, $this->metadata);
+        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry
@@ -85,12 +86,12 @@ final class MapEntry implements Entry
         if ($entryValue === null && $thisValue === null) {
             return $this->is($entry->name())
                 && $entry instanceof self
-                && $this->type->isEqual($entry->type);
+                && type_equals($this->type, $entry->type);
         }
 
         return $this->is($entry->name())
             && $entry instanceof self
-            && $this->type->isEqual($entry->type)
+            && type_equals($this->type, $entry->type)
             && (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 

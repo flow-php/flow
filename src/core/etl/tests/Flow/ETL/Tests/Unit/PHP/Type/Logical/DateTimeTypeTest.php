@@ -4,52 +4,66 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\{type_date, type_datetime, type_int, type_null};
+use function Flow\ETL\DSL\{type_datetime};
+use Flow\ETL\Exception\InvalidTypeException;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class DateTimeTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function datetime_castable_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_datetime()->isEqual(type_datetime())
-        );
-        self::assertFalse(
-            type_datetime()->isEqual(type_int())
-        );
+        yield 'string' => ['2021-01-01 00:00:00', new \DateTimeImmutable('2021-01-01 00:00:00')];
+        yield 'int' => [1609459200, new \DateTimeImmutable('2021-01-01 00:00:00')];
+        yield 'float' => [1609459200.0, new \DateTimeImmutable('2021-01-01 00:00:00')];
+        yield 'bool' => [true, new \DateTimeImmutable('1970-01-01 00:00:01')];
+        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), new \DateTimeImmutable('2021-01-01 00:00:00')];
+        yield 'DateInterval' => [new \DateInterval('P1D'), new \DateTimeImmutable('1970-01-02 00:00:00')];
+        yield 'DOMElement' => [new \DOMElement('element', '2021-01-01 00:00:00'), new \DateTimeImmutable('2021-01-01 00:00:00')];
     }
 
-    public function test_is_comparable() : void
+    public static function invalid_assert_data_provider() : \Generator
     {
-        self::assertTrue(type_datetime()->isComparableWith(type_datetime()));
-        self::assertTrue(type_datetime()->isComparableWith(type_date()));
-        self::assertTrue(type_datetime()->isComparableWith(type_null()));
-        self::assertFalse(type_datetime()->isComparableWith(type_int()));
+        yield ['string'];
+        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
+        yield [false];
+        yield [124.25];
+        yield [[1, 2]];
+        yield [new \stdClass()];
+        yield [new \DateTimeZone('UTC')];
+    }
+
+    public static function successful_assert_data_provider() : \Generator
+    {
+        yield [new \DateTimeImmutable()];
+        yield [new \DateTime()];
+    }
+
+    #[DataProvider('datetime_castable_data_provider')]
+    public function test_casting_different_data_types_to_datetime(mixed $value, \DateTimeImmutable $expected) : void
+    {
+        self::assertEquals($expected, type_datetime()->cast($value));
+    }
+
+    #[DataProvider('invalid_assert_data_provider')]
+    public function test_invalid_assert(mixed $value) : void
+    {
+        $this->expectException(InvalidTypeException::class);
+        type_datetime()->assert($value);
     }
 
     public function test_is_valid() : void
     {
-        self::assertTrue(type_datetime(true)->isValid(null));
         self::assertTrue(type_datetime()->isValid(new \DateTimeImmutable()));
         self::assertTrue(type_datetime()->isValid(new \DateTime()));
         self::assertFalse(type_datetime()->isValid('2020-01-01'));
         self::assertFalse(type_datetime()->isValid('2020-01-01 00:00:00'));
     }
 
-    public function test_merge_non_nullable_with_non_nullable() : void
+    #[DataProvider('successful_assert_data_provider')]
+    public function test_successful_assert(mixed $value) : void
     {
-        self::assertFalse(type_datetime()->merge(type_datetime())->nullable());
-    }
-
-    public function test_merge_non_nullable_with_nullable() : void
-    {
-        self::assertTrue(type_datetime()->merge(type_datetime(true))->nullable());
-        self::assertTrue(type_datetime(true)->merge(type_datetime(false))->nullable());
-    }
-
-    public function test_merge_nullable_with_nullable() : void
-    {
-        self::assertTrue(type_datetime(true)->merge(type_datetime(true))->nullable());
+        self::assertInstanceOf(\DateTimeInterface::class, type_datetime()->assert($value));
     }
 
     public function test_to_string() : void
@@ -57,10 +71,6 @@ final class DateTimeTypeTest extends FlowTestCase
         self::assertSame(
             'datetime',
             type_datetime()->toString()
-        );
-        self::assertSame(
-            '?datetime',
-            type_datetime(true)->toString()
         );
     }
 }

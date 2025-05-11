@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\{type_equals, type_uuid};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\Type;
@@ -13,7 +13,7 @@ use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?Uuid, ?Uuid>
+ * @implements Entry<?Uuid, Uuid>
  */
 final class UuidEntry implements Entry
 {
@@ -44,7 +44,7 @@ final class UuidEntry implements Entry
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_uuid($this->value === null);
+        $this->type = type_uuid();
     }
 
     public static function from(string $name, string $value) : self
@@ -59,7 +59,7 @@ final class UuidEntry implements Entry
 
     public function definition() : Definition
     {
-        return new Definition($this->name, $this->type, $this->metadata);
+        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : Entry
@@ -92,7 +92,7 @@ final class UuidEntry implements Entry
          * @var Uuid $entryValue
          */
 
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value?->isEqual($entryValue);
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value?->isEqual($entryValue);
     }
 
     public function map(callable $mapper) : Entry

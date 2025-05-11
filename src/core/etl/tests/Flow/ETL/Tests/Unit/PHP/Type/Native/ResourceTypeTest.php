@@ -4,37 +4,49 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
-use function Flow\ETL\DSL\{type_float, type_resource};
-use function Flow\ETL\DSL\{type_map, type_string};
+use function Flow\ETL\DSL\{type_resource};
+use Flow\ETL\Exception\InvalidTypeException;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ResourceTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function invalid_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            (type_resource(false))->isEqual(type_resource(false))
-        );
-        self::assertFalse(
-            (type_resource(false))->isEqual(type_map(type_string(), type_float()))
-        );
-        self::assertFalse(
-            (type_resource(false))->isEqual(type_float())
-        );
-        self::assertFalse(
-            (type_resource(false))->isSame(type_resource(true))
-        );
+        yield [null];
+        yield ['string'];
+        yield [false];
+        yield [123];
+        yield [[1, 2]];
+        yield [new \stdClass()];
+        yield [new \DateTimeImmutable()];
+        yield [new \DateTime()];
+        yield [new \DateTimeZone('UTC')];
+    }
+
+    public static function successful_assert_data_provider() : \Generator
+    {
+        yield [\fopen('php://temp/max', 'r+b')];
+    }
+
+    #[DataProvider('invalid_assert_data_provider')]
+    public function test_invalid_assert(mixed $value) : void
+    {
+        $this->expectException(InvalidTypeException::class);
+        type_resource()->assert($value);
+    }
+
+    #[DataProvider('successful_assert_data_provider')]
+    public function test_successful_assert(mixed $value) : void
+    {
+        self::assertIsResource(type_resource()->assert($value));
     }
 
     public function test_to_string() : void
     {
         self::assertSame(
             'resource',
-            (type_resource(false))->toString()
-        );
-        self::assertSame(
-            '?resource',
-            (type_resource(true))->toString()
+            (type_resource())->toString()
         );
     }
 
@@ -42,20 +54,17 @@ final class ResourceTypeTest extends FlowTestCase
     {
         $handle = \fopen('php://temp/max', 'r+b');
         self::assertTrue(
-            (type_resource(false))->isValid($handle)
+            (type_resource())->isValid($handle)
         );
         \fclose($handle);
-        self::assertTrue(
-            type_resource(true)->isValid(null)
+        self::assertFalse(
+            (type_resource())->isValid('one')
         );
         self::assertFalse(
-            (type_resource(false))->isValid('one')
+            (type_resource())->isValid([1, 2])
         );
         self::assertFalse(
-            (type_resource(false))->isValid([1, 2])
-        );
-        self::assertFalse(
-            (type_resource(false))->isValid(123)
+            (type_resource())->isValid(123)
         );
     }
 }

@@ -39,7 +39,7 @@ OUTPUT,
 │ order_id   │ uuid                                                          │ false    │ {}       │
 │ created_at │ datetime                                                      │ false    │ {}       │
 │ updated_at │ datetime                                                      │ false    │ {}       │
-│ discount   │ ?float                                                        │ true     │ {}       │
+│ discount   │ float                                                         │ true     │ {}       │
 │ address    │ map<string, string>                                           │ false    │ {}       │
 │ notes      │ list<string>                                                  │ false    │ {}       │
 │ items      │ list<structure{sku: string, quantity: integer, price: float}> │ false    │ {}       │
@@ -54,7 +54,7 @@ Columns
 │ order_id   │ uuid                                                          │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ -                  │ -                  │
 │ created_at │ datetime                                                      │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
 │ updated_at │ datetime                                                      │ 0     │ 5               │ 2024-02-23T19:18:53+00:00 │ 2024-06-17T19:24:49+00:00 │ -          │ -          │ -                  │ -                  │
-│ discount   │ ?float                                                        │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
+│ discount   │ float                                                         │ 2     │ 3               │ 12.45                     │ 47.10                     │ -          │ -          │ -                  │ -                  │
 │ address    │ map<string, string>                                           │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 4                  │ 4                  │
 │ notes      │ list<string>                                                  │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 1                  │ 5                  │
 │ items      │ list<structure{sku: string, quantity: integer, price: float}> │ 0     │ 5               │ -                         │ -                         │ -          │ -          │ 2                  │ 4                  │

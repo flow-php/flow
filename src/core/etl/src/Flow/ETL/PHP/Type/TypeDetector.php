@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{type_array,
+use function Flow\ETL\DSL\{
+    type_array,
     type_boolean,
     type_date,
     type_datetime,
@@ -18,11 +19,11 @@ use function Flow\ETL\DSL\{type_array,
     type_time,
     type_uuid,
     type_xml,
-    type_xml_element};
-use Brick\Math\BigDecimal;
+    type_xml_element,
+    types};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType};
+use Flow\ETL\PHP\Type\Native\{EnumType};
 
 final class TypeDetector
 {
@@ -52,29 +53,26 @@ final class TypeDetector
         }
 
         if (\is_float($value)) {
-            return type_float(precision: BigDecimal::of($value)->getScale());
+            return type_float();
         }
 
         if (\is_array($value)) {
             if ([] === $value) {
-                return ArrayType::empty();
+                return type_array();
             }
 
             $detector = new ArrayContentDetector(
-                $keyTypes = new Types(...\array_map($this->detectType(...), \array_keys($value))),
-                $valueTypes = new Types(...\array_map($this->detectType(...), \array_values($value))),
+                $keyTypes = types(...\array_map($this->detectType(...), \array_keys($value)))->deduplicate(),
+                $valueTypes = types(...\array_map($this->detectType(...), \array_values($value)))->deduplicate(),
                 \array_is_list($value)
             );
 
             if ($detector->isList()) {
-                return new ListType($detector->valueType()->makeNullable($valueTypes->has(type_null())));
+                return new ListType($detector->valueType());
             }
 
             if ($detector->isMap()) {
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                return type_map($detector->firstKeyType(), $detector->valueType()->makeNullable($valueTypes->has(type_null())));
+                return type_map($detector->firstKeyType(), $detector->valueType());
             }
 
             if ($detector->isStructure()) {

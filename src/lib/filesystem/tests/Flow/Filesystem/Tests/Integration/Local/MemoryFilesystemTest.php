@@ -7,7 +7,7 @@ namespace Flow\Filesystem\Tests\Integration\Local;
 use function Flow\ETL\DSL\{all, lit, ref};
 use function Flow\Filesystem\DSL\{memory_filesystem, path_memory};
 use Flow\ETL\Filesystem\{ScalarFunctionFilter};
-use Flow\ETL\PHP\Type\{AutoCaster, Caster};
+use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FileStatus,
     Tests\Integration\NativeLocalFilesystemTestCase};
@@ -133,7 +133,7 @@ TXT
                             )
                         ),
                         new EntryFactory(),
-                        new AutoCaster(Caster::default())
+                        new AutoCaster()
                     )
                 )
         );

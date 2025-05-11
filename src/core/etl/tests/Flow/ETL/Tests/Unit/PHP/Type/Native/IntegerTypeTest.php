@@ -4,148 +4,93 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
-use function Flow\ETL\DSL\{type_callable, type_float, type_int, type_map, type_string};
+use function Flow\ETL\DSL\{type_int, type_integer};
+use Flow\ETL\Exception\InvalidTypeException;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\{DataProvider};
 
 final class IntegerTypeTest extends FlowTestCase
 {
-    public function test_equals() : void
+    public static function integer_castable_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_int(false)->isEqual(type_int(false))
-        );
-        self::assertFalse(
-            type_int(false)->isEqual(type_map(type_string(), type_int()))
-        );
-        self::assertFalse(
-            type_int(false)->isEqual(type_callable(false))
-        );
-        self::assertFalse(
-            type_int(false)->isSame(type_int(true))
-        );
+        yield 'string' => ['string', 0];
+        yield 'int' => [1, 1];
+        yield 'float' => [1.1, 1];
+        yield 'bool' => [true, 1];
+        yield 'array' => [[1, 2, 3], 1];
+        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), 1609459200000000];
+        yield 'DateInterval' => [new \DateInterval('P1D'), 86400000000];
+        yield 'DOMElement' => [new \DOMElement('element', '1'), 1];
     }
 
-    public function test_from_array() : void
+    public static function invalid_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_int(false)->isEqual(type_int(false)->fromArray(['type' => 'integer', 'nullable' => false]))
-        );
-        self::assertTrue(
-            type_int(true)->isEqual(type_int(true)->fromArray(['type' => 'integer', 'nullable' => true]))
-        );
+        yield ['string'];
+        yield [false];
+        yield [124.25];
+        yield [[1, 2]];
+        yield [new \stdClass()];
+        yield [new \DateTimeImmutable()];
+        yield [new \DateTime()];
+        yield [new \DateTimeZone('UTC')];
     }
 
-    public function test_is_comparable_with() : void
+    public static function successful_assert_data_provider() : \Generator
     {
-        self::assertTrue(
-            type_int(false)->isComparableWith(type_int(false))
-        );
-        self::assertTrue(
-            type_int(false)->isComparableWith(type_int(true))
-        );
-        self::assertTrue(
-            type_int(true)->isComparableWith(type_int(false))
-        );
-        self::assertTrue(
-            type_int(true)->isComparableWith(type_int(true))
-        );
-        self::assertTrue(
-            type_int(false)->isComparableWith(type_float(false))
-        );
-        self::assertFalse(
-            type_int(false)->isComparableWith(type_string())
-        );
-        self::assertFalse(
-            type_int(false)->isComparableWith(type_callable(false))
-        );
+        yield [1234];
+        yield [1234];
+        yield [PHP_INT_MAX];
     }
 
-    public function test_is_equal() : void
+    #[DataProvider('integer_castable_data_provider')]
+    public function test_casting_different_data_types_to_integer(mixed $value, int $expected) : void
     {
-        self::assertTrue(
-            type_int(false)->isEqual(type_int(false))
-        );
-        self::assertFalse(
-            type_int(false)->isEqual(type_map(type_string(), type_int()))
-        );
-        self::assertFalse(
-            type_int(false)->isEqual(type_callable(false))
-        );
-        self::assertFalse(
-            type_int(false)->isSame(type_int(true))
-        );
+        self::assertSame($expected, type_integer()->cast($value));
     }
 
-    public function test_merge() : void
+    #[DataProvider('invalid_assert_data_provider')]
+    public function test_invalid_assert(mixed $value) : void
     {
-        self::assertTrue(
-            type_int(false)->isEqual(type_int(false)->merge(type_int(false)))
-        );
-        self::assertTrue(
-            type_int(true)->isEqual(type_int(true)->merge(type_int(true)))
-        );
-        self::assertTrue(
-            type_int(true)->isEqual(type_int(false)->merge(type_int(true)))
-        );
-        self::assertTrue(
-            type_int(true)->isEqual(type_int(true)->merge(type_int(false)))
-        );
-        self::assertEquals(
-            type_float(true, 12),
-            type_int(true)->merge(type_float(true, 12))
-        );
+        $this->expectException(InvalidTypeException::class);
+        type_int()->assert($value);
     }
 
     public function test_normalize() : void
     {
         self::assertSame(
-            ['type' => 'integer', 'nullable' => false],
-            type_int(false)->normalize()
+            ['type' => 'integer'],
+            type_int()->normalize()
         );
-        self::assertSame(
-            ['type' => 'integer', 'nullable' => true],
-            type_int(true)->normalize()
-        );
+
     }
 
-    public function test_nullable() : void
+    #[DataProvider('successful_assert_data_provider')]
+    public function test_successful_assert(mixed $value) : void
     {
-        self::assertFalse(
-            type_int(false)->nullable()
-        );
-        self::assertTrue(
-            type_int(true)->nullable()
-        );
+        self::assertIsInt(type_int()->assert($value));
     }
 
     public function test_to_string() : void
     {
         self::assertSame(
             'integer',
-            type_int(false)->toString()
-        );
-        self::assertSame(
-            '?integer',
-            type_int(true)->toString()
+            type_int()->toString()
         );
     }
 
     public function test_valid() : void
     {
         self::assertTrue(
-            type_int(false)->isValid(1)
-        );
-        self::assertTrue(
-            type_int(true)->isValid(null)
+            type_int()->isValid(1)
         );
         self::assertFalse(
-            type_int(false)->isValid('one')
+            type_int()->isValid('one')
         );
         self::assertFalse(
-            type_int(false)->isValid([1, 2])
+            type_int()->isValid([1, 2])
         );
         self::assertFalse(
-            type_int(false)->isValid(123.0)
+            type_int()->isValid(123.0)
         );
     }
 }

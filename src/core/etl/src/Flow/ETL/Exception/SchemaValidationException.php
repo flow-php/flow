@@ -29,20 +29,20 @@ final class SchemaValidationException extends RuntimeException
             $givenDefinition = $this->given->findDefinition($expectedDefinition->entry());
 
             if ($givenDefinition === null) {
-                $missingDefinitions[] = $expectedDefinition->entry() . '<' . $expectedDefinition->type()->toString() . '>';
+                $missingDefinitions[] = $expectedDefinition->entry() . '<' . ($expectedDefinition->isNullable() ? '?' : '') . $expectedDefinition->type()->toString() . '>';
 
                 continue;
             }
 
             if (!$expectedDefinition->isCompatible($givenDefinition)) {
                 $mismatchedDefinitions[] = 'expected: ' . $expectedDefinition->entry()->name() . '<' . $expectedDefinition->type()->toString() . '>, ' .
-                    'given: ' . $givenDefinition->entry()->name() . '<' . $givenDefinition->type()->toString() . '>';
+                    'given: ' . $givenDefinition->entry()->name() . '<' . ($givenDefinition->isNullable() ? '?' : '') . $givenDefinition->type()->toString() . '>';
             }
         }
 
         foreach ($this->given->definitions() as $givenDefinition) {
             if ($this->expected->findDefinition($givenDefinition->entry()) === null) {
-                $unexpectedDefinitions[] = $givenDefinition->entry() . '<' . $givenDefinition->type()->toString() . '>';
+                $unexpectedDefinitions[] = $givenDefinition->entry() . '<' . ($givenDefinition->isNullable() ? '?' : '') . $givenDefinition->type()->toString() . '>';
             }
         }
 

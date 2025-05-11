@@ -4,107 +4,68 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?float>
+ * @implements Type<float>
  */
 final readonly class FloatType implements Type
 {
-    public function __construct(private bool $nullable = false, public int $precision = 6)
+    public function assert(mixed $value) : float
     {
-    }
-
-    public static function fromArray(array $data) : Type
-    {
-        $nullable = $data['nullable'] ?? false;
-        $precision = $data['precision'] ?? 6;
-
-        return new self($nullable, $precision);
-    }
-
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof self) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($type instanceof NullType) {
-            return true;
-        }
-
-        if ($type instanceof IntegerType) {
-            return true;
-        }
-
-        return false;
+        throw InvalidTypeException::value($value, $this);
     }
 
-    public function isCompatible(Type $type) : bool
+    public function cast(mixed $value) : float
     {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
+        /**
+         * @var FloatType $type
+         */
+        if (\is_float($value)) {
+            return $value;
         }
 
-        return $this->isEqual($type);
-    }
+        if ($value instanceof \DOMElement) {
+            return (float) $value->nodeValue;
+        }
 
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self;
-    }
+        if ($value instanceof \DateTimeImmutable) {
+            return (float) $value->format('Uu');
+        }
 
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+        if ($value instanceof \DateInterval) {
+            $reference = new \DateTimeImmutable();
+            $endTime = $reference->add($value);
+
+            return (float) $endTime->format('Uu') - (float) $reference->format('Uu');
+        }
+
+        try {
+            return (float) $value;
+        } catch (\Throwable) {
+            throw new CastingException($value, $type);
+        }
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         return \is_float($value);
-    }
-
-    public function makeNullable(bool $nullable) : Type
-    {
-        return new self($nullable, $this->precision);
-    }
-
-    public function merge(Type $type) : Type
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        $precision = min($type->precision, $this->precision);
-
-        return new self($this->nullable || $type->nullable(), $precision);
     }
 
     public function normalize() : array
     {
         return [
             'type' => 'float',
-            'nullable' => $this->nullable,
-            'precision' => $this->precision,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'float';
+        return 'float';
     }
 }

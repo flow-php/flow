@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster\StringCastingHandler;
 
-use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
+use Flow\ETL\PHP\Type\Native\String\StringTypeChecker;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StringTypeCheckerTest extends FlowTestCase

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_enum;
+use function Flow\ETL\DSL\{type_enum, type_equals};
 use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?\UnitEnum, ?\UnitEnum>
+ * @implements Entry<?\UnitEnum, \UnitEnum>
  */
 final class EnumEntry implements Entry
 {
@@ -27,7 +27,7 @@ final class EnumEntry implements Entry
         ?Metadata $metadata = null,
     ) {
         $this->metadata = $metadata ?: Metadata::empty();
-        $this->type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class, $this->value === null);
+        $this->type = type_enum($this->value === null ? \UnitEnum::class : $this->value::class);
     }
 
     public function __toString() : string
@@ -41,7 +41,7 @@ final class EnumEntry implements Entry
 
     public function definition() : Definition
     {
-        return new Definition($this->name, $this->type, $this->metadata);
+        return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
     public function duplicate() : self
@@ -60,7 +60,7 @@ final class EnumEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $entry instanceof self && $this->type->isEqual($entry->type) && $this->value === $entry->value;
+        return $entry instanceof self && type_equals($this->type, $entry->type) && $this->value === $entry->value;
     }
 
     public function map(callable $mapper) : self

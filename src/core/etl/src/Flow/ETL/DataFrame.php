@@ -82,7 +82,7 @@ final class DataFrame
 
     public function autoCast() : self
     {
-        $this->pipeline->add(new AutoCastTransformer(new AutoCaster($this->context->config->caster())));
+        $this->pipeline->add(new AutoCastTransformer(new AutoCaster()));
 
         return $this;
     }
@@ -349,7 +349,7 @@ final class DataFrame
             new ScalarFunctionFilter(
                 $filter,
                 $this->context->entryFactory(),
-                new AutoCaster($this->context->config->caster())
+                new AutoCaster()
             )
         );
 

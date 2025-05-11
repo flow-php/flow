@@ -20,7 +20,7 @@ final class FileSchemaCommandTest extends TestCase
 
         self::assertSame(
             <<<'OUTPUT'
-[{"ref":"order_id","type":{"type":"uuid","nullable":false},"metadata":[]},{"ref":"created_at","type":{"type":"string","nullable":false},"metadata":[]},{"ref":"updated_at","type":{"type":"string","nullable":false},"metadata":[]},{"ref":"discount","type":{"type":"string","nullable":true},"metadata":[]},{"ref":"address","type":{"type":"json","nullable":false},"metadata":[]},{"ref":"notes","type":{"type":"json","nullable":false},"metadata":[]},{"ref":"items","type":{"type":"json","nullable":false},"metadata":[]}]
+[{"ref":"order_id","type":{"type":"uuid"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":false,"metadata":[]}]
 
 OUTPUT,
             $tester->getDisplay()
@@ -90,57 +90,57 @@ OUTPUT,
     {
         "ref": "order_id",
         "type": {
-            "type": "uuid",
-            "nullable": false
+            "type": "uuid"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "created_at",
         "type": {
-            "type": "string",
-            "nullable": false
+            "type": "string"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "updated_at",
         "type": {
-            "type": "string",
-            "nullable": false
+            "type": "string"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "discount",
         "type": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
         },
+        "nullable": true,
         "metadata": []
     },
     {
         "ref": "address",
         "type": {
-            "type": "json",
-            "nullable": false
+            "type": "json"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "notes",
         "type": {
-            "type": "json",
-            "nullable": false
+            "type": "json"
         },
+        "nullable": false,
         "metadata": []
     },
     {
         "ref": "items",
         "type": {
-            "type": "json",
-            "nullable": false
+            "type": "json"
         },
+        "nullable": false,
         "metadata": []
     }
 ]

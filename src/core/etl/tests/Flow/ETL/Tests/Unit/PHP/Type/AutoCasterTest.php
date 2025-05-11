@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use Flow\ETL\PHP\Type\{AutoCaster, Caster};
+use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class AutoCasterTest extends FlowTestCase
@@ -13,7 +13,7 @@ final class AutoCasterTest extends FlowTestCase
     {
         self::assertSame(
             [1.0, 2.0, 3.0],
-            (new AutoCaster(Caster::default()))->cast([1, 2, 3.0])
+            (new AutoCaster())->cast([1, 2, 3.0])
         );
     }
 }

@@ -59,7 +59,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         self::assertEquals(
-            schema(list_schema('array', type_list(type_string())), int_schema('score_sum'), float_schema('score_avg', precision: 2)),
+            schema(list_schema('array', type_list(type_string())), int_schema('score_sum'), float_schema('score_avg')),
             $rows->schema()
         );
         self::assertEquals(
@@ -91,7 +91,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         self::assertEquals(
-            schema(datetime_schema('date'), int_schema('score_sum'), float_schema('score_avg', precision: 2)),
+            schema(datetime_schema('date'), int_schema('score_sum'), float_schema('score_avg')),
             $rows->schema()
         );
         self::assertEquals(
@@ -343,7 +343,7 @@ final class GroupByTest extends FlowIntegrationTestCase
             ->fetch();
 
         self::assertEquals(
-            schema(uuid_schema('uuid'), int_schema('score_sum'), float_schema('score_avg', precision: 2)),
+            schema(uuid_schema('uuid'), int_schema('score_sum'), float_schema('score_avg')),
             $rows->schema()
         );
         self::assertEquals(

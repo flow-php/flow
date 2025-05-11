@@ -4,27 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
+use function Flow\ETL\DSL\{type_array,
+    type_boolean,
+    type_callable,
+    type_date,
+    type_datetime,
+    type_float,
+    type_integer,
+    type_json,
+    type_null,
+    type_resource,
+    type_string,
+    type_time,
+    type_uuid,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType,
-    DateType,
-    JsonType,
-    ListType,
-    MapType,
-    StructureType,
-    TimeType,
-    UuidType,
-    XMLElementType,
-    XMLType};
-use Flow\ETL\PHP\Type\Native\{ArrayType,
-    BooleanType,
-    CallableType,
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType, OptionalType, StructureType};
+use Flow\ETL\PHP\Type\Native\{
     EnumType,
-    FloatType,
-    IntegerType,
-    NullType,
     ObjectType,
-    ResourceType,
-    StringType};
+    UnionType};
 
 final class TypeFactory
 {
@@ -38,26 +38,28 @@ final class TypeFactory
         }
 
         return match ($data['type']) {
-            'float' => FloatType::fromArray($data),
-            'integer' => IntegerType::fromArray($data),
-            'boolean' => BooleanType::fromArray($data),
-            'string' => StringType::fromArray($data),
-            'callable' => CallableType::fromArray($data),
-            'array' => ArrayType::fromArray($data),
+            'float' => type_float(),
+            'integer' => type_integer(),
+            'boolean' => type_boolean(),
+            'string' => type_string(),
+            'callable' => type_callable(),
+            'array' => type_array(),
             'enum' => EnumType::fromArray($data),
-            'null' => NullType::fromArray($data),
+            'null' => type_null(),
             'object' => ObjectType::fromArray($data),
-            'resource' => ResourceType::fromArray($data),
-            'time' => TimeType::fromArray($data),
-            'date' => DateType::fromArray($data),
-            'datetime' => DateTimeType::fromArray($data),
-            'json' => JsonType::fromArray($data),
-            'uuid' => UuidType::fromArray($data),
+            'resource' => type_resource(),
+            'time' => type_time(),
+            'date' => type_date(),
+            'datetime' => type_datetime(),
+            'json' => type_json(),
+            'uuid' => type_uuid(),
             'list' => ListType::fromArray($data),
             'map' => MapType::fromArray($data),
             'structure' => StructureType::fromArray($data),
-            'xml_element' => XMLElementType::fromArray($data),
-            'xml' => XMLType::fromArray($data),
+            'xml_element' => type_xml_element(),
+            'xml' => type_xml(),
+            'union' => UnionType::fromArray($data),
+            'optional' => OptionalType::fromArray($data),
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };
     }

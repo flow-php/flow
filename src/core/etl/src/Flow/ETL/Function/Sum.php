@@ -7,8 +7,8 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\{float_entry, int_entry};
 use Flow\Calculator\Calculator;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\{PHP\Type\Native\FloatType, Row, Rows, Window};
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\{Row, Rows, Window};
 
 final class Sum implements AggregatingFunction, WindowFunction
 {
@@ -28,12 +28,6 @@ final class Sum implements AggregatingFunction, WindowFunction
     {
         try {
             $entry = $row->get($this->ref);
-            $type = $entry->type();
-
-            if ($type instanceof FloatType) {
-                $this->precision = max($this->precision, $type->precision);
-            }
-
             $value = $entry->value();
 
             if (\is_numeric($value)) {
@@ -52,12 +46,6 @@ final class Sum implements AggregatingFunction, WindowFunction
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
             $entry = $partitionRow->get($this->ref);
-            $type = $entry->type();
-
-            if ($type instanceof FloatType) {
-                $precision = max($precision, $type->precision);
-            }
-
             $value = $entry->value();
 
             if (\is_numeric($value)) {
@@ -84,7 +72,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             $this->ref->as($this->ref->to() . '_sum');
         }
 
-        if ($this->precision === 0) {
+        if (!is_float($this->sum) || ((int) $this->sum) === $this->sum) {
             return int_entry($this->ref->name(), (int) $this->sum);
         }
 

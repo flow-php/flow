@@ -4,58 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\NullType;
+use Flow\ETL\Exception\{InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<?\DOMElement>
+ * @implements Type<\DOMElement>
  */
 final readonly class XMLElementType implements Type
 {
-    public function __construct(private bool $nullable = false)
+    public function assert(mixed $value) : \DOMElement
     {
-    }
-
-    public static function fromArray(array $data) : self
-    {
-        return new self($data['nullable'] ?? false);
-    }
-
-    public function isComparableWith(Type $type) : bool
-    {
-        if ($type instanceof NullType) {
-            return true;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        return false;
+        throw InvalidTypeException::value($value, $this);
     }
 
-    public function isCompatible(Type $type) : bool
+    public function cast(mixed $value) : \DOMElement
     {
-        if (!$this->nullable && $type->nullable()) {
-            return false;
-        }
-
-        return $this->isEqual($type);
-    }
-
-    public function isEqual(Type $type) : bool
-    {
-        return $type instanceof self;
-    }
-
-    public function isSame(Type $type) : bool
-    {
-        return $this->isEqual($type) && $this->nullable() === $type->nullable();
+        throw new \RuntimeException('not implemented');
     }
 
     public function isValid(mixed $value) : bool
     {
-        if ($this->nullable && $value === null) {
-            return true;
-        }
-
         if ($value instanceof \DOMElement) {
             return true;
         }
@@ -63,39 +35,15 @@ final readonly class XMLElementType implements Type
         return false;
     }
 
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($nullable);
-    }
-
-    public function merge(Type $type) : self
-    {
-        if ($type instanceof NullType) {
-            return $this->makeNullable(true);
-        }
-
-        if (!$type instanceof self) {
-            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
-        }
-
-        return new self($this->nullable || $type->nullable());
-    }
-
     public function normalize() : array
     {
         return [
             'type' => 'xml_element',
-            'nullable' => $this->nullable,
         ];
-    }
-
-    public function nullable() : bool
-    {
-        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'xml_element';
+        return 'xml_element';
     }
 }

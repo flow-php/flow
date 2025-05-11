@@ -45,7 +45,7 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
             return;
         }
 
-        $normalizer = new RowsNormalizer(new EntryNormalizer($context->config->caster(), $this->dateTimeFormat));
+        $normalizer = new RowsNormalizer(new EntryNormalizer($this->dateTimeFormat));
 
         $headers = $rows->first()->entries()->map(fn (Entry $entry) => $entry->name());
 

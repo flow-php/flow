@@ -85,7 +85,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
 
             $buffer = \array_merge($buffer, $fields);
         } else {
-            $buffer[] = $indention . '|-- ' . $entry . ': ' . $definition->type()->toString();
+            $buffer[] = $indention . '|-- ' . $entry . ': ' . ($definition->isNullable() ? '?' : '') . $definition->type()->toString();
         }
 
         return $buffer;

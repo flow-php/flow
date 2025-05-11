@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function\ScalarFunction;
 
-use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\{type_float, type_optional};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -14,6 +14,6 @@ final class ScalarResultTest extends FlowTestCase
     {
         $result = new ScalarResult(null, type_float());
 
-        self::assertTrue($result->type->nullable());
+        self::assertEquals($result->type, type_optional(type_float()));
     }
 }
