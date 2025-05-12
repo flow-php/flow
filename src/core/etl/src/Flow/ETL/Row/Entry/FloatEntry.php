@@ -7,7 +7,6 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\ETL\DSL\{is_type, type_equals, type_float};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\OptionalType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
@@ -22,9 +21,9 @@ final class FloatEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var OptionalType<float>|Type<float>
+     * @var Type<float>
      */
-    private readonly Type|OptionalType $type;
+    private readonly Type $type;
 
     private readonly ?float $value;
 

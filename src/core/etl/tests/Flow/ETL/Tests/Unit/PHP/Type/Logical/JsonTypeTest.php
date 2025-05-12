@@ -77,7 +77,6 @@ final class JsonTypeTest extends FlowTestCase
 
     public function test_is_valid() : void
     {
-        self::assertTrue(type_json(true)->isValid(null));
         self::assertTrue(type_json()->isValid('{"foo": "bar"}'));
         self::assertFalse(type_json()->isValid('{"foo": "bar"'));
         self::assertFalse(type_json()->isValid('2'));
@@ -86,6 +85,7 @@ final class JsonTypeTest extends FlowTestCase
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value) : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsString(type_json()->assert($value));
     }
 

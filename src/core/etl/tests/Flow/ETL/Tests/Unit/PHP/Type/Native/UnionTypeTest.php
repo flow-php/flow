@@ -39,6 +39,9 @@ final class UnionTypeTest extends FlowTestCase
         yield [type_union(type_int(), type_string(), type_float()), 1];
     }
 
+    /**
+     * @param UnionType<mixed, mixed> $type
+     */
     #[DataProvider('casting_data_provider')]
     public function test_casting(UnionType $type, mixed $value, mixed $result) : void
     {
@@ -76,6 +79,9 @@ final class UnionTypeTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param UnionType<mixed, mixed> $type
+     */
     #[DataProvider('valid_assert_data_provider')]
     public function test_successful_assert(UnionType $type, mixed $value) : void
     {
@@ -131,12 +137,15 @@ final class UnionTypeTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param UnionType<mixed, mixed> $type
+     */
     #[DataProvider('invalid_assert_data_provider')]
     public function test_unsuccessful_assert(UnionType $type, mixed $value) : void
     {
         $this->expectException(InvalidTypeException::class);
 
         self::assertFalse($type->isValid($value));
-        self::assertSame($value, $type->assert($value));
+        self::assertEquals($value, $type->assert($value));
     }
 }

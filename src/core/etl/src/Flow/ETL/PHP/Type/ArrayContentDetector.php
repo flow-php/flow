@@ -96,7 +96,7 @@ final readonly class ArrayContentDetector
         }
 
         if ($type === null) {
-            return type_string(true);
+            return \Flow\ETL\DSL\type_optional(type_string());
         }
 
         return $type;

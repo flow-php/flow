@@ -12,8 +12,6 @@ use Flow\ETL\{Row, Rows, Window};
 
 final class Sum implements AggregatingFunction, WindowFunction
 {
-    private int $precision = 0;
-
     private float|int $sum;
 
     private ?Window $window;
@@ -42,7 +40,6 @@ final class Sum implements AggregatingFunction, WindowFunction
     public function apply(Row $row, Rows $partition) : mixed
     {
         $sum = 0;
-        $precision = 0;
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
             $entry = $partitionRow->get($this->ref);
@@ -72,7 +69,7 @@ final class Sum implements AggregatingFunction, WindowFunction
             $this->ref->as($this->ref->to() . '_sum');
         }
 
-        if (!is_float($this->sum) || ((int) $this->sum) === $this->sum) {
+        if (!is_float($this->sum)) {
             return int_entry($this->ref->name(), (int) $this->sum);
         }
 

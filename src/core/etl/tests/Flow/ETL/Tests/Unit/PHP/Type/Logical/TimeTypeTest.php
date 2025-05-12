@@ -51,7 +51,6 @@ final class TimeTypeTest extends FlowTestCase
 
     public function test_is_valid() : void
     {
-        self::assertTrue(type_time(true)->isValid(null));
         self::assertTrue(type_time()->isValid(new \DateInterval('PT10S')));
         self::assertFalse(type_time()->isValid('00:00:01'));
         self::assertFalse(type_time()->isValid('PT10S'));

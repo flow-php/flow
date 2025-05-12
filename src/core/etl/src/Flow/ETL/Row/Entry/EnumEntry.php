@@ -19,6 +19,9 @@ final class EnumEntry implements Entry
 
     private Metadata $metadata;
 
+    /**
+     * @var EnumType<\UnitEnum>
+     */
     private readonly EnumType $type;
 
     public function __construct(

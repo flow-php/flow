@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Schema\Formatter;
 
 use function Flow\ETL\DSL\{bool_schema, datetime_schema, integer_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_schema, type_integer, type_map, type_structure, uuid_schema, xml_element_schema, xml_schema};
 use function Flow\ETL\DSL\{type_int, type_list, type_string};
+use function Flow\ETL\DSL\type_optional;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -17,12 +18,12 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
             integer_schema('integer', true),
             integer_schema('float'),
             structure_schema('user', type_structure([
-                'name' => type_string(true),
+                'name' => type_optional(type_string()),
                 'age' => type_int(),
                 'address' => type_structure([
-                    'street' => type_string(true),
-                    'city' => type_string(true),
-                    'country' => type_string(true),
+                    'street' => type_optional(type_string()),
+                    'city' => type_optional(type_string()),
+                    'country' => type_optional(type_string()),
                 ]),
             ])),
             string_schema('name', nullable: true),
@@ -64,12 +65,12 @@ SCHEMA,
     public function test_format_nested_schema_as_table() : void
     {
         $schema = schema(integer_schema('integer', true), integer_schema('float'), structure_schema('user', type_structure([
-            'name' => type_string(true),
+            'name' => type_optional(type_string()),
             'age' => type_int(),
             'address' => type_structure([
-                'street' => type_string(true),
-                'city' => type_string(true),
-                'country' => type_string(true),
+                'street' => type_optional(type_string()),
+                'city' => type_optional(type_string()),
+                'country' => type_optional(type_string()),
             ]),
         ])), string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), xml_element_schema('xml_element'), json_schema('json'), uuid_schema('uuid'), datetime_schema('datetime'));
 
@@ -100,12 +101,12 @@ SCHEMA,
     public function test_format_nested_schema_as_table_without_metadata() : void
     {
         $schema = schema(integer_schema('integer', true), integer_schema('float'), structure_schema('user', type_structure([
-            'name' => type_string(true),
+            'name' => type_optional(type_string()),
             'age' => type_int(),
             'address' => type_structure([
-                'street' => type_string(true),
-                'city' => type_string(true),
-                'country' => type_string(true),
+                'street' => type_optional(type_string()),
+                'city' => type_optional(type_string()),
+                'country' => type_optional(type_string()),
             ]),
         ])), string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), xml_element_schema('xml_element'), json_schema('json'), uuid_schema('uuid'), datetime_schema('datetime'));
 

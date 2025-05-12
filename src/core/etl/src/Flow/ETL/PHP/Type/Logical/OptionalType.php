@@ -31,6 +31,11 @@ final readonly class OptionalType implements Type
         }
     }
 
+    /**
+     * @param array{type: 'optional', base: array} $data
+     *
+     * @return OptionalType<Type<mixed>>
+     */
     public static function fromArray(array $data) : Type
     {
         return new self(TypeFactory::fromArray($data['base']));
@@ -71,6 +76,9 @@ final readonly class OptionalType implements Type
         return $this->base->isValid($value);
     }
 
+    /**
+     * @return array{type: 'optional', base: array}
+     */
     public function normalize() : array
     {
         return [

@@ -54,7 +54,6 @@ final class DateTypeTest extends FlowTestCase
 
     public function test_is_valid() : void
     {
-        self::assertTrue(type_date(true)->isValid(null));
         self::assertFalse(type_date()->isValid(new \DateTimeImmutable()));
         self::assertTrue(type_date()->isValid(new \DateTime('2024-12-01')));
         self::assertFalse(type_date()->isValid('2020-01-01'));

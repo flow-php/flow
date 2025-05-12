@@ -42,7 +42,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
 
     private function enumType(Schema\Definition $definition) : string
     {
-        /** @var EnumType $type */
+        /** @var EnumType<\UnitEnum> $type */
         $type = $definition->type();
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\enum_schema");
 
@@ -123,22 +123,23 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
 
     private function listType(Schema\Definition $definition) : string
     {
-        /** @var ListType $type */
+        /** @var ListType<mixed> $type */
         $type = $definition->type();
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\list_schema");
 
         return \sprintf(
-            '\%s("%s", type: %s, metadata: %s)',
+            '\%s("%s", type: %s, nullable: %s, metadata: %s)',
             $reflection->getName(),
             $definition->entry()->name(),
             $this->typeFormatter->format($type),
+            $definition->isNullable() ? 'true' : 'false',
             $this->formatMetadata($definition->metadata())
         );
     }
 
     private function mapType(Schema\Definition $definition) : string
     {
-        /** @var MapType $type */
+        /** @var MapType<array-key, mixed> $type */
         $type = $definition->type();
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\map_schema");
 
@@ -179,7 +180,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
 
     private function structureType(Schema\Definition $definition) : string
     {
-        /** @var StructureType $type */
+        /** @var StructureType<array> $type */
         $type = $definition->type();
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\structure_schema");
 

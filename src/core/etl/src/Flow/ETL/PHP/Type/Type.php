@@ -7,7 +7,7 @@ namespace Flow\ETL\PHP\Type;
 use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 
 /**
- * @template-covariant T of mixed
+ * @template-covariant T
  */
 interface Type
 {
@@ -15,6 +15,8 @@ interface Type
      * @throws InvalidTypeException
      *
      * @return T
+     *
+     * @phpstan-assert T $value
      */
     public function assert(mixed $value) : mixed;
 
@@ -30,6 +32,9 @@ interface Type
      */
     public function isValid(mixed $value) : bool;
 
+    /**
+     * @return array<string, string>
+     */
     public function normalize() : array;
 
     public function toString() : string;

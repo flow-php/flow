@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\ETL\Exception\{InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
@@ -23,9 +23,6 @@ final readonly class FloatType implements Type
 
     public function cast(mixed $value) : float
     {
-        /**
-         * @var FloatType $type
-         */
         if (\is_float($value)) {
             return $value;
         }
@@ -45,11 +42,7 @@ final readonly class FloatType implements Type
             return (float) $endTime->format('Uu') - (float) $reference->format('Uu');
         }
 
-        try {
-            return (float) $value;
-        } catch (\Throwable) {
-            throw new CastingException($value, $type);
-        }
+        return (float) $value;
     }
 
     public function isValid(mixed $value) : bool

@@ -113,6 +113,10 @@ final class StructureEntryTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param StructureEntry<array> $entry
+     * @param StructureEntry<array> $nextEntry
+     */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, StructureEntry $entry, StructureEntry $nextEntry) : void
     {
@@ -164,7 +168,7 @@ final class StructureEntryTest extends FlowTestCase
         $string = structure_entry('name', ['json' => ['5' => 5, '2' => 2, '3' => 3]], type_structure(['json' => type_array()]));
 
         $serialized = \serialize($string);
-        /** @var StructureEntry $unserialized */
+        /** @var StructureEntry<array> $unserialized */
         $unserialized = \unserialize($serialized);
 
         self::assertTrue($string->isEqual($unserialized));
@@ -189,7 +193,6 @@ final class StructureEntryTest extends FlowTestCase
                 '2' => type_int(),
                 '3' => type_int(),
             ])),
-            /** @phpstan-ignore-next-line */
             structure_entry('name', ['1' => 1, '2' => 2, '3' => 3], type_structure(['1' => type_int(), '2' => type_int(), '3' => type_int()])),
         );
     }

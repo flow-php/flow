@@ -41,7 +41,7 @@ final class BooleanTypeTest extends FlowTestCase
     public function test_invalid_assertion() : void
     {
         $this->expectExceptionMessage('Expected type "boolean", got "string".');
-        self::assertIsBool(type_boolean()->assert('true'));
+        type_boolean()->assert('true');
     }
 
     public function test_normalization() : void
@@ -98,7 +98,9 @@ final class BooleanTypeTest extends FlowTestCase
 
     public function test_valid_assertion() : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsBool(type_boolean()->assert(true));
+        /** @phpstan-ignore-next-line */
         self::assertIsBool(type_boolean()->assert(false));
     }
 }

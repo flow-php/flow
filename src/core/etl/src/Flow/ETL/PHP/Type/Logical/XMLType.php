@@ -62,11 +62,6 @@ final readonly class XMLType implements Type
         return false;
     }
 
-    public function makeNullable(bool $nullable) : self
-    {
-        return new self($nullable);
-    }
-
     public function normalize() : array
     {
         return [

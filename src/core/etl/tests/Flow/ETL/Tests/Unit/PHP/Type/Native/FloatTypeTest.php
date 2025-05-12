@@ -71,6 +71,7 @@ final class FloatTypeTest extends FlowTestCase
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value) : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsFloat(type_float()->assert($value));
     }
 

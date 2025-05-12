@@ -57,6 +57,10 @@ final class ComparatorTest extends FlowTestCase
         yield [type_int(), type_boolean()];
     }
 
+    /**
+     * @param Type<mixed> $left
+     * @param Type<mixed> $right
+     */
     #[DataProvider('type_comparison_data_provider')]
     public function test_comparing_types(Type $left, Type $right, bool $equals) : void
     {
@@ -67,6 +71,10 @@ final class ComparatorTest extends FlowTestCase
         }
     }
 
+    /**
+     * @param Type<mixed> $left
+     * @param Type<mixed> $right
+     */
     #[DataProvider('type_comparable_data_provider')]
     public function test_type_comparable(Type $left, Type $right) : void
     {
@@ -91,7 +99,7 @@ final class ComparatorTest extends FlowTestCase
 
     public function test_type_is_any_on_optional_type() : void
     {
-        $type = type_string(true);
+        $type = type_optional(type_string());
 
         self::assertTrue(type_is_any($type, StringType::class, BooleanType::class));
         self::assertTrue(type_is_any($type, OptionalType::class, ResourceType::class));
@@ -111,7 +119,7 @@ final class ComparatorTest extends FlowTestCase
 
     public function test_type_is_on_optional_type() : void
     {
-        $type = type_string(true);
+        $type = type_optional(type_string());
 
         self::assertTrue(type_is($type, StringType::class));
         self::assertTrue(type_is($type, OptionalType::class));
@@ -129,6 +137,10 @@ final class ComparatorTest extends FlowTestCase
         self::assertFalse(type_is($type, FloatType::class));
     }
 
+    /**
+     * @param Type<mixed> $left
+     * @param Type<mixed> $right
+     */
     #[DataProvider('type_not_comparable_data_provider')]
     public function test_type_not_comparable(Type $left, Type $right) : void
     {

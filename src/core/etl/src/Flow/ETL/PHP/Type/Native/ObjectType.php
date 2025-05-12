@@ -5,19 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Native;
 
 use function Flow\ETL\DSL\type_object;
-use _PHPStan_95d365e52\Nette\PhpGenerator\ClassType;
 use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @template ClassType
+ * @template T of object
  *
- * @implements Type<object<ClassType>>
+ * @implements Type<T>
  */
 final readonly class ObjectType implements Type
 {
     /**
-     * @param class-string<ClassType> $class
+     * @param class-string<T> $class
      */
     public function __construct(public string $class)
     {
@@ -27,9 +26,9 @@ final readonly class ObjectType implements Type
     }
 
     /**
-     * @param array{class: class-string<ClassType>} $data
+     * @param array{class: class-string<T>} $data
      *
-     * @return ObjectType<ClassType>
+     * @return ObjectType<T>
      */
     public static function fromArray(array $data) : self
     {
@@ -40,7 +39,7 @@ final readonly class ObjectType implements Type
         return new self($data['class']);
     }
 
-    public function assert(mixed $value) : object
+    public function assert(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -51,7 +50,7 @@ final readonly class ObjectType implements Type
 
     public function cast(mixed $value) : object
     {
-        if (\is_object($value)) {
+        if (\is_object($value) && \is_a($value, $this->class, true)) {
             return $value;
         }
 

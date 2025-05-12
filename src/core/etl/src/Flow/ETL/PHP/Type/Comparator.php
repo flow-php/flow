@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\type_equals;
+use function Flow\ETL\DSL\{type_equals, type_object};
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, ListType, MapType, OptionalType, StructureType, TimeType};
 use Flow\ETL\PHP\Type\Native\{FloatType, IntegerType, NullType, StringType, UnionType};
 
@@ -17,11 +17,11 @@ final class Comparator
     public function comparable(Type $left, Type $right) : bool
     {
         if ($left instanceof UnionType && $left->isOptionalType()) {
-            return $this->comparable($left->types()->reduceOptionals()->first(), $right);
+            return $this->comparable(type_object(Type::class)->assert($left->types()->reduceOptionals()->first()), $right);
         }
 
         if ($right instanceof UnionType && $right->isOptionalType()) {
-            return $this->comparable($left, $right->types()->reduceOptionals()->first());
+            return $this->comparable($left, type_object(Type::class)->assert($right->types()->reduceOptionals()->first()));
         }
 
         if ($left instanceof UnionType || $right instanceof UnionType) {
@@ -45,7 +45,7 @@ final class Comparator
         }
 
         if ($right instanceof IntegerType || $right instanceof FloatType) {
-            return $left instanceof IntegerType || $left instanceof FloatType || $left instanceof StringType;
+            return $left instanceof StringType;
         }
 
         if ($left instanceof DateTimeType || $left instanceof DateType) {
@@ -104,9 +104,7 @@ final class Comparator
      * @template T
      *
      * @param Type<T> $type
-     * @param class-string<Type> $typeClass
-     *
-     * @phpstan-assert-if-true Type<T> $type
+     * @param class-string<Type<mixed>> $typeClass
      */
     public function is(Type $type, string $typeClass) : bool
     {
@@ -135,9 +133,8 @@ final class Comparator
      * @template T
      *
      * @param Type<T> $type
-     * @param class-string<Type> $typeClass
-     *
-     * @phpstan-assert-if-true Type<T> $type
+     * @param class-string<Type<mixed>> $typeClass
+     * @param class-string<Type<mixed>> ...$typeClasses
      */
     public function isAny(Type $type, string $typeClass, string ...$typeClasses) : bool
     {

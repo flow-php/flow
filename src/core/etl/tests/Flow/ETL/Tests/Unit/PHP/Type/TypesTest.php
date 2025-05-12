@@ -15,6 +15,7 @@ use function Flow\ETL\DSL\{type_array,
     type_string,
     type_union,
     types};
+use function Flow\ETL\DSL\type_optional;
 use Flow\ETL\PHP\Type\Native\{ObjectType};
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -171,8 +172,8 @@ final class TypesTest extends FlowTestCase
     public function test_reduce_optionals() : void
     {
         $types = types(
-            type_string(true),
-            type_boolean(true),
+            type_optional(type_string()),
+            type_boolean(),
         );
 
         self::assertEquals(

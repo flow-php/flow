@@ -21,10 +21,14 @@ final class MapEntry implements Entry
 
     private Metadata $metadata;
 
+    /**
+     * @var MapType<array-key, mixed>
+     */
     private MapType $type;
 
     /**
      * @param ?array<mixed> $value
+     * @param MapType<array-key, mixed> $type
      *
      * @throws InvalidArgumentException
      */

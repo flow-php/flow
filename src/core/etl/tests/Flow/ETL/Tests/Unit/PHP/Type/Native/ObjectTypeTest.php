@@ -39,6 +39,9 @@ final class ObjectTypeTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param class-string $class
+     */
     #[DataProvider('invalid_assert_data_provider')]
     public function test_invalid_assert(mixed $value, string $class) : void
     {
@@ -46,6 +49,9 @@ final class ObjectTypeTest extends FlowTestCase
         type_object($class)->assert($value);
     }
 
+    /**
+     * @param class-string $class
+     */
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value, string $class) : void
     {
@@ -54,20 +60,13 @@ final class ObjectTypeTest extends FlowTestCase
 
     public function test_valid() : void
     {
-        self::assertTrue(
-            type_object(\stdClass::class, true)->isValid(null)
-        );
-        self::assertFalse(
-            type_object(\stdClass::class)->isValid(null)
-        );
-        self::assertFalse(
-            type_object(\stdClass::class)->isValid('one')
-        );
-        self::assertFalse(
-            type_object(\stdClass::class)->isValid(new \ArrayIterator([]))
-        );
-        self::assertTrue(
-            type_object(\stdClass::class)->isValid(new \stdClass())
-        );
+        /** @phpstan-ignore-next-line  */
+        self::assertFalse(type_object(\stdClass::class)->isValid(null));
+        /** @phpstan-ignore-next-line  */
+        self::assertFalse(type_object(\stdClass::class)->isValid('one'));
+        /** @phpstan-ignore-next-line  */
+        self::assertFalse(type_object(\stdClass::class)->isValid(new \ArrayIterator([])));
+        /** @phpstan-ignore-next-line  */
+        self::assertTrue(type_object(\stdClass::class)->isValid(new \stdClass()));
     }
 }

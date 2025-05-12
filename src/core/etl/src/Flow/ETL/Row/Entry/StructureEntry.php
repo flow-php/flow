@@ -8,12 +8,15 @@ use function Flow\ETL\DSL\type_equals;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\{Type, TypeDetector};
+use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\{TypeDetector};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 
 /**
- * @implements Entry<?array<string, mixed>, array<string, mixed>>
+ * @template T of array<array-key, mixed>
+ *
+ * @implements Entry<?array<array-key, mixed>, T>
  */
 final class StructureEntry implements Entry
 {
@@ -21,10 +24,14 @@ final class StructureEntry implements Entry
 
     private Metadata $metadata;
 
+    /**
+     * @var StructureType<T>
+     */
     private readonly StructureType $type;
 
     /**
      * @param ?array<array-key, mixed> $value
+     * @param StructureType<T> $type
      *
      * @throws InvalidArgumentException
      */
@@ -42,6 +49,7 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
+        /** @phpstan-ignore-next-line */
         if ($value !== null && !$type->isValid($value)) {
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
@@ -60,7 +68,7 @@ final class StructureEntry implements Entry
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : self
+    public function duplicate() : Entry
     {
         return new self($this->name, $this->value, $this->type, $this->metadata);
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{df, from_array, ref, to_memory, type_integer, type_list};
+use function Flow\ETL\DSL\{df, from_array, ref, to_memory, type_integer, type_list, type_optional};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -38,7 +38,7 @@ final class CastTest extends FlowTestCase
                     ['array' => []],
                 ]
             ))
-            ->withEntry('list_int', ref('array')->cast(type_list(type_integer(), true)))
+            ->withEntry('list_int', ref('array')->cast(type_optional(type_list(type_integer()))))
             ->drop('array')
             ->fetch()
             ->first();

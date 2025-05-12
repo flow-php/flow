@@ -81,6 +81,7 @@ final class StringTypeTest extends FlowTestCase
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value) : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsString(type_string()->assert($value));
     }
 }

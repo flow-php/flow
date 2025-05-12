@@ -23,6 +23,7 @@ use function Flow\ETL\DSL\{bool_schema,
     type_json,
     type_list,
     type_map,
+    type_optional,
     type_string,
     type_structure,
     type_time,
@@ -207,6 +208,9 @@ final class SchemaConverter
         return struct_schema($column->name(), type_structure($elements), $nullable);
     }
 
+    /**
+     * @return Type<mixed>
+     */
     private function parquetToFlowType(Column $column) : Type
     {
         if ($column instanceof FlatColumn) {
@@ -215,38 +219,45 @@ final class SchemaConverter
             $nullable = $column->repetition() === ParquetSchema\Repetition::OPTIONAL;
 
             if ($logicalType === null) {
-                return match ($column->type()) {
+                $type = match ($column->type()) {
                     ParquetSchema\PhysicalType::INT32 => match ($column->convertedType()) {
-                        ParquetSchema\ConvertedType::DATE => type_date($nullable),
-                        default => type_int($nullable),
+                        ParquetSchema\ConvertedType::DATE => type_date(),
+                        default => type_int(),
                     },
-                    ParquetSchema\PhysicalType::INT64 => type_int($nullable),
-                    ParquetSchema\PhysicalType::BOOLEAN => type_boolean($nullable),
-                    ParquetSchema\PhysicalType::DOUBLE => type_float($nullable),
-                    ParquetSchema\PhysicalType::FLOAT => type_float($nullable),
-                    ParquetSchema\PhysicalType::BYTE_ARRAY => type_string($nullable),
+                    ParquetSchema\PhysicalType::INT64 => type_int(),
+                    ParquetSchema\PhysicalType::BOOLEAN => type_boolean(),
+                    ParquetSchema\PhysicalType::DOUBLE => type_float(),
+                    ParquetSchema\PhysicalType::FLOAT => type_float(),
+                    ParquetSchema\PhysicalType::BYTE_ARRAY => type_string(),
                     default => throw new RuntimeException($column->type()->name . ' is not supported.'),
                 };
+
+                return $nullable ? type_optional($type) : $type;
             }
 
-            return match ($logicalType->name()) {
-                ParquetSchema\LogicalType::STRING => type_string($nullable),
-                ParquetSchema\LogicalType::TIME => type_time($nullable),
-                ParquetSchema\LogicalType::DATE => type_date($nullable),
-                ParquetSchema\LogicalType::TIMESTAMP => type_datetime($nullable),
-                ParquetSchema\LogicalType::UUID => type_uuid($nullable),
-                ParquetSchema\LogicalType::JSON => type_json($nullable),
-                ParquetSchema\LogicalType::DECIMAL => type_float($nullable),
-                ParquetSchema\LogicalType::INTEGER => type_int($nullable),
+            $type = match ($logicalType->name()) {
+                ParquetSchema\LogicalType::STRING => type_string(),
+                ParquetSchema\LogicalType::TIME => type_time(),
+                ParquetSchema\LogicalType::DATE => type_date(),
+                ParquetSchema\LogicalType::TIMESTAMP => type_datetime(),
+                ParquetSchema\LogicalType::UUID => type_uuid(),
+                ParquetSchema\LogicalType::JSON => type_json(),
+                ParquetSchema\LogicalType::DECIMAL => type_float(),
+                ParquetSchema\LogicalType::INTEGER => type_int(),
                 default => throw new RuntimeException($logicalType->name() . ' is not supported.'),
             };
+
+            return $nullable ? type_optional($type) : $type;
         }
 
         /** @var NestedColumn $column */
         $nullable = $column->repetition() === ParquetSchema\Repetition::OPTIONAL;
 
         if ($column->isList()) {
-            return type_list($this->parquetToFlowType($column->getListElement()), $nullable);
+
+            return $nullable
+                ? type_optional(type_list($this->parquetToFlowType($column->getListElement())))
+                : type_list($this->parquetToFlowType($column->getListElement()));
         }
 
         if ($column->isMap()) {
@@ -256,11 +267,9 @@ final class SchemaConverter
                 throw new RuntimeException('Flow expects map key type to be string or integer type.');
             }
 
-            return type_map(
-                $keyType,
-                $this->parquetToFlowType($column->getMapValueColumn()),
-                $nullable
-            );
+            return $nullable
+                ? type_optional(type_map($keyType, $this->parquetToFlowType($column->getMapValueColumn())))
+                : type_map($keyType, $this->parquetToFlowType($column->getMapValueColumn()));
         }
 
         $elements = [];
@@ -269,6 +278,8 @@ final class SchemaConverter
             $elements[$structColumn->name()] = $this->parquetToFlowType($structColumn);
         }
 
-        return type_structure($elements, $nullable);
+        return $nullable
+            ? type_optional(type_structure($elements))
+            : type_structure($elements);
     }
 }

@@ -8,7 +8,9 @@ use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<list<mixed>>
+ * @template T
+ *
+ * @implements Type<list<T>>
  */
 final readonly class ListType implements Type
 {
@@ -19,9 +21,14 @@ final readonly class ListType implements Type
     {
     }
 
+    /**
+     * @param array{type: 'list', element: array} $data
+     *
+     * @return ListType<Type<mixed>>
+     */
     public static function fromArray(array $data) : self
     {
-        return new self(TypeFactory::fromArray($data['element']), $data['nullable'] ?? false);
+        return new self(TypeFactory::fromArray($data['element']));
     }
 
     public function assert(mixed $value) : array
@@ -37,7 +44,7 @@ final readonly class ListType implements Type
     {
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+                return $this->assert(\json_decode($value, true, 512, \JSON_THROW_ON_ERROR));
             }
 
             if (!\is_array($value)) {
@@ -50,7 +57,7 @@ final readonly class ListType implements Type
                 $castedList[$key] = $this->element()->cast($item);
             }
 
-            return $castedList;
+            return $this->assert($castedList);
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }
@@ -84,6 +91,9 @@ final readonly class ListType implements Type
         return true;
     }
 
+    /**
+     * @return array{type: 'list', element: array}
+     */
     public function normalize() : array
     {
         return [

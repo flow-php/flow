@@ -40,34 +40,37 @@ final class TypeFormatter
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_array');
 
         return \sprintf(
-            '\%s(nullable: %s)',
+            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s())' : '\%s()',
             $reflection->getName(),
-            $nullable ? 'true' : 'false'
         );
     }
 
+    /**
+     * @param ListType<mixed> $type
+     */
     private function formatListType(ListType $type, bool $nullable) : string
     {
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_list');
 
         return \sprintf(
-            '\%s(element: %s, nullable: %s)',
+            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(%s(element: %s))' : '\%s(element: %s)',
             $reflection->getName(),
             $this->format($type->element()),
-            $nullable ? 'true' : 'false'
         );
     }
 
+    /**
+     * @param MapType<array-key, mixed> $type
+     */
     private function formatMapType(MapType $type, bool $nullable) : string
     {
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_map');
 
         return \sprintf(
-            '\%s(key_type: %s, value_type: %s, nullable: %s)',
+            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s(key_type: %s, value_type: %s))' : '\%s(key_type: %s, value_type: %s)',
             $reflection->getName(),
             $this->format($type->key()),
             $this->format($type->value()),
-            $nullable ? 'true' : 'false'
         );
     }
 
@@ -99,12 +102,14 @@ final class TypeFormatter
         }
 
         return \sprintf(
-            '\%s(nullable: %s)',
+            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s())' : '\%s()',
             $reflection->getName(),
-            $nullable ? 'true' : 'false'
         );
     }
 
+    /**
+     * @param StructureType<array> $type
+     */
     private function formatStructureType(StructureType $type, bool $nullable) : string
     {
         $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_structure');
@@ -116,10 +121,9 @@ final class TypeFormatter
         }
 
         return \sprintf(
-            '\%s(elements: [%s], nullable: %s)',
+            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s(elements: [%s]))' : '\%s(elements: [%s])',
             $reflection->getName(),
             \implode(', ', $fields),
-            $nullable ? 'true' : 'false'
         );
     }
 }

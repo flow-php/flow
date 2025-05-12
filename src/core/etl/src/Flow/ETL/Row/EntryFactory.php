@@ -154,7 +154,7 @@ final readonly class EntryFactory
                 FloatType::class => float_entry($entryName, null, $metadata),
                 BooleanType::class => bool_entry($entryName, null, $metadata),
                 MapType::class => map_entry($entryName, null, $type->base(), $metadata),
-                StructureType::class => struct_entry($entryName, null, $type, $metadata),
+                StructureType::class => struct_entry($entryName, null, $type->base(), $metadata),
                 ListType::class => list_entry($entryName, null, $type->base(), $metadata),
                 UuidType::class => uuid_entry($entryName, null, $metadata),
                 DateTimeType::class => datetime_entry($entryName, null, $metadata),
@@ -253,6 +253,7 @@ final readonly class EntryFactory
             throw new InvalidArgumentException("Entry \"{$entryName}\" conversion exception. {$e->getMessage()}", previous: $e);
         }
 
+        /** @var Type<mixed> $type */
         throw new InvalidArgumentException("Can't convert " . get_debug_type($value) . " value into type \"{$type->toString()}\"");
     }
 }

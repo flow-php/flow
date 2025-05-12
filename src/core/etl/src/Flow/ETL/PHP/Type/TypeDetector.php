@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{
-    type_array,
+use function Flow\ETL\DSL\{type_array,
     type_boolean,
     type_date,
     type_datetime,
+    type_enum,
     type_float,
     type_int,
     type_json,
@@ -17,13 +17,14 @@ use function Flow\ETL\DSL\{
     type_object,
     type_string,
     type_time,
+    type_union,
     type_uuid,
     type_xml,
     type_xml_element,
     types};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
-use Flow\ETL\PHP\Type\Native\{EnumType};
+use Flow\ETL\PHP\Type\Native\{IntegerType, StringType};
 
 final class TypeDetector
 {
@@ -72,10 +73,11 @@ final class TypeDetector
             }
 
             if ($detector->isMap()) {
-                return type_map($detector->firstKeyType(), $detector->valueType());
+                return type_map(type_union(type_object(StringType::class), type_object(IntegerType::class))->assert($detector->firstKeyType()), $detector->valueType());
             }
 
             if ($detector->isStructure()) {
+                /** @var array<Type<mixed>> $elements */
                 $elements = [];
 
                 foreach ($value as $key => $item) {
@@ -85,11 +87,11 @@ final class TypeDetector
                 return new StructureType($elements);
             }
 
-            return type_array([] === \array_filter($value, fn ($value) : bool => null !== $value));
+            return type_array();
         }
 
         if ($value instanceof \UnitEnum) {
-            return EnumType::of($value::class);
+            return type_enum($value::class);
         }
 
         if (\is_object($value)) {

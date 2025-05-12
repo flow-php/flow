@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\TypeDetector;
 
 use function Flow\ETL\DSL\{type_boolean, type_int, type_map, type_string, type_structure};
+use function Flow\ETL\DSL\type_optional;
 use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -36,7 +37,7 @@ final class StructuresTypeDetectorTest extends FlowTestCase
                 ]),
                 'payload' => type_map(
                     key_type: type_string(),
-                    value_type: type_string(true)
+                    value_type: type_optional(type_string())
                 ),
                 'public' => type_boolean(),
                 'created_at' => type_string(),

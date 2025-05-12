@@ -75,7 +75,7 @@ final readonly class EntryNormalizer
     {
         $node = XMLNode::nestedNode($entry->name());
 
-        /** @var ListType $type */
+        /** @var ListType<mixed> $type */
         $type = $entry->type();
 
         $listValue = $entry->value();
@@ -132,7 +132,7 @@ final readonly class EntryNormalizer
             return $node;
         }
 
-        /** @var MapType $type */
+        /** @var MapType<array-key, mixed> $type */
         $type = $entry->type();
 
         foreach ($mapValue as $key => $value) {
@@ -143,6 +143,9 @@ final readonly class EntryNormalizer
         return $node;
     }
 
+    /**
+     * @param StructureEntry<array> $entry
+     */
     private function structureToNode(StructureEntry $entry) : XMLNode
     {
         $node = XMLNode::nestedNode($entry->name());
@@ -153,7 +156,7 @@ final readonly class EntryNormalizer
             return $node;
         }
 
-        /** @var StructureType $type */
+        /** @var StructureType<array> $type */
         $type = $entry->type();
 
         $structureIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);

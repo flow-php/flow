@@ -29,6 +29,8 @@ use Flow\ETL\PHP\Type\Native\{
 final class TypeFactory
 {
     /**
+     * @param array $data
+     *
      * @return Type<mixed>
      */
     public static function fromArray(array $data) : Type
@@ -44,8 +46,10 @@ final class TypeFactory
             'string' => type_string(),
             'callable' => type_callable(),
             'array' => type_array(),
+            /** @phpstan-ignore argument.type */
             'enum' => EnumType::fromArray($data),
             'null' => type_null(),
+            /** @phpstan-ignore argument.type */
             'object' => ObjectType::fromArray($data),
             'resource' => type_resource(),
             'time' => type_time(),
@@ -53,12 +57,17 @@ final class TypeFactory
             'datetime' => type_datetime(),
             'json' => type_json(),
             'uuid' => type_uuid(),
+            /** @phpstan-ignore argument.type */
             'list' => ListType::fromArray($data),
+            /** @phpstan-ignore argument.type */
             'map' => MapType::fromArray($data),
+            /** @phpstan-ignore argument.type */
             'structure' => StructureType::fromArray($data),
             'xml_element' => type_xml_element(),
             'xml' => type_xml(),
+            /** @phpstan-ignore argument.type */
             'union' => UnionType::fromArray($data),
+            /** @phpstan-ignore argument.type */
             'optional' => OptionalType::fromArray($data),
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };

@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\{list_entry,
     type_list,
     type_string,
     type_structure};
+use function Flow\ETL\DSL\type_optional;
 use Flow\ETL\Function\StructureSelect;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -88,9 +89,9 @@ final class StructureSelectTest extends FlowTestCase
                 'email' => 'email@email.com',
             ],
             type_structure([
-                'id' => type_int(true),
+                'id' => type_int(),
                 'email' => type_string(),
-                'name' => type_string(true),
+                'name' => type_optional(type_string()),
             ])
         );
 

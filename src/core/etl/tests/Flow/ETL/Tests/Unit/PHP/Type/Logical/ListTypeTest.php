@@ -55,6 +55,7 @@ final class ListTypeTest extends FlowTestCase
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value) : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsArray(type_list(type_string())->assert($value));
     }
 

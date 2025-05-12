@@ -9,17 +9,25 @@ use Flow\ETL\PHP\Type\Native\{IntegerType, StringType};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<array<array-key, mixed>>
+ * @template TKey of array-key
+ * @template TValue
+ *
+ * @implements Type<array<TKey, TValue>>
  */
 final readonly class MapType implements Type
 {
     /**
-     * @param Type<mixed> $value
+     * @param Type<TValue> $value
      */
     public function __construct(private StringType|IntegerType $key, private Type $value)
     {
     }
 
+    /**
+     * @param array{type: 'map', key: array, value: array} $data
+     *
+     * @return MapType<array-key, Type<mixed>>
+     */
     public static function fromArray(array $data) : self
     {
         $keyType = TypeFactory::fromArray($data['key']);
@@ -47,20 +55,10 @@ final readonly class MapType implements Type
                 return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
             }
 
-            if (!\is_array($value)) {
-                return [
-                    $this->key->cast(0) => $this->value->cast($value),
-                ];
-            }
-
             $castedMap = [];
 
             foreach ($value as $key => $item) {
                 $castedKey = $this->key->cast($key);
-
-                if ($castedKey === null) {
-                    continue;
-                }
 
                 if (\array_key_exists($castedKey, $castedMap)) {
                     throw new CastingException($value, $this);
@@ -69,7 +67,7 @@ final readonly class MapType implements Type
                 $castedMap[$this->key->cast($key)] = $this->value->cast($item);
             }
 
-            return $castedMap;
+            return $this->assert($castedMap);
         } catch (\Throwable $e) {
             throw new CastingException($value, $this, $e);
         }
@@ -99,6 +97,9 @@ final readonly class MapType implements Type
         return $this->key;
     }
 
+    /**
+     * @return array{type: 'map', key: array, value: array}
+     */
     public function normalize() : array
     {
         return [

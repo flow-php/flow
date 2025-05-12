@@ -56,16 +56,6 @@ final class MapTypeTest extends FlowTestCase
         );
     }
 
-    public function test_casting_scalar_to_map() : void
-    {
-        self::assertSame(
-            [
-                '0' => 2,
-            ],
-            type_map(type_string(), type_integer())->cast('2')
-        );
-    }
-
     #[DataProvider('invalid_assert_data_provider')]
     public function test_invalid_assert(mixed $value) : void
     {
@@ -76,6 +66,7 @@ final class MapTypeTest extends FlowTestCase
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value) : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsArray((type_map(type_int(), type_string()))->assert($value));
     }
 

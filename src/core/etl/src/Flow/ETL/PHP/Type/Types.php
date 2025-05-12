@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{type_equals, type_null};
+use function Flow\ETL\DSL\{type_equals, type_null, type_object};
 use Flow\ETL\PHP\Type\Logical\OptionalType;
 use Flow\ETL\PHP\Type\Native\UnionType;
 
@@ -76,7 +76,7 @@ final readonly class Types implements \Countable, \Stringable
     }
 
     /**
-     * @param Type $type
+     * @param Type<mixed> $type
      */
     public function has(Type $type) : bool
     {
@@ -89,6 +89,9 @@ final readonly class Types implements \Countable, \Stringable
         return false;
     }
 
+    /**
+     * @param Type<mixed> ...$types
+     */
     public function hasAll(Type ...$types) : bool
     {
         foreach ($types as $type) {
@@ -100,6 +103,9 @@ final readonly class Types implements \Countable, \Stringable
         return true;
     }
 
+    /**
+     * @param Type<mixed> ...$types
+     */
     public function hasAny(Type ...$types) : bool
     {
         foreach ($this->types as $existingType) {
@@ -114,7 +120,7 @@ final readonly class Types implements \Countable, \Stringable
     }
 
     /**
-     * @param Type ...$types
+     * @param Type<mixed> ...$types
      */
     public function only(Type ...$types) : self
     {
@@ -133,8 +139,6 @@ final readonly class Types implements \Countable, \Stringable
 
     /**
      * Reduce optional types to their base types.
-     *
-     * @return Type<mixed>
      */
     public function reduceOptionals() : self
     {
@@ -144,7 +148,8 @@ final readonly class Types implements \Countable, \Stringable
             if ($type instanceof OptionalType) {
                 $types[] = $type->base();
             } elseif ($type instanceof UnionType && $type->isOptionalType()) {
-                $types[] = $type->types()->without(type_null())->first();
+                $t = type_object(Type::class)->assert($type->types()->without(type_null())->first());
+                $types[] = $t;
             } else {
                 $types[] = $type;
             }
@@ -154,7 +159,7 @@ final readonly class Types implements \Countable, \Stringable
     }
 
     /**
-     * @param Type ...$types
+     * @param Type<mixed> ...$types
      */
     public function without(Type ...$types) : self
     {

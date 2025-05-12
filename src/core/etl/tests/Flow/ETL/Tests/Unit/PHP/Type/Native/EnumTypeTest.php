@@ -39,6 +39,9 @@ final class EnumTypeTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param class-string<\UnitEnum> $class
+     */
     #[DataProvider('invalid_assert_data_provider')]
     public function test_invalid_assert(mixed $value, string $class) : void
     {
@@ -46,13 +49,12 @@ final class EnumTypeTest extends FlowTestCase
         (type_enum($class))->assert($value);
     }
 
+    /**
+     * @param class-string<\UnitEnum> $class
+     */
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value, string $class) : void
     {
-        if ($value === null) {
-            self::assertNull((type_enum($class))->assert($value));
-        } else {
-            self::assertInstanceOf($class, (type_enum($class))->assert($value));
-        }
+        self::assertInstanceOf($class, (type_enum($class))->assert($value));
     }
 }

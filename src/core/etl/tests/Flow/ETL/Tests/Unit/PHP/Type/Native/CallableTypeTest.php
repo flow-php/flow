@@ -47,6 +47,7 @@ final class CallableTypeTest extends FlowTestCase
     #[TestWith(['count'])]
     public function test_valid_assertion(mixed $value) : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsCallable(type_callable()->assert($value));
     }
 }

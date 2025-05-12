@@ -8,7 +8,6 @@ use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\Config\Sort\SortConfig;
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FilesystemTable};
@@ -53,11 +52,6 @@ final readonly class Config
     public static function default() : self
     {
         return self::builder()->build();
-    }
-
-    public function caster() : Caster
-    {
-        return $this->caster;
     }
 
     public function clock() : ClockInterface

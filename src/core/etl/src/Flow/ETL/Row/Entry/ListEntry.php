@@ -21,11 +21,14 @@ final class ListEntry implements Entry
 
     private Metadata $metadata;
 
+    /**
+     * @var ListType<mixed>
+     */
     private readonly ListType $type;
 
     /**
      * @param list<mixed> $value
-     * @param ListType $type
+     * @param ListType<mixed> $type
      *
      * @throws InvalidArgumentException
      */

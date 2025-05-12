@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\{is_nullable,
     type_is_any,
     type_json,
     type_list,
+    type_optional,
     type_string,
     type_time,
     type_uuid,
@@ -120,6 +121,9 @@ final class Definition
         return new self($entry, type_json(), $nullable, $metadata);
     }
 
+    /**
+     * @param ListType<mixed> $type
+     */
     public static function list(string|Reference $entry, ListType $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self(
@@ -130,6 +134,9 @@ final class Definition
         );
     }
 
+    /**
+     * @param MapType<array-key, mixed> $type
+     */
     public static function map(string|Reference $entry, MapType $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self(
@@ -145,14 +152,12 @@ final class Definition
         return new self($entry, type_string(), $nullable, $metadata);
     }
 
+    /**
+     * @param StructureType<array> $type
+     */
     public static function structure(string|Reference $entry, StructureType $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
-        return new self(
-            $entry,
-            $type,
-            $nullable,
-            $metadata
-        );
+        return new self($entry, $type, $nullable, $metadata);
     }
 
     public static function time(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
@@ -328,7 +333,10 @@ final class Definition
 
     public function merge(self $definition) : self
     {
-        $types = types($this->type, $definition->type);
+        $thisType = $this->type;
+        $definitionType = $definition->type;
+
+        $types = types($thisType, $definitionType);
 
         if (!$this->ref->is($definition->ref)) {
             throw new RuntimeException(\sprintf('Cannot merge different definitions, %s and %s', $this->ref->name(), $definition->ref->name()));
@@ -337,7 +345,7 @@ final class Definition
         if ($this->metadata->has(Metadata::FROM_NULL) && $definition->metadata()->has(Metadata::FROM_NULL)) {
             return new self(
                 $this->ref,
-                $this->type(),
+                $thisType,
                 true,
                 $this->metadata->merge($definition->metadata)
             );
@@ -346,7 +354,7 @@ final class Definition
         if ($this->metadata->has(Metadata::FROM_NULL)) {
             return new self(
                 $this->ref,
-                $definition->type(),
+                $definitionType,
                 true,
                 $definition->metadata->remove(Metadata::FROM_NULL)->merge($this->metadata->remove(Metadata::FROM_NULL))
             );
@@ -355,23 +363,25 @@ final class Definition
         if ($definition->metadata()->has(Metadata::FROM_NULL)) {
             return new self(
                 $this->ref,
-                $this->type(),
+                $thisType,
                 true,
                 $this->metadata->remove(Metadata::FROM_NULL)->merge($definition->metadata->remove(Metadata::FROM_NULL))
             );
         }
 
-        if (type_is($this->type, ListType::class) && type_is($definition->type, ListType::class) && !type_equals($this->type, $definition->type)) {
-            $thisElementType = $this->type->element();
-            $definitionElementType = $definition->type->element();
+        if (type_is($thisType, ListType::class) && type_is($definitionType, ListType::class) && !type_equals($thisType, $definitionType)) {
+            /** @var ListType<mixed> $thisType */
+            $thisElementType = $thisType->element();
+            /** @var ListType<mixed> $definitionType */
+            $definitionElementType = $definitionType->element();
 
             if (type_is_any($thisElementType, IntegerType::class, FloatType::class) && type_is_any($definitionElementType, IntegerType::class, FloatType::class)) {
                 return new self(
                     $this->ref,
                     type_list(
-                        type_float(
-                            is_nullable($this->type->element()) || is_nullable($definition->type->element()),
-                        )
+                        is_nullable($thisElementType) || is_nullable($definitionElementType)
+                            ? type_optional(type_float())
+                            : type_float()
                     ),
                     $this->nullable || $definition->nullable,
                     $this->metadata->merge($definition->metadata)
@@ -379,8 +389,8 @@ final class Definition
             }
         }
 
-        if ($this->type::class === $definition->type::class && type_is_any($this->type, ListType::class, MapType::class, StructureType::class)) {
-            if (!type_equals($this->type, $definition->type)) {
+        if ($thisType::class === $definitionType::class && type_is_any($thisType, ListType::class, MapType::class, StructureType::class)) {
+            if (!type_equals($thisType, $definitionType)) {
                 return new self(
                     $this->ref,
                     type_json(),
@@ -390,10 +400,10 @@ final class Definition
             }
         }
 
-        if (type_equals($this->type, $definition->type)) {
+        if (type_equals($thisType, $definitionType)) {
             return new self(
                 $this->ref,
-                $this->type,
+                $thisType,
                 $this->nullable || $definition->nullable,
                 $this->metadata->merge($definition->metadata)
             );
@@ -427,7 +437,7 @@ final class Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s (%s)" and "%s (%s)"', $this->ref->name(), $this->type->toString(), $definition->ref->name(), $definition->type->toString()));
+        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s (%s)" and "%s (%s)"', $this->ref->name(), $thisType->toString(), $definition->ref->name(), $definitionType->toString()));
     }
 
     public function metadata() : Metadata

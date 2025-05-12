@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\{int_schema,
     type_int,
     type_list,
     type_map,
+    type_optional,
     type_string,
     type_structure};
 use Flow\ETL\Schema\Definition;
@@ -30,12 +31,12 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         yield [list_schema('list', type_list(type_int()), true), list_schema('list', type_list(type_int())), true];
         yield [list_schema('list', type_list(type_int()), true), list_schema('list', type_list(type_int()), true), true];
 
-        yield [list_schema('list', type_list(type_int(true))), list_schema('list', type_list(type_int())), true];
-        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_int(true))), false];
+        yield [list_schema('list', type_list(type_optional(type_int()))), list_schema('list', type_list(type_int())), true];
+        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_optional(type_int()))), false];
 
         yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_string())), false];
 
-        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_int(true))), false];
+        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_optional(type_int()))), false];
 
         yield [
             list_schema('list', type_list(type_list(type_int()))),
@@ -43,13 +44,13 @@ final class DefinitionCompatibilityTest extends FlowTestCase
             true,
         ];
         yield [
-            list_schema('list', type_list(type_list(type_int(true)))),
+            list_schema('list', type_list(type_list(type_optional(type_int())))),
             list_schema('list', type_list(type_list(type_int()))),
             true,
         ];
         yield [
             list_schema('list', type_list(type_list(type_int()))),
-            list_schema('list', type_list(type_list(type_int(true)))),
+            list_schema('list', type_list(type_list(type_optional(type_int())))),
             false,
         ];
     }
@@ -61,13 +62,13 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_int()), true), false];
         yield [map_schema('map', type_map(type_string(), type_int()), true), map_schema('map', type_map(type_string(), type_int())), true];
 
-        yield [map_schema('map', type_map(type_string(), type_int(true))), map_schema('map', type_map(type_string(), type_int())), true];
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_int(true))), false];
+        yield [map_schema('map', type_map(type_string(), type_optional(type_int()))), map_schema('map', type_map(type_string(), type_int())), true];
+        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_optional(type_int()))), false];
 
         yield [map_schema('map', type_map(type_string(), type_int()), true), map_schema('map', type_map(type_string(), type_int()), true), true];
         yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_string())), false];
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_int(true))), false];
-        yield [map_schema('map', type_map(type_string(), type_int(true))), map_schema('map', type_map(type_string(), type_int())), true];
+        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_optional(type_int()))), false];
+        yield [map_schema('map', type_map(type_string(), type_optional(type_int()))), map_schema('map', type_map(type_string(), type_int())), true];
     }
 
     public static function scalar_types_compatibility_provider() : \Generator
@@ -125,14 +126,14 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         ];
 
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(true), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_optional(type_int()), 'name' => type_string()])),
             struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
             true,
         ];
 
         yield [
             struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_int(true), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_optional(type_int()), 'name' => type_string()])),
             false,
         ];
     }

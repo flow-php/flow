@@ -8,17 +8,19 @@ use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeE
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 /**
- * @implements Type<array<string, mixed>>
+ * @template T of array
+ *
+ * @implements Type<T>
  */
 final readonly class StructureType implements Type
 {
     /**
-     * @var array<string, Type<mixed>>
+     * @var T
      */
     private array $elements;
 
     /**
-     * @param array<string, Type<mixed>> $elements
+     * @param T $elements
      *
      * @throws InvalidArgumentException
      */
@@ -37,6 +39,11 @@ final readonly class StructureType implements Type
         $this->elements = $elements;
     }
 
+    /**
+     * @param array{type: 'structure', elements: array} $data
+     *
+     * @return StructureType<array<Type<mixed>>>
+     */
     public static function fromArray(array $data) : self
     {
         if (!\array_key_exists('elements', $data)) {
@@ -65,19 +72,18 @@ final readonly class StructureType implements Type
     {
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+                return $this->assert(\json_decode($value, true, 512, \JSON_THROW_ON_ERROR));
             }
 
             $castedStructure = [];
 
             foreach ($this->elements as $elementName => $elementType) {
-
                 $castedStructure[$elementName] = (\is_array($value) && \array_key_exists($elementName, $value))
                     ? $elementType->cast($value[$elementName])
                     : $elementType->cast(null);
             }
 
-            return $castedStructure;
+            return $this->assert($castedStructure);
         } catch (\Throwable $e) {
             throw new CastingException($value, $this, $e);
         }
@@ -114,6 +120,9 @@ final readonly class StructureType implements Type
         return true;
     }
 
+    /**
+     * @return array{type: 'structure', elements: array}
+     */
     public function normalize() : array
     {
         $elements = [];

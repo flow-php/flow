@@ -39,7 +39,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
                 /** @var list<string> $value */
                 $concatValues = \array_merge($concatValues, $value);
             } else {
-                $value = \is_string($value) ? $value : type_string(true)->cast($value);
+                $value = \is_string($value) ? $value : \Flow\ETL\DSL\type_optional(type_string())->cast($value);
 
                 if (\is_string($value)) {
                     $concatValues[] = $value;

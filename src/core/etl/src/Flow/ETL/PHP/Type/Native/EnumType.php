@@ -8,12 +8,14 @@ use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeE
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements Type<\UnitEnum>
+ * @template T of \UnitEnum
+ *
+ * @implements Type<T>
  */
 final readonly class EnumType implements Type
 {
     /**
-     * @param class-string<\UnitEnum> $class
+     * @param class-string<T> $class
      */
     public function __construct(public string $class)
     {
@@ -23,11 +25,9 @@ final readonly class EnumType implements Type
     }
 
     /**
-     * @template ClassType
+     * @param array{class: class-string<T>} $data
      *
-     * @param array{class: class-string<ClassType>} $data
-     *
-     * @return EnumType<ClassType>
+     * @return EnumType<T>
      */
     public static function fromArray(array $data) : self
     {
@@ -36,14 +36,6 @@ final readonly class EnumType implements Type
         }
 
         return new self($data['class']);
-    }
-
-    /**
-     * @param class-string<\UnitEnum> $class
-     */
-    public static function of(string $class) : self
-    {
-        return new self($class);
     }
 
     public function assert(mixed $value) : \UnitEnum
@@ -62,7 +54,6 @@ final readonly class EnumType implements Type
         }
 
         try {
-            /** @var EnumType $type */
             $enumClass = $this->class;
 
             if (\is_a($enumClass, \BackedEnum::class, true)) {

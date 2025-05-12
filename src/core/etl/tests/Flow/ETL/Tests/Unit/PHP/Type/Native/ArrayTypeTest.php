@@ -107,6 +107,7 @@ final class ArrayTypeTest extends FlowTestCase
     #[TestWith([[]])]
     public function test_valid_assertion(array $value) : void
     {
+        /** @phpstan-ignore-next-line */
         self::assertIsArray(type_array()->assert($value));
     }
 }

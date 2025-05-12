@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
 use function Flow\ETL\DSL\{type_datetime, type_integer, type_list, type_map, type_structure};
-use function Flow\ETL\DSL\{type_float, type_int, type_string};
+use function Flow\ETL\DSL\{type_float, type_int, type_optional, type_string};
 use Flow\ETL\Exception\InvalidTypeException;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -24,6 +24,7 @@ final class StructureTypeTest extends FlowTestCase
         yield [['id' => null, 'name' => 'b']];
         yield [['id' => 1, 'name' => null]];
         yield [['id' => null, 'name' => null]];
+        yield [['id' => 1, 'name' => null, 'active' => false]];
     }
 
     public static function successful_assert_data_provider() : \Generator
@@ -78,8 +79,8 @@ final class StructureTypeTest extends FlowTestCase
                 'name' => type_string(),
                 'age' => type_integer(),
                 'address' => type_structure([
-                    'street' => type_string(true),
-                    'city' => type_string(true),
+                    'street' => type_optional(type_string()),
+                    'city' => type_optional(type_string()),
                 ]),
             ])->cast(
                 [
@@ -102,11 +103,11 @@ final class StructureTypeTest extends FlowTestCase
             type_structure([
                 'name' => type_string(),
                 'age' => type_integer(),
-                'address' => type_structure([
+                'address' => type_optional(type_structure([
                     'street' => type_string(),
                     'city' => type_string(),
-                ], true),
-            ], true)->cast(
+                ])),
+            ])->cast(
                 [
                     'name' => 'Norbert Orzechowicz',
                     'age' => 30,
@@ -119,7 +120,7 @@ final class StructureTypeTest extends FlowTestCase
     {
         self::assertEquals(
             $map = ['map' => type_map(type_string(), type_float())],
-            (type_structure($map))->elements()
+            type_structure($map)->elements()
         );
     }
 
@@ -133,7 +134,8 @@ final class StructureTypeTest extends FlowTestCase
     #[DataProvider('successful_assert_data_provider')]
     public function test_successful_assert(mixed $value) : void
     {
-        self::assertIsArray(type_structure(['id' => type_int(), 'name' => type_string(true)])->assert($value));
+        /** @phpstan-ignore-next-line */
+        self::assertIsArray(type_structure(['id' => type_int(), 'name' => type_optional(type_string())])->assert($value));
     }
 
     public function test_to_string() : void
@@ -153,12 +155,11 @@ final class StructureTypeTest extends FlowTestCase
     public function test_valid() : void
     {
         self::assertTrue(
+            /** @phpstan-ignore-next-line  */
             (type_structure(['string' => type_string()]))->isValid(['string' => 'two'])
         );
         self::assertTrue(
-            (type_structure(['string' => type_string()], true))->isValid(null)
-        );
-        self::assertTrue(
+            /** @phpstan-ignore-next-line  */
             (
                 type_structure([
                     'map' => type_map(type_integer(), type_map(type_string(), type_list(type_integer()))),
@@ -167,7 +168,9 @@ final class StructureTypeTest extends FlowTestCase
                 ])
             )->isValid(['map' => [0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]], 'string' => 'c', 'float' => 1.5])
         );
+        /** @phpstan-ignore-next-line  */
         self::assertFalse(
+            /** @phpstan-ignore-next-line  */
             (type_structure(['int' => type_int()]))->isValid([1, 2])
         );
     }

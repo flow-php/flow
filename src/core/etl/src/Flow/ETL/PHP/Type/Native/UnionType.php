@@ -41,7 +41,9 @@ final readonly class UnionType implements Type
     }
 
     /**
-     * return Type<TLeft|TRight>.
+     * @param array{type: 'union', left: array, right: array} $data
+     *
+     * @return type<TLeft|TRight>
      */
     public static function fromArray(array $data) : Type
     {
@@ -71,13 +73,13 @@ final readonly class UnionType implements Type
     {
         try {
             return $this->left->cast($value);
-        } catch (InvalidTypeException) {
+        } catch (CastingException) {
             // ignore
         }
 
         try {
             return $this->right->cast($value);
-        } catch (InvalidTypeException) {
+        } catch (CastingException) {
             // ignore
         }
 
@@ -108,6 +110,9 @@ final readonly class UnionType implements Type
         return $this->left->isValid($value) || $this->right->isValid($value);
     }
 
+    /**
+     * @return array{type: 'union', left: array, right: array}
+     */
     public function normalize() : array
     {
         return [
