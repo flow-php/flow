@@ -49,13 +49,14 @@ pkgs.mkShell {
     ;
 
     shellHook = ''
-    if [ -f "./.nix/shell/starship.toml" ]; then
-        export STARSHIP_CONFIG="./.nix/shell/starship.toml"
+    if [ -f "$PWD/.nix/shell/starship.toml" ]; then
+        export STARSHIP_CONFIG="$PWD/.nix/shell/starship.toml"
     else
-        export STARSHIP_CONFIG="./.nix/shell/starship.toml.dist"
+        export STARSHIP_CONFIG="$PWD/.nix/shell/starship.toml.dist"
     fi
 
     eval "$(${pkgs.starship}/bin/starship init bash)"
+
     clear
     figlet "Flow PHP"
     '';

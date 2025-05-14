@@ -94,6 +94,32 @@ final class SimpleTypesWritingTest extends TestCase
         \unlink($path);
     }
 
+    public function test_writing_date_column_before_1970() : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(FlatColumn::date('date'));
+
+        $faker = Factory::create();
+
+        $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
+            [
+                'date' => \DateTimeImmutable::createFromMutable($faker->dateTimeBetween('1930-01-01', '1969-01-01'))->setTime(0, 0, 0, 0),
+            ],
+        ], \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertEquals(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+
+        self::assertTrue(\file_exists($path));
+        \unlink($path);
+    }
+
     public function test_writing_date_nullable_column() : void
     {
         $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
@@ -560,6 +586,31 @@ final class SimpleTypesWritingTest extends TestCase
         $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
             [
                 'dateTime' => $faker->dateTimeThisYear,
+            ],
+        ], \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertEquals(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+        self::assertTrue(\file_exists($path));
+        \unlink($path);
+    }
+
+    public function test_writing_timestamp_column_for_years_before_1970() : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(FlatColumn::dateTime('dateTime'));
+
+        $faker = Factory::create();
+
+        $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
+            [
+                'dateTime' => $faker->dateTimeBetween('1930-01-01', '1969-01-01'),
             ],
         ], \range(1, 100)));
 

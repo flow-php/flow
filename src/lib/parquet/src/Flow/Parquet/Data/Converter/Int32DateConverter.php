@@ -38,11 +38,17 @@ final class Int32DateConverter implements Converter
         $epoch = new \DateTimeImmutable('1970-01-01 00:00:00 UTC');
         $interval = $epoch->diff($date->setTime(0, 0, 0, 0));
 
-        return (int) $interval->format('%a');
+        return $interval->invert ? -(int) $interval->format('%a') : (int) $interval->format('%a');
     }
 
     private function numberOfDaysToDateTime(int $data) : \DateTimeImmutable
     {
-        return (new \DateTimeImmutable('1970-01-01 00:00:00 UTC'))->add(new \DateInterval('P' . $data . 'D'));
+        $interval = new \DateInterval('P' . \abs($data) . 'D');
+
+        if ($data < 0) {
+            $interval->invert = 1;
+        }
+
+        return (new \DateTimeImmutable('1970-01-01 00:00:00 UTC'))->add($interval);
     }
 }
