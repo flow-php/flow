@@ -714,9 +714,7 @@ final class DataFrame
 
     public function renameEach(RenameEntryStrategy ...$strategies) : self
     {
-        foreach ($strategies as $strategy) {
-            $this->pipeline->add(new RenameEachEntryTransformer($strategy));
-        }
+        $this->pipeline->add(new RenameEachEntryTransformer(...$strategies));
 
         return $this;
     }
