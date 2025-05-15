@@ -13,8 +13,6 @@ use Flow\ETL\Sort\{ExternalSort, MemorySort};
 
 final readonly class SortingPipeline implements OverridingPipeline, Pipeline
 {
-    use RecursivePipelineIterator;
-
     public function __construct(private Pipeline $pipeline, private References $refs)
     {
     }
@@ -33,7 +31,7 @@ final readonly class SortingPipeline implements OverridingPipeline, Pipeline
 
     public function pipelines() : array
     {
-        return $this->allPipelines($this->pipeline);
+        return [$this->pipeline];
     }
 
     public function pipes() : Pipes

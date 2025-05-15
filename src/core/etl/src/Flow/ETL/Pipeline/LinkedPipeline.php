@@ -16,8 +16,6 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
  */
 final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
 {
-    use RecursivePipelineIterator;
-
     private Pipeline $nextPipeline;
 
     public function __construct(
@@ -43,10 +41,7 @@ final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
      */
     public function pipelines() : array
     {
-        $pipelines = $this->allPipelines($this->pipeline);
-        $pipelines[] = $this->nextPipeline;
-
-        return $pipelines;
+        return [$this->pipeline, $this->nextPipeline];
     }
 
     public function pipes() : Pipes

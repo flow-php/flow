@@ -8,8 +8,6 @@ use Flow\ETL\{Extractor, FlowContext, GroupBy, Loader, Pipeline, Transformer};
 
 final readonly class GroupByPipeline implements OverridingPipeline, Pipeline
 {
-    use RecursivePipelineIterator;
-
     public function __construct(public GroupBy $groupBy, private Pipeline $pipeline)
     {
     }
@@ -28,7 +26,7 @@ final readonly class GroupByPipeline implements OverridingPipeline, Pipeline
 
     public function pipelines() : array
     {
-        return $this->allPipelines($this->pipeline);
+        return [$this->pipeline];
     }
 
     public function pipes() : Pipes

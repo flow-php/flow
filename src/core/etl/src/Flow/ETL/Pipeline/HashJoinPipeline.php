@@ -14,8 +14,6 @@ use Flow\ETL\Row\Entry;
 
 final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
 {
-    use RecursivePipelineIterator;
-
     private Extractor $extractor;
 
     public function __construct(
@@ -42,7 +40,7 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
 
     public function pipelines() : array
     {
-        return $this->allPipelines($this->left);
+        return [$this->left];
     }
 
     public function pipes() : Pipes

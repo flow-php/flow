@@ -9,8 +9,6 @@ use Flow\ETL\Exception\{ConstraintViolationException, InvalidArgumentException};
 
 final class ConstrainedPipeline implements OverridingPipeline, Pipeline
 {
-    use RecursivePipelineIterator;
-
     private int $rowIndex = 0;
 
     /**
@@ -45,7 +43,7 @@ final class ConstrainedPipeline implements OverridingPipeline, Pipeline
      */
     public function pipelines() : array
     {
-        return $this->allPipelines($this->pipeline);
+        return [$this->pipeline];
     }
 
     public function pipes() : Pipes

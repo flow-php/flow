@@ -57,23 +57,7 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
      */
     public function pipelines() : array
     {
-        $pipelines = [];
-
-        $recursivelyAddPipelines = function (Pipeline $pipeline, array &$pipelines) use (&$recursivelyAddPipelines) : void {
-            if ($pipeline instanceof OverridingPipeline) {
-                $pipelines[] = $pipeline;
-
-                foreach ($pipeline->pipelines() as $p) {
-                    $recursivelyAddPipelines($p, $pipelines);
-                }
-            } else {
-                $pipelines[] = $pipeline;
-            }
-        };
-
-        $pipelines[] = $this->pipeline;
-
-        return $pipelines;
+        return [$this->pipeline];
     }
 
     public function pipes() : Pipes

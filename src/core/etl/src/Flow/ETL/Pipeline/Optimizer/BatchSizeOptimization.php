@@ -55,11 +55,9 @@ final class BatchSizeOptimization implements Optimization
             return false;
         }
 
-        if ($pipeline instanceof OverridingPipeline) {
-            foreach ($pipeline->pipelines() as $subPipeline) {
-                if (\in_array($subPipeline::class, $this->batchingPipelines, true)) {
-                    return false;
-                }
+        foreach ($this->allPipelines($pipeline) as $subPipeline) {
+            if (\in_array($subPipeline::class, $this->batchingPipelines, true)) {
+                return false;
             }
         }
 
@@ -80,5 +78,25 @@ final class BatchSizeOptimization implements Optimization
         $pipeline->add($element);
 
         return $pipeline;
+    }
+
+    /**
+     * @return array<Pipeline>
+     */
+    private function allPipelines(Pipeline $pipeline) : array
+    {
+        $pipelines = [];
+
+        if ($pipeline instanceof OverridingPipeline) {
+            $pipelines[] = $pipeline;
+
+            foreach ($pipeline->pipelines() as $nextPipeline) {
+                $pipelines = [...$pipelines, ...$this->allPipelines($nextPipeline)];
+            }
+        } else {
+            $pipelines[] = $pipeline;
+        }
+
+        return $pipelines;
     }
 }

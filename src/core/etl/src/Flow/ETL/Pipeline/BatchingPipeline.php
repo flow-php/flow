@@ -10,8 +10,6 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 final readonly class BatchingPipeline implements OverridingPipeline, Pipeline
 {
-    use RecursivePipelineIterator;
-
     /**
      * @param Pipeline $pipeline
      * @param int<1, max> $size
@@ -39,7 +37,7 @@ final readonly class BatchingPipeline implements OverridingPipeline, Pipeline
 
     public function pipelines() : array
     {
-        return $this->allPipelines($this->pipeline);
+        return [$this->pipeline];
     }
 
     public function pipes() : Pipes

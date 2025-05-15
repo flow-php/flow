@@ -8,8 +8,6 @@ use Flow\ETL\{Cache\CacheIndex, Extractor, FlowContext, Loader, Pipeline, Transf
 
 final readonly class CachingPipeline implements OverridingPipeline, Pipeline
 {
-    use RecursivePipelineIterator;
-
     public function __construct(private Pipeline $pipeline, private ?string $id = null)
     {
     }
@@ -28,7 +26,7 @@ final readonly class CachingPipeline implements OverridingPipeline, Pipeline
 
     public function pipelines() : array
     {
-        return $this->allPipelines($this->pipeline);
+        return [$this->pipeline];
     }
 
     public function pipes() : Pipes

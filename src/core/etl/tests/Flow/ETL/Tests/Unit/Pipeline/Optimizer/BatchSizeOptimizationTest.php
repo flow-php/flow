@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
+use Flow\ETL\{GroupBy, Transformer};
 use Flow\ETL\Loader\StreamLoader;
-use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, LinkedPipeline, SynchronousPipeline};
+use Flow\ETL\Pipeline\{BatchingPipeline,
+    CollectingPipeline,
+    GroupByPipeline,
+    LinkedPipeline,
+    PartitioningPipeline,
+    SynchronousPipeline};
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer;
 
 final class BatchSizeOptimizationTest extends FlowTestCase
 {
@@ -52,6 +58,25 @@ final class BatchSizeOptimizationTest extends FlowTestCase
     public function test_is_for_already_batching_pipeline() : void
     {
         $pipeline = new BatchingPipeline(new SynchronousPipeline(), 10);
+
+        self::assertFalse(
+            (new BatchSizeOptimization())->isFor(new DbalLoader('test', []), $pipeline)
+        );
+    }
+
+    public function test_is_for_already_deeply_nested_batching_pipeline() : void
+    {
+        $pipeline = new LinkedPipeline(
+            new GroupByPipeline(
+                new GroupBy(),
+                new LinkedPipeline(
+                    new PartitioningPipeline(
+                        new LinkedPipeline(new BatchingPipeline(new SynchronousPipeline(), 100)),
+                        [ref('id')]
+                    )
+                ),
+            )
+        );
 
         self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', []), $pipeline)
