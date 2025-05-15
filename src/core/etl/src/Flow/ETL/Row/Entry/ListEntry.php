@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_equals;
+use function Flow\Types\DSL\type_equals;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Logical\ListType;
+use Flow\Types\Type\{Type, TypeDetector};
 
 /**
  * @implements Entry<?list<mixed>, list<mixed>>

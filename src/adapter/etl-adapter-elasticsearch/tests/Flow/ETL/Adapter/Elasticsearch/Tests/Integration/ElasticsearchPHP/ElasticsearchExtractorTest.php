@@ -10,9 +10,7 @@ use function Flow\ETL\DSL\{config, flow_context, rows};
 use function Flow\ETL\DSL\data_frame;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
-use Flow\ETL\{Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase,
-    Row
-};
+use Flow\ETL\{Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase, Row};
 
 final class ElasticsearchExtractorTest extends ElasticsearchTestCase
 {

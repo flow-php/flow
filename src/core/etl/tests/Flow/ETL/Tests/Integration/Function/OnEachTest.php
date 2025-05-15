@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{df, from_array, ref, type_string};
+use function Flow\ETL\DSL\{df, from_array, ref};
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class OnEachTest extends FlowTestCase

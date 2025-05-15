@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{json_entry, ref, row, type_string};
+use function Flow\ETL\DSL\{json_entry, ref, row};
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class OnEachTest extends FlowTestCase

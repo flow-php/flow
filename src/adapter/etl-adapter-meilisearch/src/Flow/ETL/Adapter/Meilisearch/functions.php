@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch;
 
+use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\HitsIntoRowsTransformer;
 use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\{MeilisearchExtractor, MeilisearchLoader};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Flow\ETL\Loader;
@@ -35,9 +36,9 @@ function to_meilisearch_bulk_update(
  * Transforms Meilisearch results into clear Flow Rows.
  */
 #[DocumentationDSL(module: Module::MEILI_SEARCH, type: Type::HELPER)]
-function meilisearch_hits_to_rows() : MeilisearchPHP\HitsIntoRowsTransformer
+function meilisearch_hits_to_rows() : HitsIntoRowsTransformer
 {
-    return new MeilisearchPHP\HitsIntoRowsTransformer();
+    return new HitsIntoRowsTransformer();
 }
 
 /**

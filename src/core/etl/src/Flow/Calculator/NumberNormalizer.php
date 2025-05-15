@@ -22,7 +22,7 @@ final class NumberNormalizer
         }
 
         if (\str_contains($number, '.')) {
-            $number = \rtrim(rtrim($number, '0'), '.');
+            $number = \rtrim(\rtrim($number, '0'), '.');
         }
 
         if (\str_contains($number, '.')) {

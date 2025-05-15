@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use function Flow\ETL\DSL\type_string;
-use Doctrine\DBAL\Schema\{Column, Table};
+use function Flow\Types\DSL\type_string;
+use Doctrine\DBAL\Schema\{Column, Index, Table};
+use Doctrine\DBAL\Types\{DateImmutableType, DateTimeImmutableType, GuidType, TimeImmutableType};
 use Doctrine\DBAL\Types\{Type as DbalType};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, StructureType, TimeType, UuidType, XMLElementType, XMLType};
-use Flow\ETL\PHP\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Schema;
+use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Logical\{DateTimeType,
+    DateType,
+    JsonType,
+    ListType,
+    MapType,
+    StructureType,
+    TimeType,
+    UuidType,
+    XMLElementType,
+    XMLType};
+use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
+use Flow\Types\Type\Type;
 
 final readonly class SchemaConverter
 {
@@ -20,10 +31,10 @@ final readonly class SchemaConverter
         IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
         FloatType::class => \Doctrine\DBAL\Types\FloatType::class,
         BooleanType::class => \Doctrine\DBAL\Types\BooleanType::class,
-        DateType::class => \Doctrine\DBAL\Types\DateImmutableType::class,
-        TimeType::class => \Doctrine\DBAL\Types\TimeImmutableType::class,
-        DateTimeType::class => \Doctrine\DBAL\Types\DateTimeImmutableType::class,
-        UuidType::class => \Doctrine\DBAL\Types\GuidType::class,
+        DateType::class => DateImmutableType::class,
+        TimeType::class => TimeImmutableType::class,
+        DateTimeType::class => DateTimeImmutableType::class,
+        UuidType::class => GuidType::class,
         JsonType::class => \Doctrine\DBAL\Types\JsonType::class,
         XMLType::class => \Doctrine\DBAL\Types\StringType::class,
         XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
@@ -68,13 +79,13 @@ final readonly class SchemaConverter
         return new Schema(...$definitions);
     }
 
-    private function columnToFlow(Column $column, Table $table) : Schema\Definition
+    private function columnToFlow(Column $column, Table $table) : Definition
     {
         $type = $this->typesMap->toFlowType($column->getType()::class);
 
         $nullable = !$column->getNotnull();
 
-        $metadata = Schema\Metadata::empty();
+        $metadata = Metadata::empty();
 
         if ($column->getLength() !== null) {
             $metadata = $metadata->merge(DbalMetadata::length($column->getLength()));
@@ -130,13 +141,13 @@ final readonly class SchemaConverter
             }
         }
 
-        return new Schema\Definition($column->getName(), $type, $nullable, $metadata);
+        return new Definition($column->getName(), $type, $nullable, $metadata);
     }
 
     /**
      * @param Type<mixed> $type
      */
-    private function flowToColumn(string $name, Type $type, bool $nullable, ?Schema\Metadata $metadata = null) : Column
+    private function flowToColumn(string $name, Type $type, bool $nullable, ?Metadata $metadata = null) : Column
     {
         $dbalTypeClass = $this->typesMap->toDbalType($type::class);
 
@@ -161,12 +172,6 @@ final readonly class SchemaConverter
         $options = [
             'notnull' => !$nullable,
         ];
-
-        if ($type instanceof FloatType) {
-            // with decimals precision and scale are confusing, in float precision is number of digits, not digits before/after decimal point
-            // with decimals precision is total number of digits, and scale is number of digits after decimal point
-            $options['scale'] = 6;
-        }
 
         if ($metadata?->has(DbalMetadata::LENGTH->value)) {
             $options['length'] = $metadata->get(DbalMetadata::LENGTH->value);
@@ -255,7 +260,7 @@ final readonly class SchemaConverter
         }
 
         foreach ($uniqueIndexesData as $name => $columns) {
-            $indexes[] = new \Doctrine\DBAL\Schema\Index($name, $columns, isUnique: true);
+            $indexes[] = new Index($name, $columns, isUnique: true);
             $table->addUniqueIndex($columns, $name);
         }
 

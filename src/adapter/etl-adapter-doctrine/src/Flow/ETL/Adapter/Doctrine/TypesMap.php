@@ -4,11 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use Doctrine\DBAL\Types\{BigIntType, BlobType, DateImmutableType, DateTimeImmutableType, DateTimeTzImmutableType, DateTimeTzType, DecimalType, GuidType, SmallFloatType, SmallIntType, TextType, TimeImmutableType};
 use Doctrine\DBAL\Types\{Type as DbalType};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, StructureType, TimeType, UuidType, XMLElementType, XMLType};
-use Flow\ETL\PHP\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
-use Flow\ETL\PHP\Type\Type as FlowType;
+use Flow\Types\Type\Logical\{DateTimeType,
+    DateType,
+    JsonType,
+    ListType,
+    MapType,
+    StructureType,
+    TimeType,
+    UuidType,
+    XMLElementType,
+    XMLType};
+use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
+use Flow\Types\Type\Type as FlowType;
 
 final class TypesMap
 {
@@ -17,25 +27,25 @@ final class TypesMap
      */
     public const DBAL_TYPES = [
         \Doctrine\DBAL\Types\StringType::class => StringType::class,
-        \Doctrine\DBAL\Types\TextType::class => StringType::class,
+        TextType::class => StringType::class,
         \Doctrine\DBAL\Types\IntegerType::class => IntegerType::class,
-        \Doctrine\DBAL\Types\BigIntType::class => IntegerType::class,
-        \Doctrine\DBAL\Types\SmallIntType::class => IntegerType::class,
+        BigIntType::class => IntegerType::class,
+        SmallIntType::class => IntegerType::class,
         \Doctrine\DBAL\Types\FloatType::class => FloatType::class,
-        \Doctrine\DBAL\Types\SmallFloatType::class => FloatType::class,
+        SmallFloatType::class => FloatType::class,
         \Doctrine\DBAL\Types\BooleanType::class => BooleanType::class,
         \Doctrine\DBAL\Types\DateType::class => DateType::class,
-        \Doctrine\DBAL\Types\DateImmutableType::class => DateType::class,
-        \Doctrine\DBAL\Types\TimeImmutableType::class => TimeType::class,
+        DateImmutableType::class => DateType::class,
+        TimeImmutableType::class => TimeType::class,
         \Doctrine\DBAL\Types\TimeType::class => TimeType::class,
-        \Doctrine\DBAL\Types\DateTimeImmutableType::class => DateTimeType::class,
-        \Doctrine\DBAL\Types\DateTimeTzImmutableType::class => DateTimeType::class,
-        \Doctrine\DBAL\Types\DateTimeTzType::class => DateTimeType::class,
+        DateTimeImmutableType::class => DateTimeType::class,
+        DateTimeTzImmutableType::class => DateTimeType::class,
+        DateTimeTzType::class => DateTimeType::class,
         \Doctrine\DBAL\Types\DateTimeType::class => DateTimeType::class,
-        \Doctrine\DBAL\Types\GuidType::class => UuidType::class,
+        GuidType::class => UuidType::class,
         \Doctrine\DBAL\Types\JsonType::class => JsonType::class,
-        \Doctrine\DBAL\Types\BlobType::class => StringType::class,
-        \Doctrine\DBAL\Types\DecimalType::class => FloatType::class,
+        BlobType::class => StringType::class,
+        DecimalType::class => FloatType::class,
     ];
 
     /**
@@ -46,10 +56,10 @@ final class TypesMap
         IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
         FloatType::class => \Doctrine\DBAL\Types\FloatType::class,
         BooleanType::class => \Doctrine\DBAL\Types\BooleanType::class,
-        DateType::class => \Doctrine\DBAL\Types\DateImmutableType::class,
-        TimeType::class => \Doctrine\DBAL\Types\TimeImmutableType::class,
-        DateTimeType::class => \Doctrine\DBAL\Types\DateTimeImmutableType::class,
-        UuidType::class => \Doctrine\DBAL\Types\GuidType::class,
+        DateType::class => DateImmutableType::class,
+        TimeType::class => TimeImmutableType::class,
+        DateTimeType::class => DateTimeImmutableType::class,
+        UuidType::class => GuidType::class,
         JsonType::class => \Doctrine\DBAL\Types\JsonType::class,
         XMLType::class => \Doctrine\DBAL\Types\StringType::class,
         XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,

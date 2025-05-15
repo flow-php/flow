@@ -7,6 +7,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 use function Flow\ETL\DSL\{df};
 use function Flow\Filesystem\DSL\{path_memory, protocol};
 use Flow\Bridge\Symfony\HttpFoundation\Output;
+use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\{Config, Extractor, Transformation, Transformations};
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,7 +15,7 @@ final class FlowBufferedResponse extends Response
 {
     private bool $buffered = false;
 
-    private readonly Config|Config\ConfigBuilder $config;
+    private readonly Config|ConfigBuilder $config;
 
     public function __construct(
         private readonly Extractor $extractor,
@@ -22,7 +23,7 @@ final class FlowBufferedResponse extends Response
         private readonly Transformation $transformations = new Transformations(),
         int $status = 200,
         array $headers = [],
-        Config|Config\ConfigBuilder|null $config = null,
+        Config|ConfigBuilder|null $config = null,
     ) {
         $this->config = $config ?? Config::default();
 
@@ -51,7 +52,7 @@ final class FlowBufferedResponse extends Response
             return;
         }
 
-        $config = $this->config instanceof Config\ConfigBuilder ? $this->config->build() : $this->config;
+        $config = $this->config instanceof ConfigBuilder ? $this->config->build() : $this->config;
 
         df($config)
             ->read($this->extractor)

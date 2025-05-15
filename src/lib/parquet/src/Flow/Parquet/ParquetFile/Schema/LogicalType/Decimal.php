@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema\LogicalType;
 
+use Flow\Parquet\Thrift\DecimalType;
+
 final readonly class Decimal
 {
     public function __construct(
@@ -12,7 +14,7 @@ final readonly class Decimal
     ) {
     }
 
-    public static function fromThrift(\Flow\Parquet\Thrift\DecimalType $thrift) : self
+    public static function fromThrift(DecimalType $thrift) : self
     {
         return new self(
             $thrift->scale,

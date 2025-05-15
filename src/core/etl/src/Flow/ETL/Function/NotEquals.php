@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\PHP\Type\ValueComparator;
 use Flow\ETL\Row;
+use Flow\Types\Type\ValueComparator;
 
 final class NotEquals extends ScalarFunctionChain
 {

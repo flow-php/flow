@@ -42,6 +42,8 @@ jobs:
             split_repository: 'filesystem'
           - local_path: 'src/lib/snappy'
             split_repository: 'snappy'
+          - local_path: 'src/lib/types'
+            split_repository: 'types'
 
           - local_path: 'src/adapter/etl-adapter-avro'
             split_repository: 'etl-adapter-avro'

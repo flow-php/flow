@@ -135,6 +135,11 @@
       "name" : "flow-php/snappy",
       "path": "src/lib/snappy",
       "type": "lib"
+    },
+    {
+      "name" : "flow-php/types",
+      "path": "src/lib/types",
+      "type": "lib"
     }
   ]
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Logger\Logger;
 
 use Psr\Log\AbstractLogger;
+use Symfony\Component\VarDumper\VarDumper;
 
 final class DumpLogger extends AbstractLogger
 {
@@ -20,7 +21,7 @@ final class DumpLogger extends AbstractLogger
         }
 
         if (\class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
-            \Symfony\Component\VarDumper\VarDumper::dump([$message => $context]);
+            VarDumper::dump([$message => $context]);
         } else {
             /** @phpstan-ignore-next-line */
             \var_dump([$message => $context]);

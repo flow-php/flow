@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_list, type_object};
+use function Flow\Types\DSL\{type_list, type_object};
 use Flow\ETL\Row;
 
 final class DOMElementAttributeValue extends ScalarFunctionChain

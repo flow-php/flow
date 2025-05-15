@@ -11,7 +11,8 @@ use Flow\Filesystem\{Bridge\Azure\AzureBlobDestinationStream\AzureBlobBlockLifec
     Exception\RuntimeException,
     Path};
 use Flow\Filesystem\Exception\InvalidArgumentException;
-use Flow\Filesystem\Stream\{Block, BlockFactory, Blocks};
+use Flow\Filesystem\Stream\Block\NativeLocalFileBlocksFactory;
+use Flow\Filesystem\Stream\{BlockFactory, Blocks};
 
 final class AzureBlobDestinationStream implements DestinationStream
 {
@@ -28,7 +29,7 @@ final class AzureBlobDestinationStream implements DestinationStream
     public static function openAppend(
         BlobServiceInterface $blobService,
         Path $path,
-        BlockFactory $blockFactory = new Block\NativeLocalFileBlocksFactory(),
+        BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ) : self {
         $blocks = new Blocks(
@@ -56,7 +57,7 @@ final class AzureBlobDestinationStream implements DestinationStream
     public static function openBlank(
         BlobServiceInterface $blobService,
         Path $path,
-        BlockFactory $blockFactory = new Block\NativeLocalFileBlocksFactory(),
+        BlockFactory $blockFactory = new NativeLocalFileBlocksFactory(),
         int $blockSize = 1024 * 1024 * 4,
     ) : self {
         return new self(

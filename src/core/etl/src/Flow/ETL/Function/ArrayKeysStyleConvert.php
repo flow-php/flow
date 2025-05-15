@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
+use Flow\ETL\Function\StyleConverter\{ArrayKeyConverter, StringStyles as OldStringStyles};
 use Flow\ETL\Row;
 use Flow\ETL\String\StringStyles;
 
@@ -31,7 +31,7 @@ final class ArrayKeysStyleConvert extends ScalarFunctionChain
             return null;
         }
 
-        $converter = (new StyleConverter\ArrayKeyConverter(
+        $converter = (new ArrayKeyConverter(
             fn (string $key) : string => $this->style->convert($key)
         ));
 

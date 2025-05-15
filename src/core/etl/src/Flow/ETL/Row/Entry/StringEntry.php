@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{type_equals, type_string};
+use function Flow\Types\DSL\{type_equals, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\StringType;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Native\StringType;
+use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?string, string>

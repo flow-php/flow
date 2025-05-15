@@ -15,12 +15,6 @@ use function Flow\ETL\DSL\{bool_entry,
     list_entry,
     str_entry,
     time_entry,
-    type_datetime,
-    type_float,
-    type_int,
-    type_list,
-    type_map,
-    type_string,
     uuid_entry,
     xml_entry};
 use function Flow\ETL\DSL\{bool_schema,
@@ -35,10 +29,9 @@ use function Flow\ETL\DSL\{bool_schema,
     string_schema,
     structure_entry,
     time_schema,
-    type_integer,
-    type_structure,
     uuid_schema,
     xml_schema};
+use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\{TimeEntry};
 use Flow\ETL\Row\{EntryFactory};
@@ -80,7 +73,7 @@ final class EntryFactoryTest extends FlowTestCase
     public function test_array_structure() : void
     {
         self::assertEquals(
-            structure_entry('e', ['a' => 1, 'b' => '2'], type_structure(['a' => type_int(), 'b' => type_string()])),
+            structure_entry('e', ['a' => 1, 'b' => '2'], type_structure(['a' => type_integer(), 'b' => type_string()])),
             (new EntryFactory())->create('e', ['a' => 1, 'b' => '2'])
         );
     }
@@ -293,7 +286,7 @@ final class EntryFactoryTest extends FlowTestCase
     public function test_list_int_with_schema() : void
     {
         self::assertEquals(
-            list_entry('e', [1, 2, 3], type_list(type_int())),
+            list_entry('e', [1, 2, 3], type_list(type_integer())),
             (new EntryFactory())->create('e', [1, 2, 3], schema(list_schema('e', type_list(type_integer()))))
         );
     }
@@ -326,7 +319,7 @@ final class EntryFactoryTest extends FlowTestCase
     public function test_list_of_scalars() : void
     {
         self::assertEquals(
-            list_entry('e', [1, 2], type_list(type_int())),
+            list_entry('e', [1, 2], type_list(type_integer())),
             (new EntryFactory())->create('e', [1, 2])
         );
     }
@@ -387,7 +380,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             structure_entry('address', ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'], type_structure([
-                'id' => type_int(),
+                'id' => type_integer(),
                 'city' => type_string(),
                 'street' => type_string(),
                 'zip' => type_string(),

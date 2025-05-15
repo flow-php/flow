@@ -4,9 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\Types\DSL\type_string;
 use function Flow\ETL\DSL\{config, rows};
-use function Flow\ETL\DSL\{df, flow_context, from_array, ref, to_memory, to_transformation, type_string};
-use Flow\ETL\{DataFrame, FlowContext, Loader, Loader\Closure, Memory\ArrayMemory, Tests\FlowTestCase, Transformation, Transformer};
+use function Flow\ETL\DSL\{df, flow_context, from_array, ref, to_memory, to_transformation};
+use Flow\ETL\{DataFrame,
+    FlowContext,
+    Loader,
+    Loader\Closure,
+    Memory\ArrayMemory,
+    Tests\FlowTestCase,
+    Transformation,
+    Transformer};
 
 final class TransformerLoaderTest extends FlowTestCase
 {

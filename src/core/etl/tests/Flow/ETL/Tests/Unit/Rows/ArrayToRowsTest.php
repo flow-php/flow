@@ -14,10 +14,9 @@ use function Flow\ETL\DSL\{array_to_rows,
     row,
     rows,
     str_entry,
-    str_schema,
-    type_list,
-    type_string};
+    str_schema};
 use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\{type_list, type_string};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayToRowsTest extends FlowTestCase

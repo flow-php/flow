@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 
-use function Flow\ETL\DSL\{type_int, type_integer, type_list, type_map, type_string, type_structure};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Adapter\XML\Abstraction\XMLNode;
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
@@ -32,7 +32,7 @@ final class ListNormalizationTest extends FlowTestCase
                 type_list(
                     type_structure([
                         'name' => type_string(),
-                        'age' => type_int(),
+                        'age' => type_integer(),
                     ])
                 ),
                 [['name' => 'John', 'age' => 30], ['name' => 'Jane', 'age' => 25]]

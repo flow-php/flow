@@ -12,12 +12,9 @@ use function Flow\ETL\DSL\{bool_schema,
     list_schema,
     map_schema,
     string_schema,
-    structure_schema,
-    type_integer,
-    type_list,
-    type_map,
-    type_structure};
-use function Flow\ETL\DSL\{schema, type_boolean, type_int, type_string};
+    structure_schema};
+use function Flow\ETL\DSL\{schema};
+use function Flow\Types\DSL\{type_boolean, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
@@ -59,7 +56,7 @@ final class FlowToParquetSchemaTest extends FlowTestCase
                         'list_of_structs',
                         type_list(
                             type_structure([
-                                'integer' => type_int(),
+                                'integer' => type_integer(),
                                 'boolean' => type_boolean(),
                             ])
                         )

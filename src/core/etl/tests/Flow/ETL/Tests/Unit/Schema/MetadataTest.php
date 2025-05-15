@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{type_int, type_string};
+use function Flow\Types\DSL\{type_integer, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Type\Type;
 use PHPUnit\Framework\Attributes\{DataProvider};
 
 final class MetadataTest extends FlowTestCase
@@ -19,7 +19,7 @@ final class MetadataTest extends FlowTestCase
         yield [1.01, type_string(), '1.01'];
         yield [true, type_string(), 'true'];
         yield [[1, 2, 3], type_string(), '[1,2,3]'];
-        yield ['1', type_int(), 1];
+        yield ['1', type_integer(), 1];
     }
 
     public function test_equal_metadata() : void
@@ -46,7 +46,7 @@ final class MetadataTest extends FlowTestCase
     {
         self::assertEquals(
             100,
-            Metadata::empty()->getAs('name', type_int(), 100)
+            Metadata::empty()->getAs('name', type_integer(), 100)
         );
     }
 

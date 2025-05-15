@@ -14,14 +14,9 @@ use function Flow\ETL\DSL\{array_to_row,
     row,
     str_entry,
     str_schema,
-    struct_entry,
-    type_boolean,
-    type_int,
-    type_list,
-    type_null,
-    type_string,
-    type_structure};
+    struct_entry};
 use function Flow\ETL\DSL\schema;
+use function Flow\Types\DSL\{type_boolean, type_integer, type_list, type_null, type_string, type_structure};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayToRowTest extends FlowTestCase
@@ -51,7 +46,7 @@ final class ArrayToRowTest extends FlowTestCase
                     'e00',
                     ['id' => 1234, 'deleted' => false, 'phase' => null],
                     type_structure([
-                        'id' => type_int(),
+                        'id' => type_integer(),
                         'deleted' => type_boolean(),
                         'phase' => type_null(),
                     ])
@@ -60,7 +55,7 @@ final class ArrayToRowTest extends FlowTestCase
                     'e01',
                     ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
                     type_structure([
-                        'id' => type_int(),
+                        'id' => type_integer(),
                         'deleted' => type_boolean(),
                         'phase' => type_string(),
                     ])

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_optional, type_string};
+use function Flow\Types\DSL\{type_optional, type_string};
 use Flow\ETL\Row;
 
 final class Concat extends ScalarFunctionChain

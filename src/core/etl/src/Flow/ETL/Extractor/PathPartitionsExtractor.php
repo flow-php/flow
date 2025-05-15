@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use function Flow\ETL\DSL\{map_entry, row, rows, string_entry, type_map, type_string};
+use function Flow\ETL\DSL\{map_entry, row, rows, string_entry};
+use function Flow\Types\DSL\{type_map, type_string};
 use Flow\ETL\{Extractor, FlowContext};
 use Flow\Filesystem\{Partition, Path};
 

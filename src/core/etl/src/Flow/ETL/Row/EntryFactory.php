@@ -18,26 +18,18 @@ use function Flow\ETL\DSL\{bool_entry,
     str_entry,
     struct_entry,
     time_entry,
-    type_boolean,
-    type_date,
-    type_datetime,
-    type_float,
-    type_int,
-    type_json,
-    type_optional,
-    type_string,
-    type_time,
-    type_uuid,
-    type_xml,
-    type_xml_element,
     uuid_entry,
     xml_element_entry,
     xml_entry};
+use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element};
 use Flow\ETL\Exception\{CastingException,
     InvalidArgumentException,
     RuntimeException,
     SchemaDefinitionNotFoundException};
-use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+use Flow\ETL\Row\Entry\{ListEntry, StringEntry};
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
@@ -48,7 +40,7 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{ArrayType,
+use Flow\Types\Type\Native\{ArrayType,
     BooleanType,
     EnumType,
     FloatType,
@@ -57,10 +49,9 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     ObjectType,
     StringType,
     UnionType};
-use Flow\ETL\PHP\Type\Native\String\StringTypeChecker;
-use Flow\ETL\PHP\Type\{Type, TypeDetector};
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Native\String\StringTypeChecker;
+use Flow\Types\Type\{Type, TypeDetector};
+use Flow\Types\Value\Uuid;
 
 final readonly class EntryFactory
 {
@@ -84,7 +75,7 @@ final readonly class EntryFactory
         }
 
         if (null === $value) {
-            return Entry\StringEntry::fromNull($entryName);
+            return StringEntry::fromNull($entryName);
         }
 
         $valueType = (new TypeDetector())->detectType($value);
@@ -119,7 +110,7 @@ final readonly class EntryFactory
                     $valueType = type_datetime();
                 }
             } else {
-                foreach (['Ramsey\Uuid\UuidInterface', \Flow\ETL\PHP\Value\Uuid::class, 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
+                foreach (['Ramsey\Uuid\UuidInterface', Uuid::class, 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
                     if (\is_a($valueType->class, $uuidClass, true)) {
                         $valueType = type_uuid();
 
@@ -162,7 +153,7 @@ final readonly class EntryFactory
                 DateType::class => date_entry($entryName, null, $metadata),
                 EnumType::class => enum_entry($entryName, null, $metadata),
                 ArrayType::class, JsonType::class => json_entry($entryName, null, $metadata),
-                NullType::class => Entry\StringEntry::fromNull($entryName, $metadata),
+                NullType::class => StringEntry::fromNull($entryName, $metadata),
                 XMLType::class => xml_entry($entryName, null, $metadata),
                 XMLElementType::class => xml_element_entry($entryName, null, $metadata),
                 default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
@@ -183,7 +174,7 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof IntegerType) {
-                return int_entry($entryName, is_type([type_int()], $value) ? $value : $type->cast($value), $metadata);
+                return int_entry($entryName, is_type([type_integer()], $value) ? $value : $type->cast($value), $metadata);
             }
 
             if ($type instanceof BooleanType) {
@@ -247,7 +238,7 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof ListType) {
-                return new Entry\ListEntry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $type, $metadata);
+                return new ListEntry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $type, $metadata);
             }
         } catch (InvalidArgumentException|CastingException|\TypeError $e) {
             throw new InvalidArgumentException("Entry \"{$entryName}\" conversion exception. {$e->getMessage()}", previous: $e);

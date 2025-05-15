@@ -6,9 +6,10 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\lit;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\Types\Type\Type;
+use UnitEnum;
 
 final readonly class Parameter
 {
@@ -61,7 +62,7 @@ final readonly class Parameter
     }
 
     /**
-     * @template T of \UnitEnum
+     * @template T of UnitEnum
      *
      * @param Row $row
      * @param class-string<T> $enumClass

@@ -4,17 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{df,
-    from_array,
-    from_rows,
-    ref,
-    type_int,
-    type_list,
-    type_map,
-    type_string,
-    type_structure};
+use function Flow\ETL\DSL\{df, from_array, from_rows, ref};
 use function Flow\ETL\DSL\{integer_entry, list_entry};
 use function Flow\ETL\DSL\row;
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor, FlowContext, Rows};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -149,8 +142,8 @@ final class LimitTest extends FlowIntegrationTestCase
                         ], type_list(
                             type_structure(
                                 [
-                                    'id' => type_int(),
-                                    'more_ids' => type_list(type_map(type_string(), type_int())),
+                                    'id' => type_integer(),
+                                    'more_ids' => type_list(type_map(type_string(), type_integer())),
                                 ]
                             )
                         ))));

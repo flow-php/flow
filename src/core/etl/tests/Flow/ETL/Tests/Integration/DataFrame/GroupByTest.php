@@ -29,15 +29,14 @@ use function Flow\ETL\DSL\{average,
     schema,
     str_entry,
     sum,
-    type_list,
-    type_string,
     uuid_entry,
     uuid_schema,
     window};
+use function Flow\Types\DSL\{type_list, type_string};
 use Flow\ETL\{Loader, Rows};
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Types\Value\Uuid;
 
 final class GroupByTest extends FlowIntegrationTestCase
 {

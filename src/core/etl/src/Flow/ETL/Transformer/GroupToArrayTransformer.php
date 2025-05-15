@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
-use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Entry\JsonEntry;
 
 final readonly class GroupToArrayTransformer implements Transformer
 {
@@ -33,7 +33,7 @@ final readonly class GroupToArrayTransformer implements Transformer
         foreach ($entries as $entry) {
             $rows = $rows->add(
                 Row::create(
-                    new Entry\JsonEntry(
+                    new JsonEntry(
                         $this->newEntryName,
                         $entry
                     )

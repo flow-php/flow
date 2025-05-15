@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{is_type, type_list, type_string};
+use function Flow\ETL\DSL\{is_type};
+use function Flow\Types\DSL\{type_list, type_optional, type_string};
 use Flow\ETL\Row;
 
 final class ConcatWithSeparator extends ScalarFunctionChain
@@ -39,7 +40,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
                 /** @var list<string> $value */
                 $concatValues = \array_merge($concatValues, $value);
             } else {
-                $value = \is_string($value) ? $value : \Flow\ETL\DSL\type_optional(type_string())->cast($value);
+                $value = \is_string($value) ? $value : type_optional(type_string())->cast($value);
 
                 if (\is_string($value)) {
                     $concatValues[] = $value;

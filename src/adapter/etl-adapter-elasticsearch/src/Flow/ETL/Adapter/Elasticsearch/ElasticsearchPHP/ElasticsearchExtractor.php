@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use Elastic\Elasticsearch\Exception\{ClientResponseException, ServerResponseException};
+use Elasticsearch\{Client, ClientBuilder};
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext};
 
 final class ElasticsearchExtractor implements Extractor
@@ -11,7 +14,7 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @phpstan-ignore-next-line
      */
-    private \Elasticsearch\Client|\Elastic\Elasticsearch\Client|null $client;
+    private Client|\Elastic\Elasticsearch\Client|null $client;
 
     private ?array $pointInTimeParams = null;
 
@@ -110,7 +113,7 @@ final class ElasticsearchExtractor implements Extractor
 
                 $signal = yield $nextResults->toRows($context->entryFactory());
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
             }
@@ -132,11 +135,11 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @phpstan-ignore-next-line
      */
-    private function client() : \Elasticsearch\Client|\Elastic\Elasticsearch\Client
+    private function client() : Client|\Elastic\Elasticsearch\Client
     {
         if ($this->client === null) {
             if (\class_exists("Elasticsearch\ClientBuilder")) {
-                $this->client = \Elasticsearch\ClientBuilder::fromConfig($this->config);
+                $this->client = ClientBuilder::fromConfig($this->config);
             } else {
                 $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);
             }
@@ -149,8 +152,8 @@ final class ElasticsearchExtractor implements Extractor
     }
 
     /**
-     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
-     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
+     * @throws ClientResponseException
+     * @throws ServerResponseException
      */
     private function closePointInTime(?PointInTime $pit) : void
     {

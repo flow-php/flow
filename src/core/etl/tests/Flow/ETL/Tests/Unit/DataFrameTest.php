@@ -22,15 +22,7 @@ use function Flow\ETL\DSL\{average,
     to_callable};
 use function Flow\ETL\DSL\{bool_schema, boolean_entry, integer_entry, integer_schema, row, rows, schema, string_schema};
 use function Flow\ETL\DSL\data_frame;
-use Flow\ETL\{DataFrame,
-    Extractor,
-    FlowContext,
-    Loader,
-    Row,
-    Rows,
-    Tests\FlowTestCase,
-    Transformation,
-    Transformer};
+use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Row, Rows, Tests\FlowTestCase, Transformation, Transformer};
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Row\Entry\{DateTimeEntry};
 use Flow\ETL\Schema\Validator\SelectiveValidator;

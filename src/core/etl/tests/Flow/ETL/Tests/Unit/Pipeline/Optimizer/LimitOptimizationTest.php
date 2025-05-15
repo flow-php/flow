@@ -10,7 +10,11 @@ use Flow\ETL\GroupBy;
 use Flow\ETL\Pipeline\{GroupByPipeline, Optimizer, PartitioningPipeline, SynchronousPipeline};
 use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\ETL\Transformer\{DropDuplicatesTransformer, LimitTransformer, RenameEntryTransformer, ScalarFunctionTransformer, SelectEntriesTransformer};
+use Flow\ETL\Transformer\{DropDuplicatesTransformer,
+    LimitTransformer,
+    RenameEntryTransformer,
+    ScalarFunctionTransformer,
+    SelectEntriesTransformer};
 use Flow\Filesystem\Path;
 
 final class LimitOptimizationTest extends FlowTestCase

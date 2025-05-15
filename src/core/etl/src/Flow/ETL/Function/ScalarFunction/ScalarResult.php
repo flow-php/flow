@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\ScalarFunction;
 
-use function Flow\ETL\DSL\type_optional;
-use Flow\ETL\PHP\Type\{Type, TypeDetector};
+use function Flow\Types\DSL\type_optional;
+use Flow\Types\Type\{Type, TypeDetector};
 
 final readonly class ScalarResult
 {

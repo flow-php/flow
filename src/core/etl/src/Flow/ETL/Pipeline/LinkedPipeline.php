@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\Extractor\PipelineExtractor;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 /**
@@ -21,7 +22,7 @@ final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
     public function __construct(
         private Pipeline $pipeline,
     ) {
-        $this->nextPipeline = new SynchronousPipeline(new Extractor\PipelineExtractor($this->pipeline));
+        $this->nextPipeline = new SynchronousPipeline(new PipelineExtractor($this->pipeline));
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline

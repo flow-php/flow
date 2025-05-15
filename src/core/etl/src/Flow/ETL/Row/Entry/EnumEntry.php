@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{type_enum, type_equals};
-use Flow\ETL\PHP\Type\Native\EnumType;
-use Flow\ETL\PHP\Type\Type;
+use function Flow\Types\DSL\{type_enum, type_equals};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Native\EnumType;
+use Flow\Types\Type\Type;
+use UnitEnum;
 
 /**
- * @implements Entry<?\UnitEnum, \UnitEnum>
+ * @implements Entry<?UnitEnum, UnitEnum>
  */
 final class EnumEntry implements Entry
 {

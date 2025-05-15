@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\Azure;
 
-use Flow\Azure\SDK\BlobService\GetBlob\GetBlobOptions;
+use Flow\Azure\SDK\BlobService\GetBlob\{GetBlobOptions, Range};
 use Flow\Azure\SDK\BlobService\GetBlobProperties\BlobProperties;
-use Flow\Azure\SDK\{BlobService, BlobServiceInterface};
+use Flow\Azure\SDK\{BlobServiceInterface};
 use Flow\Filesystem\{Path, SourceStream};
 
 final class AzureBlobSourceStream implements SourceStream
@@ -53,7 +53,7 @@ final class AzureBlobSourceStream implements SourceStream
 
         return $this->blobService->getBlob(
             $this->path->path(),
-            (new GetBlobOptions())->withRange(new BlobService\GetBlob\Range($offset, $offset + $length - 1))
+            (new GetBlobOptions())->withRange(new Range($offset, $offset + $length - 1))
         )->content();
     }
 

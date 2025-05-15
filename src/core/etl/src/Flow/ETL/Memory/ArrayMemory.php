@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Memory;
 
+use function array_values;
 use Flow\ETL\Exception\InvalidArgumentException;
 
 final class ArrayMemory implements \Countable, Memory

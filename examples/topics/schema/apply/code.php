@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\DSL\{bool_schema, data_frame, from_array, int_schema, schema, str_schema, to_stream};
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\Schema\Metadata;
 
 require __DIR__ . '/vendor/autoload.php';
 

@@ -9,6 +9,8 @@ enum Type : string
     case AGGREGATING_FUNCTION = 'AGGREGATING_FUNCTION';
     case COMPARISON = 'COMPARISON';
     case DATA_FRAME = 'DATA_FRAME';
+
+    case DEPRECATED = 'DEPRECATED';
     case ENTRY = 'ENTRY';
     case EXTRACTOR = 'EXTRACTOR';
     case HELPER = 'HELPER';

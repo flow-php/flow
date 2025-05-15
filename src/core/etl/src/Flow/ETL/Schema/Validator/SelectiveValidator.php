@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Validator;
 
-use function Flow\ETL\DSL\{type_equals, type_string};
+use function Flow\Types\DSL\{type_equals, type_string};
 use Flow\ETL\Schema;
 use Flow\ETL\{SchemaValidator, Schema\Metadata};
 

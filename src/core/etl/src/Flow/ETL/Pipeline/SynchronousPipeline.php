@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use function count;
 use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Extractor\Signal;

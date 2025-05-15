@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer;
 
-use function Flow\ETL\DSL\{type_json, type_string};
+use function Flow\Types\DSL\{type_json, type_string};
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType};
-use Flow\ETL\PHP\Type\Native\{ArrayType,
-    BooleanType,
-    EnumType,
-    FloatType,
-    IntegerType,
-    ObjectType,
-    StringType};
-use Flow\ETL\PHP\Type\{Type};
+use Flow\Types\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType};
+use Flow\Types\Type\Native\{ArrayType, BooleanType, EnumType, FloatType, IntegerType, ObjectType, StringType};
+use Flow\Types\Type\{Type};
 
 final readonly class PHPValueNormalizer
 {

@@ -2,11 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Row\Schema\Formatter;
+namespace Flow\ETL\Tests\Unit\Schema\Formatter;
 
-use function Flow\ETL\DSL\{bool_schema, datetime_schema, integer_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_schema, type_integer, type_map, type_structure, uuid_schema, xml_element_schema, xml_schema};
-use function Flow\ETL\DSL\{type_int, type_list, type_string};
-use function Flow\ETL\DSL\type_optional;
+use function Flow\ETL\DSL\{bool_schema,
+    datetime_schema,
+    integer_schema,
+    json_schema,
+    list_schema,
+    map_schema,
+    schema,
+    string_schema,
+    structure_schema,
+    uuid_schema,
+    xml_element_schema,
+    xml_schema};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_optional, type_string, type_structure};
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -19,7 +29,7 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
             integer_schema('float'),
             structure_schema('user', type_structure([
                 'name' => type_optional(type_string()),
-                'age' => type_int(),
+                'age' => type_integer(),
                 'address' => type_structure([
                     'street' => type_optional(type_string()),
                     'city' => type_optional(type_string()),
@@ -66,7 +76,7 @@ SCHEMA,
     {
         $schema = schema(integer_schema('integer', true), integer_schema('float'), structure_schema('user', type_structure([
             'name' => type_optional(type_string()),
-            'age' => type_int(),
+            'age' => type_integer(),
             'address' => type_structure([
                 'street' => type_optional(type_string()),
                 'city' => type_optional(type_string()),
@@ -102,7 +112,7 @@ SCHEMA,
     {
         $schema = schema(integer_schema('integer', true), integer_schema('float'), structure_schema('user', type_structure([
             'name' => type_optional(type_string()),
-            'age' => type_int(),
+            'age' => type_integer(),
             'address' => type_structure([
                 'street' => type_optional(type_string()),
                 'city' => type_optional(type_string()),

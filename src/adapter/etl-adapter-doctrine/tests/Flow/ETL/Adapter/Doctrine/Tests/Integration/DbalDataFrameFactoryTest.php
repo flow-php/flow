@@ -5,17 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\dbal_dataframe_factory;
-use function Flow\ETL\DSL\{int_entry,
-    int_schema,
-    map_schema,
-    ref,
-    row,
-    rows,
-    schema,
-    str_schema,
-    type_int,
-    type_map,
-    type_string};
+use function Flow\ETL\DSL\{int_entry, int_schema, map_schema, ref, row, rows, schema, str_schema};
+use function Flow\Types\DSL\{type_integer, type_map, type_string};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\{LiteralParameter, Parameter};
@@ -93,7 +84,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
             )->withSchema(schema(
                 int_schema('id'),
                 str_schema('name'),
-                map_schema('tags', type_map(type_string(), type_int()))
+                map_schema('tags', type_map(type_string(), type_integer()))
             ))
         )
             ->from(rows(

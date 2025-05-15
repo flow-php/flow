@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function preg_match;
 use Flow\ETL\Row;
 
 final class Regex extends ScalarFunctionChain

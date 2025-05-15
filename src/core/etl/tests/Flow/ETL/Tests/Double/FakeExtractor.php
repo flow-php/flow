@@ -27,17 +27,11 @@ use function Flow\ETL\DSL\{bool_entry,
     string_schema,
     struct_entry,
     structure_schema,
-    type_datetime,
-    type_float,
-    type_int,
-    type_list,
-    type_map,
-    type_string,
-    type_structure,
     uuid_entry,
     uuid_schema,
     xml_entry,
     xml_schema};
+use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\{Extractor, FlowContext, Rows, Schema};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Ramsey\Uuid\Uuid;
@@ -58,11 +52,11 @@ final readonly class FakeExtractor implements Extractor
             string_schema('null', nullable: true),
             uuid_schema('uuid'),
             json_schema('json'),
-            list_schema('list', type_list(type_int())),
+            list_schema('list', type_list(type_integer())),
             list_schema('list_of_datetimes', type_list(type_datetime())),
             map_schema(
                 'map',
-                type_map(type_int(), type_string())
+                type_map(type_integer(), type_string())
             ),
             structure_schema(
                 'struct',
@@ -99,14 +93,14 @@ final readonly class FakeExtractor implements Extractor
                     bool_entry('bool', \random_int(0, 1) === 1),
                     datetime_entry('datetime', new \DateTimeImmutable('now')),
                     null_entry('null'),
-                    uuid_entry('uuid', new \Flow\ETL\PHP\Value\Uuid(Uuid::uuid4())),
+                    uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
                     json_entry('json', ['id' => $id, 'status' => 'NEW']),
-                    list_entry('list', [1, 2, 3], type_list(type_int())),
+                    list_entry('list', [1, 2, 3], type_list(type_integer())),
                     list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime())),
                     map_entry(
                         'map',
                         ['NEW', 'PENDING'],
-                        type_map(type_int(), type_string())
+                        type_map(type_integer(), type_string())
                     ),
                     struct_entry(
                         'struct',

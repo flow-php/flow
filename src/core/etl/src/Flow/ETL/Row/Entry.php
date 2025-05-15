@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Schema\Definition;
+use Flow\Types\Type\Type;
 
 /**
  * @template-covariant TValue of mixed

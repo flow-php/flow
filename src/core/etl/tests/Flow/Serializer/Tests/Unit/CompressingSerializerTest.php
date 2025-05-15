@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Serializer\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry,
-    datetime_entry,
-    float_entry,
-    int_entry,
-    str_entry,
-    struct_entry,
-    type_int,
-    type_string,
-    type_structure};
+use function Flow\ETL\DSL\{bool_entry, datetime_entry, float_entry, int_entry, str_entry, struct_entry};
+use function Flow\Types\DSL\{type_integer, type_string, type_structure};
 use Flow\ETL\{Row, Rows};
 use Flow\Serializer\{CompressingSerializer, NativePHPSerializer};
 use PHPUnit\Framework\TestCase;
@@ -33,7 +26,7 @@ final class CompressingSerializerTest extends TestCase
                 'struct',
                 ['integer' => 1, 'string' => 'string'],
                 type_structure([
-                    'integer' => type_int(),
+                    'integer' => type_integer(),
                     'string' => type_string(),
                 ])
             )),

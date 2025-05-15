@@ -6,7 +6,7 @@ namespace Flow\ETL\Schema;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\{Type};
+use Flow\Types\Type\{Type};
 
 final class Metadata
 {
@@ -133,7 +133,7 @@ final class Metadata
     private function assertArray(array $array) : void
     {
         foreach ($array as $value) {
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 $this->assertArray($value);
             } else {
                 if (!is_bool($value) && !is_float($value) && !is_int($value) && !is_string($value)) {

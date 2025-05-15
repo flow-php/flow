@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Entry\{XMLElementEntry, XMLEntry};
 
 final class ASCIIValue
 {
@@ -89,7 +90,7 @@ final class ASCIIValue
                 if ($val instanceof Entry) {
                     $this->stringValue = $val->toString();
 
-                    if ($val instanceof Entry\XMLEntry || $val instanceof Entry\XMLElementEntry) {
+                    if ($val instanceof XMLEntry || $val instanceof XMLElementEntry) {
                         $this->stringValue = \str_replace("\n", '', $this->stringValue);
                     }
 

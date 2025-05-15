@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\OrderEntries;
 
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, XMLElementEntry, XMLEntry};
 use Flow\ETL\Row\Entry\{IntegerEntry, UuidEntry};
 
 final readonly class TypePriorities
@@ -15,17 +16,17 @@ final readonly class TypePriorities
     public const PRIORITIES = [
         UuidEntry::class => 1,
         IntegerEntry::class => 2,
-        Entry\BooleanEntry::class => 3,
-        Entry\FloatEntry::class => 4,
-        Entry\DateTimeEntry::class => 5,
-        Entry\StringEntry::class => 6,
-        Entry\EnumEntry::class => 7,
-        Entry\ListEntry::class => 8,
-        Entry\JsonEntry::class => 9,
-        Entry\MapEntry::class => 10,
-        Entry\StructureEntry::class => 11,
-        Entry\XMLEntry::class => 12,
-        Entry\XMLElementEntry::class => 13,
+        BooleanEntry::class => 3,
+        FloatEntry::class => 4,
+        DateTimeEntry::class => 5,
+        StringEntry::class => 6,
+        EnumEntry::class => 7,
+        ListEntry::class => 8,
+        JsonEntry::class => 9,
+        MapEntry::class => 10,
+        StructureEntry::class => 11,
+        XMLEntry::class => 12,
+        XMLElementEntry::class => 13,
     ];
 
     /**

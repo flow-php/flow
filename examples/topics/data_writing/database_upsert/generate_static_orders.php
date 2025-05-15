@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use Faker\Factory;
+
 /**
  * @param array<string> $ids
  */
 function generateStaticOrders(array $ids) : Generator
 {
-    $faker = Faker\Factory::create();
+    $faker = Factory::create();
 
     $skus = [
         ['sku' => 'SKU_0001', 'name' => 'Product 1', 'price' => $faker->randomFloat(2, 0, 500)],

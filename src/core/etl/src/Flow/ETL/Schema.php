@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\schema;
-use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
+use Flow\ETL\Exception\{InvalidArgumentException,
+    SchemaDefinitionNotFoundException,
+    SchemaDefinitionNotUniqueException};
 use Flow\ETL\{Row\EntryReference, Row\Reference, Row\References, Schema\Metadata};
 use Flow\ETL\Schema\{Definition};
 

@@ -15,15 +15,23 @@ use function Flow\ETL\DSL\{bool_entry,
     row,
     str_entry,
     string_entry,
-    struct_entry,
-    type_int,
-    type_list,
-    type_map,
-    type_string};
-use function Flow\ETL\DSL\{bool_schema, boolean_entry, datetime_schema, float_schema, integer_entry, integer_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_entry, structure_schema, type_integer, type_structure};
-use Flow\ETL\Row\Entry\{
-    DateTimeEntry
-};
+    struct_entry};
+use function Flow\ETL\DSL\{bool_schema,
+    boolean_entry,
+    datetime_schema,
+    float_schema,
+    integer_entry,
+    integer_schema,
+    json_schema,
+    list_schema,
+    map_schema,
+    schema,
+    string_schema,
+    structure_entry,
+    structure_schema};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
+use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\{DateTimeEntry};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -90,21 +98,21 @@ final class RowTest extends FlowTestCase
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
                 type_structure([
-                    'item-id' => type_int(),
+                    'item-id' => type_integer(),
                     'name' => type_string(),
                 ])
             ),
-            list_entry('list', [1, 2, 3], type_list(type_int())),
+            list_entry('list', [1, 2, 3], type_list(type_integer())),
             map_entry(
                 'statuses',
                 ['NEW', 'PENDING'],
-                type_map(type_int(), type_string())
+                type_map(type_integer(), type_string())
             ),
         );
 
         self::assertEquals(
             schema(integer_schema('id'), float_schema('price'), bool_schema('deleted'), datetime_schema('created-at'), string_schema('phase', nullable: true), json_schema('array'), structure_schema('items', type_structure([
-                'item-id' => type_int(),
+                'item-id' => type_integer(),
                 'name' => type_string(),
             ])), map_schema('statuses', type_map(type_integer(), type_string())), list_schema('list', type_list(type_integer()))),
             $row->schema()
@@ -117,7 +125,7 @@ final class RowTest extends FlowTestCase
             int_entry('id', 1),
             str_entry('string', 'string'),
             bool_entry('bool', false),
-            list_entry('list', [1, 2, 3], type_list(type_int()))
+            list_entry('list', [1, 2, 3], type_list(type_integer()))
         );
 
         self::assertSame(
@@ -126,7 +134,7 @@ final class RowTest extends FlowTestCase
                 int_entry('id', 1),
                 bool_entry('bool', false),
                 str_entry('string', 'string'),
-                list_entry('list', [1, 2, 3], type_list(type_int()))
+                list_entry('list', [1, 2, 3], type_list(type_integer()))
             )->hash()
         );
     }
@@ -134,8 +142,8 @@ final class RowTest extends FlowTestCase
     public function test_hash_different_rows() : void
     {
         self::assertNotSame(
-            row(list_entry('list', [1, 2, 3], type_list(type_int())))->hash(),
-            row(list_entry('list', [3, 2, 1], type_list(type_int())))->hash()
+            row(list_entry('list', [1, 2, 3], type_list(type_integer())))->hash(),
+            row(list_entry('list', [3, 2, 1], type_list(type_integer())))->hash()
         );
     }
 
@@ -148,7 +156,7 @@ final class RowTest extends FlowTestCase
     }
 
     #[DataProvider('is_equal_data_provider')]
-    public function test_is_equal(bool $equals, \Flow\ETL\Row $row, \Flow\ETL\Row $nextRow) : void
+    public function test_is_equal(bool $equals, Row $row, Row $nextRow) : void
     {
         self::assertSame($equals, $row->isEqual($nextRow));
     }
@@ -258,7 +266,7 @@ final class RowTest extends FlowTestCase
             boolean_entry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
-            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(['item-id' => type_int(), 'name' => type_string()])),
+            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(['item-id' => type_integer(), 'name' => type_string()])),
             map_entry('statuses', ['NEW', 'PENDING'], type_map(type_integer(), type_string()))
         );
 

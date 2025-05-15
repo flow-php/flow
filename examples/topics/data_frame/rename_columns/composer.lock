@@ -68,7 +68,7 @@
         },
         {
             "name": "flow-php/array-dot",
-            "version": "0.15.1",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
@@ -110,7 +110,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/0.15.1"
+                "source": "https://github.com/flow-php/array-dot/tree/0.16.0"
             },
             "funding": [
                 {
@@ -130,20 +130,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa"
+                "reference": "3f9433295995eecb31f775665bd8462bd8229a79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa",
-                "reference": "c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/3f9433295995eecb31f775665bd8462bd8229a79",
+                "reference": "3f9433295995eecb31f775665bd8462bd8229a79",
                 "shasum": ""
             },
             "require": {
                 "brick/math": "^0.11 || ^0.12 || ^0.13",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "flow-php/array-dot": "^0.15.0 || 1.x-dev",
-                "flow-php/filesystem": "^0.15.0 || 1.x-dev",
+                "flow-php/array-dot": "^0.16.0 || 1.x-dev",
+                "flow-php/filesystem": "^0.16.0 || 1.x-dev",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/clock": "^1.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
@@ -182,7 +182,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/1.x"
+                "source": "https://github.com/flow-php/etl/tree/0.16.0"
             },
             "funding": [
                 {
@@ -194,11 +194,11 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-05-04T19:16:47+00:00"
+            "time": "2025-05-12T16:58:31+00:00"
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.15.1",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
@@ -243,7 +243,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.15.1"
+                "source": "https://github.com/flow-php/filesystem/tree/0.16.0"
             },
             "funding": [
                 {

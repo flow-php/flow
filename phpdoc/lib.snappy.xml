@@ -6,15 +6,15 @@
 >
     <title>Flow PHP</title>
     <paths>
-        <output>./../web/landing/build/documentation/api/lib/rdls</output>
-        <cache>./../var/phpdocumentor/cache/lib/rdls</cache>
+        <output>./../web/landing/build/documentation/api/lib/snappy</output>
+        <cache>./../var/phpdocumentor/cache/lib/snappy</cache>
     </paths>
     <version number="1.x">
         <api format="php">
             <source dsn="./../">
-                <path>src/lib/rdls/src</path>
+                <path>src/lib/snappy/src</path>
             </source>
-            <output>rdls</output>
+            <output>snappy</output>
             <default-package-name>Snappy</default-package-name>
             <visibility>public</visibility>
             <include-source>false</include-source>

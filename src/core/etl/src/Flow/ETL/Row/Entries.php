@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use ArrayAccess;
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, InvalidLogicException, RuntimeException};
+use IteratorAggregate;
 
 /**
- * @implements \ArrayAccess<string, Entry<mixed, mixed>>
- * @implements \IteratorAggregate<string, Entry<mixed, mixed>>
+ * @implements ArrayAccess<string, Entry<mixed, mixed>>
+ * @implements IteratorAggregate<string, Entry<mixed, mixed>>
  */
 final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
 {

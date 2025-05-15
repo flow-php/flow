@@ -32,7 +32,7 @@ final class Calculator
      * @param float|int|numeric-string $a
      * @param float|int|numeric-string $b
      *
-     * @throws \Flow\Calculator\Exception\RoundingNecessaryException
+     * @throws Exception\RoundingNecessaryException
      * @throws \DivisionByZeroError
      */
     public function divide(int|float|string $a, int|float|string $b, ?int $scale = null, ?Rounding $rounding = null) : int|float
@@ -74,7 +74,7 @@ final class Calculator
         } catch (DivisionByZeroException $e) {
             throw new \DivisionByZeroError('Division by zero.', $e->getCode(), $e);
         } catch (RoundingNecessaryException $e) {
-            throw new \Flow\Calculator\Exception\RoundingNecessaryException($e->getMessage(), $e->getCode(), $e);
+            throw new Exception\RoundingNecessaryException($e->getMessage(), $e->getCode(), $e);
         }
     }
 

@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 use Flow\Documentation\{FunctionCollector, FunctionsExtractor};
+use Flow\ETL\Attribute\Module;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface};
@@ -47,6 +48,7 @@ $application->add(new class extends Command {
             __DIR__ . '/../src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php',
             __DIR__ . '/../src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php',
+            __DIR__ . '/../src/lib/types/src/Flow/Types/DSL/functions.php',
             __DIR__ . '/../src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php',
             __DIR__ . '/../src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php',
             __DIR__ . '/../src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php',
@@ -60,6 +62,13 @@ $application->add(new class extends Command {
         $normalizedFunctions = [];
 
         foreach ($extractor->extract($paths) as $function) {
+            if (($attribute = $function->attributes->findByName('DocumentationDSL')) !== null) {
+
+                if ($attribute->arguments['module'] === Module::DEPRECATED) {
+                    continue;
+                }
+            }
+
             $normalizedFunctions[] = $function->normalize();
         }
 

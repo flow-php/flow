@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\{Decimal, Time, Timestamp};
-use Flow\Parquet\Thrift\TimeUnit;
+use Flow\Parquet\Thrift\{BsonType, DateType, DecimalType, EnumType, IntType, JsonType, ListType, MapType, MicroSeconds, MilliSeconds, NanoSeconds, NullType, StringType, TimeType, TimeUnit, TimestampType, UUIDType};
 
 final readonly class LogicalType
 {
@@ -205,36 +205,36 @@ final readonly class LogicalType
     public function toThrift() : \Flow\Parquet\Thrift\LogicalType
     {
         return new \Flow\Parquet\Thrift\LogicalType([
-            self::BSON => $this->is(self::BSON) ? new \Flow\Parquet\Thrift\BsonType() : null,
-            self::DATE => $this->is(self::DATE) ? new \Flow\Parquet\Thrift\DateType() : null,
-            self::DECIMAL => $this->is(self::DECIMAL) ? new \Flow\Parquet\Thrift\DecimalType([
+            self::BSON => $this->is(self::BSON) ? new BsonType() : null,
+            self::DATE => $this->is(self::DATE) ? new DateType() : null,
+            self::DECIMAL => $this->is(self::DECIMAL) ? new DecimalType([
                 'scale' => $this->decimalData()?->scale(),
                 'precision' => $this->decimalData()?->precision(),
             ]) : null,
-            self::ENUM => $this->is(self::ENUM) ? new \Flow\Parquet\Thrift\EnumType() : null,
-            self::INTEGER => $this->is(self::INTEGER) ? new \Flow\Parquet\Thrift\IntType() : null,
-            self::JSON => $this->is(self::JSON) ? new \Flow\Parquet\Thrift\JsonType() : null,
-            self::LIST => $this->is(self::LIST) ? new \Flow\Parquet\Thrift\ListType() : null,
-            self::MAP => $this->is(self::MAP) ? new \Flow\Parquet\Thrift\MapType() : null,
-            self::STRING => $this->is(self::STRING) ? new \Flow\Parquet\Thrift\StringType() : null,
-            self::TIME => $this->is(self::TIME) ? new \Flow\Parquet\Thrift\TimeType([
+            self::ENUM => $this->is(self::ENUM) ? new EnumType() : null,
+            self::INTEGER => $this->is(self::INTEGER) ? new IntType() : null,
+            self::JSON => $this->is(self::JSON) ? new JsonType() : null,
+            self::LIST => $this->is(self::LIST) ? new ListType() : null,
+            self::MAP => $this->is(self::MAP) ? new MapType() : null,
+            self::STRING => $this->is(self::STRING) ? new StringType() : null,
+            self::TIME => $this->is(self::TIME) ? new TimeType([
                 'isAdjustedToUTC' => $this->timeData()?->isAdjustedToUTC(),
                 'unit' => new TimeUnit([
-                    'MILLIS' => $this->timeData()?->millis() ? new \Flow\Parquet\Thrift\MilliSeconds() : null,
-                    'MICROS' => $this->timeData()?->micros() ? new \Flow\Parquet\Thrift\MicroSeconds() : null,
-                    'NANOS' => $this->timeData()?->nanos() ? new \Flow\Parquet\Thrift\NanoSeconds() : null,
+                    'MILLIS' => $this->timeData()?->millis() ? new MilliSeconds() : null,
+                    'MICROS' => $this->timeData()?->micros() ? new MicroSeconds() : null,
+                    'NANOS' => $this->timeData()?->nanos() ? new NanoSeconds() : null,
                 ]),
             ]) : null,
-            self::TIMESTAMP => $this->is(self::TIMESTAMP) ? new \Flow\Parquet\Thrift\TimestampType([
+            self::TIMESTAMP => $this->is(self::TIMESTAMP) ? new TimestampType([
                 'isAdjustedToUTC' => $this->timestampData()?->isAdjustedToUTC(),
                 'unit' => new TimeUnit([
-                    'MILLIS' => $this->timestampData()?->millis() ? new \Flow\Parquet\Thrift\MilliSeconds() : null,
-                    'MICROS' => $this->timestampData()?->micros() ? new \Flow\Parquet\Thrift\MicroSeconds() : null,
-                    'NANOS' => $this->timestampData()?->nanos() ? new \Flow\Parquet\Thrift\NanoSeconds() : null,
+                    'MILLIS' => $this->timestampData()?->millis() ? new MilliSeconds() : null,
+                    'MICROS' => $this->timestampData()?->micros() ? new MicroSeconds() : null,
+                    'NANOS' => $this->timestampData()?->nanos() ? new NanoSeconds() : null,
                 ]),
             ]) : null,
-            self::UNKNOWN => $this->is(self::UNKNOWN) ? new \Flow\Parquet\Thrift\NullType() : null,
-            self::UUID => $this->is(self::UUID) ? new \Flow\Parquet\Thrift\UUIDType() : null,
+            self::UNKNOWN => $this->is(self::UNKNOWN) ? new NullType() : null,
+            self::UUID => $this->is(self::UUID) ? new UUIDType() : null,
         ]);
     }
 }

@@ -4,30 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema;
 
-use function Flow\ETL\DSL\{is_nullable,
-    type_boolean,
-    type_date,
-    type_datetime,
-    type_enum,
-    type_equals,
-    type_float,
-    type_int,
-    type_integer,
-    type_is,
-    type_is_any,
-    type_json,
-    type_list,
-    type_optional,
-    type_string,
-    type_time,
-    type_uuid,
-    type_xml,
-    type_xml_element,
-    types};
+use function Flow\ETL\DSL\{is_nullable};
+use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_enum, type_equals, type_float, type_integer, type_is, type_is_any, type_json, type_list, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element, types};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\PHP\Type\Logical\{ListType, MapType, OptionalType, StructureType};
-use Flow\ETL\PHP\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, Type, TypeFactory};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
+use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
+use Flow\Types\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, Type, TypeFactory};
 
 final class Definition
 {
@@ -113,7 +95,7 @@ final class Definition
 
     public static function integer(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
-        return new self($entry, type_int(), $nullable, $metadata);
+        return new self($entry, type_integer(), $nullable, $metadata);
     }
 
     public static function json(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self

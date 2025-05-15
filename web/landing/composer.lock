@@ -431,7 +431,7 @@
         },
         {
             "name": "flow-php/array-dot",
-            "version": "0.15.1",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
@@ -473,7 +473,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/0.15.1"
+                "source": "https://github.com/flow-php/array-dot/tree/0.16.0"
             },
             "funding": [
                 {
@@ -493,20 +493,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa"
+                "reference": "3f9433295995eecb31f775665bd8462bd8229a79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa",
-                "reference": "c2a26d5a47c4a1a0d70e780ed77061ba80eb12aa",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/3f9433295995eecb31f775665bd8462bd8229a79",
+                "reference": "3f9433295995eecb31f775665bd8462bd8229a79",
                 "shasum": ""
             },
             "require": {
                 "brick/math": "^0.11 || ^0.12 || ^0.13",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "flow-php/array-dot": "^0.15.0 || 1.x-dev",
-                "flow-php/filesystem": "^0.15.0 || 1.x-dev",
+                "flow-php/array-dot": "^0.16.0 || 1.x-dev",
+                "flow-php/filesystem": "^0.16.0 || 1.x-dev",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/clock": "^1.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
@@ -545,7 +545,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/1.x"
+                "source": "https://github.com/flow-php/etl/tree/0.16.0"
             },
             "funding": [
                 {
@@ -557,7 +557,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-05-04T19:16:47+00:00"
+            "time": "2025-05-12T16:58:31+00:00"
         },
         {
             "name": "flow-php/etl-adapter-http",
@@ -565,17 +565,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-http.git",
-                "reference": "f0b1c49ceac80881b9aa20bc6605562e63a40366"
+                "reference": "15ab26682d89f751cae654118962a21ff64de0ab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/f0b1c49ceac80881b9aa20bc6605562e63a40366",
-                "reference": "f0b1c49ceac80881b9aa20bc6605562e63a40366",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/15ab26682d89f751cae654118962a21ff64de0ab",
+                "reference": "15ab26682d89f751cae654118962a21ff64de0ab",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
-                "flow-php/etl": "^0.12.0 || 1.x-dev",
+                "flow-php/etl": "^0.16.0 || 1.x-dev",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/http-client": "^1.0"
             },
@@ -606,7 +606,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl-adapter-http/issues",
-                "source": "https://github.com/flow-php/etl-adapter-http/tree/0.12.0"
+                "source": "https://github.com/flow-php/etl-adapter-http/tree/0.16.0"
             },
             "funding": [
                 {
@@ -618,11 +618,11 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-17T09:27:48+00:00"
+            "time": "2025-05-12T16:58:11+00:00"
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.15.1",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
@@ -667,7 +667,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.15.1"
+                "source": "https://github.com/flow-php/filesystem/tree/0.16.0"
             },
             "funding": [
                 {
@@ -3639,16 +3639,16 @@
         },
         {
             "name": "symfony/mime",
-            "version": "v7.2.4",
+            "version": "v7.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mime.git",
-                "reference": "87ca22046b78c3feaff04b337f33b38510fd686b"
+                "reference": "706e65c72d402539a072d0d6ad105fff6c161ef1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mime/zipball/87ca22046b78c3feaff04b337f33b38510fd686b",
-                "reference": "87ca22046b78c3feaff04b337f33b38510fd686b",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/706e65c72d402539a072d0d6ad105fff6c161ef1",
+                "reference": "706e65c72d402539a072d0d6ad105fff6c161ef1",
                 "shasum": ""
             },
             "require": {
@@ -3703,7 +3703,7 @@
                 "mime-type"
             ],
             "support": {
-                "source": "https://github.com/symfony/mime/tree/v7.2.4"
+                "source": "https://github.com/symfony/mime/tree/v7.2.6"
             },
             "funding": [
                 {
@@ -3719,7 +3719,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-19T08:51:20+00:00"
+            "time": "2025-04-27T13:34:41+00:00"
         },
         {
             "name": "symfony/monolog-bridge",
@@ -4106,16 +4106,16 @@
         },
         {
             "name": "symfony/polyfill-intl-idn",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-idn.git",
-                "reference": "c36586dcf89a12315939e00ec9b4474adcb1d773"
+                "reference": "9614ac4d8061dc257ecc64cba1b140873dce8ad3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-intl-idn/zipball/c36586dcf89a12315939e00ec9b4474adcb1d773",
-                "reference": "c36586dcf89a12315939e00ec9b4474adcb1d773",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-idn/zipball/9614ac4d8061dc257ecc64cba1b140873dce8ad3",
+                "reference": "9614ac4d8061dc257ecc64cba1b140873dce8ad3",
                 "shasum": ""
             },
             "require": {
@@ -4169,7 +4169,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-idn/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-intl-idn/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -4185,7 +4185,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-09T11:45:10+00:00"
+            "time": "2024-09-10T14:38:51+00:00"
         },
         {
             "name": "symfony/polyfill-intl-normalizer",
@@ -4752,16 +4752,16 @@
         },
         {
             "name": "symfony/stimulus-bundle",
-            "version": "v2.23.0",
+            "version": "v2.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/stimulus-bundle.git",
-                "reference": "254f4e05cbaa349d4ae68b9b2e6a22995e0887f9"
+                "reference": "e09840304467cda3324cc116c7f4ee23c8ff227c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/stimulus-bundle/zipball/254f4e05cbaa349d4ae68b9b2e6a22995e0887f9",
-                "reference": "254f4e05cbaa349d4ae68b9b2e6a22995e0887f9",
+                "url": "https://api.github.com/repos/symfony/stimulus-bundle/zipball/e09840304467cda3324cc116c7f4ee23c8ff227c",
+                "reference": "e09840304467cda3324cc116c7f4ee23c8ff227c",
                 "shasum": ""
             },
             "require": {
@@ -4801,7 +4801,7 @@
                 "symfony-ux"
             ],
             "support": {
-                "source": "https://github.com/symfony/stimulus-bundle/tree/v2.23.0"
+                "source": "https://github.com/symfony/stimulus-bundle/tree/v2.24.0"
             },
             "funding": [
                 {
@@ -4817,7 +4817,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-01-16T21:55:09+00:00"
+            "time": "2025-03-09T21:10:04+00:00"
         },
         {
             "name": "symfony/string",
@@ -4908,16 +4908,16 @@
         },
         {
             "name": "symfony/translation",
-            "version": "v7.2.4",
+            "version": "v7.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
-                "reference": "283856e6981286cc0d800b53bd5703e8e363f05a"
+                "reference": "e7fd8e2a4239b79a0fd9fb1fef3e0e7f969c6dc6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation/zipball/283856e6981286cc0d800b53bd5703e8e363f05a",
-                "reference": "283856e6981286cc0d800b53bd5703e8e363f05a",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/e7fd8e2a4239b79a0fd9fb1fef3e0e7f969c6dc6",
+                "reference": "e7fd8e2a4239b79a0fd9fb1fef3e0e7f969c6dc6",
                 "shasum": ""
             },
             "require": {
@@ -4983,7 +4983,7 @@
             "description": "Provides tools to internationalize your application",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/translation/tree/v7.2.4"
+                "source": "https://github.com/symfony/translation/tree/v7.2.6"
             },
             "funding": [
                 {
@@ -4999,7 +4999,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-02-13T10:27:23+00:00"
+            "time": "2025-04-07T19:09:28+00:00"
         },
         {
             "name": "symfony/translation-contracts",
@@ -6024,22 +6024,22 @@
         },
         {
             "name": "norberttech/symfony-process-executor",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/norberttech/symfony-process-executor.git",
-                "reference": "21069763e2324d1ee4432359d0a7ffe0f29f3a9c"
+                "reference": "44273563f4ae4a4e2752732d2d47334d2480123b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/norberttech/symfony-process-executor/zipball/21069763e2324d1ee4432359d0a7ffe0f29f3a9c",
-                "reference": "21069763e2324d1ee4432359d0a7ffe0f29f3a9c",
+                "url": "https://api.github.com/repos/norberttech/symfony-process-executor/zipball/44273563f4ae4a4e2752732d2d47334d2480123b",
+                "reference": "44273563f4ae4a4e2752732d2d47334d2480123b",
                 "shasum": ""
             },
             "require": {
-                "aeon-php/sleep": ">=0.6.0",
-                "php": "^7.4.2 || ^8.0 || ^8.1",
-                "symfony/process": "^3.4|^4.4|^5.0"
+                "aeon-php/sleep": "^1.0",
+                "php": "^8.2",
+                "symfony/process": "^3.4 || ^4.4 || ^5.0 || ^6.0 || ^7.0"
             },
             "type": "library",
             "autoload": {
@@ -6054,9 +6054,9 @@
             "description": "Symfony Process Component on steroids, async/sync execution chain.",
             "support": {
                 "issues": "https://github.com/norberttech/symfony-process-executor/issues",
-                "source": "https://github.com/norberttech/symfony-process-executor/tree/2.1.0"
+                "source": "https://github.com/norberttech/symfony-process-executor/tree/2.2.0"
             },
-            "time": "2022-01-01T20:40:45+00:00"
+            "time": "2025-05-02T10:00:44+00:00"
         },
         {
             "name": "symfony/browser-kit",
@@ -6260,21 +6260,20 @@
         },
         {
             "name": "symfony/process",
-            "version": "v5.4.47",
+            "version": "v7.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "5d1662fb32ebc94f17ddb8d635454a776066733d"
+                "reference": "87b7c93e57df9d8e39a093d32587702380ff045d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/5d1662fb32ebc94f17ddb8d635454a776066733d",
-                "reference": "5d1662fb32ebc94f17ddb8d635454a776066733d",
+                "url": "https://api.github.com/repos/symfony/process/zipball/87b7c93e57df9d8e39a093d32587702380ff045d",
+                "reference": "87b7c93e57df9d8e39a093d32587702380ff045d",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2.5",
-                "symfony/polyfill-php80": "^1.16"
+                "php": ">=8.2"
             },
             "type": "library",
             "autoload": {
@@ -6302,7 +6301,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v5.4.47"
+                "source": "https://github.com/symfony/process/tree/v7.2.5"
             },
             "funding": [
                 {
@@ -6318,7 +6317,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-06T11:36:42+00:00"
+            "time": "2025-03-13T12:21:46+00:00"
         },
         {
             "name": "symfony/web-profiler-bundle",

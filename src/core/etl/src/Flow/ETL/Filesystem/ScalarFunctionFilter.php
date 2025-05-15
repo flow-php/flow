@@ -6,10 +6,10 @@ namespace Flow\ETL\Filesystem;
 
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\PHP\Type\AutoCaster;
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FileStatus, Partition};
 use Flow\Filesystem\Path\Filter;
+use Flow\Types\Type\AutoCaster;
 
 final readonly class ScalarFunctionFilter implements Filter
 {

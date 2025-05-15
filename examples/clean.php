@@ -18,13 +18,13 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     exit(1);
 }
 
-if (false === \in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
+if (false === in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     print PHP_EOL . 'This script may only be invoked from a command line, got "' . PHP_SAPI . '"' . PHP_EOL;
 
     exit(1);
 }
 
-\ini_set('memory_limit', -1);
+ini_set('memory_limit', -1);
 
 $finder = new Finder();
 $finder->in(__DIR__ . '/topics')

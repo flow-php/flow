@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Types\Tests\Unit\Type\Fixtures;
+
+enum SomeEnum : string
+{
+    case A = 'a';
+    case B = 'b';
+    case C = 'c';
+}

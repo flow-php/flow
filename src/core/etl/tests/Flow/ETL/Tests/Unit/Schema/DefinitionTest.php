@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{bool_schema, date_schema, float_schema, integer_schema, json_schema, list_schema, map_schema, string_schema, structure_schema, time_schema, type_integer};
-use function Flow\ETL\DSL\{datetime_schema,
-    int_entry,
-    int_schema,
-    str_entry,
-    struct_entry,
-    struct_schema,
-    type_float,
-    type_int,
-    type_list,
-    type_map,
-    type_string,
-    type_structure};
+use function Flow\ETL\DSL\{bool_schema,
+    date_schema,
+    float_schema,
+    integer_schema,
+    json_schema,
+    list_schema,
+    map_schema,
+    string_schema,
+    structure_schema,
+    time_schema};
+use function Flow\ETL\DSL\{datetime_schema, int_entry, int_schema, str_entry, struct_entry, struct_schema};
+use function Flow\Types\DSL\{type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\{RuntimeException};
 use Flow\ETL\Schema\Definition;
 use Flow\ETL\Schema\{Metadata};
@@ -174,7 +173,7 @@ final class DefinitionTest extends FlowTestCase
     {
         self::assertEquals(
             list_schema('list', type_list(type_float())),
-            list_schema('list', type_list(type_int()))->merge(list_schema('list', type_list(type_float())))
+            list_schema('list', type_list(type_integer()))->merge(list_schema('list', type_list(type_float())))
         );
     }
 
@@ -219,7 +218,7 @@ final class DefinitionTest extends FlowTestCase
     {
         self::assertEquals(
             json_schema('list'),
-            list_schema('list', type_list(type_string()))->merge(list_schema('list', type_list(type_int())))
+            list_schema('list', type_list(type_string()))->merge(list_schema('list', type_list(type_integer())))
         );
     }
 
@@ -227,7 +226,7 @@ final class DefinitionTest extends FlowTestCase
     {
         self::assertEquals(
             json_schema('map'),
-            map_schema('map', type_map(type_string(), type_string()))->merge(map_schema('map', type_map(type_string(), type_int())))
+            map_schema('map', type_map(type_string(), type_string()))->merge(map_schema('map', type_map(type_string(), type_integer())))
         );
     }
 
@@ -241,7 +240,7 @@ final class DefinitionTest extends FlowTestCase
             ]))->merge(
                 structure_schema('structure', type_structure([
                     'street' => type_string(),
-                    'city' => type_int(),
+                    'city' => type_integer(),
                 ]))
             )
         );
@@ -250,8 +249,8 @@ final class DefinitionTest extends FlowTestCase
     public function test_merging_two_same_lists() : void
     {
         self::assertEquals(
-            list_schema('list', type_list(type_int())),
-            list_schema('list', type_list(type_int()))->merge(list_schema('list', type_list(type_int())))
+            list_schema('list', type_list(type_integer())),
+            list_schema('list', type_list(type_integer()))->merge(list_schema('list', type_list(type_integer())))
         );
     }
 

@@ -6,7 +6,8 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_queries, from_dbal_query};
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{df, from_array, int_schema, map_schema, schema, str_schema, type_int, type_map, type_string};
+use function Flow\ETL\DSL\{df, from_array, int_schema, map_schema, schema, str_schema};
+use function Flow\Types\DSL\{type_integer, type_map, type_string};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\{DbalLoader, ParametersSet};
@@ -159,7 +160,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             )->withSchema(schema(
                 int_schema('id'),
                 str_schema('name'),
-                map_schema('tags', type_map(type_string(), type_int()))
+                map_schema('tags', type_map(type_string(), type_integer()))
             ))
         )->schema();
 

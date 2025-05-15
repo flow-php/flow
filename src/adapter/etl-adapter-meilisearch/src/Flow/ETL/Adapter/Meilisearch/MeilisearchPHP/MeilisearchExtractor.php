@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext};
 use Meilisearch\Client;
 
@@ -55,7 +56,7 @@ final class MeilisearchExtractor implements Extractor
 
             $signal = yield $nextResults->toRows($context->entryFactory());
 
-            if ($signal === Extractor\Signal::STOP) {
+            if ($signal === Signal::STOP) {
                 return;
             }
         }

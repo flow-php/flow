@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use function Flow\ETL\DSL\generate_random_string;
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Filesystem\Path\Options;
 use Flow\Filesystem\Stream\ResourceContext;
@@ -285,7 +286,7 @@ final class Path
         $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
 
         return new self(
-            $this->protocol->scheme() . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . \Flow\ETL\DSL\generate_random_string() . $extension,
+            $this->protocol->scheme() . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . generate_random_string() . $extension,
             $this->options
         );
     }

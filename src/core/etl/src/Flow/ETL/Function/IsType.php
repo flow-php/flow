@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\PHP\Type\{Type, TypeFactory};
 use Flow\ETL\Row;
+use Flow\Types\Type\{Type, TypeFactory};
 
 final class IsType extends ScalarFunctionChain
 {

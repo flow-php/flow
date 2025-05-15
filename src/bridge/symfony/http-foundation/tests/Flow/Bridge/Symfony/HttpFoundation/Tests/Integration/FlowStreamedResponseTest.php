@@ -7,12 +7,7 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Integration;
 use function Flow\Bridge\Symfony\HttpFoundation\{http_csv_output, http_xml_output};
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\from_array;
-use Flow\Bridge\Symfony\HttpFoundation\{
-    DataStream,
-    Output\CSVOutput,
-    Output\JsonOutput,
-    Response\FlowStreamedResponse
-};
+use Flow\Bridge\Symfony\HttpFoundation\{DataStream, Output\CSVOutput, Output\JsonOutput, Response\FlowStreamedResponse};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class FlowStreamedResponseTest extends FlowTestCase

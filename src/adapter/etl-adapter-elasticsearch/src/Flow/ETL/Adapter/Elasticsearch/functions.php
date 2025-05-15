@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch;
 
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\{DocumentDataSource, ElasticsearchExtractor, ElasticsearchLoader, HitsIntoRowsTransformer};
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\{DocumentDataSource,
+    ElasticsearchExtractor,
+    ElasticsearchLoader,
+    HitsIntoRowsTransformer};
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\{EntryIdFactory, HashIdFactory};
 use Flow\ETL\Attribute\{DocumentationDSL, DocumentationExample, Module, Type};
 

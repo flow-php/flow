@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\{ArrayParameterType, Connection, ParameterType};
 use Doctrine\DBAL\Types\Type;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
 
 final class DbalQueryExtractor implements Extractor
@@ -49,7 +50,7 @@ final class DbalQueryExtractor implements Extractor
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
             }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Formatter\PHPFormatter;
 
-use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
@@ -15,8 +15,15 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{ArrayType, BooleanType, CallableType, FloatType, IntegerType, NullType, ResourceType, StringType};
-use Flow\ETL\PHP\Type\Type;
+use Flow\Types\Type\Native\{ArrayType,
+    BooleanType,
+    CallableType,
+    FloatType,
+    IntegerType,
+    NullType,
+    ResourceType,
+    StringType};
+use Flow\Types\Type\Type;
 
 final class TypeFormatter
 {
@@ -29,20 +36,9 @@ final class TypeFormatter
             MapType::class => $this->formatMapType($type, $nullable),
             ListType::class => $this->formatListType($type, $nullable),
             StructureType::class => $this->formatStructureType($type, $nullable),
-            ArrayType::class => $this->formatArrayType($type, $nullable),
             OptionalType::class => $this->format($type->base(), true),
             default => $this->formatSimpleType($type, $nullable),
         };
-    }
-
-    private function formatArrayType(ArrayType $type, bool $nullable) : string
-    {
-        $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_array');
-
-        return \sprintf(
-            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s())' : '\%s()',
-            $reflection->getName(),
-        );
     }
 
     /**
@@ -50,10 +46,10 @@ final class TypeFormatter
      */
     private function formatListType(ListType $type, bool $nullable) : string
     {
-        $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_list');
+        $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_list');
 
         return \sprintf(
-            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(%s(element: %s))' : '\%s(element: %s)',
+            $nullable ? '\\Flow\\Types\\DSL\\type_optional(%s(element: %s))' : '\%s(element: %s)',
             $reflection->getName(),
             $this->format($type->element()),
         );
@@ -64,10 +60,10 @@ final class TypeFormatter
      */
     private function formatMapType(MapType $type, bool $nullable) : string
     {
-        $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_map');
+        $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_map');
 
         return \sprintf(
-            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s(key_type: %s, value_type: %s))' : '\%s(key_type: %s, value_type: %s)',
+            $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s(key_type: %s, value_type: %s))' : '\%s(key_type: %s, value_type: %s)',
             $reflection->getName(),
             $this->format($type->key()),
             $this->format($type->value()),
@@ -80,20 +76,21 @@ final class TypeFormatter
     private function formatSimpleType(Type $type, bool $nullable) : string
     {
         $reflection = match ($type::class) {
-            StringType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_string'),
-            IntegerType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_integer'),
-            BooleanType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_boolean'),
-            FloatType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_float'),
-            DateTimeType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_datetime'),
-            DateType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_date'),
-            TimeType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_time'),
-            ResourceType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_resource'),
-            NullType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_null'),
-            UuidType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_uuid'),
-            CallableType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_callable'),
-            JsonType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_json'),
-            XMLType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_xml'),
-            XMLElementType::class => new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_xml_element'),
+            ArrayType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_array'),
+            StringType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_string'),
+            IntegerType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_integer'),
+            BooleanType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_boolean'),
+            FloatType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_float'),
+            DateTimeType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_datetime'),
+            DateType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_date'),
+            TimeType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_time'),
+            ResourceType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_resource'),
+            NullType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_null'),
+            UuidType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_uuid'),
+            CallableType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_callable'),
+            JsonType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_json'),
+            XMLType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_xml'),
+            XMLElementType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_xml_element'),
             default => throw new \RuntimeException('Type ' . $type->toString() . ' is not a simple definition'),
         };
 
@@ -102,7 +99,7 @@ final class TypeFormatter
         }
 
         return \sprintf(
-            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s())' : '\%s()',
+            $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s())' : '\%s()',
             $reflection->getName(),
         );
     }
@@ -112,7 +109,7 @@ final class TypeFormatter
      */
     private function formatStructureType(StructureType $type, bool $nullable) : string
     {
-        $reflection = new \ReflectionFunction('\\Flow\\ETL\\DSL\\type_structure');
+        $reflection = new \ReflectionFunction('\\Flow\\Types\\DSL\\type_structure');
 
         $fields = [];
 
@@ -121,7 +118,7 @@ final class TypeFormatter
         }
 
         return \sprintf(
-            $nullable ? '\\Flow\\ETL\\DSL\\type_optional(\%s(elements: [%s]))' : '\%s(elements: [%s])',
+            $nullable ? '\\Flow\\Types\\DSL\\type_optional(\%s(elements: [%s]))' : '\%s(elements: [%s])',
             $reflection->getName(),
             \implode(', ', $fields),
         );

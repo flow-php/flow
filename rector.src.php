@@ -20,6 +20,7 @@ return RectorConfig::configure()
         __DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift/*',
     ])
     ->withCache(__DIR__ . '/var/rector/src')
+    ->withImportNames(importShortClasses: false, removeUnusedImports: true)
     ->withSets([
         LevelSetList::UP_TO_PHP_82
     ]);

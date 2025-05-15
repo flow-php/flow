@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use Elasticsearch\{Client, ClientBuilder};
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
+use Flow\ETL\Row\Entry\JsonEntry;
 
 final class ElasticsearchLoader implements Loader
 {
     /** @phpstan-ignore-next-line */
-    private \Elasticsearch\Client|\Elastic\Elasticsearch\Client|null $client;
+    private Client|\Elastic\Elasticsearch\Client|null $client;
 
     private string $method;
 
@@ -67,7 +69,7 @@ final class ElasticsearchLoader implements Loader
          */
         $dataCollection = $rows->map(fn (Row $row) : Row => Row::create(
             $factory->create($row),
-            new Row\Entry\JsonEntry('body', $row->toArray())
+            new JsonEntry('body', $row->toArray())
         ))->toArray();
 
         foreach ($dataCollection as $data) {
@@ -101,11 +103,11 @@ final class ElasticsearchLoader implements Loader
     /**
      * @phpstan-ignore-next-line
      */
-    private function client() : \Elasticsearch\Client|\Elastic\Elasticsearch\Client
+    private function client() : Client|\Elastic\Elasticsearch\Client
     {
         if ($this->client === null) {
             if (\class_exists("Elasticsearch\ClientBuilder")) {
-                $this->client = \Elasticsearch\ClientBuilder::fromConfig($this->config);
+                $this->client = ClientBuilder::fromConfig($this->config);
             } else {
                 $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);
             }

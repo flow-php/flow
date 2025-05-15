@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\{
-    ArrayParameterType as DbalArrayType,
+use Doctrine\DBAL\{ArrayParameterType as DbalArrayType,
     Connection,
     ParameterType,
     ParameterType as DbalParameterType,
-    Types\Type
-};
+    Types\Type};
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\Doctrine\Bulk\{Dialect\MySQLInsertOptions,

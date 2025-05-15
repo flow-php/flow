@@ -13,8 +13,8 @@ use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\String\StringStyles;
+use Flow\Types\Type\Type;
 
 abstract class ScalarFunctionChain implements ScalarFunction
 {

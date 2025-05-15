@@ -13,13 +13,11 @@ use function Flow\ETL\DSL\{bool_entry,
     rows,
     rows_partitioned,
     str_entry,
-    string_entry,
-    type_int,
-    type_list,
-    type_string};
-use function Flow\ETL\DSL\{boolean_entry, integer_schema, json_schema, list_schema, string_schema, type_integer};
+    string_entry};
+use function Flow\ETL\DSL\{boolean_entry, integer_schema, json_schema, list_schema, string_schema};
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\{partition, partitions};
+use function Flow\Types\DSL\{type_integer, type_list, type_string};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\Comparator\{NativeComparator};
 use Flow\ETL\Row\{Comparator};
@@ -817,7 +815,7 @@ final class RowsTest extends FlowTestCase
     {
         $rows = rows(
             row(int_entry('id', 1), str_entry('name', 'foo')),
-            row(int_entry('id', 1), str_entry('name', null), list_entry('list', [1, 2], type_list(type_int()))),
+            row(int_entry('id', 1), str_entry('name', null), list_entry('list', [1, 2], type_list(type_integer()))),
             row(int_entry('id', 1), str_entry('name', 'bar'), list_entry('tags', ['a', 'b'], type_list(type_string()))),
             row(int_entry('id', 1), int_entry('name', 25)),
         );
@@ -832,7 +830,7 @@ final class RowsTest extends FlowTestCase
     {
         $rows = rows(
             row(list_entry('list', ['one', 'two'], type_list(type_string()))),
-            row(list_entry('list', [1, 2], type_list(type_int()))),
+            row(list_entry('list', [1, 2], type_list(type_integer()))),
         );
 
         self::assertEquals(

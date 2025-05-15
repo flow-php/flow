@@ -28,6 +28,20 @@ final class AttributesModel
         );
     }
 
+    public function findByName(string $name) : ?AttributeModel
+    {
+        $attributes = array_filter(
+            $this->attributes,
+            static fn (AttributeModel $attribute) => $attribute->name === $name
+        );
+
+        if (\count($attributes)) {
+            return $attributes[0];
+        }
+
+        return null;
+    }
+
     public function normalize() : array
     {
         return array_map(fn (AttributeModel $attribute) => $attribute->normalize(), $this->attributes);

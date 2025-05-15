@@ -6,11 +6,11 @@ namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\{Adapter\CSV\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\ETL\Row\Entry;
 use Flow\Filesystem\{DestinationStream, Partition, Path};
 
-final class CSVLoader implements Closure, Loader, Loader\FileLoader
+final class CSVLoader implements Closure, FileLoader, Loader
 {
     private string $dateTimeFormat = \DateTimeInterface::ATOM;
 

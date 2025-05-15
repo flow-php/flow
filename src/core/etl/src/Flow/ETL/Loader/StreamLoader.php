@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
+use function fopen;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\{FlowContext, Formatter, Loader, Loader\StreamLoader\Type, Rows};
+use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\SchemaFormatter;
@@ -29,24 +31,24 @@ final class StreamLoader implements Closure, Loader
         private readonly Mode $mode = Mode::WRITE,
         private readonly int|bool $truncate = 20,
         private readonly Output $output = Output::rows,
-        private readonly Formatter $formatter = new Formatter\AsciiTableFormatter(),
+        private readonly Formatter $formatter = new AsciiTableFormatter(),
         private readonly SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter(),
         private readonly Type $type = Type::custom,
     ) {
         $this->stream = null;
     }
 
-    public static function output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
+    public static function output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
         return new self('php://output', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::output);
     }
 
-    public static function stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
+    public static function stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
         return new self('php://stderr', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stderr);
     }
 
-    public static function stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
+    public static function stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
         return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stdout);
     }

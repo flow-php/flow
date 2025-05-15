@@ -17,6 +17,7 @@ use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     Schema};
 use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Thrift\FileMetaData;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
@@ -216,7 +217,7 @@ final class ParquetFile
             return $rows;
         }
 
-        if (!$column instanceof Schema\NestedColumn) {
+        if (!$column instanceof NestedColumn) {
             throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
         }
 

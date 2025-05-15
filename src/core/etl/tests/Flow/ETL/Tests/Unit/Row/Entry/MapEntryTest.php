@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\{map_entry, map_schema, type_boolean, type_datetime, type_float, type_integer, type_map, type_string};
+use function Flow\ETL\DSL\{map_entry, map_schema};
+use function Flow\Types\DSL\{type_boolean, type_datetime, type_float, type_integer, type_map, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 

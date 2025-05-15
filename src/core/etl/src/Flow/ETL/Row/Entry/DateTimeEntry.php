@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{type_datetime, type_equals};
+use function Flow\Types\DSL\{type_datetime, type_equals};
+use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\DateTimeType;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Logical\DateTimeType;
+use Flow\Types\Type\Type;
 
 /**
- * @implements Entry<?\DateTimeInterface, \DateTimeInterface>
+ * @implements Entry<?DateTimeInterface, DateTimeInterface>
  */
 final class DateTimeEntry implements Entry
 {

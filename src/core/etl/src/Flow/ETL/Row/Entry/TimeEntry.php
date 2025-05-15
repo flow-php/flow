@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{date_interval_to_microseconds, type_equals, type_time};
+use function Flow\ETL\DSL\{date_interval_to_microseconds};
+use function Flow\Types\DSL\{type_equals, type_time};
+use DateInterval;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\TimeType;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Logical\TimeType;
+use Flow\Types\Type\Type;
 
 /**
- * @implements Entry<?\DateInterval, \DateInterval>
+ * @implements Entry<?DateInterval, DateInterval>
  */
 final class TimeEntry implements Entry
 {

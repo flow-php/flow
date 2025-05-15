@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_enum, type_string};
+use function Flow\Types\DSL\{type_enum, type_string};
 use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
 use Flow\ETL\Row;
 use Flow\ETL\String\StringStyles;

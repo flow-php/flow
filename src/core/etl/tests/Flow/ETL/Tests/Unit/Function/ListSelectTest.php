@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{list_entry, ref, row, type_int, type_list, type_string, type_structure};
+use function Flow\ETL\DSL\{list_entry, ref, row};
+use function Flow\Types\DSL\{type_integer, type_list, type_string, type_structure};
 use Flow\ETL\Function\ListSelect;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -21,7 +22,7 @@ final class ListSelectTest extends FlowTestCase
                     ['id' => 3, 'name' => 'test3'],
                 ],
                 type_list(type_structure([
-                    'id' => type_int(),
+                    'id' => type_integer(),
                     'name' => type_string(),
                 ]))
             )
@@ -48,7 +49,7 @@ final class ListSelectTest extends FlowTestCase
                     ['id' => 3, 'name' => 'test3'],
                 ],
                 type_list(type_structure([
-                    'id' => type_int(),
+                    'id' => type_integer(),
                     'name' => type_string(),
                 ]))
             )
@@ -75,7 +76,7 @@ final class ListSelectTest extends FlowTestCase
                     ['id' => 3, 'name' => 'test3'],
                 ],
                 type_list(type_structure([
-                    'id' => type_int(),
+                    'id' => type_integer(),
                     'name' => type_string(),
                 ]))
             )

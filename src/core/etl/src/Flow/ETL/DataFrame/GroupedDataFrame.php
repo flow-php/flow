@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DataFrame;
 
-use Flow\ETL\{DataFrame, GroupBy, Pipeline};
+use Flow\ETL\{DataFrame, GroupBy};
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Pipeline\{GroupByPipeline, LinkedPipeline};
 use Flow\ETL\Row\Reference;
 
 final readonly class GroupedDataFrame
@@ -22,7 +23,7 @@ final readonly class GroupedDataFrame
             /**
              * @phpstan-ignore-next-line
              */
-            $this->pipeline = new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($groupBy, $this->pipeline));
+            $this->pipeline = new LinkedPipeline(new GroupByPipeline($groupBy, $this->pipeline));
         };
 
         $pipelineSetter->bindTo($this->df, $this->df)($this->groupBy);

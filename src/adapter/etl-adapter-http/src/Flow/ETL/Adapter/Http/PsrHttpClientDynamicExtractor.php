@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Http;
 
 use function Flow\ETL\DSL\{json_entry, str_entry};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Row, Rows};
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
@@ -63,7 +64,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                     )
                 );
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
             } else {
@@ -71,7 +72,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                     Row::create(...\array_merge($responseFactory->create($response)->all(), $requestFactory->create($nextRequest)->all()))
                 );
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
             }

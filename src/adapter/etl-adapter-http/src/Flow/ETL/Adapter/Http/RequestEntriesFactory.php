@@ -7,6 +7,8 @@ namespace Flow\ETL\Adapter\Http;
 use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entries;
+use Flow\ETL\Row\Entry\JsonEntry;
 use Psr\Http\Message\RequestInterface;
 
 final class RequestEntriesFactory
@@ -19,7 +21,7 @@ final class RequestEntriesFactory
      *
      * @return Row\Entries
      */
-    public function create(RequestInterface $request) : Row\Entries
+    public function create(RequestInterface $request) : Entries
     {
         $requestType = 'html';
 
@@ -54,8 +56,8 @@ final class RequestEntriesFactory
             if (!empty($requestBodyContent)) {
                 switch ($requestType) {
                     case 'json':
-                        if (\class_exists(Row\Entry\JsonEntry::class)) {
-                            $requestBodyEntry = new Row\Entry\JsonEntry('request_body', (array) \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
+                        if (\class_exists(JsonEntry::class)) {
+                            $requestBodyEntry = new JsonEntry('request_body', (array) \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
                         } else {
                             $requestBodyEntry = string_entry('request_body', $requestBodyContent);
                         }
@@ -70,10 +72,10 @@ final class RequestEntriesFactory
             }
         }
 
-        return new Row\Entries(
+        return new Entries(
             $requestBodyEntry,
             string_entry('request_uri', (string) $request->getUri()),
-            new Row\Entry\JsonEntry('request_headers', $request->getHeaders()),
+            new JsonEntry('request_headers', $request->getHeaders()),
             string_entry('request_protocol_version', $request->getProtocolVersion()),
             string_entry('request_method', $request->getMethod()),
         );

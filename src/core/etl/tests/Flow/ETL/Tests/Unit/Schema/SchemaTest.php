@@ -15,17 +15,14 @@ use function Flow\ETL\DSL\{bool_schema,
     schema_to_json,
     str_schema,
     structure_schema,
-    type_int,
-    type_list,
-    type_map,
-    type_string,
-    type_structure,
     uuid_schema};
 use function Flow\ETL\DSL\{integer_schema, string_schema};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException,
     SchemaDefinitionNotFoundException,
     SchemaDefinitionNotUniqueException};
 use Flow\ETL\Row\{EntryReference};
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -185,8 +182,8 @@ final class SchemaTest extends FlowTestCase
             str_schema('str', true),
             uuid_schema('uuid'),
             json_schema('json', true),
-            map_schema('map', type_map(type_string(), type_int())),
-            list_schema('list', type_list(type_int())),
+            map_schema('map', type_map(type_string(), type_integer())),
+            list_schema('list', type_list(type_integer())),
             structure_schema('struct', type_structure([
                 'street' => type_string(),
                 'city' => type_string(),
@@ -195,7 +192,7 @@ final class SchemaTest extends FlowTestCase
 
         self::assertEquals(
             $schema,
-            \Flow\ETL\Schema::fromArray($schema->normalize())
+            Schema::fromArray($schema->normalize())
         );
     }
 
@@ -281,8 +278,8 @@ final class SchemaTest extends FlowTestCase
             str_schema('str', true),
             uuid_schema('uuid'),
             json_schema('json', true),
-            map_schema('map', type_map(type_string(), type_int())),
-            list_schema('list', type_list(type_int())),
+            map_schema('map', type_map(type_string(), type_integer())),
+            list_schema('list', type_list(type_integer())),
             structure_schema('struct', type_structure([
                 'street' => type_string(),
                 'city' => type_string(),

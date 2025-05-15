@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{is_type, type_equals, type_float};
+use function Flow\ETL\DSL\{is_type};
+use function Flow\Types\DSL\{type_equals, type_float};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?float, float>

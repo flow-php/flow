@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Formatter;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+use Flow\ETL\Schema;
+use Flow\ETL\Schema\{Definition, Metadata, SchemaFormatter};
+use Flow\ETL\Schema\Formatter\PHPFormatter\{TypeFormatter};
+use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
+use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
@@ -15,11 +19,7 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
-use Flow\ETL\Schema;
-use Flow\ETL\Schema\Formatter\PHPFormatter\{TypeFormatter};
-use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
-use Flow\ETL\Schema\SchemaFormatter;
+use Flow\Types\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
 
 final readonly class PHPSchemaFormatter implements SchemaFormatter
 {
@@ -40,7 +40,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
-    private function enumType(Schema\Definition $definition) : string
+    private function enumType(Definition $definition) : string
     {
         /** @var EnumType<\UnitEnum> $type */
         $type = $definition->type();
@@ -56,7 +56,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
-    private function floatType(Schema\Definition $definition) : string
+    private function floatType(Definition $definition) : string
     {
         /** @var FloatType $type */
         $type = $definition->type();
@@ -71,7 +71,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
-    private function formatMetadata(Schema\Metadata $metadata) : string
+    private function formatMetadata(Metadata $metadata) : string
     {
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\schema_metadata");
 
@@ -121,7 +121,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return $definitions;
     }
 
-    private function listType(Schema\Definition $definition) : string
+    private function listType(Definition $definition) : string
     {
         /** @var ListType<mixed> $type */
         $type = $definition->type();
@@ -137,7 +137,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
-    private function mapType(Schema\Definition $definition) : string
+    private function mapType(Definition $definition) : string
     {
         /** @var MapType<array-key, mixed> $type */
         $type = $definition->type();
@@ -153,7 +153,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
-    private function simpleType(Schema\Definition $definition) : string
+    private function simpleType(Definition $definition) : string
     {
         $reflection = match ($definition->type()::class) {
             StringType::class => new \ReflectionFunction("\Flow\ETL\DSL\string_schema"),
@@ -178,7 +178,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
-    private function structureType(Schema\Definition $definition) : string
+    private function structureType(Definition $definition) : string
     {
         /** @var StructureType<array> $type */
         $type = $definition->type();

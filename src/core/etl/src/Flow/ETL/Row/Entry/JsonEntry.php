@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{type_equals, type_json};
+use function Flow\Types\DSL\{type_equals, type_json};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\JsonType;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Logical\JsonType;
+use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?array<mixed>, string>
@@ -151,7 +151,7 @@ final class JsonEntry implements Entry
             return '{}';
         }
 
-        return \json_encode($this->value, JSON_THROW_ON_ERROR);
+        return \json_encode($this->value, \JSON_THROW_ON_ERROR);
     }
 
     public function type() : Type

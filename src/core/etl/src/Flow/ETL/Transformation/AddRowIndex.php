@@ -10,7 +10,7 @@ use Flow\ETL\Transformation\AddRowIndex\StartFrom;
 
 final readonly class AddRowIndex implements Transformation
 {
-    public function __construct(private string $indexColumn = 'index', private AddRowIndex\StartFrom $startFrom = StartFrom::ZERO)
+    public function __construct(private string $indexColumn = 'index', private StartFrom $startFrom = StartFrom::ZERO)
     {
     }
 

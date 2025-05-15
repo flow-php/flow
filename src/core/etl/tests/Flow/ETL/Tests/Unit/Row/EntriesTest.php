@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry, type_int, type_string};
-use function Flow\ETL\DSL\{boolean_entry, enum_entry, integer_entry, structure_entry, type_structure};
+use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry};
+use function Flow\ETL\DSL\{boolean_entry, enum_entry, integer_entry, structure_entry};
+use function Flow\Types\DSL\{type_integer, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entries, Entry};
 use Flow\ETL\Row\Entry\{DateTimeEntry};
@@ -363,7 +364,7 @@ final class EntriesTest extends FlowTestCase
             $phase = string_entry('phase', null),
             $items = structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(
                 [
-                    'item-id' => type_int(),
+                    'item-id' => type_integer(),
                     'name' => type_string(),
                 ]
             ))
@@ -380,7 +381,7 @@ final class EntriesTest extends FlowTestCase
                     'items',
                     ['item-id' => 1, 'name' => 'one'],
                     type_structure([
-                        'item-id' => type_int(),
+                        'item-id' => type_integer(),
                         'name' => type_string(),
                     ])
                 ),
@@ -397,7 +398,7 @@ final class EntriesTest extends FlowTestCase
             boolean_entry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
             string_entry('phase', null),
-            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(['item-id' => type_int(), 'name' => type_string()])),
+            structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(['item-id' => type_integer(), 'name' => type_string()])),
             enum_entry('enum', BasicEnum::three)
         );
 
@@ -426,7 +427,7 @@ final class EntriesTest extends FlowTestCase
             string_entry('phase', null),
             structure_entry('items', ['item-id' => 1, 'name' => 'one'], type_structure(
                 [
-                    'item-id' => type_int(),
+                    'item-id' => type_integer(),
                     'name' => type_string(),
                 ]
             )),

@@ -15,22 +15,14 @@ use function Flow\ETL\DSL\{bool_schema,
     str_schema,
     struct_schema,
     time_schema,
-    type_boolean,
-    type_date,
-    type_datetime,
-    type_float,
-    type_int,
-    type_json,
-    type_list,
-    type_map,
-    type_optional,
-    type_string,
-    type_structure,
-    type_time,
-    type_uuid,
     uuid_schema};
+use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_list, type_map, type_optional, type_string, type_structure, type_time, type_uuid};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+use Flow\ETL\Schema\Definition;
+use Flow\ETL\{Schema};
+use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
+use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
+use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
@@ -41,11 +33,8 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
-use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\{Schema};
-use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
+use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
+use Flow\Types\Type\Type;
 
 final class SchemaConverter
 {
@@ -136,7 +125,7 @@ final class SchemaConverter
         throw new RuntimeException($type::class . ' is not supported.');
     }
 
-    private function parquetToFlowDefinition(Column $column) : Schema\Definition
+    private function parquetToFlowDefinition(Column $column) : Definition
     {
         if ($column instanceof FlatColumn) {
             $logicalType = $column->logicalType();
@@ -222,9 +211,9 @@ final class SchemaConverter
                 $type = match ($column->type()) {
                     ParquetSchema\PhysicalType::INT32 => match ($column->convertedType()) {
                         ParquetSchema\ConvertedType::DATE => type_date(),
-                        default => type_int(),
+                        default => type_integer(),
                     },
-                    ParquetSchema\PhysicalType::INT64 => type_int(),
+                    ParquetSchema\PhysicalType::INT64 => type_integer(),
                     ParquetSchema\PhysicalType::BOOLEAN => type_boolean(),
                     ParquetSchema\PhysicalType::DOUBLE => type_float(),
                     ParquetSchema\PhysicalType::FLOAT => type_float(),
@@ -243,7 +232,7 @@ final class SchemaConverter
                 ParquetSchema\LogicalType::UUID => type_uuid(),
                 ParquetSchema\LogicalType::JSON => type_json(),
                 ParquetSchema\LogicalType::DECIMAL => type_float(),
-                ParquetSchema\LogicalType::INTEGER => type_int(),
+                ParquetSchema\LogicalType::INTEGER => type_integer(),
                 default => throw new RuntimeException($logicalType->name() . ' is not supported.'),
             };
 

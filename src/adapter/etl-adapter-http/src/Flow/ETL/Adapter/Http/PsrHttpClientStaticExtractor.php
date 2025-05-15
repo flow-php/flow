@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Http;
 
 use function Flow\ETL\DSL\{json_entry, str_entry};
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Row, Rows};
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
@@ -63,7 +64,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
                     )
                 );
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
             } else {
@@ -74,7 +75,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
                     ))
                 );
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
             }

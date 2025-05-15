@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{
-    Exception\InvalidArgumentException,
+use Flow\ETL\{Exception\InvalidArgumentException,
     Extractor,
     FlowContext,
     Pipeline,
@@ -14,6 +13,7 @@ use Flow\ETL\{
     Sort\ExternalSort\Bucket,
     Sort\ExternalSort\Buckets,
     Sort\ExternalSort\BucketsCache};
+use Flow\ETL\Extractor\SortBucketsExtractor;
 
 /**
  * External sorting is explained here:.
@@ -46,7 +46,7 @@ final class ExternalSort implements SortingAlgorithm
             $sortedBuckets[] = $this->sortBuckets($buckets, $refs);
         }
 
-        return new Extractor\SortBucketsExtractor($this->mergeBuckets($sortedBuckets, $refs), \abs($this->batchSize), $this->bucketsCache);
+        return new SortBucketsExtractor($this->mergeBuckets($sortedBuckets, $refs), \abs($this->batchSize), $this->bucketsCache);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use function Flow\Parquet\{array_combine_recursive, array_iterate_at_level};
+use function Flow\Parquet\array_merge_recursive;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{DefinitionConverter, NullLevel, Stack};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
@@ -277,7 +278,7 @@ final readonly class DremelAssembler
                     }
                 );
 
-                $structures = \Flow\Parquet\array_merge_recursive($structures, $propertyValues);
+                $structures = array_merge_recursive($structures, $propertyValues);
             }
 
             $rows[] = $structures;

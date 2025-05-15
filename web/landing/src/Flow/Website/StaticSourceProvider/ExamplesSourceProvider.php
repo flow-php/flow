@@ -23,7 +23,6 @@ final class ExamplesSourceProvider implements SourceProvider
 
             foreach ($this->examples->examples($topic) as $example) {
                 $sources[] = new Source('example', ['topic' => $topic, 'example' => $example]);
-                $sources[] = new Source('documentation_example', ['topic' => $topic, 'example' => $example]);
             }
         }
 

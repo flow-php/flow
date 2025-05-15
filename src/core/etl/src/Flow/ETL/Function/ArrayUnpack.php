@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Row;
 
-final class ArrayUnpack extends ScalarFunctionChain implements ScalarFunction\UnpackResults
+final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
 {
     public function __construct(
         private readonly ScalarFunction|array $array,

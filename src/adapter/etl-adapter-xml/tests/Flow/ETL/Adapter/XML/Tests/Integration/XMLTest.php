@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use function Flow\ETL\Adapter\XML\from_xml;
-use function Flow\ETL\DSL\{date_schema, df, int_schema, ref, schema, type_int};
+use function Flow\ETL\DSL\{date_schema, df, int_schema, ref, schema};
 use function Flow\Filesystem\DSL\path;
+use function Flow\Types\DSL\type_integer;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class XMLTest extends FlowIntegrationTestCase
@@ -15,12 +16,12 @@ final class XMLTest extends FlowIntegrationTestCase
     {
         $rows = df()
             ->read(from_xml(path(__DIR__ . '/../Fixtures/simple_items.xml'))->withXMLNodePath('root/items'))
-            ->withEntry('parent_attribute_01', ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_int()))
-            ->withEntry('parent_attribute_02', ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_int()))
+            ->withEntry('parent_attribute_01', ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_integer()))
+            ->withEntry('parent_attribute_02', ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_integer()))
             ->withEntry('items', ref('node')->xpath('/*/item'))
             ->withEntry('item', ref('items')->expand())
-            ->withEntry('item_attribute_01', ref('item')->domElementAttributeValue('item_attribute_01')->cast(type_int()))
-            ->withEntry('value', ref('item')->cast(type_int()))
+            ->withEntry('item_attribute_01', ref('item')->domElementAttributeValue('item_attribute_01')->cast(type_integer()))
+            ->withEntry('value', ref('item')->cast(type_integer()))
             ->drop('node', 'items', 'item')
             ->fetch();
 
@@ -51,12 +52,12 @@ final class XMLTest extends FlowIntegrationTestCase
         $rows = df()
             ->read(from_xml(path(__DIR__ . '/../Fixtures/partitioned/date=*/*.xml'))->withXMLNodePath('root/items'))
 
-            ->withEntry('parent_attribute_01', ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_int()))
-            ->withEntry('parent_attribute_02', ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_int()))
+            ->withEntry('parent_attribute_01', ref('node')->domElementAttributeValue('items_attribute_01')->cast(type_integer()))
+            ->withEntry('parent_attribute_02', ref('node')->domElementAttributeValue('items_attribute_02')->cast(type_integer()))
             ->withEntry('items', ref('node')->xpath('/*/item'))
             ->withEntry('item', ref('items')->expand())
-            ->withEntry('item_attribute_01', ref('item')->domElementAttributeValue('item_attribute_01')->cast(type_int()))
-            ->withEntry('value', ref('item')->cast(type_int()))
+            ->withEntry('item_attribute_01', ref('item')->domElementAttributeValue('item_attribute_01')->cast(type_integer()))
+            ->withEntry('value', ref('item')->cast(type_integer()))
             ->withEntry('date', ref('date')->cast('date'))
             ->sortBy(ref('date')->asc())
             ->drop('node', 'items', 'item')

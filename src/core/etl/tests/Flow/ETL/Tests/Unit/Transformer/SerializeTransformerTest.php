@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{bool_entry, flow_context, int_entry, list_entry, row, rows, str_entry, type_list, type_string};
+use function Flow\ETL\DSL\{bool_entry, flow_context, int_entry, list_entry, row, rows, str_entry};
+use function Flow\Types\DSL\{type_list, type_string};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\SerializeTransformer;
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer};

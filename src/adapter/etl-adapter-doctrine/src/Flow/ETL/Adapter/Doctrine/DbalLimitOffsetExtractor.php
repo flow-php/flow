@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\{Extractor, FlowContext, Schema};
 
 final class DbalLimitOffsetExtractor implements Extractor
@@ -119,7 +120,7 @@ final class DbalLimitOffsetExtractor implements Extractor
             foreach ($pageResults as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
 

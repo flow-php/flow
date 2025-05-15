@@ -7,8 +7,10 @@ namespace Flow\ETL\Adapter\Doctrine;
 use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Flow\ETL\Adapter\Doctrine\Pagination\Key;
 use Flow\ETL\{Adapter\Doctrine\Pagination\KeySet, Extractor, FlowContext, Schema};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Extractor\Signal;
 
 /**
  * Extractor implementing keyset pagination for Doctrine DBAL queries.
@@ -127,7 +129,7 @@ final class DbalKeySetExtractor implements Extractor
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), [], $this->schema);
 
-                if ($signal === Extractor\Signal::STOP) {
+                if ($signal === Signal::STOP) {
                     return;
                 }
 
@@ -205,7 +207,7 @@ final class DbalKeySetExtractor implements Extractor
         return $this;
     }
 
-    private function keyAlias(Pagination\Key $key) : string
+    private function keyAlias(Key $key) : string
     {
         return (string) preg_replace('/[^a-zA-Z0-9_]/', '_', str_replace('.', '_', $key->column . $this->keyAliasSuffix));
     }

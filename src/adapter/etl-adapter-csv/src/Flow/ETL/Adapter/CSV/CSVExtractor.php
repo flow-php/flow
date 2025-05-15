@@ -43,7 +43,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
 
-            $option = \Flow\ETL\Adapter\CSV\csv_detect_separator($stream);
+            $option = csv_detect_separator($stream);
 
             $separator = $this->separator ?? $option->separator;
             $enclosure = $this->enclosure ?? $option->enclosure;

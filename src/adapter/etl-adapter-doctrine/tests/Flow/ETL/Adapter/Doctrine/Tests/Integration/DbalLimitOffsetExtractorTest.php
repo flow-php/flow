@@ -6,7 +6,8 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_limit_offset, from_dbal_limit_offset_qb};
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{df, int_schema, map_schema, schema, str_schema, type_int, type_map, type_string};
+use function Flow\ETL\DSL\{df, int_schema, map_schema, schema, str_schema};
+use function Flow\Types\DSL\{type_integer, type_map, type_string};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\{Order, OrderBy};
@@ -127,7 +128,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                 )->withSchema(schema(
                     int_schema('id'),
                     str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_int()))
+                    map_schema('tags', type_map(type_string(), type_integer()))
                 ))->withMaximum(5)->withOffset(10)->withPageSize(1)
             )->fetch()->toArray();
 
@@ -166,7 +167,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                 )->withSchema(schema(
                     int_schema('id'),
                     str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_int()))
+                    map_schema('tags', type_map(type_string(), type_integer()))
                 ))
             )->fetch()->toArray();
 
@@ -204,7 +205,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                 )->withSchema(schema(
                     int_schema('id'),
                     str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_int()))
+                    map_schema('tags', type_map(type_string(), type_integer()))
                 ))
             )->fetch()->toArray();
 
@@ -241,7 +242,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                 )->withSchema(schema(
                     int_schema('id'),
                     str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_int()))
+                    map_schema('tags', type_map(type_string(), type_integer()))
                 ))
             )
             ->schema();

@@ -6,6 +6,7 @@ namespace Flow\ETL\Sort\ExternalSort;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
+use Generator;
 
 final class Buckets
 {

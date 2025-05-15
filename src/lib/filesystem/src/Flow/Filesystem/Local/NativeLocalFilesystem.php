@@ -6,6 +6,7 @@ namespace Flow\Filesystem\Local;
 
 use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Path\Filter, Protocol, SourceStream};
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Filesystem\Path\Filter\OnlyFiles;
 use Flow\Filesystem\Stream\{NativeLocalDestinationStream, NativeLocalSourceStream};
 use Webmozart\Glob\Glob;
 
@@ -41,7 +42,7 @@ final class NativeLocalFilesystem implements Filesystem
         return new Path(\sys_get_temp_dir());
     }
 
-    public function list(Path $path, Filter $pathFilter = new Filter\OnlyFiles()) : \Generator
+    public function list(Path $path, Filter $pathFilter = new OnlyFiles()) : \Generator
     {
         $this->protocol()->validateScheme($path);
 

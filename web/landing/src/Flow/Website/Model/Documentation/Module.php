@@ -20,6 +20,7 @@ enum Module : string
     case PARQUET = 'Parquet';
     case S3_FILESYSTEM = 'S3 Filesystem';
     case TEXT = 'Text';
+    case TYPES = 'Types';
     case XML = 'XML';
 
     public static function fromName(string $name) : self
@@ -44,8 +45,9 @@ enum Module : string
             self::TEXT => 10,
             self::XML => 11,
             self::FILESYSTEM => 12,
-            self::AZURE_FILESYSTEM => 13,
-            self::AZURE_SDK => 14,
+            self::TYPES => 13,
+            self::AZURE_FILESYSTEM => 14,
+            self::AZURE_SDK => 15,
             default => 99,
         };
     }

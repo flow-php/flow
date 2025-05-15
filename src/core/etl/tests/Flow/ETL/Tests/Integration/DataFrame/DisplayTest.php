@@ -21,12 +21,8 @@ use function Flow\ETL\DSL\{bool_entry,
     str_entry,
     string_entry,
     struct_entry,
-    type_int,
-    type_list,
-    type_map,
-    type_string,
-    type_structure,
     xml_entry};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\{Extractor, FlowContext, Rows};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -61,12 +57,12 @@ final class DisplayTest extends FlowIntegrationTestCase
                                 list_entry(
                                     'list',
                                     [1, 2, 3],
-                                    type_list(type_int())
+                                    type_list(type_integer())
                                 ),
                                 map_entry(
                                     'map',
                                     ['NEW', 'PENDING'],
-                                    type_map(type_int(), type_string())
+                                    type_map(type_integer(), type_string())
                                 ),
                                 struct_entry(
                                     'items',

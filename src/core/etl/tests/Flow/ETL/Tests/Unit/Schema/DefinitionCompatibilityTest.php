@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{int_schema,
-    list_schema,
-    map_schema,
-    string_schema,
-    struct_schema,
-    type_boolean,
-    type_int,
+use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, string_schema, struct_schema};
+use function Flow\Types\DSL\{type_boolean,
+    type_integer,
     type_list,
     type_map,
     type_optional,
@@ -24,51 +20,51 @@ final class DefinitionCompatibilityTest extends FlowTestCase
 {
     public static function list_compatibility_provider() : \Generator
     {
-        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_int())), true];
-        yield [list_schema('list', type_list(type_int())), list_schema('other_list', type_list(type_int())), false];
-        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_int())), true, false];
+        yield [list_schema('list', type_list(type_integer())), list_schema('list', type_list(type_integer())), true];
+        yield [list_schema('list', type_list(type_integer())), list_schema('other_list', type_list(type_integer())), false];
+        yield [list_schema('list', type_list(type_integer())), list_schema('list', type_list(type_integer())), true, false];
 
-        yield [list_schema('list', type_list(type_int()), true), list_schema('list', type_list(type_int())), true];
-        yield [list_schema('list', type_list(type_int()), true), list_schema('list', type_list(type_int()), true), true];
+        yield [list_schema('list', type_list(type_integer()), true), list_schema('list', type_list(type_integer())), true];
+        yield [list_schema('list', type_list(type_integer()), true), list_schema('list', type_list(type_integer()), true), true];
 
-        yield [list_schema('list', type_list(type_optional(type_int()))), list_schema('list', type_list(type_int())), true];
-        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_optional(type_int()))), false];
+        yield [list_schema('list', type_list(type_optional(type_integer()))), list_schema('list', type_list(type_integer())), true];
+        yield [list_schema('list', type_list(type_integer())), list_schema('list', type_list(type_optional(type_integer()))), false];
 
-        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_string())), false];
+        yield [list_schema('list', type_list(type_integer())), list_schema('list', type_list(type_string())), false];
 
-        yield [list_schema('list', type_list(type_int())), list_schema('list', type_list(type_optional(type_int()))), false];
+        yield [list_schema('list', type_list(type_integer())), list_schema('list', type_list(type_optional(type_integer()))), false];
 
         yield [
-            list_schema('list', type_list(type_list(type_int()))),
-            list_schema('list', type_list(type_list(type_int()))),
+            list_schema('list', type_list(type_list(type_integer()))),
+            list_schema('list', type_list(type_list(type_integer()))),
             true,
         ];
         yield [
-            list_schema('list', type_list(type_list(type_optional(type_int())))),
-            list_schema('list', type_list(type_list(type_int()))),
+            list_schema('list', type_list(type_list(type_optional(type_integer())))),
+            list_schema('list', type_list(type_list(type_integer()))),
             true,
         ];
         yield [
-            list_schema('list', type_list(type_list(type_int()))),
-            list_schema('list', type_list(type_list(type_optional(type_int())))),
+            list_schema('list', type_list(type_list(type_integer()))),
+            list_schema('list', type_list(type_list(type_optional(type_integer())))),
             false,
         ];
     }
 
     public static function map_compatibility_provider() : \Generator
     {
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_int())), true];
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('different_map', type_map(type_string(), type_int())), false];
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_int()), true), false];
-        yield [map_schema('map', type_map(type_string(), type_int()), true), map_schema('map', type_map(type_string(), type_int())), true];
+        yield [map_schema('map', type_map(type_string(), type_integer())), map_schema('map', type_map(type_string(), type_integer())), true];
+        yield [map_schema('map', type_map(type_string(), type_integer())), map_schema('different_map', type_map(type_string(), type_integer())), false];
+        yield [map_schema('map', type_map(type_string(), type_integer())), map_schema('map', type_map(type_string(), type_integer()), true), false];
+        yield [map_schema('map', type_map(type_string(), type_integer()), true), map_schema('map', type_map(type_string(), type_integer())), true];
 
-        yield [map_schema('map', type_map(type_string(), type_optional(type_int()))), map_schema('map', type_map(type_string(), type_int())), true];
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_optional(type_int()))), false];
+        yield [map_schema('map', type_map(type_string(), type_optional(type_integer()))), map_schema('map', type_map(type_string(), type_integer())), true];
+        yield [map_schema('map', type_map(type_string(), type_integer())), map_schema('map', type_map(type_string(), type_optional(type_integer()))), false];
 
-        yield [map_schema('map', type_map(type_string(), type_int()), true), map_schema('map', type_map(type_string(), type_int()), true), true];
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_string())), false];
-        yield [map_schema('map', type_map(type_string(), type_int())), map_schema('map', type_map(type_string(), type_optional(type_int()))), false];
-        yield [map_schema('map', type_map(type_string(), type_optional(type_int()))), map_schema('map', type_map(type_string(), type_int())), true];
+        yield [map_schema('map', type_map(type_string(), type_integer()), true), map_schema('map', type_map(type_string(), type_integer()), true), true];
+        yield [map_schema('map', type_map(type_string(), type_integer())), map_schema('map', type_map(type_string(), type_string())), false];
+        yield [map_schema('map', type_map(type_string(), type_integer())), map_schema('map', type_map(type_string(), type_optional(type_integer()))), false];
+        yield [map_schema('map', type_map(type_string(), type_optional(type_integer()))), map_schema('map', type_map(type_string(), type_integer())), true];
     }
 
     public static function scalar_types_compatibility_provider() : \Generator
@@ -89,51 +85,51 @@ final class DefinitionCompatibilityTest extends FlowTestCase
     public static function structure_types_compatibility_provider() : \Generator
     {
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             true,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_int()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer()])),
             false,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_boolean()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_boolean()])),
             false,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('different_structure', type_structure(['id' => type_int(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            struct_schema('different_structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             false,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()]), true),
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()]), true),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             true,
         ];
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()]), true),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()]), true),
             false,
         ];
 
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['different_id' => type_int(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['different_id' => type_integer(), 'name' => type_string()])),
             false,
         ];
 
         yield [
-            struct_schema('structure', type_structure(['id' => type_optional(type_int()), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_optional(type_integer()), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             true,
         ];
 
         yield [
-            struct_schema('structure', type_structure(['id' => type_int(), 'name' => type_string()])),
-            struct_schema('structure', type_structure(['id' => type_optional(type_int()), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            struct_schema('structure', type_structure(['id' => type_optional(type_integer()), 'name' => type_string()])),
             false,
         ];
     }

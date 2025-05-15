@@ -6,10 +6,10 @@ namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\{FlowContext, Loader, Rows};
-use Flow\ETL\Loader\Closure;
+use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\Filesystem\Path;
 
-final class TextLoader implements Closure, Loader, Loader\FileLoader
+final class TextLoader implements Closure, FileLoader, Loader
 {
     private string $newLineSeparator = PHP_EOL;
 

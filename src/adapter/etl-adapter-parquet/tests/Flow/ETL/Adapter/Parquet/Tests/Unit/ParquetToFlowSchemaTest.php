@@ -15,15 +15,15 @@ use function Flow\ETL\DSL\{bool_schema,
     str_schema,
     struct_schema,
     time_schema,
-    type_boolean,
-    type_int,
+    uuid_schema};
+use function Flow\Types\DSL\{type_boolean,
+    type_integer,
     type_list,
     type_map,
     type_optional,
     type_string,
-    type_structure,
-    type_uuid,
-    uuid_schema};
+    type_structure};
+use function Flow\Types\DSL\type_uuid;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Parquet\ParquetFile\Schema;
@@ -96,7 +96,7 @@ final class ParquetToFlowSchemaTest extends FlowTestCase
 
         self::assertEquals(
             \Flow\ETL\DSL\schema(
-                map_schema('map', type_map(type_string(), type_optional(type_int())), true)
+                map_schema('map', type_map(type_string(), type_optional(type_integer())), true)
             ),
             $flowSchema,
         );

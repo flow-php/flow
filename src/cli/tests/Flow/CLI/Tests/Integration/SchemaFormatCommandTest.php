@@ -178,9 +178,9 @@ OUTPUT,
     \Flow\ETL\DSL\float_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("email", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("customer", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\structure_schema("address", type: \Flow\ETL\DSL\type_structure(elements: ["street" => \Flow\ETL\DSL\type_string(), "city" => \Flow\ETL\DSL\type_string(), "zip" => \Flow\ETL\DSL\type_string(), "country" => \Flow\ETL\DSL\type_string()]), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\list_schema("notes", type: \Flow\ETL\DSL\type_list(element: \Flow\ETL\DSL\type_string()), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
-    \Flow\ETL\DSL\list_schema("items", type: \Flow\ETL\DSL\type_list(element: \Flow\ETL\DSL\type_structure(elements: ["sku" => \Flow\ETL\DSL\type_string(), "quantity" => \Flow\ETL\DSL\type_integer(), "price" => \Flow\ETL\DSL\type_float()])), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\structure_schema("address", type: \Flow\Types\DSL\type_structure(elements: ["street" => \Flow\Types\DSL\type_string(), "city" => \Flow\Types\DSL\type_string(), "zip" => \Flow\Types\DSL\type_string(), "country" => \Flow\Types\DSL\type_string()]), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\list_schema("notes", type: \Flow\Types\DSL\type_list(element: \Flow\Types\DSL\type_string()), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\list_schema("items", type: \Flow\Types\DSL\type_list(element: \Flow\Types\DSL\type_structure(elements: ["sku" => \Flow\Types\DSL\type_string(), "quantity" => \Flow\Types\DSL\type_integer(), "price" => \Flow\Types\DSL\type_float()])), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
 );
 
 PHP,

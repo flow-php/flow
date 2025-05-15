@@ -12,6 +12,7 @@ use Flow\ETL\Config\Sort\SortConfigBuilder;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Optimizer;
+use Flow\ETL\Pipeline\Optimizer\{BatchSizeOptimization, LimitOptimization};
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{Filesystem, FilesystemTable};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
@@ -57,8 +58,8 @@ final class ConfigBuilder
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
         $this->clock ??= SystemClock::utc();
         $this->optimizer ??= new Optimizer(
-            new Optimizer\LimitOptimization(),
-            new Optimizer\BatchSizeOptimization(batchSize: 1000)
+            new LimitOptimization(),
+            new BatchSizeOptimization(batchSize: 1000)
         );
 
         return new Config(

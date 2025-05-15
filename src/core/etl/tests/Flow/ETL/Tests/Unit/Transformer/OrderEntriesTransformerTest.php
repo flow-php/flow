@@ -24,13 +24,8 @@ use function Flow\ETL\DSL\{bool_entry,
     rows,
     str_entry,
     struct_entry,
-    type_float,
-    type_int,
-    type_list,
-    type_map,
-    type_string,
-    type_structure,
     uuid_entry};
+use function Flow\Types\DSL\{type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\OrderEntriesTransformer;
@@ -53,10 +48,10 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                 datetime_entry('datetime_z', new \DateTimeImmutable('now')),
                 str_entry('string_a', 'string'),
                 str_entry('string_b', 'string'),
-                uuid_entry('uuid', new \Flow\ETL\PHP\Value\Uuid(Uuid::uuid4())),
+                uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
                 json_entry('json', ['id' => 1, 'status' => 'NEW']),
-                list_entry('list', [1, 2, 3], type_list(type_int())),
-                map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_int(), type_string())),
+                list_entry('list', [1, 2, 3], type_list(type_integer())),
+                map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_integer(), type_string())),
                 struct_entry(
                     'struct',
                     [
@@ -132,10 +127,10 @@ final class OrderEntriesTransformerTest extends FlowTestCase
                 bool_entry('bool', false),
                 datetime_entry('datetime', new \DateTimeImmutable('now')),
                 str_entry('null', null),
-                uuid_entry('uuid', new \Flow\ETL\PHP\Value\Uuid(Uuid::uuid4())),
+                uuid_entry('uuid', new \Flow\Types\Value\Uuid(Uuid::uuid4())),
                 json_entry('json', ['id' => 1, 'status' => 'NEW']),
-                list_entry('list', [1, 2, 3], type_list(type_int())),
-                map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_int(), type_string())),
+                list_entry('list', [1, 2, 3], type_list(type_integer())),
+                map_entry('map', [0 => 'zero', 1 => 'one', 2 => 'two'], type_map(type_integer(), type_string())),
                 struct_entry(
                     'struct',
                     [

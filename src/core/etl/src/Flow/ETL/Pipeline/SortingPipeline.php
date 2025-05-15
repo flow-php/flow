@@ -9,6 +9,7 @@ use Flow\ETL\Exception\OutOfMemoryException;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Row\References;
+use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Sort\{ExternalSort, MemorySort};
 
 final readonly class SortingPipeline implements OverridingPipeline, Pipeline
@@ -47,7 +48,7 @@ final readonly class SortingPipeline implements OverridingPipeline, Pipeline
                     ->sortBy($this->pipeline, $context, $this->refs);
             } else {
                 $extractor = (new ExternalSort(
-                    new ExternalSort\BucketsCache\FilesystemBucketsCache(
+                    new FilesystemBucketsCache(
                         $context->filesystem(protocol('file')),
                         $context->config->serializer(),
                         100,
@@ -59,7 +60,7 @@ final readonly class SortingPipeline implements OverridingPipeline, Pipeline
             }
         } catch (OutOfMemoryException) {
             $extractor = (new ExternalSort(
-                new ExternalSort\BucketsCache\FilesystemBucketsCache(
+                new FilesystemBucketsCache(
                     $context->filesystem(protocol('file')),
                     $context->config->serializer(),
                     100,

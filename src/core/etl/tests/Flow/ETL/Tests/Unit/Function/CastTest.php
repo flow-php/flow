@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{cast, ref};
 use function Flow\ETL\DSL\row;
-use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class CastTest extends FlowTestCase

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\uuid_entry;
-use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class UuidEntryTest extends FlowTestCase

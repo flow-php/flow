@@ -6,6 +6,7 @@ namespace Flow\ETL\Pipeline\Optimizer;
 
 use Flow\ETL\{Loader, Pipeline, Transformer};
 use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, OverridingPipeline, PartitioningPipeline};
+use Flow\ETL\Pipeline\LinkedPipeline;
 
 /**
  * The goal of this optimizer is to detect if there is a loader that supports batching and optimize pipeline to use it.
@@ -74,7 +75,7 @@ final class BatchSizeOptimization implements Optimization
             return $pipeline;
         }
 
-        $pipeline = new Pipeline\LinkedPipeline(new BatchingPipeline($pipeline, $this->batchSize));
+        $pipeline = new LinkedPipeline(new BatchingPipeline($pipeline, $this->batchSize));
         $pipeline->add($element);
 
         return $pipeline;

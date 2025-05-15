@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use ArrayAccess;
 use Flow\ETL\Exception\InvalidArgumentException;
+use IteratorAggregate;
 
 /**
- * @implements \ArrayAccess<string, Reference>
- * @implements \IteratorAggregate<string, Reference>
+ * @implements ArrayAccess<string, Reference>
+ * @implements IteratorAggregate<string, Reference>
  */
 final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 {

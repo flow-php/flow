@@ -6,13 +6,14 @@ namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
 use function Flow\ETL\DSL\df;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
+use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\{Config, Extractor, Transformation};
 use Flow\ETL\{Transformations};
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FlowStreamedResponse extends StreamedResponse
 {
-    private readonly Config|Config\ConfigBuilder $config;
+    private readonly Config|ConfigBuilder $config;
 
     public function __construct(
         private readonly Extractor $extractor,
@@ -20,7 +21,7 @@ class FlowStreamedResponse extends StreamedResponse
         private readonly Transformation $transformations = new Transformations(),
         int $status = 200,
         array $headers = [],
-        Config|Config\ConfigBuilder|null $config = null,
+        Config|ConfigBuilder|null $config = null,
     ) {
         $this->config = $config ?? Config::default();
 

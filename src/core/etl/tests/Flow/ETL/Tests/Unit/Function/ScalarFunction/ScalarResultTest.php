@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function\ScalarFunction;
 
-use function Flow\ETL\DSL\{type_float, type_optional};
+use function Flow\Types\DSL\{type_float, type_optional};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Tests\FlowTestCase;
 

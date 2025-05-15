@@ -108,17 +108,6 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    public function examples() : Response
-    {
-        $modules = $this->dslDefinitions->modules();
-
-        return $this->render('documentation/examples.html.twig', [
-            'examples' => $this->examples,
-            'modules' => $modules,
-            'types' => $this->dslDefinitions->types(),
-        ]);
-    }
-
     #[Route('/documentation', name: 'documentation', options: ['sitemap' => true])]
     public function index() : Response
     {
@@ -127,15 +116,20 @@ final class DocumentationController extends AbstractController
         ]);
     }
 
-    public function navigation() : Response
+    public function navigationLeft() : Response
     {
         $modules = $this->dslDefinitions->modules();
 
-        return $this->render('documentation/navigation.html.twig', [
+        return $this->render('documentation/navigation_left.html.twig', [
             'examples' => $this->examples,
             'modules' => $modules,
             'types' => $this->dslDefinitions->types(),
         ]);
+    }
+
+    public function navigationRight() : Response
+    {
+        return $this->render('documentation/navigation_right.html.twig');
     }
 
     #[Route('/documentation/{path}', name: 'documentation_page', requirements: ['path' => '.*'], priority: -100)]

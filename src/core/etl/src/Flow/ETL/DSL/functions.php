@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use function Flow\Types\DSL\{is_nullable as is_nullable_new, type_array as type_array_new, type_boolean as type_boolean_new, type_callable as type_callable_new, type_date as type_date_new, type_datetime as type_datetime_new, type_enum as type_enum_new, type_equals as type_equals_new, type_float as type_float_new, type_from_array as type_from_array_new, type_integer as type_integer_new, type_is as type_is_new, type_is_any as type_is_any_new, type_json as type_json_new, type_list as type_list_new, type_map as type_map_new, type_null as type_null_new, type_object as type_object_new, type_optional as type_optional_new, type_resource as type_resource_new, type_string as type_string_new, type_structure as type_structure_new, type_time as type_time_new, type_union as type_union_new, type_uuid as type_uuid_new, type_xml as type_xml_new, type_xml_element as type_xml_element_new, types as types_new};
 use Flow\Calculator\Rounding;
 use Flow\ETL\{
     Analyze,
@@ -44,8 +45,10 @@ use Flow\ETL\{
 };
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
-use Flow\ETL\Extractor\FilesExtractor;
+use Flow\ETL\Extractor\{CacheExtractor, ChainExtractor, ChunkExtractor, DataFrameExtractor, FilesExtractor, MemoryExtractor, PathPartitionsExtractor, PipelineExtractor, RowsExtractor, SequenceExtractor};
+use Flow\ETL\Extractor\SequenceGenerator\{DatePeriodSequenceGenerator, NumberSequenceGenerator};
 use Flow\ETL\Filesystem\{SaveMode};
+use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{All,
     Any,
     ArrayGet,
@@ -115,10 +118,22 @@ use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
+use Flow\ETL\Loader\BranchingLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\Memory;
-use Flow\ETL\PHP\Type\{Comparator, Type, TypeDetector, TypeFactory, Types};
-use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+use Flow\ETL\Row\{Entries, EntryFactory, SortOrder};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
+use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Schema\{Definition};
+use Flow\ETL\Schema\Formatter\JsonSchemaFormatter;
+use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Transformer\OrderEntries\{CombinedComparator, Comparator, NameComparator, Order, TypeComparator, TypePriorities};
+use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameReplaceEntryStrategy};
+use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
+use Flow\Filesystem\Stream\Mode;
+use Flow\Serializer\{NativePHPSerializer, Serializer};
+use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
     ListType,
@@ -129,7 +144,7 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\ETL\PHP\Type\Native\{ArrayType,
+use Flow\Types\Type\Native\{ArrayType,
     BooleanType,
     CallableType,
     EnumType,
@@ -140,13 +155,8 @@ use Flow\ETL\PHP\Type\Native\{ArrayType,
     ResourceType,
     StringType,
     UnionType};
-use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Schema\{Definition};
-use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
-use Flow\Filesystem\Stream\Mode;
-use Flow\Serializer\{NativePHPSerializer, Serializer};
+use Flow\Types\Type\{Type, TypeDetector, Types};
+use UnitEnum;
 
 /**
  * Alias for data_frame() : Flow.
@@ -170,16 +180,16 @@ function data_frame(Config|ConfigBuilder|null $config = null) : Flow
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
 #[DocumentationExample(topic: 'data_frame', example: 'overwrite')]
-function from_rows(Rows ...$rows) : Extractor\RowsExtractor
+function from_rows(Rows ...$rows) : RowsExtractor
 {
-    return new Extractor\RowsExtractor(...$rows);
+    return new RowsExtractor(...$rows);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'partitioning', example: 'path_partitions')]
-function from_path_partitions(Path|string $path) : Extractor\PathPartitionsExtractor
+function from_path_partitions(Path|string $path) : PathPartitionsExtractor
 {
-    return new Extractor\PathPartitionsExtractor(\is_string($path) ? \Flow\Filesystem\DSL\path($path) : $path);
+    return new PathPartitionsExtractor(\is_string($path) ? \Flow\Filesystem\DSL\path($path) : $path);
 }
 
 /**
@@ -206,9 +216,9 @@ function from_array(iterable $array, ?Schema $schema = null) : ArrayExtractor
  * @param bool $clear - clear cache after extraction - @deprecated use withClearOnFinish() method instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor\CacheExtractor
+function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : CacheExtractor
 {
-    $extractor = new Extractor\CacheExtractor($id);
+    $extractor = new CacheExtractor($id);
 
     if ($fallback_extractor !== null) {
         $extractor->withFallbackExtractor($fallback_extractor);
@@ -222,15 +232,15 @@ function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $cle
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_all(Extractor ...$extractors) : Extractor\ChainExtractor
+function from_all(Extractor ...$extractors) : ChainExtractor
 {
-    return new Extractor\ChainExtractor(...$extractors);
+    return new ChainExtractor(...$extractors);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_memory(Memory $memory) : Extractor\MemoryExtractor
+function from_memory(Memory $memory) : MemoryExtractor
 {
-    return new Extractor\MemoryExtractor($memory);
+    return new MemoryExtractor($memory);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
@@ -249,46 +259,46 @@ function filesystem_cache(Path|string|null $cache_dir = null, Filesystem $filesy
  * @param int<1, max> $chunk_size
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function chunks_from(Extractor $extractor, int $chunk_size) : Extractor\ChunkExtractor
+function chunks_from(Extractor $extractor, int $chunk_size) : ChunkExtractor
 {
-    return new Extractor\ChunkExtractor($extractor, $chunk_size);
+    return new ChunkExtractor($extractor, $chunk_size);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_pipeline(Pipeline $pipeline) : Extractor\PipelineExtractor
+function from_pipeline(Pipeline $pipeline) : PipelineExtractor
 {
-    return new Extractor\PipelineExtractor($pipeline);
+    return new PipelineExtractor($pipeline);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_data_frame(DataFrame $data_frame) : Extractor\DataFrameExtractor
+function from_data_frame(DataFrame $data_frame) : DataFrameExtractor
 {
-    return new Extractor\DataFrameExtractor($data_frame);
+    return new DataFrameExtractor($data_frame);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_sequence_date_period(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, \DateTimeInterface $end, int $options = 0) : Extractor\SequenceExtractor
+function from_sequence_date_period(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, \DateTimeInterface $end, int $options = 0) : SequenceExtractor
 {
-    return new Extractor\SequenceExtractor(
-        new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $end, $options)),
+    return new SequenceExtractor(
+        new DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $end, $options)),
         $entry_name
     );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_sequence_date_period_recurrences(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, int $recurrences, int $options = 0) : Extractor\SequenceExtractor
+function from_sequence_date_period_recurrences(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, int $recurrences, int $options = 0) : SequenceExtractor
 {
-    return new Extractor\SequenceExtractor(
-        new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $recurrences, $options)),
+    return new SequenceExtractor(
+        new DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $recurrences, $options)),
         $entry_name
     );
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function from_sequence_number(string $entry_name, string|int|float $start, string|int|float $end, int|float $step = 1) : Extractor\SequenceExtractor
+function from_sequence_number(string $entry_name, string|int|float $start, string|int|float $end, int|float $step = 1) : SequenceExtractor
 {
-    return new Extractor\SequenceExtractor(
-        new Extractor\SequenceGenerator\NumberSequenceGenerator($start, $end, $step),
+    return new SequenceExtractor(
+        new NumberSequenceGenerator($start, $end, $step),
         $entry_name
     );
 }
@@ -318,25 +328,25 @@ function to_array(array &$array) : ArrayLoader
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+function to_output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
 {
     return StreamLoader::output($truncate, $output, $formatter, $schemaFormatter);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+function to_stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
 {
     return StreamLoader::stderr($truncate, $output, $formatter, $schemaFormatter);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+function to_stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
 {
     return StreamLoader::stdout($truncate, $output, $formatter, $schemaFormatter);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_stream(string $uri, int|bool $truncate = 20, Output $output = Output::rows, string $mode = 'w', Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+function to_stream(string $uri, int|bool $truncate = 20, Output $output = Output::rows, string $mode = 'w', Formatter $formatter = new AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
 {
     return new StreamLoader($uri, Mode::from($mode), $truncate, $output, $formatter, $schemaFormatter, StreamLoader\Type::custom);
 }
@@ -348,15 +358,15 @@ function to_transformation(Transformer|Transformation $transformer, Loader $load
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-function to_branch(ScalarFunction $condition, Loader $loader) : Loader\BranchingLoader
+function to_branch(ScalarFunction $condition, Loader $loader) : BranchingLoader
 {
-    return new Loader\BranchingLoader($condition, $loader);
+    return new BranchingLoader($condition, $loader);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_style(OldStringStyles|StringStyles $style) : Transformer\Rename\RenameCaseEntryStrategy
+function rename_style(OldStringStyles|StringStyles $style) : RenameCaseEntryStrategy
 {
-    return new Transformer\Rename\RenameCaseEntryStrategy($style);
+    return new RenameCaseEntryStrategy($style);
 }
 
 /**
@@ -364,88 +374,88 @@ function rename_style(OldStringStyles|StringStyles $style) : Transformer\Rename\
  * @param array<string>|string $replace
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
-function rename_replace(string|array $search, string|array $replace) : Transformer\Rename\RenameReplaceEntryStrategy
+function rename_replace(string|array $search, string|array $replace) : RenameReplaceEntryStrategy
 {
-    return new Transformer\Rename\RenameReplaceEntryStrategy($search, $replace);
+    return new RenameReplaceEntryStrategy($search, $replace);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function bool_entry(string $name, ?bool $value, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
+function bool_entry(string $name, ?bool $value, ?Metadata $metadata = null) : BooleanEntry
 {
-    return new Entry\BooleanEntry($name, $value, $metadata);
+    return new BooleanEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function boolean_entry(string $name, ?bool $value, ?Schema\Metadata $metadata = null) : Entry\BooleanEntry
+function boolean_entry(string $name, ?bool $value, ?Metadata $metadata = null) : BooleanEntry
 {
     return bool_entry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function datetime_entry(string $name, \DateTimeInterface|string|null $value, ?Schema\Metadata $metadata = null) : Entry\DateTimeEntry
+function datetime_entry(string $name, \DateTimeInterface|string|null $value, ?Metadata $metadata = null) : DateTimeEntry
 {
-    return new Entry\DateTimeEntry($name, $value, $metadata);
+    return new DateTimeEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function time_entry(string $name, \DateInterval|string|null $value, ?Schema\Metadata $metadata = null) : Entry\TimeEntry
+function time_entry(string $name, \DateInterval|string|null $value, ?Metadata $metadata = null) : TimeEntry
 {
-    return new Entry\TimeEntry($name, $value, $metadata);
+    return new TimeEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function date_entry(string $name, \DateTimeInterface|string|null $value, ?Schema\Metadata $metadata = null) : Entry\DateEntry
+function date_entry(string $name, \DateTimeInterface|string|null $value, ?Metadata $metadata = null) : DateEntry
 {
-    return new Entry\DateEntry($name, $value, $metadata);
+    return new DateEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function int_entry(string $name, ?int $value, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
+function int_entry(string $name, ?int $value, ?Metadata $metadata = null) : IntegerEntry
 {
-    return new Entry\IntegerEntry($name, $value, $metadata);
+    return new IntegerEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function integer_entry(string $name, ?int $value, ?Schema\Metadata $metadata = null) : Entry\IntegerEntry
+function integer_entry(string $name, ?int $value, ?Metadata $metadata = null) : IntegerEntry
 {
     return int_entry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function enum_entry(string $name, ?\UnitEnum $enum, ?Schema\Metadata $metadata = null) : Entry\EnumEntry
+function enum_entry(string $name, ?\UnitEnum $enum, ?Metadata $metadata = null) : EnumEntry
 {
-    return new Entry\EnumEntry($name, $enum, $metadata);
+    return new EnumEntry($name, $enum, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function float_entry(string $name, float|int|string|null $value, ?Schema\Metadata $metadata = null) : Entry\FloatEntry
+function float_entry(string $name, float|int|string|null $value, ?Metadata $metadata = null) : FloatEntry
 {
-    return new Entry\FloatEntry($name, $value, $metadata);
+    return new FloatEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_entry(string $name, array|string|null $data, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
+function json_entry(string $name, array|string|null $data, ?Metadata $metadata = null) : JsonEntry
 {
-    return new Entry\JsonEntry($name, $data, $metadata);
+    return new JsonEntry($name, $data, $metadata);
 }
 
 /**
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function json_object_entry(string $name, array|string|null $data, ?Schema\Metadata $metadata = null) : Entry\JsonEntry
+function json_object_entry(string $name, array|string|null $data, ?Metadata $metadata = null) : JsonEntry
 {
     if (\is_string($data)) {
-        return new Entry\JsonEntry($name, $data, $metadata);
+        return new JsonEntry($name, $data, $metadata);
     }
 
-    return Entry\JsonEntry::object($name, $data, $metadata);
+    return JsonEntry::object($name, $data, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function str_entry(string $name, ?string $value, ?Schema\Metadata $metadata = null) : Entry\StringEntry
+function str_entry(string $name, ?string $value, ?Metadata $metadata = null) : StringEntry
 {
-    return new Entry\StringEntry($name, $value, $metadata);
+    return new StringEntry($name, $value, $metadata);
 }
 
 /**
@@ -459,42 +469,42 @@ function str_entry(string $name, ?string $value, ?Schema\Metadata $metadata = nu
  * By design flow assumes when guessing column type that null would be a string (the most flexible type).
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function null_entry(string $name, ?Schema\Metadata $metadata = null) : Entry\StringEntry
+function null_entry(string $name, ?Metadata $metadata = null) : StringEntry
 {
-    return Entry\StringEntry::fromNull($name, $metadata);
+    return StringEntry::fromNull($name, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function string_entry(string $name, ?string $value, ?Schema\Metadata $metadata = null) : Entry\StringEntry
+function string_entry(string $name, ?string $value, ?Metadata $metadata = null) : StringEntry
 {
     return str_entry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function uuid_entry(string $name, \Flow\ETL\PHP\Value\Uuid|string|null $value, ?Schema\Metadata $metadata = null) : Entry\UuidEntry
+function uuid_entry(string $name, \Flow\Types\Value\Uuid|string|null $value, ?Metadata $metadata = null) : UuidEntry
 {
-    return new Entry\UuidEntry($name, $value, $metadata);
+    return new UuidEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_entry(string $name, \DOMDocument|string|null $value, ?Schema\Metadata $metadata = null) : Entry\XMLEntry
+function xml_entry(string $name, \DOMDocument|string|null $value, ?Metadata $metadata = null) : XMLEntry
 {
-    return new Entry\XMLEntry($name, $value, $metadata);
+    return new XMLEntry($name, $value, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function xml_element_entry(string $name, \DOMElement|string|null $value, ?Schema\Metadata $metadata = null) : Entry\XMLElementEntry
+function xml_element_entry(string $name, \DOMElement|string|null $value, ?Metadata $metadata = null) : XMLElementEntry
 {
-    return new Entry\XMLElementEntry($name, $value, $metadata);
+    return new XMLElementEntry($name, $value, $metadata);
 }
 
 /**
  * @param Entry<mixed, mixed> ...$entries
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function entries(Entry ...$entries) : Row\Entries
+function entries(Entry ...$entries) : Entries
 {
-    return new Row\Entries(...$entries);
+    return new Entries(...$entries);
 }
 
 /**
@@ -506,9 +516,9 @@ function entries(Entry ...$entries) : Row\Entries
  * @return Entry\StructureEntry<T>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function struct_entry(string $name, ?array $value, StructureType $type, ?Schema\Metadata $metadata = null) : Entry\StructureEntry
+function struct_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null) : StructureEntry
 {
-    return new Entry\StructureEntry($name, $value, $type, $metadata);
+    return new StructureEntry($name, $value, $type, $metadata);
 }
 
 /**
@@ -520,9 +530,9 @@ function struct_entry(string $name, ?array $value, StructureType $type, ?Schema\
  * @return Entry\StructureEntry<T>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function structure_entry(string $name, ?array $value, StructureType $type, ?Schema\Metadata $metadata = null) : Entry\StructureEntry
+function structure_entry(string $name, ?array $value, StructureType $type, ?Metadata $metadata = null) : StructureEntry
 {
-    return new Entry\StructureEntry($name, $value, $type, $metadata);
+    return new StructureEntry($name, $value, $type, $metadata);
 }
 
 /**
@@ -531,11 +541,13 @@ function structure_entry(string $name, ?array $value, StructureType $type, ?Sche
  * @param T $elements
  *
  * @return StructureType<T>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_structure(array $elements) instead
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_structure(array $elements) : StructureType
 {
-    return new StructureType($elements);
+    return type_structure_new($elements);
 }
 
 /**
@@ -546,17 +558,13 @@ function type_structure(array $elements) : StructureType
  * @param Type<T> ...$types
  *
  * @return UnionType<T, T>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_union(Type $first, Type $second, Type ...$types) : UnionType
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_union(Type $first, Type $second, Type ...$types) : UnionType
 {
-    $type = new UnionType($first, $second);
-
-    foreach ($types as $t) {
-        $type = new UnionType($type, $t);
-    }
-
-    return $type;
+    return type_union_new($first, $second, ...$types);
 }
 
 /**
@@ -565,43 +573,37 @@ function type_union(Type $first, Type $second, Type ...$types) : UnionType
  * @param Type<T> $type
  *
  * @return OptionalType<T>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_optional(Type $type) : OptionalType
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_optional(Type $type) : OptionalType
 {
-    return new OptionalType($type);
+    return type_optional_new($type);
 }
 
 /**
  * @param array<mixed> $data
  *
  * @return Type<mixed>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_from_array(array $data) : Type
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_from_array(array $data) : Type
 {
-    return TypeFactory::fromArray($data);
+    return type_from_array_new($data);
 }
 
 /**
  * @param Type<mixed> $type
+ *
+ * @deprecated please use \Flow\Types\DSL\is_nullable(Type $type) : bool
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function is_nullable(Type $type) : bool
 {
-    if ($type instanceof OptionalType) {
-        return true;
-    }
-
-    if ($type instanceof UnionType) {
-        foreach ($type->types()->all() as $nextType) {
-            if ($nextType instanceof NullType) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+    return is_nullable_new($type);
 }
 
 /**
@@ -610,20 +612,24 @@ function is_nullable(Type $type) : bool
  *
  * @param Type<TLeft> $left
  * @param Type<TRight> $right
+ *
+ * @deprecated please use \Flow\Types\DSL\type_equals(Type $left, Type $right) : bool
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_equals(Type $left, Type $right) : bool
 {
-    return (new Comparator())->equals($left, $right);
+    return type_equals_new($left, $right);
 }
 
 /**
  * @param Type<mixed> ...$types
+ *
+ * @deprecated please use \Flow\Types\DSL\types(Type ...$types) : Types
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function types(Type ...$types) : Types
 {
-    return new Types(...$types);
+    return types_new(...$types);
 }
 
 /**
@@ -633,9 +639,9 @@ function types(Type ...$types) : Types
  * @param ListType<T> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function list_entry(string $name, ?array $value, ListType $type, ?Schema\Metadata $metadata = null) : Entry\ListEntry
+function list_entry(string $name, ?array $value, ListType $type, ?Metadata $metadata = null) : ListEntry
 {
-    return new Entry\ListEntry($name, $value, $type, $metadata);
+    return new ListEntry($name, $value, $type, $metadata);
 }
 
 /**
@@ -644,11 +650,13 @@ function list_entry(string $name, ?array $value, ListType $type, ?Schema\Metadat
  * @param Type<T> $element
  *
  * @return ListType<T>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_list(Type $element) : ListType
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_list(Type $element) : ListType
 {
-    return new ListType($element);
+    return type_list_new($element);
 }
 
 /**
@@ -657,11 +665,13 @@ function type_list(Type $element) : ListType
  * @param Type<T> $value_type
  *
  * @return MapType<array-key, T>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
 {
-    return new MapType($key_type, $value_type);
+    return type_map_new($key_type, $value_type);
 }
 
 /**
@@ -672,81 +682,117 @@ function type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
  * @param ?array $value
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function map_entry(string $name, ?array $value, MapType $mapType, ?Schema\Metadata $metadata = null) : Entry\MapEntry
+function map_entry(string $name, ?array $value, MapType $mapType, ?Metadata $metadata = null) : MapEntry
 {
-    return new Entry\MapEntry($name, $value, $mapType, $metadata);
+    return new MapEntry($name, $value, $mapType, $metadata);
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_json() : JsonType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_json() : JsonType
 {
-    return new JsonType();
+    return type_json_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_datetime() : DateTimeType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_datetime() : DateTimeType
 {
-    return new DateTimeType();
+    return type_datetime_new();
 }
 
+/**
+ * @deprecated please use \Flow\Types\DSL\type_date() : DateType
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
 function type_date() : DateType
 {
-    return new DateType();
+    return type_date_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_time() : TimeType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_time() : TimeType
 {
-    return new TimeType();
+    return type_time_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_xml() : XMLType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_xml() : XMLType
 {
-    return new XMLType();
+    return type_xml_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_xml_element() : XMLElementType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_xml_element() : XMLElementType
 {
-    return new XMLElementType();
+    return type_xml_element_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_uuid() : UuidType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_uuid() : UuidType
 {
-    return new UuidType();
+    return type_uuid_new();
 }
 
+/**
+ * @deprecated please use \Flow\Types\DSL\type_integer() : IntegerType
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
 function type_int() : IntegerType
 {
-    return new IntegerType();
+    return type_integer_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_integer() : IntegerType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_integer() : IntegerType
 {
-    return new IntegerType();
+    return type_integer_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_string() : StringType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_string() : StringType
 {
-    return new StringType();
+    return type_string_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_float() : FloatType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_float() : FloatType
 {
-    return new FloatType();
+    return type_float_new();
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+/**
+ * @deprecated please use \Flow\Types\DSL\type_boolean() : BooleanType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_boolean() : BooleanType
 {
-    return new BooleanType();
+    return type_boolean_new();
 }
 
 /**
@@ -755,48 +801,64 @@ function type_boolean() : BooleanType
  * @param class-string<T> $class
  *
  * @return ObjectType<T>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_object(string $class) : ObjectType
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_object(string $class) : ObjectType
 {
-    return new ObjectType($class);
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_resource() : ResourceType
-{
-    return new ResourceType();
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_array() : ArrayType
-{
-    return new ArrayType();
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_callable(bool $nullable = false) : CallableType
-{
-    return new CallableType();
-}
-
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
-function type_null() : NullType
-{
-    return new NullType();
+    return type_object_new($class);
 }
 
 /**
- * @template T of \UnitEnum
+ * @deprecated please use \Flow\Types\DSL\type_resource() : ResourceType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
+function type_resource() : ResourceType
+{
+    return type_resource_new();
+}
+
+/**
+ * @deprecated please use \Flow\Types\DSL\type_array() : ArrayType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
+function type_array() : ArrayType
+{
+    return type_array_new();
+}
+
+/**
+ * @deprecated please use \Flow\Types\DSL\type_callable() : CallableType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
+function type_callable() : CallableType
+{
+    return type_callable_new();
+}
+
+/**
+ * @deprecated please use \Flow\Types\DSL\type_null() : NullType
+ */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
+function type_null() : NullType
+{
+    return type_null_new();
+}
+
+/**
+ * @template T of UnitEnum
  *
  * @param class-string<T> $class
  *
  * @return EnumType<T>
+ *
+ * @deprecated please use \Flow\Types\DSL\type_enum(string $class) : EnumType
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::TYPE)]
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_enum(string $class) : EnumType
 {
-    return new EnumType($class);
+    return type_enum_new($class);
 }
 
 /**
@@ -932,7 +994,7 @@ function array_key_rename(ScalarFunction $ref, ScalarFunction|string $path, Scal
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function array_keys_style_convert(ScalarFunction $ref, OldStringStyles|\Flow\ETL\String\StringStyles|string $style = StringStyles::SNAKE) : ArrayKeysStyleConvert
+function array_keys_style_convert(ScalarFunction $ref, OldStringStyles|StringStyles|string $style = StringStyles::SNAKE) : ArrayKeysStyleConvert
 {
     if ($style instanceof OldStringStyles) {
         $style = StringStyles::fromString($style->value);
@@ -1341,7 +1403,7 @@ function dense_rank() : DenseRank
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function average(EntryReference|string $ref, int $scale = 2, Rounding $rounding = Rounding::HALF_UP) : Average
 {
-    return new Average(is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
+    return new Average(\is_string($ref) ? ref($ref) : $ref, $scale, $rounding);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
@@ -1359,19 +1421,19 @@ function least(mixed ...$values) : Least
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function collect(EntryReference|string $ref) : Collect
 {
-    return new Collect(is_string($ref) ? ref($ref) : $ref);
+    return new Collect(\is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
-function string_agg(EntryReference|string $ref, string $separator = ', ', ?Row\SortOrder $sort = null) : StringAggregate
+function string_agg(EntryReference|string $ref, string $separator = ', ', ?SortOrder $sort = null) : StringAggregate
 {
-    return new StringAggregate(is_string($ref) ? ref($ref) : $ref, $separator, $sort);
+    return new StringAggregate(\is_string($ref) ? ref($ref) : $ref, $separator, $sort);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function collect_unique(EntryReference|string $ref) : CollectUnique
 {
-    return new CollectUnique(is_string($ref) ? ref($ref) : $ref);
+    return new CollectUnique(\is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -1383,31 +1445,31 @@ function window() : Window
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function sum(EntryReference|string $ref) : Sum
 {
-    return new Sum(is_string($ref) ? ref($ref) : $ref);
+    return new Sum(\is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function first(EntryReference|string $ref) : First
 {
-    return new First(is_string($ref) ? ref($ref) : $ref);
+    return new First(\is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function last(EntryReference|string $ref) : Last
 {
-    return new Last(is_string($ref) ? ref($ref) : $ref);
+    return new Last(\is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function max(EntryReference|string $ref) : Max
 {
-    return new Max(is_string($ref) ? ref($ref) : $ref);
+    return new Max(\is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::AGGREGATING_FUNCTION)]
 function min(EntryReference|string $ref) : Min
 {
-    return new Min(is_string($ref) ? ref($ref) : $ref);
+    return new Min(\is_string($ref) ? ref($ref) : $ref);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
@@ -1425,7 +1487,7 @@ function schema(Definition ...$definitions) : Schema
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_to_json(Schema $schema, bool $pretty = false) : string
 {
-    return (new Schema\Formatter\JsonSchemaFormatter($pretty))->format($schema);
+    return (new JsonSchemaFormatter($pretty))->format($schema);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
@@ -1464,20 +1526,20 @@ function schema_from_json(string $schema) : Schema
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_metadata(array $metadata = []) : Schema\Metadata
 {
-    return Schema\Metadata::fromArray($metadata);
+    return Metadata::fromArray($metadata);
 }
 
 /**
  * Alias for `int_schema`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function int_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function int_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return integer_schema($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function integer_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function integer_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::integer($name, $nullable, $metadata);
 }
@@ -1486,25 +1548,25 @@ function integer_schema(string $name, bool $nullable = false, ?Schema\Metadata $
  * Alias for `string_schema`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function str_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function str_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return string_schema($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function string_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function string_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::string($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function bool_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function bool_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::boolean($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function float_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function float_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::float($name, $nullable, $metadata);
 }
@@ -1513,7 +1575,7 @@ function float_schema(string $name, bool $nullable = false, ?Schema\Metadata $me
  * @param MapType<array-key, mixed> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function map_schema(string $name, MapType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function map_schema(string $name, MapType $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::map($name, $type, $nullable, $metadata);
 }
@@ -1522,7 +1584,7 @@ function map_schema(string $name, MapType $type, bool $nullable = false, ?Schema
  * @param ListType<mixed> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function list_schema(string $name, ListType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function list_schema(string $name, ListType $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::list($name, $type, $nullable, $metadata);
 }
@@ -1531,49 +1593,49 @@ function list_schema(string $name, ListType $type, bool $nullable = false, ?Sche
  * @param class-string<\UnitEnum> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function enum_schema(string $name, string $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function enum_schema(string $name, string $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::enum($name, $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function null_schema(string $name, ?Schema\Metadata $metadata = null) : Definition
+function null_schema(string $name, ?Metadata $metadata = null) : Definition
 {
     return Definition::string($name, true, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function datetime_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function datetime_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::datetime($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function time_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function time_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::time($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function date_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function date_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::date($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function json_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function json_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::json($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function xml_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function xml_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::xml($name, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function xml_element_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function xml_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::xml_element($name, $nullable, $metadata);
 }
@@ -1584,7 +1646,7 @@ function xml_element_schema(string $name, bool $nullable = false, ?Schema\Metada
  * @param StructureType<T> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function struct_schema(string $name, StructureType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function struct_schema(string $name, StructureType $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::structure($name, $type, $nullable, $metadata);
 }
@@ -1595,13 +1657,13 @@ function struct_schema(string $name, StructureType $type, bool $nullable = false
  * @param StructureType<T> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function structure_schema(string $name, StructureType $type, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function structure_schema(string $name, StructureType $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::structure($name, $type, $nullable, $metadata);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function uuid_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function uuid_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::uuid($name, $nullable, $metadata);
 }
@@ -1672,7 +1734,7 @@ function print_schema(Schema $schema, ?SchemaFormatter $formatter = null) : stri
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function print_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null) : string
 {
-    return ($formatter ?? new Formatter\AsciiTableFormatter())->format($rows, $truncate);
+    return ($formatter ?? new AsciiTableFormatter())->format($rows, $truncate);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::COMPARISON)]
@@ -1708,44 +1770,44 @@ function join_on(array|Comparison $comparisons, string $join_prefix = '') : Expr
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_name(Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
+function compare_entries_by_name(Order $order = Order::ASC) : Comparator
 {
-    return new Transformer\OrderEntries\NameComparator($order);
+    return new NameComparator($order);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_name_desc() : Transformer\OrderEntries\Comparator
+function compare_entries_by_name_desc() : Comparator
 {
-    return new Transformer\OrderEntries\NameComparator(Transformer\OrderEntries\Order::DESC);
-}
-
-/**
- * @param array<class-string<Entry<mixed, mixed>>, int> $priorities
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES, Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
-{
-    return new Transformer\OrderEntries\TypeComparator(new Transformer\OrderEntries\TypePriorities($priorities), $order);
+    return new NameComparator(Order::DESC);
 }
 
 /**
  * @param array<class-string<Entry<mixed, mixed>>, int> $priorities
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type_desc(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES) : Transformer\OrderEntries\Comparator
+function compare_entries_by_type(array $priorities = TypePriorities::PRIORITIES, Order $order = Order::ASC) : Comparator
 {
-    return new Transformer\OrderEntries\TypeComparator(new Transformer\OrderEntries\TypePriorities($priorities), Transformer\OrderEntries\Order::DESC);
+    return new TypeComparator(new TypePriorities($priorities), $order);
 }
 
 /**
  * @param array<class-string<Entry<mixed, mixed>>, int> $priorities
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function compare_entries_by_type_and_name(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES, Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
+function compare_entries_by_type_desc(array $priorities = TypePriorities::PRIORITIES) : Comparator
 {
-    return new Transformer\OrderEntries\CombinedComparator(
-        new Transformer\OrderEntries\TypeComparator(new Transformer\OrderEntries\TypePriorities($priorities), $order),
-        new Transformer\OrderEntries\NameComparator($order)
+    return new TypeComparator(new TypePriorities($priorities), Order::DESC);
+}
+
+/**
+ * @param array<class-string<Entry<mixed, mixed>>, int> $priorities
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function compare_entries_by_type_and_name(array $priorities = TypePriorities::PRIORITIES, Order $order = Order::ASC) : Comparator
+{
+    return new CombinedComparator(
+        new TypeComparator(new TypePriorities($priorities), $order),
+        new NameComparator($order)
     );
 }
 
@@ -1792,10 +1854,13 @@ function is_type(Type|array $type, mixed $value) : bool
  *
  * @param Type<T> $type
  * @param class-string<Type<mixed>> $typeClass
+ *
+ * @deprecated please use \Flow\Types\DSL\type_is($type, $typeClass): bool instead
  */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_is(Type $type, string $typeClass) : bool
 {
-    return (new Comparator())->is($type, $typeClass);
+    return type_is_new($type, $typeClass);
 }
 
 /**
@@ -1804,10 +1869,13 @@ function type_is(Type $type, string $typeClass) : bool
  * @param Type<T> $type
  * @param class-string<Type<mixed>> $typeClass
  * @param class-string<Type<mixed>> ...$typeClasses
+ *
+ * @deprecated please use \Flow\Types\DSL\type_is_any($type, $typeClass, ...$typeClasses): bool instead
  */
+#[DocumentationDSL(module: Module::DEPRECATED, type: DSLType::DEPRECATED)]
 function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool
 {
-    return (new Comparator())->isAny($type, $typeClass, ...$typeClasses);
+    return type_is_any_new($type, $typeClass, ...$typeClasses);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]

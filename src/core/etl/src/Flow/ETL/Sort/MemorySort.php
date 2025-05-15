@@ -13,6 +13,7 @@ use Flow\ETL\{Exception\OutOfMemoryException,
     Pipeline,
     Row\References,
     Rows};
+use Flow\ETL\Extractor\GeneratorExtractor;
 
 final class MemorySort implements SortingAlgorithm
 {
@@ -46,6 +47,6 @@ final class MemorySort implements SortingAlgorithm
             }
         }
 
-        return new Extractor\GeneratorExtractor($mergedRows->sortBy(...$refs->all())->chunks($maxSize));
+        return new GeneratorExtractor($mergedRows->sortBy(...$refs->all())->chunks($maxSize));
     }
 }

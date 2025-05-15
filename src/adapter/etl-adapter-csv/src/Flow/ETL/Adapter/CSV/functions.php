@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
-use Flow\ETL\{Attribute\DocumentationDSL,
-    Attribute\DocumentationExample,
-    Attribute\Module,
-    Attribute\Type as DSLType
-};
+use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type as DSLType};
 use Flow\ETL\Schema;
 use Flow\Filesystem\{Path, SourceStream};
 

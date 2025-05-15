@@ -17,16 +17,10 @@ use function Flow\ETL\DSL\{bool_schema,
     str_schema,
     struct_schema,
     time_schema,
-    type_int,
-    type_integer,
-    type_list,
-    type_map,
-    type_optional,
-    type_string,
-    type_structure,
     uuid_schema,
     xml_element_schema,
     xml_schema};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_optional, type_string, type_structure};
 use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
@@ -75,11 +69,11 @@ PHP,
         self::assertEquals(
             <<<'PHP'
 \Flow\ETL\DSL\schema(
-    \Flow\ETL\DSL\list_schema("list", type: \Flow\ETL\DSL\type_list(element: \Flow\ETL\DSL\type_integer()), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\list_schema("list", type: \Flow\Types\DSL\type_list(element: \Flow\Types\DSL\type_integer()), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
 );
 PHP,
             (new PHPSchemaFormatter())->format(schema(
-                list_schema('list', type: type_list(type_int())),
+                list_schema('list', type: type_list(type_integer())),
             ))
         );
     }
@@ -89,7 +83,7 @@ PHP,
         self::assertEquals(
             <<<'PHP'
 \Flow\ETL\DSL\schema(
-    \Flow\ETL\DSL\map_schema("map", type: \Flow\ETL\DSL\type_map(key_type: \Flow\ETL\DSL\type_integer(), value_type: \Flow\ETL\DSL\type_string()), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\map_schema("map", type: \Flow\Types\DSL\type_map(key_type: \Flow\Types\DSL\type_integer(), value_type: \Flow\Types\DSL\type_string()), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
 );
 PHP,
             (new PHPSchemaFormatter())->format(schema(
@@ -163,12 +157,12 @@ PHP,
         self::assertEquals(
             <<<'PHP'
 \Flow\ETL\DSL\schema(
-    \Flow\ETL\DSL\structure_schema("structure", type: \Flow\ETL\DSL\type_structure(elements: ["int" => \Flow\ETL\DSL\type_optional(\Flow\ETL\DSL\type_integer()), "string" => \Flow\ETL\DSL\type_optional(\Flow\ETL\DSL\type_string())]), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\structure_schema("structure", type: \Flow\Types\DSL\type_structure(elements: ["int" => \Flow\Types\DSL\type_optional(\Flow\Types\DSL\type_integer()), "string" => \Flow\Types\DSL\type_optional(\Flow\Types\DSL\type_string())]), nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
 );
 PHP,
             (new PHPSchemaFormatter())->format(schema(
                 struct_schema('structure', type_structure(
-                    ['int' => type_optional(type_int()), 'string' => type_optional(type_string())],
+                    ['int' => type_optional(type_integer()), 'string' => type_optional(type_string())],
                 ))
             ))
         );

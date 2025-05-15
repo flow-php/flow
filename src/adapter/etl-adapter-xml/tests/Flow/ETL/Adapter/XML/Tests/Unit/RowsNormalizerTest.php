@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit;
 
-use function Flow\ETL\DSL\{row,
-    rows,
-    str_entry,
-    structure_entry,
-    type_boolean,
+use function Flow\ETL\DSL\{row, rows, str_entry, structure_entry};
+use function Flow\Types\DSL\{type_boolean,
     type_datetime,
     type_integer,
     type_list,

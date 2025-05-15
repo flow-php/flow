@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{type_boolean, type_equals};
+use function Flow\Types\DSL\{type_boolean, type_equals};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\BooleanType;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Native\BooleanType;
+use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?bool, bool>

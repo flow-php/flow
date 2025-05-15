@@ -6,7 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext, Row, Rows, Schema\Definition, Transformer};
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Function\ScalarFunction\ExpandResults;
+use Flow\ETL\Function\ScalarFunction\{ExpandResults, ScalarResult, UnpackResults};
 
 final readonly class ScalarFunctionTransformer implements Transformer
 {
@@ -32,7 +32,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
             );
         }
 
-        if ($this->function instanceof ScalarFunction\UnpackResults) {
+        if ($this->function instanceof UnpackResults) {
             return $rows->map(
                 function (Row $r) use ($context) : Row {
                     /**
@@ -53,7 +53,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
                 $value = $this->function->eval($r);
                 $type = $this->entry instanceof Definition ? $this->entry->type() : null;
 
-                if ($value instanceof ScalarFunction\ScalarResult) {
+                if ($value instanceof ScalarResult) {
                     $type = $value->type;
                     $value = $value->value;
                 }

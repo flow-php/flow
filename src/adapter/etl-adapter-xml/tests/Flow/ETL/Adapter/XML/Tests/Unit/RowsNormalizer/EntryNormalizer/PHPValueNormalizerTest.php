@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer;
 
-use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_integer, type_json, type_object, type_string};
-use function Flow\ETL\DSL\type_optional;
+use function Flow\Types\DSL\{type_array,
+    type_boolean,
+    type_datetime,
+    type_float,
+    type_integer,
+    type_json,
+    type_object,
+    type_optional,
+    type_string};
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Tests\FlowTestCase;

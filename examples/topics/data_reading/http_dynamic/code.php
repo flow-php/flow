@@ -7,7 +7,7 @@ use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Message;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -15,7 +15,7 @@ $factory = new Psr17Factory();
 $client = new Client($factory, $factory);
 
 $from_github_api = new PsrHttpClientDynamicExtractor($client, new class implements NextRequestFactory {
-    public function create(?Message\ResponseInterface $previousResponse = null) : ?Message\RequestInterface
+    public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
     {
         $factory = new Psr17Factory();
 

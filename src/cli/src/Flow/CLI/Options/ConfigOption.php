@@ -7,6 +7,7 @@ namespace Flow\CLI\Options;
 use function Flow\CLI\option_string_nullable;
 use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Config;
+use Flow\ETL\Config\ConfigBuilder;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,12 +36,12 @@ final readonly class ConfigOption
 
         $config = require $path->path();
 
-        if ($config instanceof Config\ConfigBuilder) {
+        if ($config instanceof ConfigBuilder) {
             $config = $config->build();
         }
 
         if (!$config instanceof Config) {
-            throw new InvalidArgumentException('File "{$path->path()}" does not return instance of "' . Config::class . '" or "' . Config\ConfigBuilder::class . '".');
+            throw new InvalidArgumentException('File "{$path->path()}" does not return instance of "' . Config::class . '" or "' . ConfigBuilder::class . '".');
         }
 
         return $config;

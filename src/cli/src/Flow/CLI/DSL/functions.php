@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI;
 
 use Flow\CLI\Arguments\TypedArgument;
+use Flow\CLI\Options\IncludeFileOption;
 use Flow\CLI\Options\{TypedOption};
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -65,5 +66,5 @@ function argument_string_nullable(string $name, InputInterface $input) : ?string
  */
 function option_include_file(string $name, InputInterface $input, string $expectedClass) : object
 {
-    return (new Options\IncludeFileOption($name, $expectedClass))->include($input);
+    return (new IncludeFileOption($name, $expectedClass))->include($input);
 }

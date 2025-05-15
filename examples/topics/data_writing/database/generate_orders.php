@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Faker\Factory;
+
 function generateOrders(int $count) : Generator
 {
-    $faker = Faker\Factory::create();
+    $faker = Factory::create();
 
     $skus = [
         ['sku' => 'SKU_0001', 'name' => 'Product 1', 'price' => $faker->randomFloat(2, 0, 500)],

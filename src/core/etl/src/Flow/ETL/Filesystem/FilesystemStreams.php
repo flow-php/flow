@@ -7,9 +7,10 @@ namespace Flow\ETL\Filesystem;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\Filesystem\{DestinationStream, Path, Path\Filter, SourceStream, Stream\VoidStream};
 use Flow\Filesystem\{FilesystemTable, Partition};
+use IteratorAggregate;
 
 /**
- * @implements \IteratorAggregate<array-key, DestinationStream>
+ * @implements IteratorAggregate<array-key, DestinationStream>
  */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {

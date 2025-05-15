@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use function Flow\ETL\DSL\type_string;
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\Row\Entry\{UuidEntry, XMLEntry};
 use Flow\ETL\{Rows, Schema};
 

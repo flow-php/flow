@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
 use Flow\ETL\{FlowContext, Loader, Row, Rows};
+use Flow\ETL\Row\Entry;
 use Meilisearch\Client;
 use Psr\Http\Client\ClientInterface;
 
@@ -37,7 +38,7 @@ final class MeilisearchLoader implements Loader
 
         $dataCollection = $rows->map(fn (Row $row) : Row => Row::create(
             ...$row->map(
-                fn (Row\Entry $entry) : Row\Entry => $entry
+                fn (Entry $entry) : Entry => $entry
             )->entries()
         ))->toArray();
 

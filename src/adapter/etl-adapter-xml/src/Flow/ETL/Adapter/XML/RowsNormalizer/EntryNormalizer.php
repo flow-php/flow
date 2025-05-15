@@ -7,8 +7,6 @@ namespace Flow\ETL\Adapter\XML\RowsNormalizer;
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{BooleanEntry,
     DateTimeEntry,
@@ -22,6 +20,8 @@ use Flow\ETL\Row\Entry\{BooleanEntry,
     StructureEntry,
     UuidEntry,
     XMLEntry};
+use Flow\Types\Type\Logical\{ListType, MapType, StructureType};
+use Flow\Types\Type\Type;
 
 final readonly class EntryNormalizer
 {

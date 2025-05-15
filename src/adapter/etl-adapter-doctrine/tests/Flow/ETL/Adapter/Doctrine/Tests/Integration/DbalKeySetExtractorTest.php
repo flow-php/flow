@@ -9,18 +9,9 @@ use function Flow\ETL\Adapter\Doctrine\{from_dbal_key_set_qb,
     pagination_key_desc,
     pagination_key_set,
     to_dbal_schema_table};
-use function Flow\ETL\DSL\{
-    datetime_schema,
-    df,
-    int_schema,
-    json_schema,
-    map_schema,
-    schema,
-    str_schema,
-    type_int,
-    type_map,
-    type_string};
 use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\{datetime_schema, df, int_schema, json_schema, map_schema, schema, str_schema};
+use function Flow\Types\DSL\{type_integer, type_map, type_string};
 use Flow\Clock\FakeClock;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
@@ -134,7 +125,7 @@ final class DbalKeySetExtractorTest extends IntegrationTestCase
                     int_schema('id'),
                     str_schema('name'),
                     datetime_schema('created_at'),
-                    map_schema('tags', type_map(type_string(), type_int()))
+                    map_schema('tags', type_map(type_string(), type_integer()))
                 ))->withMaximum(5)->withPageSize(1)
             )->fetch()->toArray();
 
@@ -173,7 +164,7 @@ final class DbalKeySetExtractorTest extends IntegrationTestCase
                 )->withSchema(schema(
                     int_schema('id'),
                     str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_int()))
+                    map_schema('tags', type_map(type_string(), type_integer()))
                 ))->withMaximum(5)->withPageSize(1)
             )->fetch()->toArray();
 
@@ -212,7 +203,7 @@ final class DbalKeySetExtractorTest extends IntegrationTestCase
                 )->withSchema(schema(
                     int_schema('id'),
                     str_schema('name'),
-                    map_schema('tags', type_map(type_string(), type_int()))
+                    map_schema('tags', type_map(type_string(), type_integer()))
                 ))->withMaximum(5)->withPageSize(1)
             )->fetch()->toArray();
 

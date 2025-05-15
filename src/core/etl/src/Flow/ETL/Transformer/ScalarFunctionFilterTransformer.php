@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Function\ScalarFunction\ScalarResult;
 
 final readonly class ScalarFunctionFilterTransformer implements Transformer
 {
@@ -19,7 +20,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
         return $rows->filter(function (Row $r) : bool {
             $value = $this->function->eval($r);
 
-            if ($value instanceof ScalarFunction\ScalarResult) {
+            if ($value instanceof ScalarResult) {
                 $value = $value->value;
             }
 

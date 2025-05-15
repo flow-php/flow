@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Exception;
 
-use Flow\ETL\PHP\Type\{Type, TypeDetector};
+use Flow\Types\Type\{Type, TypeDetector};
 
 final class InvalidTypeException extends InvalidArgumentException
 {

@@ -7,17 +7,77 @@
     "content-hash": "f826903079536f9d1cf90ae16ef81866",
     "packages": [
         {
-            "name": "doctrine/dbal",
-            "version": "4.2.2",
+            "name": "brick/math",
+            "version": "0.13.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/doctrine/dbal.git",
-                "reference": "19a2b7deb5fe8c2df0ff817ecea305e50acb62ec"
+                "url": "https://github.com/brick/math.git",
+                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/19a2b7deb5fe8c2df0ff817ecea305e50acb62ec",
-                "reference": "19a2b7deb5fe8c2df0ff817ecea305e50acb62ec",
+                "url": "https://api.github.com/repos/brick/math/zipball/fc7ed316430118cc7836bf45faff18d5dfc8de04",
+                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^2.2",
+                "phpunit/phpunit": "^10.1",
+                "vimeo/psalm": "6.8.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Brick\\Math\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Arbitrary-precision arithmetic library",
+            "keywords": [
+                "Arbitrary-precision",
+                "BigInteger",
+                "BigRational",
+                "arithmetic",
+                "bigdecimal",
+                "bignum",
+                "bignumber",
+                "brick",
+                "decimal",
+                "integer",
+                "math",
+                "mathematics",
+                "rational"
+            ],
+            "support": {
+                "issues": "https://github.com/brick/math/issues",
+                "source": "https://github.com/brick/math/tree/0.13.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/BenMorel",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-03-29T13:50:30+00:00"
+        },
+        {
+            "name": "doctrine/dbal",
+            "version": "4.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/dbal.git",
+                "reference": "33d2d7fe1269b2301640c44cf2896ea607b30e3e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/33d2d7fe1269b2301640c44cf2896ea607b30e3e",
+                "reference": "33d2d7fe1269b2301640c44cf2896ea607b30e3e",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +154,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/4.2.2"
+                "source": "https://github.com/doctrine/dbal/tree/4.2.3"
             },
             "funding": [
                 {
@@ -110,30 +170,33 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-01-16T08:40:56+00:00"
+            "time": "2025-03-07T18:29:05+00:00"
         },
         {
             "name": "doctrine/deprecations",
-            "version": "1.1.4",
+            "version": "1.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "31610dbb31faa98e6b5447b62340826f54fbc4e9"
+                "reference": "459c2f5dd3d6a4633d3b5f46ee2b1c40f57d3f38"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/31610dbb31faa98e6b5447b62340826f54fbc4e9",
-                "reference": "31610dbb31faa98e6b5447b62340826f54fbc4e9",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/459c2f5dd3d6a4633d3b5f46ee2b1c40f57d3f38",
+                "reference": "459c2f5dd3d6a4633d3b5f46ee2b1c40f57d3f38",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.1 || ^8.0"
             },
+            "conflict": {
+                "phpunit/phpunit": "<=7.5 || >=13"
+            },
             "require-dev": {
-                "doctrine/coding-standard": "^9 || ^12",
-                "phpstan/phpstan": "1.4.10 || 2.0.3",
+                "doctrine/coding-standard": "^9 || ^12 || ^13",
+                "phpstan/phpstan": "1.4.10 || 2.1.11",
                 "phpstan/phpstan-phpunit": "^1.0 || ^2",
-                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.5",
+                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.6 || ^10.5 || ^11.5 || ^12",
                 "psr/log": "^1 || ^2 || ^3"
             },
             "suggest": {
@@ -153,9 +216,9 @@
             "homepage": "https://www.doctrine-project.org/",
             "support": {
                 "issues": "https://github.com/doctrine/deprecations/issues",
-                "source": "https://github.com/doctrine/deprecations/tree/1.1.4"
+                "source": "https://github.com/doctrine/deprecations/tree/1.1.5"
             },
-            "time": "2024-12-07T21:18:45+00:00"
+            "time": "2025-04-07T20:06:18+00:00"
         },
         {
             "name": "fakerphp/faker",
@@ -222,20 +285,20 @@
         },
         {
             "name": "flow-php/array-dot",
-            "version": "0.10.0",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "70ca846b8f1c472fa9388cafc4e3a52b35576629"
+                "reference": "da0de985ff59f1354dd358987f5c01bf0a03b558"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/70ca846b8f1c472fa9388cafc4e3a52b35576629",
-                "reference": "70ca846b8f1c472fa9388cafc4e3a52b35576629",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/da0de985ff59f1354dd358987f5c01bf0a03b558",
+                "reference": "da0de985ff59f1354dd358987f5c01bf0a03b558",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.1.0 || ~8.2.0 || ~8.3.0"
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
             },
             "type": "library",
             "autoload": {
@@ -264,9 +327,19 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/0.10.0"
+                "source": "https://github.com/flow-php/array-dot/tree/0.16.0"
             },
-            "time": "2024-09-05T19:07:26+00:00"
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-01-30T16:34:14+00:00"
         },
         {
             "name": "flow-php/doctrine-dbal-bulk",
@@ -274,12 +347,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
-                "reference": "13fc13826199f5f076a8f2cca72db68368068558"
+                "reference": "d85c8a1e89a80b7a44fe7f400f1a6a99bc99b5ad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/13fc13826199f5f076a8f2cca72db68368068558",
-                "reference": "13fc13826199f5f076a8f2cca72db68368068558",
+                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/d85c8a1e89a80b7a44fe7f400f1a6a99bc99b5ad",
+                "reference": "d85c8a1e89a80b7a44fe7f400f1a6a99bc99b5ad",
                 "shasum": ""
             },
             "require": {
@@ -309,7 +382,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/doctrine-dbal-bulk/issues",
-                "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
+                "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/0.16.0"
             },
             "funding": [
                 {
@@ -321,7 +394,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-30T16:34:14+00:00"
+            "time": "2025-03-31T09:49:24+00:00"
         },
         {
             "name": "flow-php/etl",
@@ -329,20 +402,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "2aa95163d5f8a8c087f3812f47c5a2f3e1c35e78"
+                "reference": "3f9433295995eecb31f775665bd8462bd8229a79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/2aa95163d5f8a8c087f3812f47c5a2f3e1c35e78",
-                "reference": "2aa95163d5f8a8c087f3812f47c5a2f3e1c35e78",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/3f9433295995eecb31f775665bd8462bd8229a79",
+                "reference": "3f9433295995eecb31f775665bd8462bd8229a79",
                 "shasum": ""
             },
             "require": {
+                "brick/math": "^0.11 || ^0.12 || ^0.13",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "flow-php/array-dot": "^0.10.0 || 1.x-dev",
-                "flow-php/filesystem": "^0.10.0 || 1.x-dev",
-                "flow-php/rdsl": "^0.10.0 || 1.x-dev",
+                "flow-php/array-dot": "^0.16.0 || 1.x-dev",
+                "flow-php/filesystem": "^0.16.0 || 1.x-dev",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/clock": "^1.0",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
@@ -352,6 +425,9 @@
             "require-dev": {
                 "ramsey/uuid": "^4.5",
                 "symfony/uid": "^6.3 || ^7.0"
+            },
+            "suggest": {
+                "ext-bcmath": "BCMath extension for PHP for more precise calculations"
             },
             "default-branch": true,
             "type": "library",
@@ -378,7 +454,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/1.x"
+                "source": "https://github.com/flow-php/etl/tree/0.16.0"
             },
             "funding": [
                 {
@@ -390,7 +466,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-01T16:34:51+00:00"
+            "time": "2025-05-12T16:58:31+00:00"
         },
         {
             "name": "flow-php/etl-adapter-doctrine",
@@ -398,18 +474,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-doctrine.git",
-                "reference": "ceb1509e6875a9236139ec25ea3b1564b3af4c52"
+                "reference": "783fb7e5fc05f9b20300f37d449ee4f573271654"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-doctrine/zipball/ceb1509e6875a9236139ec25ea3b1564b3af4c52",
-                "reference": "ceb1509e6875a9236139ec25ea3b1564b3af4c52",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-doctrine/zipball/783fb7e5fc05f9b20300f37d449ee4f573271654",
+                "reference": "783fb7e5fc05f9b20300f37d449ee4f573271654",
                 "shasum": ""
             },
             "require": {
                 "doctrine/dbal": "^3.6 || ^4.0",
-                "flow-php/doctrine-dbal-bulk": "^0.10.0 || 1.x-dev",
-                "flow-php/etl": "^0.10.0 || 1.x-dev",
+                "flow-php/doctrine-dbal-bulk": "^0.16.0 || 1.x-dev",
+                "flow-php/etl": "^0.16.0 || 1.x-dev",
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
             },
             "default-branch": true,
@@ -440,7 +516,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl-adapter-doctrine/issues",
-                "source": "https://github.com/flow-php/etl-adapter-doctrine/tree/1.x"
+                "source": "https://github.com/flow-php/etl-adapter-doctrine/tree/0.16.0"
             },
             "funding": [
                 {
@@ -452,24 +528,24 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-01T14:30:53+00:00"
+            "time": "2025-05-12T16:58:13+00:00"
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.10.0",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
-                "reference": "763354c829d45c266d903957c934e8bc4fcf23f7"
+                "reference": "edb3f60d002edff5b3914f676b21de32271c487b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/763354c829d45c266d903957c934e8bc4fcf23f7",
-                "reference": "763354c829d45c266d903957c934e8bc4fcf23f7",
+                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/edb3f60d002edff5b3914f676b21de32271c487b",
+                "reference": "edb3f60d002edff5b3914f676b21de32271c487b",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "webmozart/glob": "^3.0 || ^4.0"
             },
             "type": "library",
@@ -501,55 +577,19 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.10.0"
+                "source": "https://github.com/flow-php/filesystem/tree/0.16.0"
             },
-            "time": "2024-09-26T20:26:39+00:00"
-        },
-        {
-            "name": "flow-php/rdsl",
-            "version": "0.10.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/rdsl.git",
-                "reference": "6fa54d160ee1c16a3c4fbe0fc4e108758a157ec6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/rdsl/zipball/6fa54d160ee1c16a3c4fbe0fc4e108758a157ec6",
-                "reference": "6fa54d160ee1c16a3c4fbe0fc4e108758a157ec6",
-                "shasum": ""
-            },
-            "require": {
-                "php": "~8.1.0 || ~8.2.0 || ~8.3.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
                 }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
             ],
-            "description": "PHP ETL - Remote DSL",
-            "keywords": [
-                "Algorithm",
-                "compression",
-                "etl",
-                "extract",
-                "filter",
-                "load",
-                "snappy",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/rdsl/issues",
-                "source": "https://github.com/flow-php/rdsl/tree/0.10.0"
-            },
-            "time": "2024-09-05T19:07:29+00:00"
+            "time": "2025-04-28T19:24:46+00:00"
         },
         {
             "name": "psr/cache",
@@ -871,7 +911,7 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
@@ -930,7 +970,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -950,7 +990,7 @@
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
@@ -1008,7 +1048,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -1028,7 +1068,7 @@
         },
         {
             "name": "symfony/polyfill-intl-normalizer",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-normalizer.git",
@@ -1089,7 +1129,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -1109,19 +1149,20 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "85181ba99b2345b0ef10ce42ecac37612d9fd341"
+                "reference": "6d857f4d76bd4b343eac26d6b539585d2bc56493"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/85181ba99b2345b0ef10ce42ecac37612d9fd341",
-                "reference": "85181ba99b2345b0ef10ce42ecac37612d9fd341",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/6d857f4d76bd4b343eac26d6b539585d2bc56493",
+                "reference": "6d857f4d76bd4b343eac26d6b539585d2bc56493",
                 "shasum": ""
             },
             "require": {
+                "ext-iconv": "*",
                 "php": ">=7.2"
             },
             "provide": {
@@ -1169,7 +1210,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -1185,11 +1226,11 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-09T11:45:10+00:00"
+            "time": "2024-12-23T08:48:59+00:00"
         },
         {
             "name": "symfony/polyfill-uuid",
-            "version": "v1.31.0",
+            "version": "v1.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-uuid.git",
@@ -1248,7 +1289,7 @@
                 "uuid"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-uuid/tree/v1.31.0"
+                "source": "https://github.com/symfony/polyfill-uuid/tree/v1.32.0"
             },
             "funding": [
                 {
@@ -1268,16 +1309,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v7.2.0",
+            "version": "v7.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "446e0d146f991dde3e73f45f2c97a9faad773c82"
+                "reference": "a214fe7d62bd4df2a76447c67c6b26e1d5e74931"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/446e0d146f991dde3e73f45f2c97a9faad773c82",
-                "reference": "446e0d146f991dde3e73f45f2c97a9faad773c82",
+                "url": "https://api.github.com/repos/symfony/string/zipball/a214fe7d62bd4df2a76447c67c6b26e1d5e74931",
+                "reference": "a214fe7d62bd4df2a76447c67c6b26e1d5e74931",
                 "shasum": ""
             },
             "require": {
@@ -1335,7 +1376,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v7.2.0"
+                "source": "https://github.com/symfony/string/tree/v7.2.6"
             },
             "funding": [
                 {
@@ -1351,7 +1392,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-13T13:31:26+00:00"
+            "time": "2025-04-20T20:18:16+00:00"
         },
         {
             "name": "symfony/uid",

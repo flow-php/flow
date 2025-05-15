@@ -4,7 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema\Formatter;
 
-use function Flow\ETL\DSL\{bool_schema, datetime_schema, enum_schema, float_schema, int_schema, json_schema, list_schema, map_schema, schema, string_schema, structure_schema, type_datetime, type_float, type_int, type_list, type_map, type_string, type_structure, uuid_schema, xml_schema};
+use function Flow\ETL\DSL\{bool_schema,
+    datetime_schema,
+    enum_schema,
+    float_schema,
+    int_schema,
+    json_schema,
+    list_schema,
+    map_schema,
+    schema,
+    string_schema,
+    structure_schema,
+    uuid_schema,
+    xml_schema};
+use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Schema\Formatter\JsonSchemaFormatter;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -35,11 +48,11 @@ JSON,
                     string_schema('null', nullable: true),
                     uuid_schema('uuid'),
                     json_schema('json'),
-                    list_schema('list', type_list(type_int()), metadata: Metadata::fromArray(['foo' => 'bar'])),
+                    list_schema('list', type_list(type_integer()), metadata: Metadata::fromArray(['foo' => 'bar'])),
                     list_schema('list_of_datetimes', type_list(type_datetime())),
                     map_schema(
                         'map',
-                        type_map(type_int(), type_string())
+                        type_map(type_integer(), type_string())
                     ),
                     structure_schema(
                         'struct',

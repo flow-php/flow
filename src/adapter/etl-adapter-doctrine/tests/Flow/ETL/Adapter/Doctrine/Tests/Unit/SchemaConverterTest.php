@@ -13,11 +13,8 @@ use function Flow\ETL\DSL\{bool_schema,
     list_schema,
     map_schema,
     schema,
-    str_schema,
-    type_integer,
-    type_list,
-    type_map,
-    type_string};
+    str_schema};
+use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string};
 use Doctrine\DBAL\Schema\{Column, Index, Table};
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Adapter\Doctrine\DbalMetadata;
@@ -52,7 +49,7 @@ final class SchemaConverterTest extends FlowTestCase
                     new Column('str_with_length', Type::getType('string'), ['notnull' => false, 'length' => 255]),
                     new Column('str_unique', Type::getType('string'), ['notnull' => false]),
                     new Column('float', Type::getType('float'), ['notnull' => false, 'precision' => 10, 'scale' => 2]),
-                    new Column('float_default', Type::getType('float'), ['notnull' => true, 'scale' => 6]),
+                    new Column('float_default', Type::getType('float'), ['notnull' => true]),
                     new Column('bool', Type::getType('boolean'), ['notnull' => false, 'default' => true]),
                     new Column('json', Type::getType('json'), ['notnull' => false, 'platformOptions' => ['jsonb' => true]]),
                     new Column('list', Type::getType('json'), ['notnull' => true, 'columnDefinition' => 'integer[]']),

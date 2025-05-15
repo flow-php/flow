@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk;
 
 use Doctrine\DBAL\Platforms\{AbstractPlatform, MariaDBPlatform, MySQLPlatform, PostgreSQLPlatform};
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Flow\Doctrine\Bulk\Dialect\{Dialect, MySQLDialect, PostgreSQLDialect, SqliteDialect};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
@@ -54,6 +55,6 @@ final readonly class DbalPlatform
 
     private function isSqlite() : bool
     {
-        return \in_array($this->platform::class, ['Doctrine\DBAL\Platforms\SqlitePlatform', \Doctrine\DBAL\Platforms\SQLitePlatform::class], true);
+        return \in_array($this->platform::class, ['Doctrine\DBAL\Platforms\SqlitePlatform', SQLitePlatform::class], true);
     }
 }

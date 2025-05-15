@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{type_int};
+use function Flow\Types\DSL\type_integer;
 use function Symfony\Component\String\u;
 use Flow\ETL\Row;
 
@@ -22,7 +22,7 @@ final class IndexOf extends ScalarFunctionChain
     {
         $string = (new Parameter($this->string))->asString($row);
         $needle = (new Parameter($this->needle))->asString($row);
-        $offset = (new Parameter($this->offset))->as($row, type_int());
+        $offset = (new Parameter($this->offset))->as($row, type_integer());
         $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row);
 
         if ($string === null || $needle === null) {

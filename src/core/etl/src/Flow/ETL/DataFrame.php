@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use function Flow\ETL\DSL\{analyze, refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
+use Flow\ETL\Dataset\Statistics\{Columns, ExecutionTime, HighResolutionTime};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
@@ -18,7 +19,6 @@ use Flow\ETL\Function\{AggregatingFunction,
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Pipeline\{BatchingPipeline,
     CachingPipeline,
     CollectingPipeline,
@@ -30,10 +30,10 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     SortingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Formatter\ASCIISchemaFormatter, Reference, References};
-use Flow\ETL\Schema\Definition;
+use Flow\ETL\Schema\{Definition, SchemaFormatter};
+use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\String\StringStyles;
-use Flow\ETL\Transformer\{
-    AutoCastTransformer,
+use Flow\ETL\Transformer\{AutoCastTransformer,
     CallbackRowTransformer,
     CrossJoinRowsTransformer,
     DropDuplicatesTransformer,
@@ -54,9 +54,9 @@ use Flow\ETL\Transformer\{
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
     UntilTransformer,
-    WindowFunctionTransformer
-};
+    WindowFunctionTransformer};
 use Flow\Filesystem\Path\Filter;
+use Flow\Types\Type\{AutoCaster};
 
 final class DataFrame
 {
@@ -537,7 +537,7 @@ final class DataFrame
      */
     public function match(Schema $schema, ?SchemaValidator $validator = null) : self
     {
-        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new Schema\Validator\StrictValidator()));
+        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new StrictValidator()));
 
         return $this;
     }
@@ -611,7 +611,7 @@ final class DataFrame
     /**
      * @trigger
      */
-    public function printSchema(?int $limit = 20, Schema\SchemaFormatter $formatter = new ASCIISchemaFormatter()) : void
+    public function printSchema(?int $limit = 20, SchemaFormatter $formatter = new ASCIISchemaFormatter()) : void
     {
         $clone = clone $this;
 
@@ -758,8 +758,8 @@ final class DataFrame
 
         if ($analyze) {
             $startedAt = $this->context->config->clock()->now();
-            $startTime = Statistics\HighResolutionTime::now();
-            $columnStatistics = $analyze->collectColumnStatistics() ? new Statistics\Columns() : null;
+            $startTime = HighResolutionTime::now();
+            $columnStatistics = $analyze->collectColumnStatistics() ? new Columns() : null;
             $schema = $analyze->collectSchema() ? new Schema() : null;
         }
 
@@ -787,13 +787,13 @@ final class DataFrame
 
         if ($analyze) {
             $endedAt = $this->context->config->clock()->now();
-            $endTime = Statistics\HighResolutionTime::now();
+            $endTime = HighResolutionTime::now();
 
             return new Report(
                 $schema,
                 new Statistics(
                     $totalRows,
-                    new Statistics\ExecutionTime($startedAt, $endedAt, $startTime->diff($endTime)),
+                    new ExecutionTime($startedAt, $endedAt, $startTime->diff($endTime)),
                     $columnStatistics
                 )
             );

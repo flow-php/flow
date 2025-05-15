@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
+use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, FloatEntry, IntegerEntry, ListEntry, MapEntry, StringEntry, StructureEntry, UuidEntry};
 use Flow\ETL\Row\{Entry, Reference};
 
 final class Column
@@ -55,19 +56,19 @@ final class Column
             return;
         }
 
-        if ($entry instanceof Entry\UuidEntry) {
+        if ($entry instanceof UuidEntry) {
             $this->distinctCounter->add((string) $value);
 
             return;
         }
 
-        if ($entry instanceof Entry\StructureEntry) {
+        if ($entry instanceof StructureEntry) {
             $this->distinctCounter->add(\json_encode($value, JSON_THROW_ON_ERROR));
 
             return;
         }
 
-        if ($entry instanceof Entry\ListEntry || $entry instanceof Entry\MapEntry) {
+        if ($entry instanceof ListEntry || $entry instanceof MapEntry) {
             $this->distinctCounter->add(\json_encode($value, JSON_THROW_ON_ERROR));
             $elementsCount = \count($value);
             $this->maxElementsCount = \max($this->maxElementsCount ?? $elementsCount, $elementsCount);
@@ -78,7 +79,7 @@ final class Column
 
         $this->distinctCounter->add($value);
 
-        if ($entry instanceof Entry\StringEntry) {
+        if ($entry instanceof StringEntry) {
             $valueLength = \mb_strlen((string) $entry->value());
             $this->maxLength = \max($this->maxLength ?? $valueLength, $valueLength);
             $this->minLength = \min($this->minLength ?? $valueLength, $valueLength);
@@ -86,14 +87,14 @@ final class Column
             return;
         }
 
-        if ($entry instanceof Entry\DateEntry || $entry instanceof Entry\DateTimeEntry) {
+        if ($entry instanceof DateEntry || $entry instanceof DateTimeEntry) {
             $this->max = \max($this->max ?? $value, $value);
             $this->min = \min($this->min ?? $value, $value);
 
             return;
         }
 
-        if ($entry instanceof Entry\IntegerEntry || $entry instanceof Entry\FloatEntry || $entry instanceof Entry\BooleanEntry) {
+        if ($entry instanceof IntegerEntry || $entry instanceof FloatEntry || $entry instanceof BooleanEntry) {
             $this->min = \min($this->min ?? $value, $value);
             $this->max = \max($this->max ?? $value, $value);
         }

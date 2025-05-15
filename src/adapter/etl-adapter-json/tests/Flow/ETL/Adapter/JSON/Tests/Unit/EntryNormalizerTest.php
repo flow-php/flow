@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry, date_entry, datetime_entry, float_entry, int_entry, null_entry, str_entry, time_entry, uuid_entry};
+use function Flow\ETL\DSL\{bool_entry,
+    date_entry,
+    datetime_entry,
+    float_entry,
+    int_entry,
+    null_entry,
+    str_entry,
+    time_entry,
+    uuid_entry};
 use Flow\ETL\Adapter\JSON\RowsNormalizer\EntryNormalizer;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Tests\FlowTestCase;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\{array_to_rows, row};
+use ArrayAccess;
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, RuntimeException};
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Join\Expression;
@@ -12,10 +13,11 @@ use Flow\ETL\Row\{CartesianProduct, EntryFactory};
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\{Comparator, Entries, Reference, References, SortOrder};
 use Flow\Filesystem\{Partition, Partitions};
+use IteratorAggregate;
 
 /**
- * @implements \ArrayAccess<int, Row>
- * @implements \IteratorAggregate<int, Row>
+ * @implements ArrayAccess<int, Row>
+ * @implements IteratorAggregate<int, Row>
  */
 final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 {

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\{df, from_array, ref, to_memory, type_integer, type_list, type_optional};
+use function Flow\ETL\DSL\{df, from_array, ref, to_memory};
+use function Flow\Types\DSL\{type_integer, type_list, type_optional};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 

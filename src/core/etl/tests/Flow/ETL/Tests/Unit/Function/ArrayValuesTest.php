@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{
-    map_entry,
-    ref,
-    string_entry,
-    type_int,
-    type_map,
-    type_string};
+use function Flow\ETL\DSL\{map_entry, ref, string_entry};
 use function Flow\ETL\DSL\row;
+use function Flow\Types\DSL\{type_integer, type_map, type_string};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayValuesTest extends FlowTestCase
@@ -22,7 +17,7 @@ final class ArrayValuesTest extends FlowTestCase
             [1, 2],
             ref('map')->arrayValues()
                 ->eval(
-                    row(map_entry('map', ['a' => 1, 'b' => 2], type_map(type_string(), type_int()))),
+                    row(map_entry('map', ['a' => 1, 'b' => 2], type_map(type_string(), type_integer()))),
                 )
         );
     }

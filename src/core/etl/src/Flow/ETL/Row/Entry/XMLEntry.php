@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{type_equals, type_xml};
+use function Flow\Types\DSL\{type_equals, type_xml};
+use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\XMLType;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type\Logical\XMLType;
+use Flow\Types\Type\Type;
 
 /**
- * @implements Entry<?\DOMDocument, \DOMDocument>
+ * @implements Entry<?DOMDocument, DOMDocument>
  */
 final class XMLEntry implements Entry
 {

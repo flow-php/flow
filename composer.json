@@ -122,6 +122,7 @@
                 "src/lib/parquet-viewer/src/Flow",
                 "src/lib/parquet/src/Flow",
                 "src/lib/snappy/src/Flow",
+                "src/lib/types/src/Flow",
                 "src/tools/documentation/src/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
@@ -154,6 +155,7 @@
             "src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",
             "src/lib/parquet/src/stubs.php",
+            "src/lib/types/src/Flow/Types/DSL/functions.php",
             "src/lib/snappy/polyfill.php"
         ]
     },
@@ -187,6 +189,7 @@
                 "src/lib/parquet-viewer/tests/Flow",
                 "src/lib/parquet/tests/Flow",
                 "src/lib/snappy/tests/Flow",
+                "src/lib/types/tests/Flow",
                 "src/tools/documentation/tests/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
@@ -227,6 +230,7 @@
             "@test:lib:parquet",
             "@test:lib:parquet-viewer",
             "@test:lib:snappy",
+            "@test:lib:types",
             "@test:bridge:filesystem-azure",
             "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
@@ -275,6 +279,9 @@
         ],
         "test:lib:snappy": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-snappy-integration --log-junit ./var/phpunit/logs/lib-snappy-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-snappy-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-snappy-integration"
+        ],
+        "test:lib:types": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-types-unit --log-junit ./var/phpunit/logs/lib-types-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-types-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-types-unit"
         ],
         "test:bridge:filesystem-azure": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-unit --log-junit ./var/phpunit/logs/bridge-filesystem-azure-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-azure-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-filesystem-azure-unit",
@@ -403,6 +410,7 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet-viewer.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.snappy.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.types.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.chartjs.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.csv.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.doctrine.xml",

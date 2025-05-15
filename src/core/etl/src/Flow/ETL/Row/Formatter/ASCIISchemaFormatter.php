@@ -6,10 +6,10 @@ namespace Flow\ETL\Row\Formatter;
 
 use function Flow\ETL\DSL\{df, from_array, ref, rename_replace, to_output};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Schema;
-use Flow\ETL\Schema\SchemaFormatter;
+use Flow\ETL\Schema\{Definition, SchemaFormatter};
+use Flow\Types\Type\Logical\StructureType;
+use Flow\Types\Type\Type;
 
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {
@@ -65,7 +65,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
      *
      * @return array<string>
      */
-    private function formatEntry(Schema\Definition $definition, array $buffer) : array
+    private function formatEntry(Definition $definition, array $buffer) : array
     {
         $entry = $definition->entry()->name();
 
