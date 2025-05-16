@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\Calculator\Rounding;
-use Flow\ETL\{Analyze,
+use Flow\ETL\{
+    Analyze,
     Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
@@ -33,12 +34,14 @@ use Flow\ETL\{Analyze,
     Row,
     Rows,
     Schema,
+    SchemaValidator,
     Schema\SchemaFormatter,
     String\StringStyles,
     Transformation,
     Transformer,
     Window,
-    WithEntry};
+    WithEntry
+};
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Extractor\FilesExtractor;
@@ -1283,13 +1286,37 @@ function schema(Definition ...$definitions) : Schema
     return new Schema(...$definitions);
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_to_json(Schema $schema, bool $pretty = false) : string
 {
     return (new Schema\Formatter\JsonSchemaFormatter($pretty))->format($schema);
 }
 
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function schema_validate(Schema $expected, Schema $given, SchemaValidator $validator = new Schema\Validator\StrictValidator()) : bool
+{
+    return $validator->isValid($expected, $given);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function schema_evolving_validator() : Schema\Validator\EvolvingValidator
+{
+    return new Schema\Validator\EvolvingValidator();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function schema_strict_validator() : Schema\Validator\StrictValidator
+{
+    return new Schema\Validator\StrictValidator();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function schema_selective_validator() : Schema\Validator\SelectiveValidator
+{
+    return new Schema\Validator\SelectiveValidator();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_from_json(string $schema) : Schema
 {
     return Schema::fromArray(\json_decode($schema, true, 512, JSON_THROW_ON_ERROR));
@@ -1298,7 +1325,7 @@ function schema_from_json(string $schema) : Schema
 /**
  * @param array<string, array<bool|float|int|string>|bool|float|int|string> $metadata
  */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
 function schema_metadata(array $metadata = []) : Schema\Metadata
 {
     return Schema\Metadata::fromArray($metadata);

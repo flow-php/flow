@@ -6,5 +6,5 @@ namespace Flow\ETL;
 
 interface SchemaValidator
 {
-    public function isValid(Schema $given, Schema $expected) : bool;
+    public function isValid(Schema $expected, Schema $given) : bool;
 }

@@ -20,7 +20,7 @@ final readonly class SchemaValidationLoader implements Loader
     {
         $given = $rows->schema();
 
-        if (!$this->validator->isValid($given, $this->expected)) {
+        if (!$this->validator->isValid($this->expected, $given)) {
             throw new SchemaValidationException($this->expected, $given);
         }
     }

@@ -13,7 +13,7 @@ use Flow\ETL\{SchemaValidator, Schema\Metadata};
  */
 final class SelectiveValidator implements SchemaValidator
 {
-    public function isValid(Schema $given, Schema $expected) : bool
+    public function isValid(Schema $expected, Schema $given) : bool
     {
         foreach ($expected->definitions() as $expectedDefinition) {
             $givenDefinition = $given->findDefinition($expectedDefinition->entry());
