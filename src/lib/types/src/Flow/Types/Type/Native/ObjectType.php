@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\ETL\Exception\{InvalidTypeException};
 use Flow\Types\Type\Type;
 
 /**
@@ -31,11 +31,7 @@ final class ObjectType implements Type
             return $value;
         }
 
-        try {
-            return (object) $value;
-        } catch (\Throwable) {
-            throw new CastingException($value, $this);
-        }
+        return (object) $value;
     }
 
     public function isValid(mixed $value) : bool

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Validator;
 
+use function Flow\Types\DSL\type_equals;
 use Flow\ETL\Schema;
 use Flow\ETL\{SchemaValidator};
 
@@ -41,8 +42,7 @@ final class EvolvingValidator implements SchemaValidator
                 return false;
             }
 
-            // making both sides nullable to compare just types of the fields
-            if (!$rightDefinition->type()->makeNullable(true)->isEqual($leftDefinition->type()->makeNullable(true))) {
+            if (!type_equals($rightDefinition->type(), $leftDefinition->type())) {
                 return false;
             }
         }

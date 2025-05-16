@@ -56,7 +56,7 @@ final class StringTypeTest extends TestCase
     #[DataProvider('string_castable_data_provider')]
     public function test_casting_different_data_types_to_string(mixed $value, string $expected) : void
     {
-        self::assertSame($expected, \trim(type_string()->cast($value)));
+        self::assertSame($expected, \trim((string) type_string()->cast($value)));
     }
 
     #[DataProvider('invalid_assert_data_provider')]

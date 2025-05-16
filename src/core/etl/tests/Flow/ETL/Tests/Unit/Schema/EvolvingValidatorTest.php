@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Row\Schema;
+namespace Flow\ETL\Tests\Unit\Schema;
 
 use function Flow\ETL\DSL\{bool_schema, schema};
 use function Flow\ETL\DSL\{int_schema, schema_evolving_validator, schema_validate, str_schema};

@@ -128,6 +128,7 @@ use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\{Definition};
 use Flow\ETL\Schema\Formatter\JsonSchemaFormatter;
 use Flow\ETL\Schema\Metadata;
+use Flow\ETL\Schema\Validator\{EvolvingValidator, SelectiveValidator, StrictValidator};
 use Flow\ETL\Transformer\OrderEntries\{CombinedComparator, Comparator, NameComparator, Order, TypeComparator, TypePriorities};
 use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameReplaceEntryStrategy};
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
@@ -1493,27 +1494,27 @@ function schema_to_json(Schema $schema, bool $pretty = false) : string
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function schema_validate(Schema $expected, Schema $given, SchemaValidator $validator = new Schema\Validator\StrictValidator()) : bool
+function schema_validate(Schema $expected, Schema $given, SchemaValidator $validator = new StrictValidator()) : bool
 {
     return $validator->isValid($expected, $given);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function schema_evolving_validator() : Schema\Validator\EvolvingValidator
+function schema_evolving_validator() : EvolvingValidator
 {
-    return new Schema\Validator\EvolvingValidator();
+    return new EvolvingValidator();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function schema_strict_validator() : Schema\Validator\StrictValidator
+function schema_strict_validator() : StrictValidator
 {
-    return new Schema\Validator\StrictValidator();
+    return new StrictValidator();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function schema_selective_validator() : Schema\Validator\SelectiveValidator
+function schema_selective_validator() : SelectiveValidator
 {
-    return new Schema\Validator\SelectiveValidator();
+    return new SelectiveValidator();
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
@@ -1526,7 +1527,7 @@ function schema_from_json(string $schema) : Schema
  * @param array<string, array<bool|float|int|string>|bool|float|int|string> $metadata
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
-function schema_metadata(array $metadata = []) : Schema\Metadata
+function schema_metadata(array $metadata = []) : Metadata
 {
     return Metadata::fromArray($metadata);
 }
