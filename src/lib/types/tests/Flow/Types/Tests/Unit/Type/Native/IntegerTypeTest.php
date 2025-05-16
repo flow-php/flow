@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_integer;
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\{DataProvider};
+use PHPUnit\Framework\TestCase;
 
-final class IntegerTypeTest extends FlowTestCase
+final class IntegerTypeTest extends TestCase
 {
     public static function integer_castable_data_provider() : \Generator
     {

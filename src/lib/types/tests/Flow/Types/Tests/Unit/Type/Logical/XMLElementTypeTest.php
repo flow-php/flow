@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\type_xml_element;
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class XMLElementTypeTest extends FlowTestCase
+final class XMLElementTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

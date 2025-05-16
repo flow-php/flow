@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\TypeDetector;
 
 use function Flow\Types\DSL\{type_boolean, type_map, type_string, type_structure};
 use function Flow\Types\DSL\{type_integer, type_optional};
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\TypeDetector;
+use PHPUnit\Framework\TestCase;
 
-final class StructuresTypeDetectorTest extends FlowTestCase
+final class StructuresTypeDetectorTest extends TestCase
 {
     public function test_detecting_structures_with_nested_arrays() : void
     {

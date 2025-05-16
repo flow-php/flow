@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\type_json;
 use Flow\ETL\Exception\{CastingException, InvalidTypeException};
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class JsonTypeTest extends FlowTestCase
+final class JsonTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

@@ -5,6 +5,40 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.16.x to 0.17.x
+
+### 1) Removed $nullable property from all types
+
+Before:
+```php
+type_string(nullable:true)->toString() // ?string
+```
+
+After:
+
+```php
+type_optional(string())->toString() // ?string
+```
+
+### 2) Removed precision from `float_type()`
+
+Before `float_type()` use to have default precision 6. This means that any operations on float had to round values
+to given precision. The problem with this approach is that all operations now need to receive a dedicated rounding option. 
+
+Instead, end users should handle precision of float columns through `round()` scalar function.
+
+### 3) Moved all Types to `Flow\Types\Type` namespace
+
+Before
+```php
+\Flow\ETL\DSL\type_string(); // now deprecated, alias for \Flow\Types\DSL\type_string();
+```
+
+After
+```php
+\Flow\Types\DSL\type_string();
+```
+
 ## Upgrading from 0.15.x to 0.16.x
 
 ### 1) Deprecated `Flow\ETL\DataFrame::renameAll*` methods

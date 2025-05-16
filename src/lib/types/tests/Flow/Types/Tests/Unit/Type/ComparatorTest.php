@@ -17,13 +17,13 @@ use function Flow\Types\DSL\{type_boolean,
     type_string,
     type_structure,
     type_union};
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\{Comparator, Type};
 use Flow\Types\Type\Logical\{MapType, OptionalType};
 use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, ResourceType, StringType, UnionType};
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class ComparatorTest extends FlowTestCase
+final class ComparatorTest extends TestCase
 {
     public static function type_comparable_data_provider() : \Generator
     {

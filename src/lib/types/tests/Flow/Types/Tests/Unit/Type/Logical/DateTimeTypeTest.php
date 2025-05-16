@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\type_datetime;
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class DateTimeTypeTest extends FlowTestCase
+final class DateTimeTypeTest extends TestCase
 {
     public static function datetime_castable_data_provider() : \Generator
     {

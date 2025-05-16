@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_object, type_string, type_xml};
+use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_float, type_instance_of, type_integer, type_json, type_string, type_xml};
 use Flow\ETL\Exception\{CastingException, InvalidArgumentException};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
@@ -61,7 +61,7 @@ final class Cast extends ScalarFunctionChain
                 'string' => new ScalarResult(type_string()->cast($value), type_string()),
                 'bool', 'boolean' => new ScalarResult(type_boolean()->cast($value), type_boolean()),
                 'array' => new ScalarResult(type_array()->cast($value), type_array()),
-                'object' => new ScalarResult(type_object(\stdClass::class)->cast($value), type_object(\stdClass::class)),
+                'object' => new ScalarResult(type_instance_of(\stdClass::class)->cast($value), type_instance_of(\stdClass::class)),
                 'json' => new ScalarResult(type_json()->cast($value), type_json()),
                 'json_pretty' => new ScalarResult(\json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT), type_json()),
                 'xml' => new ScalarResult(type_xml()->cast($value), type_xml()),

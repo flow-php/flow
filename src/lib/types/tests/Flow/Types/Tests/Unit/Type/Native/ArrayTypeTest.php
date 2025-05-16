@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_array;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\TestCase;
 
-final class ArrayTypeTest extends FlowTestCase
+final class ArrayTypeTest extends TestCase
 {
     public function test_casting_boolean_to_array() : void
     {

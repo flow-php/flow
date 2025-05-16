@@ -40,15 +40,17 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Native\{ArrayType,
+use Flow\Types\Type\Native\{
+    ArrayType,
     BooleanType,
     EnumType,
     FloatType,
+    InstanceOfType,
     IntegerType,
     NullType,
-    ObjectType,
     StringType,
-    UnionType};
+    UnionType
+};
 use Flow\Types\Type\Native\String\StringTypeChecker;
 use Flow\Types\Type\{Type, TypeDetector};
 use Flow\Types\Value\Uuid;
@@ -96,7 +98,7 @@ final readonly class EntryFactory
             }
         }
 
-        if ($valueType instanceof ObjectType) {
+        if ($valueType instanceof InstanceOfType) {
             if ($valueType->class === \DOMDocument::class) {
                 $valueType = type_xml();
             } elseif ($valueType->class === \DOMElement::class) {
@@ -225,7 +227,7 @@ final readonly class EntryFactory
                 return json_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
             }
 
-            if ($type instanceof ObjectType) {
+            if ($type instanceof InstanceOfType) {
                 throw new InvalidArgumentException("{$entryName}: {$type->toString()} can't be converted to any known Entry, please normalize that object first.");
             }
 

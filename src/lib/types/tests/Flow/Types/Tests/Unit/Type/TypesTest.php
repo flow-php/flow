@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\Types\DSL\{type_array,
+use function Flow\Types\DSL\{
+    type_array,
     type_boolean,
     type_float,
+    type_instance_of,
     type_integer,
     type_null,
-    type_object,
     type_optional,
     type_resource,
     type_string,
     type_union,
-    types};
-use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Type\Native\{ObjectType};
+    types
+};
+use Flow\Types\Type\Native\{InstanceOfType};
+use PHPUnit\Framework\TestCase;
 
-final class TypesTest extends FlowTestCase
+final class TypesTest extends TestCase
 {
     public function test_all() : void
     {
@@ -28,7 +30,7 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
@@ -38,7 +40,7 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         ]);
     }
@@ -51,7 +53,7 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
@@ -78,7 +80,7 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
@@ -93,7 +95,7 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
@@ -102,7 +104,7 @@ final class TypesTest extends FlowTestCase
         self::assertTrue($types->has(type_float()));
         self::assertTrue($types->has(type_boolean()));
         self::assertTrue($types->has(type_array()));
-        self::assertTrue($types->has(type_object(ObjectType::class)));
+        self::assertTrue($types->has(type_instance_of(InstanceOfType::class)));
         self::assertTrue($types->has(type_null()));
         self::assertFalse($types->has(type_resource()));
     }
@@ -115,13 +117,13 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
         self::assertTrue($types->hasAll(type_string(), type_integer()));
         self::assertTrue($types->hasAll(type_float(), type_boolean()));
-        self::assertTrue($types->hasAll(type_array(), type_object(ObjectType::class)));
+        self::assertTrue($types->hasAll(type_array(), type_instance_of(InstanceOfType::class)));
         self::assertTrue($types->hasAll(type_null()));
         self::assertFalse($types->hasAll(type_string(), type_resource()));
     }
@@ -134,13 +136,13 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
         self::assertTrue($types->hasAny(type_string(), type_integer()));
         self::assertTrue($types->hasAny(type_float(), type_boolean()));
-        self::assertTrue($types->hasAny(type_resource(), type_array(), type_object(ObjectType::class)));
+        self::assertTrue($types->hasAny(type_resource(), type_array(), type_instance_of(InstanceOfType::class)));
         self::assertTrue($types->hasAny(type_null()));
         self::assertFalse($types->hasAny(type_resource()));
     }
@@ -153,7 +155,7 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
@@ -163,8 +165,8 @@ final class TypesTest extends FlowTestCase
         self::assertEquals(types(type_float()), $types->only(type_float()));
         self::assertEquals(types(type_boolean()), $types->only(type_boolean()));
         self::assertEquals(types(type_array()), $types->only(type_array()));
-        self::assertEquals(types(type_object(ObjectType::class)), $types->only(type_object(ObjectType::class)));
-        self::assertEquals(types(), $types->only(type_object(\stdClass::class)));
+        self::assertEquals(types(type_instance_of(InstanceOfType::class)), $types->only(type_instance_of(InstanceOfType::class)));
+        self::assertEquals(types(), $types->only(type_instance_of(\stdClass::class)));
         self::assertEquals(types(type_null()), $types->only(type_null()));
     }
 
@@ -208,7 +210,7 @@ final class TypesTest extends FlowTestCase
             type_float(),
             type_boolean(),
             type_array(),
-            type_object(ObjectType::class),
+            type_instance_of(InstanceOfType::class),
             type_null(),
         );
 
@@ -218,7 +220,7 @@ final class TypesTest extends FlowTestCase
                 type_float(),
                 type_boolean(),
                 type_array(),
-                type_object(ObjectType::class),
+                type_instance_of(InstanceOfType::class),
                 type_null(),
             ),
             $types->without(type_string())

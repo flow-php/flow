@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native\String;
 
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Native\String\StringTypeChecker;
+use PHPUnit\Framework\TestCase;
 
-final class StringTypeCheckerTest extends FlowTestCase
+final class StringTypeCheckerTest extends TestCase
 {
     public function test_detecting_boolean() : void
     {

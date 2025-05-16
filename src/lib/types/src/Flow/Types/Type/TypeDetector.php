@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_float, type_integer, type_json, type_map, type_null, type_object, type_string, type_time, type_union, type_uuid, type_xml, type_xml_element, types};
+use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_float, type_instance_of, type_integer, type_json, type_map, type_null, type_string, type_time, type_union, type_uuid, type_xml, type_xml_element, types};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type\Logical\{ListType, StructureType};
 use Flow\Types\Type\Native\{IntegerType, StringType};
@@ -56,7 +56,7 @@ final class TypeDetector
             }
 
             if ($detector->isMap()) {
-                return type_map(type_union(type_object(StringType::class), type_object(IntegerType::class))->assert($detector->firstKeyType()), $detector->valueType());
+                return type_map(type_union(type_instance_of(StringType::class), type_instance_of(IntegerType::class))->assert($detector->firstKeyType()), $detector->valueType());
             }
 
             if ($detector->isStructure()) {
@@ -102,7 +102,7 @@ final class TypeDetector
                 return type_xml_element();
             }
 
-            return type_object($value::class);
+            return type_instance_of($value::class);
         }
 
         throw InvalidArgumentException::because('Unsupported type given: ' . \gettype($value));

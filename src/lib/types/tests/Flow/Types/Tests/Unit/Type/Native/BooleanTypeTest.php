@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\{type_boolean, type_from_array};
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class BooleanTypeTest extends FlowTestCase
+final class BooleanTypeTest extends TestCase
 {
     public static function boolean_castable_data_provider() : \Generator
     {

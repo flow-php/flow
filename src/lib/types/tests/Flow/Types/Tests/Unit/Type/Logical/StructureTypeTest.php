@@ -13,10 +13,10 @@ use function Flow\Types\DSL\{type_datetime,
     type_string,
     type_structure};
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class StructureTypeTest extends FlowTestCase
+final class StructureTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

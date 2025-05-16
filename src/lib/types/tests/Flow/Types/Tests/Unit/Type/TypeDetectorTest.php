@@ -6,7 +6,6 @@ namespace Flow\Types\Tests\Unit\Type;
 
 use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_string};
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -17,12 +16,13 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, ObjectType, StringType};
+use Flow\Types\Type\Native\{ArrayType, EnumType, InstanceOfType, NullType, StringType};
 use Flow\Types\Type\{Type, TypeDetector};
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class TypeDetectorTest extends FlowTestCase
+final class TypeDetectorTest extends TestCase
 {
     public static function provide_logical_types_data() : \Generator
     {
@@ -410,7 +410,7 @@ final class TypeDetectorTest extends FlowTestCase
     #[DataProvider('provide_object_data')]
     public function test_object_types(mixed $data) : void
     {
-        self::assertInstanceOf(ObjectType::class, (new TypeDetector())->detectType($data));
+        self::assertInstanceOf(InstanceOfType::class, (new TypeDetector())->detectType($data));
     }
 
     /**

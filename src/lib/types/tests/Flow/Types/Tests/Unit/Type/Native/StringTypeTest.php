@@ -6,11 +6,11 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_string;
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
 use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
+use PHPUnit\Framework\TestCase;
 
-final class StringTypeTest extends FlowTestCase
+final class StringTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

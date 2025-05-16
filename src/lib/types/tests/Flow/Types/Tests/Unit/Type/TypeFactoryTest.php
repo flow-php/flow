@@ -4,30 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\Types\DSL\{type_array,
+use function Flow\Types\DSL\{
+    type_array,
     type_boolean,
     type_callable,
     type_datetime,
     type_enum,
     type_float,
     type_from_array,
+    type_instance_of,
     type_integer,
     type_json,
     type_list,
     type_map,
     type_null,
-    type_object,
     type_resource,
     type_string,
     type_structure,
     type_time,
     type_xml,
-    type_xml_element};
+    type_xml_element
+};
 use function Flow\Types\DSL\type_uuid;
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum;
+use PHPUnit\Framework\TestCase;
 
-final class TypeFactoryTest extends FlowTestCase
+final class TypeFactoryTest extends TestCase
 {
     public function test_normalizing_and_creating_all_scalar() : void
     {
@@ -91,7 +93,7 @@ final class TypeFactoryTest extends FlowTestCase
 
     public function test_normalizing_and_creating_object_type() : void
     {
-        $object = type_object(\stdClass::class);
+        $object = type_instance_of(\stdClass::class);
         self::assertEquals($object, type_from_array($object->normalize()));
     }
 
@@ -109,7 +111,7 @@ final class TypeFactoryTest extends FlowTestCase
                 'age' => type_integer(),
                 'list' => type_list(type_string()),
                 'map' => type_map(type_string(), type_integer()),
-                'object' => type_object(\stdClass::class),
+                'object' => type_instance_of(\stdClass::class),
             ]
         );
 

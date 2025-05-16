@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_float;
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class FloatTypeTest extends FlowTestCase
+final class FloatTypeTest extends TestCase
 {
     public static function float_castable_data_provider() : \Generator
     {

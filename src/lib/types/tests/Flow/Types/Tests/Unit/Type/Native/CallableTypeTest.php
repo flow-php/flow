@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_callable;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
+use PHPUnit\Framework\TestCase;
 
-final class CallableTypeTest extends FlowTestCase
+final class CallableTypeTest extends TestCase
 {
     #[TestWith(['some_string', 'Expected type "callable", got "string"'])]
     public function test_invalid_assertion(mixed $value, string $exception) : void

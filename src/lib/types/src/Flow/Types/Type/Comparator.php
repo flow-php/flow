@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_equals, type_object};
+use function Flow\Types\DSL\{type_equals, type_instance_of};
 use Flow\Types\Type\Logical\{DateTimeType, DateType, ListType, MapType, OptionalType, StructureType, TimeType};
 use Flow\Types\Type\Native\{FloatType, IntegerType, NullType, StringType, UnionType};
 
@@ -17,11 +17,11 @@ final class Comparator
     public function comparable(Type $left, Type $right) : bool
     {
         if ($left instanceof UnionType && $left->isOptionalType()) {
-            return $this->comparable(type_object(Type::class)->assert($left->types()->reduceOptionals()->first()), $right);
+            return $this->comparable(type_instance_of(Type::class)->assert($left->types()->reduceOptionals()->first()), $right);
         }
 
         if ($right instanceof UnionType && $right->isOptionalType()) {
-            return $this->comparable($left, type_object(Type::class)->assert($right->types()->reduceOptionals()->first()));
+            return $this->comparable($left, type_instance_of(Type::class)->assert($right->types()->reduceOptionals()->first()));
         }
 
         if ($left instanceof UnionType || $right instanceof UnionType) {

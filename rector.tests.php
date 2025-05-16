@@ -28,7 +28,7 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
-use Flow\Types\Type\Native\ObjectType;
+use Flow\Types\Type\Native\InstanceOfType;
 use Flow\Types\Type\Native\ResourceType;
 use Flow\Types\Type\Native\StringType;
 use Flow\ETL\Row;
@@ -130,7 +130,7 @@ return RectorConfig::configure()
             new NewObjectToFunction(FloatType::class, 'Flow\ETL\DSL\type_float'),
             new NewObjectToFunction(IntegerType::class, 'Flow\ETL\DSL\type_integer'),
             new NewObjectToFunction(NullType::class, 'Flow\ETL\DSL\type_null'),
-            new NewObjectToFunction(ObjectType::class, 'Flow\ETL\DSL\type_object'),
+            new NewObjectToFunction(InstanceOfType::class, 'Flow\ETL\DSL\type_object'),
             new NewObjectToFunction(ResourceType::class, 'Flow\ETL\DSL\type_resource'),
             new NewObjectToFunction(StringType::class, 'Flow\ETL\DSL\type_string'),
 

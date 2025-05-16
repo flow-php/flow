@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_list, type_map, type_string};
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class ListTypeTest extends FlowTestCase
+final class ListTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

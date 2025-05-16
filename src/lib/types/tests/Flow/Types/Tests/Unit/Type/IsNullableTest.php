@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\ETL\DSL\{is_nullable};
-use function Flow\Types\DSL\{type_null, type_optional, type_string, type_union};
-use Flow\ETL\Tests\FlowTestCase;
+use function Flow\Types\DSL\{is_nullable, type_null, type_optional, type_string, type_union};
+use PHPUnit\Framework\TestCase;
 
-final class IsNullableTest extends FlowTestCase
+final class IsNullableTest extends TestCase
 {
     public function test_is_nullable() : void
     {

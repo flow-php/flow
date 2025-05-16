@@ -6,11 +6,11 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\type_uuid;
 use Flow\ETL\Exception\{CastingException, InvalidTypeException};
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
-final class UuidTypeTest extends FlowTestCase
+final class UuidTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

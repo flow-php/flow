@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_float, type_from_array, type_integer, type_optional, type_string, type_union};
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Logical\OptionalType;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class OptionalTypeTest extends FlowTestCase
+final class OptionalTypeTest extends TestCase
 {
     public static function optional_castable_data_provider() : \Generator
     {

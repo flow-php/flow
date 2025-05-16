@@ -22,6 +22,7 @@ use Flow\Types\Type\Native\{ArrayType,
     CallableType,
     EnumType,
     FloatType,
+    InstanceOfType,
     IntegerType,
     NullType,
     ObjectType,
@@ -228,12 +229,18 @@ function type_boolean() : BooleanType
  *
  * @param class-string<T> $class
  *
- * @return ObjectType<T>
+ * @return InstanceOfType<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_object(string $class) : ObjectType
+function type_instance_of(string $class) : InstanceOfType
 {
-    return new ObjectType($class);
+    return new InstanceOfType($class);
+}
+
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_object() : ObjectType
+{
+    return new ObjectType();
 }
 
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]

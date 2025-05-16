@@ -14,11 +14,11 @@ use function Flow\Types\DSL\{type_boolean,
     type_union,
     types};
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\Native\UnionType;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class UnionTypeTest extends FlowTestCase
+final class UnionTypeTest extends TestCase
 {
     public static function casting_data_provider() : \Generator
     {

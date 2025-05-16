@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_equals, type_null, type_object};
+use function Flow\Types\DSL\{type_equals, type_instance_of, type_null};
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\UnionType;
 
@@ -148,7 +148,7 @@ final readonly class Types implements \Countable, \Stringable
             if ($type instanceof OptionalType) {
                 $types[] = $type->base();
             } elseif ($type instanceof UnionType && $type->isOptionalType()) {
-                $t = type_object(Type::class)->assert($type->types()->without(type_null())->first());
+                $t = type_instance_of(Type::class)->assert($type->types()->without(type_null())->first());
                 $types[] = $t;
             } else {
                 $types[] = $type;

@@ -4,10 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_callable, type_date, type_datetime, type_float, type_integer, type_json, type_null, type_resource, type_string, type_time, type_uuid, type_xml, type_xml_element};
+use function Flow\Types\DSL\{type_array,
+    type_boolean,
+    type_callable,
+    type_date,
+    type_datetime,
+    type_float,
+    type_integer,
+    type_json,
+    type_null,
+    type_object,
+    type_resource,
+    type_string,
+    type_time,
+    type_uuid,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
-use Flow\Types\Type\Native\{EnumType, ObjectType, UnionType};
+use Flow\Types\Type\Native\{EnumType, InstanceOfType, UnionType};
 
 final class TypeFactory
 {
@@ -32,8 +47,9 @@ final class TypeFactory
             /** @phpstan-ignore argument.type */
             'enum' => EnumType::fromArray($data),
             'null' => type_null(),
+            'object' => type_object(),
             /** @phpstan-ignore argument.type */
-            'object' => ObjectType::fromArray($data),
+            'instance_of' => InstanceOfType::fromArray($data),
             'resource' => type_resource(),
             'time' => type_time(),
             'date' => type_date(),

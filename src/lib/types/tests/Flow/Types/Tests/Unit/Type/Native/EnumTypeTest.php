@@ -6,12 +6,12 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_enum;
 use Flow\ETL\Exception\{CastingException, InvalidTypeException};
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Tests\Unit\Type\Fixtures\{AnotherEnum, SomeEnum};
 use Flow\Types\Tests\Unit\Type\Fixtures\ColorsEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class EnumTypeTest extends FlowTestCase
+final class EnumTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Unit\RowsNormalizer\EntryNormalizer;
 
-use function Flow\Types\DSL\{type_array,
+use function Flow\Types\DSL\{
+    type_array,
     type_boolean,
     type_datetime,
     type_float,
+    type_instance_of,
     type_integer,
     type_json,
-    type_object,
     type_optional,
-    type_string};
+    type_string
+};
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
@@ -107,7 +109,7 @@ final class PHPValueNormalizerTest extends FlowTestCase
 
         self::assertEquals(
             XMLNode::flatNode('object', '{"a":"1","b":22}'),
-            $normalizer->normalize('object', type_object(\stdClass::class), (object) ['a' => '1', 'b' => 22])
+            $normalizer->normalize('object', type_instance_of(\stdClass::class), (object) ['a' => '1', 'b' => 22])
         );
     }
 

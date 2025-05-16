@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\{type_list, type_object};
+use function Flow\Types\DSL\{type_instance_of, type_list};
 use Flow\ETL\Row;
 
 final class DOMElementAttributeValue extends ScalarFunctionChain
@@ -17,7 +17,7 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
 
     public function eval(Row $row) : ?string
     {
-        $node = (new Parameter($this->domElement))->as($row, type_object(\DOMNode::class), type_list(type_object(\DOMNode::class)));
+        $node = (new Parameter($this->domElement))->as($row, type_instance_of(\DOMNode::class), type_list(type_instance_of(\DOMNode::class)));
 
         if ($node instanceof \DOMDocument) {
             $node = $node->documentElement;

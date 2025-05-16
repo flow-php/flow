@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Value;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
+use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid as RamseyUuid;
 use Symfony\Component\Uid\Uuid as SymfonyUuid;
 
-final class UuidTest extends FlowTestCase
+final class UuidTest extends TestCase
 {
     public function test_construct_with_invalid_string_uuid_throws_exception() : void
     {

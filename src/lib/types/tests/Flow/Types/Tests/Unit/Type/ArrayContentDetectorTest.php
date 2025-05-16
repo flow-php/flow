@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type;
 
 use function Flow\Types\DSL\{type_array, type_integer, type_list, type_map, type_null, type_string, type_structure};
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Type\{ArrayContentDetector, Types};
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class ArrayContentDetectorTest extends FlowTestCase
+final class ArrayContentDetectorTest extends TestCase
 {
     public static function provide_list_data() : \Generator
     {

@@ -6,10 +6,10 @@ namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_resource;
 use Flow\ETL\Exception\InvalidTypeException;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 
-final class ResourceTypeTest extends FlowTestCase
+final class ResourceTypeTest extends TestCase
 {
     public static function invalid_assert_data_provider() : \Generator
     {

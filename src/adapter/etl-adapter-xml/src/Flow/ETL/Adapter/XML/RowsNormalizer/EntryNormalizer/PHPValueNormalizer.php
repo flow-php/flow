@@ -8,7 +8,7 @@ use function Flow\Types\DSL\{type_json, type_string};
 use Flow\ETL\Adapter\XML\Abstraction\{XMLAttribute, XMLNode};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType};
-use Flow\Types\Type\Native\{ArrayType, BooleanType, EnumType, FloatType, IntegerType, ObjectType, StringType};
+use Flow\Types\Type\Native\{ArrayType, BooleanType, EnumType, FloatType, InstanceOfType, IntegerType, StringType};
 use Flow\Types\Type\{Type};
 
 final readonly class PHPValueNormalizer
@@ -100,7 +100,7 @@ final readonly class PHPValueNormalizer
             FloatType::class => XMLNode::flatNode($name, type_string()->cast($value)),
             ArrayType::class => XMLNode::flatNode($name, type_json()->cast($value)),
             EnumType::class => XMLNode::flatNode($name, $value->name),
-            ObjectType::class => XMLNode::flatNode($name, type_string()->cast($value)),
+            InstanceOfType::class => XMLNode::flatNode($name, type_string()->cast($value)),
             DateTimeType::class => XMLNode::flatNode($name, type_string()->cast($value->format($this->dateTimeFormat))),
             JsonType::class => XMLNode::flatNode($name, type_json()->cast($value)),
             UuidType::class => XMLNode::flatNode($name, (string) $value),
