@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Types\Tests\Unit\Type\Native;
+namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Exception\InvalidTypeException;

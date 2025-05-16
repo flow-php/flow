@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use function Flow\Types\DSL\type_instance_of;
 use DOMElement;
-use Flow\ETL\Exception\{InvalidTypeException};
+use Flow\ETL\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type\Type;
 
 /**
@@ -24,7 +25,18 @@ final readonly class XMLElementType implements Type
 
     public function cast(mixed $value) : \DOMElement
     {
-        throw new \RuntimeException('not implemented');
+        if ($this->isValid($value)) {
+            return $value;
+        }
+
+        if (\is_string($value)) {
+            $dom = new \DOMDocument();
+            $dom->loadXML($value);
+
+            return type_instance_of(\DOMElement::class)->assert($dom->documentElement);
+        }
+
+        throw new CastingException($value, $this);
     }
 
     public function isValid(mixed $value) : bool

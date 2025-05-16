@@ -50,7 +50,7 @@ final readonly class EnumType implements Type
 
     public function cast(mixed $value) : \UnitEnum
     {
-        if ($value instanceof $this->class) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

@@ -15,14 +15,15 @@ use function Flow\Types\DSL\{type_array,
     type_null,
     type_object,
     type_resource,
+    type_scalar,
     type_string,
     type_time,
     type_uuid,
     type_xml,
     type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
-use Flow\Types\Type\Native\{EnumType, InstanceOfType, UnionType};
+use Flow\Types\Type\Logical\{InstanceOfType, ListType, MapType, OptionalType, StructureType};
+use Flow\Types\Type\Native\{EnumType, UnionType};
 
 final class TypeFactory
 {
@@ -68,6 +69,7 @@ final class TypeFactory
             'union' => UnionType::fromArray($data),
             /** @phpstan-ignore argument.type */
             'optional' => OptionalType::fromArray($data),
+            'scalar' => type_scalar(),
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };
     }

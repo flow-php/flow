@@ -24,11 +24,11 @@ final readonly class ArrayType implements Type
 
     public function cast(mixed $value) : array
     {
-        try {
-            if (\is_array($value)) {
-                return $value;
-            }
+        if ($this->isValid($value)) {
+            return $value;
+        }
 
+        try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
                 return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
             }

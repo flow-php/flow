@@ -28,12 +28,12 @@ final readonly class DateTimeType implements Type
             return $value;
         }
 
-        if ($value instanceof \DOMElement) {
-            $value = $value->nodeValue;
-        }
-
         if ($value instanceof \DateTime) {
             return \DateTimeImmutable::createFromMutable($value);
+        }
+
+        if ($value instanceof \DOMElement) {
+            $value = $value->nodeValue;
         }
 
         try {

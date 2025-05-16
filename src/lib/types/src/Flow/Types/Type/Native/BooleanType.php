@@ -23,7 +23,7 @@ final readonly class BooleanType implements Type
 
     public function cast(mixed $value) : bool
     {
-        if (\is_bool($value)) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

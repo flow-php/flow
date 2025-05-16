@@ -28,7 +28,7 @@ use Flow\Types\Type\Native\EnumType;
 use Flow\Types\Type\Native\FloatType;
 use Flow\Types\Type\Native\IntegerType;
 use Flow\Types\Type\Native\NullType;
-use Flow\Types\Type\Native\InstanceOfType;
+use Flow\Types\Type\Logical\InstanceOfType;
 use Flow\Types\Type\Native\ResourceType;
 use Flow\Types\Type\Native\StringType;
 use Flow\ETL\Row;

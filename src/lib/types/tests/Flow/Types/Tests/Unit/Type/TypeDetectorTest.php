@@ -8,6 +8,7 @@ use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_string
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    InstanceOfType,
     JsonType,
     ListType,
     MapType,
@@ -16,7 +17,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Native\{ArrayType, EnumType, InstanceOfType, NullType, StringType};
+use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, StringType};
 use Flow\Types\Type\{Type, TypeDetector};
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;

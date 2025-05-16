@@ -70,6 +70,10 @@ final readonly class StructureType implements Type
 
     public function cast(mixed $value) : array
     {
+        if ($this->isValid($value)) {
+            return $value;
+        }
+
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
                 return $this->assert(\json_decode($value, true, 512, \JSON_THROW_ON_ERROR));
@@ -104,6 +108,10 @@ final readonly class StructureType implements Type
         }
 
         if (\array_is_list($value)) {
+            return false;
+        }
+
+        if (\count($value) !== \count($this->elements)) {
             return false;
         }
 

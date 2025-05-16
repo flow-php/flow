@@ -60,6 +60,10 @@ final readonly class OptionalType implements Type
 
     public function cast(mixed $value) : mixed
     {
+        if ($this->isValid($value)) {
+            return $value;
+        }
+
         if ($value === null) {
             return null;
         }

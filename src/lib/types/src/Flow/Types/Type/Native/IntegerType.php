@@ -23,7 +23,7 @@ final readonly class IntegerType implements Type
 
     public function cast(mixed $value) : int
     {
-        if (\is_int($value)) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

@@ -24,7 +24,7 @@ final readonly class StringType implements Type
 
     public function cast(mixed $value) : string
     {
-        if (\is_string($value)) {
+        if ($this->isValid($value)) {
             return $value;
         }
 
@@ -56,7 +56,7 @@ final readonly class StringType implements Type
             return (string) $value;
             /* @phpstan-ignore-next-line */
         } catch (\Throwable) {
-            throw new CastingException($value, $type);
+            throw new CastingException($value, $this);
         }
     }
 

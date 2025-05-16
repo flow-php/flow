@@ -23,7 +23,7 @@ final readonly class ResourceType implements Type
 
     public function cast(mixed $value) : mixed
     {
-        if (\is_resource($value)) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Types\Type\Native;
+namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
@@ -39,7 +39,7 @@ final readonly class InstanceOfType implements Type
         return new self($data['class']);
     }
 
-    public function assert(mixed $value) : mixed
+    public function assert(mixed $value) : object
     {
         if ($this->isValid($value)) {
             return $value;

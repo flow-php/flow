@@ -8,10 +8,12 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Types\Type\{Comparator, Type, TypeFactory, Types};
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    InstanceOfType,
     JsonType,
     ListType,
     MapType,
     OptionalType,
+    ScalarType,
     StructureType,
     TimeType,
     UuidType,
@@ -22,7 +24,6 @@ use Flow\Types\Type\Native\{ArrayType,
     CallableType,
     EnumType,
     FloatType,
-    InstanceOfType,
     IntegerType,
     NullType,
     ObjectType,
@@ -241,6 +242,12 @@ function type_instance_of(string $class) : InstanceOfType
 function type_object() : ObjectType
 {
     return new ObjectType();
+}
+
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_scalar() : ScalarType
+{
+    return new ScalarType();
 }
 
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]

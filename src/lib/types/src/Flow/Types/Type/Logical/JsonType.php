@@ -25,11 +25,11 @@ final readonly class JsonType implements Type
 
     public function cast(mixed $value) : string
     {
-        try {
-            if (\is_string($value)) {
-                return \json_encode(\json_decode($value, true, 512, \JSON_THROW_ON_ERROR), \JSON_THROW_ON_ERROR);
-            }
+        if ($this->isValid($value)) {
+            return $value;
+        }
 
+        try {
             if (\is_scalar($value)) {
                 throw new CastingException($value, type_json());
             }
@@ -42,7 +42,6 @@ final readonly class JsonType implements Type
 
     public function isValid(mixed $value) : bool
     {
-
         if (!\is_string($value)) {
             return false;
         }

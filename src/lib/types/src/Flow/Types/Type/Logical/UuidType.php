@@ -24,7 +24,7 @@ final readonly class UuidType implements Type
 
     public function cast(mixed $value) : mixed
     {
-        if ($value instanceof Uuid) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

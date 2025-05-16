@@ -24,16 +24,12 @@ final readonly class DateType implements Type
 
     public function cast(mixed $value) : \DateTimeInterface
     {
-        if ($value instanceof \DateTimeImmutable) {
-            return $value->setTime(0, 0, 0, 0);
+        if ($this->isValid($value)) {
+            return $value;
         }
 
         if ($value instanceof \DOMElement) {
             $value = $value->nodeValue;
-        }
-
-        if ($value instanceof \DateTime) {
-            return \DateTimeImmutable::createFromMutable($value)->setTime(0, 0, 0, 0);
         }
 
         try {

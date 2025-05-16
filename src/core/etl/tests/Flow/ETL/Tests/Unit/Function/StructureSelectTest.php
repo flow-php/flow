@@ -80,10 +80,12 @@ final class StructureSelectTest extends FlowTestCase
         $structure = struct_entry(
             'struct',
             [
+                'id' => null,
                 'email' => 'email@email.com',
+                'name' => null,
             ],
             type_structure([
-                'id' => type_integer(),
+                'id' => type_optional(type_integer()),
                 'email' => type_string(),
                 'name' => type_optional(type_string()),
             ])

@@ -136,6 +136,7 @@ use Flow\Filesystem\Stream\Mode;
 use Flow\Serializer\{NativePHPSerializer, Serializer};
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    InstanceOfType,
     JsonType,
     ListType,
     MapType,
@@ -151,7 +152,6 @@ use Flow\Types\Type\Native\{
     CallableType,
     EnumType,
     FloatType,
-    InstanceOfType,
     IntegerType,
     NullType,
     ResourceType,
@@ -803,7 +803,7 @@ function type_boolean() : BooleanType
  *
  * @param class-string<T> $class
  *
- * @return InstanceOfType<T>
+ * @return \Flow\Types\Type\Logical\InstanceOfType<T>
  *
  * @deprecated please use \Flow\Types\DSL\type_instance_of(string $class) : InstanceOfType
  */

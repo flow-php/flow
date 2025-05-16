@@ -27,7 +27,7 @@ final class ObjectType implements Type
 
     public function cast(mixed $value) : object
     {
-        if (\is_object($value)) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

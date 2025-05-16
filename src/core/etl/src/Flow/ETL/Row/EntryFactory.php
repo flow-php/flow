@@ -31,6 +31,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    InstanceOfType,
     JsonType,
     ListType,
     MapType,
@@ -45,7 +46,6 @@ use Flow\Types\Type\Native\{
     BooleanType,
     EnumType,
     FloatType,
-    InstanceOfType,
     IntegerType,
     NullType,
     StringType,

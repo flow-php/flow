@@ -25,12 +25,12 @@ final readonly class TimeType implements Type
 
     public function cast(mixed $value) : \DateInterval
     {
-        if ($value instanceof \DateTimeInterface) {
-            return $value->diff(new \DateTimeImmutable($value->format('Y-m-d')), true);
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        if ($value instanceof \DateInterval) {
-            return $value;
+        if ($value instanceof \DateTimeInterface) {
+            return $value->diff(new \DateTimeImmutable($value->format('Y-m-d')), true);
         }
 
         if ($value instanceof \DOMElement) {

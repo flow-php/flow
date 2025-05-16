@@ -23,7 +23,7 @@ final readonly class FloatType implements Type
 
     public function cast(mixed $value) : float
     {
-        if (\is_float($value)) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

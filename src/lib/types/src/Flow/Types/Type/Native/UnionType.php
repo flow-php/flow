@@ -71,6 +71,10 @@ final readonly class UnionType implements Type
 
     public function cast(mixed $value) : mixed
     {
+        if ($this->isValid($value)) {
+            return $value;
+        }
+
         try {
             return $this->left->cast($value);
         } catch (CastingException) {

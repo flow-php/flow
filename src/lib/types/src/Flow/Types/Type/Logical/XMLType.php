@@ -25,7 +25,7 @@ final readonly class XMLType implements Type
 
     public function cast(mixed $value) : \DOMDocument
     {
-        if ($value instanceof \DOMDocument) {
+        if ($this->isValid($value)) {
             return $value;
         }
 

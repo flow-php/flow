@@ -23,7 +23,7 @@ final readonly class CallableType implements Type
 
     public function cast(mixed $value) : callable
     {
-        if (\is_callable($value)) {
+        if ($this->isValid($value)) {
             return $value;
         }
 
