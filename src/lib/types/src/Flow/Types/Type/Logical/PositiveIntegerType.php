@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Flow\Types\Type\Native;
+namespace Flow\Types\Type\Logical;
 
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Type;
 
 /**
- * @implements Type<int>
+ * @implements Type<int<0, max>>
  */
-final readonly class IntegerType implements Type
+final readonly class PositiveIntegerType implements Type
 {
     public function assert(mixed $value) : int
     {
@@ -31,21 +31,21 @@ final readonly class IntegerType implements Type
         try {
 
             if ($value instanceof \DOMElement) {
-                return (int) $value->nodeValue;
+                return $this->assert((int) $value->nodeValue);
             }
 
             if ($value instanceof \DateTimeImmutable) {
-                return (int) $value->format('Uu');
+                return $this->assert((int) $value->format('Uu'));
             }
 
             if ($value instanceof \DateInterval) {
                 $reference = new \DateTimeImmutable();
                 $endTime = $reference->add($value);
 
-                return (int) ($endTime->format('Uu')) - (int) ($reference->format('Uu'));
+                return $this->assert(((int) $endTime->format('Uu')) - (int) ($reference->format('Uu')));
             }
 
-            return (int) $value;
+            return $this->assert((int) $value);
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }
@@ -53,18 +53,18 @@ final readonly class IntegerType implements Type
 
     public function isValid(mixed $value) : bool
     {
-        return \is_int($value);
+        return \is_int($value) && $value > 0;
     }
 
     public function normalize() : array
     {
         return [
-            'type' => 'integer',
+            'type' => 'positive_integer',
         ];
     }
 
     public function toString() : string
     {
-        return 'integer';
+        return 'positive_integer';
     }
 }

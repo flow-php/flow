@@ -12,7 +12,7 @@ use function Flow\Types\DSL\{type_datetime,
     type_optional,
     type_string,
     type_structure};
-use Flow\ETL\Exception\InvalidTypeException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

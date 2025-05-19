@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Flow\Types\Type\Native;
+namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\dom_element_to_string;
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type\Type;
 
 /**
- * @implements Type<string>
+ * @implements Type<non-empty-string>
  */
-final readonly class StringType implements Type
+final class NonEmptyStringType implements Type
 {
     public function assert(mixed $value) : string
     {
@@ -29,36 +28,36 @@ final readonly class StringType implements Type
             return $value;
         }
 
-        try {
-            if (\is_bool($value)) {
-                return $value ? 'true' : 'false';
-            }
+        if (\is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
 
+        try {
             if (\is_array($value)) {
-                return \json_encode($value, JSON_THROW_ON_ERROR);
+                return $this->assert(\json_encode($value, JSON_THROW_ON_ERROR));
             }
 
             if ($value instanceof \DateTimeInterface) {
-                return $value->format(\DateTimeInterface::RFC3339);
-            }
-
-            if ($value instanceof \Stringable) {
-                return (string) $value;
+                return $this->assert($value->format(\DateTimeInterface::RFC3339));
             }
 
             if ($value instanceof \DateTimeZone) {
-                return $value->getName();
+                return $this->assert($value->getName());
+            }
+
+            if ($value instanceof \Stringable) {
+                return $this->assert((string) $value);
             }
 
             if ($value instanceof \DOMDocument) {
-                return $value->saveXML($value->documentElement) ?: '';
+                return $this->assert($value->saveXML($value->documentElement) ?: '');
             }
 
             if ($value instanceof \DOMElement) {
-                return (string) dom_element_to_string($value);
+                return $this->assert((string) dom_element_to_string($value));
             }
 
-            return (string) $value;
+            return $this->assert((string) $value);
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }
@@ -71,18 +70,18 @@ final readonly class StringType implements Type
 
     public function isValid(mixed $value) : bool
     {
-        return \is_string($value);
+        return \is_string($value) && $value !== '';
     }
 
     public function normalize() : array
     {
         return [
-            'type' => 'string',
+            'type' => 'non_empty_string',
         ];
     }
 
     public function toString() : string
     {
-        return 'string';
+        return 'non_empty_string';
     }
 }

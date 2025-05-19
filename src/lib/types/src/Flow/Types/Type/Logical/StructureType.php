@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type\{Type, TypeFactory};
 
 /**
@@ -27,12 +27,12 @@ final readonly class StructureType implements Type
     public function __construct(array $elements)
     {
         if (0 === \count($elements)) {
-            throw InvalidArgumentException::because('Structure must receive at least one element.');
+            throw new InvalidArgumentException('Structure must receive at least one element.');
         }
 
         foreach ($elements as $type) {
             if (!$type instanceof Type) {
-                throw InvalidArgumentException::because('Structure element type must be an instance of Type');
+                throw new InvalidArgumentException('Structure element type must be an instance of Type');
             }
         }
 
@@ -47,7 +47,7 @@ final readonly class StructureType implements Type
     public static function fromArray(array $data) : self
     {
         if (!\array_key_exists('elements', $data)) {
-            throw InvalidArgumentException::because('Structure must receive at least one element.');
+            throw new InvalidArgumentException('Structure must receive at least one element.');
         }
 
         $elements = [];

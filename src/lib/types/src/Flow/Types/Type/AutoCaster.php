@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\ETL\DSL\{get_type};
-use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_uuid};
+use function Flow\Types\DSL\{get_type,
+    type_boolean,
+    type_date,
+    type_datetime,
+    type_float,
+    type_integer,
+    type_json,
+    type_uuid};
 use Flow\Types\Type\Native\String\StringTypeChecker;
 
 final readonly class AutoCaster

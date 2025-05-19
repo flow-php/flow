@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException};
+use Flow\Types\Exception\InvalidTypeException;
 
 /**
  * @template-covariant T

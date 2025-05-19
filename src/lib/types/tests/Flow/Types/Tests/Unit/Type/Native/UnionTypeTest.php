@@ -13,7 +13,7 @@ use function Flow\Types\DSL\{type_boolean,
     type_string,
     type_union,
     types};
-use Flow\ETL\Exception\InvalidTypeException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Native\UnionType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

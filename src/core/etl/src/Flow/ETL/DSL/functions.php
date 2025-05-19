@@ -4,7 +4,36 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use function Flow\Types\DSL\{is_nullable as is_nullable_new, type_array as type_array_new, type_boolean as type_boolean_new, type_callable as type_callable_new, type_date as type_date_new, type_datetime as type_datetime_new, type_enum as type_enum_new, type_equals as type_equals_new, type_float as type_float_new, type_from_array as type_from_array_new, type_instance_of as type_instance_of_new, type_integer as type_integer_new, type_is as type_is_new, type_is_any as type_is_any_new, type_json as type_json_new, type_list as type_list_new, type_map as type_map_new, type_null as type_null_new, type_optional as type_optional_new, type_resource as type_resource_new, type_string as type_string_new, type_structure as type_structure_new, type_time as type_time_new, type_union as type_union_new, type_uuid as type_uuid_new, type_xml as type_xml_new, type_xml_element as type_xml_element_new, types as types_new};
+use function Flow\Types\DSL\{dom_element_to_string as dom_element_to_string_new,
+    get_type as get_type_new,
+    is_nullable as is_nullable_new,
+    type_array as type_array_new,
+    type_boolean as type_boolean_new,
+    type_callable as type_callable_new,
+    type_date as type_date_new,
+    type_datetime as type_datetime_new,
+    type_enum as type_enum_new,
+    type_equals as type_equals_new,
+    type_float as type_float_new,
+    type_from_array as type_from_array_new,
+    type_instance_of as type_instance_of_new,
+    type_integer as type_integer_new,
+    type_is as type_is_new,
+    type_is_any as type_is_any_new,
+    type_json as type_json_new,
+    type_list as type_list_new,
+    type_map as type_map_new,
+    type_null as type_null_new,
+    type_optional as type_optional_new,
+    type_resource as type_resource_new,
+    type_string as type_string_new,
+    type_structure as type_structure_new,
+    type_time as type_time_new,
+    type_union as type_union_new,
+    type_uuid as type_uuid_new,
+    type_xml as type_xml_new,
+    type_xml_element as type_xml_element_new,
+    types as types_new};
 use Flow\Calculator\Rounding;
 use Flow\ETL\{
     Analyze,
@@ -158,7 +187,7 @@ use Flow\Types\Type\Native\{
     StringType,
     UnionType
 };
-use Flow\Types\Type\{Type, TypeDetector, Types};
+use Flow\Types\Type\{Type, Types};
 use UnitEnum;
 
 /**
@@ -1721,11 +1750,13 @@ function append() : SaveMode
 
 /**
  * @return Type<mixed>
+ *
+ * @deprecated Please use \Flow\Types\DSL\get_type($value) instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function get_type(mixed $value) : Type
 {
-    return (new TypeDetector())->detectType($value);
+    return get_type_new($value);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
@@ -1901,17 +1932,13 @@ function random_string(
     return new RandomString($length, $generator);
 }
 
+/**
+ * @deprecated Please use \Flow\Types\DSL\dom_element_to_string() instead
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function dom_element_to_string(\DOMElement $element, bool $format_output = false, bool $preserver_white_space = false) : string|false
 {
-    $doc = new \DOMDocument('1.0', 'UTF-8');
-    $doc->formatOutput = $format_output;
-    $doc->preserveWhiteSpace = $preserver_white_space;
-
-    $importedNode = $doc->importNode($element, true);
-    $doc->appendChild($importedNode);
-
-    return $doc->saveXML($doc->documentElement);
+    return dom_element_to_string_new($element, $format_output, $preserver_white_space);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

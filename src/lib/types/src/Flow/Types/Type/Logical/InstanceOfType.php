@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\type_instance_of;
-use Flow\ETL\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type\Type;
 
 /**

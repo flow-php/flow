@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\ETL\Exception\{InvalidTypeException};
+use Flow\Types\Exception\{InvalidTypeException};
 use Flow\Types\Type\Type;
 
 /**

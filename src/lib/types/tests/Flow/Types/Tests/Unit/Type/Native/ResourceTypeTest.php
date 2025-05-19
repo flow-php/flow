@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_resource;
-use Flow\ETL\Exception\InvalidTypeException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

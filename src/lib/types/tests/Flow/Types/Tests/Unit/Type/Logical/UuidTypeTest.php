@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\type_uuid;
-use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException};
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;

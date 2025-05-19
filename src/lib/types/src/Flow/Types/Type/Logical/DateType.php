@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use DateTimeInterface;
-use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException};
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Type;
 
 /**
@@ -33,6 +34,11 @@ final readonly class DateType implements Type
         }
 
         try {
+            /** @phpstan-ignore-next-line */
+            if ($value instanceof \DateTimeImmutable || $value instanceof \DateTime) {
+                return $value->setTime(0, 0, 0, 0);
+            }
+
             if (\is_string($value)) {
                 return (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0);
             }
@@ -48,7 +54,6 @@ final readonly class DateType implements Type
 
             if ($value instanceof \DateInterval) {
                 return (new \DateTimeImmutable('@0'))->add($value)->setTime(0, 0, 0, 0);
-
             }
         } catch (\Throwable) {
             throw new CastingException($value, $this);

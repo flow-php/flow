@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Value;
 
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Types\Exception\{InvalidArgumentException, RuntimeException};
 use Ramsey\Uuid\UuidInterface;
 
 final readonly class Uuid implements \Stringable

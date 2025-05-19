@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_string;
-use Flow\ETL\Exception\InvalidTypeException;
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
 use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
 use PHPUnit\Framework\TestCase;
@@ -45,6 +45,7 @@ final class StringTypeTest extends TestCase
 
         yield 'Not Empty DOMDocument' => [$xml, '<xml>Some Happy XML</xml>'];
         yield 'DOMElement' => [new \DOMElement('element'), '<element/>'];
+        yield 'DateTimeZone' => [new \DateTimeZone('UTC'), 'UTC'];
     }
 
     public static function successful_assert_data_provider() : \Generator

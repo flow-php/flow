@@ -12,8 +12,10 @@ use function Flow\Types\DSL\{type_array,
     type_float,
     type_integer,
     type_json,
+    type_non_empty_string,
     type_null,
     type_object,
+    type_positive_integer,
     type_resource,
     type_scalar,
     type_string,
@@ -21,7 +23,7 @@ use function Flow\Types\DSL\{type_array,
     type_uuid,
     type_xml,
     type_xml_element};
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type\Logical\{InstanceOfType, ListType, MapType, OptionalType, StructureType};
 use Flow\Types\Type\Native\{EnumType, UnionType};
 
@@ -35,14 +37,16 @@ final class TypeFactory
     public static function fromArray(array $data) : Type
     {
         if (!\array_key_exists('type', $data)) {
-            throw new \InvalidArgumentException("Missing 'type' key in type definition");
+            throw new InvalidArgumentException("Missing 'type' key in type definition");
         }
 
         return match ($data['type']) {
             'float' => type_float(),
             'integer' => type_integer(),
+            'positive_integer' => type_positive_integer(),
             'boolean' => type_boolean(),
             'string' => type_string(),
+            'non_empty_string' => type_non_empty_string(),
             'callable' => type_callable(),
             'array' => type_array(),
             /** @phpstan-ignore argument.type */

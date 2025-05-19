@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException};
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type\Type;
 
 /**
@@ -27,23 +28,22 @@ final readonly class BooleanType implements Type
             return $value;
         }
 
-        if ($value instanceof \DOMElement) {
-            $value = $value->nodeValue;
-        }
-
-        if (\is_string($value)) {
-            if (\in_array(\mb_strtolower($value), ['true', '1', 'yes', 'on'], true)) {
-                return true;
-            }
-
-            if (\in_array(\mb_strtolower($value), ['false', '0', 'no', 'off'], true)) {
-                return false;
-            }
-        }
-
         try {
+            if ($value instanceof \DOMElement) {
+                $value = $value->nodeValue;
+            }
+
+            if (\is_string($value)) {
+                if (\in_array(\mb_strtolower($value), ['true', '1', 'yes', 'on'], true)) {
+                    return true;
+                }
+
+                if (\in_array(\mb_strtolower($value), ['false', '0', 'no', 'off'], true)) {
+                    return false;
+                }
+            }
+
             return (bool) $value;
-            /* @phpstan-ignore-next-line */
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }

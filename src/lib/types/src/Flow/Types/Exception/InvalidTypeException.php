@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Exception;
+namespace Flow\Types\Exception;
 
 use Flow\Types\Type\{Type, TypeDetector};
 

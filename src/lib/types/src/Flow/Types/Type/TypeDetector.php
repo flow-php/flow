@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type;
 
 use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_float, type_instance_of, type_integer, type_json, type_map, type_null, type_string, type_time, type_union, type_uuid, type_xml, type_xml_element, types};
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type\Logical\{ListType, StructureType};
 use Flow\Types\Type\Native\{IntegerType, StringType};
 
@@ -105,6 +105,6 @@ final class TypeDetector
             return type_instance_of($value::class);
         }
 
-        throw InvalidArgumentException::because('Unsupported type given: ' . \gettype($value));
+        throw new InvalidArgumentException('Unsupported type given: ' . \gettype($value));
     }
 }

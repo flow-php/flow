@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Flow\Types\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\Types\Type\{Comparator, Type, TypeFactory, Types};
+use Flow\Types\Type\{Comparator, Type, TypeDetector, TypeFactory, Types};
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     InstanceOfType,
     JsonType,
     ListType,
     MapType,
+    NonEmptyStringType,
     OptionalType,
+    PositiveIntegerType,
     ScalarType,
     StructureType,
     TimeType,
@@ -274,6 +276,18 @@ function type_null() : NullType
     return new NullType();
 }
 
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_positive_integer() : PositiveIntegerType
+{
+    return new PositiveIntegerType();
+}
+
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_non_empty_string() : NonEmptyStringType
+{
+    return new NonEmptyStringType();
+}
+
 /**
  * @template T of UnitEnum
  *
@@ -310,4 +324,26 @@ function type_is(Type $type, string $typeClass) : bool
 function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool
 {
     return (new Comparator())->isAny($type, $typeClass, ...$typeClasses);
+}
+
+/**
+ * @return Type<mixed>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
+function get_type(mixed $value) : Type
+{
+    return (new TypeDetector())->detectType($value);
+}
+
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
+function dom_element_to_string(\DOMElement $element, bool $format_output = false, bool $preserver_white_space = false) : string|false
+{
+    $doc = new \DOMDocument('1.0', 'UTF-8');
+    $doc->formatOutput = $format_output;
+    $doc->preserveWhiteSpace = $preserver_white_space;
+
+    $importedNode = $doc->importNode($element, true);
+    $doc->appendChild($importedNode);
+
+    return $doc->saveXML($doc->documentElement);
 }

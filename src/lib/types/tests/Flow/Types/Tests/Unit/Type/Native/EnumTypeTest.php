@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\type_enum;
-use Flow\ETL\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException};
+use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\{AnotherEnum, SomeEnum};
 use Flow\Types\Tests\Unit\Type\Fixtures\ColorsEnum;
 use PHPUnit\Framework\Attributes\DataProvider;

@@ -22,13 +22,13 @@ use function Flow\ETL\DSL\{bool_entry,
     xml_element_entry,
     xml_entry};
 use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element};
-use Flow\ETL\Exception\{CastingException,
-    InvalidArgumentException,
+use Flow\ETL\Exception\{InvalidArgumentException,
     RuntimeException,
     SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\{ListEntry, StringEntry};
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Exception\CastingException;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     InstanceOfType,

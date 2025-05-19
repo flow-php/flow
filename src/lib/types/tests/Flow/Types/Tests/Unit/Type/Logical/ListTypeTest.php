@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_list, type_map, type_string};
-use Flow\ETL\Exception\InvalidTypeException;
+use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

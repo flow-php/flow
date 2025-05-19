@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type\Comparison\Operator;
 
 final readonly class ValueComparator

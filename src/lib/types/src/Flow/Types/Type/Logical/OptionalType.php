@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type\Native\UnionType;
 use Flow\Types\Type\{Type, TypeFactory};
 

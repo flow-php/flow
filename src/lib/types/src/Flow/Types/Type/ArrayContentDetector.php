@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type;
 
 use function Flow\Types\DSL\{type_array, type_null, type_optional, type_string};
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type\Native\{IntegerType, NullType, StringType};
 
 final readonly class ArrayContentDetector
@@ -35,7 +35,7 @@ final readonly class ArrayContentDetector
     public function firstKeyType() : IntegerType|StringType|null
     {
         if (null !== $this->firstKeyType && (!$this->firstKeyType instanceof IntegerType && !$this->firstKeyType instanceof StringType)) {
-            throw InvalidArgumentException::because('First unique key type must be of IntegerType or StringType, given: ' . $this->firstKeyType::class);
+            throw new InvalidArgumentException('First unique key type must be of IntegerType or StringType, given: ' . $this->firstKeyType::class);
         }
 
         return $this->firstKeyType;
