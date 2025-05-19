@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\{array_to_rows};
 use Flow\ETL\{Adapter\Excel\Sheet\SheetNameAssertion,
     Adapter\Excel\Sheet\SheetsManager,
     Exception\InvalidArgumentException,
     Extractor,
-    FlowContext,
-    Loader\Closure};
+    FlowContext
+};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\Filesystem\{Path, SourceStream};
 use OpenSpout\Common\Entity\{Cell, Row};
 use OpenSpout\Reader\ODS\Reader as OdsReader;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 
-final class ExcelExtractor implements Closure, Extractor, FileExtractor, LimitableExtractor
+final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
@@ -43,11 +43,6 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
         $this->resetLimit();
     }
 
-    public function closure(FlowContext $context) : void
-    {
-        $this->reader()->close();
-    }
-
     public function extract(FlowContext $context) : \Generator
     {
         $headers = [];
@@ -61,13 +56,17 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions());
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    $stream->close();
+
                     return;
                 }
             }
+
+            $stream->close();
         }
     }
 
@@ -170,6 +169,8 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
 
                 $rows[] = $rowData;
             }
+
+            $this->reader()->close();
 
             return $rows;
         } catch (\Throwable $e) {
