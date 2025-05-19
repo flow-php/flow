@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use function Flow\Types\DSL\{dom_element_to_string as dom_element_to_string_new,
+use function Flow\Types\DSL\{
+    dom_element_to_string as dom_element_to_string_new,
     get_type as get_type_new,
-    is_nullable as is_nullable_new,
     type_array as type_array_new,
     type_boolean as type_boolean_new,
     type_callable as type_callable_new,
@@ -20,6 +20,7 @@ use function Flow\Types\DSL\{dom_element_to_string as dom_element_to_string_new,
     type_integer as type_integer_new,
     type_is as type_is_new,
     type_is_any as type_is_any_new,
+    type_is_nullable as is_nullable_new,
     type_json as type_json_new,
     type_list as type_list_new,
     type_map as type_map_new,
@@ -33,7 +34,8 @@ use function Flow\Types\DSL\{dom_element_to_string as dom_element_to_string_new,
     type_uuid as type_uuid_new,
     type_xml as type_xml_new,
     type_xml_element as type_xml_element_new,
-    types as types_new};
+    types as types_new
+};
 use Flow\Calculator\Rounding;
 use Flow\ETL\{
     Analyze,

@@ -96,7 +96,7 @@ function type_from_array(array $data) : Type
  * @param Type<mixed> $type
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
-function is_nullable(Type $type) : bool
+function type_is_nullable(Type $type) : bool
 {
     if ($type instanceof OptionalType) {
         return true;
