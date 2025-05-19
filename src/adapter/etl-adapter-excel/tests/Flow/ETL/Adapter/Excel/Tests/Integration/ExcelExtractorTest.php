@@ -20,6 +20,12 @@ final class ExcelExtractorTest extends FlowTestCase
         yield 'xlsx' => [__DIR__ . '/../Fixtures/fixture.xlsx'];
     }
 
+    public static function provide_nullable_fixtures() : iterable
+    {
+        yield 'ods' => [__DIR__ . '/../Fixtures/nullable_fixture.ods'];
+        yield 'xlsx' => [__DIR__ . '/../Fixtures/nullable_fixture.xlsx'];
+    }
+
     #[DataProvider('provide_fixtures')]
     public function test_extract_excel_file(string $fixtureName) : void
     {
@@ -163,6 +169,24 @@ final class ExcelExtractorTest extends FlowTestCase
         }
 
         self::assertSame(10, $total);
+    }
+
+    #[DataProvider('provide_nullable_fixtures')]
+    public function test_extract_excel_nullable_file(string $fixtureName) : void
+    {
+        $extractor = from_excel($fixtureName);
+
+        $total = 0;
+
+        foreach ($extractor->extract(flow_context(config())) as $rows) {
+            $rows->each(function (Row $row) : void {
+                $this->assertSame(['id', 'name', 'email'], \array_keys($row->toArray()));
+                $this->assertCount(3, $row->toArray());
+            });
+            $total += $rows->count();
+        }
+
+        self::assertSame(5, $total);
     }
 
     public function test_extract_with_wrongly_selected_reader() : void

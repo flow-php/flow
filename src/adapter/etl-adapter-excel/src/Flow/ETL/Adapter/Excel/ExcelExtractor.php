@@ -120,28 +120,17 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
         return $this;
     }
 
-    private function createRowsFromCells(Row $row) : array
+    private function createRowsFromCells(Row $row, int $previousRowDataCount = 0) : array
     {
-        return \array_map(
-            fn (Cell $cell) =>
-                // Convert empty values to nullables if allowed
-                $this->convertEmptyToNull && '' === $cell->getValue() ? null : $cell->getValue(),
+        $rowData = \array_map(
+            // Convert empty values to nullables if allowed
+            fn (Cell $cell) => $this->convertEmptyToNull && '' === $cell->getValue() ? null : $cell->getValue(),
             $row->getCells()
         );
-    }
 
-    private function extendRowData(int $headersCount, array $rowData) : array
-    {
-        $rowDataCount = \count($rowData);
-
-        if ($headersCount > $rowDataCount) {
-            \array_push(
-                $rowData,
-                ...\array_map(
-                    static fn (int $i) => null,
-                    \range(1, $headersCount - $rowDataCount)
-                )
-            );
+        // Expand columns to the size of the previous row
+        for ($i = \count($rowData); $i < $previousRowDataCount; $i++) {
+            $rowData[$i] = null;
         }
 
         return $rowData;
@@ -172,7 +161,7 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
                 }
 
                 // ODS format reader skips empty cells when reading rows
-                $rowData = $this->extendRowData($previousRowDataCount, $this->createRowsFromCells($row));
+                $rowData = $this->createRowsFromCells($row, $previousRowDataCount);
                 $previousRowDataCount = \count($rowData);
 
                 if ($this->withHeader) {

@@ -68,14 +68,9 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
                 function (array $rowData) use ($headers, $headersCount, $shouldPutInputIntoRows) {
                     $rowDataCount = \count($rowData);
 
-                    if ($headersCount > $rowDataCount) {
-                        \array_push(
-                            $rowData,
-                            ...\array_map(
-                                static fn (int $i) => null,
-                                \range(1, $headersCount - $rowDataCount)
-                            )
-                        );
+                    // Expand columns to the size of the previous row
+                    for ($i = $rowDataCount; $i < $headersCount; $i++) {
+                        $rowData[$i] = null;
                     }
 
                     if ($rowDataCount > $headersCount) {
