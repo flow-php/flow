@@ -8,8 +8,9 @@ use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\DSL\{config, df, flow_context};
 use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{Extractor\Signal, Row, Rows};
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Filesystem\{Partition, Path};
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ExcelExtractorTest extends FlowTestCase
@@ -198,5 +199,34 @@ final class ExcelExtractorTest extends FlowTestCase
         $this->expectExceptionMessage('Failed to open file: Could not open');
 
         iterator_to_array($extractor->extract(flow_context(config())));
+    }
+
+    public function test_loading_data_from_all_partitions() : void
+    {
+        df()
+            ->read(from_excel(__DIR__ . '/../Fixtures/partitioned/group=*/*.xlsx'))
+            ->run(function (Rows $rows) : void {
+                $this->assertSame(
+                    ['group'],
+                    \array_map(
+                        fn (Partition $p) => $p->name,
+                        $rows->partitions()->toArray()
+                    )
+                );
+            });
+    }
+
+    public function test_signal_stop() : void
+    {
+        $generator = from_excel(Path::realpath(__DIR__ . '/../Fixtures/fixture.xlsx'))
+            ->extract(flow_context(config()));
+
+        self::assertTrue($generator->valid());
+        $generator->next();
+        self::assertTrue($generator->valid());
+        $generator->next();
+        self::assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        self::assertFalse($generator->valid());
     }
 }

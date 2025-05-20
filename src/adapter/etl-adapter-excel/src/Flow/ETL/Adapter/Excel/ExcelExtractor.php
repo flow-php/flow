@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use function Flow\ETL\DSL\array_to_rows;
+use function Flow\ETL\DSL\{array_to_rows};
 use Flow\ETL\{Adapter\Excel\Sheet\SheetNameAssertion,
     Adapter\Excel\Sheet\SheetsManager,
     Exception\InvalidArgumentException,
     Extractor,
-    FlowContext,
-    Loader\Closure};
+    FlowContext
+};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\Filesystem\{Path, SourceStream};
 use OpenSpout\Common\Entity\{Cell, Row};
 use OpenSpout\Reader\ODS\Reader as OdsReader;
 use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 
-final class ExcelExtractor implements Closure, Extractor, FileExtractor, LimitableExtractor
+final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
     use PathFiltering;
@@ -43,11 +43,6 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
         $this->resetLimit();
     }
 
-    public function closure(FlowContext $context) : void
-    {
-        $this->reader()->close();
-    }
-
     public function extract(FlowContext $context) : \Generator
     {
         $headers = [];
@@ -61,13 +56,17 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions());
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    $stream->close();
+
                     return;
                 }
             }
+
+            $stream->close();
         }
     }
 
@@ -136,7 +135,7 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
         return $rowData;
     }
 
-    private function extractRows(SourceStream $stream, array $headers, int $offset) : array
+    private function extractRows(SourceStream $stream, array $headers, int $offset) : \Generator
     {
         try {
             $this->reader()->open($stream->path()->path());
@@ -148,9 +147,9 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
 
             $sheet = $this->sheetName ? $manager->get($this->sheetName) : $manager->first();
 
-            foreach ($sheet->getRowIterator() as $rowIndex => $row) {
+            foreach ($sheet->getRowIterator() as $rowIndex => $sheetRow) {
                 if (1 === $rowIndex && $this->withHeader) {
-                    $headers = $this->createRowsFromCells($row);
+                    $headers = $this->createRowsFromCells($sheetRow);
 
                     continue;
                 }
@@ -161,17 +160,17 @@ final class ExcelExtractor implements Closure, Extractor, FileExtractor, Limitab
                 }
 
                 // ODS format reader skips empty cells when reading rows
-                $rowData = $this->createRowsFromCells($row, $previousRowDataCount);
-                $previousRowDataCount = \count($rowData);
+                $row = $this->createRowsFromCells($sheetRow, $previousRowDataCount);
+                $previousRowDataCount = \count($row);
 
                 if ($this->withHeader) {
-                    $rowData = \array_combine($headers, $rowData);
+                    yield \array_combine($headers, $row);
+                } else {
+                    yield $row;
                 }
-
-                $rows[] = $rowData;
             }
 
-            return $rows;
+            $this->reader()->close();
         } catch (\Throwable $e) {
             throw new InvalidArgumentException('Failed to open file: ' . $e->getMessage(), previous: $e);
         }
