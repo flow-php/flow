@@ -42,7 +42,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
-
             $option = csv_detect_separator($stream);
 
             $separator = $this->separator ?? $option->separator;
@@ -50,35 +49,35 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $escape = $this->escape ?? $option->escape;
 
             $headers = [];
+            $headersCount = 0;
 
             foreach ($stream->readLines(length: $this->charactersReadInLine) as $csvLine) {
                 /** @var non-empty-list<null|string> $rowData */
                 $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
+                $rowDataCount = \count($rowData);
 
                 if ([] === $headers) {
                     if ($this->withHeader) {
                         /** @var array<string> $headers */
                         $headers = $this->mapHeaders($rowData);
+                        $headersCount = $rowDataCount;
 
                         continue;
                     }
 
                     $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
                     $headers = $this->mapHeaders($headers);
+                    $headersCount = \count($headers);
                 }
 
-                if (\count($headers) > \count($rowData)) {
-                    \array_push(
-                        $rowData,
-                        ...\array_map(
-                            fn (int $i) => ($this->emptyToNull ? null : ''),
-                            \range(1, \count($headers) - \count($rowData))
-                        )
-                    );
+                // Expand columns to the size of the previous row
+                for ($i = $rowDataCount; $i < $headersCount; $i++) {
+                    $rowData[$i] = $this->emptyToNull ? null : '';
                 }
 
-                if (\count($rowData) > \count($headers)) {
-                    $rowData = \array_slice($rowData, 0, \count($headers));
+                // Cut columns to the size of the header row
+                if ($rowDataCount > $headersCount) {
+                    $rowData = \array_slice($rowData, 0, $headersCount);
                 }
 
                 if ($this->emptyToNull) {
@@ -87,10 +86,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                             $rowData[$i] = null;
                         }
                     }
-                }
-
-                if (\count($headers) !== \count($rowData)) {
-                    continue;
                 }
 
                 $row = \array_combine($headers, $rowData);
@@ -107,8 +102,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
                     return;
                 }
-
-                $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
             }
 
             $stream->close();
