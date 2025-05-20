@@ -135,7 +135,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         return $rowData;
     }
 
-    private function extractRows(SourceStream $stream, array $headers, int $offset) : array
+    private function extractRows(SourceStream $stream, array $headers, int $offset) : \Generator
     {
         try {
             $this->reader()->open($stream->path()->path());
@@ -147,9 +147,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
             $sheet = $this->sheetName ? $manager->get($this->sheetName) : $manager->first();
 
-            foreach ($sheet->getRowIterator() as $rowIndex => $row) {
+            foreach ($sheet->getRowIterator() as $rowIndex => $sheetRow) {
                 if (1 === $rowIndex && $this->withHeader) {
-                    $headers = $this->createRowsFromCells($row);
+                    $headers = $this->createRowsFromCells($sheetRow);
 
                     continue;
                 }
@@ -160,19 +160,17 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                 }
 
                 // ODS format reader skips empty cells when reading rows
-                $rowData = $this->createRowsFromCells($row, $previousRowDataCount);
-                $previousRowDataCount = \count($rowData);
+                $row = $this->createRowsFromCells($sheetRow, $previousRowDataCount);
+                $previousRowDataCount = \count($row);
 
                 if ($this->withHeader) {
-                    $rowData = \array_combine($headers, $rowData);
+                    yield \array_combine($headers, $row);
+                } else {
+                    yield $row;
                 }
-
-                $rows[] = $rowData;
             }
 
             $this->reader()->close();
-
-            return $rows;
         } catch (\Throwable $e) {
             throw new InvalidArgumentException('Failed to open file: ' . $e->getMessage(), previous: $e);
         }
