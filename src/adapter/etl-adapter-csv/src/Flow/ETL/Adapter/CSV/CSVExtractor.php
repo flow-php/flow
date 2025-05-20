@@ -52,22 +52,20 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $headers = [];
 
             foreach ($stream->readLines(length: $this->charactersReadInLine) as $csvLine) {
-                if ($this->withHeader && \count($headers) === 0) {
-                    /** @var array<string> $headers */
-                    $headers = \str_getcsv($csvLine, $separator, $enclosure, $escape);
-
-                    continue;
-                }
-
                 /** @var non-empty-list<null|string> $rowData */
                 $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
 
-                if (!\count($headers)) {
-                    $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
-                }
+                if ([] === $headers) {
+                    if ($this->withHeader) {
+                        /** @var array<string> $headers */
+                        $headers = $this->mapHeaders($rowData);
 
-                $headers = \array_map(fn (string $header) : string => \trim($header), $headers);
-                $headers = \array_map(fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad((string) $index, 2, '0', STR_PAD_LEFT), $headers, \array_keys($headers));
+                        continue;
+                    }
+
+                    $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
+                    $headers = $this->mapHeaders($headers);
+                }
 
                 if (\count($headers) > \count($rowData)) {
                     \array_push(
@@ -176,5 +174,21 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $this->separator = $separator;
 
         return $this;
+    }
+
+    private function mapHeaders(array $headers) : array
+    {
+        $headers = \array_map(fn (string $header) : string => \trim($header), $headers);
+
+        return \array_map(
+            fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad(
+                (string) $index,
+                2,
+                '0',
+                STR_PAD_LEFT
+            ),
+            $headers,
+            \array_keys($headers)
+        );
     }
 }
