@@ -10,6 +10,7 @@ Resolves: #xxx
     PULL REQUESTS WITHOUT CHANGELOG CAN'T BE MERGED 
 -->
 <h2>Change Log</h2>
+<hr /> 
 <div id="change-log">
   <h4>Added</h4>
   <ul id="added">
@@ -36,8 +37,3 @@ Resolves: #xxx
     <!-- <li>Something that was a security issue, is not an issue anymore</li> -->
   </ul>     
 </div>
-<hr/>
-
-<h2>Description</h2>
-
-<!-- Please provide a short description of changes in this section, feel free to use markdown syntax -->

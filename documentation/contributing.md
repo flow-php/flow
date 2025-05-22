@@ -4,7 +4,7 @@ Below graph explains the process of contributing to Flow.
 
 ```mermaid
 flowchart TD
-    subgraph "Contributing Graph"
+    subgraph "How to contribute"
 
         is-a-bug[Did you found a bug?]
         is-a-bug -->|Yes| can-you-fix-it[Can you fix it?]
