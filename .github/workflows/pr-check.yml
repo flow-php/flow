@@ -30,13 +30,3 @@ jobs:
           fail_if_xl: false
           files_to_ignore: 'composer.lock timezones.json nested_timezones.json'
           message_if_xl: ''
-
-  pull-request-type:
-    name: "Label PR Type"
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/labeler@v5
-        with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          sync-labels: true
