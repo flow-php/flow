@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Community Support
+    url: https://discord.gg/5dNXfQyACW
+    about: The fastest way to get answer to your questions
+  - name: Project Documentation
+    url: https://flow-php.com/documentation/
+    about: Project Documentation
+  - name: Project Roadmap
+    url: https://github.com/orgs/flow-php/projects/1
+    about: Project Roadmap - please check if given issue is not already there

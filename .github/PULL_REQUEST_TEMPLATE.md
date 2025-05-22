@@ -1,4 +1,10 @@
 <!-- 
+    Please replace #xxx with a GitHub issue id from flow-php/flow repository. For example #1234 
+    If there is no item in a roadmap related to this PR, please check our contributing guidelines first. 
+-->
+Resolves: #xxx
+
+<!-- 
     Below section will be used to automatically generate changelog, please do not modify HTML code structure
     DO NOT REMOVE that HTML STRUCTURE, INSTEAD ADD YOUR CHANGES INSIDE THE LISTS 
     PULL REQUESTS WITHOUT CHANGELOG CAN'T BE MERGED 
