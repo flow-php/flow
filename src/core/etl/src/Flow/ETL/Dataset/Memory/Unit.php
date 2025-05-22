@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Monitoring\Memory;
+namespace Flow\ETL\Dataset\Memory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 

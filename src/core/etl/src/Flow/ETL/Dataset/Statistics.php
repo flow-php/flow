@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset;
 
+use Flow\ETL\Dataset\Memory\Consumption;
 use Flow\ETL\Dataset\Statistics\{Columns, ExecutionTime};
 
 final readonly class Statistics
@@ -11,6 +12,7 @@ final readonly class Statistics
     public function __construct(
         private int $totalRows,
         public ExecutionTime $executionTime,
+        public Consumption $memory,
         public ?Columns $columns,
     ) {
     }

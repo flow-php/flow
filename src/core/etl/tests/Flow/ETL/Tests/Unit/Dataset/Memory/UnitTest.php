@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Monitoring\Memory;
+namespace Flow\ETL\Tests\Unit\Dataset\Memory;
 
-use Flow\ETL\Monitoring\Memory\Unit;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class UnitTest extends FlowTestCase

@@ -6,7 +6,7 @@ namespace Flow\ETL;
 
 use function Flow\ETL\DSL\{analyze, refs, to_output};
 use Flow\ETL\DataFrame\GroupedDataFrame;
-use Flow\ETL\Dataset\{Report, Statistics};
+use Flow\ETL\Dataset\{Memory\Consumption, Report, Statistics};
 use Flow\ETL\Dataset\Statistics\{Columns, ExecutionTime, HighResolutionTime};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Extractor\FileExtractor;
@@ -757,6 +757,7 @@ final class DataFrame
         $analyze = $analyze === true ? analyze() : $analyze;
 
         if ($analyze) {
+            $memory = new Consumption();
             $startedAt = $this->context->config->clock()->now();
             $startTime = HighResolutionTime::now();
             $columnStatistics = $analyze->collectColumnStatistics() ? new Columns() : null;
@@ -770,6 +771,7 @@ final class DataFrame
 
             if ($analyze) {
                 $totalRows += $rows->count();
+                $memory->capture();
 
                 if ($schema !== null) {
                     $schema = $schema->merge($rows->schema());
@@ -794,6 +796,7 @@ final class DataFrame
                 new Statistics(
                     $totalRows,
                     new ExecutionTime($startedAt, $endedAt, $startTime->diff($endTime)),
+                    $memory,
                     $columnStatistics
                 )
             );

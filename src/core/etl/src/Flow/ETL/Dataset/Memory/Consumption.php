@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Monitoring\Memory;
+namespace Flow\ETL\Dataset\Memory;
 
 final class Consumption
 {
@@ -14,14 +14,14 @@ final class Consumption
 
     public function __construct()
     {
-        $this->initial = Unit::fromBytes(\memory_get_usage());
+        $this->initial = Unit::fromBytes(\memory_get_usage(true));
         $this->min = $this->initial;
         $this->max = $this->initial;
     }
 
-    public function current() : Unit
+    public function capture() : Unit
     {
-        $current = Unit::fromBytes(\memory_get_usage());
+        $current = Unit::fromBytes(\memory_get_usage(true));
 
         if ($current->isGreaterThan($this->max)) {
             $this->max = $current;
@@ -36,7 +36,7 @@ final class Consumption
 
     public function currentDiff() : Unit
     {
-        return $this->current()->diff($this->initial);
+        return $this->capture()->diff($this->initial);
     }
 
     public function initial() : Unit

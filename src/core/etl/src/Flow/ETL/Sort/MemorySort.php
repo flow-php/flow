@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Sort;
 
-use Flow\ETL\{Exception\OutOfMemoryException,
+use Flow\ETL\{
+    Dataset\Memory\Configuration,
+    Dataset\Memory\Consumption,
+    Dataset\Memory\Unit,
+    Exception\OutOfMemoryException,
     Extractor,
     FlowContext,
-    Monitoring\Memory\Configuration,
-    Monitoring\Memory\Consumption,
-    Monitoring\Memory\Unit,
     Pipeline,
     Row\References,
-    Rows};
+    Rows
+};
 use Flow\ETL\Extractor\GeneratorExtractor;
 
 final class MemorySort implements SortingAlgorithm

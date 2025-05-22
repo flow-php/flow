@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Sort;
 
-use Flow\ETL\Monitoring\Memory\Unit;
+use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Sort\SortAlgorithms;
 
 final class SortConfigBuilder

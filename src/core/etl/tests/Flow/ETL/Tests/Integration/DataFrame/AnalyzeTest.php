@@ -59,6 +59,7 @@ final class AnalyzeTest extends FlowIntegrationTestCase
             $report->schema()
         );
         self::assertSame(7, $report->schema()?->count());
+        self::assertGreaterThan(0, $report->statistics()->memory->max()->inBytes());
         self::assertInstanceOf(\DateTimeImmutable::class, $report->statistics()->executionTime->startedAt);
         self::assertInstanceOf(\DateTimeImmutable::class, $report->statistics()->executionTime->finishedAt);
         self::assertGreaterThanOrEqual($report->statistics()->executionTime->startedAt, $report->statistics()->executionTime->finishedAt);
