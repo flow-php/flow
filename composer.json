@@ -90,6 +90,7 @@
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
         "flow-php/snappy": "self.version",
+        "flow-php/sql-query-builder": "self.version",
         "flow-php/symfony-http-foundation-bridge": "self.version",
         "flow-php/types": "self.version"
     },
@@ -127,6 +128,7 @@
                 "src/lib/parquet/src/Flow",
                 "src/lib/snappy/src/Flow",
                 "src/lib/types/src/Flow",
+                "src/lib/sql-query-builder/src/Flow",
                 "src/tools/documentation/src/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
@@ -196,6 +198,7 @@
                 "src/lib/parquet/tests/Flow",
                 "src/lib/snappy/tests/Flow",
                 "src/lib/types/tests/Flow",
+                "src/lib/sql-query-builder/tests/Flow",
                 "src/tools/documentation/tests/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
