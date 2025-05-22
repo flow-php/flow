@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\{Exception\InvalidArgumentException, Extractor, FlowContext};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\Schema;
-use Flow\Filesystem\Path;
+use Flow\Filesystem\{Path, SourceStream};
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
