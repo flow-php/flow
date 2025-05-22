@@ -1,0 +1,19 @@
+Monthly Product Sales with Running Totals:
+==========================================
+Month      Product ID   Sales        Running Total  
+------------------------------------------
+2024-01    1            $100.00      $100.00        
+2024-02    1            $200.00      $300.00        
+2024-03    1            $180.00      $480.00        
+2024-01    2            $150.00      $150.00        
+2024-03    2            $250.00      $400.00        
+2024-02    3            $300.00      $300.00        
+
+Generated SQL:
+==============
+WITH "monthly_product_sales" AS (SELECT strftime('%Y-%m', sale_date) as month, product_id, SUM(amount) as total_sales
+FROM "sales"
+GROUP BY "month", "product_id")
+SELECT month, product_id, total_sales, SUM(total_sales) OVER (PARTITION BY product_id ORDER BY month) as running_total
+FROM "monthly_product_sales"
+ORDER BY "product_id" ASC, "month" ASC

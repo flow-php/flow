@@ -8,6 +8,9 @@ use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Adapter\Doctrine\Pagination\Key;
+use Flow\ETL\SQL\QueryBuilder\Adapter\DbalQueryBuilderAdapter;
+use Flow\ETL\SQL\QueryBuilder\Adapter\FlowQueryBuilderWrapper;
+use Flow\ETL\SQL\QueryBuilder\QueryBuilderInterface;
 use Flow\ETL\{Adapter\Doctrine\Pagination\KeySet, Extractor, FlowContext, Schema};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Extractor\Signal;
@@ -30,17 +33,24 @@ final class DbalKeySetExtractor implements Extractor
 
     private ?Schema $schema = null;
 
+    private readonly QueryBuilderInterface $flowQueryBuilder;
+
     public function __construct(
         private readonly Connection $connection,
-        private readonly QueryBuilder $queryBuilder,
+        private readonly QueryBuilder|QueryBuilderInterface $queryBuilder,
         private readonly KeySet $keySet,
     ) {
-        $qb = clone $this->queryBuilder;
+        if ($queryBuilder instanceof QueryBuilderInterface) {
+            $this->flowQueryBuilder = $queryBuilder;
+        } elseif ($queryBuilder instanceof FlowQueryBuilderWrapper) {
+            $this->flowQueryBuilder = $queryBuilder->getFlowQueryBuilder();
+        } else {
+            $this->flowQueryBuilder = DbalQueryBuilderAdapter::fromDbalQueryBuilder($queryBuilder);
+        }
 
-        /** @phpstan-ignore-next-line */
-        $cleanQuery = \method_exists($qb, 'resetOrderBy') ? (clone $this->queryBuilder)->resetOrderBy() : (clone $qb)->resetQueryPart('orderBy');
-
-        if ($cleanQuery->getSQL() !== $this->queryBuilder->getSQL()) {
+        // Check for existing ORDER BY
+        $queryParts = $this->flowQueryBuilder->getQueryParts();
+        if (!empty($queryParts['orderBy'])) {
             throw new InvalidArgumentException('Keyset pagination cannot be used with an ORDER BY clause, please remove OrderBy from Query Builder');
         }
 
@@ -55,9 +65,10 @@ final class DbalKeySetExtractor implements Extractor
         $lastRow = null;
 
         while (true) {
-            $qb = clone $this->queryBuilder;
-            $qb->setMaxResults($this->pageSize);
+            $qb = $this->flowQueryBuilder->clone();
+            $qb->limit($this->pageSize);
 
+            // Add order by and select columns for keyset pagination
             foreach ($this->keySet->keys as $key) {
                 $qb->addOrderBy($key->column, $key->order->value);
                 $qb->addSelect($key->column . ' AS ' . $this->keyAlias($key));
@@ -85,30 +96,30 @@ final class DbalKeySetExtractor implements Extractor
                     $parameterTypes[$keyAlias] = $key->type;
 
                     $subConditions = [];
+                    $expr = $qb->expr();
 
                     for ($i = 0; $i < $index; $i++) {
                         $prevKey = $this->keySet->keys[$i];
-                        $subConditions[] = $qb->expr()->eq($prevKey->column, ':' . $this->keyAlias($prevKey));
+                        $subConditions[] = $expr->eq($prevKey->column, ':' . $this->keyAlias($prevKey));
                     }
 
                     $operator = $key->order->value === 'DESC' ? 'lt' : 'gt';
-                    $subConditions[] = $qb->expr()->{$operator}($key->column, ':' . $keyAlias);
+                    $subConditions[] = $expr->{$operator}($key->column, ':' . $keyAlias);
 
-                    $conditions[] = $qb->expr()->and(...$subConditions);
+                    $conditions[] = $expr->andX(...$subConditions);
                 }
 
                 if ($conditions) {
-                    $qb->andWhere($qb->expr()->or(...$conditions));
+                    $qb->andWhere($expr->orX(...$conditions));
 
                     foreach ($parameters as $param => $value) {
-                        /** @phpstan-ignore-next-line */
                         $qb->setParameter($param, $value, $parameterTypes[$param]);
                     }
                 }
             }
 
             $stmt = $this->connection->executeQuery(
-                $qb->getSQL(),
+                $qb->toSQL(),
                 $qb->getParameters(),
                 $qb->getParameterTypes()
             );
@@ -119,6 +130,7 @@ final class DbalKeySetExtractor implements Extractor
                 $hasRows = true;
                 $lastRow = $row;
 
+                // Remove keyset columns from the result
                 foreach ($this->keySet->keys as $key) {
                     $keyAlias = $this->keyAlias($key);
 

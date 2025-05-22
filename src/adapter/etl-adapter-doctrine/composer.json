@@ -16,7 +16,8 @@
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
         "doctrine/dbal": "^3.6 || ^4.0",
         "flow-php/doctrine-dbal-bulk": "^0.16.0 || 1.x-dev",
-        "flow-php/etl": "^0.16.0 || 1.x-dev"
+        "flow-php/etl": "^0.16.0 || 1.x-dev",
+        "flow-php/sql-query-builder": "^0.16.0 || 1.x-dev"
     },
     "autoload": {
         "psr-4": {

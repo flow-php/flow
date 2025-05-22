@@ -1,0 +1,8 @@
+{
+    "name": "flow-php/example-lateral-join",
+    "require": {
+        "php": "^8.2",
+        "flow-php/sql-query-builder": "^1.0",
+        "doctrine/dbal": "^3.8 || ^4.0"
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "name": "flow-php/sql-query-builder",
+    "type": "library",
+    "description": "Advanced SQL Query Builder for Flow PHP ETL with CTE and LATERAL JOIN support",
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "sql",
+        "query-builder",
+        "cte",
+        "lateral-join",
+        "database"
+    ],
+    "require": {
+        "php": "~8.2 || ~8.3 || ~8.4",
+        "doctrine/dbal": "^3.8 || ^4.0"
+    },
+    "require-dev": {
+        "flow-php/etl": "^1.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\ETL\\SQL\\QueryBuilder\\": "src/Flow/ETL/SQL/QueryBuilder/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\ETL\\SQL\\QueryBuilder\\Tests\\": "tests/Flow/ETL/SQL/QueryBuilder/Tests/"
+        }
+    }
+}

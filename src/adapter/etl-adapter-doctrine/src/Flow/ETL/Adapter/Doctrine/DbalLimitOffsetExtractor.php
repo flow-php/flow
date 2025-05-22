@@ -9,6 +9,9 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\SQL\QueryBuilder\Adapter\DbalQueryBuilderAdapter;
+use Flow\ETL\SQL\QueryBuilder\Adapter\FlowQueryBuilderWrapper;
+use Flow\ETL\SQL\QueryBuilder\QueryBuilderInterface;
 use Flow\ETL\{Extractor, FlowContext, Schema};
 
 final class DbalLimitOffsetExtractor implements Extractor
@@ -21,10 +24,19 @@ final class DbalLimitOffsetExtractor implements Extractor
 
     private ?Schema $schema = null;
 
+    private readonly QueryBuilderInterface $flowQueryBuilder;
+
     public function __construct(
         private readonly Connection $connection,
-        private readonly QueryBuilder $queryBuilder,
+        private readonly QueryBuilder|QueryBuilderInterface $queryBuilder,
     ) {
+        if ($queryBuilder instanceof QueryBuilderInterface) {
+            $this->flowQueryBuilder = $queryBuilder;
+        } elseif ($queryBuilder instanceof FlowQueryBuilderWrapper) {
+            $this->flowQueryBuilder = $queryBuilder->getFlowQueryBuilder();
+        } else {
+            $this->flowQueryBuilder = DbalQueryBuilderAdapter::fromDbalQueryBuilder($queryBuilder);
+        }
     }
 
     /**
@@ -55,49 +67,47 @@ final class DbalLimitOffsetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
-        if ($this->maximum === null && $this->queryBuilder->getMaxResults()) {
-            $this->maximum = $this->queryBuilder->getMaxResults();
+        // Get initial limit and offset from query builder if not set
+        if ($this->maximum === null) {
+            $queryParts = $this->flowQueryBuilder->getQueryParts();
+            if ($queryParts['limit'] !== null) {
+                $this->maximum = $queryParts['limit'];
+            }
         }
 
-        if ($this->offset === 0 && $this->queryBuilder->getFirstResult()) {
-            $this->offset = $this->queryBuilder->getFirstResult();
+        if ($this->offset === 0) {
+            $queryParts = $this->flowQueryBuilder->getQueryParts();
+            if ($queryParts['offset'] !== null) {
+                $this->offset = $queryParts['offset'];
+            }
         }
 
         if (isset($this->maximum)) {
             $total = $this->maximum;
         } else {
+            // Create count query
+            $countQuery = $this->flowQueryBuilder->clone()
+                ->select('COUNT(*)')
+                ->resetQueryPart('orderBy');
 
-            $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
+            // Check if we have GROUP BY
+            $queryParts = $countQuery->getQueryParts();
+            $hasGroupBy = !empty($queryParts['groupBy']);
 
-            /**
-             * @phpstan-ignore-next-line
-             */
-            $nonGroupByQuery = \method_exists($countQuery, 'resetGroupBy') ? (clone $this->queryBuilder)->select('COUNT(*)')->resetGroupBy() : $countQuery->resetQueryPart('groupBy');
-
-            if ($countQuery->getSQL() === $nonGroupByQuery->getSQL()) {
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                if (\method_exists($countQuery, 'resetOrderBy')) {
-                    $countQuery->resetOrderBy();
-                } else {
-                    /**
-                     * @phpstan-ignore-next-line
-                     */
-                    $countQuery->resetQueryPart('orderBy');
-                }
-
+            if (!$hasGroupBy) {
+                // Simple count query
                 $total = (int) $this->connection->fetchOne(
-                    $countQuery->getSQL(),
+                    $countQuery->toSQL(),
                     $countQuery->getParameters(),
                     $countQuery->getParameterTypes()
                 );
             } else {
                 // For grouped queries, wrap in a subquery to get accurate count
+                $countQuery->resetQueryPart('groupBy');
                 $total = (int) $this->connection->executeQuery(
-                    'SELECT COUNT(*) FROM (' . $countQuery->getSQL() . ') as count_query',
-                    $countQuery->getParameters(),
-                    $countQuery->getParameterTypes()
+                    'SELECT COUNT(*) FROM (' . $this->flowQueryBuilder->toSQL() . ') as count_query',
+                    $this->flowQueryBuilder->getParameters(),
+                    $this->flowQueryBuilder->getParameterTypes()
                 )->fetchOne();
             }
         }
@@ -107,12 +117,13 @@ final class DbalLimitOffsetExtractor implements Extractor
         for ($page = 0; $page < (new Pages($total, $this->pageSize))->pages(); $page++) {
             $offset = $page * $this->pageSize + $this->offset;
 
-            $pageQuery = $this->queryBuilder
-                ->setMaxResults($this->pageSize)
-                ->setFirstResult($offset);
+            // Clone the query builder for this page
+            $pageQuery = $this->flowQueryBuilder->clone()
+                ->limit($this->pageSize)
+                ->offset($offset);
 
             $pageResults = $this->connection->executeQuery(
-                $pageQuery->getSQL(),
+                $pageQuery->toSQL(),
                 $pageQuery->getParameters(),
                 $pageQuery->getParameterTypes()
             )->fetchAllAssociative();
