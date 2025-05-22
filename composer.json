@@ -136,6 +136,9 @@
             ],
             "Flow\\ETL\\Adapter\\Doctrine\\": [
                 "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine"
+            ],
+            "Flow\\ETL\\SQL\\QueryBuilder\\": [
+                "src/lib/sql-query-builder/src/Flow/ETL/SQL/QueryBuilder"
             ]
         },
         "files": [
@@ -206,6 +209,9 @@
             ],
             "Flow\\ETL\\Adapter\\Doctrine\\Tests\\": [
                 "src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests"
+            ],
+            "Flow\\ETL\\SQL\\QueryBuilder\\Tests\\": [
+                "src/lib/sql-query-builder/tests/Flow/ETL/SQL/QueryBuilder/Tests"
             ]
         }
     },
