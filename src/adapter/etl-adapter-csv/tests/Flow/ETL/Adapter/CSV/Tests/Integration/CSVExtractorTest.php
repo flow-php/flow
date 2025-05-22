@@ -99,6 +99,64 @@ final class CSVExtractorTest extends FlowTestCase
         );
     }
 
+    public function test_extracting_csv_with_utf8_bom() : void
+    {
+        $extractor = from_csv(
+            __DIR__ . '/../Fixtures/csv_with_bom.csv'
+        );
+
+        self::assertSame(
+            [
+                [
+                    ['id' => '1', 'name' => 'John Doe', 'email' => 'john@example.com'],
+                ],
+                [
+                    ['id' => '2', 'name' => 'Jane Smith', 'email' => 'jane@example.com'],
+                ],
+            ],
+            \array_map(
+                fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
+            )
+        );
+    }
+
+    public function test_extracting_csv_with_utf8_bom_no_header() : void
+    {
+        $extractor = from_csv(
+            __DIR__ . '/../Fixtures/csv_with_bom_no_header.csv',
+            with_header: false
+        );
+
+        self::assertSame(
+            [
+                [
+                    ['e00' => '1', 'e01' => 'John Doe', 'e02' => 'john@example.com'],
+                ],
+                [
+                    ['e00' => '2', 'e01' => 'Jane Smith', 'e02' => 'jane@example.com'],
+                ],
+            ],
+            \array_map(
+                fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())))
+            )
+        );
+    }
+
+    public function test_extracting_csv_with_utf8_bom_detection_disabled() : void
+    {
+        $extractor = from_csv(
+            __DIR__ . '/../Fixtures/csv_with_bom.csv'
+        )->withBOMDetection(false);
+
+        $rows = \iterator_to_array($extractor->extract(flow_context(\Flow\ETL\DSL\config())));
+        $firstRow = $rows[0]->toArray()[0];
+        
+        // When BOM detection is disabled, the BOM should be included in the first column name
+        self::assertStringStartsWith("\xEF\xBB\xBF", \array_keys($firstRow)[0]);
+    }
+
     public function test_extracting_csv_files_with_header() : void
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';

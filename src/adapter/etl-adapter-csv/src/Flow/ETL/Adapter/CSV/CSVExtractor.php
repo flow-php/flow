@@ -32,6 +32,8 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
     private bool $withHeader = true;
 
+    private bool $bomDetection = true;
+
     public function __construct(private readonly Path $path)
     {
         $this->resetLimit();
@@ -50,8 +52,17 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
             $headers = [];
             $headersCount = 0;
+            
+            // Detect BOM before reading lines
+            $bomOffset = $this->detectBOM($stream);
+            $isFirstLine = true;
 
             foreach ($stream->readLines(length: $this->charactersReadInLine) as $csvLine) {
+                // Skip BOM on first line if present
+                if ($isFirstLine && $bomOffset > 0) {
+                    $csvLine = \substr($csvLine, $bomOffset);
+                }
+                $isFirstLine = false;
                 /** @var non-empty-list<null|string> $rowData */
                 $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
                 $rowDataCount = \count($rowData);
@@ -169,6 +180,13 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         return $this;
     }
 
+    public function withBOMDetection(bool $enabled = true) : self
+    {
+        $this->bomDetection = $enabled;
+
+        return $this;
+    }
+
     private function mapHeaders(array $headers) : array
     {
         $headers = \array_map(fn (string $header) : string => \trim($header), $headers);
@@ -183,5 +201,27 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $headers,
             \array_keys($headers)
         );
+    }
+
+    /**
+     * Detects UTF-8 BOM at the beginning of the stream and returns the offset to skip it.
+     * 
+     * @return int The number of bytes to skip (3 if BOM is present, 0 otherwise)
+     */
+    private function detectBOM(SourceStream $stream) : int
+    {
+        if (!$this->bomDetection) {
+            return 0;
+        }
+
+        // Read first 3 bytes to check for UTF-8 BOM
+        $firstBytes = $stream->read(3, 0);
+        
+        // UTF-8 BOM bytes: 0xEF, 0xBB, 0xBF
+        if (\strlen($firstBytes) === 3 && $firstBytes === "\xEF\xBB\xBF") {
+            return 3;
+        }
+
+        return 0;
     }
 }
