@@ -20,7 +20,7 @@ final readonly class EnumType implements Type
      */
     public function __construct(public string $class)
     {
-        if (!\enum_exists($class)) {
+        if ($class !== \UnitEnum::class && $this->class !== \BackedEnum::class && !\enum_exists($class)) {
             throw new InvalidArgumentException("Enum {$class} not found");
         }
     }

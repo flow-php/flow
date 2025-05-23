@@ -22,6 +22,8 @@ final class EnumTypeTest extends TestCase
     public static function successful_assert_data_provider() : \Generator
     {
         yield [SomeEnum::A, SomeEnum::class];
+        yield [SomeEnum::B, \UnitEnum::class]; // all enums are \UnitEnum
+        yield [SomeEnum::B, \BackedEnum::class]; // SomeEnum is string backed enum
     }
 
     public function test_casting_integer_to_enum() : void

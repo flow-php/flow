@@ -25,6 +25,12 @@ final readonly class RowsNormalizer
             $columns = [];
 
             foreach ($row->entries() as $entry) {
+                if ($schema->get($entry->ref())->isNullable() && $entry->value() === null) {
+                    $columns[$entry->name()] = null;
+
+                    continue;
+                }
+
                 $columns[$entry->name()] = match ($entry::class) {
                     UuidEntry::class => type_string()->cast($entry->value()),
                     XMLEntry::class => type_string()->cast($entry->value()),
