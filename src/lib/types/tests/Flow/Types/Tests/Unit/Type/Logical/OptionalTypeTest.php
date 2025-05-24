@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_float, type_from_array, type_integer, type_optional, type_string, type_union};
+use function Flow\Types\DSL\{type_float,
+    type_from_array,
+    type_integer,
+    type_mixed,
+    type_optional,
+    type_string,
+    type_union};
 use Flow\Types\Type\Logical\OptionalType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -40,10 +46,31 @@ final class OptionalTypeTest extends TestCase
         type_optional(type_optional(type_float()));
     }
 
+    public function test_creating_optional_type_from_mixed_type() : void
+    {
+        $this->expectExceptionMessage('Optional type cannot be created from MixedType, mixed is a standalone type');
+
+        type_optional(type_mixed());
+    }
+
+    public function test_creating_optional_type_from_optional_type() : void
+    {
+        $this->expectExceptionMessage('Optional type cannot be created from an optional type');
+
+        type_optional(type_optional(type_float()));
+    }
+
     public function test_creating_optional_type_from_union_type() : void
     {
         $this->expectExceptionMessage('Optional type cannot be created from a union type');
         type_optional(type_union(type_float(), type_string()));
+    }
+
+    public function test_creating_optional_type_from_union_type_with_mixed() : void
+    {
+        $this->expectExceptionMessage('Optional type cannot be created from a union type');
+
+        type_optional(type_union(type_float(), type_integer()));
     }
 
     public function test_normalizing_optional_type() : void

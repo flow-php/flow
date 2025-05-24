@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Type\{Native\MixedType, Type, TypeFactory};
 use Flow\Types\Type\Native\UnionType;
-use Flow\Types\Type\{Type, TypeFactory};
 
 /**
  * @template T
@@ -18,16 +18,20 @@ final readonly class OptionalType implements Type
     /**
      * @param Type<T> $base
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidTypeException
      */
     public function __construct(private Type $base)
     {
+        if ($base instanceof MixedType) {
+            throw new InvalidTypeException('Optional type cannot be created from MixedType, mixed is a standalone type');
+        }
+
         if ($base instanceof UnionType) {
-            throw new InvalidArgumentException('Optional type cannot be created from a union type');
+            throw new InvalidTypeException('Optional type cannot be created from a union type');
         }
 
         if ($base instanceof self) {
-            throw new InvalidArgumentException('Optional type cannot be created from an optional type');
+            throw new InvalidTypeException('Optional type cannot be created from an optional type');
         }
     }
 

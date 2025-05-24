@@ -24,6 +24,10 @@ final readonly class UnionType implements Type
      */
     public function __construct(private Type $left, private Type $right)
     {
+        if ($left instanceof MixedType || $right instanceof MixedType) {
+            throw new InvalidTypeException('UnionType cannot be mixed with MixedType, mixed is a standalone type');
+        }
+
         $types = [];
 
         if ($this->left instanceof self) {

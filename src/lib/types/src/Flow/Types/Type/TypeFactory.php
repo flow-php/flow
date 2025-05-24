@@ -12,6 +12,7 @@ use function Flow\Types\DSL\{type_array,
     type_float,
     type_integer,
     type_json,
+    type_mixed,
     type_non_empty_string,
     type_null,
     type_object,
@@ -74,6 +75,7 @@ final class TypeFactory
             /** @phpstan-ignore argument.type */
             'optional' => OptionalType::fromArray($data),
             'scalar' => type_scalar(),
+            'mixed' => type_mixed(),
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };
     }

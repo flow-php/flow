@@ -27,6 +27,7 @@ use Flow\Types\Type\Native\{ArrayType,
     EnumType,
     FloatType,
     IntegerType,
+    MixedType,
     NullType,
     ObjectType,
     ResourceType,
@@ -274,6 +275,12 @@ function type_callable() : CallableType
 function type_null() : NullType
 {
     return new NullType();
+}
+
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_mixed() : MixedType
+{
+    return new MixedType();
 }
 
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]

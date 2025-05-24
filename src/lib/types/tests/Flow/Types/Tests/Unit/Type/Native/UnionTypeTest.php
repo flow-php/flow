@@ -8,6 +8,7 @@ use function Flow\Types\DSL\{type_boolean,
     type_float,
     type_from_array,
     type_integer,
+    type_mixed,
     type_null,
     type_optional,
     type_string,
@@ -143,6 +144,14 @@ final class UnionTypeTest extends TestCase
             types(type_integer(), type_float(), type_boolean()),
             type_union(type_integer(), type_integer(), type_union(type_float(), type_boolean()))->types()->deduplicate()
         );
+    }
+
+    public function test_union_with_mixed_type() : void
+    {
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('UnionType cannot be mixed with MixedType, mixed is a standalone type');
+
+        type_union(type_integer(), type_mixed());
     }
 
     /**
