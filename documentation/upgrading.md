@@ -39,6 +39,11 @@ After
 \Flow\Types\DSL\type_string();
 ```
 
+### 4) Removed `BatchSizeOptimization::__construct($batchSize, $supportedLoaders)` parameters
+
+To enable batch size optimization, implement `Flow\ETL\Loader\BatchingLoader` interface on your loader, and add a new 
+method called `defaultBatchSize()`.
+
 ## Upgrading from 0.15.x to 0.16.x
 
 ### 1) Deprecated `Flow\ETL\DataFrame::renameAll*` methods

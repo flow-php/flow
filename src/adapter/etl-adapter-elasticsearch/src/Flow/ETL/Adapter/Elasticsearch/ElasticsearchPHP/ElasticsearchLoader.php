@@ -6,10 +6,10 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Elasticsearch\{Client, ClientBuilder};
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
-use Flow\ETL\{FlowContext, Loader, Row, Rows};
+use Flow\ETL\{FlowContext, Loader, Loader\BatchingLoader, Row, Rows};
 use Flow\ETL\Row\Entry\JsonEntry;
 
-final class ElasticsearchLoader implements Loader
+final class ElasticsearchLoader implements BatchingLoader, Loader
 {
     /** @phpstan-ignore-next-line */
     private Client|\Elastic\Elasticsearch\Client|null $client;
@@ -22,7 +22,18 @@ final class ElasticsearchLoader implements Loader
     private array $parameters = [];
 
     /**
-     * @param array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: bool, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: (bool|string), elasticMetaHeader?: bool, includePortInHostHeader?: bool} $config
+     * @param array{
+     *   hosts?: array<string>,
+     *   connectionParams?: array<mixed>,
+     *   retries?: int,
+     *   sniffOnStart?: boolean,
+     *   sslCert?: array<string>,
+     *   sslKey?: array<string>,
+     *   sslVerification?: boolean|string,
+     *   elasticMetaHeader?: boolean,
+     *   includePortInHostHeader?: boolean,
+     *   batchSize?: int<1, max>
+     *  } $config
      */
     public function __construct(
         private readonly array $config,
@@ -43,7 +54,8 @@ final class ElasticsearchLoader implements Loader
      *  sslKey?: array<string>,
      *  sslVerification?: boolean|string,
      *  elasticMetaHeader?: boolean,
-     *  includePortInHostHeader?: boolean
+     *  includePortInHostHeader?: boolean,
+     *  batchSize?: int<1, max>
      * } $clientConfig
      */
     public static function update(array $clientConfig, string $index, IdFactory $idFactory) : self
@@ -52,6 +64,11 @@ final class ElasticsearchLoader implements Loader
         $loader->method = 'update';
 
         return $loader;
+    }
+
+    public function defaultBatchSize() : int
+    {
+        return $this->config['batchSize'] ?? 1000;
     }
 
     public function load(Rows $rows, FlowContext $context) : void

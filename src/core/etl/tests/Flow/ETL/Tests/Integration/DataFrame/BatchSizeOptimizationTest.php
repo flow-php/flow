@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use function Flow\ETL\DSL\{config_builder, constraint_unique, df};
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
-use Flow\ETL\Tests\Double\{FakeExtractor, SpyLoader};
+use Flow\ETL\Tests\Double\{BatchingSpyLoader, FakeExtractor, SpyLoader};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class BatchSizeOptimizationTest extends FlowTestCase
@@ -28,14 +28,14 @@ final class BatchSizeOptimizationTest extends FlowTestCase
     public function test_not_changing_explicitly_set_batch_size() : void
     {
         $config = config_builder()->optimizer(new Optimizer(
-            new BatchSizeOptimization(100, [SpyLoader::class])
+            new BatchSizeOptimization()
         ));
 
         df($config)
             ->from(new FakeExtractor(100))
             ->batchSize(10)
             ->write(
-                $loader = new SpyLoader()
+                $loader = new BatchingSpyLoader()
             )
             ->run();
 
@@ -46,7 +46,7 @@ final class BatchSizeOptimizationTest extends FlowTestCase
     public function test_not_changing_explicitly_set_batch_size_with_another_overriding_pipeline() : void
     {
         $config = config_builder()->optimizer(new Optimizer(
-            new BatchSizeOptimization(100, [SpyLoader::class])
+            new BatchSizeOptimization()
         ));
 
         $df = df($config)
@@ -58,7 +58,7 @@ final class BatchSizeOptimizationTest extends FlowTestCase
             ->batchSize(10)
             ->constrain(constraint_unique('int'))
         ->write(
-            $loader = new SpyLoader()
+            $loader = new BatchingSpyLoader()
         )
         ->run();
 
@@ -69,14 +69,14 @@ final class BatchSizeOptimizationTest extends FlowTestCase
     public function test_setting_batch_size_to_1k_when_another_overriding_pipeline_is_set() : void
     {
         $config = config_builder()->optimizer(new Optimizer(
-            new BatchSizeOptimization(100, [SpyLoader::class])
+            new BatchSizeOptimization()
         ));
 
         df($config)
             ->from(new FakeExtractor(100))
             ->constrain(constraint_unique('int'))
             ->write(
-                $loader = new SpyLoader()
+                $loader = new BatchingSpyLoader()
             )
             ->run();
 
@@ -87,13 +87,13 @@ final class BatchSizeOptimizationTest extends FlowTestCase
     public function test_setting_batch_size_to_1k_when_none_was_set() : void
     {
         $config = config_builder()->optimizer(new Optimizer(
-            new BatchSizeOptimization(100, [SpyLoader::class])
+            new BatchSizeOptimization()
         ));
 
         df($config)
             ->from(new FakeExtractor(100))
             ->write(
-                $loader = new SpyLoader()
+                $loader = new BatchingSpyLoader()
             )
             ->run();
 

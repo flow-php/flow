@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline\Optimizer;
 
-use Flow\ETL\{Loader, Pipeline, Transformer};
+use Flow\ETL\{Loader, Loader\BatchingLoader, Pipeline, Transformer};
 use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, OverridingPipeline, PartitioningPipeline};
 use Flow\ETL\Pipeline\LinkedPipeline;
+use Flow\ETL\Transformer\BatchingTransformer;
 
 /**
- * The goal of this optimizer is to detect if there is a loader that supports batching and optimize pipeline to use it.
+ * The goal of this optimizer is to detect if there is a loader that supports batching and optimize a pipeline to use it.
  * This optimization is only applicable for the pipelines with a default batch size (1).
  *
- * Be default all extractors are yielding rows one by one, in that case loaders like for example DbalLoader
+ * By default, all extractors are yielding rows one by one, in that case loaders like-for-example, DbalLoader
  * would become a bottleneck because it would execute a single query for each row.
  * This optimization will detect that and will wrap the pipeline with a BatchingPipeline.
  */
@@ -27,31 +28,13 @@ final class BatchSizeOptimization implements Optimization
         PartitioningPipeline::class,
     ];
 
-    /**
-     * We can't use DbalLoader::class here because that would create a circular dependency between ETL and Adapters.
-     * All adapters requires ETL, but ELT does not require a single adapter to be present.
-     *
-     * @var array<class-string<Loader>>
-     */
-    private array $supportedLoaders = [
-        'Flow\ETL\Adapter\Doctrine\DbalLoader',
-        'Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader',
-        'Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader',
-    ];
-
-    /**
-     * @param int<1, max> $batchSize
-     */
-    public function __construct(private readonly int $batchSize = 1000, ?array $supportedLoaders = null)
+    public function __construct()
     {
-        if ($supportedLoaders !== null) {
-            $this->supportedLoaders = $supportedLoaders;
-        }
     }
 
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
     {
-        // Pipeline is already batching so we don't need to optimize it
+        // Pipeline is already batching, so we don't need to optimize it
         if (\in_array($pipeline::class, $this->batchingPipelines, true)) {
             return false;
         }
@@ -62,7 +45,7 @@ final class BatchSizeOptimization implements Optimization
             }
         }
 
-        if (\in_array($element::class, $this->supportedLoaders, true)) {
+        if ($element instanceof BatchingLoader || $element instanceof BatchingTransformer) {
             return true;
         }
 
@@ -75,8 +58,10 @@ final class BatchSizeOptimization implements Optimization
             return $pipeline;
         }
 
-        $pipeline = new LinkedPipeline(new BatchingPipeline($pipeline, $this->batchSize));
-        $pipeline->add($element);
+        if ($element instanceof BatchingLoader || $element instanceof BatchingTransformer) {
+            $pipeline = new LinkedPipeline(new BatchingPipeline($pipeline, $element->defaultBatchSize()));
+            $pipeline->add($element);
+        }
 
         return $pipeline;
     }
@@ -86,16 +71,12 @@ final class BatchSizeOptimization implements Optimization
      */
     private function allPipelines(Pipeline $pipeline) : array
     {
-        $pipelines = [];
+        $pipelines = [$pipeline];
 
         if ($pipeline instanceof OverridingPipeline) {
-            $pipelines[] = $pipeline;
-
             foreach ($pipeline->pipelines() as $nextPipeline) {
                 $pipelines = [...$pipelines, ...$this->allPipelines($nextPipeline)];
             }
-        } else {
-            $pipelines[] = $pipeline;
         }
 
         return $pipelines;

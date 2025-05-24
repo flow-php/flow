@@ -4,30 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
-use Flow\ETL\{FlowContext, Loader, Row, Rows};
+use Flow\ETL\{FlowContext, Loader, Loader\BatchingLoader, Row, Rows};
 use Flow\ETL\Row\Entry;
 use Meilisearch\Client;
 use Psr\Http\Client\ClientInterface;
 
-final class MeilisearchLoader implements Loader
+final class MeilisearchLoader implements BatchingLoader, Loader
 {
     private ?Client $client = null;
 
     /**
-     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
+     * @param array{url: string, apiKey: string, batchSize?: int<1, max>, httpClient: ?ClientInterface} $config
      */
     public function __construct(
-        private array $config,
+        private readonly array $config,
         private readonly string $index,
     ) {
     }
 
     /**
-     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
+     * @param array{url: string, apiKey: string, batchSize?: int<1, max>, httpClient: ?ClientInterface} $config
      */
     public static function update(array $config, string $index) : self
     {
         return new self($config, $index);
+    }
+
+    public function defaultBatchSize() : int
+    {
+        return $this->config['batchSize'] ?? 1000;
     }
 
     public function load(Rows $rows, FlowContext $context) : void

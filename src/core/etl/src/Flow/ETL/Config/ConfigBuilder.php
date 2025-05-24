@@ -59,7 +59,7 @@ final class ConfigBuilder
         $this->clock ??= SystemClock::utc();
         $this->optimizer ??= new Optimizer(
             new LimitOptimization(),
-            new BatchSizeOptimization(batchSize: 1000)
+            new BatchSizeOptimization()
         );
 
         return new Config(

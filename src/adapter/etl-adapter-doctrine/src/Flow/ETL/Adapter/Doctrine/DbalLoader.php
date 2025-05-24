@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\{Connection, DriverManager};
 use Flow\Doctrine\Bulk\{Bulk, BulkData, InsertOptions, UpdateOptions};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\ETL\{FlowContext, Loader, Loader\BatchingLoader, Rows};
 
-final class DbalLoader implements Loader
+final class DbalLoader implements BatchingLoader, Loader
 {
     private ?Connection $connection = null;
 
@@ -51,6 +51,11 @@ final class DbalLoader implements Loader
         $loader->connection = $connection;
 
         return $loader;
+    }
+
+    public function defaultBatchSize() : int
+    {
+        return 1000;
     }
 
     public function load(Rows $rows, FlowContext $context) : void
