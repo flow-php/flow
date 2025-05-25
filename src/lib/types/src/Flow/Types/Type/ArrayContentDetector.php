@@ -6,6 +6,7 @@ namespace Flow\Types\Type;
 
 use function Flow\Types\DSL\{type_array, type_null, type_optional, type_string};
 use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Type;
 use Flow\Types\Type\Native\{IntegerType, NullType, StringType};
 
 final readonly class ArrayContentDetector

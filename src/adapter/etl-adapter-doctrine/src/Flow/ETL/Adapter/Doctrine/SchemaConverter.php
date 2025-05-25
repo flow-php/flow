@@ -11,6 +11,7 @@ use Doctrine\DBAL\Types\{Type as DbalType};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -22,7 +23,6 @@ use Flow\Types\Type\Logical\{DateTimeType,
     XMLElementType,
     XMLType};
 use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
-use Flow\Types\Type\Type;
 
 final readonly class SchemaConverter
 {
@@ -46,7 +46,7 @@ final readonly class SchemaConverter
     private TypesMap $typesMap;
 
     /**
-     * @param array<class-string<Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $map
+     * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $map
      */
     public function __construct(array $map = [])
     {
@@ -145,7 +145,7 @@ final readonly class SchemaConverter
     }
 
     /**
-     * @param Type<mixed> $type
+     * @param \Flow\Types\Type<mixed> $type
      */
     private function flowToColumn(string $name, Type $type, bool $nullable, ?Metadata $metadata = null) : Column
     {

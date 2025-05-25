@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
-use Flow\Types\Type\{Type, TypeFactory};
+use Flow\Types\Type;
+use Flow\Types\Type\{TypeFactory};
 
 /**
  * @template T of array

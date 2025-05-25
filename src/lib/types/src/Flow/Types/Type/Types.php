@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type;
 
 use function Flow\Types\DSL\{type_equals, type_instance_of, type_null};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\UnionType;
 

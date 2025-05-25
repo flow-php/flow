@@ -14,7 +14,7 @@ use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\String\StringStyles;
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 abstract class ScalarFunctionChain implements ScalarFunction
 {

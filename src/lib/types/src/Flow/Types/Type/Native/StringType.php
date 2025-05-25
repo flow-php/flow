@@ -7,7 +7,7 @@ namespace Flow\Types\Type\Native;
 use function Flow\Types\DSL\dom_element_to_string;
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @implements Type<string>

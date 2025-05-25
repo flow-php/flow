@@ -25,6 +25,7 @@ use function Flow\Types\DSL\{type_array,
     type_xml,
     type_xml_element};
 use Flow\Types\Exception\InvalidArgumentException;
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{InstanceOfType, ListType, MapType, OptionalType, StructureType};
 use Flow\Types\Type\Native\{EnumType, UnionType};
 

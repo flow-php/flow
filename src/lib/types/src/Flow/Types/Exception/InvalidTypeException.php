@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Exception;
 
-use Flow\Types\Type\{Type, TypeDetector};
+use Flow\Types\Type;
+use Flow\Types\Type\{TypeDetector};
 
 final class InvalidTypeException extends InvalidArgumentException
 {

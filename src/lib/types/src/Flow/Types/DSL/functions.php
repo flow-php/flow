@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Types\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\Types\Type\{Comparator, Type, TypeDetector, TypeFactory, Types};
+use Flow\Types\Type;
+use Flow\Types\Type\{Comparator, TypeDetector, TypeFactory, Types};
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     InstanceOfType,
@@ -51,9 +52,9 @@ function type_structure(array $elements) : StructureType
 /**
  * @template T
  *
- * @param Type<T> $first
+ * @param \Flow\Types\Type<T> $first
  * @param Type<T> $second
- * @param Type<T> ...$types
+ * @param \Flow\Types\Type<T> ...$types
  *
  * @return UnionType<T, T>
  */
@@ -85,7 +86,7 @@ function type_optional(Type $type) : OptionalType
 /**
  * @param array<mixed> $data
  *
- * @return Type<mixed>
+ * @return \Flow\Types\Type<mixed>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_from_array(array $data) : Type
@@ -311,8 +312,8 @@ function type_enum(string $class) : EnumType
 /**
  * @template T
  *
- * @param Type<T> $type
- * @param class-string<Type<mixed>> $typeClass
+ * @param \Flow\Types\Type<T> $type
+ * @param class-string<\Flow\Types\Type<mixed>> $typeClass
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_is(Type $type, string $typeClass) : bool
@@ -323,9 +324,9 @@ function type_is(Type $type, string $typeClass) : bool
 /**
  * @template T
  *
- * @param Type<T> $type
- * @param class-string<Type<mixed>> $typeClass
- * @param class-string<Type<mixed>> ...$typeClasses
+ * @param \Flow\Types\Type<T> $type
+ * @param class-string<\Flow\Types\Type<mixed>> $typeClass
+ * @param class-string<\Flow\Types\Type<mixed>> ...$typeClasses
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool

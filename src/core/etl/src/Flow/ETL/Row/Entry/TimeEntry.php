@@ -10,8 +10,8 @@ use DateInterval;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\TimeType;
-use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?DateInterval, DateInterval>

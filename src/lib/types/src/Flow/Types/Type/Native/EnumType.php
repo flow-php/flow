@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Native;
 
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 use UnitEnum;
 
 /**

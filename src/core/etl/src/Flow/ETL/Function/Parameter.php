@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\lit;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 use UnitEnum;
 
 final readonly class Parameter

@@ -6,7 +6,8 @@ namespace Flow\Types\Type\Native;
 
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
-use Flow\Types\Type\{Logical\OptionalType, Type, TypeFactory, Types};
+use Flow\Types\Type;
+use Flow\Types\Type\{Logical\OptionalType, TypeFactory, Types};
 
 /**
  * @template TLeft

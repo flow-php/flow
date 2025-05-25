@@ -10,7 +10,7 @@ use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @implements Entry<?float, float>

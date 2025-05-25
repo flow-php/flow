@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Formatter\PHPFormatter;
 
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -23,7 +24,6 @@ use Flow\Types\Type\Native\{ArrayType,
     NullType,
     ResourceType,
     StringType};
-use Flow\Types\Type\Type;
 
 final class TypeFormatter
 {

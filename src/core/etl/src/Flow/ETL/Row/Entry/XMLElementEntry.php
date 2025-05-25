@@ -9,8 +9,8 @@ use DOMElement;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\XMLElementType;
-use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?DOMElement, DOMElement>

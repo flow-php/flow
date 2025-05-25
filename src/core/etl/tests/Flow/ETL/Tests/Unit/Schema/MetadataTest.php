@@ -8,7 +8,7 @@ use function Flow\Types\DSL\{type_integer, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 use PHPUnit\Framework\Attributes\{DataProvider};
 
 final class MetadataTest extends FlowTestCase

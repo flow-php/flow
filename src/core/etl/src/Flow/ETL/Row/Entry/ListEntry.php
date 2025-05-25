@@ -9,8 +9,9 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\ListType;
-use Flow\Types\Type\{Type, TypeDetector};
+use Flow\Types\Type\{TypeDetector};
 
 /**
  * @implements Entry<?list<mixed>, list<mixed>>

@@ -20,8 +20,8 @@ use Flow\ETL\Row\Entry\{BooleanEntry,
     StructureEntry,
     UuidEntry,
     XMLEntry};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, MapType, StructureType};
-use Flow\Types\Type\Type;
 
 final readonly class EntryNormalizer
 {

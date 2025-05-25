@@ -9,7 +9,7 @@ use Flow\ETL\Exception\{InvalidArgumentException};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Exception\CastingException;
-use Flow\Types\Type\{Type};
+use Flow\Types\{Type};
 
 final class Cast extends ScalarFunctionChain
 {

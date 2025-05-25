@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use Flow\Types\Exception\InvalidTypeException;
-use Flow\Types\Type\{Native\MixedType, Type, TypeFactory};
+use Flow\Types\Type;
+use Flow\Types\Type\{Native\MixedType, TypeFactory};
 use Flow\Types\Type\Native\UnionType;
 
 /**

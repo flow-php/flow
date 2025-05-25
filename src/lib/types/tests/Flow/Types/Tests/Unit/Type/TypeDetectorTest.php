@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type;
 
 use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_string};
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     InstanceOfType,
@@ -18,7 +19,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     XMLElementType,
     XMLType};
 use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, StringType};
-use Flow\Types\Type\{Type, TypeDetector};
+use Flow\Types\Type\{TypeDetector};
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

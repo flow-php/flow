@@ -8,8 +8,8 @@ use function Flow\ETL\DSL\{df, from_array, ref, rename_replace, to_output};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, SchemaFormatter};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
-use Flow\Types\Type\Type;
 
 final readonly class ASCIISchemaFormatter implements SchemaFormatter
 {

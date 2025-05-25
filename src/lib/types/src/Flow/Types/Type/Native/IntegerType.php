@@ -6,7 +6,7 @@ namespace Flow\Types\Type\Native;
 
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @implements Type<int>
@@ -43,6 +43,10 @@ final readonly class IntegerType implements Type
                 $endTime = $reference->add($value);
 
                 return (int) ($endTime->format('Uu')) - (int) ($reference->format('Uu'));
+            }
+
+            if (\is_object($value)) {
+                throw new CastingException($value, $this);
             }
 
             return (int) $value;

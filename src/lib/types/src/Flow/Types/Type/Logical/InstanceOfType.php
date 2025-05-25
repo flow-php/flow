@@ -6,7 +6,7 @@ namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\type_instance_of;
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @template T of object

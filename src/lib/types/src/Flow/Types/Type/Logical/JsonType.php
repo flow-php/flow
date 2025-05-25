@@ -7,8 +7,8 @@ namespace Flow\Types\Type\Logical;
 use function Flow\Types\DSL\type_json;
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Type;
 use Flow\Types\Type\Native\String\StringTypeChecker;
-use Flow\Types\Type\Type;
 
 /**
  * @implements Type<string>

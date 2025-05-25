@@ -8,8 +8,8 @@ use function Flow\Types\DSL\{type_equals, type_uuid};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\UuidType;
-use Flow\Types\Type\Type;
 use Flow\Types\Value\Uuid;
 
 /**

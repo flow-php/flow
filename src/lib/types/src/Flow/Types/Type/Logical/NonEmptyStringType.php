@@ -6,7 +6,7 @@ namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\dom_element_to_string;
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @implements Type<non-empty-string>

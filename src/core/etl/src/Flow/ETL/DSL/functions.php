@@ -165,6 +165,7 @@ use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameReplaceEntryStra
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
 use Flow\Filesystem\Stream\Mode;
 use Flow\Serializer\{NativePHPSerializer, Serializer};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     InstanceOfType,
@@ -189,7 +190,7 @@ use Flow\Types\Type\Native\{
     StringType,
     UnionType
 };
-use Flow\Types\Type\{Type, Types};
+use Flow\Types\Type\{Types};
 use UnitEnum;
 
 /**
@@ -588,7 +589,7 @@ function type_structure(array $elements) : StructureType
  * @template T
  *
  * @param Type<T> $first
- * @param Type<T> $second
+ * @param \Flow\Types\Type<T> $second
  * @param Type<T> ...$types
  *
  * @return UnionType<T, T>
@@ -604,7 +605,7 @@ function type_union(Type $first, Type $second, Type ...$types) : UnionType
 /**
  * @template T
  *
- * @param Type<T> $type
+ * @param \Flow\Types\Type<T> $type
  *
  * @return OptionalType<T>
  *
@@ -630,7 +631,7 @@ function type_from_array(array $data) : Type
 }
 
 /**
- * @param Type<mixed> $type
+ * @param \Flow\Types\Type<mixed> $type
  *
  * @deprecated please use \Flow\Types\DSL\is_nullable(Type $type) : bool
  */
@@ -1120,7 +1121,7 @@ function hash(mixed $value, Algorithm $algorithm = new NativePHPHash()) : Hash
 }
 
 /**
- * @param string|Type<mixed> $type
+ * @param \Flow\Types\Type<mixed>|string $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function cast(mixed $value, string|Type $type) : Cast
@@ -1888,7 +1889,7 @@ function is_type(Type|array $type, mixed $value) : bool
 /**
  * @template T
  *
- * @param Type<T> $type
+ * @param \Flow\Types\Type<T> $type
  * @param class-string<Type<mixed>> $typeClass
  *
  * @deprecated please use \Flow\Types\DSL\type_is($type, $typeClass): bool instead

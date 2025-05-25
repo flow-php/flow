@@ -8,7 +8,7 @@ use function Flow\Types\DSL\type_time;
 use DateInterval;
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @implements Type<DateInterval>

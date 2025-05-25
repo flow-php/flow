@@ -8,8 +8,9 @@ use function Flow\ETL\DSL\{is_nullable};
 use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_enum, type_equals, type_float, type_integer, type_is, type_is_any, type_json, type_list, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element, types};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
-use Flow\Types\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, Type, TypeFactory};
+use Flow\Types\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, TypeFactory};
 
 final class Definition
 {

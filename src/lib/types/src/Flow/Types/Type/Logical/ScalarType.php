@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_string, type_union};
+use Flow\Types\Type;
 use Flow\Types\Type\Native\UnionType;
-use Flow\Types\Type\Type;
 
 /**
  * @implements Type<int|float|string|bool>

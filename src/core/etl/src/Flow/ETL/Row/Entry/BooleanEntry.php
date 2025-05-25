@@ -8,8 +8,8 @@ use function Flow\Types\DSL\{type_boolean, type_equals};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Native\BooleanType;
-use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?bool, bool>

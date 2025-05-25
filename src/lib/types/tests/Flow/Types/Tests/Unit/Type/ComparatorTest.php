@@ -17,7 +17,8 @@ use function Flow\Types\DSL\{type_boolean,
     type_string,
     type_structure,
     type_union};
-use Flow\Types\Type\{Comparator, Type};
+use Flow\Types\Type;
+use Flow\Types\Type\{Comparator};
 use Flow\Types\Type\Logical\{MapType, OptionalType};
 use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, ResourceType, StringType, UnionType};
 use PHPUnit\Framework\Attributes\DataProvider;

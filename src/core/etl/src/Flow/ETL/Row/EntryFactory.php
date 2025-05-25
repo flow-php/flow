@@ -29,6 +29,7 @@ use Flow\ETL\Row\Entry\{ListEntry, StringEntry};
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Exception\CastingException;
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     InstanceOfType,
@@ -52,7 +53,7 @@ use Flow\Types\Type\Native\{
     UnionType
 };
 use Flow\Types\Type\Native\String\StringTypeChecker;
-use Flow\Types\Type\{Type, TypeDetector};
+use Flow\Types\Type\{TypeDetector};
 use Flow\Types\Value\Uuid;
 
 final readonly class EntryFactory

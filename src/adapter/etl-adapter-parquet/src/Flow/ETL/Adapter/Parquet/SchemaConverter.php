@@ -22,6 +22,7 @@ use Flow\ETL\Schema\Definition;
 use Flow\ETL\{Schema};
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -34,7 +35,6 @@ use Flow\Types\Type\Logical\{DateTimeType,
     XMLElementType,
     XMLType};
 use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
-use Flow\Types\Type\Type;
 
 final class SchemaConverter
 {

@@ -7,7 +7,7 @@ namespace Flow\Types\Type\Logical;
 use DateTimeInterface;
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @implements Type<DateTimeInterface>

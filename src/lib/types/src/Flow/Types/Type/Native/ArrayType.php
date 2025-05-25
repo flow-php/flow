@@ -6,8 +6,8 @@ namespace Flow\Types\Type\Native;
 
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\XML\XMLConverter;
-use Flow\Types\Type\Type;
 
 /**
  * @implements Type<array>

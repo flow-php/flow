@@ -6,7 +6,7 @@ namespace Flow\Types\Type\Logical;
 
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
-use Flow\Types\Type\Type;
+use Flow\Types\Type;
 
 /**
  * @implements Type<int<0, max>>

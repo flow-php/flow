@@ -9,8 +9,8 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\JsonType;
-use Flow\Types\Type\Type;
 
 /**
  * @implements Entry<?array<mixed>, string>

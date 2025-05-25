@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flow\Types\Type;
+namespace Flow\Types;
 
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 
 /**
  * @template-covariant T

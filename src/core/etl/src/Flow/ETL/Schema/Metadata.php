@@ -6,7 +6,7 @@ namespace Flow\ETL\Schema;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Types\Type\{Type};
+use Flow\Types\{Type};
 
 final class Metadata
 {

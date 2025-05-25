@@ -7,8 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\Types\DSL\{type_enum, type_equals};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Native\EnumType;
-use Flow\Types\Type\Type;
 use UnitEnum;
 
 /**

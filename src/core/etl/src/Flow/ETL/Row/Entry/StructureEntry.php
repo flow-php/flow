@@ -9,8 +9,8 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\StructureType;
-use Flow\Types\Type\Type;
 use Flow\Types\Type\{TypeDetector};
 
 /**

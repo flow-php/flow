@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\Types\{BigIntType, BlobType, DateImmutableType, DateTimeImmutableType, DateTimeTzImmutableType, DateTimeTzType, DecimalType, GuidType, SmallFloatType, SmallIntType, TextType, TimeImmutableType};
 use Doctrine\DBAL\Types\{Type as DbalType};
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Types\Type as FlowType;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -18,7 +19,6 @@ use Flow\Types\Type\Logical\{DateTimeType,
     XMLElementType,
     XMLType};
 use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
-use Flow\Types\Type\Type as FlowType;
 
 final class TypesMap
 {
