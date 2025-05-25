@@ -4,78 +4,154 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\type_non_empty_string;
+use function Flow\Types\DSL\{type_from_array, type_non_empty_string};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
-use Flow\Types\Type\TypeFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NonEmptyStringTypeTest extends TestCase
 {
-    public static function assertion_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string', false];
-        yield ['', true];
-        yield [0, true];
+        yield 'valid non-empty string' => [
+            'value' => 'string',
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid empty string' => [
+            'value' => '',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 0,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function casting_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield ['string', 'string', false];
-        yield ['', '', true];
-        yield [0, '0', false];
-        yield [1, '1', false];
-        yield [new \DateTimeImmutable('2024-12-01'), '2024-12-01T00:00:00+00:00', false];
-        yield [new \DateTime('2024-12-01'), '2024-12-01T00:00:00+00:00', false];
-        yield [new \DateTimeZone('UTC'), 'UTC', false];
-        yield [new \DOMElement('element', '2024-12-01'), '<element>2024-12-01</element>', false];
+        yield 'string stays as is' => [
+            'value' => 'string',
+            'expected' => 'string',
+            'exceptionClass' => null,
+        ];
+
+        yield 'empty string throws exception' => [
+            'value' => '',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'integer 0 to string' => [
+            'value' => 0,
+            'expected' => '0',
+            'exceptionClass' => null,
+        ];
+
+        yield 'integer 1 to string' => [
+            'value' => 1,
+            'expected' => '1',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTimeImmutable to string' => [
+            'value' => new \DateTimeImmutable('2024-12-01'),
+            'expected' => '2024-12-01T00:00:00+00:00',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTime to string' => [
+            'value' => new \DateTime('2024-12-01'),
+            'expected' => '2024-12-01T00:00:00+00:00',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTimeZone to string' => [
+            'value' => new \DateTimeZone('UTC'),
+            'expected' => 'UTC',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DOMElement to string' => [
+            'value' => new \DOMElement('element', '2024-12-01'),
+            'expected' => '<element>2024-12-01</element>',
+            'exceptionClass' => null,
+        ];
     }
 
-    public static function validation_data_provider() : \Generator
+    public static function is_valid_data_provider() : \Generator
     {
-        yield ['string', true];
-        yield ['', false];
-        yield [0, false];
-        yield [1, false];
+        yield 'valid non-empty string' => [
+            'value' => 'string',
+            'expected' => true,
+        ];
+
+        yield 'invalid empty string' => [
+            'value' => '',
+            'expected' => false,
+        ];
+
+        yield 'invalid integer 0' => [
+            'value' => 0,
+            'expected' => false,
+        ];
+
+        yield 'invalid integer 1' => [
+            'value' => 1,
+            'expected' => false,
+        ];
     }
 
-    #[DataProvider('assertion_data_provider')]
-    public function test_assert(mixed $value, bool $exception) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        if ($exception) {
-            $this->expectException(InvalidTypeException::class);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
         }
 
-        self::assertSame($value, type_non_empty_string()->assert($value));
+        $result = type_non_empty_string()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsString($result);
+            self::assertSame($value, $result);
+        }
     }
 
-    #[DataProvider('casting_data_provider')]
-    public function test_cast(mixed $value, mixed $output, bool $exception) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        if ($exception) {
-            $this->expectException(CastingException::class);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
         }
 
-        self::assertSame($output, type_non_empty_string()->cast($value));
+        $result = type_non_empty_string()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
-    #[DataProvider('validation_data_provider')]
-    public function test_is_valid(mixed $value, bool $result) : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        self::assertEquals($result, type_non_empty_string()->isValid($value));
+        self::assertSame($expected, type_non_empty_string()->isValid($value));
     }
 
     public function test_normalization() : void
     {
         $type = type_non_empty_string();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
 
+        self::assertEquals($type, $recreated);
+    }
+
+    public function test_to_string() : void
+    {
         self::assertSame(
-            [
-                'type' => 'non_empty_string',
-            ],
-            $type->normalize()
+            'non_empty_string',
+            type_non_empty_string()->toString()
         );
-
-        self::assertEquals(type_non_empty_string(), TypeFactory::fromArray($type->normalize()));
     }
 }

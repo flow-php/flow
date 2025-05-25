@@ -4,62 +4,147 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\type_time;
+use function Flow\Types\DSL\{type_from_array, type_time};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class TimeTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string'];
-        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
-        yield [false];
-        yield [124.25];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeZone('UTC')];
-        yield [new \DateTimeImmutable()];
+        yield 'valid DateInterval' => [
+            'value' => new \DateInterval('PT10S'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid UUID string' => [
+            'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [new \DateInterval('PT10S')];
+        yield 'string to time' => [
+            'value' => 'PT1S',
+            'expected' => new \DateInterval('PT1S'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'datetime to time' => [
+            'value' => new \DateTimeImmutable('2021-01-01 00:00:01'),
+            'expected' => new \DateInterval('PT1S'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'date to time' => [
+            'value' => new \DateTimeImmutable('2021-01-01'),
+            'expected' => new \DateInterval('PT0S'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'time stays as is' => [
+            'value' => new \DateInterval('PT10S'),
+            'expected' => new \DateInterval('PT10S'),
+            'exceptionClass' => null,
+        ];
     }
 
-    public static function time_castable_data_provider() : \Generator
+    public static function is_valid_data_provider() : \Generator
     {
-        yield 'string' => ['PT1S', new \DateInterval('PT1S')];
-        yield 'datetime' => [new \DateTimeImmutable('2021-01-01 00:00:01'), new \DateInterval('PT1S')];
-        yield 'date' => [new \DateTimeImmutable('2021-01-01'), new \DateInterval('PT0S')];
-        yield 'time' => [new \DateInterval('PT10S'), new \DateInterval('PT10S')];
+        yield 'valid DateInterval' => [
+            'value' => new \DateInterval('PT10S'),
+            'expected' => true,
+        ];
+
+        yield 'invalid time string' => [
+            'value' => '00:00:01',
+            'expected' => false,
+        ];
+
+        yield 'invalid interval string' => [
+            'value' => 'PT10S',
+            'expected' => false,
+        ];
     }
 
-    #[DataProvider('time_castable_data_provider')]
-    public function test_casting_different_time_types_to_time(mixed $value, \DateInterval $expextedInterval) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertEquals($expextedInterval, type_time()->cast($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_time()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertInstanceOf(\DateInterval::class, $result);
+        }
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_time()->assert($value);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_time()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertEquals($expected, $result);
+        }
     }
 
-    public function test_is_valid() : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        self::assertTrue(type_time()->isValid(new \DateInterval('PT10S')));
-        self::assertFalse(type_time()->isValid('00:00:01'));
-        self::assertFalse(type_time()->isValid('PT10S'));
+        self::assertSame($expected, type_time()->isValid($value));
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    public function test_normalization() : void
     {
-        self::assertInstanceOf(\DateInterval::class, type_time()->assert($value));
+        $type = type_time();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void

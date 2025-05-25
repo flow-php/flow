@@ -4,69 +4,159 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\{type_from_array, type_instance_of};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class InstanceOfTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string', \DateTimeImmutable::class];
-        yield [false, \DateTimeImmutable::class];
-        yield [124.25, \DateTimeImmutable::class];
-        yield [[1, 2], \DateTimeImmutable::class];
-        yield [new \stdClass(), \DateTimeImmutable::class];
+        yield 'valid DateTimeImmutable for DateTimeImmutable class' => [
+            'value' => new \DateTimeImmutable(),
+            'class' => \DateTimeImmutable::class,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid DateTimeImmutable for DateTimeInterface class' => [
+            'value' => new \DateTimeImmutable(),
+            'class' => \DateTimeInterface::class,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid DateTime for DateTimeInterface class' => [
+            'value' => new \DateTime(),
+            'class' => \DateTimeInterface::class,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'class' => \DateTimeImmutable::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'class' => \DateTimeImmutable::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'class' => \DateTimeImmutable::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'class' => \DateTimeImmutable::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid stdClass' => [
+            'value' => new \stdClass(),
+            'class' => \DateTimeImmutable::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [new \DateTimeImmutable(), \DateTimeImmutable::class];
-        yield [new \DateTimeImmutable(), \DateTimeInterface::class];
-        yield [new \DateTime(), \DateTimeInterface::class];
+        yield 'stdClass object' => [
+            'value' => (object) ['foo' => 'bar'],
+            'class' => \stdClass::class,
+            'expected' => (object) ['foo' => 'bar'],
+            'exceptionClass' => null,
+        ];
     }
 
-    public function test_casting_string_to_object() : void
+    public static function is_valid_data_provider() : \Generator
     {
-        self::assertEquals(
-            (object) ['foo' => 'bar'],
-            type_instance_of(\stdClass::class)->cast((object) ['foo' => 'bar'])
-        );
-        self::assertInstanceOf(
-            \stdClass::class,
-            type_instance_of(\stdClass::class)->cast((object) ['foo' => 'bar'])
-        );
+        yield 'valid stdClass for stdClass class' => [
+            'value' => new \stdClass(),
+            'class' => \stdClass::class,
+            'expected' => true,
+        ];
+
+        yield 'invalid null' => [
+            'value' => null,
+            'class' => \stdClass::class,
+            'expected' => false,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'one',
+            'class' => \stdClass::class,
+            'expected' => false,
+        ];
+
+        yield 'invalid ArrayIterator' => [
+            'value' => new \ArrayIterator([]),
+            'class' => \stdClass::class,
+            'expected' => false,
+        ];
     }
 
     /**
      * @param class-string $class
      */
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value, string $class) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, string $class, ?string $exceptionClass = null) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_instance_of($class)->assert($value);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_instance_of($class)->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertInstanceOf($class, $result);
+        }
     }
 
     /**
      * @param class-string $class
      */
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value, string $class) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, string $class, mixed $expected, ?string $exceptionClass) : void
     {
-        self::assertInstanceOf($class, (type_instance_of($class))->assert($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_instance_of($class)->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertEquals($expected, $result);
+            self::assertInstanceOf($class, $result);
+        }
     }
 
-    public function test_valid() : void
+    /**
+     * @param class-string $class
+     */
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, string $class, bool $expected) : void
     {
-        /** @phpstan-ignore-next-line  */
-        self::assertFalse(type_instance_of(\stdClass::class)->isValid(null));
-        /** @phpstan-ignore-next-line  */
-        self::assertFalse(type_instance_of(\stdClass::class)->isValid('one'));
-        /** @phpstan-ignore-next-line  */
-        self::assertFalse(type_instance_of(\stdClass::class)->isValid(new \ArrayIterator([])));
-        /** @phpstan-ignore-next-line  */
-        self::assertTrue(type_instance_of(\stdClass::class)->isValid(new \stdClass()));
+        self::assertSame($expected, type_instance_of($class)->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_instance_of(\DateTimeImmutable::class);
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
+    }
+
+    public function test_to_string() : void
+    {
+        self::assertSame(
+            'object<DateTimeImmutable>',
+            type_instance_of(\DateTimeImmutable::class)->toString()
+        );
     }
 }

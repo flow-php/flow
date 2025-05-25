@@ -4,31 +4,163 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\type_null;
+use function Flow\Types\DSL\{type_from_array, type_null};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NullTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string'];
-        yield [false];
-        yield [124.25];
-        yield [124];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeImmutable()];
-        yield [new \DateTime()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'valid null' => [
+            'value' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 124,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTime' => [
+            'value' => new \DateTime(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    public static function cast_data_provider() : \Generator
     {
-        $this->expectException(InvalidTypeException::class);
-        (type_null())->assert($value);
+        yield 'null stays as null' => [
+            'value' => null,
+            'expected' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'string to null' => [
+            'value' => '',
+            'expected' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'empty array to null' => [
+            'value' => [],
+            'expected' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'false to null' => [
+            'value' => false,
+            'expected' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'zero to null' => [
+            'value' => 0,
+            'expected' => null,
+            'exceptionClass' => null,
+        ];
+    }
+
+    public static function is_valid_data_provider() : \Generator
+    {
+        yield 'valid null' => [
+            'value' => null,
+            'expected' => true,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'one',
+            'expected' => false,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'expected' => false,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'expected' => false,
+        ];
+    }
+
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_null()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertNull($result);
+        }
+    }
+
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_null()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
+    }
+
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
+    {
+        self::assertSame($expected, type_null()->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_null();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -36,22 +168,6 @@ final class NullTypeTest extends TestCase
         self::assertSame(
             'null',
             type_null()->toString()
-        );
-    }
-
-    public function test_valid() : void
-    {
-        self::assertTrue(
-            type_null()->isValid(null)
-        );
-        self::assertFalse(
-            type_null()->isValid('one')
-        );
-        self::assertFalse(
-            type_null()->isValid([1, 2])
-        );
-        self::assertFalse(
-            type_null()->isValid(123)
         );
     }
 }

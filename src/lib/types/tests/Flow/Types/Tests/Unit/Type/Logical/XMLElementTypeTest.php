@@ -4,49 +4,144 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\type_xml_element;
-use Flow\Types\Exception\InvalidTypeException;
+use function Flow\Types\DSL\{type_from_array, type_xml_element};
+use Flow\Types\Exception\{InvalidTypeException};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class XMLElementTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string'];
-        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
-        yield [false];
-        yield [124.25];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeZone('UTC')];
-        yield [new \DateTimeImmutable()];
+        yield 'valid DOMElement' => [
+            'value' => new \DOMElement('xml'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid UUID string' => [
+            'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [new \DOMElement('xml')];
+        yield 'DOMElement stays as is' => [
+            'value' => $element = new \DOMElement('xml'),
+            'expected' => $element,
+            'exceptionClass' => null,
+        ];
+
+        yield 'string to DOMElement' => [
+            'value' => '<xml></xml>',
+            'expected' => new \DOMElement('xml'),
+            'exceptionClass' => null,
+        ];
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    public static function is_valid_data_provider() : \Generator
     {
-        $this->expectException(InvalidTypeException::class);
-        type_xml_element()->assert($value);
+        yield 'valid DOMElement' => [
+            'value' => new \DOMElement('xml'),
+            'expected' => true,
+        ];
+
+        yield 'invalid XML string' => [
+            'value' => '<xml></xml>',
+            'expected' => false,
+        ];
+
+        yield 'invalid date string' => [
+            'value' => '2020-01-01',
+            'expected' => false,
+        ];
+
+        yield 'invalid datetime string' => [
+            'value' => '2020-01-01 00:00:00',
+            'expected' => false,
+        ];
     }
 
-    public function test_is_valid() : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertTrue(type_xml_element()->isValid(new \DOMElement('xml')));
-        self::assertFalse(type_xml_element()->isValid('<xml></xml>'));
-        self::assertFalse(type_xml_element()->isValid('2020-01-01'));
-        self::assertFalse(type_xml_element()->isValid('2020-01-01 00:00:00'));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_xml_element()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertInstanceOf(\DOMElement::class, $result);
+        }
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        self::assertInstanceOf(\DOMElement::class, type_xml_element()->assert($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_xml_element()->cast($value);
+
+        if ($exceptionClass === null) {
+            if ($result instanceof \DOMElement && $expected instanceof \DOMElement) {
+                self::assertEquals($expected->nodeName, $result->nodeName);
+            } else {
+                self::assertSame($expected, $result);
+            }
+        }
+    }
+
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
+    {
+        self::assertSame($expected, type_xml_element()->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_xml_element();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void

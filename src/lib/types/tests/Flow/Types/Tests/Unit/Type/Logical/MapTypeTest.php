@@ -4,71 +4,191 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_float, type_integer, type_list, type_map, type_string};
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use function Flow\Types\DSL\{type_float, type_from_array, type_integer, type_list, type_map, type_string};
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class MapTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string'];
-        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
-        yield [false];
-        yield [124.25];
-        yield [['a' => 'a', 'b' => 'b']];
-        yield [new \stdClass()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'valid map with integer keys' => [
+            'value' => [1 => 'a', 2 => 'b'],
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid map with sequential keys' => [
+            'value' => [0 => 'a', 1 => 'b'],
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid map with non-sequential integer keys' => [
+            'value' => [100 => 'a', 99 => 'b'],
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid UUID string' => [
+            'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid map with string keys for integer key type' => [
+            'value' => ['a' => 'a', 'b' => 'b'],
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [[1 => 'a', 2 => 'b']];
-        yield [[0 => 'a', 1 => 'b']];
-        yield [[100 => 'a', 99 => 'b']];
+        yield 'map of ints to map of floats' => [
+            'value' => ['a' => 1, 'b' => 2, 'c' => 3],
+            'keyType' => type_string(),
+            'valueType' => type_float(),
+            'expected' => ['a' => 1.0, 'b' => 2.0, 'c' => 3.0],
+            'exceptionClass' => null,
+        ];
+
+        yield 'map of string to ints into map of int to float' => [
+            'value' => ['a' => 1, 'b' => 2, 'c' => 3],
+            'keyType' => type_integer(),
+            'valueType' => type_float(),
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
-    public function test_casting_map_of_ints_into_map_of_floats() : void
+    public static function is_valid_data_provider() : \Generator
     {
-        self::assertSame(
-            [
-                'a' => 1.0,
-                'b' => 2.0,
-                'c' => 3.0,
-            ],
-            type_map(type_string(), type_float())->cast(['a' => 1, 'b' => 2, 'c' => 3])
-        );
+        yield 'valid map with string keys and string values' => [
+            'value' => ['one' => 'two'],
+            'keyType' => type_string(),
+            'valueType' => type_string(),
+            'expected' => true,
+        ];
+
+        yield 'valid map with integer keys and list values' => [
+            'value' => [[1, 2], [3, 4]],
+            'keyType' => type_integer(),
+            'valueType' => type_list(type_integer()),
+            'expected' => true,
+        ];
+
+        yield 'valid complex nested map' => [
+            'value' => [0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]],
+            'keyType' => type_integer(),
+            'valueType' => type_map(type_string(), type_list(type_integer())),
+            'expected' => true,
+        ];
+
+        yield 'invalid map with string keys for integer key type' => [
+            'value' => ['one' => 'two'],
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'expected' => false,
+        ];
+
+        yield 'invalid indexed array for map' => [
+            'value' => [1, 2],
+            'keyType' => type_integer(),
+            'valueType' => type_string(),
+            'expected' => false,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'keyType' => type_string(),
+            'valueType' => type_string(),
+            'expected' => false,
+        ];
     }
 
-    public function test_casting_map_of_string_to_ints_into_map_of_int_to_float() : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, $keyType, $valueType, ?string $exceptionClass = null) : void
     {
-        $this->expectException(CastingException::class);
-        $this->expectExceptionMessage('Can\'t cast "array" into "map<integer, float>"');
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
 
-        self::assertSame(
-            [
-                'a' => 1.0,
-                'b' => 2.0,
-                'c' => 3.0,
-            ],
-            type_map(type_integer(), type_float())->cast(['a' => 1, 'b' => 2, 'c' => 3])
-        );
+        $result = type_map($keyType, $valueType)->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsArray($result);
+        }
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, $keyType, $valueType, mixed $expected, ?string $exceptionClass) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_map(type_integer(), type_string())->assert($value);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_map($keyType, $valueType)->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, $keyType, $valueType, bool $expected) : void
     {
-        /** @phpstan-ignore-next-line */
-        self::assertIsArray((type_map(type_integer(), type_string()))->assert($value));
+        self::assertSame($expected, type_map($keyType, $valueType)->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_map(type_string(), type_integer());
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -76,29 +196,6 @@ final class MapTypeTest extends TestCase
         self::assertSame(
             'map<string, string>',
             (type_map(type_string(), type_string()))->toString()
-        );
-    }
-
-    public function test_valid() : void
-    {
-        self::assertTrue(
-            (type_map(type_string(), type_string()))->isValid(['one' => 'two'])
-        );
-        self::assertTrue(
-            (type_map(type_integer(), type_list(type_integer())))->isValid([[1, 2], [3, 4]])
-        );
-        self::assertTrue(
-            (type_map(type_integer(), type_map(type_string(), type_list(type_integer()))))
-                ->isValid([0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]])
-        );
-        self::assertFalse(
-            (type_map(type_integer(), type_string()))->isValid(['one' => 'two'])
-        );
-        self::assertFalse(
-            (type_map(type_integer(), type_string()))->isValid([1, 2])
-        );
-        self::assertFalse(
-            (type_map(type_string(), type_string()))->isValid(123)
         );
     }
 }

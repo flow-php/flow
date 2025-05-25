@@ -4,67 +4,172 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\type_resource;
-use Flow\Types\Exception\InvalidTypeException;
+use function Flow\Types\DSL\{type_from_array, type_resource};
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ResourceTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield [null];
-        yield ['string'];
-        yield [false];
-        yield [123];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeImmutable()];
-        yield [new \DateTime()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'valid resource' => [
+            'value' => \fopen('php://temp/max', 'r+b'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid null' => [
+            'value' => null,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTime' => [
+            'value' => new \DateTime(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [\fopen('php://temp/max', 'r+b')];
+        $resource = \fopen('php://temp/max', 'r+b');
+
+        yield 'resource stays as is' => [
+            'value' => $resource,
+            'expected' => $resource,
+            'exceptionClass' => null,
+        ];
+
+        yield 'string to resource' => [
+            'value' => 'not a resource',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'array to resource' => [
+            'value' => [],
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    public static function is_valid_data_provider() : \Generator
     {
-        $this->expectException(InvalidTypeException::class);
-        type_resource()->assert($value);
+        yield 'valid resource' => [
+            'value' => 'resource',
+            'expected' => true,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'one',
+            'expected' => false,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'expected' => false,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'expected' => false,
+        ];
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertIsResource(type_resource()->assert($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_resource()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsResource($result);
+        }
+    }
+
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_resource()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
+    }
+
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
+    {
+        if ($value === 'resource') {
+            $resource = \fopen('php://temp/max', 'r+b');
+
+            try {
+                self::assertSame($expected, type_resource()->isValid($resource));
+            } finally {
+                \fclose($resource);
+            }
+
+            return;
+        }
+
+        self::assertSame($expected, type_resource()->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_resource();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
     {
         self::assertSame(
             'resource',
-            (type_resource())->toString()
-        );
-    }
-
-    public function test_valid() : void
-    {
-        $handle = \fopen('php://temp/max', 'r+b');
-        self::assertTrue(
-            (type_resource())->isValid($handle)
-        );
-        \fclose($handle);
-        self::assertFalse(
-            (type_resource())->isValid('one')
-        );
-        self::assertFalse(
-            (type_resource())->isValid([1, 2])
-        );
-        self::assertFalse(
-            (type_resource())->isValid(123)
+            type_resource()->toString()
         );
     }
 }

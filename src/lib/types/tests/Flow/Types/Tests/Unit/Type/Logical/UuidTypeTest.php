@@ -4,88 +4,168 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\type_uuid;
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use function Flow\Types\DSL\{type_from_array, type_uuid};
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
 final class UuidTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string'];
-        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
-        yield [false];
-        yield [124.25];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeImmutable()];
-        yield [new \DateTime()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'valid Uuid' => [
+            'value' => new \Flow\Types\Value\Uuid('49e952c8-80ec-4910-a1d6-a19bd46b163d'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid UUID string' => [
+            'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTime' => [
+            'value' => new \DateTime(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [new \Flow\Types\Value\Uuid('49e952c8-80ec-4910-a1d6-a19bd46b163d')];
+        yield 'string to uuid' => [
+            'value' => '6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e',
+            'expected' => new \Flow\Types\Value\Uuid('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'ramsey uuid to uuid' => [
+            'value' => Uuid::fromString('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
+            'expected' => new \Flow\Types\Value\Uuid('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'xml element to uuid' => [
+            'value' => new \DOMElement('element', '6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
+            'expected' => '6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e',
+            'exceptionClass' => null,
+        ];
+
+        yield 'integer to uuid' => [
+            'value' => 1,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
-    public function test_casting_integer_to_uuid() : void
+    public static function is_valid_data_provider() : \Generator
     {
-        $this->expectException(CastingException::class);
-        $this->expectExceptionMessage('Can\'t cast "int" into "uuid" type');
+        yield 'valid Flow Uuid' => [
+            'value' => new \Flow\Types\Value\Uuid(Uuid::uuid4()),
+            'expected' => true,
+        ];
 
-        type_uuid()->cast(1);
+        yield 'invalid uuid string' => [
+            'value' => 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a',
+            'expected' => false,
+        ];
+
+        yield 'invalid malformed uuid string' => [
+            'value' => 'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5',
+            'expected' => false,
+        ];
+
+        yield 'invalid short string' => [
+            'value' => '2',
+            'expected' => false,
+        ];
+
+        yield 'invalid Ramsey Uuid' => [
+            'value' => Uuid::uuid4(),
+            'expected' => false,
+        ];
+
+        yield 'invalid Symfony Uuid' => [
+            'value' => \Symfony\Component\Uid\Uuid::v4(),
+            'expected' => false,
+        ];
     }
 
-    public function test_casting_ramsey_uuid_to_uuid() : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertEquals(
-            new \Flow\Types\Value\Uuid('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
-            type_uuid()->cast(Uuid::fromString('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'))
-        );
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_uuid()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertInstanceOf(\Flow\Types\Value\Uuid::class, $result);
+        }
     }
 
-    public function test_casting_string_to_uuid() : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        self::assertEquals(
-            new \Flow\Types\Value\Uuid('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
-            type_uuid()->cast('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e')
-        );
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_uuid()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertEquals($expected, $result);
+        }
     }
 
-    public function test_casting_xml_element_to_uuid() : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        $uuid = Uuid::fromString('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e')->toString();
-
-        self::assertEquals(
-            $uuid,
-            type_uuid()->cast(new \DOMElement('element', $uuid))
-        );
+        self::assertSame($expected, type_uuid()->isValid($value));
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    public function test_normalization() : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_uuid()->assert($value);
-    }
+        $type = type_uuid();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
 
-    public function test_is_valid() : void
-    {
-        self::assertFalse(type_uuid()->isValid('f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a'));
-        self::assertFalse(type_uuid()->isValid('f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5'));
-        self::assertFalse(type_uuid()->isValid('2'));
-        self::assertFalse(type_uuid()->isValid(Uuid::uuid4()));
-        self::assertFalse(type_uuid()->isValid(\Symfony\Component\Uid\Uuid::v4()));
-        self::assertTrue(type_uuid()->isValid(new \Flow\Types\Value\Uuid(Uuid::uuid4())));
-    }
-
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
-    {
-        self::assertInstanceOf(\Flow\Types\Value\Uuid::class, type_uuid()->assert($value));
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void

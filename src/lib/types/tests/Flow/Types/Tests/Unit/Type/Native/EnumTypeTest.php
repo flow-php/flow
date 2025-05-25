@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\type_enum;
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use function Flow\Types\DSL\{type_enum, type_from_array};
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Tests\Unit\Type\Fixtures\{AnotherEnum, SomeEnum};
 use Flow\Types\Tests\Unit\Type\Fixtures\ColorsEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -14,50 +13,166 @@ use PHPUnit\Framework\TestCase;
 
 final class EnumTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield [null, AnotherEnum::class, false];
+        yield 'valid enum value' => [
+            'value' => SomeEnum::A,
+            'class' => SomeEnum::class,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid enum for UnitEnum' => [
+            'value' => SomeEnum::B,
+            'class' => \UnitEnum::class,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid enum for BackedEnum' => [
+            'value' => SomeEnum::B,
+            'class' => \BackedEnum::class,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid null value' => [
+            'value' => null,
+            'class' => AnotherEnum::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid string value' => [
+            'value' => 'not_an_enum',
+            'class' => SomeEnum::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid integer value' => [
+            'value' => 123,
+            'class' => ColorsEnum::class,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [SomeEnum::A, SomeEnum::class];
-        yield [SomeEnum::B, \UnitEnum::class]; // all enums are \UnitEnum
-        yield [SomeEnum::B, \BackedEnum::class]; // SomeEnum is string backed enum
+        yield 'valid string to enum' => [
+            'value' => 'red',
+            'class' => ColorsEnum::class,
+            'expected' => ColorsEnum::RED,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid enum stays as is' => [
+            'value' => SomeEnum::A,
+            'class' => SomeEnum::class,
+            'expected' => SomeEnum::A,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid integer to enum' => [
+            'value' => 1,
+            'class' => ColorsEnum::class,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'invalid string to enum' => [
+            'value' => 'not_a_color',
+            'class' => ColorsEnum::class,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
-    public function test_casting_integer_to_enum() : void
+    public static function is_valid_data_provider() : \Generator
     {
-        $this->expectException(CastingException::class);
-        $this->expectExceptionMessage('Can\'t cast "int" into "enum<Flow\Types\Tests\Unit\Type\Fixtures\ColorsEnum>" type');
+        yield 'valid enum value' => [
+            'value' => SomeEnum::A,
+            'class' => SomeEnum::class,
+            'expected' => true,
+        ];
 
-        type_enum(ColorsEnum::class)->cast(1);
+        yield 'valid enum for UnitEnum' => [
+            'value' => SomeEnum::B,
+            'class' => \UnitEnum::class,
+            'expected' => true,
+        ];
+
+        yield 'invalid null value' => [
+            'value' => null,
+            'class' => AnotherEnum::class,
+            'expected' => false,
+        ];
+
+        yield 'invalid string value' => [
+            'value' => 'not_an_enum',
+            'class' => SomeEnum::class,
+            'expected' => false,
+        ];
+
+        yield 'invalid integer value' => [
+            'value' => 123,
+            'class' => ColorsEnum::class,
+            'expected' => false,
+        ];
     }
 
-    public function test_casting_string_to_enum() : void
+    /**
+     * @param class-string<\UnitEnum> $class
+     */
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, string $class, ?string $exceptionClass = null) : void
     {
-        self::assertEquals(
-            ColorsEnum::RED,
-            type_enum(ColorsEnum::class)->cast('red')
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_enum($class)->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertInstanceOf($class, $result);
+        }
+    }
+
+    /**
+     * @param class-string<\UnitEnum> $class
+     */
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, string $class, mixed $expected, ?string $exceptionClass) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_enum($class)->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
+    }
+
+    /**
+     * @param class-string<\UnitEnum> $class
+     */
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, string $class, bool $expected) : void
+    {
+        self::assertSame($expected, type_enum($class)->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_enum(SomeEnum::class);
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
+    }
+
+    public function test_to_string() : void
+    {
+        self::assertSame(
+            'enum<Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum>',
+            type_enum(SomeEnum::class)->toString()
         );
-    }
-
-    /**
-     * @param class-string<\UnitEnum> $class
-     */
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value, string $class) : void
-    {
-        $this->expectException(InvalidTypeException::class);
-        (type_enum($class))->assert($value);
-    }
-
-    /**
-     * @param class-string<\UnitEnum> $class
-     */
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value, string $class) : void
-    {
-        self::assertInstanceOf($class, (type_enum($class))->assert($value));
     }
 }

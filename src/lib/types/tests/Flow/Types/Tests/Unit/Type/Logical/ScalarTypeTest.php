@@ -12,85 +12,185 @@ use PHPUnit\Framework\TestCase;
 
 final class ScalarTypeTest extends TestCase
 {
+    public static function assert_data_provider() : \Generator
+    {
+        yield 'valid string' => [
+            'value' => 'string',
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid integer' => [
+            'value' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid float' => [
+            'value' => 1.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid true' => [
+            'value' => true,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid false' => [
+            'value' => false,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid null' => [
+            'value' => null,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+    }
+
     public static function cast_data_provider() : \Generator
     {
-        yield ['string', 'string'];
-        yield [1, 1];
-        yield [1.0, 1.0];
-        yield [true, true];
-        yield [false, false];
-        yield [null, ''];
-        yield [[], '[]'];
-        yield [new \stdClass(), 1];
+        yield 'string' => [
+            'value' => 'string',
+            'expected' => 'string',
+            'exceptionClass' => null,
+        ];
+
+        yield 'integer' => [
+            'value' => 1,
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'float' => [
+            'value' => 1.0,
+            'expected' => 1.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'true' => [
+            'value' => true,
+            'expected' => true,
+            'exceptionClass' => null,
+        ];
+
+        yield 'false' => [
+            'value' => false,
+            'expected' => false,
+            'exceptionClass' => null,
+        ];
+
+        yield 'null' => [
+            'value' => null,
+            'expected' => '',
+            'exceptionClass' => null,
+        ];
+
+        yield 'array' => [
+            'value' => [],
+            'expected' => '[]',
+            'exceptionClass' => null,
+        ];
     }
 
     public static function is_valid_data_provider() : \Generator
     {
-        yield ['string', true];
-        yield [1, true];
-        yield [1.0, true];
-        yield [true, true];
-        yield [false, true];
-        yield [null, false];
-        yield [[], false];
-        yield [new \stdClass(), false];
+        yield 'valid string' => [
+            'value' => 'string',
+            'expected' => true,
+        ];
+
+        yield 'valid integer' => [
+            'value' => 1,
+            'expected' => true,
+        ];
+
+        yield 'valid float' => [
+            'value' => 1.0,
+            'expected' => true,
+        ];
+
+        yield 'valid true' => [
+            'value' => true,
+            'expected' => true,
+        ];
+
+        yield 'valid false' => [
+            'value' => false,
+            'expected' => true,
+        ];
+
+        yield 'invalid null' => [
+            'value' => null,
+            'expected' => false,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [],
+            'expected' => false,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'expected' => false,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        yield ['string'];
-        yield [1];
-        yield [1.0];
-        yield [true];
-        yield [false];
-    }
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
 
-    public static function unsuccessful_assert_data_provider() : \Generator
-    {
-        yield [null];
-        yield [[]];
-        yield [new \stdClass()];
+        $result = type_scalar()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($value, $result);
+        }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $input, mixed $expected) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        self::assertSame($expected, type_scalar()->cast($input));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_scalar()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, bool $result) : void
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        self::assertSame($result, type_scalar()->isValid($value));
+        self::assertSame($expected, type_scalar()->isValid($value));
     }
 
-    public function test_normalize() : void
+    public function test_normalization() : void
     {
-        $scalarType = type_scalar();
+        $type = type_scalar();
+        $normalized = $type->normalize();
+        $recreated = TypeFactory::fromArray($normalized);
 
+        self::assertEquals($type, $recreated);
+    }
+
+    public function test_to_string() : void
+    {
         self::assertSame(
-            [
-                'type' => 'scalar',
-            ],
-            $scalarType->normalize()
+            'scalar',
+            type_scalar()->toString()
         );
-
-        self::assertEquals(
-            type_scalar(),
-            TypeFactory::fromArray(['type' => 'scalar'])
-        );
-    }
-
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
-    {
-        self::assertSame($value, type_scalar()->assert($value));
-    }
-
-    #[DataProvider('unsuccessful_assert_data_provider')]
-    public function test_unsuccessful_assert(mixed $value) : void
-    {
-        $this->expectException(InvalidTypeException::class);
-        type_scalar()->assert($value);
     }
 }

@@ -4,59 +4,185 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_list, type_map, type_string};
+use function Flow\Types\DSL\{type_boolean, type_float, type_from_array, type_integer, type_list, type_map, type_string};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ListTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string'];
-        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
-        yield [false];
-        yield [124.25];
-        yield [['a', 'b']];
-        yield [[1 => 'a', 2 => 'b']];
-        yield [new \stdClass()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'valid list of strings' => [
+            'value' => ['a', 'b'],
+            'elementType' => type_string(),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid list with explicit keys' => [
+            'value' => [0 => 'a', 1 => 'b'],
+            'elementType' => type_string(),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'elementType' => type_integer(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid UUID string' => [
+            'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'elementType' => type_integer(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'elementType' => type_integer(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'elementType' => type_integer(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array with string keys' => [
+            'value' => ['a' => 'b'],
+            'elementType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array with non-sequential keys' => [
+            'value' => [1 => 'a', 2 => 'b'],
+            'elementType' => type_string(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'elementType' => type_integer(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'elementType' => type_integer(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [['a', 'b']];
-        yield [[0 => 'a', 1 => 'b']];
+        yield 'list of ints to list of floats' => [
+            'value' => [1, 2, 3],
+            'elementType' => type_float(),
+            'expected' => [1.0, 2.0, 3.0],
+            'exceptionClass' => null,
+        ];
+
+        yield 'list of strings to list of ints' => [
+            'value' => ['1'],
+            'elementType' => type_integer(),
+            'expected' => [1],
+            'exceptionClass' => null,
+        ];
     }
 
-    public function test_casting_list_of_ints_to_list_of_floats() : void
+    public static function is_valid_data_provider() : \Generator
     {
-        self::assertSame(
-            [1.0, 2.0, 3.0],
-            type_list(type_float())->cast([1, 2, 3])
-        );
+        yield 'valid list of booleans' => [
+            'value' => [true, false],
+            'elementType' => type_boolean(),
+            'expected' => true,
+        ];
+
+        yield 'valid list of strings' => [
+            'value' => ['one', 'two'],
+            'elementType' => type_string(),
+            'expected' => true,
+        ];
+
+        yield 'valid nested list of strings' => [
+            'value' => [['one', 'two']],
+            'elementType' => type_list(type_string()),
+            'expected' => true,
+        ];
+
+        yield 'valid complex nested structure' => [
+            'value' => [['one' => [1, 2], 'two' => [3, 4]], ['one' => [5, 6], 'two' => [7, 8]]],
+            'elementType' => type_map(type_string(), type_list(type_integer())),
+            'expected' => true,
+        ];
+
+        yield 'invalid associative array' => [
+            'value' => ['one' => 'two'],
+            'elementType' => type_string(),
+            'expected' => false,
+        ];
+
+        yield 'invalid list of integers for string type' => [
+            'value' => [1, 2],
+            'elementType' => type_string(),
+            'expected' => false,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'elementType' => type_string(),
+            'expected' => false,
+        ];
+
+        yield 'valid empty array' => [
+            'value' => [],
+            'elementType' => type_integer(),
+            'expected' => true,
+        ];
     }
 
-    public function test_casting_string_to_list_of_ints() : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, $elementType, ?string $exceptionClass = null) : void
     {
-        self::assertSame(
-            [1],
-            type_list(type_integer())->cast(['1'])
-        );
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_list($elementType)->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsArray($result);
+        }
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, $elementType, mixed $expected, ?string $exceptionClass) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_list(type_integer())->assert($value);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_list($elementType)->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, $elementType, bool $expected) : void
     {
-        /** @phpstan-ignore-next-line */
-        self::assertIsArray(type_list(type_string())->assert($value));
+        self::assertSame($expected, type_list($elementType)->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_list(type_string());
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -65,17 +191,5 @@ final class ListTypeTest extends TestCase
             'list<boolean>',
             (type_list(type_boolean()))->toString()
         );
-    }
-
-    public function test_valid() : void
-    {
-        self::assertTrue((type_list(type_boolean()))->isValid([true, false]));
-        self::assertTrue((type_list(type_string()))->isValid(['one', 'two']));
-        self::assertTrue((type_list(type_list(type_string())))->isValid([['one', 'two']]));
-        self::assertTrue((type_list(type_map(type_string(), type_list(type_integer()))))->isValid([['one' => [1, 2], 'two' => [3, 4]], ['one' => [5, 6], 'two' => [7, 8]]]));
-        self::assertFalse((type_list(type_string()))->isValid(['one' => 'two']));
-        self::assertFalse((type_list(type_string()))->isValid([1, 2]));
-        self::assertFalse((type_list(type_string()))->isValid(123));
-        self::assertTrue((type_list(type_integer()))->isValid([]));
     }
 }

@@ -4,66 +4,170 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\type_datetime;
+use function Flow\Types\DSL\{type_datetime, type_from_array};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class DateTimeTypeTest extends TestCase
 {
-    public static function datetime_castable_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield 'string' => ['2021-01-01 00:00:00', new \DateTimeImmutable('2021-01-01 00:00:00')];
-        yield 'int' => [1609459200, new \DateTimeImmutable('2021-01-01 00:00:00')];
-        yield 'float' => [1609459200.0, new \DateTimeImmutable('2021-01-01 00:00:00')];
-        yield 'bool' => [true, new \DateTimeImmutable('1970-01-01 00:00:01')];
-        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), new \DateTimeImmutable('2021-01-01 00:00:00')];
-        yield 'DateInterval' => [new \DateInterval('P1D'), new \DateTimeImmutable('1970-01-02 00:00:00')];
-        yield 'DOMElement' => [new \DOMElement('element', '2021-01-01 00:00:00'), new \DateTimeImmutable('2021-01-01 00:00:00')];
+        yield 'valid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid DateTime' => [
+            'value' => new \DateTime(),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid UUID string' => [
+            'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function invalid_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield ['string'];
-        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
-        yield [false];
-        yield [124.25];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'string' => [
+            'value' => '2021-01-01 00:00:00',
+            'expected' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'int' => [
+            'value' => 1609459200,
+            'expected' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'float' => [
+            'value' => 1609459200.0,
+            'expected' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'bool' => [
+            'value' => true,
+            'expected' => new \DateTimeImmutable('1970-01-01 00:00:01'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTimeInterface' => [
+            'value' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'expected' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateInterval' => [
+            'value' => new \DateInterval('P1D'),
+            'expected' => new \DateTimeImmutable('1970-01-02 00:00:00'),
+            'exceptionClass' => null,
+        ];
+
+        yield 'DOMElement' => [
+            'value' => new \DOMElement('element', '2021-01-01 00:00:00'),
+            'expected' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'exceptionClass' => null,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function is_valid_data_provider() : \Generator
     {
-        yield [new \DateTimeImmutable()];
-        yield [new \DateTime()];
+        yield 'valid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'expected' => true,
+        ];
+
+        yield 'valid DateTime' => [
+            'value' => new \DateTime(),
+            'expected' => true,
+        ];
+
+        yield 'invalid date string' => [
+            'value' => '2020-01-01',
+            'expected' => false,
+        ];
+
+        yield 'invalid datetime string' => [
+            'value' => '2020-01-01 00:00:00',
+            'expected' => false,
+        ];
     }
 
-    #[DataProvider('datetime_castable_data_provider')]
-    public function test_casting_different_data_types_to_datetime(mixed $value, \DateTimeImmutable $expected) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertEquals($expected, type_datetime()->cast($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_datetime()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertInstanceOf(\DateTimeInterface::class, $result);
+        }
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_datetime()->assert($value);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_datetime()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertEquals($expected, $result);
+        }
     }
 
-    public function test_is_valid() : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        self::assertTrue(type_datetime()->isValid(new \DateTimeImmutable()));
-        self::assertTrue(type_datetime()->isValid(new \DateTime()));
-        self::assertFalse(type_datetime()->isValid('2020-01-01'));
-        self::assertFalse(type_datetime()->isValid('2020-01-01 00:00:00'));
+        self::assertSame($expected, type_datetime()->isValid($value));
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    public function test_normalization() : void
     {
-        self::assertInstanceOf(\DateTimeInterface::class, type_datetime()->assert($value));
+        $type = type_datetime();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void

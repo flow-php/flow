@@ -126,6 +126,17 @@ final class CustomTypeTest extends TestCase
     {
         // we want to check if for given output method isValid() returns true or false
     }
+    
+    public funciton test_to_string() : void
+    {
+        // we want to check the output of toString() method for type
+    }
+    
+    public function test_normalization() : void
+    {
+        // we want to use normalize() to turn type into an array representation
+        // then we want to use \Flow\Types\DSL\type_from_array() to create a new type from that array and compare it with the original type
+    }
 }
 ```
 

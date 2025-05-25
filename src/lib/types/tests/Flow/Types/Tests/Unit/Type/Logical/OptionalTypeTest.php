@@ -11,83 +11,181 @@ use function Flow\Types\DSL\{type_float,
     type_optional,
     type_string,
     type_union};
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class OptionalTypeTest extends TestCase
 {
-    public static function optional_castable_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield [type_optional(type_float()), null, null];
-        yield [type_optional(type_float()), 1.23445, 1.23445];
-        yield [type_optional(type_string()), '1.23445', '1.23445'];
-        yield [type_optional(type_string()), null, null];
+        yield 'valid null' => [
+            'type' => type_optional(type_integer()),
+            'value' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid integer' => [
+            'type' => type_optional(type_integer()),
+            'value' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid string for string type' => [
+            'type' => type_optional(type_string()),
+            'value' => 'string',
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid null for string type' => [
+            'type' => type_optional(type_string()),
+            'value' => null,
+            'exceptionClass' => null,
+        ];
     }
 
-    public function test_assert() : void
+    public static function cast_data_provider() : \Generator
     {
-        self::assertNull(type_optional(type_integer())->assert(null));
-        self::assertSame(1, type_optional(type_integer())->assert(1));
+        yield 'null stays as null for float type' => [
+            'type' => type_optional(type_float()),
+            'value' => null,
+            'expected' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'float stays as is' => [
+            'type' => type_optional(type_float()),
+            'value' => 1.23445,
+            'expected' => 1.23445,
+            'exceptionClass' => null,
+        ];
+
+        yield 'string stays as is for string type' => [
+            'type' => type_optional(type_string()),
+            'value' => '1.23445',
+            'expected' => '1.23445',
+            'exceptionClass' => null,
+        ];
+
+        yield 'null stays as null for string type' => [
+            'type' => type_optional(type_string()),
+            'value' => null,
+            'expected' => null,
+            'exceptionClass' => null,
+        ];
     }
 
-    /**
-     * @param OptionalType<mixed> $type
-     */
-    #[DataProvider('optional_castable_data_provider')]
-    public function test_casting_different_data_types_to_float(OptionalType $type, mixed $value, mixed $expected) : void
+    public static function invalid_creation_data_provider() : \Generator
     {
-        self::assertSame($expected, $type->cast($value));
+        yield 'optional type from another optional type' => [
+            'type' => type_optional(type_float()),
+            'exceptionMessage' => 'Optional type cannot be created from an optional type',
+        ];
+
+        yield 'optional type from mixed type' => [
+            'type' => type_mixed(),
+            'exceptionMessage' => 'Optional type cannot be created from MixedType, mixed is a standalone type',
+        ];
+
+        yield 'optional type from union type' => [
+            'type' => type_union(type_float(), type_string()),
+            'exceptionMessage' => 'Optional type cannot be created from a union type',
+        ];
+
+        yield 'optional type from union type with mixed' => [
+            'type' => type_union(type_float(), type_integer()),
+            'exceptionMessage' => 'Optional type cannot be created from a union type',
+        ];
     }
 
-    public function test_creating_optional_type_from_another_optional_type() : void
+    public static function is_valid_data_provider() : \Generator
     {
-        $this->expectExceptionMessage('Optional type cannot be created from an optional type');
-        type_optional(type_optional(type_float()));
+        yield 'valid null' => [
+            'type' => type_optional(type_integer()),
+            'value' => null,
+            'expected' => true,
+        ];
+
+        yield 'valid integer' => [
+            'type' => type_optional(type_integer()),
+            'value' => 1,
+            'expected' => true,
+        ];
+
+        yield 'invalid string for integer type' => [
+            'type' => type_optional(type_integer()),
+            'value' => 'string',
+            'expected' => false,
+        ];
+
+        yield 'valid string for string type' => [
+            'type' => type_optional(type_string()),
+            'value' => 'string',
+            'expected' => true,
+        ];
     }
 
-    public function test_creating_optional_type_from_mixed_type() : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(OptionalType $type, mixed $value, ?string $exceptionClass = null) : void
     {
-        $this->expectExceptionMessage('Optional type cannot be created from MixedType, mixed is a standalone type');
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
 
-        type_optional(type_mixed());
+        $result = $type->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($value, $result);
+        }
     }
 
-    public function test_creating_optional_type_from_optional_type() : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(OptionalType $type, mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        $this->expectExceptionMessage('Optional type cannot be created from an optional type');
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
 
-        type_optional(type_optional(type_float()));
+        $result = $type->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
-    public function test_creating_optional_type_from_union_type() : void
+    #[DataProvider('invalid_creation_data_provider')]
+    public function test_invalid_creation(Type $type, string $exceptionMessage) : void
     {
-        $this->expectExceptionMessage('Optional type cannot be created from a union type');
-        type_optional(type_union(type_float(), type_string()));
+        $this->expectExceptionMessage($exceptionMessage);
+        type_optional($type);
     }
 
-    public function test_creating_optional_type_from_union_type_with_mixed() : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(OptionalType $type, mixed $value, bool $expected) : void
     {
-        $this->expectExceptionMessage('Optional type cannot be created from a union type');
-
-        type_optional(type_union(type_float(), type_integer()));
+        self::assertSame($expected, $type->isValid($value));
     }
 
-    public function test_normalizing_optional_type() : void
+    public function test_normalization() : void
     {
-        self::assertEquals(
-            [
-                'type' => 'optional',
-                'base' => [
-                    'type' => 'float',
-                ],
-            ],
-            type_optional(type_float())->normalize()
+        $type = type_optional(type_float());
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
+    }
+
+    public function test_to_string() : void
+    {
+        self::assertSame(
+            '?float',
+            type_optional(type_float())->toString()
         );
 
-        self::assertEquals(
-            type_optional(type_float()),
-            type_from_array(type_optional(type_float())->normalize())
+        self::assertSame(
+            '?string',
+            type_optional(type_string())->toString()
         );
     }
 }

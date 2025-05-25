@@ -4,71 +4,186 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\type_integer;
+use function Flow\Types\DSL\{type_from_array, type_integer};
 use Flow\Types\Exception\InvalidTypeException;
-use PHPUnit\Framework\Attributes\{DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class IntegerTypeTest extends TestCase
 {
-    public static function integer_castable_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield 'string' => ['string', 0];
-        yield 'int' => [1, 1];
-        yield 'float' => [1.1, 1];
-        yield 'bool' => [true, 1];
-        yield 'array' => [[1, 2, 3], 1];
-        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), 1609459200000000];
-        yield 'DateInterval' => [new \DateInterval('P1D'), 86400000000];
-        yield 'DOMElement' => [new \DOMElement('element', '1'), 1];
+        yield 'valid integer 1234' => [
+            'value' => 1234,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid integer PHP_INT_MAX' => [
+            'value' => PHP_INT_MAX,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTime' => [
+            'value' => new \DateTime(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function invalid_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield ['string'];
-        yield [false];
-        yield [124.25];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeImmutable()];
-        yield [new \DateTime()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'string' => [
+            'value' => 'string',
+            'expected' => 0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'int' => [
+            'value' => 1,
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'float' => [
+            'value' => 1.1,
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'bool' => [
+            'value' => true,
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'array' => [
+            'value' => [1, 2, 3],
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTimeInterface' => [
+            'value' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'expected' => 1609459200000000,
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateInterval' => [
+            'value' => new \DateInterval('P1D'),
+            'expected' => 86400000000,
+            'exceptionClass' => null,
+        ];
+
+        yield 'DOMElement' => [
+            'value' => new \DOMElement('element', '1'),
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function is_valid_data_provider() : \Generator
     {
-        yield [1234];
-        yield [1234];
-        yield [PHP_INT_MAX];
+        yield 'valid integer' => [
+            'value' => 1,
+            'expected' => true,
+        ];
+
+        yield 'valid negative integer' => [
+            'value' => -5,
+            'expected' => true,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'one',
+            'expected' => false,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'expected' => false,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 123.0,
+            'expected' => false,
+        ];
     }
 
-    #[DataProvider('integer_castable_data_provider')]
-    public function test_casting_different_data_types_to_integer(mixed $value, int $expected) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertSame($expected, type_integer()->cast($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_integer()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsInt($result);
+        }
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_integer()->assert($value);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_integer()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
-    public function test_normalize() : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        self::assertSame(
-            ['type' => 'integer'],
-            type_integer()->normalize()
-        );
-
+        self::assertSame($expected, type_integer()->isValid($value));
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    public function test_normalization() : void
     {
-        /** @phpstan-ignore-next-line */
-        self::assertIsInt(type_integer()->assert($value));
+        $type = type_integer();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -76,22 +191,6 @@ final class IntegerTypeTest extends TestCase
         self::assertSame(
             'integer',
             type_integer()->toString()
-        );
-    }
-
-    public function test_valid() : void
-    {
-        self::assertTrue(
-            type_integer()->isValid(1)
-        );
-        self::assertFalse(
-            type_integer()->isValid('one')
-        );
-        self::assertFalse(
-            type_integer()->isValid([1, 2])
-        );
-        self::assertFalse(
-            type_integer()->isValid(123.0)
         );
     }
 }

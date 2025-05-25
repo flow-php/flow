@@ -4,56 +4,171 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\type_array;
-use PHPUnit\Framework\Attributes\TestWith;
+use function Flow\Types\DSL\{type_array, type_from_array};
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayTypeTest extends TestCase
 {
-    public function test_casting_boolean_to_array() : void
+    public static function assert_data_provider() : \Generator
     {
-        self::assertEquals(
-            [true],
-            type_array()->cast(true)
-        );
+        yield 'valid empty array' => [
+            'value' => [],
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid array with integer' => [
+            'value' => [1],
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid array with key-value' => [
+            'value' => ['a' => 'b'],
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string that looks like json' => [
+            'value' => '[]',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid null' => [
+            'value' => null,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'one',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => true,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public function test_casting_datetime_to_array() : void
+    public static function cast_data_provider() : \Generator
     {
-        self::assertEquals(
-            ['date' => '2021-01-01 00:00:00.000000', 'timezone_type' => 3, 'timezone' => 'UTC'],
-            type_array()->cast(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'))
-        );
+        yield 'array stays as is' => [
+            'value' => ['test'],
+            'expected' => ['test'],
+            'exceptionClass' => null,
+        ];
+
+        yield 'boolean to array' => [
+            'value' => true,
+            'expected' => [true],
+            'exceptionClass' => null,
+        ];
+
+        yield 'datetime to array' => [
+            'value' => new \DateTimeImmutable('2021-01-01 00:00:00 UTC'),
+            'expected' => ['date' => '2021-01-01 00:00:00.000000', 'timezone_type' => 3, 'timezone' => 'UTC'],
+            'exceptionClass' => null,
+        ];
+
+        yield 'float to array' => [
+            'value' => 1.1,
+            'expected' => [1.1],
+            'exceptionClass' => null,
+        ];
+
+        yield 'integer to array' => [
+            'value' => 1,
+            'expected' => [1],
+            'exceptionClass' => null,
+        ];
+
+        yield 'json string to array' => [
+            'value' => '{"items":{"item":1}}',
+            'expected' => ['items' => ['item' => 1]],
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid json string' => [
+            'value' => '{invalid json}',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
     }
 
-    public function test_casting_float_to_array() : void
+    public static function is_valid_data_provider() : \Generator
     {
-        self::assertEquals(
-            [1.1],
-            type_array()->cast(1.1)
-        );
+        yield 'empty array' => [
+            'value' => [],
+            'expected' => true,
+        ];
+
+        yield 'array with string' => [
+            'value' => ['one'],
+            'expected' => true,
+        ];
+
+        yield 'array with integer' => [
+            'value' => [1],
+            'expected' => true,
+        ];
+
+        yield 'null' => [
+            'value' => null,
+            'expected' => false,
+        ];
+
+        yield 'string' => [
+            'value' => 'one',
+            'expected' => false,
+        ];
+
+        yield 'boolean' => [
+            'value' => true,
+            'expected' => false,
+        ];
+
+        yield 'integer' => [
+            'value' => 123,
+            'expected' => false,
+        ];
     }
 
-    public function test_casting_integer_to_array() : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertEquals(
-            [1],
-            type_array()->cast(1)
-        );
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_array()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsArray($result);
+        }
     }
 
-    public function test_casting_string_to_array() : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        self::assertSame(
-            ['items' => ['item' => 1]],
-            type_array()->cast('{"items":{"item":1}}')
-        );
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_array()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertEquals($expected, $result);
+        }
     }
 
     public function test_casting_xml_document_to_array() : void
     {
         $xml = new \DOMDocument();
-        $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
+        $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertSame(
             ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
@@ -61,12 +176,19 @@ final class ArrayTypeTest extends TestCase
         );
     }
 
-    #[TestWith(['[]', 'Expected type "array<mixed>", got "json"'])]
-    public function test_invalid_assertion(mixed $value, string $exception) : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        $this->expectExceptionMessage($exception);
+        self::assertSame($expected, type_array()->isValid($value));
+    }
 
-        type_array()->assert($value);
+    public function test_normalization() : void
+    {
+        $type = type_array();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -75,39 +197,5 @@ final class ArrayTypeTest extends TestCase
             'array<mixed>',
             type_array()->toString()
         );
-    }
-
-    public function test_valid() : void
-    {
-        self::assertTrue(
-            type_array()->isValid([])
-        );
-        self::assertTrue(
-            type_array()->isValid(['one'])
-        );
-        self::assertTrue(
-            type_array()->isValid([1])
-        );
-        self::assertFalse(
-            type_array()->isValid(null)
-        );
-        self::assertFalse(
-            type_array()->isValid('one')
-        );
-        self::assertFalse(
-            type_array()->isValid(true)
-        );
-        self::assertFalse(
-            type_array()->isValid(123)
-        );
-    }
-
-    #[TestWith([[1]])]
-    #[TestWith([['a' => 'b']])]
-    #[TestWith([[]])]
-    public function test_valid_assertion(array $value) : void
-    {
-        /** @phpstan-ignore-next-line */
-        self::assertIsArray(type_array()->assert($value));
     }
 }

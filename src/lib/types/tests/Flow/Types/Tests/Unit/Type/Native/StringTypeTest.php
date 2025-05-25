@@ -4,85 +4,249 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\type_string;
+use function Flow\Types\DSL\{type_from_array, type_string};
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
-use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class StringTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield [null, false];
-        yield [false];
-        yield [124.25];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeImmutable()];
-        yield [new \DateTime()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'valid string 1234' => [
+            'value' => '1234',
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid string abcd' => [
+            'value' => 'abcd',
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid null' => [
+            'value' => null,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTime' => [
+            'value' => new \DateTime(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function string_castable_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield 'string' => ['string', 'string'];
-        yield 'int' => [1, '1'];
-        yield 'float' => [1.1, '1.1'];
-        yield 'bool' => [true, 'true'];
-        yield 'array' => [[1, 2, 3], '[1,2,3]'];
-        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), '2021-01-01T00:00:00+00:00'];
-        yield 'Stringable' => [new class() implements \Stringable {
-            public function __toString() : string
-            {
-                return 'stringable';
-            }
-        }, 'stringable'];
-        yield 'DOMDocument' => [new \DOMDocument(), '<?xml version="1.0"?>'];
+        yield 'string' => [
+            'value' => 'string',
+            'expected' => 'string',
+            'exceptionClass' => null,
+        ];
+
+        yield 'int' => [
+            'value' => 1,
+            'expected' => '1',
+            'exceptionClass' => null,
+        ];
+
+        yield 'float' => [
+            'value' => 1.1,
+            'expected' => '1.1',
+            'exceptionClass' => null,
+        ];
+
+        yield 'bool' => [
+            'value' => true,
+            'expected' => 'true',
+            'exceptionClass' => null,
+        ];
+
+        yield 'array' => [
+            'value' => [1, 2, 3],
+            'expected' => '[1,2,3]',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTimeInterface' => [
+            'value' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'expected' => '2021-01-01T00:00:00+00:00',
+            'exceptionClass' => null,
+        ];
+
+        yield 'Stringable' => [
+            'value' => new class() implements \Stringable {
+                public function __toString() : string
+                {
+                    return 'stringable';
+                }
+            },
+            'expected' => 'stringable',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DOMDocument' => [
+            'value' => new \DOMDocument(),
+            'expected' => '<?xml version="1.0"?>',
+            'exceptionClass' => null,
+        ];
 
         $xml = (new \DOMDocument());
         $xml->loadXML('<xml>Some Happy XML</xml>');
 
-        yield 'Not Empty DOMDocument' => [$xml, '<xml>Some Happy XML</xml>'];
-        yield 'DOMElement' => [new \DOMElement('element'), '<element/>'];
-        yield 'DateTimeZone' => [new \DateTimeZone('UTC'), 'UTC'];
+        yield 'Not Empty DOMDocument' => [
+            'value' => $xml,
+            'expected' => '<xml>Some Happy XML</xml>',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DOMElement' => [
+            'value' => new \DOMElement('element'),
+            'expected' => '<element/>',
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'expected' => 'UTC',
+            'exceptionClass' => null,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function is_stringable_data_provider() : \Generator
     {
-        yield ['1234'];
-        yield ['abcd'];
+        yield 'DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'expected' => false,
+        ];
+
+        yield 'DateInterval' => [
+            'value' => new \DateInterval('P1D'),
+            'expected' => false,
+        ];
+
+        yield 'StringableObject' => [
+            'value' => new StringableObject(),
+            'expected' => true,
+        ];
     }
 
-    #[DataProvider('string_castable_data_provider')]
-    public function test_casting_different_data_types_to_string(mixed $value, string $expected) : void
+    public static function is_valid_data_provider() : \Generator
     {
-        self::assertSame($expected, \trim((string) type_string()->cast($value)));
+        yield 'valid string' => [
+            'value' => 'string',
+            'expected' => true,
+        ];
+
+        yield 'valid empty string' => [
+            'value' => '',
+            'expected' => true,
+        ];
+
+        yield 'invalid null' => [
+            'value' => null,
+            'expected' => false,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => true,
+            'expected' => false,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'expected' => false,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'expected' => false,
+        ];
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_string()->assert($value);
-    }
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
 
-    #[TestWith([new \DateTimeImmutable(), false])]
-    #[TestWith([new \DateInterval('P1D'), false])]
-    #[TestWith([new StringableObject(), true])]
-    public function test_is_stringable(mixed $value, bool $stringable) : void
-    {
-        if ($stringable) {
-            self::assertTrue(type_string()->isStringable($value));
-        } else {
-            self::assertFalse(type_string()->isStringable($value));
+        $result = type_string()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsString($result);
         }
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        /** @phpstan-ignore-next-line */
-        self::assertIsString(type_string()->assert($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_string()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, \trim($result));
+        }
+    }
+
+    #[DataProvider('is_stringable_data_provider')]
+    public function test_is_stringable(mixed $value, bool $expected) : void
+    {
+        self::assertSame($expected, type_string()->isStringable($value));
+    }
+
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
+    {
+        self::assertSame($expected, type_string()->isValid($value));
+    }
+
+    public function test_normalization() : void
+    {
+        $type = type_string();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
+    }
+
+    public function test_to_string() : void
+    {
+        self::assertSame(
+            'string',
+            type_string()->toString()
+        );
     }
 }

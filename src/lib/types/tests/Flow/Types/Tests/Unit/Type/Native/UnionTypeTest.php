@@ -21,40 +21,171 @@ use PHPUnit\Framework\TestCase;
 
 final class UnionTypeTest extends TestCase
 {
-    public static function casting_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield [type_union(type_integer(), type_string()), '1', 1];
-        yield [type_union(type_integer(), type_string()), 1, 1];
-        yield [type_union(type_integer(), type_string()), 1.0, 1];
-        yield [type_union(type_integer(), type_string()), false, 0];
+        yield 'valid string' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => '1',
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid integer' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid integer with null union' => [
+            'type' => type_union(type_integer(), type_null()),
+            'value' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid null with null union' => [
+            'type' => type_union(type_integer(), type_null()),
+            'value' => null,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid string with multiple types' => [
+            'type' => type_union(type_integer(), type_string(), type_float()),
+            'value' => '1.0',
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid float with multiple types' => [
+            'type' => type_union(type_integer(), type_string(), type_float()),
+            'value' => 1.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid integer with multiple types' => [
+            'type' => type_union(type_integer(), type_string(), type_float()),
+            'value' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid boolean' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid float' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => 1.0,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid null' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => null,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function invalid_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [type_union(type_integer(), type_string()), false];
-        yield [type_union(type_integer(), type_string()), 1.0];
-        yield [type_union(type_integer(), type_string()), null];
-        yield [type_union(type_integer(), type_string()), new \stdClass()];
+        yield 'string to integer' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => '1',
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'integer stays as is' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => 1,
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'float to integer' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => 1.0,
+            'expected' => 1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'boolean to integer' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => false,
+            'expected' => 0,
+            'exceptionClass' => null,
+        ];
     }
 
-    public static function valid_assert_data_provider() : \Generator
+    public static function is_valid_data_provider() : \Generator
     {
-        yield [type_union(type_integer(), type_string()), '1'];
-        yield [type_union(type_integer(), type_string()), 1];
-        yield [type_union(type_integer(), type_null()), 1];
-        yield [type_union(type_integer(), type_null()), null];
-        yield [type_union(type_integer(), type_string(), type_float()), '1.0'];
-        yield [type_union(type_integer(), type_string(), type_float()), 1.0];
-        yield [type_union(type_integer(), type_string(), type_float()), 1];
+        yield 'valid string' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => '1',
+            'expected' => true,
+        ];
+
+        yield 'valid integer' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => 1,
+            'expected' => true,
+        ];
+
+        yield 'valid null with null union' => [
+            'type' => type_union(type_integer(), type_null()),
+            'value' => null,
+            'expected' => true,
+        ];
+
+        yield 'invalid boolean' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => false,
+            'expected' => false,
+        ];
+
+        yield 'invalid float' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => 1.0,
+            'expected' => false,
+        ];
+
+        yield 'invalid null' => [
+            'type' => type_union(type_integer(), type_string()),
+            'value' => null,
+            'expected' => false,
+        ];
     }
 
-    /**
-     * @param UnionType<mixed, mixed> $type
-     */
-    #[DataProvider('casting_data_provider')]
-    public function test_casting(UnionType $type, mixed $value, mixed $result) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(UnionType $type, mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertEquals($result, $type->cast($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = $type->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($value, $result);
+        }
+    }
+
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(UnionType $type, mixed $value, mixed $expected, ?string $exceptionClass) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = $type->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertEquals($expected, $result);
+        }
     }
 
     public function test_is_optional_type() : void
@@ -62,40 +193,21 @@ final class UnionTypeTest extends TestCase
         self::assertTrue(type_union(type_integer(), type_null())->isOptionalType());
         self::assertFalse(type_union(type_null(), type_null())->isOptionalType());
         self::assertFalse(type_union(type_integer(), type_null(), type_optional(type_string()))->isOptionalType());
+    }
 
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(UnionType $type, mixed $value, bool $expected) : void
+    {
+        self::assertSame($expected, $type->isValid($value));
     }
 
     public function test_normalization() : void
     {
         $type = type_union(type_integer(), type_string());
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
 
-        self::assertEquals(
-            [
-                'type' => 'union',
-                'left' => [
-                    'type' => 'integer',
-                ],
-                'right' => [
-                    'type' => 'string',
-                ],
-            ],
-            $type->normalize()
-        );
-
-        self::assertEquals(
-            $type,
-            type_from_array($type->normalize())
-        );
-    }
-
-    /**
-     * @param UnionType<mixed, mixed> $type
-     */
-    #[DataProvider('valid_assert_data_provider')]
-    public function test_successful_assert(UnionType $type, mixed $value) : void
-    {
-        self::assertTrue($type->isValid($value));
-        self::assertSame($value, $type->assert($value));
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -152,17 +264,5 @@ final class UnionTypeTest extends TestCase
         $this->expectExceptionMessage('UnionType cannot be mixed with MixedType, mixed is a standalone type');
 
         type_union(type_integer(), type_mixed());
-    }
-
-    /**
-     * @param UnionType<mixed, mixed> $type
-     */
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_unsuccessful_assert(UnionType $type, mixed $value) : void
-    {
-        $this->expectException(InvalidTypeException::class);
-
-        self::assertFalse($type->isValid($value));
-        self::assertEquals($value, $type->assert($value));
     }
 }

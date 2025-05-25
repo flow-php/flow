@@ -4,75 +4,206 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Native;
 
-use function Flow\Types\DSL\type_float;
+use function Flow\Types\DSL\{type_float, type_from_array};
 use Flow\Types\Exception\InvalidTypeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class FloatTypeTest extends TestCase
 {
-    public static function float_castable_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield 'string' => ['string', 0.0];
-        yield 'int' => [1, 1.0];
-        yield 'float' => [1.1, 1.1];
-        yield 'bool' => [true, 1.0];
-        yield 'array' => [[1, 2, 3], 1.0];
-        yield 'DateTimeInterface' => [new \DateTimeImmutable('2021-01-01 00:00:00'), 1609459200000000.0];
-        yield 'DateInterval' => [new \DateInterval('P1D'), 86400000000.0];
-        yield 'DOMElement' => [new \DOMElement('element', '1.1'), 1.1];
+        yield 'valid float 1234.52' => [
+            'value' => 1234.52,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid float -1234.52' => [
+            'value' => -1234.52,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid float 1.22e-15' => [
+            'value' => 1.22e-15,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid float -1.22e-15' => [
+            'value' => -1.22e-15,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid float .25' => [
+            'value' => .25,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid float -.25' => [
+            'value' => -.25,
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeImmutable' => [
+            'value' => new \DateTimeImmutable(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTime' => [
+            'value' => new \DateTime(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
-    public static function invalid_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield ['string'];
-        yield [false];
-        yield [123];
-        yield [[1, 2]];
-        yield [new \stdClass()];
-        yield [new \DateTimeImmutable()];
-        yield [new \DateTime()];
-        yield [new \DateTimeZone('UTC')];
+        yield 'string' => [
+            'value' => 'string',
+            'expected' => 0.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'int' => [
+            'value' => 1,
+            'expected' => 1.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'float' => [
+            'value' => 1.1,
+            'expected' => 1.1,
+            'exceptionClass' => null,
+        ];
+
+        yield 'bool' => [
+            'value' => true,
+            'expected' => 1.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'array' => [
+            'value' => [1, 2, 3],
+            'expected' => 1.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateTimeInterface' => [
+            'value' => new \DateTimeImmutable('2021-01-01 00:00:00'),
+            'expected' => 1609459200000000.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'DateInterval' => [
+            'value' => new \DateInterval('P1D'),
+            'expected' => 86400000000.0,
+            'exceptionClass' => null,
+        ];
+
+        yield 'DOMElement' => [
+            'value' => new \DOMElement('element', '1.1'),
+            'expected' => 1.1,
+            'exceptionClass' => null,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function is_valid_data_provider() : \Generator
     {
-        yield [1234.52];
-        yield [-1234.52];
-        yield [1.22e-15];
-        yield [-1.22e-15];
-        yield [.25];
-        yield [-.25];
+        yield 'valid float' => [
+            'value' => 1.0,
+            'expected' => true,
+        ];
+
+        yield 'valid negative float' => [
+            'value' => -1.5,
+            'expected' => true,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'one',
+            'expected' => false,
+        ];
+
+        yield 'invalid array' => [
+            'value' => [1, 2],
+            'expected' => false,
+        ];
+
+        yield 'invalid integer' => [
+            'value' => 123,
+            'expected' => false,
+        ];
     }
 
-    #[DataProvider('float_castable_data_provider')]
-    public function test_casting_different_data_types_to_float(mixed $value, float $expected) : void
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null) : void
     {
-        self::assertSame($expected, type_float()->cast($value));
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_float()->assert($value);
+
+        if ($exceptionClass === null) {
+            self::assertIsFloat($result);
+        }
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('cast_data_provider')]
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_float()->assert($value);
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = type_float()->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
-    public function test_normalize() : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid(mixed $value, bool $expected) : void
     {
-        self::assertSame(
-            [
-                'type' => 'float',
-            ],
-            type_float()->normalize()
-        );
+        self::assertSame($expected, type_float()->isValid($value));
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    public function test_normalization() : void
     {
-        /** @phpstan-ignore-next-line */
-        self::assertIsFloat(type_float()->assert($value));
+        $type = type_float();
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -80,22 +211,6 @@ final class FloatTypeTest extends TestCase
         self::assertSame(
             'float',
             type_float()->toString()
-        );
-    }
-
-    public function test_valid() : void
-    {
-        self::assertTrue(
-            type_float()->isValid(1.0)
-        );
-        self::assertFalse(
-            type_float()->isValid('one')
-        );
-        self::assertFalse(
-            type_float()->isValid([1, 2])
-        );
-        self::assertFalse(
-            type_float()->isValid(123)
         );
     }
 }

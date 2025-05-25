@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_datetime,
     type_float,
+    type_from_array,
     type_integer,
     type_list,
     type_map,
@@ -18,31 +19,99 @@ use PHPUnit\Framework\TestCase;
 
 final class StructureTypeTest extends TestCase
 {
-    public static function invalid_assert_data_provider() : \Generator
+    public static function assert_data_provider() : \Generator
     {
-        yield ['string'];
-        yield ['49e952c8-80ec-4910-a1d6-a19bd46b163d'];
-        yield [false];
-        yield [124.25];
-        yield [['a' => 'a', 'b' => 'b']];
-        yield [new \stdClass()];
-        yield [new \DateTimeZone('UTC')];
-        yield [['id' => null, 'name' => 'b']];
-        yield [['id' => 1, 'name' => null]];
-        yield [['id' => null, 'name' => null]];
-        yield [['id' => 1, 'name' => null, 'active' => false]];
+        yield 'valid structure with required fields' => [
+            'value' => ['id' => 1, 'name' => 'b'],
+            'exceptionClass' => null,
+            'useOptionalName' => false,
+        ];
+
+        yield 'valid structure with optional field' => [
+            'value' => ['id' => 1, 'name' => null],
+            'exceptionClass' => null,
+            'useOptionalName' => true,
+        ];
+
+        yield 'invalid string' => [
+            'value' => 'string',
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid UUID string' => [
+            'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid boolean' => [
+            'value' => false,
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid float' => [
+            'value' => 124.25,
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid array with different keys' => [
+            'value' => ['a' => 'a', 'b' => 'b'],
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid DateTimeZone' => [
+            'value' => new \DateTimeZone('UTC'),
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid structure with null required field' => [
+            'value' => ['id' => null, 'name' => 'b'],
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid structure with null required field 2' => [
+            'value' => ['id' => 2, 'name' => null],
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid structure with all null fields' => [
+            'value' => ['id' => null, 'name' => null],
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
+
+        yield 'invalid structure with extra field' => [
+            'value' => ['id' => 1, 'name' => null, 'active' => false],
+            'exceptionClass' => InvalidTypeException::class,
+            'useOptionalName' => false,
+        ];
     }
 
-    public static function successful_assert_data_provider() : \Generator
+    public static function cast_data_provider() : \Generator
     {
-        yield [['id' => 1, 'name' => 'b']];
-        yield [['id' => 1, 'name' => null]];
-    }
-
-    public function test_casting_array_into_structure() : void
-    {
-        self::assertSame(
-            [
+        yield 'array into structure' => [
+            'structure' => type_structure([
+                'name' => type_string(),
+                'age' => type_integer(),
+                'address' => type_structure([
+                    'street' => type_string(),
+                    'city' => type_string(),
+                ]),
+            ]),
+            'value' => [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,
                 'address' => [
@@ -50,30 +119,32 @@ final class StructureTypeTest extends TestCase
                     'city' => 'Warsaw',
                 ],
             ],
-            type_structure([
+            'expected' => [
+                'name' => 'Norbert Orzechowicz',
+                'age' => 30,
+                'address' => [
+                    'street' => 'Polna',
+                    'city' => 'Warsaw',
+                ],
+            ],
+            'exceptionClass' => null,
+        ];
+
+        yield 'structure with empty not nullable fields' => [
+            'structure' => type_structure([
                 'name' => type_string(),
                 'age' => type_integer(),
                 'address' => type_structure([
-                    'street' => type_string(),
-                    'city' => type_string(),
+                    'street' => type_optional(type_string()),
+                    'city' => type_optional(type_string()),
                 ]),
-            ])->cast(
-                [
-                    'name' => 'Norbert Orzechowicz',
-                    'age' => 30,
-                    'address' => [
-                        'street' => 'Polna',
-                        'city' => 'Warsaw',
-                    ],
-                ]
-            )
-        );
-    }
-
-    public function test_casting_structure_with_empty_not_nullable_fields() : void
-    {
-        self::assertSame(
-            [
+            ]),
+            'value' => [
+                'name' => 'Norbert Orzechowicz',
+                'age' => 30,
+                'address' => [],
+            ],
+            'expected' => [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,
                 'address' => [
@@ -81,45 +152,86 @@ final class StructureTypeTest extends TestCase
                     'city' => null,
                 ],
             ],
-            type_structure([
-                'name' => type_string(),
-                'age' => type_integer(),
-                'address' => type_structure([
-                    'street' => type_optional(type_string()),
-                    'city' => type_optional(type_string()),
-                ]),
-            ])->cast(
-                [
-                    'name' => 'Norbert Orzechowicz',
-                    'age' => 30,
-                    'address' => [],
-                ]
-            )
-        );
-    }
+            'exceptionClass' => null,
+        ];
 
-    public function test_casting_structure_with_missing_nullable_fields() : void
-    {
-        self::assertSame(
-            [
-                'name' => 'Norbert Orzechowicz',
-                'age' => 30,
-                'address' => null,
-            ],
-            type_structure([
+        yield 'structure with missing nullable fields' => [
+            'structure' => type_structure([
                 'name' => type_string(),
                 'age' => type_integer(),
                 'address' => type_optional(type_structure([
                     'street' => type_string(),
                     'city' => type_string(),
                 ])),
-            ])->cast(
-                [
-                    'name' => 'Norbert Orzechowicz',
-                    'age' => 30,
-                ],
-            )
-        );
+            ]),
+            'value' => [
+                'name' => 'Norbert Orzechowicz',
+                'age' => 30,
+            ],
+            'expected' => [
+                'name' => 'Norbert Orzechowicz',
+                'age' => 30,
+                'address' => null,
+            ],
+            'exceptionClass' => null,
+        ];
+    }
+
+    public static function is_valid_data_provider() : \Generator
+    {
+        yield 'valid simple structure' => [
+            'structure' => type_structure(['string' => type_string()]),
+            'value' => ['string' => 'two'],
+            'expected' => true,
+        ];
+
+        yield 'valid complex structure' => [
+            'structure' => type_structure([
+                'map' => type_map(type_integer(), type_map(type_string(), type_list(type_integer()))),
+                'string' => type_string(),
+                'float' => type_float(),
+            ]),
+            'value' => ['map' => [0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]], 'string' => 'c', 'float' => 1.5],
+            'expected' => true,
+        ];
+
+        yield 'invalid indexed array' => [
+            'structure' => type_structure(['int' => type_integer()]),
+            'value' => [1, 2],
+            'expected' => false,
+        ];
+    }
+
+    #[DataProvider('assert_data_provider')]
+    public function test_assert(mixed $value, ?string $exceptionClass = null, bool $useOptionalName = false) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        if ($useOptionalName) {
+            $result = type_structure(['id' => type_integer(), 'name' => type_optional(type_string())])->assert($value);
+        } else {
+            $result = type_structure(['id' => type_integer(), 'name' => type_string()])->assert($value);
+        }
+
+        if ($exceptionClass === null) {
+            self::assertIsArray($result);
+        }
+    }
+
+    #[DataProvider('cast_data_provider')]
+    public function test_cast($structure, mixed $value, mixed $expected, ?string $exceptionClass) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+        }
+
+        $result = $structure->cast($value);
+
+        if ($exceptionClass === null) {
+            self::assertSame($expected, $result);
+        }
     }
 
     public function test_elements() : void
@@ -130,18 +242,23 @@ final class StructureTypeTest extends TestCase
         );
     }
 
-    #[DataProvider('invalid_assert_data_provider')]
-    public function test_invalid_assert(mixed $value) : void
+    #[DataProvider('is_valid_data_provider')]
+    public function test_is_valid($structure, mixed $value, bool $expected) : void
     {
-        $this->expectException(InvalidTypeException::class);
-        type_structure(['id' => type_integer(), 'name' => type_string()])->assert($value);
+        self::assertSame($expected, $structure->isValid($value));
     }
 
-    #[DataProvider('successful_assert_data_provider')]
-    public function test_successful_assert(mixed $value) : void
+    public function test_normalization() : void
     {
-        /** @phpstan-ignore-next-line */
-        self::assertIsArray(type_structure(['id' => type_integer(), 'name' => type_optional(type_string())])->assert($value));
+        $type = type_structure([
+            'string' => type_string(),
+            'float' => type_float(),
+            'map' => type_map(type_string(), type_list(type_datetime())),
+        ]);
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
     }
 
     public function test_to_string() : void
@@ -155,29 +272,6 @@ final class StructureTypeTest extends TestCase
         self::assertSame(
             'structure{string: string, float: float, map: map<string, list<datetime>>}',
             $struct->toString()
-        );
-    }
-
-    public function test_valid() : void
-    {
-        self::assertTrue(
-            /** @phpstan-ignore-next-line  */
-            (type_structure(['string' => type_string()]))->isValid(['string' => 'two'])
-        );
-        self::assertTrue(
-            /** @phpstan-ignore-next-line  */
-            (
-                type_structure([
-                    'map' => type_map(type_integer(), type_map(type_string(), type_list(type_integer()))),
-                    'string' => type_string(),
-                    'float' => type_float(),
-                ])
-            )->isValid(['map' => [0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]], 'string' => 'c', 'float' => 1.5])
-        );
-        /** @phpstan-ignore-next-line  */
-        self::assertFalse(
-            /** @phpstan-ignore-next-line  */
-            (type_structure(['int' => type_integer()]))->isValid([1, 2])
         );
     }
 }
