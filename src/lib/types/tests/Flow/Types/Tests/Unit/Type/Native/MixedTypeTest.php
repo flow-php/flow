@@ -232,12 +232,9 @@ final class MixedTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_mixed()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($value, $result);
+            type_mixed()->assert($value);
+        } else {
+            self::assertEquals($value, type_mixed()->assert($value));
         }
     }
 
@@ -246,12 +243,9 @@ final class MixedTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_mixed()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($expected, $result);
+            type_mixed()->cast($value);
+        } else {
+            self::assertEquals($expected, type_mixed()->cast($value));
         }
     }
 

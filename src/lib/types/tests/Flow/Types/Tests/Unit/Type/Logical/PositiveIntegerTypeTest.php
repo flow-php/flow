@@ -89,11 +89,9 @@ final class PositiveIntegerTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_positive_integer()->assert($value);
-
-        if ($exceptionClass === null) {
+            type_positive_integer()->assert($value);
+        } else {
+            $result = type_positive_integer()->assert($value);
             self::assertIsInt($result);
             self::assertSame($value, $result);
         }
@@ -104,12 +102,9 @@ final class PositiveIntegerTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_positive_integer()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_positive_integer()->cast($value);
+        } else {
+            self::assertSame($expected, type_positive_integer()->cast($value));
         }
     }
 

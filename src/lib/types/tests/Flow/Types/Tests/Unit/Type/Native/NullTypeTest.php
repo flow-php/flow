@@ -125,12 +125,9 @@ final class NullTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_null()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertNull($result);
+            type_null()->assert($value);
+        } else {
+            self::assertNull(type_null()->assert($value));
         }
     }
 
@@ -139,12 +136,9 @@ final class NullTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_null()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_null()->cast($value);
+        } else {
+            self::assertSame($expected, type_null()->cast($value));
         }
     }
 

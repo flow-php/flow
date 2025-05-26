@@ -102,12 +102,9 @@ final class XMLElementTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_xml_element()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertInstanceOf(\DOMElement::class, $result);
+            type_xml_element()->assert($value);
+        } else {
+            self::assertInstanceOf(\DOMElement::class, type_xml_element()->assert($value));
         }
     }
 
@@ -116,11 +113,10 @@ final class XMLElementTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
+            type_xml_element()->cast($value);
+        } else {
+            $result = type_xml_element()->cast($value);
 
-        $result = type_xml_element()->cast($value);
-
-        if ($exceptionClass === null) {
             if ($result instanceof \DOMElement && $expected instanceof \DOMElement) {
                 self::assertEquals($expected->nodeName, $result->nodeName);
             } else {

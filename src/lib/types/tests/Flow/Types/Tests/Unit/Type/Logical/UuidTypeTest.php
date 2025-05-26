@@ -130,12 +130,9 @@ final class UuidTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_uuid()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertInstanceOf(\Flow\Types\Value\Uuid::class, $result);
+            type_uuid()->assert($value);
+        } else {
+            self::assertInstanceOf(\Flow\Types\Value\Uuid::class, type_uuid()->assert($value));
         }
     }
 
@@ -144,12 +141,9 @@ final class UuidTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_uuid()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($expected, $result);
+            type_uuid()->cast($value);
+        } else {
+            self::assertEquals($expected, type_uuid()->cast($value));
         }
     }
 

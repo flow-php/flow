@@ -148,12 +148,9 @@ final class ScalarTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_scalar()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($value, $result);
+            type_scalar()->assert($value);
+        } else {
+            self::assertSame($value, type_scalar()->assert($value));
         }
     }
 
@@ -162,12 +159,9 @@ final class ScalarTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_scalar()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_scalar()->cast($value);
+        } else {
+            self::assertSame($expected, type_scalar()->cast($value));
         }
     }
 

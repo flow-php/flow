@@ -142,12 +142,9 @@ final class ArrayTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_array()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsArray($result);
+            type_array()->assert($value);
+        } else {
+            self::assertIsArray(type_array()->assert($value));
         }
     }
 
@@ -156,12 +153,9 @@ final class ArrayTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_array()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($expected, $result);
+            type_array()->cast($value);
+        } else {
+            self::assertEquals($expected, type_array()->cast($value));
         }
     }
 

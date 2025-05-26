@@ -104,12 +104,9 @@ final class CallableTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_callable()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsCallable($result);
+            type_callable()->assert($value);
+        } else {
+            self::assertIsCallable(type_callable()->assert($value));
         }
     }
 
@@ -118,12 +115,9 @@ final class CallableTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_callable()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_callable()->cast($value);
+        } else {
+            self::assertSame($expected, type_callable()->cast($value));
         }
     }
 

@@ -102,12 +102,9 @@ final class XMLTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_xml()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertInstanceOf(\DOMDocument::class, $result);
+            type_xml()->assert($value);
+        } else {
+            self::assertInstanceOf(\DOMDocument::class, type_xml()->assert($value));
         }
     }
 
@@ -116,11 +113,9 @@ final class XMLTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_xml()->cast($value);
-
-        if ($exceptionClass === null) {
+            type_xml()->cast($value);
+        } else {
+            $result = type_xml()->cast($value);
             self::assertSame($expected, $result->saveXML());
         }
     }

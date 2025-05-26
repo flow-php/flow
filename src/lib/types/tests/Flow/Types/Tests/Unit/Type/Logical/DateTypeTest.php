@@ -132,12 +132,9 @@ final class DateTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_date()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertInstanceOf(\DateTimeInterface::class, $result);
+            type_date()->assert($value);
+        } else {
+            self::assertInstanceOf(\DateTimeInterface::class, type_date()->assert($value));
         }
     }
 
@@ -146,12 +143,9 @@ final class DateTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_date()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($expected, $result);
+            type_date()->cast($value);
+        } else {
+            self::assertEquals($expected, type_date()->cast($value));
         }
     }
 

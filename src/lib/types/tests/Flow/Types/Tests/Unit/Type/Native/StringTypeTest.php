@@ -198,12 +198,9 @@ final class StringTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_string()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsString($result);
+            type_string()->assert($value);
+        } else {
+            self::assertIsString(type_string()->assert($value));
         }
     }
 
@@ -212,12 +209,9 @@ final class StringTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_string()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, \trim($result));
+            type_string()->cast($value);
+        } else {
+            self::assertSame($expected, \trim(type_string()->cast($value)));
         }
     }
 

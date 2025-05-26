@@ -108,12 +108,9 @@ final class ObjectTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_object()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsObject($result);
+            type_object()->assert($value);
+        } else {
+            self::assertIsObject(type_object()->assert($value));
         }
     }
 
@@ -122,12 +119,9 @@ final class ObjectTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_object()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($expected, $result);
+            type_object()->cast($value);
+        } else {
+            self::assertEquals($expected, type_object()->cast($value));
         }
     }
 

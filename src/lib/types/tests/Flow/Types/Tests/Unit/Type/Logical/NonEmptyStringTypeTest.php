@@ -108,11 +108,9 @@ final class NonEmptyStringTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_non_empty_string()->assert($value);
-
-        if ($exceptionClass === null) {
+            type_non_empty_string()->assert($value);
+        } else {
+            $result = type_non_empty_string()->assert($value);
             self::assertIsString($result);
             self::assertSame($value, $result);
         }
@@ -123,12 +121,9 @@ final class NonEmptyStringTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_non_empty_string()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_non_empty_string()->cast($value);
+        } else {
+            self::assertSame($expected, type_non_empty_string()->cast($value));
         }
     }
 

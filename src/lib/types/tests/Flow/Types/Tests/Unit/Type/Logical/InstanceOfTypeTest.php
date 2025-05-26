@@ -107,12 +107,9 @@ final class InstanceOfTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_instance_of($class)->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertInstanceOf($class, $result);
+            type_instance_of($class)->assert($value);
+        } else {
+            self::assertInstanceOf($class, type_instance_of($class)->assert($value));
         }
     }
 
@@ -124,11 +121,9 @@ final class InstanceOfTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_instance_of($class)->cast($value);
-
-        if ($exceptionClass === null) {
+            type_instance_of($class)->cast($value);
+        } else {
+            $result = type_instance_of($class)->cast($value);
             self::assertEquals($expected, $result);
             self::assertInstanceOf($class, $result);
         }

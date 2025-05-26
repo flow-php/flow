@@ -90,7 +90,7 @@ final class ResourceTypeTest extends TestCase
     public static function is_valid_data_provider() : \Generator
     {
         yield 'valid resource' => [
-            'value' => 'resource',
+            'value' => \fopen('php://temp/max', 'r+b'),
             'expected' => true,
         ];
 
@@ -115,12 +115,9 @@ final class ResourceTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_resource()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsResource($result);
+            type_resource()->assert($value);
+        } else {
+            self::assertIsResource(type_resource()->assert($value));
         }
     }
 
@@ -129,31 +126,22 @@ final class ResourceTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_resource()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_resource()->cast($value);
+        } else {
+            self::assertSame($expected, type_resource()->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
     public function test_is_valid(mixed $value, bool $expected) : void
     {
-        if ($value === 'resource') {
-            $resource = \fopen('php://temp/max', 'r+b');
-
-            try {
-                self::assertSame($expected, type_resource()->isValid($resource));
-            } finally {
-                \fclose($resource);
+        try {
+            self::assertSame($expected, type_resource()->isValid($value));
+        } finally {
+            if (is_resource($value)) {
+                \fclose($value);
             }
-
-            return;
         }
-
-        self::assertSame($expected, type_resource()->isValid($value));
     }
 
     public function test_normalization() : void

@@ -168,12 +168,9 @@ final class FloatTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_float()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsFloat($result);
+            type_float()->assert($value);
+        } else {
+            self::assertIsFloat(type_float()->assert($value));
         }
     }
 
@@ -182,12 +179,9 @@ final class FloatTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_float()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_float()->cast($value);
+        } else {
+            self::assertSame($expected, type_float()->cast($value));
         }
     }
 

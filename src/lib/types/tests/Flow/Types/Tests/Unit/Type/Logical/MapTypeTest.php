@@ -15,71 +15,61 @@ final class MapTypeTest extends TestCase
     {
         yield 'valid map with integer keys' => [
             'value' => [1 => 'a', 2 => 'b'],
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => null,
         ];
 
         yield 'valid map with sequential keys' => [
             'value' => [0 => 'a', 1 => 'b'],
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => null,
         ];
 
         yield 'valid map with non-sequential integer keys' => [
             'value' => [100 => 'a', 99 => 'b'],
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => null,
         ];
 
         yield 'invalid string' => [
             'value' => 'string',
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid UUID string' => [
             'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid boolean' => [
             'value' => false,
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid float' => [
             'value' => 124.25,
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid map with string keys for integer key type' => [
             'value' => ['a' => 'a', 'b' => 'b'],
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid object' => [
             'value' => new \stdClass(),
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
 
         yield 'invalid DateTimeZone' => [
             'value' => new \DateTimeZone('UTC'),
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'exceptionClass' => InvalidTypeException::class,
         ];
     }
@@ -88,16 +78,14 @@ final class MapTypeTest extends TestCase
     {
         yield 'map of ints to map of floats' => [
             'value' => ['a' => 1, 'b' => 2, 'c' => 3],
-            'keyType' => type_string(),
-            'valueType' => type_float(),
+            'mapType' => type_map(type_string(), type_float()),
             'expected' => ['a' => 1.0, 'b' => 2.0, 'c' => 3.0],
             'exceptionClass' => null,
         ];
 
         yield 'map of string to ints into map of int to float' => [
             'value' => ['a' => 1, 'b' => 2, 'c' => 3],
-            'keyType' => type_integer(),
-            'valueType' => type_float(),
+            'mapType' => type_map(type_integer(), type_float()),
             'expected' => null,
             'exceptionClass' => CastingException::class,
         ];
@@ -107,79 +95,67 @@ final class MapTypeTest extends TestCase
     {
         yield 'valid map with string keys and string values' => [
             'value' => ['one' => 'two'],
-            'keyType' => type_string(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_string(), type_string()),
             'expected' => true,
         ];
 
         yield 'valid map with integer keys and list values' => [
             'value' => [[1, 2], [3, 4]],
-            'keyType' => type_integer(),
-            'valueType' => type_list(type_integer()),
+            'mapType' => type_map(type_integer(), type_list(type_integer())),
             'expected' => true,
         ];
 
         yield 'valid complex nested map' => [
             'value' => [0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]],
-            'keyType' => type_integer(),
-            'valueType' => type_map(type_string(), type_list(type_integer())),
+            'mapType' => type_map(type_integer(), type_map(type_string(), type_list(type_integer()))),
             'expected' => true,
         ];
 
         yield 'invalid map with string keys for integer key type' => [
             'value' => ['one' => 'two'],
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'expected' => false,
         ];
 
         yield 'invalid indexed array for map' => [
             'value' => [1, 2],
-            'keyType' => type_integer(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_integer(), type_string()),
             'expected' => false,
         ];
 
         yield 'invalid integer' => [
             'value' => 123,
-            'keyType' => type_string(),
-            'valueType' => type_string(),
+            'mapType' => type_map(type_string(), type_string()),
             'expected' => false,
         ];
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, $keyType, $valueType, ?string $exceptionClass = null) : void
+    public function test_assert(mixed $value, $mapType, ?string $exceptionClass = null) : void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_map($keyType, $valueType)->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsArray($result);
+            $mapType->assert($value);
+        } else {
+            self::assertIsArray($mapType->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, $keyType, $valueType, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, $mapType, mixed $expected, ?string $exceptionClass) : void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_map($keyType, $valueType)->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            $mapType->cast($value);
+        } else {
+            self::assertSame($expected, $mapType->cast($value));
         }
     }
 
     #[DataProvider('is_valid_data_provider')]
-    public function test_is_valid(mixed $value, $keyType, $valueType, bool $expected) : void
+    public function test_is_valid(mixed $value, $mapType, bool $expected) : void
     {
-        self::assertSame($expected, type_map($keyType, $valueType)->isValid($value));
+        self::assertSame($expected, $mapType->isValid($value));
     }
 
     public function test_normalization() : void

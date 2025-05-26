@@ -109,12 +109,9 @@ final class TimeTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_time()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertInstanceOf(\DateInterval::class, $result);
+            type_time()->assert($value);
+        } else {
+            self::assertInstanceOf(\DateInterval::class, type_time()->assert($value));
         }
     }
 
@@ -123,12 +120,9 @@ final class TimeTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_time()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($expected, $result);
+            type_time()->cast($value);
+        } else {
+            self::assertEquals($expected, type_time()->cast($value));
         }
     }
 

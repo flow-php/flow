@@ -131,12 +131,9 @@ final class OptionalTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = $type->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($value, $result);
+            $type->assert($value);
+        } else {
+            self::assertSame($value, $type->assert($value));
         }
     }
 
@@ -145,12 +142,9 @@ final class OptionalTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = $type->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            $type->cast($value);
+        } else {
+            self::assertSame($expected, $type->cast($value));
         }
     }
 

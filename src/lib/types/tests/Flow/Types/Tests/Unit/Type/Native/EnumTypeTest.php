@@ -124,12 +124,9 @@ final class EnumTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_enum($class)->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertInstanceOf($class, $result);
+            type_enum($class)->assert($value);
+        } else {
+            self::assertInstanceOf($class, type_enum($class)->assert($value));
         }
     }
 
@@ -141,12 +138,9 @@ final class EnumTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_enum($class)->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_enum($class)->cast($value);
+        } else {
+            self::assertSame($expected, type_enum($class)->cast($value));
         }
     }
 

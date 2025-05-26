@@ -165,12 +165,9 @@ final class UnionTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = $type->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($value, $result);
+            $type->assert($value);
+        } else {
+            self::assertSame($value, $type->assert($value));
         }
     }
 
@@ -179,12 +176,9 @@ final class UnionTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = $type->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertEquals($expected, $result);
+            $type->cast($value);
+        } else {
+            self::assertEquals($expected, $type->cast($value));
         }
     }
 

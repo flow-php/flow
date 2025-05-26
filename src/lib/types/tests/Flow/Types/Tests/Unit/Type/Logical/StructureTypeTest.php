@@ -23,80 +23,80 @@ final class StructureTypeTest extends TestCase
     {
         yield 'valid structure with required fields' => [
             'value' => ['id' => 1, 'name' => 'b'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => null,
-            'useOptionalName' => false,
         ];
 
         yield 'valid structure with optional field' => [
             'value' => ['id' => 1, 'name' => null],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_optional(type_string())]),
             'exceptionClass' => null,
-            'useOptionalName' => true,
         ];
 
         yield 'invalid string' => [
             'value' => 'string',
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid UUID string' => [
             'value' => '49e952c8-80ec-4910-a1d6-a19bd46b163d',
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid boolean' => [
             'value' => false,
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid float' => [
             'value' => 124.25,
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid array with different keys' => [
             'value' => ['a' => 'a', 'b' => 'b'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid object' => [
             'value' => new \stdClass(),
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid DateTimeZone' => [
             'value' => new \DateTimeZone('UTC'),
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid structure with null required field' => [
             'value' => ['id' => null, 'name' => 'b'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid structure with null required field 2' => [
             'value' => ['id' => 2, 'name' => null],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid structure with all null fields' => [
             'value' => ['id' => null, 'name' => null],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
 
         yield 'invalid structure with extra field' => [
             'value' => ['id' => 1, 'name' => null, 'active' => false],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
-            'useOptionalName' => false,
         ];
     }
 
@@ -203,20 +203,13 @@ final class StructureTypeTest extends TestCase
     }
 
     #[DataProvider('assert_data_provider')]
-    public function test_assert(mixed $value, ?string $exceptionClass = null, bool $useOptionalName = false) : void
+    public function test_assert(mixed $value, $structureType, ?string $exceptionClass = null) : void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        if ($useOptionalName) {
-            $result = type_structure(['id' => type_integer(), 'name' => type_optional(type_string())])->assert($value);
+            $structureType->assert($value);
         } else {
-            $result = type_structure(['id' => type_integer(), 'name' => type_string()])->assert($value);
-        }
-
-        if ($exceptionClass === null) {
-            self::assertIsArray($result);
+            self::assertIsArray($structureType->assert($value));
         }
     }
 
@@ -225,12 +218,9 @@ final class StructureTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = $structure->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            $structure->cast($value);
+        } else {
+            self::assertSame($expected, $structure->cast($value));
         }
     }
 

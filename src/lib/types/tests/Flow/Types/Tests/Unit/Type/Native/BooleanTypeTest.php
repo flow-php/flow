@@ -183,12 +183,9 @@ final class BooleanTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_boolean()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsBool($result);
+            type_boolean()->assert($value);
+        } else {
+            self::assertIsBool(type_boolean()->assert($value));
         }
     }
 
@@ -197,12 +194,9 @@ final class BooleanTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_boolean()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_boolean()->cast($value);
+        } else {
+            self::assertSame($expected, type_boolean()->cast($value));
         }
     }
 

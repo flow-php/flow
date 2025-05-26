@@ -115,12 +115,9 @@ final class JsonTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_json()->assert($value);
-
-        if ($exceptionClass === null) {
-            self::assertIsString($result);
+            type_json()->assert($value);
+        } else {
+            self::assertIsString(type_json()->assert($value));
         }
     }
 
@@ -129,12 +126,9 @@ final class JsonTypeTest extends TestCase
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-        }
-
-        $result = type_json()->cast($value);
-
-        if ($exceptionClass === null) {
-            self::assertSame($expected, $result);
+            type_json()->cast($value);
+        } else {
+            self::assertSame($expected, type_json()->cast($value));
         }
     }
 
