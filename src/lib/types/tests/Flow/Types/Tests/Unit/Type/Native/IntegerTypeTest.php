@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\{type_from_array, type_integer};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -94,6 +94,12 @@ final class IntegerTypeTest extends TestCase
             'value' => [1, 2, 3],
             'expected' => 1,
             'exceptionClass' => null,
+        ];
+
+        yield 'stdClass' => [
+            'value' => new \stdClass(),
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'DateTimeInterface' => [
