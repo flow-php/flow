@@ -80,5 +80,6 @@ It's mandatory to follow all of them without any exceptions unless explicitly ov
 
 ## Next Steps
 
- - [Setup development environment](/documentation/contributing/environment.md)
-   - [Nix Shell](/documentation/contributing/nix.md)
+- [Setup development environment](/documentation/contributing/environment.md)
+  - [Nix Shell](/documentation/contributing/nix.md)
+- [Development Guidelines](/documentation/contributing/guidelines.md)
