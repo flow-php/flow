@@ -232,20 +232,20 @@ final class IntersectionTypeTest extends TestCase
         }
     }
 
-    public function test_intersection_with_mixed_type_as_right() : void
-    {
-        $this->expectException(InvalidTypeException::class);
-        $this->expectExceptionMessage('IntersectionType cannot be mixed with MixedType, mixed is a standalone type');
-
-        type_intersection(type_integer(), type_mixed());
-    }
-
     public function test_intersection_with_mixed_type_as_left() : void
     {
         $this->expectException(InvalidTypeException::class);
         $this->expectExceptionMessage('IntersectionType cannot be mixed with MixedType, mixed is a standalone type');
 
         type_intersection(type_mixed(), type_integer());
+    }
+
+    public function test_intersection_with_mixed_type_as_right() : void
+    {
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('IntersectionType cannot be mixed with MixedType, mixed is a standalone type');
+
+        type_intersection(type_integer(), type_mixed());
     }
 
     #[DataProvider('is_valid_data_provider')]
