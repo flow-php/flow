@@ -46,15 +46,19 @@ The project is structured as follows:
     - `bridge` contains bridges to connect flow libs with other libraries and frameworks.
     - `cli` contains the command line interface application.
     - `core` contains the core functionality of the project, it holds the entire DataFrame.
-    - `lib` contains standalone libraries that can be used independently of the project, like `doctrine-dbal-bulk` and `parquet`.
+    - `lib` contains standalone libraries that can be used independently of the project, like `doctrine-dbal-bulk` and
+      `parquet`.
     - `tools` contains tools used during development.
-- `tools` contains tools used during development, like the `phpstan`, `phpunit` and others, to not pollute project autoloader and
+- `tools` contains tools used during development, like the `phpstan`, `phpunit` and others, to not pollute project
+  autoloader and
   to keep tools outside of project dependencies.
 - `var` contains temporary files, like cache and logs.
 - `vendor` contains the dependencies of the project, managed by Composer.
 - `web`
-    - `landing` contains the landing page of the project, which is a symfony application that is automatically dumped to static HTML files
-      and served by GitHub Pages. It has it's own composer.json that defines the dependencies for the landing page and commands.
+    - `landing` contains the landing page of the project, which is a symfony application that is automatically dumped to
+      static HTML files
+      and served by GitHub Pages. It has it's own composer.json that defines the dependencies for the landing page and
+      commands.
 
 ## Monorepo packages
 
@@ -91,7 +95,8 @@ as wide as possible, so we don't block other projects by our constraints.
 Packages from this monorepo can depend on each other, but ther are strict rules about that:
 
 - `lib` - libraries can depend only on other `lib` packages, never on anything else.
-- `adapter` - adapters can depend on `lib` / `bridge` and they always depend on `core`. Adpaters should not depend on `cli`
+- `adapter` - adapters can depend on `lib` / `bridge` and they always depend on `core`. Adpaters should not depend on
+  `cli`
 - `bridge` - bridges can depend only on `lib`
 - `cli` - CLI can depend on `core`, `lib` and `adapter` and `bridge`, `cli` always depends on `core`
 - `core` - core can depend on `lib` or `bridge`, but should should never depend on `adapter`, or `cli`
@@ -100,7 +105,8 @@ The above rules apply also on namespaces. So for example Adapter for `CSV` can't
 
 # PHP Versions
 
-This project supports only the latest three PHP versions, for example: 8.2, 8.3, and 8.4. (assuming that 8.4 is the latest version).
+This project supports only the latest three PHP versions, for example: 8.2, 8.3, and 8.4. (assuming that 8.4 is the
+latest version).
 Development is done using the lowest supported version, which is currently PHP 8.2.
 The project is tested against all three versions, so you can use any of them for development.
 
@@ -111,7 +117,8 @@ Most of them are available as Composer scripts, so you can run them using `compo
 
 - `composer static:analyze` runs static analysis tools like PHPStan to check the code for errors and potential issues.
 - `composer cs:php:fix` runs the PHP CS Fixer and Rector to automatically fix coding standards issues in the code.
-    - `composer test` runs all tests in the project, including unit tests, functional tests, and integration tests. It's a combination of all other test commands:
+    - `composer test` runs all tests in the project, including unit tests, functional tests, and integration tests. It's
+      a combination of all other test commands:
     - `composer test:core`
         - `composer test:cli`
         - `composer test:lib:array-dot`
@@ -120,7 +127,8 @@ Most of them are available as Composer scripts, so you can run them using `compo
         - ...
         - `composer test:adapter:xml`
         - ...
-        - `composer test:benchmark` runs the benchmark tests to measure the performance of the certain parts of the project.
+        - `composer test:benchmark` runs the benchmark tests to measure the performance of the certain parts of the
+          project.
         - `composer test:website` runs the tests for the website
         - `composer test:examples` runs all examples
         - `composer test:mutation` runs the mutation tests to check the quality of the tests.
@@ -134,4 +142,24 @@ Each package comes with a DSL (Domain Specific Language) that provides an easy, 
 All functions defined in DSL (usually in `functions.php` files) are following the same codding standards as PHP code.
 snake_case is used for function names and arguments in DSL. The only other place where snake_case is used is in the
 tests, where it is used for test method names.
+
+To make sure, that the whole project is aligned with the codding standards, run following commands:
+
+```
+composer cs:php:fix
+composer static:analyze
+```
+
+Only when both commands pass, you should commit your changes.
+
+# Testing
+
+- Tests in the project are divided into
+    - `Unit` - tests a single behavior in isolation, without any dependencies.
+    - `Integration` - tests a single behavior with dependencies, like database or external services.
+- Test cases of all packages should extends `\Flow\ETL\Tests\FlowTestCase` class, the only exceptions are `lib` and
+  `bridge` packages, which can use their own test cases.
+- Each test method should test only one scenario, when one behavior needs to be tested against multiple input data, use
+  `PHPUnit\Framework\Attributes\TestWith` or `PHPUnit\Framework\Attributes\DataProvider` attributes.
+
 
