@@ -55,6 +55,12 @@ abstract class IntegrationTestCase extends FlowTestCase
     protected function tearDown() : void
     {
         $this->pgsqlDatabaseContext->dropAllTables();
+        $this->mysqlDatabaseContext->dropAllTables();
+        $this->sqliteDatabaseContext->dropAllTables();
+
+        $this->pgsqlDatabaseContext->connection()->close();
+        $this->mysqlDatabaseContext->connection()->close();
+        $this->sqliteDatabaseContext->connection()->close();
     }
 
     protected function mysqlConnectionParams() : array

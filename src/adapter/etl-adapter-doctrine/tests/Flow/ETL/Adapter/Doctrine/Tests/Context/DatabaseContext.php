@@ -7,12 +7,14 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Table;
 
-final readonly class DatabaseContext
+final class DatabaseContext
 {
+    private array $createdTables = [];
+
     public function __construct(
-        private Connection $connection,
-        private InsertQueryCounter $insertQueryCounter,
-        private SelectQueryCounter $selectQueryCounter,
+        private readonly Connection $connection,
+        private readonly InsertQueryCounter $insertQueryCounter,
+        private readonly SelectQueryCounter $selectQueryCounter,
     ) {
     }
 
@@ -30,14 +32,15 @@ final readonly class DatabaseContext
         }
 
         $schemaManager->createTable($table);
+        $this->createdTables[] = $table->getName();
     }
 
     public function dropAllTables() : void
     {
         $schemaManager = $this->connection->createSchemaManager();
 
-        foreach ($schemaManager->listTables() as $table) {
-            $schemaManager->dropTable($table->getName());
+        foreach ($this->createdTables as $tableName) {
+            $schemaManager->dropTable($tableName);
         }
     }
 
