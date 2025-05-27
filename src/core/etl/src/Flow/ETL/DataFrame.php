@@ -513,10 +513,6 @@ final class DataFrame
      */
     public function load(Loader $loader) : self
     {
-        if ($loader instanceof LoaderExtension) {
-            $this->context = $loader->onAdded($this->context);
-        }
-
         $this->pipeline = $this->context->config->optimizer()->optimize($loader, $this->pipeline);
 
         return $this;
