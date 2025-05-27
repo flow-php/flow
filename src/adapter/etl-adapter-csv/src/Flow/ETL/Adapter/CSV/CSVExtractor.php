@@ -31,6 +31,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     private ?string $separator = null;
 
     private bool $withHeader = true;
+    private bool $removeBOM = true;
 
     public function __construct(private readonly Path $path)
     {
@@ -51,7 +52,11 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $headers = [];
             $headersCount = 0;
 
-            foreach ($stream->readLines(length: $this->charactersReadInLine) as $csvLine) {
+            foreach ($stream->readLines(length: $this->charactersReadInLine) as $line => $csvLine) {
+                if($line === 0 && $this->removeBOM) {
+                    $csvLine = preg_replace('/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF|\xFF\xFE\x00\x00|\x00\x00\xFE\xFF)/', '', $csvLine);
+                }
+
                 /** @var non-empty-list<null|string> $rowData */
                 $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
                 $rowDataCount = \count($rowData);
@@ -183,5 +188,12 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $headers,
             \array_keys($headers)
         );
+    }
+
+    public function withBomRemoval(bool $removeBOM) : self
+    {
+        $this->removeBOM = $removeBOM;
+
+        return $this;
     }
 }

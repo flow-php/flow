@@ -332,4 +332,124 @@ SCHEMA,
         $generator->send(Signal::STOP);
         self::assertFalse($generator->valid());
     }
+
+    public function test_bom_removal_utf8(): void
+    {
+        $extractor = from_csv(
+            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf8_bom.csv'),
+        );
+
+        self::assertSame(
+            [
+                [
+                    [
+                        'id' => '2',
+                        'name' => 'asd',
+                        'reference' => '144',
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ]
+            ],
+            \array_map(
+                static fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
+            )
+        );
+    }
+
+    public function test_bom_removal_utf16_le(): void
+    {
+        $extractor = from_csv(
+            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf16le_bom.csv'),
+        );
+
+        self::assertSame(
+            [
+                [
+                    [
+                        'id' => '2',
+                        'name' => 'asd',
+                        'reference' => '144',
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ]
+            ],
+            \array_map(
+                static fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
+            )
+        );
+    }
+
+    public function test_bom_removal_utf16_be(): void
+    {
+        $extractor = from_csv(
+            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf16be_bom.csv'),
+        );
+
+        self::assertSame(
+            [
+                [
+                    [
+                        'id' => '2',
+                        'name' => 'asd',
+                        'reference' => '144',
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ]
+            ],
+            \array_map(
+                static fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
+            )
+        );
+    }
+
+    public function test_bom_removal_utf32_le(): void
+    {
+        $extractor = from_csv(
+            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf32le_bom.csv'),
+        );
+
+        self::assertSame(
+            [
+                [
+                    [
+                        'id' => '2',
+                        'name' => 'asd',
+                        'reference' => '144',
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ]
+            ],
+            \array_map(
+                static fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
+            )
+        );
+    }
+
+    public function test_bom_removal_utf32_be(): void
+    {
+        $extractor = from_csv(
+            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf32be_bom.csv'),
+        );
+
+        self::assertSame(
+            [
+                [
+                    [
+                        'id' => '2',
+                        'name' => 'asd',
+                        'reference' => '144',
+                        '_input_file_uri' => $path->uri(),
+                    ],
+                ]
+            ],
+            \array_map(
+                static fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(flow_context(Config::builder()->putInputIntoRows()->build())))
+            )
+        );
+    }
 }
