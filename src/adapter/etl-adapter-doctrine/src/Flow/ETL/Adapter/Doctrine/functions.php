@@ -235,6 +235,25 @@ function to_dbal_table_update(
 }
 
 /**
+ * Delete rows from database table based on the provided data.
+ *
+ * In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
+ *
+ * @param array<string, mixed>|Connection $connection
+ *
+ * @throws InvalidArgumentException
+ */
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
+function to_dbal_table_delete(
+    array|Connection $connection,
+    string $table,
+) : DbalLoader {
+    return $connection instanceof Connection
+        ? DbalLoader::fromConnection($connection, $table, null, 'delete')
+        : (new DbalLoader($table, $connection))->withOperation('delete');
+}
+
+/**
  * Converts a Flow\ETL\Schema to a Doctrine\DBAL\Schema\Table.
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]

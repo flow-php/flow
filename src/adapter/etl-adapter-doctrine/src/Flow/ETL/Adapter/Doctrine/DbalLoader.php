@@ -68,8 +68,8 @@ final class DbalLoader implements Loader
      */
     public function withOperation(string $operation) : self
     {
-        if (false === \in_array(\strtolower($operation), ['update', 'insert'], true)) {
-            throw new InvalidArgumentException("Operation can be insert or update, {$operation} given.");
+        if (false === \in_array(\strtolower($operation), ['update', 'insert', 'delete'], true)) {
+            throw new InvalidArgumentException("Operation can be insert, update, or delete, {$operation} given.");
         }
 
         $this->operation = $operation;

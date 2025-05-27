@@ -15,6 +15,15 @@ interface QueryFactory
      *
      * @return string
      */
+    public function delete(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData) : string;
+
+    /**
+     * @param AbstractPlatform $platform
+     * @param TableDefinition $table
+     * @param BulkData $bulkData
+     *
+     * @return string
+     */
     public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string;
 
     /**

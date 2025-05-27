@@ -13,6 +13,35 @@ final readonly class SqliteDialect implements Dialect
     {
     }
 
+    /**
+     * @param TableDefinition $table
+     * @param BulkData $bulkData
+     *
+     * @return string
+     */
+    public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string
+    {
+        $columns = $bulkData->columns()->all();
+
+        if (count($columns) === 1) {
+            $column = $columns[0];
+
+            return \sprintf(
+                'DELETE FROM %s WHERE %s IN (%s)',
+                $table->name(),
+                $this->platform->quoteIdentifier($column),
+                $bulkData->toSqlPlaceholders()
+            );
+        }
+
+        return \sprintf(
+            'DELETE FROM %s WHERE (%s) IN (%s)',
+            $table->name(),
+            \implode(', ', \array_map(fn ($column) => $this->platform->quoteIdentifier($column), $columns)),
+            $bulkData->toSqlPlaceholders()
+        );
+    }
+
     public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
         if ($options === null) {
