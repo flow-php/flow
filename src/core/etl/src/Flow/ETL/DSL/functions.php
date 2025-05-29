@@ -1607,7 +1607,10 @@ function float_schema(string $name, bool $nullable = false, ?Metadata $metadata 
 }
 
 /**
- * @param MapType<array-key, mixed> $type
+ * @template TKey of array-key
+ * @template TValue
+ *
+ * @param MapType<TKey, TValue> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function map_schema(string $name, MapType $type, bool $nullable = false, ?Metadata $metadata = null) : Definition
@@ -1616,7 +1619,9 @@ function map_schema(string $name, MapType $type, bool $nullable = false, ?Metada
 }
 
 /**
- * @param ListType<mixed> $type
+ * @template T
+ *
+ * @param ListType<T> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
 function list_schema(string $name, ListType $type, bool $nullable = false, ?Metadata $metadata = null) : Definition

@@ -27,6 +27,10 @@ component_management:
       name: lib-filesystem
       paths:
         - src/lib/filesystem/**
+    - component_id: lib-types
+      name: lib-types
+      paths:
+        - src/lib/types/**
     - component_id: lib-parquet
       name: lib-parquet
       paths:

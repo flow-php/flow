@@ -27,7 +27,7 @@ use function Flow\Types\DSL\{type_array,
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{InstanceOfType, ListType, MapType, OptionalType, StructureType};
-use Flow\Types\Type\Native\{EnumType, UnionType};
+use Flow\Types\Type\Native\{EnumType, IntersectionType, UnionType};
 
 final class TypeFactory
 {
@@ -73,6 +73,8 @@ final class TypeFactory
             'xml' => type_xml(),
             /** @phpstan-ignore argument.type */
             'union' => UnionType::fromArray($data),
+            /** @phpstan-ignore argument.type */
+            'intersection' => IntersectionType::fromArray($data),
             /** @phpstan-ignore argument.type */
             'optional' => OptionalType::fromArray($data),
             'scalar' => type_scalar(),

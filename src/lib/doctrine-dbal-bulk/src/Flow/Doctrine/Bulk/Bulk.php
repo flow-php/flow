@@ -20,6 +20,22 @@ final readonly class Bulk
     }
 
     /**
+     * Delete data from the database in bulk based on the provided bulk data.
+     *
+     * @throws Exception|RuntimeException
+     */
+    public function delete(Connection $connection, string $table, BulkData $bulkData) : void
+    {
+        $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
+
+        $connection->executeStatement(
+            $this->queryFactory->delete($connection->getDatabasePlatform(), $tableDefinition, $bulkData),
+            $bulkData->toSqlParameters($tableDefinition),
+            $tableDefinition->dbalTypes($bulkData)
+        );
+    }
+
+    /**
      * Insert data into the database in bulk.
      * Insert should be used whenever you want to insert a large number of rows into a table or upsert them.
      *

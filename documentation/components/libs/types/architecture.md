@@ -64,7 +64,7 @@ internally creates a new instance of `\Flow\Types\Type\TypeDetector` and calls i
 method.
 
 The DSL definition can thus be considered the library's API, located in the
-file [functions.php](src/lib/types/src/Flow/Types/DSL/functions.php).
+file [functions.php](/src/lib/types/src/Flow/Types/DSL/functions.php).
 
 One of the library's key principles is tight integration with static code analysis tools. This is achieved through
 proper use of template mechanisms and type narrowing, `@template` and `@phpstan-assert`.
@@ -80,7 +80,7 @@ Therefore, it is critical that all classes and functions in this library are pro
 ## Testing
 
 This library provides a set of unit tests that verify the correct operation of all types and DSL functions.  
-All tests are located in the directory [`Flow/Types/Tests/Unit`](src/lib/types/tests/Flow/Types/Tests/Unit).
+All tests are located in the directory [`Flow/Types/Tests/Unit`](/src/lib/types/tests/Flow/Types/Tests/Unit).
 
 Below is an example template that can be used to create cover a type with unit tests:
 

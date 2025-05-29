@@ -87,6 +87,7 @@ By default all types are not nullabe, in order to achieve nullability two types 
 
 - `type_optional(type_string())` - results in nullable string '?string'
 - `type_union(type_string(),type_integer(),type_null())` - results in `union<string,integer,null>` which is the same as `string|integer|null`
+- `type_intersection(type_integer(),type_string())` - results in `intersection<integer,string>` which is the same as `integer&string`, requiring values to be valid for ALL types in the intersection
 
 #### Lists 
 

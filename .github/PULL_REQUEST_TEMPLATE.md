@@ -1,9 +1,16 @@
 <!-- 
+    Please replace #xxx with a GitHub issue id from flow-php/flow repository. For example #1234 
+    If there is no item in a roadmap related to this PR, please check our contributing guidelines first. 
+-->
+Resolves: #xxx
+
+<!-- 
     Below section will be used to automatically generate changelog, please do not modify HTML code structure
     DO NOT REMOVE that HTML STRUCTURE, INSTEAD ADD YOUR CHANGES INSIDE THE LISTS 
     PULL REQUESTS WITHOUT CHANGELOG CAN'T BE MERGED 
 -->
 <h2>Change Log</h2>
+<hr /> 
 <div id="change-log">
   <h4>Added</h4>
   <ul id="added">
@@ -30,8 +37,3 @@
     <!-- <li>Something that was a security issue, is not an issue anymore</li> -->
   </ul>     
 </div>
-<hr/>
-
-<h2>Description</h2>
-
-<!-- Please provide a short description of changes in this section, feel free to use markdown syntax -->

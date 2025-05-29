@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests;
 
+use function Flow\Types\DSL\type_string;
 use Doctrine\DBAL\{Configuration, DriverManager};
 use Doctrine\DBAL\Logging\Middleware;
 use Doctrine\DBAL\Tools\DsnParser;
@@ -15,6 +16,8 @@ abstract class IntegrationTestCase extends FlowTestCase
     protected DatabaseContext $mysqlDatabaseContext;
 
     protected DatabaseContext $pgsqlDatabaseContext;
+
+    protected DatabaseContext $sqliteDatabaseContext;
 
     protected function setUp() : void
     {
@@ -38,11 +41,26 @@ abstract class IntegrationTestCase extends FlowTestCase
             $insertQueryCounter,
             $selectQueryCounter
         );
+
+        $this->sqliteDatabaseContext = new DatabaseContext(
+            DriverManager::getConnection(
+                $this->sqliteConnectionParams(),
+                (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
+            ),
+            $insertQueryCounter,
+            $selectQueryCounter
+        );
     }
 
     protected function tearDown() : void
     {
         $this->pgsqlDatabaseContext->dropAllTables();
+        $this->mysqlDatabaseContext->dropAllTables();
+        $this->sqliteDatabaseContext->dropAllTables();
+
+        $this->pgsqlDatabaseContext->connection()->close();
+        $this->mysqlDatabaseContext->connection()->close();
+        $this->sqliteDatabaseContext->connection()->close();
     }
 
     protected function mysqlConnectionParams() : array
@@ -53,5 +71,17 @@ abstract class IntegrationTestCase extends FlowTestCase
     protected function postgresqlConnectionParams() : array
     {
         return (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(\getenv('PGSQL_DATABASE_URL') ?: '');
+    }
+
+    protected function sqliteConnectionParams() : array
+    {
+        $path = type_string()->assert(\getenv('SQLITE_DATABASE_PATH'));
+        $folder = pathinfo($path, PATHINFO_DIRNAME);
+
+        if (!is_dir($folder)) {
+            @mkdir($folder, 0777, true);
+        }
+
+        return (new DsnParser(['sqlite' => 'sqlite3']))->parse('sqlite3://' . $path);
     }
 }

@@ -11,6 +11,14 @@ interface Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
+     *
+     * @return string
+     */
+    public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string;
+
+    /**
+     * @param TableDefinition $table
+     * @param BulkData $bulkData
      * @param null|InsertOptions $options
      *
      * @return string

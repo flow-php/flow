@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
+namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 
 use function Flow\ETL\Adapter\Doctrine\{from_dbal_queries, from_dbal_query};
 use function Flow\ETL\DSL\data_frame;
@@ -13,7 +13,7 @@ use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\{DbalLoader, ParametersSet};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 
-final class DbalQueryExtractorTest extends IntegrationTestCase
+final class PostgreSQLDbalQueryExtractorTest extends IntegrationTestCase
 {
     public function test_extracting_multiple_rows_at_once() : void
     {

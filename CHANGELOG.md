@@ -1,7 +1,33 @@
-## [Unreleased] - 2025-05-26
+## [Unreleased] - 2025-05-28
+
+### Added
+- [#1687](https://github.com/flow-php/flow/pull/1687) - **Dbal Bulk::delete()** - [@norberttech](https://github.com/norberttech)
+- [#1687](https://github.com/flow-php/flow/pull/1687) - **to_dbal_table_delete()** - [@norberttech](https://github.com/norberttech)
+- [#1687](https://github.com/flow-php/flow/pull/1687) - **Tested dbal adapter elements at all supported db engines** - [@norberttech](https://github.com/norberttech)
+- [#1684](https://github.com/flow-php/flow/pull/1684) - **type_intersection** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1682](https://github.com/flow-php/flow/pull/1682) - **Update Homebrew TAP formula: flow-php to version: 0.17.1** - [@norberttech](https://github.com/norberttech)
+
+### Updated
+- [e8d7de](https://github.com/flow-php/flow/commit/e8d7de6277e71ff6c2ca21106cfba0e4f85014df) - **proposal.yml** - [@norberttech](https://github.com/norberttech)
+- [47487c](https://github.com/flow-php/flow/commit/47487c1438dc6dfd71e7919d614c6338b94d0947) - **proposal.yml** - [@norberttech](https://github.com/norberttech)
+- [6a0ad1](https://github.com/flow-php/flow/commit/6a0ad155af831158006fbf073993294aeb97dfa5) - **bug.yml** - [@norberttech](https://github.com/norberttech)
+- [bcbd17](https://github.com/flow-php/flow/commit/bcbd17194ee5dcfa8e44da12089ecb1996d87281) - **bug.yml** - [@norberttech](https://github.com/norberttech)
+- [0eb36b](https://github.com/flow-php/flow/commit/0eb36bc69b0bcfe28755218430548b478aabaff2) - **bug.yml** - [@norberttech](https://github.com/norberttech)
+
+## [0.17.1] - 2025-05-26
+
+### Added
+- [#1673](https://github.com/flow-php/flow/pull/1673) - **Issue Templates** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#1673](https://github.com/flow-php/flow/pull/1673) - **Contributing guildelines** - [@norberttech](https://github.com/norberttech)
 - [#1681](https://github.com/flow-php/flow/pull/1681) - **Update Homebrew TAP formula: flow-php to version: 0.17.0** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [b46480](https://github.com/flow-php/flow/commit/b46480fc9f54aaaf7c222b061558b7e0ed52ed65) - **dsl definition** - [@norberttech](https://github.com/norberttech)
+- [b45520](https://github.com/flow-php/flow/commit/b455208687fce1b0ca942724e5cab7200ca68cbb) - **types for complex schema types, prepared release 0.17.1** - [@norberttech](https://github.com/norberttech)
 
 ## [0.17.0] - 2025-05-26
 

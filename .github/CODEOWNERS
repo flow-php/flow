@@ -1,1 +1,16 @@
+# [Core Contributors]
+#
+# People below are responsible for the entire project.
+# Those people can be considered project owners, they are responsible for managing the roadmap, preparing releases,
+# handling security issue, answering questions, fixing bugs but also working on new features.
 * @norberttech
+
+# [Mantainers]
+#
+# People below are responsible for project maintenance.
+
+# [Adapter Maintainers]
+#
+# People Below are responsible for specific adapters, they should keep adapters up to date, they should be the first
+# to review reported incidents and provide guidance. Whenever bigger architectural changes are proposed, Adapter Maintainers
+# should make sure that the adapters their are responsible for are going to be aligned with those changes.

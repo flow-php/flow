@@ -28,6 +28,7 @@ use Flow\Types\Type\Native\{ArrayType,
     EnumType,
     FloatType,
     IntegerType,
+    IntersectionType,
     MixedType,
     NullType,
     ObjectType,
@@ -65,6 +66,27 @@ function type_union(Type $first, Type $second, Type ...$types) : UnionType
 
     foreach ($types as $t) {
         $type = new UnionType($type, $t);
+    }
+
+    return $type;
+}
+
+/**
+ * @template T
+ *
+ * @param \Flow\Types\Type<T> $first
+ * @param Type<T> $second
+ * @param \Flow\Types\Type<T> ...$types
+ *
+ * @return IntersectionType<T, T>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_intersection(Type $first, Type $second, Type ...$types) : IntersectionType
+{
+    $type = new IntersectionType($first, $second);
+
+    foreach ($types as $t) {
+        $type = new IntersectionType($type, $t);
     }
 
     return $type;

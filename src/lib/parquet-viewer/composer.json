@@ -13,8 +13,8 @@
     "require": {
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
         "coduo/php-humanizer": "^5.0",
-        "flow-php/etl": "^0.17.0 || 1.x-dev",
-        "flow-php/parquet": "^0.17.0 || 1.x-dev",
+        "flow-php/etl": "^0.17.1 || 1.x-dev",
+        "flow-php/parquet": "^0.17.1 || 1.x-dev",
         "symfony/console": "^5.4 || ^6.4 || ^7.0"
     },
     "config": {

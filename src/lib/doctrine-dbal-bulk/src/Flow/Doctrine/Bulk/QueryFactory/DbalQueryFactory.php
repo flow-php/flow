@@ -14,6 +14,20 @@ final class DbalQueryFactory implements QueryFactory
      * @param AbstractPlatform $platform
      * @param TableDefinition $table
      * @param BulkData $bulkData
+     *
+     * @throws RuntimeException
+     *
+     * @return string
+     */
+    public function delete(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData) : string
+    {
+        return (new DbalPlatform($platform))->dialect()->prepareDelete($table, $bulkData);
+    }
+
+    /**
+     * @param AbstractPlatform $platform
+     * @param TableDefinition $table
+     * @param BulkData $bulkData
      * @param ?InsertOptions $options
      *
      * @throws RuntimeException

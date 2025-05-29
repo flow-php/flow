@@ -20,6 +20,35 @@ final readonly class PostgreSQLDialect implements Dialect
      *
      * @return string
      */
+    public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string
+    {
+        $columns = $bulkData->columns()->all();
+
+        if (count($columns) === 1) {
+            $column = $columns[0];
+
+            return \sprintf(
+                'DELETE FROM %s WHERE %s IN (%s)',
+                $table->name(),
+                $this->platform->quoteIdentifier($column),
+                $bulkData->toSqlPlaceholders()
+            );
+        }
+
+        return \sprintf(
+            'DELETE FROM %s WHERE (%s) IN (%s)',
+            $table->name(),
+            \implode(', ', \array_map(fn ($column) => $this->platform->quoteIdentifier($column), $columns)),
+            $table->toSqlCastedPlaceholders($bulkData, $this->platform)
+        );
+    }
+
+    /**
+     * @param TableDefinition $table
+     * @param BulkData $bulkData
+     *
+     * @return string
+     */
     public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
         if ($options === null) {
