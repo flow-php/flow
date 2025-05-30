@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http;
 
+use Flow\Bridge\Monolog\Http\Sanitization\Sanitizer;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
@@ -45,6 +46,17 @@ final readonly class PSR7Processor implements ProcessorInterface
         return $record->with(context: $context);
     }
 
+    private function isJson(string $body) : bool
+    {
+        try {
+            json_decode($body, false, 512, JSON_THROW_ON_ERROR);
+
+            return true;
+        } catch (\JsonException) {
+            return false;
+        }
+    }
+
     private function normalizeRequest(RequestInterface $request) : array
     {
         $requestData = [];
@@ -58,8 +70,16 @@ final readonly class PSR7Processor implements ProcessorInterface
         }
 
         if ($this->config->request->includeBody()) {
-            $requestData['body'] = \substr($request->getBody()->getContents(), 0, $this->config->request->bodySizeLimit());
+            $body = $request->getBody()->getContents();
             $request->getBody()->rewind();
+
+            if ($this->isJson($body)) {
+                $body = $this->recursiveSanitize(\json_decode($body, true, 512, JSON_THROW_ON_ERROR), $this->config->request->sanitizers());
+
+                $requestData['body'] = \substr(\json_encode($body, JSON_THROW_ON_ERROR), 0, $this->config->request->bodySizeLimit());
+            } else {
+                $requestData['body'] = \substr($request->getBody()->getContents(), 0, $this->config->request->bodySizeLimit());
+            }
 
             if ($requestData['body'] === '') {
                 unset($requestData['body']);
@@ -74,7 +94,7 @@ final readonly class PSR7Processor implements ProcessorInterface
             );
         }
 
-        return $requestData;
+        return $this->recursiveSanitize($requestData, $this->config->request->sanitizers());
     }
 
     private function normalizeResponse(ResponseInterface $response) : array
@@ -94,8 +114,16 @@ final readonly class PSR7Processor implements ProcessorInterface
         }
 
         if ($this->config->response->includeBody()) {
-            $responseData['body'] = \substr($response->getBody()->getContents(), 0, $this->config->response->bodySizeLimit());
+            $body = $response->getBody()->getContents();
             $response->getBody()->rewind();
+
+            if ($this->isJson($body)) {
+                $body = $this->recursiveSanitize(\json_decode($body, true, 512, JSON_THROW_ON_ERROR), $this->config->response->sanitizers());
+
+                $responseData['body'] = \substr(\json_encode($body, JSON_THROW_ON_ERROR), 0, $this->config->response->bodySizeLimit());
+            } else {
+                $responseData['body'] = \substr($response->getBody()->getContents(), 0, $this->config->response->bodySizeLimit());
+            }
 
             if ($responseData['body'] === '') {
                 unset($responseData['body']);
@@ -110,6 +138,35 @@ final readonly class PSR7Processor implements ProcessorInterface
             );
         }
 
-        return $responseData;
+        return $this->recursiveSanitize($responseData, $this->config->response->sanitizers());
+    }
+
+    /**
+     * Recursively sanitize an array by masking sensitive fields.
+     *
+     * @param array $data
+     * @param array<string, Sanitizer> $sanitizers
+     *
+     * @return array
+     */
+    private function recursiveSanitize(array $data, array $sanitizers) : array
+    {
+        if (!\count($sanitizers)) {
+            return $data;
+        }
+
+        foreach ($data as $key => $value) {
+            if (\is_array($value)) {
+                $data[$key] = $this->recursiveSanitize($value, $sanitizers);
+
+                continue;
+            }
+
+            if (\is_string($value) && isset($sanitizers[$key])) {
+                $data[$key] = $sanitizers[$key]->sanitize($value);
+            }
+        }
+
+        return $data;
     }
 }

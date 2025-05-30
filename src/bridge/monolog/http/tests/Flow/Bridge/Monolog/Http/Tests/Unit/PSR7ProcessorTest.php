@@ -23,7 +23,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor();
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Request',
+            'context' => ['request' => $request],
+        ]);
 
         self::assertEquals(
             [
@@ -52,7 +58,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor((new Config(new RequestConfig(withBody: true))));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Request',
+            'context' => ['request' => $request],
+        ]);
 
         self::assertEquals(
             [
@@ -82,7 +94,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor((new Config(new RequestConfig(withBody: true, bodySizeLimit: 5))));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Request',
+            'context' => ['request' => $request],
+        ]);
 
         self::assertEquals(
             [
@@ -109,7 +127,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor((new Config(new RequestConfig(headers: []))));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Request',
+            'context' => ['request' => $request],
+        ]);
 
         self::assertEquals(
             [
@@ -133,7 +157,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor();
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Response',
+            'context' => ['response' => $response],
+        ]);
 
         self::assertEquals(
             [
@@ -161,7 +191,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor((new Config(response: new ResponseConfig(withoutStatusCodes: [404]))));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Response',
+            'context' => ['response' => $response],
+        ]);
 
         self::assertEquals([], $record['context']);
     }
@@ -177,7 +213,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor((new Config(response: new ResponseConfig(withBody: true))));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Response',
+            'context' => ['response' => $response],
+        ]);
 
         self::assertEquals(
             [
@@ -206,7 +248,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor((new Config(response: new ResponseConfig(withBody: true, bodySizeLimit: 5))));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Response',
+            'context' => ['response' => $response],
+        ]);
 
         self::assertEquals(
             [
@@ -234,7 +282,13 @@ final class PSR7ProcessorTest extends FlowTestCase
 
         $processor = new PSR7Processor((new Config(response: new ResponseConfig(withBody: true))));
 
-        $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
+        $record = $processor([
+            'datetime' => new \DateTimeImmutable,
+            'channel' => 'http',
+            'level_name' => 'debug',
+            'message' => 'HTTP Response',
+            'context' => ['response' => $response],
+        ]);
 
         self::assertEquals(
             [

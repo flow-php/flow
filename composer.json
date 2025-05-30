@@ -151,6 +151,7 @@
             "src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php",
             "src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php",
             "src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php",
+            "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
             "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
             "src/cli/src/Flow/CLI/DSL/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
