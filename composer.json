@@ -31,7 +31,7 @@
         "meilisearch/meilisearch-php": "^1.11",
         "monolog/monolog": "^2.0||^3.0",
         "openspout/openspout": "^4.0",
-        "packaged/thrift": "^0.15.0",
+        "packaged/thrift": "^0.15.0 || ^0.17.0",
         "php-http/discovery": "^1.0",
         "psr/clock": "^1.0",
         "psr/http-client": "^1.0",
