@@ -76,16 +76,16 @@
         },
         {
             "name": "async-aws/s3",
-            "version": "2.9.0",
+            "version": "2.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/async-aws/s3.git",
-                "reference": "588bc47e0dd9ec0d3cc444c355c58a14ad1d4a40"
+                "reference": "e4445551467859c80f2e194405a80afd7a988510"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/async-aws/s3/zipball/588bc47e0dd9ec0d3cc444c355c58a14ad1d4a40",
-                "reference": "588bc47e0dd9ec0d3cc444c355c58a14ad1d4a40",
+                "url": "https://api.github.com/repos/async-aws/s3/zipball/e4445551467859c80f2e194405a80afd7a988510",
+                "reference": "e4445551467859c80f2e194405a80afd7a988510",
                 "shasum": ""
             },
             "require": {
@@ -120,7 +120,7 @@
                 "sdk"
             ],
             "support": {
-                "source": "https://github.com/async-aws/s3/tree/2.9.0"
+                "source": "https://github.com/async-aws/s3/tree/2.9.1"
             },
             "funding": [
                 {
@@ -132,7 +132,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-05-12T09:35:01+00:00"
+            "time": "2025-06-03T08:22:28+00:00"
         },
         {
             "name": "brick/math",
@@ -5305,7 +5305,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -5321,6 +5321,6 @@
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
