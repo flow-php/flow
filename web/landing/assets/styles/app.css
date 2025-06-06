@@ -211,3 +211,28 @@ code {
 #documentation-page blockquote {
     @apply border-l-4 border-orange-100 p-2 bg-blue-300 mb-3;
 }
+
+.mermaid-wrapper {
+    @apply relative;
+}
+
+.mermaid-wrapper .navigation {
+    @apply absolute top-[36px] right-[4px] z-10;
+}
+
+.mermaid-wrapper .navigation button {
+    @apply bg-orange-100 rounded-lg px-[12px] py-[6px] mr-2;
+}
+
+.mermaid-wrapper .navigation button:active {
+    @apply bg-orange-200;
+}
+
+.mermaid-wrapper .navigation button img {
+    @apply inline-block w-[16px] h-[16px];
+}
+
+
+.mermaid-wrapper .mermaid {
+    @apply z-0 !p-0;
+}

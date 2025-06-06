@@ -1,86 +1,119 @@
-<div>
-    <h2>Adapters</h2>
-    <ul>
-        <li>
-            <a href="/documentation/components/adapters/chartjs">ChartJS</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/csv">CSV</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/doctrine">Doctrine</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/elasticsearch">ElasticSearch</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/excel">Excel</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/google-sheet">Google Sheets</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/http">HTTP</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/json">JSON</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/logger">Logger</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/meilisearch">MeiliSearch</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/parquet">Parquet</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/text">Text</a>
-        </li>
-        <li>
-            <a href="/documentation/components/adapters/xml">XML</a>
-        </li>
-    </ul>
-    <h2>Libraries</h2>
-    <ul>
-        <li>
-            <a href="/documentation/components/libs/filesystem">Filesystem</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/types">Types</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/array-dot">Array Dot</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/azure-sdk">Azure SDK</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/doctrine-dbal-bulk">Doctrine DBAL Bulk</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/parquet">Parquet</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/parquet-viewer">Parquet Viewer</a>
-        </li>
-        <li>
-            <a href="/documentation/components/libs/snappy">Snappy</a>
-        </li>
-    </ul>
-    <h2>Bridges</h2>
-    <ul class="mb-10">
-        <li>
-            <a href="/documentation/components/bridges/filesystem-azure-bridge">Filesystem Azure</a>
-        </li>
-        <li>
-            <a href="/documentation/components/bridges/filesystem-async-aws-bridge">Filesystem S3</a>
-        </li>
-        <li>
-            <a href="/documentation/components/bridges/symfony-http-foundation-bridge">Symfony Http Foundation</a>
-        </li>
-        <li>
-            <a href="/documentation/components/bridges/monolog-http-bridge">Monolog Http</a>
-        </li>
-    </ul>
+<div class="grid grid-cols-3 gap-2 lg:grid-cols-1">
+    <div>
+        <h2 class="hidden lg:block">Adapters</h2>
+        <div class="lg:hidden p-2 text-center">
+            <button class="font-bold text-xl" aria-controls="documentation-adapters" data-collapse-toggle="documentation-adapters">
+                Adapters
+
+                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                </svg>
+            </button>
+        </div>
+        <ul id="documentation-adapters" class="hidden lg:block">
+            <li>
+                <a href="/documentation/components/adapters/chartjs">ChartJS</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/csv">CSV</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/doctrine">Doctrine</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/elasticsearch">ElasticSearch</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/excel">Excel</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/google-sheet">Google Sheets</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/http">HTTP</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/json">JSON</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/logger">Logger</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/meilisearch">MeiliSearch</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/parquet">Parquet</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/text">Text</a>
+            </li>
+            <li>
+                <a href="/documentation/components/adapters/xml">XML</a>
+            </li>
+        </ul>
+    </div>
+    <div>
+        <h2 class="hidden lg:block">Libraries</h2>
+        <div class="lg:hidden p-2 text-center">
+            <button class="font-bold text-xl" aria-controls="documentation-libraries" data-collapse-toggle="documentation-libraries">
+                Libraries
+
+                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                </svg>
+            </button>
+        </div>
+        <ul id="documentation-libraries" class="hidden lg:block">
+            <li>
+                <a href="/documentation/components/libs/filesystem">Filesystem</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/types">Types</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/array-dot">Array Dot</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/azure-sdk">Azure SDK</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/doctrine-dbal-bulk">Doctrine DBAL Bulk</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/parquet">Parquet</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/parquet-viewer">Parquet Viewer</a>
+            </li>
+            <li>
+                <a href="/documentation/components/libs/snappy">Snappy</a>
+            </li>
+        </ul>
+        </div>
+    <div>
+        <h2 class="hidden lg:block">Bridges</h2>
+        <div class="lg:hidden p-2 text-center">
+            <button class="font-bold text-xl" aria-controls="documentation-bridges" data-collapse-toggle="documentation-bridges">
+                Bridges
+
+                <svg class="w-3 h-3 ml-2 inline" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                </svg>
+            </button>
+        </div>
+        <ul id="documentation-bridges" class="mb-10 hidden lg:block">
+            <li>
+                <a href="/documentation/components/bridges/filesystem-azure-bridge">Filesystem Azure</a>
+            </li>
+            <li>
+                <a href="/documentation/components/bridges/filesystem-async-aws-bridge">Filesystem S3</a>
+            </li>
+            <li>
+                <a href="/documentation/components/bridges/symfony-http-foundation-bridge">Symfony Http Foundation</a>
+            </li>
+            <li>
+                <a href="/documentation/components/bridges/monolog-http-bridge">Monolog Http</a>
+            </li>
+        </ul>
+    </div>
 </div>

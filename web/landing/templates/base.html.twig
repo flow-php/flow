@@ -55,6 +55,10 @@
     {% endblock %}
 
     {% block javascripts %}
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"></script>
+        <script>
+            mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+        </script>
         <script>
             window.flow = {
                 dsl: {{ dsl() | raw }},

@@ -77,4 +77,7 @@ return [
     'prismjs/components/prism-csv.min.js' => [
         'version' => '1.29.0',
     ],
+    '@panzoom/panzoom' => [
+        'version' => '4.6.0',
+    ],
 ];

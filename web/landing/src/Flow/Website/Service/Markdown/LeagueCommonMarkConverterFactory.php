@@ -13,11 +13,12 @@ use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
 use League\CommonMark\Extension\HeadingPermalink\{HeadingPermalinkExtension};
 use League\CommonMark\Extension\Mention\MentionExtension;
 use League\CommonMark\Extension\Table\TableExtension;
+use Symfony\Component\Asset\Packages;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 final class LeagueCommonMarkConverterFactory
 {
-    public function __construct(private readonly ContainerBagInterface $parameters)
+    public function __construct(private readonly ContainerBagInterface $parameters, private readonly Packages $packages)
     {
     }
 
@@ -57,6 +58,7 @@ final class LeagueCommonMarkConverterFactory
             ->addExtension(new FrontMatterExtension())
             ->addExtension(new MentionExtension())
             ->addExtension(new TableExtension())
+            ->addRenderer(FencedCode::class, new MermaidCodeRenderer($this->packages), 100)
             ->addRenderer(FencedCode::class, new FlowCodeRenderer(), 0)
             ->addRenderer(Link::class, new FlowLinkRenderer(), 0)
             ->addEventListener(DocumentParsedEvent::class, new FlowVersionReplacer($this->parameters->get('flow_version')));
