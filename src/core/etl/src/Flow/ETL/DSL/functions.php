@@ -94,6 +94,7 @@ use Flow\ETL\Function\{All,
     ArrayUnpack,
     Average,
     Between,
+    CallUserFunc,
     Capitalize,
     Cast,
     Coalesce,
@@ -1139,6 +1140,19 @@ function coalesce(ScalarFunction ...$values) : Coalesce
 function count(?EntryReference $function = null) : Count
 {
     return new Count($function);
+}
+
+/**
+ * Calls a user-defined function with the given parameters.
+ *
+ * @param callable|ScalarFunction $callable
+ * @param array<mixed> $parameters
+ * @param null|Type<mixed> $return_type
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function call(ScalarFunction|callable $callable, array $parameters = [], ?Type $return_type = null) : CallUserFunc
+{
+    return new CallUserFunc($callable, $parameters, $return_type);
 }
 
 /**

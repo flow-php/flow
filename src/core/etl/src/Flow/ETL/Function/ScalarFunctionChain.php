@@ -135,6 +135,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Between($this, $lowerBoundRef, $upperBoundRef, $boundary);
     }
 
+    /**
+     * @param Type<mixed> $returnType
+     */
+    public function call(ScalarFunction|callable $callable, array $arguments = [], string|int $refAlias = 0, ?Type $returnType = null) : CallUserFunc
+    {
+        return new CallUserFunc($callable, array_merge($arguments, [$refAlias => $this]), $returnType);
+    }
+
     public function capitalize() : self
     {
         return new Capitalize($this);
