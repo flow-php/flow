@@ -259,7 +259,7 @@ jobs:
 
       - name: "Download artifact"
         if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: dawidd6/action-download-artifact@v10
+        uses: dawidd6/action-download-artifact@v11
         with:
           workflow: test-suite.yml
           name: codecov-base-commit-sha-1.x
