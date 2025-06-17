@@ -1156,16 +1156,16 @@
         },
         {
             "name": "meilisearch/meilisearch-php",
-            "version": "v1.14.0",
+            "version": "v1.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/meilisearch/meilisearch-php.git",
-                "reference": "860c6f81e81abb5040c50031512b21ae59a26a97"
+                "reference": "94930b9e4b8a6c1ad841eed1395a58a73d0db313"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/meilisearch/meilisearch-php/zipball/860c6f81e81abb5040c50031512b21ae59a26a97",
-                "reference": "860c6f81e81abb5040c50031512b21ae59a26a97",
+                "url": "https://api.github.com/repos/meilisearch/meilisearch-php/zipball/94930b9e4b8a6c1ad841eed1395a58a73d0db313",
+                "reference": "94930b9e4b8a6c1ad841eed1395a58a73d0db313",
                 "shasum": ""
             },
             "require": {
@@ -1178,7 +1178,6 @@
                 "guzzlehttp/guzzle": "^7.8.1",
                 "http-interop/http-factory-guzzle": "^1.2.0",
                 "php-cs-fixer/shim": "^3.59.3",
-                "phpstan/extension-installer": "^1.4.1",
                 "phpstan/phpstan": "^2.0",
                 "phpstan/phpstan-deprecation-rules": "^2.0",
                 "phpstan/phpstan-phpunit": "^2.0",
@@ -1217,9 +1216,9 @@
             ],
             "support": {
                 "issues": "https://github.com/meilisearch/meilisearch-php/issues",
-                "source": "https://github.com/meilisearch/meilisearch-php/tree/v1.14.0"
+                "source": "https://github.com/meilisearch/meilisearch-php/tree/v1.15.0"
             },
-            "time": "2025-04-14T12:32:57+00:00"
+            "time": "2025-06-10T04:33:15+00:00"
         },
         {
             "name": "monolog/monolog",
