@@ -14,6 +14,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     ListType,
     MapType,
     NonEmptyStringType,
+    NumericStringType,
     OptionalType,
     PositiveIntegerType,
     ScalarType,
@@ -90,6 +91,12 @@ function type_intersection(Type $first, Type $second, Type ...$types) : Intersec
     }
 
     return $type;
+}
+
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_numeric_string() : NumericStringType
+{
+    return new NumericStringType();
 }
 
 /**

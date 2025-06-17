@@ -15,6 +15,7 @@ use function Flow\Types\DSL\{type_array,
     type_mixed,
     type_non_empty_string,
     type_null,
+    type_numeric_string,
     type_object,
     type_positive_integer,
     type_resource,
@@ -79,6 +80,7 @@ final class TypeFactory
             'optional' => OptionalType::fromArray($data),
             'scalar' => type_scalar(),
             'mixed' => type_mixed(),
+            'numeric-string' => type_numeric_string(),
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };
     }
