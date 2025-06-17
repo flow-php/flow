@@ -80,7 +80,8 @@ use Flow\ETL\Extractor\{CacheExtractor, ChainExtractor, ChunkExtractor, DataFram
 use Flow\ETL\Extractor\SequenceGenerator\{DatePeriodSequenceGenerator, NumberSequenceGenerator};
 use Flow\ETL\Filesystem\{SaveMode};
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Function\{All,
+use Flow\ETL\Function\{
+    All,
     Any,
     ArrayGet,
     ArrayGetCollection,
@@ -114,6 +115,7 @@ use Flow\ETL\Function\{All,
     Least,
     ListFunctions,
     Literal,
+    MatchCases,
     Max,
     Min,
     Not,
@@ -145,10 +147,12 @@ use Flow\ETL\Function\{All,
     ToUpper,
     Ulid,
     Uuid,
-    When};
+    When
+};
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\Function\MatchCases\MatchCase;
 use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Loader\BranchingLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
@@ -2030,4 +2034,16 @@ function constraint_unique(string $reference, string ...$references) : UniqueCon
 function analyze() : Analyze
 {
     return new Analyze();
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function match_(array $cases, mixed $default = null) : MatchCases
+{
+    return new MatchCases($cases, $default);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
+function case_(mixed $condition, mixed $then) : MatchCase
+{
+    return new MatchCase($condition, $then);
 }
