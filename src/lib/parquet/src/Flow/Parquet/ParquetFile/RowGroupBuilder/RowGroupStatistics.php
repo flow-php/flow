@@ -16,6 +16,9 @@ final class RowGroupStatistics
     ) {
     }
 
+    /**
+     * @param array<ColumnChunkBuilder> $columnChunkBuilders
+     */
     public static function fromBuilders(array $columnChunkBuilders) : self
     {
         return new self(

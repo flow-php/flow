@@ -15,6 +15,9 @@ final class Split extends ScalarFunctionChain
     ) {
     }
 
+    /**
+     * @return null|array<int, string>
+     */
     public function eval(Row $row) : ?array
     {
         $value = (new Parameter($this->value))->asString($row);

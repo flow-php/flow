@@ -130,6 +130,7 @@ function from_dbal_queries(
     }
 
     if ($types !== []) {
+        /** @phpstan-ignore-next-line */
         $extractor->withTypes($types);
     }
 
@@ -154,7 +155,7 @@ function dbal_from_queries(
 
 /**
  * @param array<string, mixed>|list<mixed> $parameters - @deprecated use DbalQueryExtractor::withParameters() instead
- * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types - @deprecated use DbalQueryExtractor::withTypes() instead
+ * @param array<int<0, max>|string, DbalArrayType|DbalParameterType|DbalType|string> $types - @deprecated use DbalQueryExtractor::withTypes() instead
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function from_dbal_query(
@@ -175,7 +176,7 @@ function from_dbal_query(
  * @deprecated use from_dbal_query() instead
  *
  * @param array<string, mixed>|list<mixed> $parameters - @deprecated use DbalQueryExtractor::withParameters() instead
- * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types - @deprecated use DbalQueryExtractor::withTypes() instead
+ * @param array<int<0, max>|string, DbalArrayType|DbalParameterType|DbalType|string> $types - @deprecated use DbalQueryExtractor::withTypes() instead
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::EXTRACTOR)]
 function dbal_from_query(
@@ -255,6 +256,9 @@ function to_dbal_table_delete(
 
 /**
  * Converts a Flow\ETL\Schema to a Doctrine\DBAL\Schema\Table.
+ *
+ * @param array<array-key, mixed> $table_options
+ * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $types_map
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function to_dbal_schema_table(Schema $schema, string $table_name, array $table_options = [], array $types_map = []) : \Doctrine\DBAL\Schema\Table
@@ -264,6 +268,8 @@ function to_dbal_schema_table(Schema $schema, string $table_name, array $table_o
 
 /**
  * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Schema.
+ *
+ * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $types_map
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []) : Schema
@@ -271,6 +277,10 @@ function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $
     return (new SchemaConverter($types_map))->toFlowSchema($table);
 }
 
+/**
+ * @param array<string> $conflict_columns
+ * @param array<string> $update_columns
+ */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 #[DocumentationExample(topic: 'data_writing', example: 'database_upsert')]
 function postgresql_insert_options(?bool $skip_conflicts = null, ?string $constraint = null, array $conflict_columns = [], array $update_columns = []) : PostgreSQLInsertOptions
@@ -278,18 +288,29 @@ function postgresql_insert_options(?bool $skip_conflicts = null, ?string $constr
     return new PostgreSQLInsertOptions($skip_conflicts, $constraint, $conflict_columns, $update_columns);
 }
 
+/**
+ * @param array<string> $update_columns
+ */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function mysql_insert_options(?bool $skip_conflicts = null, ?bool $upsert = null, array $update_columns = []) : MySQLInsertOptions
 {
     return new MySQLInsertOptions($skip_conflicts, $upsert, $update_columns);
 }
 
+/**
+ * @param array<string> $conflict_columns
+ * @param array<string> $update_columns
+ */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function sqlite_insert_options(?bool $skip_conflicts = null, array $conflict_columns = [], array $update_columns = []) : SqliteInsertOptions
 {
     return new SqliteInsertOptions($skip_conflicts, $conflict_columns, $update_columns);
 }
 
+/**
+ * @param array<string> $primary_key_columns
+ * @param array<string> $update_columns
+ */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function postgresql_update_options(
     array $primary_key_columns = [],

@@ -17,6 +17,9 @@ final class FlowBufferedResponse extends Response
 
     private readonly Config|ConfigBuilder $config;
 
+    /**
+     * @param array<string, mixed> $headers
+     */
     public function __construct(
         private readonly Extractor $extractor,
         private readonly Output $output,

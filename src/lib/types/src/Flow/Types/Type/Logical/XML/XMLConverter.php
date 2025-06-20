@@ -24,6 +24,9 @@ final class XMLConverter
         return $xmlArray;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function convertDOMElement(\DOMElement|\DOMNode $element) : array
     {
         $xmlArray = [];

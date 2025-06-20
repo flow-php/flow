@@ -21,6 +21,9 @@ use Flow\ETL\Transformer\{CallbackRowTransformer,
 
 final class LimitOptimization implements Optimization
 {
+    /**
+     * @var array<int, class-string>
+     */
     private array $nonExpandingPipelines = [
         SynchronousPipeline::class,
         CollectingPipeline::class,
@@ -29,6 +32,9 @@ final class LimitOptimization implements Optimization
         VoidPipeline::class,
     ];
 
+    /**
+     * @var array<int, class-string>
+     */
     private array $nonExpandingTransformers = [
         CallbackRowTransformer::class,
         ScalarFunctionTransformer::class,

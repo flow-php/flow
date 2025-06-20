@@ -9,6 +9,11 @@ use Flow\ETL\Row;
 
 final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
 {
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $array
+     * @param array<array-key, mixed>|ScalarFunction $skipKeys
+     * @param null|ScalarFunction|string $entryPrefix
+     */
     public function __construct(
         private readonly ScalarFunction|array $array,
         private readonly ScalarFunction|array $skipKeys = [],
@@ -16,6 +21,9 @@ final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function eval(Row $row) : array
     {
         $array = (new Parameter($this->array))->asArray($row);
@@ -39,7 +47,7 @@ final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
                 continue;
             }
 
-            if ($entryName) {
+            if ($entryPrefix && $entryName) {
                 $entryName = $entryPrefix . $entryName;
             }
 

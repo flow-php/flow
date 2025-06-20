@@ -18,6 +18,9 @@ final class DataPageV2Statistics
 
     private int $nullCount;
 
+    /**
+     * @var array<mixed>
+     */
     private array $values = [];
 
     private int $valuesCount;
@@ -31,6 +34,9 @@ final class DataPageV2Statistics
         $this->comparator = new Comparator();
     }
 
+    /**
+     * @param null|array<mixed>|bool|float|int|object|string $value
+     */
     public function add(string|int|float|array|bool|object|null $value) : void
     {
         if (\is_array($value)) {
@@ -99,6 +105,9 @@ final class DataPageV2Statistics
         return $this->nullCount;
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function values() : array
     {
         return $this->values;

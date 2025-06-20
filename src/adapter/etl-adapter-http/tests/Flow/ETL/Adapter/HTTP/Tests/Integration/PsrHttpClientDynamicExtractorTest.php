@@ -20,10 +20,16 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         $psr17Factory = new Psr17Factory();
         $psr18Client = new Client($psr17Factory);
 
+        $fixtureContent = \file_get_contents(__DIR__ . '/../Fixtures/flow-php.json');
+
+        if ($fixtureContent === false) {
+            throw new \RuntimeException('Failed to read fixture file');
+        }
+
         $psr18Client->addResponse(
             new Response(200, [
                 'Server' => 'GitHub.com',
-            ], \file_get_contents(__DIR__ . '/../Fixtures/flow-php.json')),
+            ], $fixtureContent),
         );
 
         $extractor = new PsrHttpClientDynamicExtractor($psr18Client, new class implements NextRequestFactory {

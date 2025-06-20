@@ -8,10 +8,16 @@ use Flow\ETL\Row;
 
 final class ArrayValues extends ScalarFunctionChain
 {
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $array
+     */
     public function __construct(private readonly ScalarFunction|array $array)
     {
     }
 
+    /**
+     * @return null|array<int, mixed>
+     */
     public function eval(Row $row) : mixed
     {
         $array = (new Parameter($this->array))->asArray($row);

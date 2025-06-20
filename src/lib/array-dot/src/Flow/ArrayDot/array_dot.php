@@ -106,6 +106,9 @@ function array_dot_set(array $array, string $path, $value) : array
     return \array_merge($array, $newArray);
 }
 
+/**
+ * @param array<mixed> $array
+ */
 function array_dot_get_int(array $array, string $path) : ?int
 {
     $result = array_dot_get($array, $path);
@@ -117,6 +120,9 @@ function array_dot_get_int(array $array, string $path) : ?int
     return (int) $result;
 }
 
+/**
+ * @param array<mixed> $array
+ */
 function array_dot_get_string(array $array, string $path) : ?string
 {
     $result = array_dot_get($array, $path);
@@ -128,6 +134,9 @@ function array_dot_get_string(array $array, string $path) : ?string
     return (string) $result;
 }
 
+/**
+ * @param array<mixed> $array
+ */
 function array_dot_get_bool(array $array, string $path) : ?bool
 {
     $result = array_dot_get($array, $path);
@@ -139,6 +148,9 @@ function array_dot_get_bool(array $array, string $path) : ?bool
     return (bool) $result;
 }
 
+/**
+ * @param array<mixed> $array
+ */
 function array_dot_get_float(array $array, string $path) : ?float
 {
     $result = array_dot_get($array, $path);
@@ -150,6 +162,9 @@ function array_dot_get_float(array $array, string $path) : ?float
     return (float) $result;
 }
 
+/**
+ * @param array<mixed> $array
+ */
 function array_dot_get_datetime(array $array, string $path) : ?\DateTimeImmutable
 {
     $result = array_dot_get($array, $path);

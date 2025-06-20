@@ -48,6 +48,9 @@ abstract class FlowTestCase extends TestCase
         }
     }
 
+    /**
+     * @param array<array-key, mixed> $expectedArray
+     */
     final public static function assertExtractedRowsAsArrayEquals(
         array $expectedArray,
         Extractor $extractor,

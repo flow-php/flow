@@ -16,6 +16,8 @@ final class FunctionsExtractor
     }
 
     /**
+     * @param array<string> $paths
+     *
      * @return \Generator<FunctionModel>
      */
     public function extract(array $paths) : \Generator

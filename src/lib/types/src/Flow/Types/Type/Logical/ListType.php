@@ -24,7 +24,7 @@ final readonly class ListType implements Type
     }
 
     /**
-     * @param array{type: 'list', element: array} $data
+     * @param array{type: 'list', element: array<string, mixed>} $data
      *
      * @return ListType<Type<mixed>>
      */
@@ -98,7 +98,7 @@ final readonly class ListType implements Type
     }
 
     /**
-     * @return array{type: 'list', element: array}
+     * @return array{type: 'list', element: array<string, mixed>}
      */
     public function normalize() : array
     {

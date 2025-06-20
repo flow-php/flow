@@ -17,6 +17,9 @@ final class ArraySort extends ScalarFunctionChain
     ) {
     }
 
+    /**
+     * @return null|array<mixed>
+     */
     public function eval(Row $row) : mixed
     {
         $array = (new Parameter($this->ref))->asArray($row);
@@ -33,6 +36,9 @@ final class ArraySort extends ScalarFunctionChain
         return $array;
     }
 
+    /**
+     * @param array<array-key, mixed> $array
+     */
     private function recursiveSort(array &$array, callable $function, ?int $flags, bool $recursive) : void
     {
         /** @var mixed $value */

@@ -15,12 +15,18 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ExcelExtractorTest extends FlowTestCase
 {
+    /**
+     * @return iterable<string, array<string>>
+     */
     public static function provide_fixtures() : iterable
     {
         yield 'ods' => [__DIR__ . '/../Fixtures/fixture.ods'];
         yield 'xlsx' => [__DIR__ . '/../Fixtures/fixture.xlsx'];
     }
 
+    /**
+     * @return iterable<string, array<string>>
+     */
     public static function provide_nullable_fixtures() : iterable
     {
         yield 'ods' => [__DIR__ . '/../Fixtures/nullable_fixture.ods'];

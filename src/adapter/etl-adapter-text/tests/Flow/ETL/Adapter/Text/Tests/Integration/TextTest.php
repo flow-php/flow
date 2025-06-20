@@ -23,13 +23,15 @@ final class TextTest extends FlowTestCase
             ->write(to_text($path))
             ->run();
 
+        $content = \file_get_contents($path);
+        self::assertNotFalse($content);
         self::assertStringContainsString(
             <<<'TEXT'
 Norbert
 Tomek
 Dawid
 TEXT,
-            \file_get_contents($path)
+            $content
         );
 
         if (\file_exists($path)) {

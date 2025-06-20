@@ -97,6 +97,9 @@ final class MathTest extends FlowTestCase
         ];
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     #[DataProvider('divide_data_provider')]
     public function test_divide(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, ?int $scale, ?Rounding $rounding, array $result) : void
     {
@@ -114,6 +117,9 @@ final class MathTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     #[DataProvider('minus_data_provider')]
     public function test_minus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
     {
@@ -131,6 +137,9 @@ final class MathTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     #[DataProvider('multiply_data_provider')]
     public function test_multiply(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
     {
@@ -148,6 +157,9 @@ final class MathTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     #[DataProvider('plus_data_provider')]
     public function test_plus(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
     {
@@ -165,6 +177,9 @@ final class MathTest extends FlowTestCase
         );
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     #[DataProvider('power_data_provider')]
     public function test_power(IntegerEntry|FloatEntry $a, IntegerEntry|FloatEntry $b, array $result) : void
     {

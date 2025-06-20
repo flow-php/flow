@@ -46,6 +46,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ArrayGet($this, $path);
     }
 
+    /**
+     * @param array<array-key, mixed> $keys
+     */
     public function arrayGetCollection(ScalarFunction|array $keys) : self
     {
         return new ArrayGetCollection($this, $keys);
@@ -82,6 +85,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ArrayKeys($this);
     }
 
+    /**
+     * @param array<array-key, mixed> $ref
+     */
     public function arrayMerge(ScalarFunction|array $ref) : self
     {
         return new ArrayMerge($this, $ref);
@@ -136,6 +142,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
+     * @param array<array-key, mixed> $arguments
      * @param Type<mixed> $returnType
      */
     public function call(ScalarFunction|callable $callable, array $arguments = [], string|int $refAlias = 0, ?Type $returnType = null) : CallUserFunc
@@ -287,6 +294,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Same($this, lit(false));
     }
 
+    /**
+     * @param array<array-key, mixed> $haystack
+     */
     public function isIn(ScalarFunction|array $haystack) : self
     {
         return new IsIn($haystack, $this);
@@ -483,6 +493,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Size($this);
     }
 
+    /**
+     * @param null|array<array-key, mixed> $symbolsMap
+     */
     public function slug(ScalarFunction|string $separator = '-', ScalarFunction|string|null $locale = null, ScalarFunction|array|null $symbolsMap = null) : self
     {
         return new Slug($this, $separator, $locale, $symbolsMap);
@@ -629,6 +642,9 @@ abstract class ScalarFunctionChain implements ScalarFunction
      *   | 1|    2|    3|     |     |     |
      *   | 2|     |     |    4|    5|    6|
      *   +--+-----+-----+-----+-----+-----+
+     */
+    /**
+     * @param array<array-key, mixed> $skipKeys
      */
     public function unpack(ScalarFunction|array $skipKeys = [], ScalarFunction|string|null $entryPrefix = null) : self
     {

@@ -35,6 +35,9 @@ final class ListBlobOptions implements EndpointOptions
     {
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function toHeaders() : array
     {
         $headers = [];
@@ -49,6 +52,9 @@ final class ListBlobOptions implements EndpointOptions
         return $headers;
     }
 
+    /**
+     * @return array<string, array<string>|int|string>
+     */
     public function toURIParameters() : array
     {
         $uriParameters = [];

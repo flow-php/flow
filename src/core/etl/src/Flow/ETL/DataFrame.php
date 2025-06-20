@@ -400,7 +400,7 @@ final class DataFrame
      *
      * @trigger
      *
-     * @return \Generator<array<array>>
+     * @return \Generator<array<array<mixed>>>
      */
     public function getAsArray() : \Generator
     {
@@ -434,7 +434,7 @@ final class DataFrame
      *
      * @trigger
      *
-     * @return \Generator<array>
+     * @return \Generator<array<mixed>>
      */
     public function getEachAsArray() : \Generator
     {
@@ -930,7 +930,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, ScalarFunction|WindowFunction|WithEntry> $references
+     * @param array<int, WithEntry>|array<string, ScalarFunction|WindowFunction|WithEntry> $references
      */
     public function withEntries(array $references) : self
     {
@@ -938,7 +938,7 @@ final class DataFrame
             if ($ref instanceof WithEntry) {
                 $this->withEntry($ref->name, $ref->function);
             } else {
-                $this->withEntry($entryName, $ref);
+                $this->withEntry((string) $entryName, $ref);
             }
         }
 

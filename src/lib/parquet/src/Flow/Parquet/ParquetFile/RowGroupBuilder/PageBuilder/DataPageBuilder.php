@@ -26,6 +26,10 @@ final readonly class DataPageBuilder
     ) {
     }
 
+    /**
+     * @param null|array<mixed> $dictionary
+     * @param null|array<mixed> $indices
+     */
     public function build(FlatColumn $column, FlatColumnValues $rows, ?array $dictionary = null, ?array $indices = null) : PageContainer
     {
         return match ($this->options->get(Option::WRITER_VERSION)) {
@@ -35,6 +39,10 @@ final readonly class DataPageBuilder
         };
     }
 
+    /**
+     * @param null|array<mixed> $dictionary
+     * @param null|array<mixed> $indices
+     */
     private function buildDataPage(FlatColumnValues $data, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
@@ -82,6 +90,10 @@ final readonly class DataPageBuilder
         );
     }
 
+    /**
+     * @param null|array<mixed> $dictionary
+     * @param null|array<mixed> $indices
+     */
     private function buildDataPageV2(FlatColumnValues $data, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
     {
         $pageStatistics = new DataPageV2Statistics();

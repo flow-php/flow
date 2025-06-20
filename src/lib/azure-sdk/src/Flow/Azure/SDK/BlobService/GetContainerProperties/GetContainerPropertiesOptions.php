@@ -20,6 +20,9 @@ final class GetContainerPropertiesOptions implements EndpointOptions
 
     private ?string $versionId = null;
 
+    /**
+     * @return array<string, string>
+     */
     public function toHeaders() : array
     {
         $headers = [];
@@ -38,6 +41,9 @@ final class GetContainerPropertiesOptions implements EndpointOptions
         return $headers;
     }
 
+    /**
+     * @return array<string, int|string>
+     */
     public function toURIParameters() : array
     {
         $uriParameters = [];

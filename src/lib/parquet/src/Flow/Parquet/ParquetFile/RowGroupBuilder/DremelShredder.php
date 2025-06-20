@@ -77,6 +77,9 @@ final readonly class DremelShredder
         );
     }
 
+    /**
+     * @param null|array<mixed> $listValue
+     */
     private function shredList(NestedColumn $column, ?array $listValue, int $definitionLevel, int $repetitionLevel, FlatColumnData $data, int $depth) : void
     {
         $repetitionLevel++;
@@ -187,6 +190,9 @@ final readonly class DremelShredder
         }
     }
 
+    /**
+     * @param null|array<mixed> $mapValue
+     */
     private function shredMap(NestedColumn $column, ?array $mapValue, int $definitionLevel, int $repetitionLevel, FlatColumnData $data, int $depth) : void
     {
         $repetitionLevel++;

@@ -28,7 +28,8 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
     {
         $this->baseMemoryLimit = (\ini_get('memory_limit')) ?: '-1';
 
-        $this->cacheDir = Path::realpath(\getenv(CacheConfig::CACHE_DIR_ENV));
+        $cacheDirEnv = \getenv(CacheConfig::CACHE_DIR_ENV);
+        $this->cacheDir = Path::realpath($cacheDirEnv ?: '');
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
         $this->serializer = new Base64Serializer(new NativePHPSerializer());
@@ -90,7 +91,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
     }
 
     /**
-     * @param array<string, array<string, string>|string> $datasets
+     * @param array<string, array<string, mixed>|string> $datasets
      */
     protected function setupFiles(array $datasets, string $path = '') : void
     {

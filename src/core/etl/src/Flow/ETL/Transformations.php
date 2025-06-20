@@ -11,13 +11,13 @@ namespace Flow\ETL;
 final readonly class Transformations implements Transformation
 {
     /**
-     * @param Transformation ...$transformations
+     * @var array<int, Transformation>
      */
     public array $transformations;
 
     public function __construct(Transformation ...$transformations)
     {
-        $this->transformations = $transformations;
+        $this->transformations = \array_values($transformations);
     }
 
     public function transform(DataFrame $dataFrame) : DataFrame

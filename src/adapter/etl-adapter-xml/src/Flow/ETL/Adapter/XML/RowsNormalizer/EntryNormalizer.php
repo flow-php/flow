@@ -144,7 +144,7 @@ final readonly class EntryNormalizer
     }
 
     /**
-     * @param StructureEntry<array> $entry
+     * @param StructureEntry<array<string, mixed>> $entry
      */
     private function structureToNode(StructureEntry $entry) : XMLNode
     {
@@ -156,7 +156,7 @@ final readonly class EntryNormalizer
             return $node;
         }
 
-        /** @var StructureType<array> $type */
+        /** @var StructureType<array<string, mixed>> $type */
         $type = $entry->type();
 
         $structureIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);

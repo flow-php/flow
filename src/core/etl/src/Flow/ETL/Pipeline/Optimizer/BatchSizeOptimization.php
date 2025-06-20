@@ -41,6 +41,7 @@ final class BatchSizeOptimization implements Optimization
 
     /**
      * @param int<1, max> $batchSize
+     * @param null|array<int, class-string<Loader>> $supportedLoaders
      */
     public function __construct(private readonly int $batchSize = 1000, ?array $supportedLoaders = null)
     {

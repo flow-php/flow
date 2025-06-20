@@ -9,6 +9,7 @@ use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata, SchemaFormatter};
 use Flow\ETL\Schema\Formatter\PHPFormatter\{TypeFormatter};
 use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
+use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     JsonType,
@@ -180,7 +181,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
 
     private function structureType(Definition $definition) : string
     {
-        /** @var StructureType<array> $type */
+        /** @var StructureType<array<string, Type<mixed>>> $type */
         $type = $definition->type();
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\structure_schema");
 

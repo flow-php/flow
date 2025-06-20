@@ -110,6 +110,10 @@ final class ArraySortByKeyTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<array-key, mixed> $origin
+     * @param array<array-key, mixed> $sorted
+     */
     #[DataProvider('arrays')]
     public function test_sorts_array_by_key(array $origin, array $sorted) : void
     {

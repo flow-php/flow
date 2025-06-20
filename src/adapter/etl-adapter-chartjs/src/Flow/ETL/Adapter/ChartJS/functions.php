@@ -64,7 +64,7 @@ function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|stri
 
 /**
  * @param Chart $type
- * @param array $output - @deprecated use $loader->withOutputVar() instead
+ * @param array<array-key, mixed> $output - @deprecated use $loader->withOutputVar() instead
  */
 #[DocumentationDSL(module: Module::CHART_JS, type: Type::LOADER)]
 function to_chartjs_var(Chart $type, array &$output) : ChartJSLoader

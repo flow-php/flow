@@ -9,5 +9,8 @@ use Flow\ETL\Row;
 
 interface ExpandResults extends ScalarFunction
 {
+    /**
+     * @return array<array-key, mixed>
+     */
     public function eval(Row $row) : array;
 }

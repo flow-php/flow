@@ -9,6 +9,11 @@ namespace Flow\ETL\Row;
  */
 final class CartesianProduct
 {
+    /**
+     * @param array<array-key, mixed> $input
+     *
+     * @return array<array-key, mixed>
+     */
     public function __invoke(array $input) : array
     {
         $result = [[]];

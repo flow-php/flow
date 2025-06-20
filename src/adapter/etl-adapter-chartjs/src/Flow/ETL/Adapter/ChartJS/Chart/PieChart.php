@@ -12,7 +12,7 @@ final class PieChart implements Chart
 {
     /**
      * @var array{
-     *   datasets: array<string, array{data: array, label: ?string}>
+     *   datasets: array<string, array{data: array<mixed>, label: ?string}>
      * }
      */
     private array $data = [
@@ -24,6 +24,9 @@ final class PieChart implements Chart
      */
     private array $datasetOptions = [];
 
+    /**
+     * @var array<array-key, mixed>
+     */
     private array $options = [];
 
     public function __construct(
@@ -49,6 +52,9 @@ final class PieChart implements Chart
         }
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function data() : array
     {
         $labels = [];
@@ -78,6 +84,9 @@ final class PieChart implements Chart
         return $data;
     }
 
+    /**
+     * @param array<array-key, mixed> $options
+     */
     public function setDatasetOptions(Reference $dataset, array $options) : self
     {
         $this->datasetOptions[$dataset->name()] = $options;
@@ -85,6 +94,9 @@ final class PieChart implements Chart
         return $this;
     }
 
+    /**
+     * @param array<array-key, mixed> $options
+     */
     public function setOptions(array $options) : self
     {
         $this->options = $options;

@@ -8,6 +8,12 @@ use Flow\ETL\Row;
 
 final class RegexMatch extends ScalarFunctionChain
 {
+    /**
+     * @param ScalarFunction|string $pattern
+     * @param array<array-key, mixed>|ScalarFunction|string $subject
+     * @param int|ScalarFunction $flags
+     * @param int|ScalarFunction $offset
+     */
     public function __construct(
         private readonly ScalarFunction|string $pattern,
         private readonly ScalarFunction|string|array $subject,

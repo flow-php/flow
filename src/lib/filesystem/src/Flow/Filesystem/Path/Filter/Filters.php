@@ -10,7 +10,7 @@ use Flow\Filesystem\Path\Filter;
 final readonly class Filters implements Filter
 {
     /**
-     * @param array<Filter> $filters
+     * @var array<Filter>
      */
     private array $filters;
 

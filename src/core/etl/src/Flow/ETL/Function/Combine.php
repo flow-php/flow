@@ -8,12 +8,19 @@ use Flow\ETL\Row;
 
 final class Combine extends ScalarFunctionChain
 {
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $keys
+     * @param array<array-key, mixed>|ScalarFunction $values
+     */
     public function __construct(
         private readonly ScalarFunction|array $keys,
         private readonly ScalarFunction|array $values,
     ) {
     }
 
+    /**
+     * @return null|array<int|string, mixed>
+     */
     public function eval(Row $row) : ?array
     {
         $keys = (new Parameter($this->keys))->asArray($row);

@@ -74,7 +74,7 @@ TEXT;
 
         self::assertSame($content, $stream->content());
 
-        $lines = $stream->readLines(length: $lineLength);
+        $lines = $stream->readLines(length: $lineLength > 0 ? $lineLength : null);
         self::assertSame('This is some', $lines->current());
         $lines->next();
         self::assertSame('multi line file', $lines->current());

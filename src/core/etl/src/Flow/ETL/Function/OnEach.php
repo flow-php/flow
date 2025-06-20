@@ -10,6 +10,11 @@ use Flow\ETL\Row;
 
 final class OnEach extends ScalarFunctionChain
 {
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $array
+     * @param ScalarFunction $function
+     * @param bool|ScalarFunction $preserveKeys
+     */
     public function __construct(
         private readonly ScalarFunction|array $array,
         private readonly ScalarFunction $function,

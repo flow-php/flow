@@ -53,6 +53,9 @@ final readonly class SchemaConverter
         $this->typesMap = new TypesMap($map);
     }
 
+    /**
+     * @param array<array-key, mixed> $tableOptions
+     */
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
     {
         $columns = [];
@@ -216,6 +219,9 @@ final readonly class SchemaConverter
         return new Column($name, $dbalType, $options);
     }
 
+    /**
+     * @return array<Index>
+     */
     private function updateIndexes(Schema $schema, Table $table) : array
     {
         $indexesData = [];

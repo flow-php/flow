@@ -28,11 +28,17 @@ final class JsonTest extends FlowTestCase
             ->write(to_json($path = __DIR__ . '/var/test_domdocument.json'))
             ->run();
 
+        $content = \file_get_contents($path);
+
+        if ($content === false) {
+            self::fail('Failed to read file content');
+        }
+
         self::assertStringContainsString(
             <<<'JSON'
 [{"id":1,"descriptionHtml":"<b>red<\/b>","size":"small"}]
 JSON,
-            \file_get_contents($path)
+            $content
         );
     }
 
@@ -67,12 +73,18 @@ JSON,
 
         $loader->closure($context);
 
+        $content = \file_get_contents($path);
+
+        if ($content === false) {
+            self::fail('Failed to read file content');
+        }
+
         self::assertJsonStringEqualsJsonString(
             <<<'JSON'
 [
 ]
 JSON,
-            \file_get_contents($path)
+            $content
         );
 
         if (\file_exists($path)) {
@@ -100,6 +112,11 @@ JSON,
             ->run();
 
         $content = \file_get_contents($path);
+
+        if ($content === false) {
+            self::fail('Failed to read file content');
+        }
+
         self::assertStringEndsWith(']', $content);
 
         self::assertEquals(
@@ -126,11 +143,17 @@ JSON,
             ->write(to_json($path = __DIR__ . '/var/test_jsonentry.json'))
             ->run();
 
+        $content = \file_get_contents($path);
+
+        if ($content === false) {
+            self::fail('Failed to read file content');
+        }
+
         self::assertStringContainsString(
             <<<'JSON'
 [{"id":1,"nested":{"short":"short_description","long":"long_description"}}]
 JSON,
-            \file_get_contents($path)
+            $content
         );
     }
 
@@ -179,6 +202,12 @@ JSON,
             ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', put_rows_in_new_lines: true))
             ->run();
 
+        $content = \file_get_contents($path);
+
+        if ($content === false) {
+            self::fail('Failed to read file content');
+        }
+
         self::assertStringContainsString(
             <<<'JSON'
 [
@@ -188,7 +217,7 @@ JSON,
 {"name":"Joe","age":30}
 ]
 JSON,
-            \file_get_contents($path)
+            $content
         );
     }
 
@@ -207,6 +236,12 @@ JSON,
             ->write(to_json($path = __DIR__ . '/var/test_putting_each_row_in_a_new_line.json', flags: JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT, put_rows_in_new_lines: true))
             ->run();
 
+        $content = \file_get_contents($path);
+
+        if ($content === false) {
+            self::fail('Failed to read file content');
+        }
+
         self::assertStringContainsString(
             <<<'JSON'
 [
@@ -220,7 +255,7 @@ JSON,
 }
 ]
 JSON,
-            \file_get_contents($path)
+            $content
         );
     }
 }

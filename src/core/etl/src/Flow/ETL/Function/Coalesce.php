@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 final class Coalesce extends ScalarFunctionChain
 {
     /**
-     * @param array<ScalarFunction> $values
+     * @var array<ScalarFunction>
      */
     private readonly array $values;
 

@@ -6,5 +6,8 @@ namespace Flow\Azure\SDK;
 
 interface Normalizer
 {
+    /**
+     * @return array<array-key, mixed>
+     */
     public function toArray(string $data) : array;
 }

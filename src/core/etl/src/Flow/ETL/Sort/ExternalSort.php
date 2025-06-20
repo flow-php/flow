@@ -94,6 +94,8 @@ final class ExternalSort implements SortingAlgorithm
 
     /**
      * @param array<Bucket> $buckets
+     *
+     * @return array<Bucket>
      */
     private function mergeBuckets(array $buckets, References $refs) : array
     {

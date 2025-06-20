@@ -6,19 +6,41 @@ namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
 final class SearchParams
 {
+    /**
+     * @var array{q: string, limit: int, offset: int, attributesToRetrieve?: null|array<string>, sort?: null|array<string>}
+     */
+    private array $params;
+
     private readonly string $query;
 
     /**
-     * @param array{q: string, limit: ?int, offset: ?int, attributesToRetrieve: ?array<string>, sort: ?array<string>} $params See: https://www.meilisearch.com/docs/reference/api/search#search-parameters
+     * @param array{q: string, limit?: null|int, offset?: null|int, attributesToRetrieve?: null|array<string>, sort?: null|array<string>} $params See: https://www.meilisearch.com/docs/reference/api/search#search-parameters
      */
-    public function __construct(private array $params)
+    public function __construct(array $params)
     {
         $this->query = $params['q'];
-        $this->params = \array_merge(['limit' => 20, 'offset' => 0], $params);
+
+        // Build params array with guaranteed non-null limit and offset
+        $mergedParams = \array_merge(['limit' => 20, 'offset' => 0, 'q' => $params['q']], $params);
+
+        $this->params = [
+            'q' => $mergedParams['q'],
+            'limit' => (int) ($mergedParams['limit'] ?? 20),
+            'offset' => (int) ($mergedParams['offset'] ?? 0),
+        ];
+
+        // Add optional parameters if they exist
+        if (isset($mergedParams['attributesToRetrieve'])) {
+            $this->params['attributesToRetrieve'] = $mergedParams['attributesToRetrieve'];
+        }
+
+        if (isset($mergedParams['sort'])) {
+            $this->params['sort'] = $mergedParams['sort'];
+        }
     }
 
     /**
-     * @return array{q: string, limit: ?int, offset: ?int, attributesToRetrieve: ?array<string>, sort: ?array<string>}
+     * @return array{q: string, limit: int, offset: int, attributesToRetrieve?: null|array<string>, sort?: null|array<string>}
      */
     public function asArray() : array
     {
@@ -27,12 +49,12 @@ final class SearchParams
 
     public function getLimit() : int
     {
-        return (int) $this->params['limit'];
+        return $this->params['limit'];
     }
 
     public function getOffset() : int
     {
-        return (int) $this->params['offset'];
+        return $this->params['offset'];
     }
 
     public function getQuery() : string

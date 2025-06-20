@@ -49,7 +49,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
 
             foreach ($stream->readLines() as $jsonLine) {
                 /**
-                 * @var array|object $rowData
+                 * @var array<string, mixed>|object $rowData
                  */
                 foreach ($lineIterator($jsonLine) as $rowData) {
 

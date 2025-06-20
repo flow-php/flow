@@ -10,6 +10,9 @@ use PhpBench\Attributes\{Groups, ParamProviders};
 #[Groups(['building_blocks'])]
 final class TypeDetectorBench
 {
+    /**
+     * @param array<string, mixed> $params
+     */
     #[ParamProviders('provideRows')]
     public function bench_type_detector(array $params) : void
     {

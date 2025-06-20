@@ -63,16 +63,25 @@ abstract class IntegrationTestCase extends FlowTestCase
         $this->sqliteDatabaseContext->connection()->close();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function mysqlConnectionParams() : array
     {
         return (new DsnParser(['mysql' => 'mysqli']))->parse(\getenv('MYSQL_DATABASE_URL') ?: '');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function postgresqlConnectionParams() : array
     {
         return (new DsnParser(['postgresql' => 'pdo_pgsql']))->parse(\getenv('PGSQL_DATABASE_URL') ?: '');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function sqliteConnectionParams() : array
     {
         $path = type_string()->assert(\getenv('SQLITE_DATABASE_PATH'));

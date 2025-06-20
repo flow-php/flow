@@ -9,6 +9,12 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 final class Slug extends ScalarFunctionChain
 {
+    /**
+     * @param ScalarFunction|string $string
+     * @param ScalarFunction|string $separator
+     * @param null|ScalarFunction|string $locale
+     * @param null|array<array-key, mixed>|ScalarFunction $symbolsMap
+     */
     public function __construct(
         private readonly ScalarFunction|string $string,
         private readonly ScalarFunction|string $separator = '-',

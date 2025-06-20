@@ -6,6 +6,9 @@ namespace Flow\Azure\SDK\BlobService\ListBlobs;
 
 final readonly class Blob
 {
+    /**
+     * @param array<array-key, mixed> $data
+     */
     public function __construct(private array $data)
     {
     }

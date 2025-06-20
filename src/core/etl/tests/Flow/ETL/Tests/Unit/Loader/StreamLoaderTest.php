@@ -31,7 +31,7 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config())
         );
-        $output = ob_get_contents();
+        $output = ob_get_contents() ?: '';
         ob_end_clean();
 
         self::assertSame(
@@ -74,7 +74,7 @@ ASCII,
             )->partitionBy(ref('group'))[0],
             flow_context(config())
         );
-        $output = ob_get_contents();
+        $output = ob_get_contents() ?: '';
         ob_end_clean();
 
         self::assertStringContainsString(
@@ -108,7 +108,7 @@ TABLE,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents();
+        $output = ob_get_contents() ?: '';
         ob_end_clean();
 
         self::assertSame(
@@ -145,7 +145,7 @@ ASCII,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents();
+        $output = ob_get_contents() ?: '';
         ob_end_clean();
 
         self::assertStringContainsString(
@@ -177,7 +177,7 @@ TABLE,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents();
+        $output = ob_get_contents() ?: '';
         ob_end_clean();
 
         self::assertSame(
@@ -205,7 +205,7 @@ ASCII,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents();
+        $output = ob_get_contents() ?: '';
         ob_end_clean();
 
         self::assertSame(
@@ -231,7 +231,7 @@ ASCII,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents();
+        $output = ob_get_contents() ?: '';
         ob_end_clean();
 
         self::assertSame(

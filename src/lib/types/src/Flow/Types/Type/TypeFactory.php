@@ -34,7 +34,7 @@ use Flow\Types\Type\Native\{EnumType, IntersectionType, UnionType};
 final class TypeFactory
 {
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      *
      * @return Type<mixed>
      */

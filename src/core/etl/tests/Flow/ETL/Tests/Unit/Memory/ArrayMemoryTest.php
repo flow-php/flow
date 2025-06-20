@@ -33,6 +33,7 @@ final class ArrayMemoryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Memory expects nested array data structure: array<array<mixed>>');
 
+        /** @phpstan-ignore-next-line */
         new ArrayMemory([1, 2, 3]);
     }
 
@@ -56,6 +57,7 @@ final class ArrayMemoryTest extends FlowTestCase
         $this->expectExceptionMessage('Memory expects nested array data structure: array<array<mixed>>');
 
         $memory = new ArrayMemory();
+        /** @phpstan-ignore-next-line */
         $memory->save([1, 2, 3]);
     }
 

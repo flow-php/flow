@@ -14,6 +14,9 @@ use PHPUnit\Framework\Attributes\{DataProvider, IgnoreDeprecations};
 #[IgnoreDeprecations]
 final class StringStyleTest extends FlowTestCase
 {
+    /**
+     * @return iterable<array-key, mixed>
+     */
     public static function provideStringStyles() : iterable
     {
         yield 'null new' => [

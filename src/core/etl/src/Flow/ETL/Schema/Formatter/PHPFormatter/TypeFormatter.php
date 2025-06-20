@@ -105,7 +105,7 @@ final class TypeFormatter
     }
 
     /**
-     * @param StructureType<array> $type
+     * @param StructureType<array<string, Type<mixed>>> $type
      */
     private function formatStructureType(StructureType $type, bool $nullable) : string
     {

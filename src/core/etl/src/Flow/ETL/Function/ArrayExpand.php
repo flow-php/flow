@@ -13,6 +13,9 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
     {
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function eval(Row $row) : array
     {
         $array = (new Parameter($this->ref))->asArray($row);

@@ -121,6 +121,9 @@ final class Schema
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toDDL() : array
     {
         return [$this->schemaRoot->name() => [
@@ -129,6 +132,9 @@ final class Schema
         ]];
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function toThrift() : array
     {
         return $this->schemaRoot->toThrift();
@@ -166,6 +172,8 @@ final class Schema
 
     /**
      * @param array<Column> $columns
+     *
+     * @return array<string, mixed>
      */
     private function generateDDL(array $columns) : array
     {

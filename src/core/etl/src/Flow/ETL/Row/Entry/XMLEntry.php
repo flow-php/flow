@@ -65,6 +65,9 @@ final class XMLEntry implements Entry
         return $this->toString();
     }
 
+    /**
+     * @param array<array-key, mixed> $data
+     */
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];

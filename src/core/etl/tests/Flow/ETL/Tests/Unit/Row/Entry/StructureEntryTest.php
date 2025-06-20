@@ -115,8 +115,8 @@ final class StructureEntryTest extends FlowTestCase
     }
 
     /**
-     * @param StructureEntry<array> $entry
-     * @param StructureEntry<array> $nextEntry
+     * @param StructureEntry<array<mixed>> $entry
+     * @param StructureEntry<array<mixed>> $nextEntry
      */
     #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, StructureEntry $entry, StructureEntry $nextEntry) : void
@@ -169,7 +169,7 @@ final class StructureEntryTest extends FlowTestCase
         $string = structure_entry('name', ['json' => ['5' => 5, '2' => 2, '3' => 3]], type_structure(['json' => type_array()]));
 
         $serialized = \serialize($string);
-        /** @var StructureEntry<array> $unserialized */
+        /** @var StructureEntry<array<array-key, mixed>> $unserialized */
         $unserialized = \unserialize($serialized);
 
         self::assertTrue($string->isEqual($unserialized));

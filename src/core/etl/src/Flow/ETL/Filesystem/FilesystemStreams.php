@@ -126,12 +126,15 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         }
     }
 
+    /**
+     * @return \Generator<DestinationStream>
+     */
     public function listOpenStreams(Path $path) : \Generator
     {
         $uri = $path->uri();
 
         if (!\array_key_exists($uri, $this->writingStreams)) {
-            return [];
+            return;
         }
 
         foreach ($this->writingStreams[$uri] as $stream) {
@@ -141,6 +144,9 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         }
     }
 
+    /**
+     * @param array<Partition> $partitions
+     */
     public function read(Path $path, array $partitions = []) : SourceStream
     {
         if ($path->isPattern()) {

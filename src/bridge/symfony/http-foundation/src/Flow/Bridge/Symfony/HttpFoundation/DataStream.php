@@ -56,6 +56,8 @@ final class DataStream
     /**
      * Set additional headers.
      * Headers are merged with the default headers.
+     *
+     * @param array<string, mixed> $headers
      */
     public function headers(array $headers) : self
     {

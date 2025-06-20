@@ -27,6 +27,12 @@ final class JsonLinesTest extends FlowTestCase
             ->write(to_json_lines($path = __DIR__ . '/var/test_jsonl_ignore_pretty.jsonl')->withFlags(JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
             ->run();
 
+        $content = \file_get_contents($path);
+
+        if ($content === false) {
+            self::fail('Failed to read file content');
+        }
+
         self::assertStringContainsString(
             <<<'JSON'
 {"name":"John","age":30}
@@ -34,7 +40,7 @@ final class JsonLinesTest extends FlowTestCase
 {"name":"Jake","age":30}
 {"name":"Joe","age":30}
 JSON,
-            \file_get_contents($path)
+            $content
         );
     }
 

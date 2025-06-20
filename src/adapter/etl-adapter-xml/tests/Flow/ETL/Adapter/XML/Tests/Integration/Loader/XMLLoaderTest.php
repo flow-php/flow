@@ -82,6 +82,8 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
             ->write(to_xml($path = $this->cacheDir->suffix('test_xml_loader.xml')))
             ->run();
 
+        $content = \file_get_contents($path->path());
+        self::assertNotFalse($content);
         self::assertXmlStringEqualsXmlString(
             <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -90,7 +92,7 @@ final class XMLLoaderTest extends FlowIntegrationTestCase
 <row id="2"><name>Jane</name><address id="2"><city>Los Angeles</city><street>Hollywood Boulevard</street></address></row>
 </rows>
 XML,
-            \file_get_contents($path->path())
+            $content
         );
     }
 }

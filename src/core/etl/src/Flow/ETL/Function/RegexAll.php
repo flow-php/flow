@@ -8,6 +8,12 @@ use Flow\ETL\Row;
 
 final class RegexAll extends ScalarFunctionChain
 {
+    /**
+     * @param ScalarFunction|string $pattern
+     * @param array<array-key, mixed>|ScalarFunction|string $subject
+     * @param int|ScalarFunction $flags
+     * @param int|ScalarFunction $offset
+     */
     public function __construct(
         private readonly ScalarFunction|string $pattern,
         private readonly ScalarFunction|string|array $subject,
@@ -16,6 +22,9 @@ final class RegexAll extends ScalarFunctionChain
     ) {
     }
 
+    /**
+     * @return null|array<array-key, mixed>
+     */
     public function eval(Row $row) : ?array
     {
         $pattern = (new Parameter($this->pattern))->asString($row);

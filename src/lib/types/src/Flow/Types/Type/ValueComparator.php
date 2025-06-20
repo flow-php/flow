@@ -13,6 +13,9 @@ final readonly class ValueComparator
     {
     }
 
+    /**
+     * @param array<array-key, mixed> $values
+     */
     public function assertAllComparable(array $values, Operator|string $operator) : void
     {
         $operator = \is_string($operator) ? Operator::from($operator) : $operator;

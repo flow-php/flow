@@ -65,7 +65,7 @@ final class ElasticsearchLoader implements Loader
         $parameters['body'] = [];
 
         /**
-         * @var array<int, array{body:array,id:string}> $dataCollection
+         * @var array<int, array{body:array<string, mixed>,id:string}> $dataCollection
          */
         $dataCollection = $rows->map(fn (Row $row) : Row => Row::create(
             $factory->create($row),
@@ -93,6 +93,9 @@ final class ElasticsearchLoader implements Loader
         $this->client()->bulk($parameters);
     }
 
+    /**
+     * @param array<array-key, mixed> $parameters
+     */
     public function withParameters(array $parameters) : self
     {
         $this->parameters = $parameters;

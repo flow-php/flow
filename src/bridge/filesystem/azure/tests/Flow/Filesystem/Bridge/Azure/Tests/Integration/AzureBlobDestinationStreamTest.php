@@ -39,7 +39,9 @@ final class AzureBlobDestinationStreamTest extends AzureBlobServiceTestCase
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $stream = $fs->writeTo(new Path('azure-blob://orders.csv'));
-        $stream->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource);
+        $stream->fromResource($resource);
         $stream->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://orders.csv'))?->isFile());

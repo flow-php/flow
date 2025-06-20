@@ -62,7 +62,9 @@ TXT
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $stream = $fs->writeTo(path('aws-s3://orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource);
+        $stream = $fs->writeTo(path('aws-s3://orders.csv'))->fromResource($resource);
         $stream->close();
 
         self::assertTrue($fs->status(path('aws-s3://orders.csv'))?->isFile());
@@ -72,8 +74,10 @@ TXT
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource);
         $fs->writeTo(path('aws-s3://var/nested/orders.csv'))
-            ->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))
+            ->fromResource($resource)
             ->close();
 
         self::assertTrue($fs->status(path('aws-s3://var/nested'))?->isDirectory());
@@ -105,7 +109,9 @@ TXT
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $stream = $fs->writeTo(path('aws-s3://var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource);
+        $stream = $fs->writeTo(path('aws-s3://var/some_path_to/file.txt'))->fromResource($resource);
         $stream->close();
 
         self::assertNull($fs->status(path('aws-s3://var/some_path')));
@@ -115,7 +121,9 @@ TXT
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $stream = $fs->writeTo(path('aws-s3://var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource);
+        $stream = $fs->writeTo(path('aws-s3://var/some_path_to/file.txt'))->fromResource($resource);
         $stream->close();
 
         self::assertTrue($fs->status(path('aws-s3://var/some_path_to/*.txt'))?->isFile());
@@ -148,9 +156,17 @@ TXT
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource1);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders.txt'))->fromResource($resource1)->close();
+
+        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource2);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource($resource2)->close();
+
+        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource3);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
         self::assertTrue($fs->status(path('aws-s3://var/nested/orders/orders.csv'))?->isFile());
         self::assertTrue($fs->status(path('aws-s3://var/nested/orders/orders_01.csv'))?->isFile());
@@ -195,9 +211,17 @@ TXT
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $fs->writeTo(path('aws-s3://var/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource1);
+        $fs->writeTo(path('aws-s3://var/orders.csv'))->fromResource($resource1)->close();
+
+        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource2);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource($resource2)->close();
+
+        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource3);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
         self::assertTrue($fs->status(path('aws-s3://var/nested/orders/orders.csv'))?->isFile());
         self::assertTrue($fs->status(path('aws-s3://var/nested/orders/orders_01.csv'))?->isFile());
@@ -213,9 +237,17 @@ TXT
     {
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource1);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders.txt'))->fromResource($resource1)->close();
+
+        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource2);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders.csv'))->fromResource($resource2)->close();
+
+        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource3);
+        $fs->writeTo(path('aws-s3://var/nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
         self::assertTrue($fs->status(path('aws-s3://var/nested/orders/orders.csv'))?->isFile());
         self::assertTrue($fs->status(path('aws-s3://var/nested/orders/orders_01.csv'))?->isFile());
@@ -320,7 +352,9 @@ TXT
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $stream = $fs->writeTo(path('aws-s3://orders.csv'));
-        $stream->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource);
+        $stream->fromResource($resource);
         $stream->close();
 
         self::assertTrue($fs->status(path('aws-s3://orders.csv'))?->isFile());

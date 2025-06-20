@@ -16,6 +16,9 @@ final class NativePHPRandomValueGeneratorTest extends FlowTestCase
         }
     }
 
+    /**
+     * @return array<string, array{int, int}>
+     */
     public static function invalid_range_provider() : array
     {
         return [
@@ -23,6 +26,9 @@ final class NativePHPRandomValueGeneratorTest extends FlowTestCase
         ];
     }
 
+    /**
+     * @return array<string, array{int, int}>
+     */
     public static function valid_range_provider() : array
     {
         return [

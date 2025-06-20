@@ -199,6 +199,9 @@ final class ParquetFile
         }
     }
 
+    /**
+     * @return array<mixed>
+     */
     private function read(Column $column, ?int $limit = null, ?int $offset = null) : array
     {
         $columnData = FlatColumnData::initialize($column);

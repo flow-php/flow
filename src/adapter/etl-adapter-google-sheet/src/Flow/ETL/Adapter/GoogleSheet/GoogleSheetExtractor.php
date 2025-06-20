@@ -17,7 +17,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
     private bool $dropExtraColumns = true;
 
     /**
-     * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
+     * @var array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string}
      */
     private array $options = [];
 
@@ -46,7 +46,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         );
 
         /**
-         * @var array<array> $values
+         * @var array<array<null|string>> $values
          */
         $values = $response->getValues() ?? [];
 
@@ -112,7 +112,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
             $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
             /**
-             * @var array<array> $values
+             * @var array<array<null|string>> $values
              */
             $values = $response->getValues() ?? [];
         }

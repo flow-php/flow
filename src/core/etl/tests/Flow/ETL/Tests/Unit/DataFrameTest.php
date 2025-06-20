@@ -381,6 +381,7 @@ final class DataFrameTest extends FlowTestCase
         };
 
         $loader = new class implements Loader {
+            /** @var array<array-key, mixed> */
             public array $result = [];
 
             public function load(Rows $rows, FlowContext $context) : void

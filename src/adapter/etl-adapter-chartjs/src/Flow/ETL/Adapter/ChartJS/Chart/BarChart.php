@@ -13,7 +13,7 @@ final class BarChart implements Chart
     /**
      * @var array{
      *   labels: array<string>,
-     *   datasets: array<string, array{label: string, data: array}>
+     *   datasets: array<string, array{label: string, data: array<mixed>}>
      * }
      */
     private array $data = [
@@ -21,8 +21,14 @@ final class BarChart implements Chart
         'datasets' => [],
     ];
 
+    /**
+     * @var array<string, array<array-key, mixed>>
+     */
     private array $datasetOptions = [];
 
+    /**
+     * @var array<array-key, mixed>
+     */
     private array $options = [];
 
     public function __construct(
@@ -49,6 +55,9 @@ final class BarChart implements Chart
         }
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function data() : array
     {
         $data = [
@@ -74,6 +83,9 @@ final class BarChart implements Chart
         return $data;
     }
 
+    /**
+     * @param array<array-key, mixed> $options
+     */
     public function setDatasetOptions(Reference $dataset, array $options) : self
     {
         $this->datasetOptions[$dataset->name()] = $options;
@@ -81,6 +93,9 @@ final class BarChart implements Chart
         return $this;
     }
 
+    /**
+     * @param array<array-key, mixed> $options
+     */
     public function setOptions(array $options) : self
     {
         $this->options = $options;

@@ -6,6 +6,12 @@ namespace Flow\Parquet;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\NullLevel;
 
+/**
+ * @param array<array-key, mixed> $array1
+ * @param array<array-key, mixed> $array2
+ *
+ * @return array<array-key, mixed>
+ */
 function array_merge_recursive(array $array1, array $array2) : array
 {
     $merged = $array1;
@@ -21,6 +27,12 @@ function array_merge_recursive(array $array1, array $array2) : array
     return $merged;
 }
 
+/**
+ * @param array<array-key, mixed> $keys
+ * @param array<array-key, mixed> $values
+ *
+ * @return array<array-key, mixed>
+ */
 function array_combine_recursive(array $keys, array $values) : array
 {
     $result = [];
@@ -60,6 +72,8 @@ function array_combine_recursive(array $keys, array $values) : array
 
 /**
  * Iterate over array at given level.
+ *
+ * @param array<array-key, mixed> $array
  */
 function array_iterate_at_level(array &$array, int $targetLevel, callable $callback, int $currentLevel = 1) : void
 {

@@ -67,6 +67,9 @@ final class XMLElementEntry implements Entry
         return (string) $this->value->ownerDocument->saveXML($this->value);
     }
 
+    /**
+     * @param array<array-key, mixed> $data
+     */
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];

@@ -15,7 +15,7 @@ final readonly class RowsNormalizer
     }
 
     /**
-     * @return \Generator<array<string, null|array|bool|float|int|string>>
+     * @return \Generator<array<string, null|array<string, mixed>|bool|float|int|string>>
      */
     public function normalize(Rows $rows) : \Generator
     {

@@ -251,6 +251,9 @@ final class Path
         return $this->partitions;
     }
 
+    /**
+     * @return array<Path>
+     */
     public function partitionsPaths() : array
     {
         $partitionPaths = [];

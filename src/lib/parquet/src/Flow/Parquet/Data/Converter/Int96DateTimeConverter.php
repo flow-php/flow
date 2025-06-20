@@ -26,6 +26,9 @@ final class Int96DateTimeConverter implements Converter
         return false;
     }
 
+    /**
+     * @return array<never>
+     */
     public function toParquetType(mixed $data) : array
     {
         throw new RuntimeException("Converting DateTime to INT96 is deprecated and should not be used, please use INT64 to store \DateTime objects as number of microseconds since Jan 1 1970.");

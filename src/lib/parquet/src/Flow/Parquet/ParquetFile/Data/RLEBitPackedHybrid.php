@@ -15,6 +15,8 @@ final class RLEBitPackedHybrid
     /**
      * $output is passed by reference as a performance optimization, otherwise we would need to return the array and merge
      * it, which creates unnecessary performance impact.
+     *
+     * @param array<int> $output
      */
     public function decodeBitPacked(BinaryReader $reader, int $bitWidth, int $varInt, int $maxItems, array &$output) : void
     {
@@ -69,8 +71,12 @@ final class RLEBitPackedHybrid
         }
     }
 
+    /**
+     * @return array<int>
+     */
     public function decodeHybrid(BinaryReader $reader, int $bitWidth, int $maxItems) : array
     {
+        /** @var array<int> $output */
         $output = [];
 
         while (\count($output) < $maxItems) {
@@ -87,6 +93,9 @@ final class RLEBitPackedHybrid
         return $output;
     }
 
+    /**
+     * @param array<int> $output
+     */
     public function decodeRLE(BinaryReader $reader, int $bitWidth, int $intVar, int $maxItems, array &$output) : void
     {
         $isLiteralRun = $intVar & 1;
@@ -104,6 +113,7 @@ final class RLEBitPackedHybrid
 
         if ($isLiteralRun) {
             for ($i = 0; $i < $count; $i++) {
+                /** @phpstan-ignore-next-line */
                 $output[] = $reader->readBits($bitWidth);
             }
         } else {

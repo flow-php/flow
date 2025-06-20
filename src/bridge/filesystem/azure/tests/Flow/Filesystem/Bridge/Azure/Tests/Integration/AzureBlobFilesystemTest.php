@@ -105,7 +105,9 @@ TXT
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(new Path('azure-blob://file.txt'))->fromResource($resource)->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://file.txt'))?->isFile());
     }
@@ -114,7 +116,9 @@ TXT
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders.txt'))->fromResource($resource)->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders'))?->isDirectory());
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/'))?->isDirectory());
@@ -145,7 +149,9 @@ TXT
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
 
         self::assertNull($fs->status(new Path('azure-blob://some_path')));
     }
@@ -154,7 +160,9 @@ TXT
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $fs->writeTo(new Path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://some_path_to/*.txt'))?->isFile());
         self::assertSame('azure-blob://some_path_to/file.txt', $fs->status(new Path('azure-blob://some_path_to/*.txt'))->path->uri());
@@ -183,9 +191,15 @@ TXT
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource1);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders.txt'))->fromResource($resource1)->close();
+        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource2);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
+        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource3);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/orders.csv'))?->isFile());
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
@@ -197,9 +211,15 @@ TXT
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource1);
+        $fs->writeTo(new Path('azure-blob://orders.csv'))->fromResource($resource1)->close();
+        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource2);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
+        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource3);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/orders.csv'))?->isFile());
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
@@ -215,9 +235,15 @@ TXT
     {
         $fs = azure_filesystem($this->blobService('flow-php'));
 
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
-        $fs->writeTo(new Path('azure-blob://nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'))->close();
+        $resource1 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource1);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders.txt'))->fromResource($resource1)->close();
+        $resource2 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource2);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders.csv'))->fromResource($resource2)->close();
+        $resource3 = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource3);
+        $fs->writeTo(new Path('azure-blob://nested/orders/orders_01.csv'))->fromResource($resource3)->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/orders.csv'))?->isFile());
         self::assertTrue($fs->status(new Path('azure-blob://nested/orders/orders_01.csv'))?->isFile());
@@ -307,7 +333,9 @@ TXT
         $fs = azure_filesystem($this->blobService('flow-php'));
 
         $stream = $fs->writeTo(new Path('azure-blob://orders.csv'));
-        $stream->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertIsResource($resource);
+        $stream->fromResource($resource);
         $stream->close();
 
         self::assertTrue($fs->status(new Path('azure-blob://orders.csv'))?->isFile());

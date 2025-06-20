@@ -19,6 +19,9 @@ final class Repetitions implements \Countable, \Stringable
      */
     private readonly int $repeatedCount;
 
+    /**
+     * @var array<int, Repetition>
+     */
     private array $repetitions;
 
     public function __construct(
@@ -39,7 +42,7 @@ final class Repetitions implements \Countable, \Stringable
             }
         }
 
-        $this->repetitions = $repetitions;
+        $this->repetitions = \array_values($repetitions);
         $this->id = \implode(',', $idParts);
         $this->repeatedCount = $repeatedCount;
     }

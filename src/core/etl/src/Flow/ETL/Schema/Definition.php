@@ -72,6 +72,9 @@ final class Definition
         return new self($entry, type_float(), $nullable, $metadata);
     }
 
+    /**
+     * @param array<array-key, mixed> $definition
+     */
     public static function fromArray(array $definition) : self
     {
         if (!\array_key_exists('ref', $definition)) {
@@ -136,7 +139,7 @@ final class Definition
     }
 
     /**
-     * @param StructureType<array> $type
+     * @param StructureType<array<array-key, mixed>> $type
      */
     public static function structure(string|Reference $entry, StructureType $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
@@ -163,6 +166,9 @@ final class Definition
         return new self($entry, type_xml_element(), $nullable, $metadata);
     }
 
+    /**
+     * @param array<array-key, mixed> $value
+     */
     public function addMetadata(string $key, int|string|bool|float|array $value) : self
     {
         $this->metadata = $this->metadata->add($key, $value);
@@ -428,6 +434,9 @@ final class Definition
         return $this->metadata;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function normalize() : array
     {
         return [

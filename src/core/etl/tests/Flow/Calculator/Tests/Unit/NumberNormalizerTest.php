@@ -16,6 +16,7 @@ final class NumberNormalizerTest extends FlowTestCase
         $this->expectException(NonNumericValueException::class);
         $this->expectExceptionMessage('foo');
 
+        /** @phpstan-ignore-next-line */
         NumberNormalizer::toString('foo', scale: 0);
     }
 
@@ -33,8 +34,17 @@ final class NumberNormalizerTest extends FlowTestCase
     #[TestWith(['3.23E-5', 12, '0.0000323'])]
     #[TestWith(['3.23e-5', 12, '0.0000323'])]
     #[TestWith([3.23E-5, 12, '0.0000323'])]
+    /**
+     * @param float|int|numeric-string $input
+     * @param int $scale
+     * @param string $output
+     */
     public function test_normalize_numbers_to_string(int|string|float $input, int $scale, string $output) : void
     {
+        if (is_string($input)) {
+            assert(is_numeric($input), 'String parameter $input must be numeric');
+        }
+
         self::assertSame($output, NumberNormalizer::toString($input, scale: $scale));
     }
 

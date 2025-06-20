@@ -8,6 +8,10 @@ use Flow\Doctrine\Bulk\InsertOptions;
 
 final readonly class PostgreSQLInsertOptions implements InsertOptions
 {
+    /**
+     * @param array<string> $conflictColumns
+     * @param array<string> $updateColumns
+     */
     public function __construct(
         public ?bool $skipConflicts = null,
         public ?string $constraint = null,
@@ -16,6 +20,9 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
     ) {
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public static function fromArray(array $options) : InsertOptions
     {
         return new self(

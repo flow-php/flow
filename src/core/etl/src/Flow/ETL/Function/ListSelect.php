@@ -22,6 +22,9 @@ final readonly class ListSelect implements ScalarFunction
         $this->refs = References::init(...$refs);
     }
 
+    /**
+     * @return null|array<int, array<string, mixed>>
+     */
     public function eval(Row $row) : ?array
     {
         if (!$row->has($this->ref)) {

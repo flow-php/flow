@@ -26,9 +26,17 @@ final class HashTableTest extends FlowTestCase
         $hashTable->add(row(int_entry('id', 3), str_entry('value', '2')), refs('id'));
         $hashTable->add(row(int_entry('id', 3), str_entry('value', '1')), refs('id'));
 
-        self::assertCount(3, $hashTable->bucketFor(row(int_entry('id', 1)), refs('id')));
-        self::assertCount(1, $hashTable->bucketFor(row(int_entry('id', 2)), refs('id')));
-        self::assertCount(2, $hashTable->bucketFor(row(int_entry('id', 3)), refs('id')));
+        $bucket1 = $hashTable->bucketFor(row(int_entry('id', 1)), refs('id'));
+        self::assertNotNull($bucket1);
+        self::assertCount(3, $bucket1);
+
+        $bucket2 = $hashTable->bucketFor(row(int_entry('id', 2)), refs('id'));
+        self::assertNotNull($bucket2);
+        self::assertCount(1, $bucket2);
+
+        $bucket3 = $hashTable->bucketFor(row(int_entry('id', 3)), refs('id'));
+        self::assertNotNull($bucket3);
+        self::assertCount(2, $bucket3);
         self::assertNull($hashTable->bucketFor(row(int_entry('id', 4)), refs('id')));
     }
 
@@ -42,7 +50,12 @@ final class HashTableTest extends FlowTestCase
         $hashTable->add(row(int_entry('id', 2), str_entry('value', '1')), refs('id'));
         $hashTable->add(row(int_entry('id', 2), str_entry('value', '2')), refs('id'));
 
-        self::assertCount(1, $hashTable->bucketFor(row(int_entry('identifier', 1)), refs('identifier')));
-        self::assertCount(2, $hashTable->bucketFor(row(int_entry('identifier', 2)), refs('identifier')));
+        $bucket4 = $hashTable->bucketFor(row(int_entry('identifier', 1)), refs('identifier'));
+        self::assertNotNull($bucket4);
+        self::assertCount(1, $bucket4);
+
+        $bucket5 = $hashTable->bucketFor(row(int_entry('identifier', 2)), refs('identifier'));
+        self::assertNotNull($bucket5);
+        self::assertCount(2, $bucket5);
     }
 }

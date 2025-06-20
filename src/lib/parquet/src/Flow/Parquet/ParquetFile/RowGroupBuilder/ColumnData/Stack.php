@@ -8,6 +8,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 
 final class Stack
 {
+    /**
+     * @var array<array-key, mixed>
+     */
     private array $stack;
 
     public function __construct(
@@ -16,6 +19,9 @@ final class Stack
         $this->stack = [];
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function dump() : array
     {
         return $this->stack;

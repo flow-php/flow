@@ -6,6 +6,9 @@ namespace Flow\ETL\Hash;
 
 final readonly class NativePHPHash implements Algorithm
 {
+    /**
+     * @param array<array-key, mixed> $options
+     */
     public function __construct(private string $algorithm = 'xxh128', private bool $binary = false, private array $options = [])
     {
         if (!\in_array($algorithm, \hash_algos(), true)) {

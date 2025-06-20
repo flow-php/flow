@@ -47,7 +47,7 @@ final readonly class IntersectionType implements Type
     }
 
     /**
-     * @param array{type: 'intersection', left: array, right: array} $data
+     * @param array{type: 'intersection', left: array<string, mixed>, right: array<string, mixed>} $data
      *
      * @return type<TLeft&TRight>
      */
@@ -104,7 +104,7 @@ final readonly class IntersectionType implements Type
     }
 
     /**
-     * @return array{type: 'intersection', left: array, right: array}
+     * @return array{type: 'intersection', left: array<string, mixed>, right: array<string, mixed>}
      */
     public function normalize() : array
     {

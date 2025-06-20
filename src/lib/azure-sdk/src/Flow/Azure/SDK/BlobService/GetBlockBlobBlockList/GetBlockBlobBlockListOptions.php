@@ -25,6 +25,9 @@ final class GetBlockBlobBlockListOptions implements EndpointOptions
 
     private ?string $versionId = null;
 
+    /**
+     * @return array<string, string>
+     */
     public function toHeaders() : array
     {
         $headers = [];
@@ -43,6 +46,9 @@ final class GetBlockBlobBlockListOptions implements EndpointOptions
         return $headers;
     }
 
+    /**
+     * @return array<string, int|string>
+     */
     public function toURIParameters() : array
     {
         $uriParameters = [];

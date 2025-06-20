@@ -14,6 +14,9 @@ final class TypesModel
     ) {
     }
 
+    /**
+     * @param array<array<string, mixed>> $data
+     */
     public static function fromArray(array $data) : self
     {
         return new self(
@@ -35,6 +38,9 @@ final class TypesModel
         );
     }
 
+    /**
+     * @return array<array<string, mixed>>
+     */
     public function normalize() : array
     {
         return array_map(fn (TypeModel $type) => $type->normalize(), $this->types);

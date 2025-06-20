@@ -9,6 +9,9 @@ use Doctrine\DBAL\Schema\Table;
 
 final class DatabaseContext
 {
+    /**
+     * @var array<string>
+     */
     private array $createdTables = [];
 
     public function __construct(
@@ -44,11 +47,18 @@ final class DatabaseContext
         }
     }
 
+    /**
+     * @return array<string>
+     */
     public function executedSelectQueries() : array
     {
         return $this->selectQueryCounter->queries;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $types
+     */
     public function insert(string $tableName, array $data, array $types = []) : void
     {
         $this->connection->insert($tableName, $data, $types);
@@ -74,6 +84,9 @@ final class DatabaseContext
         $this->selectQueryCounter->reset();
     }
 
+    /**
+     * @return array<array<string, mixed>>
+     */
     public function selectAll(string $tableName) : array
     {
         return $this->connection->fetchAllAssociative(

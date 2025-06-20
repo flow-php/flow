@@ -34,6 +34,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         $this->partitions = new Partitions();
     }
 
+    /**
+     * @param array<array-key, mixed> $data
+     */
     public static function fromArray(array $data, EntryFactory $entryFactory = new EntryFactory()) : self
     {
         return array_to_rows($data, $entryFactory);
@@ -41,6 +44,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     /**
      * @param array<int, Row>|array<Row> $rows
+     * @param array<Partition>|array<string, string>|Partitions $partitions
      */
     public static function partitioned(array $rows, array|Partitions $partitions) : self
     {
@@ -48,9 +52,26 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return new self();
         }
 
-        $partitions = \is_array($partitions) ? new Partitions(...$partitions) : $partitions;
+        if (\is_array($partitions)) {
+            $allArePartitions = \count($partitions) > 0 && \array_reduce(
+                $partitions,
+                fn ($carry, $item) => $carry && $item instanceof Partition,
+                true
+            );
+
+            if ($allArePartitions) {
+                // All elements are Partition objects, safe to spread
+                $partitions = new Partitions(...\array_filter($partitions, fn ($item) => $item instanceof Partition));
+            } else {
+                // Convert associative array to Partitions
+                /** @var array<string, string> $typedPartitions */
+                $typedPartitions = $partitions;
+                $partitions = new Partitions(...Partition::fromArray($typedPartitions));
+            }
+        }
 
         $rows = new self(...$rows);
+        /** @var Partitions $partitions */
         $rows->partitions = $partitions;
 
         return $rows;

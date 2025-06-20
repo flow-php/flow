@@ -119,6 +119,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         return $this;
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     private function createRowsFromCells(Row $row, int $previousRowDataCount = 0) : array
     {
         $rowData = \array_map(
@@ -135,6 +138,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         return $rowData;
     }
 
+    /**
+     * @param array<int, string> $headers
+     */
     private function extractRows(SourceStream $stream, array $headers, int $offset) : \Generator
     {
         try {

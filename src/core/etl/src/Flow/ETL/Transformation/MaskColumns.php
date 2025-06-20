@@ -13,6 +13,9 @@ use Flow\ETL\{DataFrame, Transformation};
  */
 final readonly class MaskColumns implements Transformation
 {
+    /**
+     * @param array<int, string> $columns
+     */
     public function __construct(private array $columns = [], private string $mask = '******')
     {
     }

@@ -16,6 +16,9 @@ final class ElasticsearchExtractor implements Extractor
      */
     private Client|\Elastic\Elasticsearch\Client|null $client;
 
+    /**
+     * @var null|array<array-key, mixed>
+     */
     private ?array $pointInTimeParams = null;
 
     /**

@@ -18,8 +18,12 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         $buckets = $this->s3Client()->listBuckets();
 
         foreach ($buckets->getBuckets() as $bucket) {
-            $this->deleteBucketContents($this->s3Client(), $bucket->getName());
-            $this->s3Client()->deleteBucket(['Bucket' => $bucket->getName()]);
+            $bucketName = $bucket->getName();
+
+            if ($bucketName !== null) {
+                $this->deleteBucketContents($this->s3Client(), $bucketName);
+                $this->s3Client()->deleteBucket(['Bucket' => $bucketName]);
+            }
         }
 
         $this->s3Client()->createBucket(['Bucket' => $this->bucket()]);
@@ -32,8 +36,12 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         $buckets = $this->s3Client()->listBuckets();
 
         foreach ($buckets->getBuckets() as $bucket) {
-            $this->deleteBucketContents($this->s3Client(), $bucket->getName());
-            $this->s3Client()->deleteBucket(['Bucket' => $bucket->getName()]);
+            $bucketName = $bucket->getName();
+
+            if ($bucketName !== null) {
+                $this->deleteBucketContents($this->s3Client(), $bucketName);
+                $this->s3Client()->deleteBucket(['Bucket' => $bucketName]);
+            }
         }
     }
 
@@ -67,7 +75,11 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         $objects = $s3Client->listObjectsV2(['Bucket' => $bucket]);
 
         foreach ($objects->getContents() as $object) {
-            $s3Client->deleteObject(['Bucket' => $bucket, 'Key' => ltrim((string) $object->getKey(), '/')]);
+            $objectKey = $object->getKey();
+
+            if ($objectKey !== null) {
+                $s3Client->deleteObject(['Bucket' => $bucket, 'Key' => ltrim($objectKey, '/')]);
+            }
         }
     }
 }

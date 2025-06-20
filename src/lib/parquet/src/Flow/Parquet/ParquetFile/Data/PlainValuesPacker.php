@@ -13,6 +13,9 @@ final readonly class PlainValuesPacker
     {
     }
 
+    /**
+     * @param array<mixed> $values
+     */
     public function packValues(FlatColumn $column, array $values) : void
     {
         $values = \array_filter($values, static fn (mixed $value) => $value !== null);

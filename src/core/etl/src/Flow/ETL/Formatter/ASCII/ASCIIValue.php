@@ -12,7 +12,7 @@ final class ASCIIValue
     private ?string $stringValue = null;
 
     /**
-     * @param null|array|bool|Entry<mixed, mixed>|float|int|string $value
+     * @param null|array<mixed>|bool|Entry<mixed, mixed>|float|int|string $value
      */
     public function __construct(private readonly string|int|bool|float|array|Entry|null $value)
     {

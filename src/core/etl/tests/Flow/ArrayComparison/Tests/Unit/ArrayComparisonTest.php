@@ -144,12 +144,20 @@ final class ArrayComparisonTest extends TestCase
         );
     }
 
+    /**
+     * @param array<array-key, mixed> $a
+     * @param array<array-key, mixed> $b
+     */
     #[DataProvider('equal_arrays')]
     public function test_equals(array $a, array $b) : void
     {
         self::assertTrue((new ArrayComparison())->equals($a, $b));
     }
 
+    /**
+     * @param array<array-key, mixed> $a
+     * @param array<array-key, mixed> $b
+     */
     #[DataProvider('not_equal_arrays')]
     public function test_not_equals(array $a, array $b) : void
     {

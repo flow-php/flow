@@ -9,7 +9,7 @@ use Flow\Types\Type;
 use Flow\Types\Type\{TypeFactory};
 
 /**
- * @template T of array
+ * @template-covariant T of array
  *
  * @implements Type<T>
  */
@@ -41,9 +41,9 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @param array{type: 'structure', elements: array} $data
+     * @param array{type: 'structure', elements: array<string, mixed>} $data
      *
-     * @return StructureType<array<Type<mixed>>>
+     * @return StructureType<array<string, Type<mixed>>>
      */
     public static function fromArray(array $data) : self
     {
@@ -130,7 +130,7 @@ final readonly class StructureType implements Type
     }
 
     /**
-     * @return array{type: 'structure', elements: array}
+     * @return array{type: 'structure', elements: array<string, array<string, mixed>>}
      */
     public function normalize() : array
     {

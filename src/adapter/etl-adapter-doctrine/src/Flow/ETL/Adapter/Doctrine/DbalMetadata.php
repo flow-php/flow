@@ -58,6 +58,9 @@ enum DbalMetadata : string
         return Metadata::with(self::LENGTH->value, $length);
     }
 
+    /**
+     * @param array<array-key, mixed> $options
+     */
     public static function platformOptions(array $options) : Metadata
     {
         return Metadata::with(self::PLATFORM_OPTIONS->value, $options);

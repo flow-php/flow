@@ -233,7 +233,7 @@ function from_path_partitions(Path|string $path) : PathPartitionsExtractor
 }
 
 /**
- * @param iterable $array
+ * @param iterable<array-key, mixed> $array
  * @param null|Schema $schema - @deprecated use withSchema() method instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
@@ -358,6 +358,8 @@ function to_memory(Memory $memory) : MemoryLoader
 /**
  * Convert rows to an array and store them in passed array variable.
  *
+ * @param array<array-key, mixed> $array
+ *
  * @param-out array<array<mixed>> $array
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
@@ -473,6 +475,9 @@ function float_entry(string $name, float|int|string|null $value, ?Metadata $meta
     return new FloatEntry($name, $value, $metadata);
 }
 
+/**
+ * @param null|array<array-key, mixed>|string $data
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function json_entry(string $name, array|string|null $data, ?Metadata $metadata = null) : JsonEntry
 {
@@ -480,6 +485,8 @@ function json_entry(string $name, array|string|null $data, ?Metadata $metadata =
 }
 
 /**
+ * @param null|array<array-key, mixed>|string $data
+ *
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
@@ -675,7 +682,7 @@ function types(Type ...$types) : Types
 /**
  * @template T
  *
- * @param ?list $value
+ * @param null|list<mixed> $value
  * @param ListType<T> $type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
@@ -719,7 +726,7 @@ function type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
  * @template TValue
  *
  * @param MapType<TKey, TValue> $mapType
- * @param ?array $value
+ * @param ?array<array-key, mixed> $value
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function map_entry(string $name, ?array $value, MapType $mapType, ?Metadata $metadata = null) : MapEntry
@@ -916,6 +923,10 @@ function rows(Row ...$row) : Rows
     return new Rows(...$row);
 }
 
+/**
+ * @param array<array-key, mixed> $rows
+ * @param array<array-key, mixed>|Partitions $partitions
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function rows_partitioned(array $rows, array|Partitions $partitions) : Rows
 {
@@ -997,6 +1008,9 @@ function array_get(ScalarFunction $ref, ScalarFunction|string $path) : ArrayGet
     return new ArrayGet($ref, $path);
 }
 
+/**
+ * @param array<array-key, mixed>|ScalarFunction $keys
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_get_collection(ScalarFunction $ref, ScalarFunction|array $keys) : ArrayGetCollection
 {
@@ -1009,18 +1023,28 @@ function array_get_collection_first(ScalarFunction $ref, string ...$keys) : Arra
     return ArrayGetCollection::fromFirst($ref, $keys);
 }
 
+/**
+ * @param array<array-key, mixed>|ScalarFunction $ref
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_exists(ScalarFunction|array $ref, ScalarFunction|string $path) : ArrayPathExists
 {
     return new ArrayPathExists($ref, $path);
 }
 
+/**
+ * @param array<array-key, mixed>|ScalarFunction $left
+ * @param array<array-key, mixed>|ScalarFunction $right
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_merge(ScalarFunction|array $left, ScalarFunction|array $right) : ArrayMerge
 {
     return new ArrayMerge($left, $right);
 }
 
+/**
+ * @param array<array-key, mixed>|ScalarFunction $array
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_merge_collection(ScalarFunction|array $array) : ArrayMergeCollection
 {
@@ -1053,6 +1077,9 @@ function array_sort(ScalarFunction $function, ScalarFunction|Sort|null $sort_fun
     return new ArraySort($function, $sort_function, $flags, $recursive);
 }
 
+/**
+ * @param array<array-key, mixed>|ScalarFunction $function
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_reverse(ScalarFunction|array $function, ScalarFunction|bool $preserveKeys = false) : ArrayReverse
 {
@@ -1095,6 +1122,10 @@ function split(ScalarFunction|string $value, ScalarFunction|string $separator, S
     return new Split($value, $separator, $limit);
 }
 
+/**
+ * @param array<array-key, mixed>|ScalarFunction $keys
+ * @param array<array-key, mixed>|ScalarFunction $values
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function combine(ScalarFunction|array $keys, ScalarFunction|array $values) : Combine
 {
@@ -1177,6 +1208,10 @@ function call(ScalarFunction|callable $callable, array $parameters = [], ?Type $
  * | 1|    2|    3|     |     |     |
  * | 2|     |     |    4|    5|    6|
  * +--+-----+-----+-----+-----+-----+
+ */
+/**
+ * @param array<array-key, mixed>|ScalarFunction $array
+ * @param array<array-key, mixed>|ScalarFunction $skip_keys
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function array_unpack(ScalarFunction|array $array, ScalarFunction|array $skip_keys = [], ScalarFunction|string|null $entry_prefix = null) : ArrayUnpack
@@ -1821,6 +1856,9 @@ function compare_any(Comparison ...$comparisons) : Comparison\Any
     return new Comparison\Any(...$comparisons);
 }
 
+/**
+ * @param array<array-key, mixed>|Comparison $comparisons
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 #[DocumentationExample(topic: 'join', example: 'join')]
 #[DocumentationExample(topic: 'join', example: 'join_each')]

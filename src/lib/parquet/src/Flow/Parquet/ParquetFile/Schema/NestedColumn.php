@@ -106,6 +106,9 @@ final class NestedColumn implements Column
         return new self($name, $repetition, $children);
     }
 
+    /**
+     * @param array<Column> $children
+     */
     public static function structure(string $name, array $children, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         return new self($name, $repetition, $children);

@@ -15,6 +15,9 @@ final class SnappyDecompressor
 
     private int $pos = 0;
 
+    /**
+     * @param array<int> $array
+     */
     public function __construct(private readonly array $array)
     {
         $this->arrayLength = \count($this->array);
@@ -44,6 +47,9 @@ final class SnappyDecompressor
         return -1;
     }
 
+    /**
+     * @param array<int> $outBuffer
+     */
     public function uncompressToBuffer(array &$outBuffer) : bool
     {
         $outBuffer = \array_fill(0, $this->readUncompressedLength(), 0);
@@ -114,6 +120,10 @@ final class SnappyDecompressor
         return true;
     }
 
+    /**
+     * @param array<int> $fromArray
+     * @param array<int> $toArray
+     */
     private function copyBytes(array $fromArray, int $fromPos, array &$toArray, int $toPos, int $length) : void
     {
         for ($i = 0; $i < $length; $i++) {
@@ -121,6 +131,9 @@ final class SnappyDecompressor
         }
     }
 
+    /**
+     * @param array<int> $array
+     */
     private function selfCopyBytes(array &$array, int $pos, int $offset, int $length) : void
     {
         for ($i = 0; $i < $length; $i++) {

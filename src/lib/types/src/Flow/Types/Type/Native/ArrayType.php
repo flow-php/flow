@@ -14,6 +14,9 @@ use Flow\Types\Type\Logical\XML\XMLConverter;
  */
 final readonly class ArrayType implements Type
 {
+    /**
+     * @return array<array-key, mixed>
+     */
     public function assert(mixed $value) : array
     {
         if ($this->isValid($value)) {
@@ -23,6 +26,9 @@ final readonly class ArrayType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function cast(mixed $value) : array
     {
         if ($this->isValid($value)) {

@@ -22,6 +22,9 @@ final class PutBlockBlobOptions implements EndpointOptions
 
     private string $version = BlobService::VERSION;
 
+    /**
+     * @return array<string, string>
+     */
     public function toHeaders() : array
     {
         $headers = [];
@@ -50,6 +53,9 @@ final class PutBlockBlobOptions implements EndpointOptions
         return $headers;
     }
 
+    /**
+     * @return array<string, int|string>
+     */
     public function toURIParameters() : array
     {
         $uriParameters = [];

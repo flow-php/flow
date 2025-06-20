@@ -24,8 +24,14 @@ final class GroupBy
 
     private ?Reference $pivot;
 
+    /**
+     * @var array<int, mixed>
+     */
     private array $pivotColumns;
 
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     private array $pivotedTable;
 
     private readonly References $refs;

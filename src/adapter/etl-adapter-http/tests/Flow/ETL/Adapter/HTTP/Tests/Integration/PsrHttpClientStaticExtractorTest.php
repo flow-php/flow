@@ -17,11 +17,23 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
     {
         $psr17Factory = new Psr17Factory();
         $psr18Client = new Client($psr17Factory);
+        $norbertFixture = \file_get_contents(__DIR__ . '/../Fixtures/norberttech.json');
+
+        if ($norbertFixture === false) {
+            throw new \RuntimeException('Failed to read norberttech fixture file');
+        }
+
+        $tomaszFixture = \file_get_contents(__DIR__ . '/../Fixtures/tomaszhanc.json');
+
+        if ($tomaszFixture === false) {
+            throw new \RuntimeException('Failed to read tomaszhanc fixture file');
+        }
+
         $psr18Client->addResponse(
-            new Response(200, [], \file_get_contents(__DIR__ . '/../Fixtures/norberttech.json')),
+            new Response(200, [], $norbertFixture),
         );
         $psr18Client->addResponse(
-            new Response(200, [], \file_get_contents(__DIR__ . '/../Fixtures/tomaszhanc.json')),
+            new Response(200, [], $tomaszFixture),
         );
 
         $requests = static function () use ($psr17Factory) : \Generator {

@@ -16,6 +16,9 @@ final class BlockList
         $this->blocks = $blocks;
     }
 
+    /**
+     * @return array<Block>
+     */
     public function all() : array
     {
         return $this->blocks;

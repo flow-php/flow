@@ -33,6 +33,9 @@ final class ValueFormatter
         return (string) $value;
     }
 
+    /**
+     * @param array<array-key, mixed> $array
+     */
     private function formatArray(array $array) : string
     {
         $formattedArray = [];

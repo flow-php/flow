@@ -17,6 +17,9 @@ final class PageContainers
 
     private ?PageContainer $dictionaryPageContainer = null;
 
+    /**
+     * @param array<PageContainer> $containers
+     */
     public function __construct(array $containers = [])
     {
         foreach ($containers as $container) {
@@ -71,6 +74,9 @@ final class PageContainers
         return $size;
     }
 
+    /**
+     * @return array<PageContainer>
+     */
     public function dataPageContainers() : array
     {
         return $this->dataPageContainers;

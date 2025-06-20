@@ -53,6 +53,9 @@ final class RowGroups
         return $rowsCount;
     }
 
+    /**
+     * @return array<\Flow\Parquet\Thrift\RowGroup>
+     */
     public function toThrift() : array
     {
         $groups = [];

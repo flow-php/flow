@@ -11,7 +11,7 @@ use Generator;
 final class Buckets
 {
     /**
-     * @param array<string, Bucket> $buckets
+     * @var array<string, \Iterator<Row>>
      */
     private array $buckets = [];
 
@@ -21,7 +21,13 @@ final class Buckets
     public function __construct(array $buckets)
     {
         foreach ($buckets as $bucket) {
-            $this->buckets[$bucket->id] = $bucket->rows;
+            if (\is_array($bucket->rows)) {
+                $this->buckets[$bucket->id] = new \ArrayIterator($bucket->rows);
+            } elseif ($bucket->rows instanceof \Iterator) {
+                $this->buckets[$bucket->id] = $bucket->rows;
+            } else {
+                $this->buckets[$bucket->id] = new \IteratorIterator($bucket->rows);
+            }
         }
     }
 

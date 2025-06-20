@@ -166,6 +166,9 @@ final class FlatColumn implements Column
         return $this->convertedType;
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function ddl() : array
     {
         return [

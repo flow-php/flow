@@ -12,6 +12,9 @@ final class ChartJSLoader implements Closure, Loader
 {
     private ?Path $output = null;
 
+    /**
+     * @var null|array<array-key, mixed>
+     */
     private ?array $outputVar = null;
 
     private Path $template;
@@ -71,6 +74,9 @@ final class ChartJSLoader implements Closure, Loader
         return $this;
     }
 
+    /**
+     * @param array<array-key, mixed> $outputVar
+     */
     public function withOutputVar(array &$outputVar) : self
     {
         $this->outputVar = &$outputVar;

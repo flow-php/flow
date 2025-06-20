@@ -11,6 +11,9 @@ use PhpBench\Attributes\{Groups, ParamProviders};
 #[Groups(['building_blocks'])]
 final class EntryFactoryBench
 {
+    /**
+     * @param array<string, mixed> $params
+     */
     #[ParamProviders('provideRows')]
     public function bench_entry_factory(array $params) : void
     {

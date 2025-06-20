@@ -40,6 +40,9 @@ final class Blocks
         $this->currentBlock = $this->blockFactory->create($this->blockSize);
     }
 
+    /**
+     * @return array<Block>
+     */
     public function all() : array
     {
         return \array_merge($this->blocks, [$this->currentBlock]);

@@ -37,6 +37,9 @@ final readonly class Parameter
         return null;
     }
 
+    /**
+     * @return null|array<array-key, mixed>
+     */
     public function asArray(Row $row) : ?array
     {
         $result = $this->eval($row);
@@ -108,6 +111,9 @@ final readonly class Parameter
         return \is_int($result) ? $result : $default;
     }
 
+    /**
+     * @return null|array<object>
+     */
     public function asListOfObjects(Row $row, string $class) : ?array
     {
         $result = $this->eval($row);

@@ -16,6 +16,9 @@ final class DbalQueryExtractor implements Extractor
 
     private ?Schema $schema = null;
 
+    /**
+     * @var array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type>
+     */
     private array $types = [];
 
     public function __construct(
@@ -27,7 +30,7 @@ final class DbalQueryExtractor implements Extractor
 
     /**
      * @param array<string, mixed>|list<mixed> $parameters
-     * @param array<int|string, ArrayParameterType|int|ParameterType|string|Type> $types
+     * @param array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type> $types
      */
     public static function single(Connection $connection, string $query, array $parameters = [], array $types = []) : self
     {
@@ -72,7 +75,7 @@ final class DbalQueryExtractor implements Extractor
     }
 
     /**
-     * @param array<int|string, ArrayParameterType|int|ParameterType|string|Type> $types
+     * @param array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type> $types
      */
     public function withTypes(array $types) : self
     {

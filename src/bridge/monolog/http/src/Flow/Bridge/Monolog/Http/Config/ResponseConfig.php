@@ -10,7 +10,7 @@ use Flow\Bridge\Monolog\Http\Sanitization\{Sanitizer, SanitizerFactory};
 final readonly class ResponseConfig
 {
     /**
-     * @var array<string, array|Sanitizer>
+     * @var array<string, array<string, mixed>|Sanitizer>
      */
     private array $sanitizers;
 
@@ -21,7 +21,7 @@ final readonly class ResponseConfig
      * @param int $bodySizeLimit
      * @param array<int> $withoutStatusCodes
      * @param array<string> $headers
-     * @param array<string, array|Sanitizer> $sanitizers
+     * @param array<string, array<string, mixed>|Sanitizer> $sanitizers
      */
     public function __construct(
         private bool $withReasonPhrase = true,

@@ -14,6 +14,9 @@ final class XPath extends ScalarFunctionChain
     ) {
     }
 
+    /**
+     * @return null|array<int, \DOMNode>
+     */
     public function eval(Row $row) : ?array
     {
         $value = (new Parameter($this->value))->asInstanceOf($row, \DOMNode::class);

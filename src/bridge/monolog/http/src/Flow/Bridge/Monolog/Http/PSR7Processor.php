@@ -15,6 +15,11 @@ final readonly class PSR7Processor implements ProcessorInterface
     {
     }
 
+    /**
+     * @param array<string, mixed>|LogRecord $record
+     *
+     * @return array<string, mixed>|LogRecord
+     */
     public function __invoke(LogRecord|array $record) : LogRecord|array
     {
         $context = \is_array($record) ? $record['context'] : $record->context;
@@ -57,6 +62,9 @@ final readonly class PSR7Processor implements ProcessorInterface
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function normalizeRequest(RequestInterface $request) : array
     {
         $requestData = [];
@@ -97,6 +105,9 @@ final readonly class PSR7Processor implements ProcessorInterface
         return $this->recursiveSanitize($requestData, $this->config->request->sanitizers());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function normalizeResponse(ResponseInterface $response) : array
     {
         $responseData = [];
@@ -144,10 +155,10 @@ final readonly class PSR7Processor implements ProcessorInterface
     /**
      * Recursively sanitize an array by masking sensitive fields.
      *
-     * @param array $data
+     * @param array<string, mixed> $data
      * @param array<string, Sanitizer> $sanitizers
      *
-     * @return array
+     * @return array<string, mixed>
      */
     private function recursiveSanitize(array $data, array $sanitizers) : array
     {

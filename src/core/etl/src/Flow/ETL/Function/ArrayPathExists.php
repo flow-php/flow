@@ -10,6 +10,10 @@ use Flow\ETL\Row;
 
 final class ArrayPathExists extends ScalarFunctionChain
 {
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $array
+     * @param ScalarFunction|string $path
+     */
     public function __construct(
         private readonly ScalarFunction|array $array,
         private readonly ScalarFunction|string $path,

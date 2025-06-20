@@ -23,7 +23,9 @@ final class AsyncAWSS3DestinationStreamTest extends AsyncAWSS3TestCase
         $fs = aws_s3_filesystem($this->bucket(), $this->s3Client());
 
         $stream = $fs->writeTo(path('aws-s3://orders.csv'));
-        $stream->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $resource = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
+        self::assertNotFalse($resource);
+        $stream->fromResource($resource);
         $stream->close();
 
         self::assertTrue($fs->status(path('aws-s3://orders.csv'))?->isFile());

@@ -9,6 +9,9 @@ use Flow\Types\Type\ValueComparator;
 
 final class Greatest extends ScalarFunctionChain
 {
+    /**
+     * @param array<mixed|ScalarFunction> $values
+     */
     public function __construct(
         private readonly array $values,
     ) {

@@ -14,7 +14,7 @@ final class MeilisearchExtractor implements Extractor
 
     /**
      * @param array{url: string, apiKey: string} $config
-     * @param array{q: string, limit: ?int, offset: ?int, attributesToRetrieve: ?array<string>, sort: ?array<string>} $params
+     * @param array{q: string, limit?: ?int, offset?: ?int, attributesToRetrieve?: ?array<string>, sort?: ?array<string>} $params
      */
     public function __construct(
         private readonly array $config,

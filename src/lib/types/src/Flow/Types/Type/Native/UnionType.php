@@ -47,7 +47,7 @@ final readonly class UnionType implements Type
     }
 
     /**
-     * @param array{type: 'union', left: array, right: array} $data
+     * @param array{type: 'union', left: array<string, mixed>, right: array<string, mixed>} $data
      *
      * @return type<TLeft|TRight>
      */
@@ -121,7 +121,7 @@ final readonly class UnionType implements Type
     }
 
     /**
-     * @return array{type: 'union', left: array, right: array}
+     * @return array{type: 'union', left: array<string, mixed>, right: array<string, mixed>}
      */
     public function normalize() : array
     {

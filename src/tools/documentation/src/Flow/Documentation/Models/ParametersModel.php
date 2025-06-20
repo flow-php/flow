@@ -14,6 +14,9 @@ final class ParametersModel
     ) {
     }
 
+    /**
+     * @param array<array<string, mixed>> $data
+     */
     public static function fromArray(array $data) : self
     {
         return new self(
@@ -32,6 +35,9 @@ final class ParametersModel
         return new self($arguments);
     }
 
+    /**
+     * @return array<array<string, mixed>>
+     */
     public function normalize() : array
     {
         return array_map(fn (ParameterModel $argument) => $argument->normalize(), $this->arguments);

@@ -492,7 +492,20 @@ SCHEMA,
     private function ensureBOMExists(string $path, string $BOM) : bool
     {
         $handle = fopen($path, 'rb');
-        $contents = fread($handle, strlen($BOM));
+
+        if ($handle === false) {
+            throw new \RuntimeException('Failed to open file: ' . $path);
+        }
+
+        $bomLength = strlen($BOM);
+
+        if ($bomLength === 0) {
+            fclose($handle);
+
+            return true;
+        }
+
+        $contents = fread($handle, $bomLength);
         fclose($handle);
 
         return $contents === $BOM;

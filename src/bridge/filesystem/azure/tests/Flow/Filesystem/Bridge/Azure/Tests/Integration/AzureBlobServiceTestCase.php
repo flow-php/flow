@@ -37,7 +37,18 @@ abstract class AzureBlobServiceTestCase extends FlowTestCase
 
     public function givenFileExistsFromPath(string $container, string $path, string $sourcePath) : void
     {
-        $this->blobService($container)->putBlockBlob($path, fopen($sourcePath, 'rb'), \filesize($sourcePath));
+        $resource = fopen($sourcePath, 'rb');
+        $filesize = \filesize($sourcePath);
+
+        if ($resource === false) {
+            throw new \RuntimeException('Unable to open file: ' . $sourcePath);
+        }
+
+        if ($filesize === false) {
+            throw new \RuntimeException('Unable to get file size: ' . $sourcePath);
+        }
+
+        $this->blobService($container)->putBlockBlob($path, $resource, $filesize);
     }
 
     protected function blobService(string $container) : BlobServiceInterface

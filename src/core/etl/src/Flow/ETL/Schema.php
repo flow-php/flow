@@ -23,6 +23,9 @@ final class Schema implements \Countable
         $this->setDefinitions(...$definitions);
     }
 
+    /**
+     * @param array<array-key, mixed> $definitions
+     */
     public static function fromArray(array $definitions) : self
     {
         $schema = [];
@@ -97,6 +100,8 @@ final class Schema implements \Countable
 
     /**
      * Adds metadata to a given definition.
+     *
+     * @param array<array-key, mixed> $value
      *
      * @throws SchemaDefinitionNotFoundException
      */
@@ -259,6 +264,9 @@ final class Schema implements \Countable
         return $this;
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function normalize() : array
     {
         $definitions = [];

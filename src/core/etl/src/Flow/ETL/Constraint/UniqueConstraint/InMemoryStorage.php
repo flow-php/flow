@@ -6,6 +6,7 @@ namespace Flow\ETL\Constraint\UniqueConstraint;
 
 final class InMemoryStorage implements Storage
 {
+    /** @var array<string, bool> */
     private array $storage = [];
 
     public function __construct()

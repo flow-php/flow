@@ -18,6 +18,9 @@ final readonly class DremelAssembler
     ) {
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function assemble(Column $column, FlatColumnData $flatData) : array
     {
         $depth = 0;
@@ -72,6 +75,9 @@ final readonly class DremelAssembler
         return $rows;
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     private function assemblyFlat(FlatColumn $column, FlatColumnData $flatData) : array
     {
         $stack = new Stack($column->repetitions()->maxRepetitionLevel());
@@ -90,6 +96,9 @@ final readonly class DremelAssembler
         return $stack->dump();
     }
 
+    /**
+     * @return array<mixed>
+     */
     private function assemblyList(NestedColumn $column, FlatColumnData $flatData, int $depth) : array
     {
         $depth++;
@@ -115,6 +124,9 @@ final readonly class DremelAssembler
         return \array_merge($rows, $this->assemblyStructure($listElementColumn, $flatData, $depth, repeated: true));
     }
 
+    /**
+     * @return array<mixed>
+     */
     private function assemblyMap(NestedColumn $column, FlatColumnData $flatData, int $depth) : array
     {
         $depth++;
@@ -199,6 +211,9 @@ final readonly class DremelAssembler
         return $rows;
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     private function assemblyStructure(NestedColumn $column, FlatColumnData $flatData, int $depth, bool $repeated = false) : array
     {
         $depth++;
@@ -287,6 +302,9 @@ final readonly class DremelAssembler
         return $rows;
     }
 
+    /**
+     * @param array<array-key, mixed> $array
+     */
     private function nullLevelToNull(array &$array) : void
     {
         foreach ($array as &$value) {

@@ -65,8 +65,12 @@ final class CSVDetectorTest extends FlowTestCase
         self::assertSame($separator, $detector->detect()->separator);
     }
 
+    /**
+     * @return SourceStream
+     */
     private function createResource(string $separator = ',', string $enclosure = '"') : SourceStream
     {
+        /** @var array<int, array<int, string>> $data */
         $data = [
             ['id', 'name', 'email'],
             ['1', 'John Doe', 'john@example.com'],
@@ -84,12 +88,24 @@ final class CSVDetectorTest extends FlowTestCase
 
         $resource = \fopen('php://memory', 'rb+');
 
+        if ($resource === false) {
+            throw new \RuntimeException('Failed to open memory stream');
+        }
+
         foreach ($data as $line) {
             \fputcsv($resource, $line, $separator, $enclosure, '\\');
         }
 
         $csv = \stream_get_contents($resource, offset: 0);
         \fclose($resource);
+
+        if ($csv === false) {
+            throw new \RuntimeException('Failed to read stream contents');
+        }
+
+        if ($csv === '') {
+            throw new \RuntimeException('Stream content is empty');
+        }
 
         return new MemorySourceStream($csv);
     }

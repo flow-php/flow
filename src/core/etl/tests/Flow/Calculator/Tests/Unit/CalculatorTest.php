@@ -22,8 +22,21 @@ final class CalculatorTest extends TestCase
     #[TestWith(['3.23E-5', '3.23E-5', 0.0000646])]
     #[TestWith(['3.23E-5', '3.23e-5', 0.0000646])]
     #[TestWith([3.23E-5, '3.23e-5', 0.0000646])]
+    /**
+     * @param float|int|numeric-string $a
+     * @param float|int|numeric-string $b
+     * @param float|int $output
+     */
     public function test_add(string|int|float $a, string|int|float $b, int|float $output) : void
     {
+        if (is_string($a)) {
+            assert(is_numeric($a), 'String parameter $a must be numeric');
+        }
+
+        if (is_string($b)) {
+            assert(is_numeric($b), 'String parameter $b must be numeric');
+        }
+
         self::assertSame($output, (new Calculator())->add($a, $b));
     }
 
@@ -37,8 +50,21 @@ final class CalculatorTest extends TestCase
     #[TestWith(['3.23E-5', '3.23E-5', 1])]
     #[TestWith(['3.23E-5', '3.23e-5', 1])]
     #[TestWith([3.23E-5, '3.23e-5', 1])]
+    /**
+     * @param float|int|numeric-string $a
+     * @param float|int|numeric-string $b
+     * @param float|int $output
+     */
     public function test_divide(string|int|float $a, string|int|float $b, int|float $output) : void
     {
+        if (is_string($a)) {
+            assert(is_numeric($a), 'String parameter $a must be numeric');
+        }
+
+        if (is_string($b)) {
+            assert(is_numeric($b), 'String parameter $b must be numeric');
+        }
+
         self::assertSame($output, (new Calculator())->divide($a, $b, rounding: Rounding::HALF_UP));
     }
 
@@ -68,8 +94,21 @@ final class CalculatorTest extends TestCase
 
     #[TestWith(['1', '1', 0])]
     #[TestWith([17, 3, 2])]
+    /**
+     * @param int|numeric-string $a
+     * @param int|numeric-string $b
+     * @param float|int $output
+     */
     public function test_modulus(string|int $a, string|int $b, int|float $output) : void
     {
+        if (is_string($a)) {
+            assert(is_numeric($a), 'String parameter $a must be numeric');
+        }
+
+        if (is_string($b)) {
+            assert(is_numeric($b), 'String parameter $b must be numeric');
+        }
+
         self::assertSame($output, (new Calculator())->modulus($a, $b));
     }
 
@@ -79,8 +118,21 @@ final class CalculatorTest extends TestCase
     #[TestWith([1.1, 2, 1.21])]
     #[TestWith([1.1, 5, 1.61051])]
     #[TestWith([1.12, 1, 1.12])]
+    /**
+     * @param float|int|numeric-string $a
+     * @param int|numeric-string $b
+     * @param float|int $output
+     */
     public function test_power(string|int|float $a, string|int $b, int|float $output) : void
     {
+        if (is_string($a)) {
+            assert(is_numeric($a), 'String parameter $a must be numeric');
+        }
+
+        if (is_string($b)) {
+            assert(is_numeric($b), 'String parameter $b must be numeric');
+        }
+
         self::assertSame($output, (new Calculator())->power($a, $b));
     }
 
@@ -95,8 +147,22 @@ final class CalculatorTest extends TestCase
     #[TestWith(['3.23E-5', '3.23E-5', 12, 0])]
     #[TestWith(['3.23E-5', '3.23e-5', 12, 0])]
     #[TestWith([3.23E-5, '3.23e-5', 12, 0])]
+    /**
+     * @param float|int|numeric-string $a
+     * @param float|int|numeric-string $b
+     * @param int $scale
+     * @param float|int $output
+     */
     public function test_subtract(string|int|float $a, string|int|float $b, int $scale, int|float $output) : void
     {
+        if (is_string($a)) {
+            assert(is_numeric($a), 'String parameter $a must be numeric');
+        }
+
+        if (is_string($b)) {
+            assert(is_numeric($b), 'String parameter $b must be numeric');
+        }
+
         self::assertSame($output, (new Calculator())->subtract($a, $b));
     }
 }

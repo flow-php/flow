@@ -29,6 +29,11 @@ final readonly class AutoCaster
         return $value;
     }
 
+    /**
+     * @param array<array-key, mixed> $value
+     *
+     * @return array<array-key, mixed>
+     */
     private function castArray(array $value) : array
     {
         $keyTypes = [];

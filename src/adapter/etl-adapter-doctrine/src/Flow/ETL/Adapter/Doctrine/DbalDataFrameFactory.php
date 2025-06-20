@@ -64,6 +64,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
         }
 
         if (\count($types)) {
+            /** @phpstan-ignore-next-line */
             $extractor->withTypes($types);
         }
 

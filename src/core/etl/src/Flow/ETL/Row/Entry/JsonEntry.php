@@ -25,9 +25,14 @@ final class JsonEntry implements Entry
 
     private readonly JsonType $type;
 
+    /**
+     * @var null|array<array-key, mixed>
+     */
     private readonly ?array $value;
 
     /**
+     * @param null|array<array-key, mixed>|string $value
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(
@@ -56,6 +61,8 @@ final class JsonEntry implements Entry
     }
 
     /**
+     * @param null|array<array-key, mixed> $value
+     *
      * @throws InvalidArgumentException
      */
     public static function object(string $name, ?array $value, ?Metadata $metadata = null) : self

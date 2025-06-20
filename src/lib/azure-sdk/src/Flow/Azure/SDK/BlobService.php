@@ -66,7 +66,7 @@ final readonly class BlobService implements BlobServiceInterface
             ));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Copy Blob', ['request' => $request]);
@@ -102,7 +102,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Delete Blob', ['request' => $request]);
@@ -137,7 +137,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Delete Container', ['request' => $request]);
@@ -173,7 +173,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Blob', ['request' => $request]);
@@ -211,7 +211,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Blob Properties', ['request' => $request]);
@@ -251,7 +251,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Block Blob Block List', ['request' => $request]);
@@ -315,7 +315,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Container Properties', ['request' => $request]);
@@ -360,7 +360,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - List Blobs', ['request' => $request]);
@@ -429,7 +429,7 @@ final readonly class BlobService implements BlobServiceInterface
             ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         if ($content) {
@@ -482,7 +482,7 @@ final readonly class BlobService implements BlobServiceInterface
             ->withHeader('content-length', (string) $size);
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $request = $request
@@ -524,7 +524,7 @@ final readonly class BlobService implements BlobServiceInterface
             ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $request = $request
@@ -566,7 +566,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, $value);
+            $request = $request->withHeader($header, (string) $value);
         }
 
         $this->logger->info('Azure - Blob Service - Put Container', ['request' => $request]);

@@ -9,6 +9,11 @@ use Flow\ETL\Row;
 
 final class StrReplace extends ScalarFunctionChain
 {
+    /**
+     * @param ScalarFunction|string $value
+     * @param array<array-key, mixed>|ScalarFunction|string $search
+     * @param array<array-key, mixed>|ScalarFunction|string $replace
+     */
     public function __construct(
         private readonly ScalarFunction|string $value,
         private readonly ScalarFunction|string|array $search,

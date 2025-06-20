@@ -8,6 +8,10 @@ use Flow\ETL\Row;
 
 final class IsIn extends ScalarFunctionChain
 {
+    /**
+     * @param array<array-key, mixed>|ScalarFunction $haystack
+     * @param mixed $needle
+     */
     public function __construct(
         private readonly ScalarFunction|array $haystack,
         private readonly mixed $needle,

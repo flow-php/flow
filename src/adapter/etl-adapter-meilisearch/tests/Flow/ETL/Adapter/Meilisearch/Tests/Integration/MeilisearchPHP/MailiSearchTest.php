@@ -22,7 +22,18 @@ final class MailiSearchTest extends FlowTestCase
 
     protected function setUp() : void
     {
-        $this->meilisearchContext = new MeilisearchContext(\getenv('MEILISEARCH_URL'), \getenv('MEILISEARCH_API_KEY'));
+        $url = \getenv('MEILISEARCH_URL');
+        $apiKey = \getenv('MEILISEARCH_API_KEY');
+
+        if ($url === false) {
+            self::markTestSkipped('MEILISEARCH_URL environment variable not set');
+        }
+
+        if ($apiKey === false) {
+            self::markTestSkipped('MEILISEARCH_API_KEY environment variable not set');
+        }
+
+        $this->meilisearchContext = new MeilisearchContext($url, $apiKey);
         $this->meilisearchContext->deleteIndex(self::SOURCE_INDEX);
         $this->meilisearchContext->createIndex(self::SOURCE_INDEX);
         $this->meilisearchContext->deleteIndex(self::DESTINATION_INDEX);

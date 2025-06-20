@@ -11,8 +11,8 @@ final readonly class PageContainer
     /**
      * @param string $pageHeaderBuffer
      * @param string $pageBuffer
-     * @param array $values - when dictionary is present values are indices
-     * @param null|array $dictionary
+     * @param array<array-key, mixed> $values - when dictionary is present values are indices
+     * @param null|array<array-key, mixed> $dictionary
      * @param PageHeader $pageHeader
      */
     public function __construct(

@@ -29,6 +29,9 @@ interface BinaryReader
 
     public function readBytes(int $total) : Bytes;
 
+    /**
+     * @return array<mixed>
+     */
     public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : array;
 
     /**
@@ -61,6 +64,9 @@ interface BinaryReader
      */
     public function readInts96(int $total) : array;
 
+    /**
+     * @return array<string>
+     */
     public function readStrings(int $total) : array;
 
     /**

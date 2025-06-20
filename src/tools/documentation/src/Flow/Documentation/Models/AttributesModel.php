@@ -6,11 +6,17 @@ namespace Flow\Documentation\Models;
 
 final class AttributesModel
 {
+    /**
+     * @param array<AttributeModel> $attributes
+     */
     public function __construct(
         public readonly array $attributes,
     ) {
     }
 
+    /**
+     * @param array<array<string, mixed>> $data
+     */
     public static function fromArray(array $data) : self
     {
         return new self(
@@ -42,6 +48,9 @@ final class AttributesModel
         return null;
     }
 
+    /**
+     * @return array<array<string, mixed>>
+     */
     public function normalize() : array
     {
         return array_map(fn (AttributeModel $attribute) => $attribute->normalize(), $this->attributes);

@@ -99,6 +99,7 @@ final class CSVLoader implements Closure, FileLoader, Loader
     }
 
     /**
+     * @param array<string> $headers
      * @param array<Partition> $partitions
      */
     public function write(Rows $nextRows, array $headers, FlowContext $context, array $partitions, RowsNormalizer $normalizer) : void
@@ -115,6 +116,9 @@ final class CSVLoader implements Closure, FileLoader, Loader
         }
     }
 
+    /**
+     * @param array<array-key, mixed> $row
+     */
     private function writeCSV(array $row, DestinationStream $stream) : void
     {
         $tmpHandle = fopen('php://temp/maxmemory:' . (5 * 1024 * 1024), 'rb+');

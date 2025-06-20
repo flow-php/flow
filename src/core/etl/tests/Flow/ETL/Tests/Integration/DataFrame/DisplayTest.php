@@ -246,7 +246,7 @@ ASCIITABLE,
                 )
             ))
             ->printRows();
-        $output = \ob_get_clean();
+        $output = \ob_get_clean() ?: '';
 
         self::assertStringContainsString(
             <<<'ASCII'
@@ -286,7 +286,7 @@ ASCII,
                 )
             ))
             ->printSchema();
-        $output = \ob_get_clean();
+        $output = \ob_get_clean() ?: '';
 
         self::assertStringContainsString(
             <<<'ASCII'

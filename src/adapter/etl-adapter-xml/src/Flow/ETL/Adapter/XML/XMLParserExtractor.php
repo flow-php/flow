@@ -156,6 +156,9 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         return $this->path;
     }
 
+    /**
+     * @param array<string, mixed> $attrs
+     */
     public function startElementHandler(\XMLParser $parser, string $name, array $attrs) : void
     {
         $this->currentPath[] = $name;

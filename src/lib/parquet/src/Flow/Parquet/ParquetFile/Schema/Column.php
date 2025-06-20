@@ -10,6 +10,9 @@ interface Column
 {
     public function convertedType() : ?ConvertedType;
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function ddl() : array;
 
     public function flatPath() : string;
@@ -41,6 +44,9 @@ interface Column
 
     public function setParent(NestedColumn $parent) : void;
 
+    /**
+     * @return array<array-key, mixed>|SchemaElement
+     */
     public function toThrift() : SchemaElement|array;
 
     public function type() : ?PhysicalType;

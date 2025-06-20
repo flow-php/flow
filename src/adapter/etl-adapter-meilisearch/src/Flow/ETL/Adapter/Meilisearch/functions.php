@@ -43,7 +43,7 @@ function meilisearch_hits_to_rows() : HitsIntoRowsTransformer
 
 /**
  * @param array{url: string, apiKey: string} $config
- * @param array{q: string, limit: ?int, offset: ?int, attributesToRetrieve: ?array<string>, sort: ?array<string>} $params
+ * @param array{q: string, limit?: ?int, offset?: ?int, attributesToRetrieve?: ?array<string>, sort?: ?array<string>} $params
  */
 #[DocumentationDSL(module: Module::MEILI_SEARCH, type: Type::EXTRACTOR)]
 function from_meilisearch(array $config, array $params, string $index) : MeilisearchExtractor

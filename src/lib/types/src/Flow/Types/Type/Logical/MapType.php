@@ -25,7 +25,7 @@ final readonly class MapType implements Type
     }
 
     /**
-     * @param array{type: 'map', key: array, value: array} $data
+     * @param array{type: 'map', key: array<string, mixed>, value: array<string, mixed>} $data
      *
      * @return MapType<array-key, Type<mixed>>
      */
@@ -99,7 +99,7 @@ final readonly class MapType implements Type
     }
 
     /**
-     * @return array{type: 'map', key: array, value: array}
+     * @return array{type: 'map', key: array<string, mixed>, value: array<string, mixed>}
      */
     public function normalize() : array
     {

@@ -16,9 +16,15 @@ final class RequestEntriesFactoryTest extends FlowTestCase
     public static function requests() : \Generator
     {
         $messageFactory = new Psr17Factory();
+        $jsonContent = \json_encode(['status' => 'success']);
+
+        if ($jsonContent === false) {
+            throw new \RuntimeException('Failed to encode JSON');
+        }
+
         $request = $messageFactory
             ->createRequest('POST', 'https://flow-php.io/example')
-            ->withBody($messageFactory->createStream(\json_encode(['status' => 'success'])));
+            ->withBody($messageFactory->createStream($jsonContent));
 
         yield 'uses StringEntry for request body when neither Accept and Content-Type header is present' => [
             StringEntry::class,
@@ -50,6 +56,7 @@ final class RequestEntriesFactoryTest extends FlowTestCase
     {
         $entryFactory = new RequestEntriesFactory();
 
+        /** @var class-string $expectedRequestBodyEntryClass */
         self::assertInstanceOf(
             $expectedRequestBodyEntryClass,
             $entryFactory->create($request)->get('request_body')

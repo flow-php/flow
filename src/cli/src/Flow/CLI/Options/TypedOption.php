@@ -69,6 +69,9 @@ final readonly class TypedOption
         return (int) $option;
     }
 
+    /**
+     * @return array<array-key, string>
+     */
     public function asListOfStrings(InputInterface $input) : array
     {
         $option = $this->asListOfStringsNullable($input);
@@ -76,6 +79,9 @@ final readonly class TypedOption
         return $option ?? [];
     }
 
+    /**
+     * @return null|array<array-key, string>
+     */
     public function asListOfStringsNullable(InputInterface $input) : ?array
     {
         $option = $input->getOption($this->name);

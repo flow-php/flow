@@ -13,7 +13,7 @@ final readonly class ColumnData
      * @param null|LogicalType $logicalType
      * @param array<int> $repetitions
      * @param array<int> $definitions
-     * @param array $values
+     * @param array<mixed> $values
      */
     public function __construct(
         public PhysicalType $type,

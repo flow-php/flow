@@ -37,7 +37,7 @@ final readonly class OptionalType implements Type
     }
 
     /**
-     * @param array{type: 'optional', base: array} $data
+     * @param array{type: 'optional', base: array<string, mixed>} $data
      *
      * @return OptionalType<Type<mixed>>
      */
@@ -86,7 +86,7 @@ final readonly class OptionalType implements Type
     }
 
     /**
-     * @return array{type: 'optional', base: array}
+     * @return array{type: 'optional', base: array<string, mixed>}
      */
     public function normalize() : array
     {

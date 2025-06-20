@@ -16,11 +16,19 @@ final class SimpleXMLNormalizer implements Normalizer
         }
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function toArray(string $data) : array
     {
         return $this->normalize(new \SimpleXMLElement($data));
     }
 
+    /**
+     * @param array<array-key, mixed>|\SimpleXMLElement $xml
+     *
+     * @return array<array-key, mixed>
+     */
     private function normalize(\SimpleXMLElement|array $xml) : array
     {
         $normalized = [];

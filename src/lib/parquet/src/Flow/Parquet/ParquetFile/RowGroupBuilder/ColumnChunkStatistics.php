@@ -23,6 +23,9 @@ final class ColumnChunkStatistics
 
     private int $totalStringLength;
 
+    /**
+     * @var array<mixed>
+     */
     private array $values = [];
 
     private int $valuesCount;
@@ -38,6 +41,9 @@ final class ColumnChunkStatistics
         $this->comparator = new Comparator();
     }
 
+    /**
+     * @param null|array<mixed>|bool|float|int|object|string $value
+     */
     public function add(string|int|float|array|bool|object|null $value) : void
     {
         if (\is_array($value)) {
@@ -175,6 +181,9 @@ final class ColumnChunkStatistics
         }
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function values() : array
     {
         return $this->values;

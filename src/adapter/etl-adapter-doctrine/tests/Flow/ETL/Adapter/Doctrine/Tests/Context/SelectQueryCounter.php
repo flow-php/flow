@@ -12,6 +12,9 @@ final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInte
 
     public int $count = 0;
 
+    /**
+     * @var array<string>
+     */
     public array $queries = [];
 
     public function __construct()

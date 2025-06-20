@@ -182,6 +182,11 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         return $this;
     }
 
+    /**
+     * @param array<array-key, mixed> $headers
+     *
+     * @return array<int, string>
+     */
     private function mapHeaders(array $headers) : array
     {
         $headers = \array_map(fn (string $header) : string => \trim($header), $headers);

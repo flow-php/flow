@@ -36,7 +36,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
 
             /**
-             * @var array|object $rowData
+             * @var array<string, mixed>|object $rowData
              */
             foreach ((new Items($stream->iterate(8 * 1024), $this->readerOptions()))->getIterator() as $rowData) {
                 $row = (array) $rowData;

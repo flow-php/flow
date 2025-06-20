@@ -18,6 +18,8 @@ final readonly class EntryNormalizer
 
     /**
      * @param Entry<mixed, mixed> $entry
+     *
+     * @return null|array<string, mixed>|bool|float|int|string
      */
     public function normalize(Entry $entry) : string|float|int|bool|array|null
     {

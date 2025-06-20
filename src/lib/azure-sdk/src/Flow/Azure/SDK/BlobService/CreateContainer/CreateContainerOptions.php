@@ -18,6 +18,9 @@ final class CreateContainerOptions implements EndpointOptions
 
     private string $version = BlobService::VERSION;
 
+    /**
+     * @return array<string, string>
+     */
     public function toHeaders() : array
     {
         $headers = [];
@@ -36,6 +39,9 @@ final class CreateContainerOptions implements EndpointOptions
         return $headers;
     }
 
+    /**
+     * @return array<string, int|string>
+     */
     public function toURIParameters() : array
     {
         $uriParameters = [];

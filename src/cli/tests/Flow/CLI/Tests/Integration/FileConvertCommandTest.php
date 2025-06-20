@@ -11,6 +11,9 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileConvertCommandTest extends TestCase
 {
+    /**
+     * @param array<string> $options
+     */
     #[TestWith(['csv', 'parquet'])]
     #[TestWith(['csv', 'json'])]
     #[TestWith(['csv', 'xml'])]
@@ -26,8 +29,14 @@ final class FileConvertCommandTest extends TestCase
     #[TestWith(['xml', 'parquet', ['--input-xml-node-path' => 'root/row']])]
     #[TestWith(['xml', 'json', ['--input-xml-node-path' => 'root/row']])]
     #[TestWith(['xml', 'csv', ['--input-xml-node-path' => 'root/row']])]
+    /**
+     * @param string $inputFormat
+     * @param string $outputFormat
+     * @param array<string, mixed> $options
+     */
     public function test_convert(string $inputFormat, string $outputFormat, array $options = []) : void
     {
+        /** @var array<string, mixed> $options */
         $output = __DIR__ . '/var/' . bin2hex(random_bytes(16)) . '.' . $outputFormat;
 
         if (\file_exists($output)) {

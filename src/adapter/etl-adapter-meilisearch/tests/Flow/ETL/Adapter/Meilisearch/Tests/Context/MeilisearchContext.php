@@ -8,6 +8,7 @@ use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_index;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\{Rows};
 use Meilisearch\Client;
+use Psr\Http\Client\ClientInterface;
 
 final class MeilisearchContext
 {
@@ -27,13 +28,14 @@ final class MeilisearchContext
     }
 
     /**
-     * @return array{url: string, apiKey: string}
+     * @return array{url: string, apiKey: string, httpClient: null|ClientInterface}
      */
     public function clientConfig() : array
     {
         return [
             'url' => $this->url,
             'apiKey' => $this->apiKey,
+            'httpClient' => null,
         ];
     }
 

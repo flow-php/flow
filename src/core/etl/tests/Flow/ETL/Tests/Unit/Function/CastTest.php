@@ -13,6 +13,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 final class CastTest extends FlowTestCase
 {
+    /**
+     * @return array<string, array<int, mixed>>
+     */
     public static function cast_provider() : array
     {
         $xml = new \DOMDocument();

@@ -22,6 +22,10 @@ final class DumpLoggerTest extends FlowTestCase
         $output = \ob_get_contents();
         \ob_end_clean();
 
+        if ($output === false) {
+            self::fail('Failed to get output buffer contents');
+        }
+
         self::assertStringContainsString(
             <<<'OUTPUT'
 array(1) {

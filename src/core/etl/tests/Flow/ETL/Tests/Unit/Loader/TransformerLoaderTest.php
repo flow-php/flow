@@ -48,6 +48,7 @@ final class TransformerLoaderTest extends FlowTestCase
             ->method('closure')
             ->with(self::isInstanceOf(FlowContext::class));
 
+        \assert($closure_loader instanceof Loader);
         $transformer = to_transformation(
             new class implements Transformation {
                 public function transform(DataFrame $data_frame) : DataFrame
