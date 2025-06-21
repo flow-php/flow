@@ -55,7 +55,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                     str_schema('name', metadata: DbalMetadata::length(255)),
                     str_schema('description', metadata: DbalMetadata::length(255)),
                 ),
-                $table = 'flow_key_set_extractor_test',
+                $table = 'flow_key_set_extractor_with_a_very_long_table_name_test',
             )
         );
 
@@ -69,7 +69,7 @@ final class PostgreSQLKeySetExtractorTest extends IntegrationTestCase
                 $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
                     ->from($table)
                     ->select('*'),
-                pagination_key_set(pagination_key_asc('id')),
+                pagination_key_set(pagination_key_asc('flow_key_set_extractor_with_a_very_long_table_name_test.id')),
             ))
             ->fetch();
 

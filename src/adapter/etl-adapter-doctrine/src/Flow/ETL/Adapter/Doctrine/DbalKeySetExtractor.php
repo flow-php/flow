@@ -209,6 +209,6 @@ final class DbalKeySetExtractor implements Extractor
 
     private function keyAlias(Key $key) : string
     {
-        return (string) preg_replace('/[^a-zA-Z0-9_]/', '_', str_replace('.', '_', $key->column . $this->keyAliasSuffix));
+        return 'key_' . \sha1((string) preg_replace('/[^a-zA-Z0-9_]/', '_', str_replace('.', '_', $key->column . $this->keyAliasSuffix)));
     }
 }
