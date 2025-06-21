@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{case_, lit, match_, ref, row, str_entry};
+use function Flow\ETL\DSL\{lit, match_cases, match_condition, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class MatchCasesTest extends FlowTestCase
 {
     public function test_case_match() : void
     {
-        $match = match_([
-            case_(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
-            case_(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
+        $match = match_cases([
+            match_condition(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
+            match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
         ]);
 
         self::assertSame(
@@ -28,9 +28,9 @@ final class MatchCasesTest extends FlowTestCase
 
     public function test_not_matching_anything() : void
     {
-        $match = match_([
-            case_(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
-            case_(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
+        $match = match_cases([
+            match_condition(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
+            match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
         ]);
 
         $this->expectExceptionMessage('Not a single case matches row, consider using default parameter, row: {"string":"weirdstring"}');
@@ -40,10 +40,10 @@ final class MatchCasesTest extends FlowTestCase
 
     public function test_not_matching_anything_with_default() : void
     {
-        $match = match_(
+        $match = match_cases(
             [
-                case_(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
-                case_(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
+                match_condition(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
+                match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
             ],
             default: lit('normal string')
         );

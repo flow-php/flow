@@ -2037,13 +2037,13 @@ function analyze() : Analyze
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function match_(array $cases, mixed $default = null) : MatchCases
+function match_cases(array $cases, mixed $default = null) : MatchCases
 {
     return new MatchCases($cases, $default);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-function case_(mixed $condition, mixed $then) : MatchCase
+function match_condition(mixed $condition, mixed $then) : MatchCase
 {
     return new MatchCase($condition, $then);
 }
