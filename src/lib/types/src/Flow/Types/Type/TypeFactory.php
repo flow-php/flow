@@ -27,7 +27,7 @@ use function Flow\Types\DSL\{type_array,
     type_xml_element};
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{InstanceOfType, ListType, MapType, OptionalType, StructureType};
+use Flow\Types\Type\Logical\{InstanceOfType, IntegerRangeType, ListType, MapType, OptionalType, StructureType};
 use Flow\Types\Type\Native\{EnumType, IntersectionType, UnionType};
 
 final class TypeFactory
@@ -81,6 +81,8 @@ final class TypeFactory
             'scalar' => type_scalar(),
             'mixed' => type_mixed(),
             'numeric-string' => type_numeric_string(),
+            /** @phpstan-ignore argument.type */
+            'integer_range' => IntegerRangeType::fromArray($data),
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };
     }

@@ -10,6 +10,7 @@ use Flow\Types\Type\{Comparator, TypeDetector, TypeFactory, Types};
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     InstanceOfType,
+    IntegerRangeType,
     JsonType,
     ListType,
     MapType,
@@ -317,6 +318,21 @@ function type_mixed() : MixedType
 function type_positive_integer() : PositiveIntegerType
 {
     return new PositiveIntegerType();
+}
+
+/**
+ * @template TMin of int
+ * @template TMax of int
+ *
+ * @param TMin $min
+ * @param TMax $max
+ *
+ * @return IntegerRangeType<TMin, TMax>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_integer_range(int $min, int $max) : IntegerRangeType
+{
+    return new IntegerRangeType($min, $max);
 }
 
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]

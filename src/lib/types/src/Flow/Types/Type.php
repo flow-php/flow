@@ -45,7 +45,7 @@ interface Type
     public function isValid(mixed $value) : bool;
 
     /**
-     * @return array<string, string>
+     * @return array<string, bool|float|int|string>
      */
     public function normalize() : array;
 
