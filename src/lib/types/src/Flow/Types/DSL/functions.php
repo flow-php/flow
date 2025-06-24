@@ -7,7 +7,8 @@ namespace Flow\Types\DSL;
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Types\Type;
 use Flow\Types\Type\{Comparator, TypeDetector, TypeFactory, Types};
-use Flow\Types\Type\Logical\{DateTimeType,
+use Flow\Types\Type\Logical\{ClassStringType,
+    DateTimeType,
     DateType,
     InstanceOfType,
     JsonType,
@@ -384,6 +385,19 @@ function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bo
 function get_type(mixed $value) : Type
 {
     return (new TypeDetector())->detectType($value);
+}
+
+/**
+ * @template T of object
+ *
+ * @param null|class-string<T> $class
+ *
+ * @return ClassStringType<T>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_class_string(?string $class = null) : ClassStringType
+{
+    return new ClassStringType($class);
 }
 
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
