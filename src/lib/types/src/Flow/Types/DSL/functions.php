@@ -12,6 +12,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     InstanceOfType,
     JsonType,
     ListType,
+    LiteralType,
     MapType,
     NonEmptyStringType,
     NumericStringType,
@@ -336,6 +337,19 @@ function type_non_empty_string() : NonEmptyStringType
 function type_enum(string $class) : EnumType
 {
     return new EnumType($class);
+}
+
+/**
+ * @template T of bool|float|int|string
+ *
+ * @param T $value
+ *
+ * @return LiteralType<T>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_literal(bool|float|int|string $value) : LiteralType
+{
+    return new LiteralType($value);
 }
 
 /**

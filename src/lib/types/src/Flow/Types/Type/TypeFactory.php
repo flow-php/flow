@@ -12,6 +12,7 @@ use function Flow\Types\DSL\{type_array,
     type_float,
     type_integer,
     type_json,
+    type_literal,
     type_mixed,
     type_non_empty_string,
     type_null,
@@ -64,6 +65,7 @@ final class TypeFactory
             'datetime' => type_datetime(),
             'json' => type_json(),
             'uuid' => type_uuid(),
+            'literal' => self::createLiteralFromString($data['value']),
             /** @phpstan-ignore argument.type */
             'list' => ListType::fromArray($data),
             /** @phpstan-ignore argument.type */
@@ -99,5 +101,29 @@ final class TypeFactory
             'bool','boolean' => self::fromArray(['type' => 'boolean', 'scalar_type' => 'boolean']),
             default => self::fromArray(['type' => $name]),
         };
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    private static function createLiteralFromString(string $value) : Type
+    {
+        if ($value === 'true') {
+            return type_literal(true);
+        }
+
+        if ($value === 'false') {
+            return type_literal(false);
+        }
+
+        if (\is_numeric($value)) {
+            if (\str_contains($value, '.')) {
+                return type_literal((float) $value);
+            }
+
+            return type_literal((int) $value);
+        }
+
+        return type_literal($value);
     }
 }
