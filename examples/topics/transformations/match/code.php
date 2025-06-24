@@ -12,7 +12,7 @@ use function Flow\ETL\DSL\{data_frame,
     rows,
     string_entry,
     to_stream
-    };
+};
 use function Flow\Types\DSL\type_integer;
 
 require __DIR__ . '/vendor/autoload.php';
