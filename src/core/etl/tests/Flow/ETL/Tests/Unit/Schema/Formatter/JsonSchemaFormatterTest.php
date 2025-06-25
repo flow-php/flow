@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Schema\Formatter;
 
 use function Flow\ETL\DSL\{bool_schema,
     datetime_schema,
-    empty_schema,
     enum_schema,
     float_schema,
     int_schema,
@@ -30,7 +29,7 @@ final class JsonSchemaFormatterTest extends FlowTestCase
     {
         self::assertEquals(
             '[]',
-            (new JsonSchemaFormatter())->format(empty_schema())
+            (new JsonSchemaFormatter())->format(schema())
         );
     }
 

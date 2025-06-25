@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use function Flow\ETL\DSL\{empty_schema, from_rows, refs, row, rows};
+use function Flow\ETL\DSL\{from_rows, refs, row, rows, schema};
 use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Pipeline, Row, Rows, Transformer};
 use Flow\ETL\Exception\{DuplicatedEntriesException, JoinException};
 use Flow\ETL\Hash\NativePHPHash;
@@ -55,7 +55,7 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
 
         $hashTable = new HashTable(new NativePHPHash());
 
-        $rightSchema = empty_schema();
+        $rightSchema = schema();
 
         foreach ($this->right->getEach() as $rightRow) {
             $hashTable->add($rightRow, $rightReferences);
@@ -73,7 +73,7 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
             }
         }
 
-        $leftSchema = empty_schema();
+        $leftSchema = schema();
 
         /** @var Rows $leftRows */
         foreach ($this->left->process($context) as $leftRows) {

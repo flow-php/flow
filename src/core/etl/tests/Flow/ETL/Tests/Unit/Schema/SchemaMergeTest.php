@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{bool_schema, datetime_schema, empty_schema, float_schema, int_schema, schema, str_schema};
+use function Flow\ETL\DSL\{bool_schema, datetime_schema, float_schema, int_schema, schema, str_schema};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SchemaMergeTest extends FlowTestCase
@@ -76,7 +76,7 @@ final class SchemaMergeTest extends FlowTestCase
 
     public function test_merge_int_empty_schema() : void
     {
-        $schema = empty_schema()->merge(
+        $schema = schema()->merge(
             $notEmptySchema = schema(
                 int_schema('id', nullable: true),
                 str_schema('name', nullable: true)
@@ -116,7 +116,7 @@ final class SchemaMergeTest extends FlowTestCase
             int_schema('id', nullable: true),
             str_schema('name', nullable: true)
         ))->merge(
-            empty_schema()
+            schema()
         );
 
         self::assertEquals(

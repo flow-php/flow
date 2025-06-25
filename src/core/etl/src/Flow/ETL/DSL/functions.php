@@ -1654,24 +1654,14 @@ function row_number() : RowNumber
 }
 
 /**
- * @param Definition<mixed> $definition
  * @param Definition<mixed> ...$definitions
  *
  * @return Schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function schema(Definition $definition, Definition ...$definitions) : Schema
+function schema(Definition ...$definitions) : Schema
 {
-    return new Schema(...[$definition], ...$definitions);
-}
-
-/**
- * @return Schema
- */
-#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function empty_schema() : Schema
-{
-    return new Schema();
+    return new Schema(...$definitions);
 }
 
 /**

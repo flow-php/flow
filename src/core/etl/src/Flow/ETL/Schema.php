@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{empty_schema, schema};
+use function Flow\ETL\DSL\{schema};
 use Flow\ETL\Exception\{InvalidArgumentException,
     SchemaDefinitionNotFoundException,
     SchemaDefinitionNotUniqueException};
@@ -63,7 +63,7 @@ final class Schema implements \Countable
         }
 
         $extractor = $pipeline->process($context);
-        $schema = empty_schema();
+        $schema = schema();
         $totalRows = 0;
 
         foreach ($extractor as $rows) {
