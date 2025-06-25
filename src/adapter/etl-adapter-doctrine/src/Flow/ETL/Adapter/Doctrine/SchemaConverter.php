@@ -54,7 +54,6 @@ final readonly class SchemaConverter
     }
 
     /**
-     * @param Schema $schema
      * @param array<array-key, mixed> $tableOptions
      */
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
@@ -72,9 +71,6 @@ final readonly class SchemaConverter
         return $table;
     }
 
-    /**
-     * @return Schema
-     */
     public function toFlowSchema(Table $table) : Schema
     {
         $definitions = [];
@@ -231,11 +227,6 @@ final readonly class SchemaConverter
     }
 
     /**
-     * @return array<Index>
-     */
-    /**
-     * @param Schema $schema
-     *
      * @return array<Index>
      */
     private function updateIndexes(Schema $schema, Table $table) : array
