@@ -21,7 +21,7 @@ use Flow\ETL\Row\Entry\{BooleanEntry,
     UuidEntry,
     XMLEntry};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{ListType, MapType, StructureType};
+use Flow\Types\Type\Logical\{MapType, StructureType};
 
 final readonly class EntryNormalizer
 {
@@ -32,7 +32,7 @@ final readonly class EntryNormalizer
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     public function normalize(Entry $entry) : XMLNode|XMLAttribute
     {
@@ -70,12 +70,13 @@ final readonly class EntryNormalizer
      * Since we don't have yet a good way of defining a custom metadata for a specific entries, we need to hardcode name of list node elements to "element".
      * It might be possible to use a schema here, if provided we might be able to take a metadata from entry definition and use it to define a node name.
      * However this might be a bit problematic in case of deeply nested lists.
+     *
+     * @param ListEntry<mixed> $entry
      */
     private function listToNode(ListEntry $entry) : XMLNode
     {
         $node = XMLNode::nestedNode($entry->name());
 
-        /** @var ListType<mixed> $type */
         $type = $entry->type();
 
         $listValue = $entry->value();
@@ -85,7 +86,7 @@ final readonly class EntryNormalizer
         }
 
         foreach ($listValue as $value) {
-            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->listElementName, $type->element(), $value));
+            $node = $node->append($this->valueNormalizer->normalize($this->valueNormalizer->listElementName, $type, $value));
         }
 
         return $node;
@@ -122,6 +123,8 @@ final readonly class EntryNormalizer
      *     - Any name can be used, no words are reserved.
      *
      * Because of that and because Map Values can be other nested structures, the only valid solution is solution from Example 1.
+     *
+     * @param MapEntry<array-key, mixed> $entry
      */
     private function mapToNode(MapEntry $entry) : XMLNode
     {

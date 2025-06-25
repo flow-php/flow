@@ -10,7 +10,7 @@ use Flow\ETL\Row\Entry;
 interface IdFactory
 {
     /**
-     * @return Entry<mixed, mixed>
+     * @return Entry<mixed>
      */
     public function create(Row $row) : Entry;
 }

@@ -10,6 +10,10 @@ use Flow\ETL\Function\WindowFunction;
 
 final readonly class WindowFunctionTransformer implements Transformer
 {
+    /**
+     * @param Definition<mixed>|string $entry
+     * @param WindowFunction $function
+     */
     public function __construct(
         private string|Definition $entry,
         private WindowFunction $function,

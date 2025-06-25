@@ -99,7 +99,9 @@ final class RowsBench
     public function bench_flat_map_on_1k() : void
     {
         $this->reducedRows->flatMap(fn (Row $row) : array => [
+            /** @phpstan-ignore-next-line */
             $row->add(string_entry('name', $row->valueOf('id') . '-name-01')),
+            /** @phpstan-ignore-next-line */
             $row->add(string_entry('name', $row->valueOf('id') . '-name-02')),
         ]);
     }
@@ -146,6 +148,7 @@ final class RowsBench
 
     public function bench_sort_on_1k() : void
     {
+        /** @phpstan-ignore-next-line */
         $this->reducedRows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('random') <=> $nextRow->valueOf('random'));
     }
 

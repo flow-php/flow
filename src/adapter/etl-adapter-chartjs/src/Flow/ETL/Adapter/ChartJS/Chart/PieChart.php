@@ -42,11 +42,12 @@ final class PieChart implements Chart
                 if (!\array_key_exists('pie', $this->data['datasets'])) {
                     $this->data['datasets']['pie'] = [
                         'data' => [$row->valueOf($dataset)],
-                        'label' => (string) $row->valueOf($this->label),
+                        'label' => \is_scalar($row->valueOf($this->label)) ? (string) $row->valueOf($this->label) : '',
                     ];
                 } else {
                     $this->data['datasets']['pie']['data'][] = $row->valueOf($dataset);
-                    $this->data['datasets']['pie']['label'] = (string) $row->valueOf($this->label);
+                    $labelValue = $row->valueOf($this->label);
+                    $this->data['datasets']['pie']['label'] = \is_scalar($labelValue) ? (string) $labelValue : '';
                 }
             }
         }

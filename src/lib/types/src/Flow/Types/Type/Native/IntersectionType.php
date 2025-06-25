@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
+use function Flow\Types\DSL\{type_literal, type_map, type_mixed, type_string, type_structure};
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
@@ -17,6 +18,9 @@ use Flow\Types\Type\{Logical\OptionalType, TypeFactory, Types};
  */
 final readonly class IntersectionType implements Type
 {
+    /**
+     * @var Types<TLeft|TRight>
+     */
     private Types $flatTypes;
 
     /**
@@ -47,12 +51,18 @@ final readonly class IntersectionType implements Type
     }
 
     /**
-     * @param array{type: 'intersection', left: array<string, mixed>, right: array<string, mixed>} $data
+     * @param array<string, mixed> $data
      *
-     * @return type<TLeft&TRight>
+     * @return IntersectionType<mixed, mixed>
      */
-    public static function fromArray(array $data) : Type
+    public static function fromArray(array $data) : self
     {
+        $data = type_structure([
+            'type' => type_literal('intersection'),
+            'left' => type_map(type_string(), type_mixed()),
+            'right' => type_map(type_string(), type_mixed()),
+        ])->assert($data);
+
         return new self(
             TypeFactory::fromArray($data['left']),
             TypeFactory::fromArray($data['right']),
@@ -140,6 +150,9 @@ final readonly class IntersectionType implements Type
         return 'intersection<' . \implode('&', $stringTypes) . '>';
     }
 
+    /**
+     * @return Types<TLeft|TRight>
+     */
     public function types() : Types
     {
         return $this->flatTypes;

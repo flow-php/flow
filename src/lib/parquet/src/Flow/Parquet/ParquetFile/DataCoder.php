@@ -62,6 +62,7 @@ final readonly class DataCoder
                 $column,
                 $repetitionLevels,
                 $definitionLevels,
+                /** @phpstan-ignore-next-line */
                 (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount)
             );
         }
@@ -134,6 +135,7 @@ final readonly class DataCoder
                 $column,
                 $repetitionLevels,
                 $definitionLevels,
+                /** @phpstan-ignore-next-line */
                 (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount)
             );
         }

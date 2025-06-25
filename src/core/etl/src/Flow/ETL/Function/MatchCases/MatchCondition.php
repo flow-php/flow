@@ -7,7 +7,7 @@ namespace Flow\ETL\Function\MatchCases;
 use Flow\ETL\Function\{Parameter, ScalarFunction};
 use Flow\ETL\Row;
 
-final readonly class MatchCase implements ScalarFunction
+final readonly class MatchCondition implements ScalarFunction
 {
     public function __construct(
         private mixed $condition,

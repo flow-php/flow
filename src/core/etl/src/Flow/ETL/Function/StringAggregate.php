@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\{Reference, SortOrder};
 
 final class StringAggregate implements AggregatingFunction
@@ -29,7 +29,10 @@ final class StringAggregate implements AggregatingFunction
         }
     }
 
-    public function result() : StringEntry
+    /**
+     * @return Row\Entry<?string>
+     */
+    public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_str_agg');

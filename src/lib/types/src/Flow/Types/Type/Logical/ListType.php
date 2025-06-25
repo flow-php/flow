@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use function Flow\Types\DSL\{
+    type_from_array,
+    type_literal,
+    type_map,
+    type_mixed,
+    type_string,
+    type_structure};
 use Flow\Types\Exception\{CastingException};
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
-use Flow\Types\Type\{TypeFactory};
 
 /**
  * @template T
@@ -17,20 +23,25 @@ use Flow\Types\Type\{TypeFactory};
 final readonly class ListType implements Type
 {
     /**
-     * @param Type<mixed> $element
+     * @param Type<T> $element
      */
     public function __construct(private Type $element)
     {
     }
 
     /**
-     * @param array{type: 'list', element: array<string, mixed>} $data
+     * @param array<string, mixed> $data
      *
-     * @return ListType<Type<mixed>>
+     * @return ListType<mixed>
      */
     public static function fromArray(array $data) : self
     {
-        return new self(TypeFactory::fromArray($data['element']));
+        $data = type_structure([
+            'type' => type_literal('list'),
+            'element' => type_map(type_string(), type_mixed()),
+        ])->assert($data);
+
+        return new self(type_from_array($data['element']));
     }
 
     public function assert(mixed $value) : array
@@ -70,7 +81,7 @@ final readonly class ListType implements Type
     }
 
     /**
-     * @return Type<mixed>
+     * @return Type<T>
      */
     public function element() : Type
     {

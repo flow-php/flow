@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data\Converter;
 
+use function Flow\Types\DSL\{type_instance_of, type_integer};
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
@@ -13,7 +14,7 @@ final class TimeConverter implements Converter
 {
     public function fromParquetType(mixed $data) : \DateInterval
     {
-        return $this->toDateInterval($data);
+        return $this->toDateInterval(type_integer()->assert($data));
     }
 
     public function isFor(FlatColumn $column, Options $options) : bool
@@ -27,7 +28,7 @@ final class TimeConverter implements Converter
 
     public function toParquetType(mixed $data) : int
     {
-        return $this->toInt($data);
+        return $this->toInt(type_instance_of(\DateInterval::class)->assert($data));
     }
 
     private function toDateInterval(int $microseconds) : \DateInterval

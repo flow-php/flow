@@ -25,6 +25,7 @@ use Flow\ETL\Row\{EntryReference};
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\InvalidTypeException;
 
 final class SchemaTest extends FlowTestCase
 {
@@ -101,8 +102,8 @@ final class SchemaTest extends FlowTestCase
 
     public function test_creating_schema_from_invalid_json_format_at_definition_level() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Schema definition "type" must be an array, got: "test"');
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "structure{ref: string, type: array<mixed>, nullable: ?boolean, metadata: ?array<mixed>}", got "map<string, string>"');
 
         schema_from_json('[{"ref": "id", "type": "test", "metadata": []}]');
     }
@@ -357,7 +358,9 @@ final class SchemaTest extends FlowTestCase
                 "city": {
                     "type": "string"
                 }
-            }
+            },
+            "optional_elements": [],
+            "allow_extra": false
         },
         "nullable": false,
         "metadata": []

@@ -13,6 +13,10 @@ use Flow\ETL\{SchemaValidator, Schema\Metadata};
  */
 final class StrictValidator implements SchemaValidator
 {
+    /**
+     * @param Schema $expected
+     * @param Schema $given
+     */
     public function isValid(Schema $expected, Schema $given) : bool
     {
         if ($expected->count() !== $given->count()) {

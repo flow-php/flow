@@ -22,6 +22,7 @@ use function Flow\ETL\DSL\{average,
     to_callable};
 use function Flow\ETL\DSL\{bool_schema, boolean_entry, integer_entry, integer_schema, row, rows, schema, string_schema};
 use function Flow\ETL\DSL\data_frame;
+use function Flow\Types\DSL\type_integer;
 use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Row, Rows, Tests\FlowTestCase, Transformation, Transformer};
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Row\Entry\{DateTimeEntry};
@@ -314,7 +315,7 @@ final class DataFrameTest extends FlowTestCase
                 }
             }
         )
-            ->map(fn (Row $row) => $row->add(boolean_entry('odd', $row->valueOf('id') % 2 === 0)))
+            ->map(fn (Row $row) => $row->add(boolean_entry('odd', type_integer()->assert($row->valueOf('id')) % 2 === 0)))
             ->fetch();
 
         self::assertCount(10, $rows);

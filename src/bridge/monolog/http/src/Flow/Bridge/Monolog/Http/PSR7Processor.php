@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http;
 
+use function Flow\Types\DSL\type_array;
 use Flow\Bridge\Monolog\Http\Sanitization\Sanitizer;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
@@ -23,6 +24,7 @@ final readonly class PSR7Processor implements ProcessorInterface
     public function __invoke(LogRecord|array $record) : LogRecord|array
     {
         $context = \is_array($record) ? $record['context'] : $record->context;
+        $context = type_array()->assert($context);
 
         foreach ($context as $key => $val) {
             if ($val instanceof RequestInterface) {
@@ -82,7 +84,11 @@ final readonly class PSR7Processor implements ProcessorInterface
             $request->getBody()->rewind();
 
             if ($this->isJson($body)) {
-                $body = $this->recursiveSanitize(\json_decode($body, true, 512, JSON_THROW_ON_ERROR), $this->config->request->sanitizers());
+                $decodedBody = \json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+                $decodedBody = type_array()->assert($decodedBody);
+                /** @var array<string, mixed> $sanitizedBody */
+                $sanitizedBody = \array_is_list($decodedBody) ? [] : $decodedBody;
+                $body = $this->recursiveSanitize($sanitizedBody, $this->config->request->sanitizers());
 
                 $requestData['body'] = \substr(\json_encode($body, JSON_THROW_ON_ERROR), 0, $this->config->request->bodySizeLimit());
             } else {
@@ -129,7 +135,11 @@ final readonly class PSR7Processor implements ProcessorInterface
             $response->getBody()->rewind();
 
             if ($this->isJson($body)) {
-                $body = $this->recursiveSanitize(\json_decode($body, true, 512, JSON_THROW_ON_ERROR), $this->config->response->sanitizers());
+                $decodedBody = \json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+                $decodedBody = type_array()->assert($decodedBody);
+                /** @var array<string, mixed> $sanitizedBody */
+                $sanitizedBody = \array_is_list($decodedBody) ? [] : $decodedBody;
+                $body = $this->recursiveSanitize($sanitizedBody, $this->config->response->sanitizers());
 
                 $responseData['body'] = \substr(\json_encode($body, JSON_THROW_ON_ERROR), 0, $this->config->response->bodySizeLimit());
             } else {
@@ -168,6 +178,7 @@ final readonly class PSR7Processor implements ProcessorInterface
 
         foreach ($data as $key => $value) {
             if (\is_array($value)) {
+                /** @phpstan-var array<string, mixed> $value */
                 $data[$key] = $this->recursiveSanitize($value, $sanitizers);
 
                 continue;

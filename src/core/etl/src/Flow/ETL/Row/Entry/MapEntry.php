@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\MapType;
 use Flow\Types\Type\{TypeDetector};
 
 /**
- * @implements Entry<?array<array-key, mixed>, array<array-key, mixed>>
+ * @template TKey of array-key
+ * @template TValue
+ *
+ * @implements Entry<?array<TKey, TValue>>
  */
 final class MapEntry implements Entry
 {
@@ -23,20 +25,20 @@ final class MapEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var MapType<array-key, mixed>
+     * @var Type<array<TKey, TValue>>
      */
-    private MapType $type;
+    private Type $type;
 
     /**
-     * @param ?array<mixed> $value
-     * @param MapType<array-key, mixed> $type
+     * @param ?array<array-key, mixed> $value
+     * @param Type<array<TKey, TValue>> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
         private readonly ?array $value,
-        MapType $type,
+        Type $type,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -97,7 +99,7 @@ final class MapEntry implements Entry
         return $this->is($entry->name())
             && $entry instanceof self
             && type_equals($this->type, $entry->type)
-            && (new ArrayComparison())->equals($thisValue, $entryValue);
+            && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
     public function map(callable $mapper) : Entry
@@ -136,6 +138,6 @@ final class MapEntry implements Entry
 
     public function withValue(mixed $value) : Entry
     {
-        return new self($this->name, $value, $this->type);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->type);
     }
 }

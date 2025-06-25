@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
+use function Flow\Types\DSL\{type_boolean, type_list, type_optional, type_string, type_structure};
 use Flow\Doctrine\Bulk\InsertOptions;
 
 final readonly class SqliteInsertOptions implements InsertOptions
@@ -24,6 +25,15 @@ final readonly class SqliteInsertOptions implements InsertOptions
      */
     public static function fromArray(array $options) : InsertOptions
     {
+        $options = type_structure(
+            [],
+            [
+                'skip_conflicts' => type_optional(type_boolean()),
+                'conflict_columns' => type_list(type_string()),
+                'update_columns' => type_list(type_string()),
+            ]
+        )->assert($options);
+
         return new self(
             $options['skip_conflicts'] ?? null,
             $options['conflict_columns'] ?? [],

@@ -15,6 +15,8 @@ final readonly class RowsNormalizer
     }
 
     /**
+     * @param Schema $schema
+     *
      * @return array<mixed, array<string, mixed>>
      */
     public function normalize(Rows $rows, Schema $schema) : array

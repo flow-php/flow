@@ -117,7 +117,7 @@ final class CSVLoader implements Closure, FileLoader, Loader
     }
 
     /**
-     * @param array<array-key, mixed> $row
+     * @param array<array-key, null|bool|float|int|string> $row
      */
     private function writeCSV(array $row, DestinationStream $stream) : void
     {

@@ -8,31 +8,31 @@ use Flow\ETL\Schema\Definition;
 use Flow\Types\Type;
 
 /**
- * @template-covariant TValue of mixed
- * @template-covariant TType of mixed
+ * @template-covariant T
  */
 interface Entry extends \Stringable
 {
     public function __toString() : string;
 
+    /**
+     * @return Definition<T>
+     */
     public function definition() : Definition;
 
     /**
-     * @return Entry<TValue, TType>
+     * @return Entry<T>
      */
     public function duplicate() : self;
 
     public function is(string|Reference $name) : bool;
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     public function isEqual(self $entry) : bool;
 
     /**
-     * @param callable(mixed) : mixed $mapper
-     *
-     * @return Entry<TValue, TType>
+     * @return Entry<T>
      */
     public function map(callable $mapper) : self;
 
@@ -41,24 +41,24 @@ interface Entry extends \Stringable
     public function ref() : Reference;
 
     /**
-     * @return Entry<TValue, TType>
+     * @return Entry<T>
      */
     public function rename(string $name) : self;
 
     public function toString() : string;
 
     /**
-     * @return Type<TType>
+     * @return Type<T>
      */
     public function type() : Type;
 
     /**
-     * @return TValue
+     * @return T
      */
     public function value();
 
     /**
-     * @return Entry<TValue, TType>
+     * @return Entry<T>
      */
     public function withValue(mixed $value) : self;
 }

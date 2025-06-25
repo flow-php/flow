@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_xml};
-use DOMDocument;
+use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_string, type_xml};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
@@ -13,7 +12,7 @@ use Flow\Types\Type;
 use Flow\Types\Type\Logical\XMLType;
 
 /**
- * @implements Entry<?DOMDocument, DOMDocument>
+ * @implements Entry<?\DOMDocument>
  */
 final class XMLEntry implements Entry
 {
@@ -21,7 +20,10 @@ final class XMLEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly XMLType $type;
+    /**
+     * @var Type<\DOMDocument>
+     */
+    private readonly Type $type;
 
     private readonly ?\DOMDocument $value;
 
@@ -70,6 +72,9 @@ final class XMLEntry implements Entry
      */
     public function __unserialize(array $data) : void
     {
+        type_string()->assert($data['name']);
+        type_instance_of(XMLType::class)->assert($data['type']);
+
         $this->name = $data['name'];
         $this->type = $data['type'];
 
@@ -96,7 +101,7 @@ final class XMLEntry implements Entry
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : self
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
@@ -127,9 +132,12 @@ final class XMLEntry implements Entry
         return $entry->value()?->C14N() === $this->value?->C14N();
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : self
     {
-        return new self($this->name, $mapper($this->value()));
+        $mappedValue = $mapper($this->value());
+        $mappedValue = type_optional(type_instance_of(\DOMDocument::class))->assert($mappedValue);
+
+        return new self($this->name, $mappedValue);
     }
 
     public function name() : string
@@ -137,7 +145,7 @@ final class XMLEntry implements Entry
         return $this->name;
     }
 
-    public function rename(string $name) : Entry
+    public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
@@ -162,8 +170,8 @@ final class XMLEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : self
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

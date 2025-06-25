@@ -49,7 +49,11 @@ final readonly class IntegerType implements Type
                 throw new CastingException($value, $this);
             }
 
-            return (int) $value;
+            if (\is_scalar($value) || null === $value || \is_array($value)) {
+                return (int) $value;
+            }
+
+            throw new CastingException($value, $this);
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
+use function Flow\Types\DSL\{type_class_string, type_literal, type_structure};
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type;
 use UnitEnum;
@@ -26,16 +27,18 @@ final readonly class EnumType implements Type
     }
 
     /**
-     * @param array{class: class-string<T>} $data
+     * @param array<string, mixed> $data
      *
-     * @return EnumType<T>
+     * @return EnumType<\UnitEnum>
      */
     public static function fromArray(array $data) : self
     {
-        if (!\array_key_exists('class', $data)) {
-            throw new InvalidArgumentException("Missing 'class' key in enum type definition");
-        }
+        $data = type_structure([
+            'type' => type_literal('enum'),
+            'class' => type_class_string(),
+        ])->assert($data);
 
+        /** @phpstan-ignore-next-line */
         return new self($data['class']);
     }
 
@@ -58,6 +61,10 @@ final readonly class EnumType implements Type
             $enumClass = $this->class;
 
             if (\is_a($enumClass, \BackedEnum::class, true)) {
+                if (!\is_int($value) && !\is_string($value)) {
+                    throw new CastingException($value, $this);
+                }
+
                 return $enumClass::from($value);
             }
 
@@ -69,7 +76,7 @@ final readonly class EnumType implements Type
 
     public function isValid(mixed $value) : bool
     {
-        return \is_a($value, $this->class, true);
+        return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
     }
 
     public function normalize() : array

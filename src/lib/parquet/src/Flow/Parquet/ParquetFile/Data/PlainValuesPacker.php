@@ -22,6 +22,7 @@ final readonly class PlainValuesPacker
 
         switch ($column->type()) {
             case PhysicalType::BOOLEAN:
+                /** @phpstan-ignore-next-line */
                 $this->writer->writeBooleans($values);
 
                 break;
@@ -29,6 +30,7 @@ final readonly class PlainValuesPacker
                 switch ($column->logicalType()?->name()) {
                     case LogicalType::DATE:
                     case null:
+                        /** @phpstan-ignore-next-line */
                         $this->writer->writeInts32($values);
 
                         break;
@@ -40,6 +42,7 @@ final readonly class PlainValuesPacker
                     case LogicalType::TIME:
                     case LogicalType::TIMESTAMP:
                     case null:
+                        /** @phpstan-ignore-next-line */
                         $this->writer->writeInts64($values);
 
                         break;
@@ -47,16 +50,20 @@ final readonly class PlainValuesPacker
 
                 break;
             case PhysicalType::FLOAT:
+                /** @phpstan-ignore-next-line */
                 $this->writer->writeFloats($values);
 
                 break;
             case PhysicalType::DOUBLE:
+                /** @phpstan-ignore-next-line */
                 $this->writer->writeDoubles($values);
 
                 break;
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
                 match ($column->logicalType()?->name()) {
+                    /** @phpstan-ignore-next-line */
                     LogicalType::UUID => $this->writer->writeStrings($values),
+                    /** @phpstan-ignore-next-line */
                     LogicalType::DECIMAL => $this->writer->writeDecimals($values, (int) $column->typeLength(), (int) $column->precision(), (int) $column->scale()),
                     default => throw new \RuntimeException('Writing logical type "' . ($column->logicalType()?->name() ?: 'UNKNOWN') . '" is not implemented yet'),
                 };
@@ -64,6 +71,7 @@ final readonly class PlainValuesPacker
                 break;
             case PhysicalType::BYTE_ARRAY:
                 match ($column->logicalType()?->name()) {
+                    /** @phpstan-ignore-next-line */
                     LogicalType::JSON, LogicalType::STRING => $this->writer->writeStrings($values),
                     default => throw new \RuntimeException('Writing logical type "' . ($column->logicalType()?->name() ?: 'UNKNOWN') . '" is not implemented yet'),
                 };

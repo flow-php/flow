@@ -19,7 +19,7 @@ final class PsrLoggerLoaderTest extends FlowTestCase
 
         $loader = new PsrLoggerLoader($logger, 'row log', LogLevel::ERROR);
 
-        $loader->load(rows(row(int_entry('id', 12345), string_entry('name', 'Norbert')->toLowercase())), flow_context(config()));
+        $loader->load(rows(row(int_entry('id', 12345), string_entry('name', 'Norbert'))), flow_context(config()));
 
         self::assertTrue($logger->hasErrorRecords());
         self::assertTrue($logger->hasError('row log'));

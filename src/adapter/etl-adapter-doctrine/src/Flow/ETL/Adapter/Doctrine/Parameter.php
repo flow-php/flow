@@ -42,7 +42,9 @@ final readonly class Parameter implements QueryParameter
      */
     public function toQueryParam(Rows $rows) : array
     {
-        return $rows->reduceToArray($this->ref);
+        $values = $rows->reduceToArray($this->ref);
+
+        return \array_filter($values, fn ($value) => \is_scalar($value) || $value === null);
     }
 
     public function type() : int|ArrayParameterType

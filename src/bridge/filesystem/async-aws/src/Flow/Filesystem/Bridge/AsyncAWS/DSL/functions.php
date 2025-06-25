@@ -9,11 +9,12 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Flow\Filesystem\Bridge\AsyncAWS\{AsyncAWSS3Filesystem, Options};
 
 /**
- * @param array<mixed> $configuration - for details please see https://async-aws.com/clients/s3.html
+ * @param array<string, mixed> $configuration - for details please see https://async-aws.com/clients/s3.html
  */
 #[DocumentationDSL(module: Module::S3_FILESYSTEM, type: Type::HELPER)]
 function aws_s3_client(array $configuration) : S3Client
 {
+    /** @phpstan-ignore-next-line */
     return new S3Client($configuration);
 }
 

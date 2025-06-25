@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use function Flow\Types\DSL\{type_array, type_list};
+
 final class ParametersModel
 {
     /**
@@ -19,6 +21,8 @@ final class ParametersModel
      */
     public static function fromArray(array $data) : self
     {
+        type_list(type_array())->assert($data);
+
         return new self(
             array_map(static fn (array $argument) => ParameterModel::fromArray($argument), $data),
         );

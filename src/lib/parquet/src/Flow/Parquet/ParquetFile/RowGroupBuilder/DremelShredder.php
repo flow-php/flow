@@ -17,7 +17,7 @@ final readonly class DremelShredder
     }
 
     /**
-     * @param array<array<string,mixed>> $row
+     * @param array<string,mixed> $row
      */
     public function shred(Column $column, array $row) : FlatColumnData
     {
@@ -34,12 +34,14 @@ final readonly class DremelShredder
 
         /** @var NestedColumn $column */
         if ($column->isList()) {
+            /** @phpstan-ignore-next-line */
             $this->shredList($column, $row[$column->name()] ?? null, $definitionLevel, $repetitionLevel, $flatData, $depth);
 
             return $flatData;
         }
 
         if ($column->isMap()) {
+            /** @phpstan-ignore-next-line */
             $this->shredMap($column, $row[$column->name()] ?? null, $definitionLevel, $repetitionLevel, $flatData, $depth);
 
             return $flatData;
@@ -72,6 +74,7 @@ final readonly class DremelShredder
                 $column,
                 $repetitionLevel,
                 $definitionLevel,
+                /** @phpstan-ignore-next-line */
                 $this->dataConverter->toParquetType($column, $value)
             )
         );
@@ -134,6 +137,7 @@ final readonly class DremelShredder
             $definitionLevel++;
 
             foreach ($listValue as $i => $value) {
+                /** @phpstan-ignore-next-line */
                 $this->shredList($listElementColumn, $value, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
             }
 
@@ -160,6 +164,7 @@ final readonly class DremelShredder
             $definitionLevel++;
 
             foreach ($listValue as $i => $mapValue) {
+                /** @phpstan-ignore-next-line */
                 $this->shredMap($listElementColumn, $mapValue, $definitionLevel, $i === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
             }
 
@@ -260,6 +265,7 @@ final readonly class DremelShredder
 
             foreach ($mapValue as $key => $value) {
                 $this->shredFlat($keyColumn, $key, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data);
+                /** @phpstan-ignore-next-line */
                 $this->shredList($valueColumn, $value, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
                 $index++;
             }
@@ -292,6 +298,7 @@ final readonly class DremelShredder
 
             foreach ($mapValue as $key => $value) {
                 $this->shredFlat($keyColumn, $key, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data);
+                /** @phpstan-ignore-next-line */
                 $this->shredMap($valueColumn, $value, $definitionLevel, $index === 0 ? $repetitionLevel - 1 : $depth, $data, $depth);
                 $index++;
             }
@@ -367,7 +374,7 @@ final readonly class DremelShredder
             $definitionLevel++;
         }
 
-        if (!\count($structureData)) {
+        if (!\is_array($structureData) || !\count($structureData)) {
             foreach ($column->children() as $child) {
                 if ($child instanceof FlatColumn) {
                     $this->shredFlat($child, null, $definitionLevel, $repetitionLevel, $data);
@@ -407,12 +414,14 @@ final readonly class DremelShredder
              * @var NestedColumn $child
              */
             if ($child->isList()) {
+                /** @phpstan-ignore-next-line */
                 $this->shredList($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data, $depth);
 
                 continue;
             }
 
             if ($child->isMap()) {
+                /** @phpstan-ignore-next-line */
                 $this->shredMap($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data, $depth);
 
                 continue;

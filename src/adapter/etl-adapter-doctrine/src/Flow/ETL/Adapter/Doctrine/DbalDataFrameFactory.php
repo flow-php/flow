@@ -17,6 +17,9 @@ final class DbalDataFrameFactory implements DataFrameFactory
      */
     private readonly array $parameters;
 
+    /**
+     * @var null|Schema
+     */
     private ?Schema $schema = null;
 
     /**
@@ -71,6 +74,9 @@ final class DbalDataFrameFactory implements DataFrameFactory
         return df()->read($extractor);
     }
 
+    /**
+     * @param Schema $schema
+     */
     public function withSchema(Schema $schema) : self
     {
         $this->schema = $schema;
@@ -81,6 +87,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
     private function connection() : Connection
     {
         if ($this->connection === null) {
+            /** @phpstan-ignore-next-line */
             $this->connection = DriverManager::getConnection($this->connectionParams);
         }
 

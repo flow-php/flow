@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Sanitization;
 
+use function Flow\Types\DSL\type_string;
 use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
 
 final class SanitizerFactory
@@ -21,9 +22,12 @@ final class SanitizerFactory
             throw new InvalidArgumentException('Sanitizer type is required');
         }
 
-        return match ($data['type']) {
+        $type = $data['type'];
+        $type = type_string()->assert($type);
+
+        return match ($type) {
             'mask' => Mask::fromArray($data),
-            default => throw new InvalidArgumentException(\sprintf('Unsupported sanitizer type: %s', $data['type'])),
+            default => throw new InvalidArgumentException(\sprintf('Unsupported sanitizer type: %s', $type)),
         };
     }
 }

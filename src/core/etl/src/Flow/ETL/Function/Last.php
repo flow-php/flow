@@ -12,7 +12,7 @@ use Flow\ETL\Row\{Entry, Reference};
 final class Last implements AggregatingFunction
 {
     /**
-     * @var null|Entry<mixed, mixed>
+     * @var null|Entry<mixed>
      */
     private ?Entry $last;
 
@@ -31,7 +31,7 @@ final class Last implements AggregatingFunction
     }
 
     /**
-     * @return Entry<mixed, mixed>
+     * @return Entry<mixed>
      */
     public function result() : Entry
     {

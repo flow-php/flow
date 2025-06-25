@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_uuid};
+use function Flow\Types\DSL\{type_equals, type_optional, type_uuid};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\UuidType;
 use Flow\Types\Value\Uuid;
 
 /**
- * @implements Entry<?Uuid, Uuid>
+ * @implements Entry<?Uuid>
  */
 final class UuidEntry implements Entry
 {
@@ -21,7 +20,10 @@ final class UuidEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly UuidType $type;
+    /**
+     * @var Type<Uuid>
+     */
+    private readonly Type $type;
 
     private ?Uuid $value;
 
@@ -62,7 +64,7 @@ final class UuidEntry implements Entry
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : self
     {
         return new self($this->name, $this->value ? new Uuid($this->value->toString()) : null, $this->metadata);
     }
@@ -88,14 +90,14 @@ final class UuidEntry implements Entry
         if ($entryValue !== null && $thisValue === null) {
             return false;
         }
+
         /**
          * @var Uuid $entryValue
          */
-
         return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value?->isEqual($entryValue);
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value));
     }
@@ -108,7 +110,7 @@ final class UuidEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function rename(string $name) : Entry
+    public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
@@ -132,8 +134,8 @@ final class UuidEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : self
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

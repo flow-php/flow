@@ -12,7 +12,7 @@ use Flow\Types\Type\Native\{IntegerType, NullType, StringType};
 final readonly class ArrayContentDetector
 {
     /**
-     * @var null|Type<mixed>
+     * @var null|Type<array-key>
      */
     private ?Type $firstKeyType;
 
@@ -25,6 +25,11 @@ final readonly class ArrayContentDetector
 
     private int $uniqueValuesTypeCount;
 
+    /**
+     * @param Types<array-key> $uniqueKeysType
+     * @param Types<mixed> $uniqueValuesType
+     * @param bool $isList
+     */
     public function __construct(Types $uniqueKeysType, private Types $uniqueValuesType, private bool $isList = false)
     {
         $this->firstKeyType = $uniqueKeysType->first();
@@ -33,7 +38,10 @@ final readonly class ArrayContentDetector
         $this->uniqueValuesTypeCount = $this->uniqueValuesType->reduceOptionals()->without(type_array(), type_null())->count();
     }
 
-    public function firstKeyType() : IntegerType|StringType|null
+    /**
+     * @return null|Type<int|string>
+     */
+    public function firstKeyType() : ?Type
     {
         if (null !== $this->firstKeyType && (!$this->firstKeyType instanceof IntegerType && !$this->firstKeyType instanceof StringType)) {
             throw new InvalidArgumentException('First unique key type must be of IntegerType or StringType, given: ' . $this->firstKeyType::class);
@@ -50,11 +58,17 @@ final readonly class ArrayContentDetector
         return $this->firstValueType;
     }
 
+    /**
+     * @phpstan-assert-if-true Type<int> $this->firstKeyType()
+     */
     public function isList() : bool
     {
         return 1 === $this->uniqueValuesTypeCount && $this->firstKeyType() instanceof IntegerType && $this->isList;
     }
 
+    /**
+     * @phpstan-assert-if-true Type<int|string> $this->firstKeyType()
+     */
     public function isMap() : bool
     {
         return 1 === $this->uniqueValuesTypeCount && 1 === $this->uniqueKeysTypeCount && !$this->isList;

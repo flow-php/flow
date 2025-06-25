@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\ListType;
 use Flow\Types\Type\{TypeDetector};
 
 /**
- * @implements Entry<?list<mixed>, list<mixed>>
+ * @template T
+ *
+ * @implements Entry<?list<T>>
  */
 final class ListEntry implements Entry
 {
@@ -23,20 +24,20 @@ final class ListEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var ListType<mixed>
+     * @var Type<list<T>>
      */
-    private readonly ListType $type;
+    private readonly Type $type;
 
     /**
-     * @param list<mixed> $value
-     * @param ListType<mixed> $type
+     * @param ?list<T> $value
+     * @param Type<list<T>> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
         private readonly ?array $value,
-        ListType $type,
+        Type $type,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -97,7 +98,7 @@ final class ListEntry implements Entry
         return $this->is($entry->name())
             && $entry instanceof self
             && type_equals($this->type, $entry->type)
-            && (new ArrayComparison())->equals($thisValue, $entryValue);
+            && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
     public function map(callable $mapper) : Entry
@@ -136,6 +137,6 @@ final class ListEntry implements Entry
 
     public function withValue(mixed $value) : Entry
     {
-        return new self($this->name, $value, $this->type);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->type);
     }
 }

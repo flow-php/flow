@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\float_entry;
+use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\{DataProvider};
@@ -48,7 +49,7 @@ final class FloatEntryTest extends FlowTestCase
 
         self::assertEquals(
             $float,
-            $float->map(fn (float $float) => $float)
+            $float->map(fn (?float $float) : ?float => $float)
         );
     }
 
@@ -74,7 +75,7 @@ final class FloatEntryTest extends FlowTestCase
 
         $serialized = \serialize($float);
         /** @var FloatEntry $unserialized */
-        $unserialized = \unserialize($serialized);
+        $unserialized = type_instance_of(FloatEntry::class)->assert(\unserialize($serialized));
 
         self::assertTrue($float->isEqual($unserialized));
     }

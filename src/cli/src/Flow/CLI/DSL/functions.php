@@ -66,9 +66,11 @@ function argument_string_nullable(string $name, InputInterface $input) : ?string
 }
 
 /**
- * @template ExpextedClass
+ * @template ExpextedClass of object
  *
  * @param class-string<ExpextedClass> $expectedClass
+ *
+ * @return ExpextedClass
  */
 function option_include_file(string $name, InputInterface $input, string $expectedClass) : object
 {

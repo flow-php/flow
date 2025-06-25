@@ -22,7 +22,7 @@ final class IndexOf extends ScalarFunctionChain
     {
         $string = (new Parameter($this->string))->asString($row);
         $needle = (new Parameter($this->needle))->asString($row);
-        $offset = (new Parameter($this->offset))->as($row, type_integer());
+        $offset = type_integer()->assert((new Parameter($this->offset))->as($row, type_integer()));
         $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row);
 
         if ($string === null || $needle === null) {

@@ -42,6 +42,9 @@ final readonly class FakeExtractor implements Extractor
     {
     }
 
+    /**
+     * @return Schema
+     */
     public static function schema() : Schema
     {
         return \Flow\ETL\DSL\schema(

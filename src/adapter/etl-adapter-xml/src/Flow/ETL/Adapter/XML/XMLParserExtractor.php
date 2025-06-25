@@ -169,13 +169,13 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
             $this->writer()->startElement($name);
 
             foreach ($attrs as $key => $value) {
-                $this->writer()->writeAttribute($key, $value);
+                $this->writer()->writeAttribute($key, \is_scalar($value) ? (string) $value : '');
             }
         } elseif ($this->capturing) {
             $this->writer()->startElement($name);
 
             foreach ($attrs as $key => $value) {
-                $this->writer()->writeAttribute($key, $value);
+                $this->writer()->writeAttribute($key, \is_scalar($value) ? (string) $value : '');
             }
         }
     }

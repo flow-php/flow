@@ -18,7 +18,7 @@ final class Columns
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     public function add(Entry $entry) : void
     {

@@ -21,9 +21,13 @@ final readonly class LiteralParameter implements QueryParameter
         return $this->queryParamName;
     }
 
-    public function toQueryParam(Rows $rows) : mixed
+    public function toQueryParam(Rows $rows) : array|bool|float|int|string|null
     {
-        return $this->value;
+        if (\is_array($this->value)) {
+            return \array_filter($this->value, fn ($item) => \is_scalar($item) || $item === null);
+        }
+
+        return \is_scalar($this->value) || $this->value === null ? $this->value : null;
     }
 
     public function type() : int|ArrayParameterType|null

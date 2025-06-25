@@ -14,9 +14,11 @@ final class UlidTest extends FlowTestCase
     public function test_ulid() : void
     {
         $expression = ulid();
+        $result = $expression->eval(row());
+        self::assertInstanceOf(Ulid::class, $result);
         self::assertTrue(
             Ulid::isValid(
-                $expression->eval(row())->toBase32()
+                $result->toBase32()
             )
         );
         self::assertNotSame(

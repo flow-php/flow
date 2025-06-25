@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data\Converter;
 
+use function Flow\Types\DSL\type_instance_of;
 use Flow\Parquet\BinaryReader\Bytes;
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Exception\RuntimeException;
@@ -14,7 +15,7 @@ final class Int96DateTimeConverter implements Converter
 {
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
-        return $this->convertArrayOfBytesToDateTime($data);
+        return $this->convertArrayOfBytesToDateTime(type_instance_of(Bytes::class)->assert($data));
     }
 
     public function isFor(FlatColumn $column, Options $options) : bool

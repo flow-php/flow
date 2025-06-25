@@ -45,7 +45,7 @@ final class BooleanEntryTest extends FlowTestCase
 
         self::assertEquals(
             $entry,
-            $entry->map(fn (bool $value) => $value)
+            $entry->map(fn (?bool $value) : ?bool => $value)
         );
     }
 

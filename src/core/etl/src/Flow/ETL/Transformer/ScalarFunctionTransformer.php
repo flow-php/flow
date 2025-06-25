@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use function Flow\Types\DSL\type_array;
 use Flow\ETL\{FlowContext, Row, Rows, Schema\Definition, Transformer};
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunction\{ExpandResults, ScalarResult, UnpackResults};
 
 final readonly class ScalarFunctionTransformer implements Transformer
 {
+    /**
+     * @param Definition<mixed>|string $entry
+     */
     public function __construct(
         private string|Definition $entry,
         public ScalarFunction $function,
@@ -39,7 +43,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
                      * @var array-key $key
                      * @var mixed $val
                      */
-                    foreach ($this->function->eval($r) as $key => $val) {
+                    foreach (type_array()->assert($this->function->eval($r)) as $key => $val) {
                         $r = $r->set($context->entryFactory()->create($this->entryName() . '.' . $key, $val));
                     }
 

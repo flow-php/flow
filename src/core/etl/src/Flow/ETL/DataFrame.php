@@ -533,6 +533,7 @@ final class DataFrame
     /**
      * @lazy
      *
+     * @param Schema $schema
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      */
     public function match(Schema $schema, ?SchemaValidator $validator = null) : self
@@ -818,6 +819,9 @@ final class DataFrame
     /**
      * @trigger
      */
+    /**
+     * @return Schema
+     */
     public function schema() : Schema
     {
         $schema = new Schema();
@@ -879,6 +883,9 @@ final class DataFrame
      * @lazy
      *
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
+     */
+    /**
+     * @param Schema $schema
      */
     public function validate(Schema $schema, ?SchemaValidator $validator = null) : self
     {
@@ -946,6 +953,8 @@ final class DataFrame
     }
 
     /**
+     * @param Definition<mixed>|string $entry
+     *
      * @lazy
      */
     public function withEntry(string|Definition $entry, ScalarFunction|WindowFunction $reference) : self

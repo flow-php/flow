@@ -7,6 +7,7 @@ namespace Flow\Bridge\Monolog\Http\Tests\Unit\Sanitization;
 use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
 use Flow\Bridge\Monolog\Http\Sanitization\{Mask, SanitizerFactory};
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\InvalidTypeException;
 
 final class SanitizerFactoryTest extends FlowTestCase
 {
@@ -44,8 +45,8 @@ final class SanitizerFactoryTest extends FlowTestCase
 
     public function test_throws_exception_when_character_is_not_a_string() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Character must be a string');
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: integer}"');
 
         SanitizerFactory::fromArray([
             'type' => 'mask',
@@ -55,8 +56,8 @@ final class SanitizerFactoryTest extends FlowTestCase
 
     public function test_throws_exception_when_offset_is_not_an_integer() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Offset must be an integer');
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"');
 
         SanitizerFactory::fromArray([
             'type' => 'mask',

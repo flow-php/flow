@@ -26,6 +26,7 @@ abstract class IntegrationTestCase extends FlowTestCase
 
         $this->pgsqlDatabaseContext = new DatabaseContext(
             DriverManager::getConnection(
+                /** @phpstan-ignore-next-line */
                 $this->postgresqlConnectionParams(),
                 (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
             ),
@@ -35,6 +36,7 @@ abstract class IntegrationTestCase extends FlowTestCase
 
         $this->mysqlDatabaseContext = new DatabaseContext(
             DriverManager::getConnection(
+                /** @phpstan-ignore-next-line */
                 $this->mysqlConnectionParams(),
                 (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
             ),
@@ -44,6 +46,7 @@ abstract class IntegrationTestCase extends FlowTestCase
 
         $this->sqliteDatabaseContext = new DatabaseContext(
             DriverManager::getConnection(
+                /** @phpstan-ignore-next-line */
                 $this->sqliteConnectionParams(),
                 (new Configuration())->setMiddlewares([new Middleware($insertQueryCounter), new Middleware($selectQueryCounter)])
             ),

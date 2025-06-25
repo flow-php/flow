@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\xml_entry;
+use function Flow\Types\DSL\type_instance_of;
 use DOMDocument;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLEntry;
@@ -174,7 +175,7 @@ XML);
 XML);
 
         $serialized = \serialize($entry);
-        $unserialized = \unserialize($serialized);
+        $unserialized = type_instance_of(XMLEntry::class)->assert(\unserialize($serialized));
 
         self::assertTrue($entry->isEqual($unserialized));
     }

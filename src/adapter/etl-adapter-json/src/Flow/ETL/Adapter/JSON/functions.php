@@ -12,7 +12,7 @@ use Flow\Filesystem\Path;
 /**
  * @param Path|string $path - string is internally turned into stream
  * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree - @deprecate use withPointer method instead
- * @param ?Schema $schema - enforce schema on the extracted data - @deprecate use withSchema method instead
+ * @param null|Schema $schema - enforce schema on the extracted data - @deprecate use withSchema method instead
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_reading', example: 'json')]

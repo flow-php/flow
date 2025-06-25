@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Dataset\Statistics;
 
+use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, FloatEntry, IntegerEntry, ListEntry, MapEntry, StringEntry, StructureEntry, UuidEntry};
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\Types\Value\Uuid;
 
 final class Column
 {
@@ -28,7 +30,7 @@ final class Column
     private readonly Reference $reference;
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      *
      * @throws \JsonException
      */
@@ -40,7 +42,7 @@ final class Column
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     public function calculate(Entry $entry) : void
     {
@@ -57,7 +59,7 @@ final class Column
         }
 
         if ($entry instanceof UuidEntry) {
-            $this->distinctCounter->add((string) $value);
+            $this->distinctCounter->add(type_instance_of(Uuid::class)->assert($value)->toString());
 
             return;
         }
@@ -70,17 +72,19 @@ final class Column
 
         if ($entry instanceof ListEntry || $entry instanceof MapEntry) {
             $this->distinctCounter->add(\json_encode($value, JSON_THROW_ON_ERROR));
-            $elementsCount = \count($value);
+            $elementsCount = \is_countable($value) ? \count($value) : 0;
             $this->maxElementsCount = \max($this->maxElementsCount ?? $elementsCount, $elementsCount);
             $this->minElementsCount = \min($this->minElementsCount ?? $elementsCount, $elementsCount);
 
             return;
         }
 
-        $this->distinctCounter->add($value);
+        if (\is_scalar($value) || $value instanceof \DateTimeInterface) {
+            $this->distinctCounter->add($value);
+        }
 
         if ($entry instanceof StringEntry) {
-            $valueLength = \mb_strlen((string) $entry->value());
+            $valueLength = \mb_strlen(\is_scalar($entry->value()) ? (string) $entry->value() : '');
             $this->maxLength = \max($this->maxLength ?? $valueLength, $valueLength);
             $this->minLength = \min($this->minLength ?? $valueLength, $valueLength);
 
@@ -88,15 +92,19 @@ final class Column
         }
 
         if ($entry instanceof DateEntry || $entry instanceof DateTimeEntry) {
-            $this->max = \max($this->max ?? $value, $value);
-            $this->min = \min($this->min ?? $value, $value);
+            if ($value instanceof \DateTimeInterface) {
+                $this->max = \max($this->max ?? $value, $value);
+                $this->min = \min($this->min ?? $value, $value);
+            }
 
             return;
         }
 
         if ($entry instanceof IntegerEntry || $entry instanceof FloatEntry || $entry instanceof BooleanEntry) {
-            $this->min = \min($this->min ?? $value, $value);
-            $this->max = \max($this->max ?? $value, $value);
+            if (\is_int($value) || \is_float($value) || \is_bool($value)) {
+                $this->min = \min($this->min ?? $value, $value);
+                $this->max = \max($this->max ?? $value, $value);
+            }
         }
     }
 

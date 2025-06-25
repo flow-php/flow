@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 use function Flow\ETL\DSL\{lit, uuid_v4, uuid_v7};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\Uuid;
 
 final class UuidTest extends FlowTestCase
@@ -25,9 +26,11 @@ final class UuidTest extends FlowTestCase
         }
 
         $expression = uuid_v4();
+        $result = $expression->eval(row());
+        self::assertInstanceOf(FlowUuid::class, $result->value);
         self::assertTrue(
             Uuid::isValid(
-                $expression->eval(row())->value->toString()
+                $result->value->toString()
             )
         );
         self::assertNotSame(
@@ -52,9 +55,11 @@ final class UuidTest extends FlowTestCase
             self::markTestSkipped("Package 'ramsey/uuid' is required for this test.");
         }
 
+        $result = uuid_v7(lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC'))))->eval(row());
+        self::assertInstanceOf(FlowUuid::class, $result->value);
         self::assertTrue(
             Uuid::isValid(
-                uuid_v7(lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC'))))->eval(row())->value->toString()
+                $result->value->toString()
             )
         );
     }

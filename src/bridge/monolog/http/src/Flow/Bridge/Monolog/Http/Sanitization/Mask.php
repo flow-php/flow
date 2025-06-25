@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Sanitization;
 
-use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
+use function Flow\Types\DSL\{type_integer, type_literal, type_string, type_structure};
 
 final readonly class Mask implements Sanitizer
 {
@@ -22,23 +22,18 @@ final readonly class Mask implements Sanitizer
      * Create a Mask sanitizer from an array representation.
      *
      * @param array<string, mixed> $data
-     *
-     * @throws InvalidArgumentException When required data is missing or invalid
      */
     public static function fromArray(array $data) : self
     {
-        $character = $data['character'] ?? '*';
-        $offset = $data['offset'] ?? 0;
+        $data = type_structure(
+            ['type' => type_literal('mask')],
+            [
+                'character' => type_string(),
+                'offset' => type_integer(),
+            ]
+        )->assert($data);
 
-        if (!\is_string($character)) {
-            throw new InvalidArgumentException('Character must be a string');
-        }
-
-        if (!\is_int($offset)) {
-            throw new InvalidArgumentException('Offset must be an integer');
-        }
-
-        return new self($character, $offset);
+        return new self($data['character'] ?? '*', $data['offset'] ?? 0);
     }
 
     /**

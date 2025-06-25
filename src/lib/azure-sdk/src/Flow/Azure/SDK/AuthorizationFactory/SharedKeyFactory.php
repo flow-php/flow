@@ -45,12 +45,21 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
             $header = \strtolower($header);
 
             if (\str_starts_with($header, 'x-ms-')) {
-                $value = \str_replace("\r\n", ' ', $value);
+                if (\is_string($value)) {
+                    $stringValue = $value;
+                } elseif (\is_int($value) || \is_float($value)) {
+                    $stringValue = (string) $value;
+                } elseif (\is_bool($value)) {
+                    $stringValue = $value ? '1' : '0';
+                } else {
+                    $stringValue = '';
+                }
 
-                $value = \ltrim($value);
+                $stringValue = \str_replace("\r\n", ' ', $stringValue);
+                $stringValue = \ltrim($stringValue);
                 $header = \rtrim($header);
 
-                $normalizedHeaders[$header] = $value;
+                $normalizedHeaders[$header] = $stringValue;
             }
         }
 
@@ -79,7 +88,17 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
         }
 
         foreach ($queryParams as $key => $value) {
-            $canonicalizedResource .= "\n" . $key . ':' . $value;
+            if (\is_string($value)) {
+                $stringValue = $value;
+            } elseif (\is_int($value) || \is_float($value)) {
+                $stringValue = (string) $value;
+            } elseif (\is_bool($value)) {
+                $stringValue = $value ? '1' : '0';
+            } else {
+                $stringValue = '';
+            }
+
+            $canonicalizedResource .= "\n" . $key . ':' . $stringValue;
         }
 
         return $canonicalizedResource;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
+use function Flow\Types\DSL\{type_array, type_boolean, type_string, type_structure};
+
 final class ParameterModel
 {
     /**
@@ -26,9 +28,20 @@ final class ParameterModel
      */
     public static function fromArray(array $data) : self
     {
+        $data = type_structure([
+            'name' => type_string(),
+            'type' => type_array(),
+            'has_default_value' => type_boolean(),
+            'is_nullable' => type_boolean(),
+            'is_variadic' => type_boolean(),
+        ])->assert($data);
+
+        /** @phpstan-var array<array<string, mixed>> $type */
+        $type = $data['type'];
+
         return new self(
             $data['name'],
-            TypesModel::fromArray($data['type']),
+            TypesModel::fromArray($type),
             $data['has_default_value'],
             $data['is_nullable'],
             $data['is_variadic'],

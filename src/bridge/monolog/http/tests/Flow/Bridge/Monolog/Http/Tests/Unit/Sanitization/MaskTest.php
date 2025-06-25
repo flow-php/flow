@@ -4,28 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Monolog\Http\Tests\Unit\Sanitization;
 
-use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
 use Flow\Bridge\Monolog\Http\Sanitization\Mask;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\InvalidTypeException;
 
 final class MaskTest extends FlowTestCase
 {
     public function test_from_array_throws_exception_when_character_is_not_a_string() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Character must be a string');
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: integer}"');
 
         Mask::fromArray([
+            'type' => 'mask',
             'character' => 123,
         ]);
     }
 
     public function test_from_array_throws_exception_when_offset_is_not_an_integer() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Offset must be an integer');
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"');
 
         Mask::fromArray([
+            'type' => 'mask',
+            'character' => '*',
             'offset' => '2',
         ]);
     }
@@ -33,6 +36,7 @@ final class MaskTest extends FlowTestCase
     public function test_from_array_with_custom_values() : void
     {
         $mask = Mask::fromArray([
+            'type' => 'mask',
             'character' => '#',
             'offset' => 2,
         ]);
@@ -44,7 +48,9 @@ final class MaskTest extends FlowTestCase
 
     public function test_from_array_with_default_values() : void
     {
-        $mask = Mask::fromArray([]);
+        $mask = Mask::fromArray([
+            'type' => 'mask',
+        ]);
 
         self::assertEquals('*', $mask->normalize()['character']);
         self::assertEquals(0, $mask->normalize()['offset']);

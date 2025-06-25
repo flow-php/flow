@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Formatter;
 
+use function Flow\Types\DSL\{type_instance_of};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata, SchemaFormatter};
@@ -30,6 +31,9 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
     ) {
     }
 
+    /**
+     * @param Schema $schema
+     */
     public function format(Schema $schema) : string
     {
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\schema");
@@ -41,10 +45,12 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     */
     private function enumType(Definition $definition) : string
     {
-        /** @var EnumType<\UnitEnum> $type */
-        $type = $definition->type();
+        $type = type_instance_of(EnumType::class)->assert($definition->type());
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\enum_schema");
 
         return \sprintf(
@@ -57,10 +63,11 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     */
     private function floatType(Definition $definition) : string
     {
-        /** @var FloatType $type */
-        $type = $definition->type();
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\float_schema");
 
         return \sprintf(
@@ -87,6 +94,9 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
+    /**
+     * @param Schema $schema
+     */
     private function formatSchema(Schema $schema, int $level = 1) : string
     {
         if (!\count($schema->definitions())) {
@@ -122,10 +132,12 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         return $definitions;
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     */
     private function listType(Definition $definition) : string
     {
-        /** @var ListType<mixed> $type */
-        $type = $definition->type();
+        $type = type_instance_of(ListType::class)->assert($definition->type());
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\\list_schema");
 
         return \sprintf(
@@ -138,6 +150,9 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     */
     private function mapType(Definition $definition) : string
     {
         /** @var MapType<array-key, mixed> $type */
@@ -154,6 +169,9 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     */
     private function simpleType(Definition $definition) : string
     {
         $reflection = match ($definition->type()::class) {
@@ -179,6 +197,9 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
         );
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     */
     private function structureType(Definition $definition) : string
     {
         /** @var StructureType<array<string, Type<mixed>>> $type */

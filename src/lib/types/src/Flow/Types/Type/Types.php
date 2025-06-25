@@ -4,28 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_equals, type_instance_of, type_null};
+use function Flow\Types\DSL\{type_equals, type_null};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\OptionalType;
 use Flow\Types\Type\Native\UnionType;
 
 /**
  * Unique collection of types.
+ *
+ * @template-covariant  T
  */
 final readonly class Types implements \Countable, \Stringable
 {
     /**
-     * @var ?Type<mixed>
+     * @var ?Type<T>
      */
     private ?Type $first;
 
     /**
-     * @var array<Type<mixed>>
+     * @var array<Type<T>>
      */
     private array $types;
 
     /**
-     * @param Type<mixed> ...$types
+     * @param Type<T> ...$types
      */
     public function __construct(Type ...$types)
     {
@@ -45,7 +47,7 @@ final readonly class Types implements \Countable, \Stringable
     }
 
     /**
-     * @return array<Type<mixed>>
+     * @return array<Type<T>>
      */
     public function all() : array
     {
@@ -57,6 +59,9 @@ final readonly class Types implements \Countable, \Stringable
         return \count($this->types);
     }
 
+    /**
+     * @return Types<T>
+     */
     public function deduplicate() : self
     {
         $types = [];
@@ -69,7 +74,7 @@ final readonly class Types implements \Countable, \Stringable
     }
 
     /**
-     * @return ?Type<mixed>
+     * @return ?Type<T>
      */
     public function first() : ?Type
     {
@@ -122,6 +127,8 @@ final readonly class Types implements \Countable, \Stringable
 
     /**
      * @param Type<mixed> ...$types
+     *
+     * @return Types<T>
      */
     public function only(Type ...$types) : self
     {
@@ -140,6 +147,8 @@ final readonly class Types implements \Countable, \Stringable
 
     /**
      * Reduce optional types to their base types.
+     *
+     * @return Types<mixed>
      */
     public function reduceOptionals() : self
     {
@@ -149,18 +158,19 @@ final readonly class Types implements \Countable, \Stringable
             if ($type instanceof OptionalType) {
                 $types[] = $type->base();
             } elseif ($type instanceof UnionType && $type->isOptionalType()) {
-                $t = type_instance_of(Type::class)->assert($type->types()->without(type_null())->first());
-                $types[] = $t;
+                $types[] = $type->types()->without(type_null())->first();
             } else {
                 $types[] = $type;
             }
         }
 
-        return new self(...$types);
+        return new self(...\array_values(\array_filter($types)));
     }
 
     /**
      * @param Type<mixed> ...$types
+     *
+     * @return Types<T>
      */
     public function without(Type ...$types) : self
     {

@@ -87,18 +87,20 @@ final class DbalLimitOffsetExtractor implements Extractor
                     $countQuery->resetQueryPart('orderBy');
                 }
 
-                $total = (int) $this->connection->fetchOne(
+                $totalValue = $this->connection->fetchOne(
                     $countQuery->getSQL(),
                     $countQuery->getParameters(),
                     $countQuery->getParameterTypes()
                 );
+                $total = \is_numeric($totalValue) ? (int) $totalValue : 0;
             } else {
                 // For grouped queries, wrap in a subquery to get accurate count
-                $total = (int) $this->connection->executeQuery(
+                $totalValue = $this->connection->executeQuery(
                     'SELECT COUNT(*) FROM (' . $countQuery->getSQL() . ') as count_query',
                     $countQuery->getParameters(),
                     $countQuery->getParameterTypes()
                 )->fetchOne();
+                $total = \is_numeric($totalValue) ? (int) $totalValue : 0;
             }
         }
 

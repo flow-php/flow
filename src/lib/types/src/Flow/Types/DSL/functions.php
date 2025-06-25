@@ -38,32 +38,36 @@ use Flow\Types\Type\Native\{ArrayType,
     ResourceType,
     StringType,
     UnionType};
+use Flow\Types\Value\Uuid;
 use UnitEnum;
-
-/**
- * @template T of array
- *
- * @param T $elements
- *
- * @return StructureType<T>
- */
-#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_structure(array $elements) : StructureType
-{
-    return new StructureType($elements);
-}
 
 /**
  * @template T
  *
- * @param \Flow\Types\Type<T> $first
- * @param Type<T> $second
- * @param \Flow\Types\Type<T> ...$types
+ * @param array<string, Type<T>> $elements
+ * @param array<string, Type<T>> $optional_elements
  *
- * @return UnionType<T, T>
+ * @return Type<array<string, T>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_union(Type $first, Type $second, Type ...$types) : UnionType
+function type_structure(array $elements = [], array $optional_elements = [], bool $allow_extra = false) : Type
+{
+    return new StructureType($elements, $optional_elements, $allow_extra);
+}
+
+/**
+ * @template T
+ * @template T
+ * @template T
+ *
+ * @param Type<T> $first
+ * @param Type<T> $second
+ * @param Type<T> ...$types
+ *
+ * @return Type<T>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_union(Type $first, Type $second, Type ...$types) : Type
 {
     $type = new UnionType($first, $second);
 
@@ -77,14 +81,14 @@ function type_union(Type $first, Type $second, Type ...$types) : UnionType
 /**
  * @template T
  *
- * @param \Flow\Types\Type<T> $first
+ * @param Type<T> $first
  * @param Type<T> $second
- * @param \Flow\Types\Type<T> ...$types
+ * @param Type<T> ...$types
  *
- * @return IntersectionType<T, T>
+ * @return Type<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_intersection(Type $first, Type $second, Type ...$types) : IntersectionType
+function type_intersection(Type $first, Type $second, Type ...$types) : Type
 {
     $type = new IntersectionType($first, $second);
 
@@ -95,8 +99,11 @@ function type_intersection(Type $first, Type $second, Type ...$types) : Intersec
     return $type;
 }
 
+/**
+ * @return Type<numeric-string>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_numeric_string() : NumericStringType
+function type_numeric_string() : Type
 {
     return new NumericStringType();
 }
@@ -106,18 +113,18 @@ function type_numeric_string() : NumericStringType
  *
  * @param Type<T> $type
  *
- * @return OptionalType<T>
+ * @return Type<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_optional(Type $type) : OptionalType
+function type_optional(Type $type) : Type
 {
     return new OptionalType($type);
 }
 
 /**
- * @param array<mixed> $data
+ * @param array<string, mixed> $data
  *
- * @return \Flow\Types\Type<mixed>
+ * @return Type<mixed>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_from_array(array $data) : Type
@@ -126,7 +133,9 @@ function type_from_array(array $data) : Type
 }
 
 /**
- * @param Type<mixed> $type
+ * @template T
+ *
+ * @param Type<T> $type
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_is_nullable(Type $type) : bool
@@ -147,11 +156,8 @@ function type_is_nullable(Type $type) : bool
 }
 
 /**
- * @template TLeft
- * @template TRight
- *
- * @param Type<TLeft> $left
- * @param Type<TRight> $right
+ * @param Type<mixed> $left
+ * @param Type<mixed> $right
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_equals(Type $left, Type $right) : bool
@@ -160,7 +166,11 @@ function type_equals(Type $left, Type $right) : bool
 }
 
 /**
- * @param Type<mixed> ...$types
+ * @template T
+ *
+ * @param Type<T> ...$types
+ *
+ * @return Types<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function types(Type ...$types) : Types
@@ -182,80 +192,115 @@ function type_list(Type $element) : ListType
 }
 
 /**
- * @template T
+ * @template TKey of array-key
+ * @template TValue
  *
- * @param Type<T> $value_type
+ * @param Type<TKey> $key_type
+ * @param Type<TValue> $value_type
  *
- * @return MapType<array-key, T>
+ * @return Type<array<TKey, TValue>>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_map(StringType|IntegerType $key_type, Type $value_type) : MapType
+function type_map(Type $key_type, Type $value_type) : Type
 {
     return new MapType($key_type, $value_type);
 }
 
+/**
+ * @return Type<string>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_json() : JsonType
+function type_json() : Type
 {
     return new JsonType();
 }
 
+/**
+ * @return Type<\DateTimeInterface>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_datetime() : DateTimeType
+function type_datetime() : Type
 {
     return new DateTimeType();
 }
 
+/**
+ * @return Type<\DateTimeInterface>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_date() : DateType
+function type_date() : Type
 {
     return new DateType();
 }
 
+/**
+ * @return Type<\DateInterval>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_time() : TimeType
+function type_time() : Type
 {
     return new TimeType();
 }
 
+/**
+ * @return Type<\DOMDocument>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_xml() : XMLType
+function type_xml() : Type
 {
     return new XMLType();
 }
 
+/**
+ * @return Type<\DOMElement>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_xml_element() : XMLElementType
+function type_xml_element() : Type
 {
     return new XMLElementType();
 }
 
+/**
+ * @return Type<Uuid>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_uuid() : UuidType
+function type_uuid() : Type
 {
     return new UuidType();
 }
 
+/**
+ * @return Type<int>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_integer() : IntegerType
+function type_integer() : Type
 {
     return new IntegerType();
 }
 
+/**
+ * @return Type<string>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_string() : StringType
+function type_string() : Type
 {
     return new StringType();
 }
 
+/**
+ * @return Type<float>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_float() : FloatType
+function type_float() : Type
 {
     return new FloatType();
 }
 
+/**
+ * @return Type<bool>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_boolean() : BooleanType
+function type_boolean() : Type
 {
     return new BooleanType();
 }
@@ -265,64 +310,91 @@ function type_boolean() : BooleanType
  *
  * @param class-string<T> $class
  *
- * @return InstanceOfType<T>
+ * @return Type<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_instance_of(string $class) : InstanceOfType
+function type_instance_of(string $class) : Type
 {
     return new InstanceOfType($class);
 }
 
+/**
+ * @return Type<object>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_object() : ObjectType
+function type_object() : Type
 {
     return new ObjectType();
 }
 
+/**
+ * @return Type<bool|float|int|string>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_scalar() : ScalarType
+function type_scalar() : Type
 {
     return new ScalarType();
 }
 
+/**
+ * @return Type<resource>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_resource() : ResourceType
+function type_resource() : Type
 {
     return new ResourceType();
 }
 
+/**
+ * @return Type<array<mixed>>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_array() : ArrayType
+function type_array() : Type
 {
     return new ArrayType();
 }
 
+/**
+ * @return Type<callable>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_callable() : CallableType
+function type_callable() : Type
 {
     return new CallableType();
 }
 
+/**
+ * @return Type<null>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_null() : NullType
+function type_null() : Type
 {
     return new NullType();
 }
 
+/**
+ * @return Type<mixed>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_mixed() : MixedType
+function type_mixed() : Type
 {
     return new MixedType();
 }
 
+/**
+ * @return Type<int<0, max>>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_positive_integer() : PositiveIntegerType
+function type_positive_integer() : Type
 {
     return new PositiveIntegerType();
 }
 
+/**
+ * @return Type<non-empty-string>
+ */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_non_empty_string() : NonEmptyStringType
+function type_non_empty_string() : Type
 {
     return new NonEmptyStringType();
 }
@@ -332,10 +404,10 @@ function type_non_empty_string() : NonEmptyStringType
  *
  * @param class-string<T> $class
  *
- * @return EnumType<T>
+ * @return Type<T>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_enum(string $class) : EnumType
+function type_enum(string $class) : Type
 {
     return new EnumType($class);
 }
@@ -356,8 +428,8 @@ function type_literal(bool|float|int|string $value) : LiteralType
 /**
  * @template T
  *
- * @param \Flow\Types\Type<T> $type
- * @param class-string<\Flow\Types\Type<mixed>> $typeClass
+ * @param Type<T> $type
+ * @param class-string<Type<mixed>> $typeClass
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_is(Type $type, string $typeClass) : bool
@@ -368,9 +440,9 @@ function type_is(Type $type, string $typeClass) : bool
 /**
  * @template T
  *
- * @param \Flow\Types\Type<T> $type
- * @param class-string<\Flow\Types\Type<mixed>> $typeClass
- * @param class-string<\Flow\Types\Type<mixed>> ...$typeClasses
+ * @param Type<T> $type
+ * @param class-string<Type<mixed>> $typeClass
+ * @param class-string<Type<mixed>> ...$typeClasses
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::HELPER)]
 function type_is_any(Type $type, string $typeClass, string ...$typeClasses) : bool
@@ -392,10 +464,10 @@ function get_type(mixed $value) : Type
  *
  * @param null|class-string<T> $class
  *
- * @return ClassStringType<T>
+ * @return ($class is null ? Type<class-string> : Type<class-string<T>>)
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_class_string(?string $class = null) : ClassStringType
+function type_class_string(?string $class = null) : Type
 {
     return new ClassStringType($class);
 }

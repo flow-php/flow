@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_string};
+use function Flow\Types\DSL\{type_equals, type_optional, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\StringType;
 
 /**
- * @implements Entry<?string, string>
+ * @implements Entry<?string>
  */
 final class StringEntry implements Entry
 {
@@ -22,7 +21,10 @@ final class StringEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly StringType $type;
+    /**
+     * @var Type<string>
+     */
+    private readonly Type $type;
 
     /**
      * @throws InvalidArgumentException
@@ -81,7 +83,7 @@ final class StringEntry implements Entry
         );
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : self
     {
         return new self($this->name, $this->value, $this->metadata);
     }
@@ -100,7 +102,7 @@ final class StringEntry implements Entry
         return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value()));
     }
@@ -113,7 +115,7 @@ final class StringEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function rename(string $name) : Entry
+    public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
@@ -134,11 +136,6 @@ final class StringEntry implements Entry
         return $value;
     }
 
-    public function toUppercase() : self
-    {
-        return new self($this->name, $this->value ? \mb_strtoupper($this->value) : null);
-    }
-
     public function type() : Type
     {
         return $this->type;
@@ -149,8 +146,8 @@ final class StringEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : self
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

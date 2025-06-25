@@ -32,6 +32,7 @@ final class ArrayMergeCollection extends ScalarFunctionChain
             }
         }
 
+        /** @var array<array<mixed>> $array */
         return \array_merge(...\array_values($array));
     }
 }

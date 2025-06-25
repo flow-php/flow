@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
-use function Flow\Types\DSL\{type_datetime,
+use function Flow\Types\DSL\{type_boolean,
+    type_datetime,
     type_float,
     type_from_array,
     type_integer,
@@ -13,7 +14,7 @@ use function Flow\Types\DSL\{type_datetime,
     type_optional,
     type_string,
     type_structure};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{InvalidArgumentException, InvalidTypeException};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -97,6 +98,60 @@ final class StructureTypeTest extends TestCase
             'value' => ['id' => 1, 'name' => null, 'active' => false],
             'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()]),
             'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'valid structure with extra field when allow_extra is true' => [
+            'value' => ['id' => 1, 'name' => 'test', 'active' => false],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid structure with multiple extra fields when allow_extra is true' => [
+            'value' => ['id' => 1, 'name' => 'test', 'active' => false, 'created_at' => '2023-01-01'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid structure with missing required field even when allow_extra is true' => [
+            'value' => ['name' => 'test', 'active' => false],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'valid structure with optional elements present' => [
+            'value' => ['id' => 1, 'name' => 'test', 'active' => false],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], ['active' => type_boolean()]),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid structure with optional elements missing' => [
+            'value' => ['id' => 1, 'name' => 'test'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], ['active' => type_boolean()]),
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid structure with some optional elements present' => [
+            'value' => ['id' => 1, 'name' => 'test', 'active' => false],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], ['active' => type_boolean(), 'created_at' => type_string()]),
+            'exceptionClass' => null,
+        ];
+
+        yield 'invalid structure with wrong type for optional element' => [
+            'value' => ['id' => 1, 'name' => 'test', 'active' => 'invalid'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], ['active' => type_boolean()]),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'invalid structure with unknown field when optional elements present and allow_extra false' => [
+            'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], ['active' => type_boolean()]),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'valid structure with unknown field when optional elements present and allow_extra true' => [
+            'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
+            'structureType' => type_structure(['id' => type_integer(), 'name' => type_string()], ['active' => type_boolean()], true),
+            'exceptionClass' => null,
         ];
     }
 
@@ -200,6 +255,84 @@ final class StructureTypeTest extends TestCase
             'value' => [1, 2],
             'expected' => false,
         ];
+
+        yield 'invalid structure with extra fields when allow_extra is false' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()]),
+            'value' => ['id' => 1, 'name' => 'test', 'active' => true],
+            'expected' => false,
+        ];
+
+        yield 'valid structure with extra fields when allow_extra is true' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'value' => ['id' => 1, 'name' => 'test', 'active' => true],
+            'expected' => true,
+        ];
+
+        yield 'valid structure with multiple extra fields when allow_extra is true' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'value' => ['id' => 1, 'name' => 'test', 'active' => true, 'created_at' => '2023-01-01', 'updated_at' => '2023-01-02'],
+            'expected' => true,
+        ];
+
+        yield 'invalid structure with missing required field when allow_extra is true' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'value' => ['name' => 'test', 'active' => true],
+            'expected' => false,
+        ];
+
+        yield 'valid structure with only required fields when allow_extra is true' => [
+            'structure' => type_structure(['id' => type_integer(), 'name' => type_string()], [], true),
+            'value' => ['id' => 1, 'name' => 'test'],
+            'expected' => true,
+        ];
+
+        yield 'valid structure with optional elements present' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string(), 'active' => type_boolean()]),
+            'value' => ['id' => 1, 'name' => 'test', 'active' => true],
+            'expected' => true,
+        ];
+
+        yield 'valid structure with some optional elements present' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string(), 'active' => type_boolean()]),
+            'value' => ['id' => 1, 'name' => 'test'],
+            'expected' => true,
+        ];
+
+        yield 'valid structure with no optional elements present' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string(), 'active' => type_boolean()]),
+            'value' => ['id' => 1],
+            'expected' => true,
+        ];
+
+        yield 'invalid structure with wrong type for optional element' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string()]),
+            'value' => ['id' => 1, 'name' => 123],
+            'expected' => false,
+        ];
+
+        yield 'invalid structure with extra field when optional elements present and allow_extra false' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string()]),
+            'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
+            'expected' => false,
+        ];
+
+        yield 'valid structure with extra field when optional elements present and allow_extra true' => [
+            'structure' => type_structure(['id' => type_integer()], ['name' => type_string()], true),
+            'value' => ['id' => 1, 'name' => 'test', 'unknown' => 'value'],
+            'expected' => true,
+        ];
+    }
+
+    public function test_allows_extra_false_by_default() : void
+    {
+        $type = type_structure(['id' => type_integer()]);
+        self::assertFalse($type->allowsExtra());
+    }
+
+    public function test_allows_extra_true_when_set() : void
+    {
+        $type = type_structure(['id' => type_integer()], [], true);
+        self::assertTrue($type->allowsExtra());
     }
 
     #[DataProvider('assert_data_provider')]
@@ -222,6 +355,29 @@ final class StructureTypeTest extends TestCase
         } else {
             self::assertSame($expected, $structure->cast($value));
         }
+    }
+
+    public function test_constructor_allows_empty_required_if_optional_provided() : void
+    {
+        $type = type_structure([], ['id' => type_integer()]);
+        self::assertEmpty($type->elements());
+        self::assertNotEmpty($type->optionalElements());
+    }
+
+    public function test_constructor_prevents_duplicate_keys() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Element keys cannot be both required and optional: id');
+
+        type_structure(['id' => type_integer()], ['id' => type_string()]);
+    }
+
+    public function test_constructor_requires_at_least_one_element() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Structure must receive at least one element (required or optional)');
+
+        type_structure([], []);
     }
 
     public function test_elements() : void
@@ -251,6 +407,46 @@ final class StructureTypeTest extends TestCase
         self::assertEquals($type, $recreated);
     }
 
+    public function test_normalization_with_allow_extra() : void
+    {
+        $type = type_structure([
+            'string' => type_string(),
+            'float' => type_float(),
+        ], [], true);
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
+        self::assertTrue($recreated->allowsExtra());
+    }
+
+    public function test_normalization_with_optional_elements() : void
+    {
+        $type = type_structure(
+            ['id' => type_integer()],
+            ['name' => type_string(), 'active' => type_boolean()]
+        );
+        $normalized = $type->normalize();
+        $recreated = type_from_array($normalized);
+
+        self::assertEquals($type, $recreated);
+        self::assertEquals(['name' => type_string(), 'active' => type_boolean()], $recreated->optionalElements());
+    }
+
+    public function test_optional_elements() : void
+    {
+        $optionalElements = ['name' => type_string(), 'active' => type_boolean()];
+        $type = type_structure(['id' => type_integer()], $optionalElements);
+
+        self::assertEquals($optionalElements, $type->optionalElements());
+    }
+
+    public function test_optional_elements_empty_by_default() : void
+    {
+        $type = type_structure(['id' => type_integer()]);
+        self::assertEmpty($type->optionalElements());
+    }
+
     public function test_to_string() : void
     {
         $struct = type_structure([
@@ -261,6 +457,19 @@ final class StructureTypeTest extends TestCase
 
         self::assertSame(
             'structure{string: string, float: float, map: map<string, list<datetime>>}',
+            $struct->toString()
+        );
+    }
+
+    public function test_to_string_with_optional_elements() : void
+    {
+        $struct = type_structure(
+            ['id' => type_integer(), 'name' => type_string()],
+            ['active' => type_boolean(), 'score' => type_float()]
+        );
+
+        self::assertSame(
+            'structure{id: integer, name: string, active?: boolean, score?: float}',
             $struct->toString()
         );
     }

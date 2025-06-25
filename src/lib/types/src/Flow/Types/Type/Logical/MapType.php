@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
+use function Flow\Types\DSL\{
+    type_from_array,
+    type_literal,
+    type_map,
+    type_mixed,
+    type_string,
+    type_structure};
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\{IntegerType, StringType};
-use Flow\Types\Type\{TypeFactory};
 
 /**
  * @template TKey of array-key
@@ -18,26 +23,27 @@ use Flow\Types\Type\{TypeFactory};
 final readonly class MapType implements Type
 {
     /**
+     * @param Type<TKey> $key
      * @param Type<TValue> $value
      */
-    public function __construct(private StringType|IntegerType $key, private Type $value)
+    public function __construct(private Type $key, private Type $value)
     {
     }
 
     /**
-     * @param array{type: 'map', key: array<string, mixed>, value: array<string, mixed>} $data
+     * @param array<string, mixed> $data
      *
-     * @return MapType<array-key, Type<mixed>>
+     * @return MapType<array-key, mixed>
      */
     public static function fromArray(array $data) : self
     {
-        $keyType = TypeFactory::fromArray($data['key']);
+        $data = type_structure([
+            'type' => type_literal('map'),
+            'key' => type_map(type_string(), type_mixed()),
+            'value' => type_map(type_string(), type_mixed()),
+        ])->assert($data);
 
-        if (!$keyType instanceof StringType && !$keyType instanceof IntegerType) {
-            throw new InvalidArgumentException('Map key must be string or integer');
-        }
-
-        return new self($keyType, TypeFactory::fromArray($data['value']));
+        return new self(type_from_array($data['key']), type_from_array($data['value']));
     }
 
     public function assert(mixed $value) : array
@@ -53,7 +59,13 @@ final readonly class MapType implements Type
     {
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+                $decoded = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+
+                return $this->assert($decoded);
+            }
+
+            if (!\is_iterable($value)) {
+                throw new CastingException($value, $this);
             }
 
             $castedMap = [];
@@ -93,7 +105,10 @@ final readonly class MapType implements Type
         return true;
     }
 
-    public function key() : StringType|IntegerType
+    /**
+     * @return Type<TKey>
+     */
+    public function key() : Type
     {
         return $this->key;
     }
@@ -116,7 +131,7 @@ final readonly class MapType implements Type
     }
 
     /**
-     * @return Type<mixed>
+     * @return Type<TValue>
      */
     public function value() : Type
     {

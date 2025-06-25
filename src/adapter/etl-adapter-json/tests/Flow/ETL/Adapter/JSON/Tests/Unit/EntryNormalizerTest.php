@@ -42,7 +42,7 @@ final class EntryNormalizerTest extends FlowTestCase
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     #[DataProvider('entries_provider')]
     public function test_normalizing_entries(Entry $entry, mixed $expected) : void

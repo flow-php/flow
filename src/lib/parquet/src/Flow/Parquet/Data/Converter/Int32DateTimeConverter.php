@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data\Converter;
 
+use function Flow\Types\DSL\{type_instance_of, type_integer};
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
@@ -13,7 +14,7 @@ final class Int32DateTimeConverter implements Converter
 {
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
-        return $this->millisecondsToDateTimeImmutable($data);
+        return $this->millisecondsToDateTimeImmutable(type_integer()->assert($data));
     }
 
     public function isFor(FlatColumn $column, Options $options) : bool
@@ -27,7 +28,7 @@ final class Int32DateTimeConverter implements Converter
 
     public function toParquetType(mixed $data) : int
     {
-        return $this->dateTimeToMicroseconds($data);
+        return $this->dateTimeToMicroseconds(type_instance_of(\DateTimeInterface::class)->assert($data));
     }
 
     private function dateTimeToMicroseconds(\DateTimeInterface $dateTime) : int

@@ -75,11 +75,17 @@ final class SchemaValidationException extends RuntimeException
         parent::__construct("Schema validation failed: \n" . $message);
     }
 
+    /**
+     * @return Schema
+     */
     public function given() : Schema
     {
         return $this->given;
     }
 
+    /**
+     * @return Schema
+     */
     public function schema() : Schema
     {
         return $this->expected;

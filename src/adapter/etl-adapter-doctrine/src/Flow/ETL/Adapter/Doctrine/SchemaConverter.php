@@ -54,6 +54,7 @@ final readonly class SchemaConverter
     }
 
     /**
+     * @param Schema $schema
      * @param array<array-key, mixed> $tableOptions
      */
     public function toDbalTable(Schema $schema, string $tableName, array $tableOptions = []) : Table
@@ -71,6 +72,9 @@ final readonly class SchemaConverter
         return $table;
     }
 
+    /**
+     * @return Schema
+     */
     public function toFlowSchema(Table $table) : Schema
     {
         $definitions = [];
@@ -82,6 +86,9 @@ final readonly class SchemaConverter
         return new Schema(...$definitions);
     }
 
+    /**
+     * @return Definition<mixed>
+     */
     private function columnToFlow(Column $column, Table $table) : Definition
     {
         $type = $this->typesMap->toFlowType($column->getType()::class);
@@ -95,7 +102,11 @@ final readonly class SchemaConverter
         }
 
         if ($column->getDefault() !== null) {
-            $metadata = $metadata->merge(DbalMetadata::default($column->getDefault()));
+            $defaultValue = $column->getDefault();
+
+            if (\is_scalar($defaultValue)) {
+                $metadata = $metadata->merge(DbalMetadata::default($defaultValue));
+            }
         }
 
         if ($column->getPrecision() !== null) {
@@ -220,6 +231,11 @@ final readonly class SchemaConverter
     }
 
     /**
+     * @return array<Index>
+     */
+    /**
+     * @param Schema $schema
+     *
      * @return array<Index>
      */
     private function updateIndexes(Schema $schema, Table $table) : array

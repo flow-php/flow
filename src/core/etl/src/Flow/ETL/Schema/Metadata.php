@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema;
 
+use function Flow\Types\DSL\{type_array};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\{Type};
@@ -30,6 +31,8 @@ final class Metadata
      */
     public static function fromArray(array $map) : self
     {
+        type_array()->assert($map);
+
         return new self($map);
     }
 
@@ -114,6 +117,7 @@ final class Metadata
      */
     public function normalize() : array
     {
+        /** @var array<string, array<bool|float|int|string>|bool|float|int|string> */
         return $this->map;
     }
 

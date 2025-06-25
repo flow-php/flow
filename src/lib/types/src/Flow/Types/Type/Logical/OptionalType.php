@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use function Flow\Types\DSL\{type_literal, type_map, type_mixed, type_string, type_structure};
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Type;
 use Flow\Types\Type\{Native\MixedType, TypeFactory};
@@ -12,7 +13,7 @@ use Flow\Types\Type\Native\UnionType;
 /**
  * @template T
  *
- * @implements Type<?T>
+ * @implements Type<T>
  */
 final readonly class OptionalType implements Type
 {
@@ -37,19 +38,24 @@ final readonly class OptionalType implements Type
     }
 
     /**
-     * @param array{type: 'optional', base: array<string, mixed>} $data
+     * @param array<string, mixed> $data
      *
-     * @return OptionalType<Type<mixed>>
+     * @return OptionalType<mixed>
      */
-    public static function fromArray(array $data) : Type
+    public static function fromArray(array $data) : self
     {
+        type_structure([
+            'type' => type_literal('optional'),
+            'base' => type_map(type_string(), type_mixed()),
+        ])->assert($data);
+
         return new self(TypeFactory::fromArray($data['base']));
     }
 
     public function assert(mixed $value) : mixed
     {
-        if ($value === null) {
-            return null;
+        if ($this->isValid($value)) {
+            return $value;
         }
 
         return $this->base->assert($value);
@@ -67,10 +73,6 @@ final readonly class OptionalType implements Type
     {
         if ($this->isValid($value)) {
             return $value;
-        }
-
-        if ($value === null) {
-            return null;
         }
 
         return $this->base->cast($value);

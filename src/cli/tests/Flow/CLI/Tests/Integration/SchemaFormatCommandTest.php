@@ -86,7 +86,9 @@ final class SchemaFormatCommandTest extends TestCase
                 "country": {
                     "type": "string"
                 }
-            }
+            },
+            "optional_elements": [],
+            "allow_extra": false
         },
         "nullable": false,
         "metadata": []
@@ -118,7 +120,9 @@ final class SchemaFormatCommandTest extends TestCase
                     "price": {
                         "type": "float"
                     }
-                }
+                },
+                "optional_elements": [],
+                "allow_extra": false
             }
         },
         "nullable": false,

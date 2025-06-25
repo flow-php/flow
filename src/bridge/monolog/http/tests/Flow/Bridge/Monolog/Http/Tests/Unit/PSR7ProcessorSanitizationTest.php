@@ -45,11 +45,13 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
         $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
 
         $requestData = json_decode((string) $record['context']['request']['body'], true);
+        \assert(\is_array($requestData));
 
         self::assertEquals('john_doe', $requestData['username']);
         self::assertEquals('***************', $requestData['password']);
         self::assertEquals('john@example.com', $requestData['email']);
         self::assertEquals('###############', $requestData['access_token']);
+        \assert(\is_array($requestData['data']));
         self::assertEquals('se***********', $requestData['data']['key']);
         self::assertEquals('public_value', $requestData['data']['value']);
     }
@@ -86,8 +88,11 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
         $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
 
         $responseData = json_decode((string) $record['context']['response']['body'], true);
+        \assert(\is_array($responseData));
 
         self::assertEquals('success', $responseData['status']);
+        \assert(\is_array($responseData['data']));
+        \assert(\is_array($responseData['data']['user']));
         self::assertEquals(123, $responseData['data']['user']['id']);
         self::assertEquals('john_doe', $responseData['data']['user']['username']);
         self::assertEquals('*********************', $responseData['data']['user']['credentials']);

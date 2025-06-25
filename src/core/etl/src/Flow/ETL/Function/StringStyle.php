@@ -32,6 +32,10 @@ final class StringStyle extends ScalarFunctionChain
             $style = StringStyles::fromString($style->value);
         }
 
+        if (!$style instanceof StringStyles) {
+            return null;
+        }
+
         return $style->convert($string);
     }
 }

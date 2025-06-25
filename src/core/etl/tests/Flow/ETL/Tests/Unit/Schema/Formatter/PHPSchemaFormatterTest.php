@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Schema\Formatter;
 use function Flow\ETL\DSL\{bool_schema,
     date_schema,
     datetime_schema,
+    empty_schema,
     enum_schema,
     float_schema,
     int_schema,
@@ -15,7 +16,7 @@ use function Flow\ETL\DSL\{bool_schema,
     map_schema,
     schema,
     str_schema,
-    struct_schema,
+    structure_schema,
     time_schema,
     uuid_schema,
     xml_element_schema,
@@ -32,7 +33,7 @@ final class PHPSchemaFormatterTest extends FlowTestCase
     {
         self::assertEquals(
             '\\Flow\\ETL\\DSL\\schema();',
-            (new PHPSchemaFormatter())->format(schema())
+            (new PHPSchemaFormatter())->format(empty_schema())
         );
     }
 
@@ -161,7 +162,7 @@ PHP,
 );
 PHP,
             (new PHPSchemaFormatter())->format(schema(
-                struct_schema('structure', type_structure(
+                structure_schema('structure', type_structure(
                     ['int' => type_optional(type_integer()), 'string' => type_optional(type_string())],
                 ))
             ))

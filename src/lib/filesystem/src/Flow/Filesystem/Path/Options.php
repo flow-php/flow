@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Path;
 
+use function Flow\Types\DSL\type_string;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
 final class Options
@@ -21,7 +22,7 @@ final class Options
         $normalizedOptions = [];
 
         foreach ($options as $option => $value) {
-            $normalizedOptions[\mb_strtolower((string) $option)] = (string) $value;
+            $normalizedOptions[\mb_strtolower(type_string()->cast($option))] = type_string()->cast($value);
         }
 
         $this->options = $normalizedOptions;

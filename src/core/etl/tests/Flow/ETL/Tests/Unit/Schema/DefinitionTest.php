@@ -14,7 +14,7 @@ use function Flow\ETL\DSL\{bool_schema,
     string_schema,
     structure_schema,
     time_schema};
-use function Flow\ETL\DSL\{datetime_schema, int_entry, int_schema, str_entry, struct_entry, struct_schema};
+use function Flow\ETL\DSL\{datetime_schema, int_entry, int_schema, str_entry, struct_entry};
 use function Flow\Types\DSL\{type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\{RuntimeException};
 use Flow\ETL\Schema\Definition;
@@ -264,7 +264,7 @@ final class DefinitionTest extends FlowTestCase
 
     public function test_normalize_and_from_array() : void
     {
-        $definition = struct_schema(
+        $definition = structure_schema(
             'structure',
             type_structure(
                 [

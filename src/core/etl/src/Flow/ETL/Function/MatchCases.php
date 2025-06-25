@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Function\MatchCases\MatchCase;
+use Flow\ETL\Function\MatchCases\MatchCondition;
 use Flow\ETL\Row;
 
 final class MatchCases extends ScalarFunctionChain
 {
     /**
-     * @param array<MatchCase> $cases
-     * @param MatchCase $default
+     * @param array<MatchCondition> $cases
+     * @param mixed $default
      */
     public function __construct(private readonly array $cases, private readonly mixed $default = null)
     {
@@ -28,7 +28,7 @@ final class MatchCases extends ScalarFunctionChain
         }
 
         if ($this->default) {
-            return $this->default->eval($row);
+            return (new Parameter($this->default))->eval($row);
         }
 
         throw new RuntimeException(

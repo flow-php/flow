@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 
-use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\{Connection, ParameterType};
 use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Type;
 
 final class DatabaseContext
 {
@@ -61,7 +62,9 @@ final class DatabaseContext
      */
     public function insert(string $tableName, array $data, array $types = []) : void
     {
-        $this->connection->insert($tableName, $data, $types);
+        /** @var array<int<0, max>|string, ParameterType|string|Type> $doctrineTypes */
+        $doctrineTypes = $types;
+        $this->connection->insert($tableName, $data, $doctrineTypes);
     }
 
     public function numberOfExecutedInsertQueries() : int
@@ -102,7 +105,7 @@ final class DatabaseContext
 
     public function tableCount(string $tableName) : int
     {
-        return (int) $this->connection->fetchOne(
+        $result = $this->connection->fetchOne(
             $this
                 ->connection
                 ->createQueryBuilder()
@@ -110,5 +113,7 @@ final class DatabaseContext
                 ->from($tableName)
                 ->getSQL()
         );
+
+        return \is_numeric($result) ? (int) $result : 0;
     }
 }

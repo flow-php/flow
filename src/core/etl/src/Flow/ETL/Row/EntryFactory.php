@@ -10,7 +10,6 @@ use function Flow\ETL\DSL\{bool_entry,
     enum_entry,
     float_entry,
     int_entry,
-    is_type,
     json_entry,
     json_object_entry,
     list_entry,
@@ -21,11 +20,11 @@ use function Flow\ETL\DSL\{bool_entry,
     uuid_entry,
     xml_element_entry,
     xml_entry};
-use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element};
+use function Flow\Types\DSL\{type_date, type_datetime, type_json, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element};
 use Flow\ETL\Exception\{InvalidArgumentException,
     RuntimeException,
     SchemaDefinitionNotFoundException};
-use Flow\ETL\Row\Entry\{ListEntry, StringEntry};
+use Flow\ETL\Row\Entry\{ListEntry, MapEntry, StringEntry, StructureEntry};
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Exception\CastingException;
@@ -59,11 +58,13 @@ use Flow\Types\Value\Uuid;
 final readonly class EntryFactory
 {
     /**
+     * @param null|Definition<mixed>|Schema $schema
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
      * @throws SchemaDefinitionNotFoundException
      *
-     * @return Entry<mixed, mixed>
+     * @return Entry<mixed>
      */
     public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null) : Entry
     {
@@ -84,6 +85,7 @@ final readonly class EntryFactory
         $valueType = (new TypeDetector())->detectType($value);
 
         if ($valueType instanceof StringType) {
+            $value = type_string()->assert($value);
             $stringChecker = new StringTypeChecker($value);
 
             if ($stringChecker->isJson()) {
@@ -107,7 +109,7 @@ final readonly class EntryFactory
             } elseif ($valueType->class === \DateInterval::class) {
                 $valueType = type_time();
             } elseif (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
-                if ($value->format('H:i:s') === '00:00:00') {
+                if ($value instanceof \DateTimeInterface && $value->format('H:i:s') === '00:00:00') {
                     $valueType = type_date();
                 } else {
                     $valueType = type_datetime();
@@ -127,18 +129,20 @@ final readonly class EntryFactory
     }
 
     /**
-     * @param Definition|Type<mixed> $type
+     * @param Definition<mixed>|Type<mixed> $definition
      *
-     * @return Entry<mixed, mixed>
+     * @return Entry<mixed>
      */
-    public function createAs(string $entryName, mixed $value, Definition|Type $type, ?Metadata $metadata = null) : Entry
+    public function createAs(string $entryName, mixed $value, Definition|Type $definition, ?Metadata $metadata = null) : Entry
     {
-        if ($type instanceof Definition) {
-            if ($type->isNullable()) {
-                $type = type_optional($type->type());
+        if ($definition instanceof Definition) {
+            if ($definition->isNullable()) {
+                $type = type_optional($definition->type());
             } else {
-                $type = $type->type();
+                $type = $definition->type();
             }
+        } else {
+            $type = $definition;
         }
 
         if (null === $value && $type instanceof OptionalType) {
@@ -173,59 +177,61 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof StringType) {
-                return str_entry($entryName, is_type([type_string()], $value) ? $value : $type->cast($value), $metadata);
+                return str_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof IntegerType) {
-                return int_entry($entryName, is_type([type_integer()], $value) ? $value : $type->cast($value), $metadata);
+                return int_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof BooleanType) {
-                return bool_entry($entryName, is_type([type_boolean()], $value) ? $value : $type->cast($value), $metadata);
+                return bool_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof FloatType) {
-                return float_entry($entryName, is_type([type_float()], $value) ? $value : $type->cast($value), $metadata);
+                return float_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof UuidType) {
-                return uuid_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                return uuid_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof DateType) {
-                return date_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                return date_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof TimeType) {
-                return time_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                return time_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof DateTimeType) {
-                return datetime_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                return datetime_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof EnumType) {
-                return enum_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                $castValue = type_optional($type)->cast($value);
+
+                return enum_entry($entryName, (\is_object($castValue) && $castValue instanceof \UnitEnum) ? $castValue : null, $metadata);
             }
 
             if ($type instanceof JsonType) {
                 try {
-                    return json_object_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                    return json_object_entry($entryName, type_optional($type)->cast($value), $metadata);
                 } catch (InvalidArgumentException) {
-                    return json_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                    return json_entry($entryName, type_optional($type)->cast($value), $metadata);
                 }
             }
 
             if ($type instanceof XMLType) {
-                return xml_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                return xml_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof XMLElementType) {
-                return xml_element_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                return xml_element_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof ArrayType) {
-                return json_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $metadata);
+                return json_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof InstanceOfType) {
@@ -233,15 +239,21 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof MapType) {
-                return map_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $type, $metadata);
+                $processedValue = ($value === null) ? null : $type->cast($value);
+
+                return new MapEntry($entryName, $processedValue, $type, $metadata);
             }
 
             if ($type instanceof StructureType) {
-                return struct_entry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $type, $metadata);
+                $processedValue = ($value === null) ? null : $type->cast($value);
+
+                return new StructureEntry($entryName, $processedValue, $type, $metadata);
             }
 
             if ($type instanceof ListType) {
-                return new ListEntry($entryName, is_type([$type], $value) ? $value : $type->cast($value), $type, $metadata);
+                $processedValue = ($value === null) ? null : $type->cast($value);
+
+                return new ListEntry($entryName, $processedValue, $type, $metadata);
             }
         } catch (InvalidArgumentException|CastingException|\TypeError $e) {
             throw new InvalidArgumentException("Entry \"{$entryName}\" conversion exception. {$e->getMessage()}", previous: $e);

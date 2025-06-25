@@ -23,7 +23,7 @@ final class Hash extends ScalarFunctionChain
             null => null,
             default => match (\gettype($value)) {
                 'array', 'object' => $this->algorithm->hash(\serialize($value)),
-                default => $this->algorithm->hash((string) $value),
+                default => $this->algorithm->hash(\is_scalar($value) ? (string) $value : ''),
             },
         };
     }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\{integer_entry, json_entry};
+use function Flow\Types\DSL\type_array;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\{JsonEntry};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -125,14 +127,15 @@ final class JsonEntryTest extends FlowTestCase
             ['item-id' => 2, 'name' => 'two'],
             ['item-id' => 3, 'name' => 'three'],
         ];
-        $entry = (json_entry('items', $items))->map(function (array $value) {
+        $entry = (json_entry('items', $items))->map(function (?array $value) : array {
+            type_array()->assert($value);
             \array_walk_recursive($value, function (&$v) : void {
                 if (\is_string($v)) {
                     $v = \trim($v);
                 }
             });
 
-            return \json_encode($value, JSON_THROW_ON_ERROR);
+            return $value;
         });
 
         self::assertEquals(
@@ -189,6 +192,7 @@ final class JsonEntryTest extends FlowTestCase
         $serialized = \serialize($entry);
         $unserialized = \unserialize($serialized);
 
+        \assert($unserialized instanceof Entry);
         self::assertTrue($entry->isEqual($unserialized));
     }
 
@@ -199,6 +203,7 @@ final class JsonEntryTest extends FlowTestCase
         $serialized = \serialize($entry);
         $unserialized = \unserialize($serialized);
 
+        \assert($unserialized instanceof Entry);
         self::assertTrue($entry->isEqual($unserialized));
     }
 }

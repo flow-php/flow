@@ -58,7 +58,7 @@ final class DateTimeEntryTest extends FlowTestCase
 
         self::assertEquals(
             $entry,
-            $entry->map(fn (\DateTimeImmutable $dateTimeImmutable) => $dateTimeImmutable)
+            $entry->map(fn (?\DateTimeInterface $dateTimeImmutable) : ?\DateTimeInterface => $dateTimeImmutable)
         );
     }
 

@@ -9,8 +9,8 @@ use Flow\ETL\Row\Entry;
 interface Comparator
 {
     /**
-     * @param Entry<mixed, mixed> $left
-     * @param Entry<mixed, mixed> $right
+     * @param Entry<mixed> $left
+     * @param Entry<mixed> $right
      *
      * @return int
      */

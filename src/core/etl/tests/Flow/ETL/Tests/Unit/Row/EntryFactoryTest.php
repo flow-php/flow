@@ -20,6 +20,7 @@ use function Flow\ETL\DSL\{bool_entry,
 use function Flow\ETL\DSL\{bool_schema,
     date_schema,
     datetime_schema,
+    empty_schema,
     enum_schema,
     float_schema,
     integer_schema,
@@ -463,7 +464,7 @@ final class EntryFactoryTest extends FlowTestCase
         $this->expectException(SchemaDefinitionNotFoundException::class);
 
         (new EntryFactory())
-            ->create('e', '1', schema());
+            ->create('e', '1', empty_schema());
     }
 
     public function test_with_schema_for_different_entry() : void

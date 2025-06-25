@@ -17,6 +17,9 @@ final readonly class ChunkExtractor implements Extractor, OverridingExtractor
     ) {
     }
 
+    /**
+     * @return \Generator<int, Rows, mixed, mixed>
+     */
     public function extract(FlowContext $context) : \Generator
     {
         $chunk = [];

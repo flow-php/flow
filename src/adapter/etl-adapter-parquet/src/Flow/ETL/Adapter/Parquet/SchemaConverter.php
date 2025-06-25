@@ -38,6 +38,9 @@ use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
 
 final class SchemaConverter
 {
+    /**
+     * @return Schema
+     */
     public function toFlow(ParquetSchema $schema) : Schema
     {
         return \Flow\ETL\DSL\schema(...\array_map(
@@ -46,6 +49,9 @@ final class SchemaConverter
         ));
     }
 
+    /**
+     * @param Schema $schema
+     */
     public function toParquet(Schema $schema) : ParquetSchema
     {
         $columns = [];
@@ -125,6 +131,9 @@ final class SchemaConverter
         throw new RuntimeException($type::class . ' is not supported.');
     }
 
+    /**
+     * @return Definition<mixed>
+     */
     private function parquetToFlowDefinition(Column $column) : Definition
     {
         if ($column instanceof FlatColumn) {

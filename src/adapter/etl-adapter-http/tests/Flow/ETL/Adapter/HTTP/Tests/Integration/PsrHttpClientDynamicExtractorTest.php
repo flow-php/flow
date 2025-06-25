@@ -50,12 +50,18 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
 
         $rows = $extractor->extract(flow_context(config()));
 
-        $body = \json_decode((string) $rows->current()->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
+        $responseBody = $rows->current()->first()->valueOf('response_body');
+        $bodyJson = \is_scalar($responseBody) || $responseBody instanceof \Stringable ? (string) $responseBody : '';
+        $body = \json_decode($bodyJson, true, 512, JSON_THROW_ON_ERROR);
+        \assert(\is_array($body));
 
         self::assertSame(1, $rows->current()->count());
         self::assertSame('flow-php', $body['login'], \json_encode($body, JSON_THROW_ON_ERROR));
         self::assertSame(73_495_297, $body['id'], \json_encode($body, JSON_THROW_ON_ERROR));
-        self::assertSame(['GitHub.com'], $rows->current()->first()->valueOf('response_headers')['Server']);
+
+        $responseHeaders = $rows->current()->first()->valueOf('response_headers');
+        \assert(\is_array($responseHeaders));
+        self::assertSame(['GitHub.com'], $responseHeaders['Server']);
         self::assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
         self::assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
         self::assertSame('OK', $rows->current()->first()->valueOf('response_reason_phrase'));

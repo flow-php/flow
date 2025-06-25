@@ -15,11 +15,29 @@ final readonly class Blob
 
     public function name() : string
     {
-        return $this->data['Name'];
+        $name = $this->data['Name'] ?? null;
+
+        if (!\is_string($name)) {
+            throw new \InvalidArgumentException('Blob name must be a string');
+        }
+
+        return $name;
     }
 
     public function size() : int
     {
-        return (int) $this->data['Properties']['Content-Length'];
+        $properties = $this->data['Properties'] ?? null;
+
+        if (!\is_array($properties)) {
+            throw new \InvalidArgumentException('Blob properties must be an array');
+        }
+
+        $contentLength = $properties['Content-Length'] ?? null;
+
+        if (!\is_string($contentLength) && !\is_int($contentLength)) {
+            throw new \InvalidArgumentException('Content-Length must be a string or integer');
+        }
+
+        return (int) $contentLength;
     }
 }

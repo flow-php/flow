@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Command;
 
+use function Flow\Types\DSL\{type_optional, type_scalar, type_string};
 use Coduo\PHPHumanizer\StringHumanizer;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\{ColumnPrimitiveType, FlatColumn};
@@ -33,6 +34,7 @@ final class ReadMetadataCommand extends Command
     {
         $style = new SymfonyStyle($input, $output);
         $filePath = $input->getArgument('file');
+        $filePath = type_string()->assert($filePath);
 
         if (!\file_exists($filePath)) {
             $style->error(\sprintf('File "%s" does not exist', $filePath));
@@ -166,10 +168,18 @@ final class ReadMetadataCommand extends Command
 
                     if ($statistics) {
                         if (ColumnPrimitiveType::isString($column)) {
-                            $min = $statistics->min($column) ? StringHumanizer::truncate($statistics->min($column), 20, '...') : '-';
-                            $max = $statistics->max($column) ? StringHumanizer::truncate($statistics->max($column), 20, '...') : '-';
-                            $minValue = $statistics->minValue($column) ? StringHumanizer::truncate($statistics->minValue($column), 20, '...') : '-';
-                            $maxValue = $statistics->maxValue($column) ? StringHumanizer::truncate($statistics->maxValue($column), 20, '...') : '-';
+                            $minVal = $statistics->min($column);
+                            $minVal = type_optional(type_scalar())->assert($minVal);
+                            $min = $minVal ? StringHumanizer::truncate((string) $minVal, 20, '...') : '-';
+                            $maxVal = $statistics->max($column);
+                            $maxVal = type_optional(type_scalar())->assert($maxVal);
+                            $max = $maxVal ? StringHumanizer::truncate((string) $maxVal, 20, '...') : '-';
+                            $minValueVal = $statistics->minValue($column);
+                            $minValueVal = type_optional(type_scalar())->assert($minValueVal);
+                            $minValue = $minValueVal ? StringHumanizer::truncate((string) $minValueVal, 20, '...') : '-';
+                            $maxValueVal = $statistics->maxValue($column);
+                            $maxValueVal = type_optional(type_scalar())->assert($maxValueVal);
+                            $maxValue = $maxValueVal ? StringHumanizer::truncate((string) $maxValueVal, 20, '...') : '-';
                         } else {
                             $min = $statistics->min($column) ?? '-';
                             $max = $statistics->max($column) ?? '-';

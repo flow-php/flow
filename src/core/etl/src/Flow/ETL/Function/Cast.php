@@ -27,7 +27,7 @@ final class Cast extends ScalarFunctionChain
      * @throws InvalidArgumentException
      * @throws \JsonException
      */
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?ScalarResult
     {
         $value = (new Parameter($this->value))->eval($row);
 

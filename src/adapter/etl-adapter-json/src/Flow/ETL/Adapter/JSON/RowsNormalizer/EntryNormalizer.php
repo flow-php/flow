@@ -17,7 +17,7 @@ final readonly class EntryNormalizer
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      *
      * @return null|array<string, mixed>|bool|float|int|string
      */
@@ -29,13 +29,56 @@ final readonly class EntryNormalizer
             DateEntry::class => $entry->value()?->format($this->dateFormat),
             TimeEntry::class => $entry->value() ? date_interval_to_microseconds($entry->value()) : null,
             EnumEntry::class => $entry->value()?->name,
-            JsonEntry::class => $entry->value(),
+            JsonEntry::class => $this->normalizeJsonValue($entry->value()),
             ListEntry::class,
             MapEntry::class,
             StructureEntry::class,
             XMLElementEntry::class => $entry->toString(),
             XMLEntry::class => $entry->toString(),
-            default => $entry->value(),
+            default => $this->normalizeValue($entry->value()),
         };
+    }
+
+    /**
+     * @return null|array<string, mixed>|bool|float|int|string
+     */
+    private function normalizeJsonValue(mixed $value) : string|float|int|bool|array|null
+    {
+        if (\is_array($value)) {
+            /** @var array<string, mixed> $normalizedArray */
+            $normalizedArray = [];
+
+            foreach ($value as $key => $val) {
+                $normalizedArray[\is_string($key) ? $key : (string) $key] = $val;
+            }
+
+            return $normalizedArray;
+        }
+
+        return $this->normalizeValue($value);
+    }
+
+    /**
+     * @return null|array<string, mixed>|bool|float|int|string
+     */
+    private function normalizeValue(mixed $value) : string|float|int|bool|array|null
+    {
+        if (\is_string($value) || \is_float($value) || \is_int($value) || \is_bool($value) || $value === null) {
+            return $value;
+        }
+
+        if (\is_array($value)) {
+            /** @var array<string, mixed> $normalizedArray */
+            $normalizedArray = [];
+
+            foreach ($value as $key => $val) {
+                $normalizedArray[\is_string($key) ? $key : (string) $key] = $val;
+            }
+
+            return $normalizedArray;
+        }
+
+        // Fallback for unexpected types - convert to string
+        return '';
     }
 }

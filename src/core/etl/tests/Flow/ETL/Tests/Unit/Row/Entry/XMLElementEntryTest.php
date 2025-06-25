@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\xml_element_entry;
+use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row\Entry\XMLElementEntry;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class XMLElementEntryTest extends FlowTestCase
@@ -45,7 +47,7 @@ final class XMLElementEntryTest extends FlowTestCase
         $serialized = \serialize($entry);
         $unserialized = \unserialize($serialized);
 
-        self::assertTrue($entry->isEqual($unserialized));
+        self::assertTrue($entry->isEqual(type_instance_of(XMLElementEntry::class)->assert($unserialized)));
         self::assertInstanceOf(\DOMElement::class, $entry->value());
         self::assertEquals($element->attributes, $entry->value()->attributes);
     }

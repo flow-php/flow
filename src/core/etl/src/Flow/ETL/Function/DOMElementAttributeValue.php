@@ -33,7 +33,7 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
             return null;
         }
 
-        if (!$node->hasAttributes()) {
+        if (!$node instanceof \DOMNode || !$node->hasAttributes()) {
             return null;
         }
 

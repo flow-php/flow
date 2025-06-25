@@ -13,8 +13,8 @@ final readonly class TypeComparator implements Comparator
     }
 
     /**
-     * @param Entry<mixed, mixed> $left
-     * @param Entry<mixed, mixed> $right
+     * @param Entry<mixed> $left
+     * @param Entry<mixed> $right
      */
     public function compare(Entry $left, Entry $right) : int
     {

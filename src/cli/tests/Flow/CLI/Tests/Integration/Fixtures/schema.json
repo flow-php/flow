@@ -64,7 +64,9 @@
         "country": {
           "type": "string"
         }
-      }
+      },
+      "optional_elements": [],
+      "allow_extra": false
     },
     "nullable": false,
     "metadata": []
@@ -96,7 +98,9 @@
           "price": {
             "type": "float"
           }
-        }
+        },
+        "optional_elements": [],
+        "allow_extra": false
       }
     },
     "nullable": false,

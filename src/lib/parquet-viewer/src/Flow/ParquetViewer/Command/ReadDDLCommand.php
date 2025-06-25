@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Command;
 
+use function Flow\Types\DSL\type_string;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Reader;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -25,6 +26,7 @@ final class ReadDDLCommand extends Command
     {
         $style = new SymfonyStyle($input, $output);
         $filePath = $input->getArgument('file');
+        $filePath = type_string()->assert($filePath);
 
         if (!\file_exists($filePath)) {
             $style->error(\sprintf('File "%s" does not exist', $filePath));

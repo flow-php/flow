@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native;
 
-use Flow\Types\Exception\{InvalidTypeException};
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
 /**
@@ -42,7 +42,11 @@ final readonly class FloatType implements Type
             return (float) $endTime->format('Uu') - (float) $reference->format('Uu');
         }
 
-        return (float) $value;
+        if (\is_scalar($value) || null === $value || \is_array($value)) {
+            return (float) $value;
+        }
+
+        throw new CastingException($value, $this);
     }
 
     public function isValid(mixed $value) : bool

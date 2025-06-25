@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\type_instance_of;
+use function Flow\Types\DSL\{type_class_string, type_instance_of, type_literal, type_structure};
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type;
 
@@ -26,15 +26,16 @@ final readonly class InstanceOfType implements Type
     }
 
     /**
-     * @param array{class: class-string<T>} $data
+     * @param array<string, mixed> $data
      *
-     * @return InstanceOfType<T>
+     * @return InstanceOfType<object>
      */
     public static function fromArray(array $data) : self
     {
-        if (!\array_key_exists('class', $data)) {
-            throw new InvalidArgumentException("Missing 'class' key in object type definition");
-        }
+        $data = type_structure([
+            'type' => type_literal('instance_of'),
+            'class' => type_class_string(),
+        ])->assert($data);
 
         return new self($data['class']);
     }
@@ -69,7 +70,7 @@ final readonly class InstanceOfType implements Type
 
     public function isValid(mixed $value) : bool
     {
-        return \is_a($value, $this->class, true);
+        return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
     }
 
     public function normalize() : array

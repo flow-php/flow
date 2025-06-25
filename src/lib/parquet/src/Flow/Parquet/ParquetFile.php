@@ -15,7 +15,9 @@ use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     RowGroupBuilder\DremelAssembler,
     RowGroupBuilder\FlatColumnData,
     Schema};
+use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Thrift\FileMetaData;
@@ -164,7 +166,12 @@ final class ParquetFile
             $row = [];
 
             foreach ($columnsData as $columnData) {
-                $row = \array_merge($row, $columnData[$i]);
+                $rowData = $columnData[$i];
+
+                if (!\is_array($rowData)) {
+                    throw new \InvalidArgumentException(\sprintf('Expected array for row data, got %s', \get_debug_type($rowData)));
+                }
+                $row = \array_merge($row, $rowData);
             }
 
             yield $row;
@@ -210,6 +217,9 @@ final class ParquetFile
             $rows = [];
 
             foreach ($this->readChunks($column, $limit, $offset) as $data) {
+                if (!$data instanceof FlatColumnValues) {
+                    throw new \InvalidArgumentException(\sprintf('Expected FlatColumnValues, got %s', \get_debug_type($data)));
+                }
                 $columnData->addValues($data);
             }
 
@@ -226,6 +236,9 @@ final class ParquetFile
 
         foreach ($column->childrenFlat() as $child) {
             foreach ($this->readChunks($child, $limit, $offset) as $data) {
+                if (!$data instanceof FlatColumnValues) {
+                    throw new \InvalidArgumentException(\sprintf('Expected FlatColumnValues, got %s', \get_debug_type($data)));
+                }
                 $columnData->addValues($data);
             }
         }
@@ -248,6 +261,9 @@ final class ParquetFile
 
         foreach ($this->getColumnChunks($column) as $columnChunk) {
             foreach ($viewer->view($columnChunk->chunk, $column, $this->stream) as $pageHeader) {
+                if (!$pageHeader instanceof PageHeader) {
+                    throw new \InvalidArgumentException(\sprintf('Expected PageHeader, got %s', \get_debug_type($pageHeader)));
+                }
                 yield new ColumnPageHeader($column, $columnChunk->chunk, $pageHeader);
             }
         }

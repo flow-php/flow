@@ -22,11 +22,11 @@ final class NativePHPSerializer implements Serializer
         $value = \unserialize($serialized, ['allowed_classes' => true]);
 
         foreach ($classes as $class) {
-            if (\is_a($value, $class)) {
+            if (\is_object($value) && \is_a($value, $class)) {
                 return $value;
             }
         }
 
-        throw new RuntimeException(\sprintf('NativePHPSerializer::unserialize must return instance of {%s}, got: %s', \implode(', ', $classes), $value::class));
+        throw new RuntimeException(\sprintf('NativePHPSerializer::unserialize must return instance of {%s}, got: %s', \implode(', ', $classes), get_debug_type($value)));
     }
 }

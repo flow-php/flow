@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\{type_list, type_string};
+use function Flow\Types\DSL\{type_list, type_string, type_union};
 use function Symfony\Component\String\u;
 use Flow\ETL\Row;
 
@@ -26,8 +26,9 @@ final class StringAfter extends ScalarFunctionChain
         }
 
         $needle = (new Parameter($this->needle))->as($row, type_string(), type_list(type_string()));
+        $typedNeedle = type_union(type_string(), type_list(type_string()))->assert($needle);
         $includeNeedle = (new Parameter($this->includeNeedle))->asBoolean($row);
 
-        return u($string)->after($needle, $includeNeedle)->toString();
+        return u($string)->after($typedNeedle, $includeNeedle)->toString();
     }
 }

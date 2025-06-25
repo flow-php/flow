@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Schema\Formatter;
 
 use function Flow\ETL\DSL\{bool_schema,
     datetime_schema,
+    empty_schema,
     enum_schema,
     float_schema,
     int_schema,
@@ -29,7 +30,7 @@ final class JsonSchemaFormatterTest extends FlowTestCase
     {
         self::assertEquals(
             '[]',
-            (new JsonSchemaFormatter())->format(schema())
+            (new JsonSchemaFormatter())->format(empty_schema())
         );
     }
 
@@ -37,7 +38,7 @@ final class JsonSchemaFormatterTest extends FlowTestCase
     {
         self::assertEquals(
             <<<'JSON'
-[{"ref":"int","type":{"type":"integer"},"nullable":false,"metadata":[]},{"ref":"float","type":{"type":"float"},"nullable":false,"metadata":[]},{"ref":"bool","type":{"type":"boolean"},"nullable":false,"metadata":[]},{"ref":"datetime","type":{"type":"datetime"},"nullable":false,"metadata":[]},{"ref":"null","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"uuid","type":{"type":"uuid"},"nullable":false,"metadata":[]},{"ref":"json","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"list","type":{"type":"list","element":{"type":"integer"}},"nullable":false,"metadata":{"foo":"bar"}},{"ref":"list_of_datetimes","type":{"type":"list","element":{"type":"datetime"}},"nullable":false,"metadata":[]},{"ref":"map","type":{"type":"map","key":{"type":"integer"},"value":{"type":"string"}},"nullable":false,"metadata":[]},{"ref":"struct","type":{"type":"structure","elements":{"street":{"type":"string"},"city":{"type":"string"},"zip":{"type":"string"},"country":{"type":"string"},"location":{"type":"structure","elements":{"lat":{"type":"float"},"lon":{"type":"float"}}}}},"nullable":false,"metadata":[]},{"ref":"enum","type":{"type":"enum","class":"Flow\\ETL\\Tests\\Fixtures\\Enum\\BackedStringEnum"},"nullable":false,"metadata":[]},{"ref":"xml","type":{"type":"xml"},"nullable":false,"metadata":[]}]
+[{"ref":"int","type":{"type":"integer"},"nullable":false,"metadata":[]},{"ref":"float","type":{"type":"float"},"nullable":false,"metadata":[]},{"ref":"bool","type":{"type":"boolean"},"nullable":false,"metadata":[]},{"ref":"datetime","type":{"type":"datetime"},"nullable":false,"metadata":[]},{"ref":"null","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"uuid","type":{"type":"uuid"},"nullable":false,"metadata":[]},{"ref":"json","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"list","type":{"type":"list","element":{"type":"integer"}},"nullable":false,"metadata":{"foo":"bar"}},{"ref":"list_of_datetimes","type":{"type":"list","element":{"type":"datetime"}},"nullable":false,"metadata":[]},{"ref":"map","type":{"type":"map","key":{"type":"integer"},"value":{"type":"string"}},"nullable":false,"metadata":[]},{"ref":"struct","type":{"type":"structure","elements":{"street":{"type":"string"},"city":{"type":"string"},"zip":{"type":"string"},"country":{"type":"string"},"location":{"type":"structure","elements":{"lat":{"type":"float"},"lon":{"type":"float"}},"optional_elements":[],"allow_extra":false}},"optional_elements":[],"allow_extra":false},"nullable":false,"metadata":[]},{"ref":"enum","type":{"type":"enum","class":"Flow\\ETL\\Tests\\Fixtures\\Enum\\BackedStringEnum"},"nullable":false,"metadata":[]},{"ref":"xml","type":{"type":"xml"},"nullable":false,"metadata":[]}]
 JSON,
             (new JsonSchemaFormatter())->format(
                 schema(

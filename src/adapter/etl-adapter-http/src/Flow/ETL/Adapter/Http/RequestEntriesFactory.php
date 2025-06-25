@@ -27,13 +27,13 @@ final class RequestEntriesFactory
 
         if ($request->hasHeader('Content-Type')) {
             foreach ($request->getHeader('Content-Type') as $header) {
-                if (\str_contains('application/json', $header)) {
+                if (\str_contains($header, 'application/json')) {
                     $requestType = 'json';
                 }
             }
         } else {
             foreach ($request->getHeader('Accept') as $header) {
-                if (\str_contains('application/json', $header)) {
+                if (\str_contains($header, 'application/json')) {
                     $requestType = 'json';
                 }
             }
@@ -57,7 +57,13 @@ final class RequestEntriesFactory
                 switch ($requestType) {
                     case 'json':
                         if (\class_exists(JsonEntry::class)) {
-                            $requestBodyEntry = new JsonEntry('request_body', (array) \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
+                            $decodedJson = \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR);
+
+                            if (!\is_array($decodedJson)) {
+                                throw new InvalidArgumentException('Invalid JSON request body, expected array or object');
+                            }
+
+                            $requestBodyEntry = new JsonEntry('request_body', $decodedJson);
                         } else {
                             $requestBodyEntry = string_entry('request_body', $requestBodyContent);
                         }

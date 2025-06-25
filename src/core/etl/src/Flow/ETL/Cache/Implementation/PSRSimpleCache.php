@@ -37,7 +37,7 @@ final readonly class PSRSimpleCache implements Cache
             throw new KeyNotInCacheException($key);
         }
 
-        return $this->serializer->unserialize($serializedValue, [Row::class, Rows::class, CacheIndex::class]);
+        return $this->serializer->unserialize(\is_string($serializedValue) ? $serializedValue : '', [Row::class, Rows::class, CacheIndex::class]);
     }
 
     public function has(string $key) : bool

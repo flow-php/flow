@@ -42,7 +42,15 @@ final readonly class PHPValueNormalizer
         if ($type instanceof ListType) {
             $listNode = XMLNode::nestedNode($name);
 
+            if (!\is_array($value) && !$value instanceof \Countable) {
+                return $listNode;
+            }
+
             if (!\count($value)) {
+                return $listNode;
+            }
+
+            if (!\is_iterable($value)) {
                 return $listNode;
             }
 
@@ -56,7 +64,15 @@ final readonly class PHPValueNormalizer
         if ($type instanceof MapType) {
             $mapNode = XMLNode::nestedNode($name);
 
+            if (!\is_array($value) && !$value instanceof \Countable) {
+                return $mapNode;
+            }
+
             if (!\count($value)) {
+                return $mapNode;
+            }
+
+            if (!\is_iterable($value)) {
                 return $mapNode;
             }
 
@@ -80,7 +96,7 @@ final readonly class PHPValueNormalizer
 
             $structureIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
             $structureIterator->attachIterator(new \ArrayIterator($type->elements()), 'structure_element');
-            $structureIterator->attachIterator(new \ArrayIterator($value), 'value_element');
+            $structureIterator->attachIterator(new \ArrayIterator(\is_array($value) ? $value : []), 'value_element');
 
             foreach ($structureIterator as $keys => $element) {
                 /** @var Type<mixed> $structureElementType */
@@ -99,11 +115,11 @@ final readonly class PHPValueNormalizer
             BooleanType::class,
             FloatType::class => XMLNode::flatNode($name, type_string()->cast($value)),
             ArrayType::class => XMLNode::flatNode($name, type_json()->cast($value)),
-            EnumType::class => XMLNode::flatNode($name, $value->name),
+            EnumType::class => XMLNode::flatNode($name, $value instanceof \BackedEnum ? $value->name : ''),
             InstanceOfType::class => XMLNode::flatNode($name, type_string()->cast($value)),
-            DateTimeType::class => XMLNode::flatNode($name, type_string()->cast($value->format($this->dateTimeFormat))),
+            DateTimeType::class => XMLNode::flatNode($name, type_string()->cast($value instanceof \DateTimeInterface ? $value->format($this->dateTimeFormat) : '')),
             JsonType::class => XMLNode::flatNode($name, type_json()->cast($value)),
-            UuidType::class => XMLNode::flatNode($name, (string) $value),
+            UuidType::class => XMLNode::flatNode($name, \is_scalar($value) || $value instanceof \Stringable ? (string) $value : ''),
             default => throw new InvalidArgumentException("Given type can't be converted to node, given type: {$type->toString()}"),
         };
     }

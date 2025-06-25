@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use function Flow\Types\DSL\{type_literal, type_string, type_structure};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
@@ -20,6 +21,21 @@ final readonly class LiteralType implements Type
     public function __construct(
         private bool|float|int|string $value,
     ) {
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return LiteralType<bool|float|int|string>
+     */
+    public static function fromArray(array $data) : self
+    {
+        $data = type_structure([
+            'type' => type_literal('literal'),
+            'value' => type_string(),
+        ])->assert($data);
+
+        return self::createFromString($data['value']);
     }
 
     public function assert(mixed $value) : bool|float|int|string
@@ -64,5 +80,34 @@ final readonly class LiteralType implements Type
         }
 
         return (string) $this->value;
+    }
+
+    /**
+     * @return LiteralType<bool|float|int|string>
+     */
+    private static function createFromString(string $value) : self
+    {
+        if ($value === 'true') {
+            // @phpstan-ignore return.type
+            return new self(true);
+        }
+
+        if ($value === 'false') {
+            // @phpstan-ignore return.type
+            return new self(false);
+        }
+
+        if (\is_numeric($value)) {
+            if (\str_contains($value, '.')) {
+                // @phpstan-ignore return.type
+                return new self((float) $value);
+            }
+
+            // @phpstan-ignore return.type
+            return new self((int) $value);
+        }
+
+        // @phpstan-ignore return.type
+        return new self($value);
     }
 }

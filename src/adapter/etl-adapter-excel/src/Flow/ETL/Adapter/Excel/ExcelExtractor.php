@@ -56,7 +56,9 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions());
+                // Ensure $row is an array before passing to array_to_rows
+                $rowArray = \is_array($row) ? $row : [];
+                $signal = yield array_to_rows($rowArray, $context->entryFactory(), $stream->path()->partitions());
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
@@ -155,7 +157,12 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
 
             foreach ($sheet->getRowIterator() as $rowIndex => $sheetRow) {
                 if (1 === $rowIndex && $this->withHeader) {
-                    $headers = $this->createRowsFromCells($sheetRow);
+                    $headersRaw = $this->createRowsFromCells($sheetRow);
+                    // Convert headers to strings for array_combine compatibility
+                    $headers = \array_map(
+                        fn ($header) => \is_scalar($header) ? (string) $header : '',
+                        $headersRaw
+                    );
 
                     continue;
                 }

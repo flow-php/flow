@@ -33,6 +33,9 @@ final class Sprintf extends ScalarFunctionChain
             return null;
         }
 
-        return \sprintf($format, ...$values);
+        /** @var array<float|int|string> $nonNullValues */
+        $nonNullValues = $values;
+
+        return \sprintf($format, ...$nonNullValues);
     }
 }

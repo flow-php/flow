@@ -29,7 +29,7 @@ final readonly class SearchResults
         $newRows = [];
 
         foreach ($this->results->getHits() as $hit) {
-            /** @var array<Row\Entry<mixed, mixed>> $entries */
+            /** @var array<Row\Entry<mixed>> $entries */
             $entries = [];
 
             foreach ($hit as $key => $value) {

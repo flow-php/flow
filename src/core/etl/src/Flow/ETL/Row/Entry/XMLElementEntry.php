@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_xml_element};
-use DOMElement;
+use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_string, type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\XMLElementType;
+use Flow\Types\Type\Logical\{XMLElementType};
 
 /**
- * @implements Entry<?DOMElement, DOMElement>
+ * @implements Entry<?\DOMElement>
  */
 final class XMLElementEntry implements Entry
 {
@@ -21,7 +20,10 @@ final class XMLElementEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly XMLElementType $type;
+    /**
+     * @var Type<\DOMElement>
+     */
+    private readonly Type $type;
 
     private readonly ?\DOMElement $value;
 
@@ -72,6 +74,9 @@ final class XMLElementEntry implements Entry
      */
     public function __unserialize(array $data) : void
     {
+        type_string()->assert($data['name']);
+        type_instance_of(XMLElementType::class)->assert($data['type']);
+
         $this->name = $data['name'];
         $this->type = $data['type'];
 
@@ -81,7 +86,7 @@ final class XMLElementEntry implements Entry
             return;
         }
 
-        $element = \gzuncompress(\base64_decode((string) $data['value'], true) ?: '') ?: '';
+        $element = \gzuncompress(\base64_decode(\is_scalar($data['value']) ? (string) $data['value'] : '', true) ?: '') ?: '';
 
         $domDocument = new \DOMDocument();
         @$domDocument->loadXML($element);
@@ -97,7 +102,7 @@ final class XMLElementEntry implements Entry
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : self
     {
         return new self($this->name, $this->value ? $this->value->cloneNode(true) : null, $this->metadata);
     }
@@ -124,9 +129,12 @@ final class XMLElementEntry implements Entry
         return $this->value?->C14N() === $entry->value?->C14N();
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : self
     {
-        return new self($this->name, $mapper($this->value()));
+        $mappedValue = $mapper($this->value());
+        $mappedValue = type_optional(type_instance_of(\DOMElement::class))->assert($mappedValue);
+
+        return new self($this->name, $mappedValue);
     }
 
     public function name() : string
@@ -134,7 +142,7 @@ final class XMLElementEntry implements Entry
         return $this->name;
     }
 
-    public function rename(string $name) : Entry
+    public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
@@ -159,8 +167,8 @@ final class XMLElementEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : self
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

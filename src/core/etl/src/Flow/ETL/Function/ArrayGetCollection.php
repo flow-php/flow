@@ -40,7 +40,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
                 return null;
             }
 
-            $path = \sprintf("{$index}.{%s}", \implode(',', \array_map(fn (string $entryName) : string => '?' . $entryName, $keys)));
+            $path = \sprintf("{$index}.{%s}", \implode(',', \array_map(fn (mixed $entryName) : string => '?' . (\is_scalar($entryName) ? (string) $entryName : \serialize($entryName)), $keys)));
 
             try {
                 $array = ($index === '0') ? \array_values($value) : $value;

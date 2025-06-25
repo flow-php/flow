@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_boolean, type_equals};
+use function Flow\Types\DSL\{type_boolean, type_equals, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\BooleanType;
 
 /**
- * @implements Entry<?bool, bool>
+ * @implements Entry<?bool>
  */
 final class BooleanEntry implements Entry
 {
@@ -20,7 +19,10 @@ final class BooleanEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly BooleanType $type;
+    /**
+     * @var Type<bool>
+     */
+    private readonly Type $type;
 
     /**
      * @throws InvalidArgumentException
@@ -40,6 +42,9 @@ final class BooleanEntry implements Entry
         return $this->toString();
     }
 
+    /**
+     * @return Definition<bool>
+     */
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
@@ -103,6 +108,6 @@ final class BooleanEntry implements Entry
 
     public function withValue(mixed $value) : Entry
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

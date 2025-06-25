@@ -37,11 +37,11 @@ final readonly class UuidType implements Type
             return new Uuid($value);
         }
 
-        if (\is_a($value, 'Ramsey\Uuid\UuidInterface')) {
+        if (\is_object($value) && \is_a($value, 'Ramsey\Uuid\UuidInterface')) {
             return new Uuid($value);
         }
 
-        if (\is_a($value, 'Symfony\Component\Uid\Uuid')) {
+        if (\is_object($value) && \is_a($value, 'Symfony\Component\Uid\Uuid')) {
             return new Uuid($value->toRfc4122());
         }
 

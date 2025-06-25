@@ -11,7 +11,7 @@ use Flow\ETL\Row\Entry\{IntegerEntry, UuidEntry};
 final readonly class TypePriorities
 {
     /**
-     * @var array<class-string<Entry<mixed, mixed>>,int>
+     * @var array<class-string<Entry<mixed>>,int>
      */
     public const PRIORITIES = [
         UuidEntry::class => 1,
@@ -30,7 +30,7 @@ final readonly class TypePriorities
     ];
 
     /**
-     * @param array<class-string<Entry<mixed, mixed>>,int> $priorities
+     * @param array<class-string<Entry<mixed>>,int> $priorities
      */
     public function __construct(private array $priorities = self::PRIORITIES)
     {
@@ -38,7 +38,7 @@ final readonly class TypePriorities
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     public function for(Entry $entry) : int
     {

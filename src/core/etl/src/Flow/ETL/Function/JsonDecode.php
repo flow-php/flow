@@ -29,7 +29,7 @@ final class JsonDecode extends ScalarFunctionChain
         }
 
         try {
-            return \json_decode((string) $value, true, 512, $flags);
+            return \json_decode(\is_scalar($value) ? (string) $value : '', true, 512, $flags);
         } catch (\JsonException) {
             return null;
         }

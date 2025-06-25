@@ -306,8 +306,18 @@ final class RowsTest extends FlowTestCase
             $five = row(int_entry('number', 5), string_entry('name', 'five'))
         );
 
-        $evenRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 0;
-        $oddRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 1;
+        $evenRows = function (Row $row) : bool {
+            $value = $row->get('number')->value();
+            \assert(\is_int($value));
+
+            return $value % 2 === 0;
+        };
+        $oddRows = function (Row $row) : bool {
+            $value = $row->get('number')->value();
+            \assert(\is_int($value));
+
+            return $value % 2 === 1;
+        };
 
         self::assertEquals(rows($two, $four), $rows->filter($evenRows));
         self::assertEquals(rows($one, $three, $five), $rows->filter($oddRows));
@@ -387,10 +397,15 @@ final class RowsTest extends FlowTestCase
             )
         );
 
-        $rows = $rows->flatMap(fn (Row $row) : array => [
-            $row->add(string_entry('name', $row->valueOf('id') . '-name-01')),
-            $row->add(string_entry('name', $row->valueOf('id') . '-name-02')),
-        ]);
+        $rows = $rows->flatMap(function (Row $row) : array {
+            $id = $row->valueOf('id');
+            \assert(\is_int($id));
+
+            return [
+                $row->add(string_entry('name', $id . '-name-01')),
+                $row->add(string_entry('name', $id . '-name-02')),
+            ];
+        });
 
         self::assertSame(
             [
@@ -873,7 +888,17 @@ final class RowsTest extends FlowTestCase
             $four = row(int_entry('number', 4), string_entry('name', 'four')),
         );
 
-        $sort = $rows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('number') <=> $nextRow->valueOf('number'));
+        $sort = $rows->sort(function (mixed $row, mixed $nextRow) : int {
+            \assert($row instanceof \Flow\ETL\Row);
+            \assert($nextRow instanceof \Flow\ETL\Row);
+
+            $rowValue = $row->valueOf('number');
+            $nextRowValue = $nextRow->valueOf('number');
+            \assert(\is_numeric($rowValue));
+            \assert(\is_numeric($nextRowValue));
+
+            return (int) $rowValue <=> (int) $nextRowValue;
+        });
 
         self::assertEquals(rows($one, $two, $three, $four, $five), $sort);
         self::assertNotEquals($sort, $rows);

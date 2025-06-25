@@ -4,31 +4,43 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use function Flow\Types\DSL\{type_array,
+    type_boolean,
+    type_from_array,
+    type_literal,
+    type_map,
+    type_string,
+    type_structure};
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type;
-use Flow\Types\Type\{TypeFactory};
 
 /**
- * @template-covariant T of array
+ * @template T
  *
- * @implements Type<T>
+ * @implements Type<array<string, T>>
  */
 final readonly class StructureType implements Type
 {
     /**
-     * @var T
+     * @var array<string, Type<T>>
      */
     private array $elements;
 
     /**
-     * @param T $elements
+     * @var array<string, Type<T>>
+     */
+    private array $optionalElements;
+
+    /**
+     * @param array<string, Type<T>> $elements
+     * @param array<string, Type<T>> $optionalElements
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(array $elements)
+    public function __construct(array $elements, array $optionalElements = [], private bool $allowExtra = false)
     {
-        if (0 === \count($elements)) {
-            throw new InvalidArgumentException('Structure must receive at least one element.');
+        if (0 === \count($elements) && 0 === \count($optionalElements)) {
+            throw new InvalidArgumentException('Structure must receive at least one element (required or optional).');
         }
 
         foreach ($elements as $type) {
@@ -37,27 +49,57 @@ final readonly class StructureType implements Type
             }
         }
 
+        foreach ($optionalElements as $type) {
+            if (!$type instanceof Type) {
+                throw new InvalidArgumentException('Structure optional element type must be an instance of Type');
+            }
+        }
+
+        // Check for duplicate keys between required and optional elements
+        $duplicateKeys = \array_intersect_key($elements, $optionalElements);
+
+        if (!empty($duplicateKeys)) {
+            throw new InvalidArgumentException('Element keys cannot be both required and optional: ' . \implode(', ', \array_keys($duplicateKeys)));
+        }
+
         $this->elements = $elements;
+        $this->optionalElements = $optionalElements;
     }
 
     /**
-     * @param array{type: 'structure', elements: array<string, mixed>} $data
+     * @param array<string, mixed> $data
      *
-     * @return StructureType<array<string, Type<mixed>>>
+     * @return StructureType<mixed>
      */
     public static function fromArray(array $data) : self
     {
-        if (!\array_key_exists('elements', $data)) {
-            throw new InvalidArgumentException('Structure must receive at least one element.');
-        }
+        $data = type_structure(
+            [
+                'type' => type_literal('structure'),
+                'elements' => type_map(type_string(), type_array()),
+                'optional_elements' => type_map(type_string(), type_array()),
+                'allow_extra' => type_boolean(),
+            ]
+        )->assert($data);
 
         $elements = [];
 
         foreach ($data['elements'] as $name => $element) {
-            $elements[$name] = TypeFactory::fromArray($element);
+            $elements[$name] = type_from_array($element);
         }
 
-        return new self($elements);
+        $optionalElements = [];
+
+        foreach ($data['optional_elements'] as $name => $element) {
+            $optionalElements[$name] = type_from_array($element);
+        }
+
+        return new self($elements, $optionalElements, $data['allow_extra']);
+    }
+
+    public function allowsExtra() : bool
+    {
+        return $this->allowExtra;
     }
 
     public function assert(mixed $value) : array
@@ -82,10 +124,18 @@ final readonly class StructureType implements Type
 
             $castedStructure = [];
 
+            // Cast required elements
             foreach ($this->elements as $elementName => $elementType) {
                 $castedStructure[$elementName] = (\is_array($value) && \array_key_exists($elementName, $value))
                     ? $elementType->cast($value[$elementName])
                     : $elementType->cast(null);
+            }
+
+            // Cast optional elements only if they are present in the input
+            foreach ($this->optionalElements as $elementName => $elementType) {
+                if (\is_array($value) && \array_key_exists($elementName, $value)) {
+                    $castedStructure[$elementName] = $elementType->cast($value[$elementName]);
+                }
             }
 
             return $this->assert($castedStructure);
@@ -112,25 +162,35 @@ final readonly class StructureType implements Type
             return false;
         }
 
-        if (\count($value) !== \count($this->elements)) {
-            return false;
+        // Check if we have all required elements
+        foreach ($this->elements as $name => $element) {
+            if (!\array_key_exists($name, $value) || !$element->isValid($value[$name])) {
+                return false;
+            }
         }
 
-        foreach ($value as $itemName => $item) {
-            foreach ($this->elements as $name => $element) {
-                if ($itemName === $name && $element->isValid($item)) {
-                    continue 2;
-                }
+        // Check optional elements (if present, they must be valid)
+        foreach ($this->optionalElements as $name => $element) {
+            if (\array_key_exists($name, $value) && !$element->isValid($value[$name])) {
+                return false;
             }
+        }
 
-            return false;
+        // If allow_extra is false, check that we don't have unexpected keys
+        if (!$this->allowExtra) {
+            $allKnownKeys = \array_merge(\array_keys($this->elements), \array_keys($this->optionalElements));
+            $extraKeys = \array_diff(\array_keys($value), $allKnownKeys);
+
+            if (!empty($extraKeys)) {
+                return false;
+            }
         }
 
         return true;
     }
 
     /**
-     * @return array{type: 'structure', elements: array<string, array<string, mixed>>}
+     * @return array{type: 'structure', elements: array<string, array<string, mixed>>, optional_elements: array<string, array<string, mixed>>, allow_extra: bool}
      */
     public function normalize() : array
     {
@@ -140,10 +200,35 @@ final readonly class StructureType implements Type
             $elements[$name] = $element->normalize();
         }
 
-        return [
+        $normalized = [
             'type' => 'structure',
             'elements' => $elements,
+            'optional_elements' => [],
+            'allow_extra' => false,
         ];
+
+        if (!empty($this->optionalElements)) {
+            $optionalElements = [];
+
+            foreach ($this->optionalElements as $name => $element) {
+                $optionalElements[$name] = $element->normalize();
+            }
+            $normalized['optional_elements'] = $optionalElements;
+        }
+
+        if ($this->allowExtra) {
+            $normalized['allow_extra'] = true;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @return array<string, Type<mixed>>
+     */
+    public function optionalElements() : array
+    {
+        return $this->optionalElements;
     }
 
     public function toString() : string
@@ -152,6 +237,10 @@ final readonly class StructureType implements Type
 
         foreach ($this->elements as $name => $element) {
             $content[] = $name . ': ' . $element->toString();
+        }
+
+        foreach ($this->optionalElements as $name => $element) {
+            $content[] = $name . '?: ' . $element->toString();
         }
 
         return 'structure{' . \implode(', ', $content) . '}';

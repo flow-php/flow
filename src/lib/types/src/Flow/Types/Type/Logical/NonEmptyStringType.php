@@ -57,7 +57,15 @@ final class NonEmptyStringType implements Type
                 return $this->assert((string) dom_element_to_string($value));
             }
 
-            return $this->assert((string) $value);
+            if (null === $value) {
+                throw new CastingException($value, $this);
+            }
+
+            if (\is_scalar($value) || (\is_object($value) && method_exists($value, '__toString'))) {
+                return $this->assert((string) $value);
+            }
+
+            throw new CastingException($value, $this);
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }

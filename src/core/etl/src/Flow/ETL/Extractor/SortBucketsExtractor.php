@@ -22,6 +22,9 @@ final readonly class SortBucketsExtractor implements Extractor
 
     }
 
+    /**
+     * @return \Generator<int, Rows, mixed, mixed>
+     */
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->sortBuckets as $bucket) {

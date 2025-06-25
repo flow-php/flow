@@ -18,11 +18,11 @@ final readonly class EntryNormalizer
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     public function normalize(Entry $entry) : string|float|int|bool|null
     {
-        return match ($entry::class) {
+        $value = match ($entry::class) {
             UuidEntry::class,
             XMLElementEntry::class,
             XMLEntry::class => $entry->toString(),
@@ -36,5 +36,42 @@ final readonly class EntryNormalizer
             JsonEntry::class => type_json()->cast($entry->value()),
             default => $entry->value(),
         };
+
+        // Ensure we return only the expected types
+        if (\is_string($value)) {
+            return $value;
+        }
+
+        if (\is_float($value)) {
+            return $value;
+        }
+
+        if (\is_int($value)) {
+            return $value;
+        }
+
+        if (\is_bool($value)) {
+            return $value;
+        }
+
+        if ($value === null) {
+            return null;
+        }
+
+        // Handle remaining types
+        if (\is_resource($value)) {
+            return (string) $value;
+        }
+
+        if (\is_object($value) && \method_exists($value, '__toString')) {
+            return $value->__toString();
+        }
+
+        if (\is_array($value) || \is_object($value)) {
+            return '';
+        }
+
+        // At this point, we should have covered all cases
+        return '';
     }
 }

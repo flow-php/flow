@@ -59,6 +59,7 @@ final readonly class DataPageBuilder
         }
 
         if ($dictionary && $indices) {
+            /** @phpstan-ignore-next-line */
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth(BitWidth::fromArray($indices), $indices));
         } else {
             (new PlainValuesPacker($pageWriter))->packValues($column, $data->values());
@@ -126,6 +127,7 @@ final readonly class DataPageBuilder
         }
 
         if ($dictionary && $indices) {
+            /** @phpstan-ignore-next-line */
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth(BitWidth::fromArray($indices), $indices));
         } else {
             (new PlainValuesPacker($pageWriter))->packValues($column, $data->values());

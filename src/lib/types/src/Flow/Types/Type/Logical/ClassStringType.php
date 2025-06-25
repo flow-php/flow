@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
+use function Flow\Types\DSL\{type_class_string, type_literal, type_structure};
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type;
 
@@ -25,12 +26,17 @@ final readonly class ClassStringType implements Type
     }
 
     /**
-     * @param array{class?: class-string<T>} $data
+     * @param array<string, mixed> $data
      *
-     * @return Type<class-string<T>>
+     * @return Type<class-string>
      */
     public static function fromArray(array $data) : Type
     {
+        $data = type_structure(
+            ['type' => type_literal('class_string')],
+            ['class' => type_class_string()],
+        )->assert($data);
+
         return new self($data['class'] ?? null);
     }
 

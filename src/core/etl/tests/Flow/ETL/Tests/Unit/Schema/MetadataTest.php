@@ -29,12 +29,12 @@ final class MetadataTest extends FlowTestCase
     }
 
     /**
-     * @param mixed $intput
+     * @param array<mixed>|bool|float|int|string $intput
      * @param Type<mixed> $type
      * @param mixed $output
      */
     #[DataProvider('provider_test_get_as')]
-    public function test_get_as(mixed $intput, Type $type, mixed $output) : void
+    public function test_get_as(int|string|float|bool|array $intput, Type $type, mixed $output) : void
     {
         self::assertEquals(
             $output,

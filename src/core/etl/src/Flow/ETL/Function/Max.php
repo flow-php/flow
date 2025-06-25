@@ -43,7 +43,7 @@ final class Max implements AggregatingFunction
     }
 
     /**
-     * @return Entry<?\DateTimeInterface, ?\DateTimeInterface>|Entry<?float, ?float>|Entry<?int, ?int>
+     * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
      */
     public function result() : Entry
     {

@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema;
 
 use function Flow\ETL\DSL\{is_nullable};
-use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_enum, type_equals, type_float, type_integer, type_is, type_is_any, type_json, type_list, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element, types};
+use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_equals, type_float, type_integer, type_is, type_is_any, type_json, type_list, type_map, type_mixed, type_optional, type_string, type_structure, type_time, type_uuid, type_xml, type_xml_element, types};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
 use Flow\Types\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, TypeFactory};
+use Flow\Types\Value\Uuid;
 
+/**
+ * @template-covariant T
+ */
 final class Definition
 {
     private Metadata $metadata;
@@ -19,7 +23,7 @@ final class Definition
     private readonly Reference $ref;
 
     /**
-     * @param Type<mixed> $type
+     * @param Type<T> $type
      */
     public function __construct(
         string|Reference $ref,
@@ -35,23 +39,36 @@ final class Definition
         $this->ref = EntryReference::init($ref);
     }
 
+    /**
+     * @return Definition<bool>
+     */
     public static function boolean(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_boolean(), $nullable, $metadata);
     }
 
+    /**
+     * @return Definition<\DateTimeInterface>
+     */
     public static function date(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_date(), $nullable, $metadata);
     }
 
+    /**
+     * @return Definition<\DateTimeInterface>
+     */
     public static function dateTime(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_datetime(), $nullable, $metadata);
     }
 
     /**
-     * @param class-string<\UnitEnum> $type
+     * @template TEnum of \UnitEnum
+     *
+     * @param class-string<TEnum> $type
+     *
+     * @return Definition<TEnum>
      */
     public static function enum(string|Reference $entry, string $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
@@ -67,6 +84,9 @@ final class Definition
         );
     }
 
+    /**
+     * @return Definition<float>
+     */
     public static function float(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_float(), $nullable, $metadata);
@@ -74,43 +94,53 @@ final class Definition
 
     /**
      * @param array<array-key, mixed> $definition
+     *
+     * @return Definition<mixed>
      */
     public static function fromArray(array $definition) : self
     {
-        if (!\array_key_exists('ref', $definition)) {
-            throw new InvalidArgumentException('Schema definition must contain "ref" key');
-        }
+        $validatedData = type_structure([
+            'ref' => type_string(),
+            'type' => type_array(),
+            'nullable' => type_optional(type_boolean()),
+            'metadata' => type_optional(type_array()),
+        ])->assert($definition);
 
-        if (!\array_key_exists('type', $definition)) {
-            throw new InvalidArgumentException('Schema definition must contain "type" key');
-        }
-
-        if (!\is_array($definition['type'])) {
-            throw new InvalidArgumentException('Schema definition "type" must be an array, got: ' . \json_encode($definition['type']));
-        }
+        $typeData = type_map(type_string(), type_mixed())->assert($validatedData['type']);
 
         return new self(
-            $definition['ref'],
-            TypeFactory::fromArray($definition['type']),
-            $definition['nullable'] ?? false,
-            Metadata::fromArray($definition['metadata'] ?? [])
+            $validatedData['ref'],
+            TypeFactory::fromArray($typeData),
+            $validatedData['nullable'] ?? false,
+            /** @phpstan-ignore-next-line */
+            Metadata::fromArray($validatedData['metadata'] ?? [])
         );
     }
 
+    /**
+     * @return Definition<int>
+     */
     public static function integer(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_integer(), $nullable, $metadata);
     }
 
+    /**
+     * @return Definition<string>
+     */
     public static function json(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_json(), $nullable, $metadata);
     }
 
     /**
-     * @param ListType<mixed> $type
+     * @template TElement
+     *
+     * @param Type<list<TElement>> $type
+     *
+     * @return Definition<list<TElement>>
      */
-    public static function list(string|Reference $entry, ListType $type, bool $nullable = false, ?Metadata $metadata = null) : self
+    public static function list(string|Reference $entry, Type $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
@@ -121,9 +151,14 @@ final class Definition
     }
 
     /**
-     * @param MapType<array-key, mixed> $type
+     * @template TKey of array-key
+     * @template TValue
+     *
+     * @param Type<array<TKey, TValue>> $type
+     *
+     * @return Definition<array<TKey, TValue>>
      */
-    public static function map(string|Reference $entry, MapType $type, bool $nullable = false, ?Metadata $metadata = null) : self
+    public static function map(string|Reference $entry, Type $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
@@ -133,34 +168,53 @@ final class Definition
         );
     }
 
+    /**
+     * @return Definition<string>
+     */
     public static function string(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_string(), $nullable, $metadata);
     }
 
     /**
-     * @param StructureType<array<array-key, mixed>> $type
+     * @template TElement
+     *
+     * @param Type<TElement> $type
+     *
+     * @return Definition<TElement>
      */
-    public static function structure(string|Reference $entry, StructureType $type, bool $nullable = false, ?Metadata $metadata = null) : self
+    public static function structure(string|Reference $entry, Type $type, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, $type, $nullable, $metadata);
     }
 
+    /**
+     * @return Definition<\DateInterval>
+     */
     public static function time(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_time(), $nullable, $metadata);
     }
 
+    /**
+     * @return Definition<Uuid>
+     */
     public static function uuid(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_uuid(), $nullable, $metadata);
     }
 
+    /**
+     * @return Definition<\DOMDocument>
+     */
     public static function xml(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_xml(), $nullable, $metadata);
     }
 
+    /**
+     * @return Definition<\DOMElement>
+     */
     public static function xml_element(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_xml_element(), $nullable, $metadata);
@@ -168,6 +222,8 @@ final class Definition
 
     /**
      * @param array<array-key, mixed> $value
+     *
+     * @return Definition<T>
      */
     public function addMetadata(string $key, int|string|bool|float|array $value) : self
     {
@@ -185,6 +241,8 @@ final class Definition
      * Checks if another type is compatible with this type. Nullability is validated from a schema evolution perspective.
      * This means that when current type is nullable and the other type is not nullable, it is still compatible.
      * When given type is not nullable and current type is nullable, it is not compatible.
+     *
+     * @param Definition<mixed> $definition
      */
     public function isCompatible(self $definition) : bool
     {
@@ -286,6 +344,9 @@ final class Definition
         return $this->nullable;
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     */
     public function isSame(self $definition) : bool
     {
         if ($this->nullable !== $definition->nullable) {
@@ -299,13 +360,16 @@ final class Definition
         return $this->metadata->isEqual($definition->metadata);
     }
 
+    /**
+     * @return Definition<T>
+     */
     public function makeNullable(bool $nullable = true) : self
     {
         return new self($this->ref, $this->type, $nullable, $this->metadata);
     }
 
     /**
-     * @param Entry<mixed, mixed> $entry
+     * @param Entry<mixed> $entry
      */
     public function matches(Entry $entry) : bool
     {
@@ -320,12 +384,21 @@ final class Definition
         return type_equals($this->type, $entry->type());
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     *
+     * @return Definition<mixed>
+     */
     public function merge(self $definition) : self
     {
         $thisType = $this->type;
         $definitionType = $definition->type;
 
-        $types = types($thisType, $definitionType);
+        /** @var Type<mixed> $thisTypeMixed */
+        $thisTypeMixed = $thisType;
+        /** @var Type<mixed> $definitionTypeMixed */
+        $definitionTypeMixed = $definitionType;
+        $types = types($thisTypeMixed, $definitionTypeMixed);
 
         if (!$this->ref->is($definition->ref)) {
             throw new RuntimeException(\sprintf('Cannot merge different definitions, %s and %s', $this->ref->name(), $definition->ref->name()));
@@ -449,12 +522,17 @@ final class Definition
 
     /**
      * @deprecated Use makeNullable() instead
+     *
+     * @return Definition<T>
      */
     public function nullable() : self
     {
         return $this->makeNullable();
     }
 
+    /**
+     * @return Definition<T>
+     */
     public function rename(string $newName) : self
     {
         return new self(
@@ -465,6 +543,9 @@ final class Definition
         );
     }
 
+    /**
+     * @return Definition<T>
+     */
     public function setMetadata(Metadata $metadata) : self
     {
         $this->metadata = $metadata;
@@ -473,7 +554,7 @@ final class Definition
     }
 
     /**
-     * @return Type<mixed>
+     * @return Type<T>
      */
     public function type() : Type
     {

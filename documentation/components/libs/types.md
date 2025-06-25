@@ -18,6 +18,17 @@ composer require flow-php/types:~--FLOW_PHP_VERSION--
 
 ### Usage
 
+**Heads Up** - in order to use full potential of `type_structure()` with PHPStan you need
+to enable a dedicated extension in your `phpstan.neon` configuration file:
+
+```neon
+services:
+    -
+        class: Flow\Types\PHPStan\StructureTypeReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicFunctionReturnTypeExtension
+```
+
 #### Type Narrowing 
 
 To narrow a variable to a specific type, you can use one of two available methods: 

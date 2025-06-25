@@ -15,7 +15,7 @@ final readonly class Row
     }
 
     /**
-     * @param Entry<mixed, mixed> ...$entries
+     * @param Entry<mixed> ...$entries
      *
      * @throws InvalidArgumentException
      */
@@ -25,7 +25,7 @@ final readonly class Row
     }
 
     /**
-     * @param Entry<mixed, mixed> ...$entries
+     * @param Entry<mixed> ...$entries
      */
     public static function with(Entry ...$entries) : self
     {
@@ -33,7 +33,7 @@ final readonly class Row
     }
 
     /**
-     * @param Entry<mixed, mixed> ...$entries
+     * @param Entry<mixed> ...$entries
      *
      * @throws InvalidArgumentException
      */
@@ -55,7 +55,7 @@ final readonly class Row
     /**
      * @throws InvalidArgumentException
      *
-     * @return Entry<mixed, mixed>
+     * @return Entry<mixed>
      */
     public function get(string|Reference $reference) : Entry
     {
@@ -95,7 +95,7 @@ final readonly class Row
     }
 
     /**
-     * @param callable(Entry<mixed, mixed>) : Entry<mixed, mixed> $mapper
+     * @param callable(Entry<mixed>) : Entry<mixed> $mapper
      */
     public function map(callable $mapper) : self
     {
@@ -132,6 +132,9 @@ final readonly class Row
         return new self($this->entries->rename($currentName, $newName));
     }
 
+    /**
+     * @return Schema
+     */
     public function schema() : Schema
     {
         $definitions = [];
@@ -144,7 +147,7 @@ final readonly class Row
     }
 
     /**
-     * @param Entry<mixed, mixed> ...$entries
+     * @param Entry<mixed> ...$entries
      */
     public function set(Entry ...$entries) : self
     {

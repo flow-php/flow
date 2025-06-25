@@ -61,7 +61,7 @@ final class Sum implements AggregatingFunction, WindowFunction
     }
 
     /**
-     * @return Entry<?float, ?float>|Entry<?int,?int>
+     * @return Entry<?float>|Entry<?int>
      */
     public function result() : Entry
     {

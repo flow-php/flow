@@ -1,5 +1,5 @@
 parameters:
-    level: 8
+    level: 9
     treatPhpDocTypesAsCertain: false
     bootstrapFiles:
         - tools/phpunit/vendor/autoload.php
@@ -84,3 +84,9 @@ parameters:
 
 includes:
     - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon
+
+services:
+    -
+        class: Flow\Types\PHPStan\StructureTypeReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicFunctionReturnTypeExtension

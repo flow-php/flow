@@ -117,7 +117,7 @@ function array_dot_get_int(array $array, string $path) : ?int
         return null;
     }
 
-    return (int) $result;
+    return \is_numeric($result) ? (int) $result : 0;
 }
 
 /**
@@ -131,7 +131,7 @@ function array_dot_get_string(array $array, string $path) : ?string
         return null;
     }
 
-    return (string) $result;
+    return \is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
 }
 
 /**
@@ -159,7 +159,7 @@ function array_dot_get_float(array $array, string $path) : ?float
         return null;
     }
 
-    return (float) $result;
+    return \is_numeric($result) ? (float) $result : 0.0;
 }
 
 /**
@@ -173,7 +173,9 @@ function array_dot_get_datetime(array $array, string $path) : ?\DateTimeImmutabl
         return null;
     }
 
-    return new \DateTimeImmutable($result);
+    $dateTimeString = \is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
+
+    return new \DateTimeImmutable($dateTimeString);
 }
 
 /**

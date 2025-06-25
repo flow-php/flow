@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data\Converter;
 
+use function Flow\Types\DSL\type_integer;
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\{ConvertedType, FlatColumn, LogicalType, PhysicalType};
@@ -12,7 +13,7 @@ final class Int32DateConverter implements Converter
 {
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
-        return $this->numberOfDaysToDateTime($data);
+        return $this->numberOfDaysToDateTime(type_integer()->assert($data));
     }
 
     public function isFor(FlatColumn $column, Options $options) : bool
@@ -30,6 +31,10 @@ final class Int32DateConverter implements Converter
 
     public function toParquetType(mixed $data) : int
     {
+        if (!$data instanceof \DateTime && !$data instanceof \DateTimeImmutable) {
+            throw new \InvalidArgumentException(\sprintf('Expected DateTime or DateTimeImmutable, got %s', \get_debug_type($data)));
+        }
+
         return $this->dateTimeToNumberOfDays($data);
     }
 

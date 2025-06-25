@@ -19,6 +19,10 @@ use Flow\ETL\{SchemaValidator};
  */
 final class EvolvingValidator implements SchemaValidator
 {
+    /**
+     * @param Schema $expected
+     * @param Schema $given
+     */
     public function isValid(Schema $expected, Schema $given) : bool
     {
         if ($given->count() < $expected->count()) {

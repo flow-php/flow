@@ -635,14 +635,19 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function reduceToArray(string|Reference $reference) : array
     {
-        return $this->reduce(
-            function (array $ids, Row $row) use ($reference) : array {
+        $result = $this->reduce(
+            function (mixed $ids, Row $row) use ($reference) : mixed {
+                if (!\is_array($ids)) {
+                    $ids = [];
+                }
                 $ids[] = $row->get($reference)->value();
 
                 return $ids;
             },
             []
         );
+
+        return \is_array($result) ? $result : [];
     }
 
     public function remove(int $offset) : self
@@ -662,6 +667,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::partitioned(\array_reverse($this->rows), $this->partitions);
     }
 
+    /**
+     * @return Schema
+     */
     public function schema() : Schema
     {
         if (!$this->count()) {

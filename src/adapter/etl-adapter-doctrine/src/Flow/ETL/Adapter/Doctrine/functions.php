@@ -257,6 +257,7 @@ function to_dbal_table_delete(
 /**
  * Converts a Flow\ETL\Schema to a Doctrine\DBAL\Schema\Table.
  *
+ * @param Schema $schema
  * @param array<array-key, mixed> $table_options
  * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $types_map
  */
@@ -270,6 +271,8 @@ function to_dbal_schema_table(Schema $schema, string $table_name, array $table_o
  * Converts a Doctrine\DBAL\Schema\Table to a Flow\ETL\Schema.
  *
  * @param array<class-string<\Flow\Types\Type<mixed>>, class-string<\Doctrine\DBAL\Types\Type>> $types_map
+ *
+ * @return Schema
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
 function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $types_map = []) : Schema

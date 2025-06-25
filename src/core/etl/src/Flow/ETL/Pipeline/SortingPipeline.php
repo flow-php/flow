@@ -7,7 +7,7 @@ namespace Flow\ETL\Pipeline;
 use function Flow\Filesystem\DSL\protocol;
 use Flow\ETL\Dataset\Memory\Unit;
 use Flow\ETL\Exception\OutOfMemoryException;
-use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
+use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 use Flow\ETL\Row\References;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Sort\{ExternalSort, MemorySort};
@@ -40,6 +40,9 @@ final readonly class SortingPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->pipes();
     }
 
+    /**
+     * @return \Generator<int, Rows>
+     */
     public function process(FlowContext $context) : \Generator
     {
         try {
@@ -71,6 +74,7 @@ final readonly class SortingPipeline implements OverridingPipeline, Pipeline
             )->sortBy($this->pipeline, $context, $this->refs);
         }
 
+        /** @phpstan-ignore-next-line */
         return $extractor->extract($context);
     }
 

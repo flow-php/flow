@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_equals, type_integer};
+use function Flow\Types\DSL\{type_equals, type_integer, type_optional};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\IntegerType;
 
 /**
- * @implements Entry<?int, int>
+ * @implements Entry<?int>
  */
 final class IntegerEntry implements Entry
 {
@@ -20,7 +19,10 @@ final class IntegerEntry implements Entry
 
     private Metadata $metadata;
 
-    private readonly IntegerType $type;
+    /**
+     * @var Type<int>
+     */
+    private readonly Type $type;
 
     /**
      * @throws InvalidArgumentException
@@ -48,7 +50,7 @@ final class IntegerEntry implements Entry
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : self
     {
         return new self($this->name, $this->value, $this->metadata);
     }
@@ -67,7 +69,7 @@ final class IntegerEntry implements Entry
         return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value()));
     }
@@ -80,7 +82,7 @@ final class IntegerEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function rename(string $name) : Entry
+    public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
@@ -104,8 +106,8 @@ final class IntegerEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : self
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

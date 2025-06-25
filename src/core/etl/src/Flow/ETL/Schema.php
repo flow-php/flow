@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\schema;
+use function Flow\ETL\DSL\{empty_schema, schema};
 use Flow\ETL\Exception\{InvalidArgumentException,
     SchemaDefinitionNotFoundException,
     SchemaDefinitionNotUniqueException};
@@ -14,10 +14,13 @@ use Flow\ETL\Schema\{Definition};
 final class Schema implements \Countable
 {
     /**
-     * @var array<string, Definition>
+     * @var array<string, Definition<mixed>>
      */
     private array $definitions;
 
+    /**
+     * @param Definition<mixed> ...$definitions
+     */
     public function __construct(Definition ...$definitions)
     {
         $this->setDefinitions(...$definitions);
@@ -60,7 +63,7 @@ final class Schema implements \Countable
         }
 
         $extractor = $pipeline->process($context);
-        $schema = schema();
+        $schema = empty_schema();
         $totalRows = 0;
 
         foreach ($extractor as $rows) {
@@ -91,6 +94,11 @@ final class Schema implements \Countable
         return $schema;
     }
 
+    /**
+     * @param Definition<mixed> ...$definitions
+     *
+     * @return Schema
+     */
     public function add(Definition ...$definitions) : self
     {
         $this->setDefinitions(...\array_merge(\array_values($this->definitions), $definitions));
@@ -104,6 +112,8 @@ final class Schema implements \Countable
      * @param array<array-key, mixed> $value
      *
      * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
      */
     public function addMetadata(string $definition, string $name, int|string|bool|float|array $value) : self
     {
@@ -118,7 +128,7 @@ final class Schema implements \Countable
     }
 
     /**
-     * @return array<Definition>
+     * @return array<string, Definition<mixed>>
      */
     public function definitions() : array
     {
@@ -135,6 +145,9 @@ final class Schema implements \Countable
         return $this->references()->all();
     }
 
+    /**
+     * @return null|Definition<mixed>
+     */
     public function findDefinition(string|Reference $ref) : ?Definition
     {
         if ($ref instanceof Reference) {
@@ -154,6 +167,8 @@ final class Schema implements \Countable
 
     /**
      * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Definition<mixed>
      */
     public function get(string|Reference $ref) : Definition
     {
@@ -164,6 +179,8 @@ final class Schema implements \Countable
      * @deprecated please use Schema::get() instead
      *
      * @throw SchemaDefinitionNotFoundException
+     *
+     * @return Definition<mixed>
      */
     public function getDefinition(string|Reference $ref) : Definition
     {
@@ -190,6 +207,9 @@ final class Schema implements \Countable
         return $this;
     }
 
+    /**
+     * @return Schema
+     */
     public function keep(string|Reference ...$entries) : self
     {
         $refs = References::init(...$entries);
@@ -265,7 +285,7 @@ final class Schema implements \Countable
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return array<array-key, array<mixed>>
      */
     public function normalize() : array
     {
@@ -280,6 +300,8 @@ final class Schema implements \Countable
 
     /**
      * @deprecated use makeNullable instead
+     *
+     * @return Schema
      */
     public function nullable() : self
     {
@@ -297,6 +319,9 @@ final class Schema implements \Countable
         return References::init(...$refs);
     }
 
+    /**
+     * @return Schema
+     */
     public function remove(string|Reference ...$entries) : self
     {
         $refs = References::init(...$entries);
@@ -320,6 +345,9 @@ final class Schema implements \Countable
         return $this;
     }
 
+    /**
+     * @return Schema
+     */
     public function rename(string|Reference $entry, string $newName) : self
     {
         $definitions = [];
@@ -341,6 +369,11 @@ final class Schema implements \Countable
         return $this;
     }
 
+    /**
+     * @param Definition<mixed> $definition
+     *
+     * @return Schema
+     */
     public function replace(string|Reference $entry, Definition $definition) : self
     {
         $definitions = [];
@@ -366,6 +399,8 @@ final class Schema implements \Countable
      * Overwrites metadata for a given definition.
      *
      * @throws SchemaDefinitionNotFoundException
+     *
+     * @return Schema
      */
     public function setMetadata(string $definition, Metadata $metadata) : self
     {
@@ -374,6 +409,9 @@ final class Schema implements \Countable
         return $this;
     }
 
+    /**
+     * @param Definition<mixed> ...$definitions
+     */
     private function setDefinitions(Definition ...$definitions) : void
     {
         $uniqueDefinitions = [];

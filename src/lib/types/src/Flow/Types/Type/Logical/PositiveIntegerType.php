@@ -45,7 +45,15 @@ final readonly class PositiveIntegerType implements Type
                 return $this->assert(((int) $endTime->format('Uu')) - (int) ($reference->format('Uu')));
             }
 
-            return $this->assert((int) $value);
+            if (\is_numeric($value)) {
+                return $this->assert((int) $value);
+            }
+
+            if (\is_bool($value)) {
+                return $this->assert($value ? 1 : 0);
+            }
+
+            throw new CastingException($value, $this);
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }

@@ -9,18 +9,18 @@ use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, In
 use IteratorAggregate;
 
 /**
- * @implements ArrayAccess<string, Entry<mixed, mixed>>
- * @implements IteratorAggregate<string, Entry<mixed, mixed>>
+ * @implements ArrayAccess<string, Entry<mixed>>
+ * @implements IteratorAggregate<string, Entry<mixed>>
  */
 final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     /**
-     * @var array<string, Entry<mixed, mixed>>
+     * @var array<string, Entry<mixed>>
      */
     private array $entries;
 
     /**
-     * @param Entry<mixed, mixed> ...$entries
+     * @param Entry<mixed> ...$entries
      *
      * @throws InvalidArgumentException
      */
@@ -40,7 +40,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @param Entry<mixed, mixed> ...$entries
+     * @param Entry<mixed> ...$entries
      *
      * @throws InvalidArgumentException
      */
@@ -68,7 +68,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @return array<Entry<mixed, mixed>>
+     * @return array<Entry<mixed>>
      */
     public function all() : array
     {
@@ -94,7 +94,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      *
-     * @return Entry<mixed, mixed>
+     * @return Entry<mixed>
      */
     public function get(string|Reference $reference) : Entry
     {
@@ -119,7 +119,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @return \Iterator<string, Entry<mixed, mixed>>
+     * @return \Iterator<string, Entry<mixed>>
      */
     public function getIterator() : \Iterator
     {
@@ -167,7 +167,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @template ReturnType
      *
-     * @param callable(Entry<mixed, mixed>) : ReturnType $callable
+     * @param callable(Entry<mixed>) : ReturnType $callable
      *
      * @return array<int, ReturnType>
      */
@@ -218,7 +218,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws InvalidArgumentException
      *
-     * @return Entry<mixed, mixed>
+     * @return Entry<mixed>
      */
     public function offsetGet($offset) : Entry
     {
@@ -332,7 +332,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @param Entry<mixed, mixed> ...$entries
+     * @param Entry<mixed> ...$entries
      */
     public function set(Entry ...$entries) : self
     {
@@ -370,11 +370,12 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * @return ?Entry<string, mixed>
+     * @return ?Entry<mixed>
      */
     private function find(string|Reference $reference) : ?Entry
     {
         if ($this->has($reference)) {
+            /** @var null|Entry<mixed> */
             return $reference instanceof Reference ? $this->entries[$reference->base()] : $this->entries[$reference];
         }
 
@@ -385,7 +386,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      * Internal function used to create entries that are already indexed and validated against duplicates.
      * It comes with a significant performance boost, only to be used inside of this collection.
      *
-     * @param array<string, Entry<mixed, mixed>> $entries
+     * @param array<string, Entry<mixed>> $entries
      */
     private static function recreate(array $entries) : self
     {

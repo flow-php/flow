@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\{type_enum, type_equals};
+use function Flow\Types\DSL\{type_enum, type_equals, type_optional};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\EnumType;
-use UnitEnum;
 
 /**
- * @implements Entry<?UnitEnum, UnitEnum>
+ * @implements Entry<?\UnitEnum>
  */
 final class EnumEntry implements Entry
 {
@@ -21,9 +19,9 @@ final class EnumEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var EnumType<\UnitEnum>
+     * @var Type<\UnitEnum>
      */
-    private readonly EnumType $type;
+    private readonly Type $type;
 
     public function __construct(
         private readonly string $name,
@@ -101,8 +99,8 @@ final class EnumEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : self
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

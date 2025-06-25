@@ -61,6 +61,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
     }
 
     /**
+     * @param Definition<mixed> $definition
      * @param array<string> $buffer
      *
      * @return array<string>

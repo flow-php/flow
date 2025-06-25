@@ -44,6 +44,7 @@ final class JsonExtractorTest extends FlowTestCase
             ->fetch();
 
         foreach ($rows as $row) {
+            $value = $row->get('/timezones')->value();
             self::assertSame(
                 [
                     'timezones',
@@ -53,7 +54,7 @@ final class JsonExtractorTest extends FlowTestCase
                     'capital',
 
                 ],
-                \array_keys($row->get('/timezones')->value())
+                \is_array($value) ? \array_keys($value) : []
             );
         }
 

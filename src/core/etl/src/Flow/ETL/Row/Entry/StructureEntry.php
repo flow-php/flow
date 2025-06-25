@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\Types\DSL\type_equals;
+use function Flow\Types\DSL\{type_equals, type_optional};
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\StructureType;
 use Flow\Types\Type\{TypeDetector};
 
 /**
- * @template T of array<array-key, mixed>
+ * @template T
  *
- * @implements Entry<?array<array-key, mixed>, T>
+ * @implements Entry<?array<string, T>>
  */
 final class StructureEntry implements Entry
 {
@@ -25,20 +24,20 @@ final class StructureEntry implements Entry
     private Metadata $metadata;
 
     /**
-     * @var StructureType<T>
+     * @var Type<array<string, T>>
      */
-    private readonly StructureType $type;
+    private readonly Type $type;
 
     /**
      * @param ?array<array-key, mixed> $value
-     * @param StructureType<T> $type
+     * @param Type<array<string, T>> $type
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
         private readonly ?array $value,
-        StructureType $type,
+        Type $type,
         ?Metadata $metadata = null,
     ) {
         if ('' === $name) {
@@ -49,7 +48,6 @@ final class StructureEntry implements Entry
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
-        /** @phpstan-ignore-next-line */
         if ($value !== null && !$type->isValid($value)) {
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
@@ -99,7 +97,7 @@ final class StructureEntry implements Entry
             return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type);
         }
 
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && (new ArrayComparison())->equals($thisValue, $entryValue);
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
     public function map(callable $mapper) : Entry
@@ -126,6 +124,9 @@ final class StructureEntry implements Entry
         return \json_encode($this->value, JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * @return Type<array<string, T>>
+     */
     public function type() : Type
     {
         return $this->type;
@@ -138,6 +139,6 @@ final class StructureEntry implements Entry
 
     public function withValue(mixed $value) : Entry
     {
-        return new self($this->name, $value, $this->type);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->type);
     }
 }

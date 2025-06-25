@@ -8,6 +8,7 @@ use Flow\Bridge\Monolog\Http\Config\ResponseConfig;
 use Flow\Bridge\Monolog\Http\Exception\InvalidArgumentException;
 use Flow\Bridge\Monolog\Http\Sanitization\Sanitizer;
 use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Exception\InvalidTypeException;
 
 final class ResponseConfigTest extends FlowTestCase
 {
@@ -37,8 +38,8 @@ final class ResponseConfigTest extends FlowTestCase
 
     public function test_constructor_throws_exception_when_mask_sanitizer_has_invalid_character() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sanitizer for key "invalid" could not be created from array: Character must be a string');
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "structure{type: string, character: integer}"');
 
         new ResponseConfig(
             sanitizers: [
@@ -49,8 +50,8 @@ final class ResponseConfigTest extends FlowTestCase
 
     public function test_constructor_throws_exception_when_mask_sanitizer_has_invalid_offset() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Sanitizer for key "invalid" could not be created from array: Offset must be an integer');
+        $this->expectException(InvalidTypeException::class);
+        $this->expectExceptionMessage('Expected type "structure{type: \'mask\', character?: string, offset?: integer}", got "map<string, string>"');
 
         new ResponseConfig(
             sanitizers: [

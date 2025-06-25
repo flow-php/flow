@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\{is_type};
-use function Flow\Types\DSL\{type_equals, type_float};
+use function Flow\Types\DSL\{type_equals, type_float, type_optional};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
@@ -13,7 +13,7 @@ use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
 
 /**
- * @implements Entry<?float, float>
+ * @implements Entry<?float>
  */
 final class FloatEntry implements Entry
 {
@@ -52,7 +52,7 @@ final class FloatEntry implements Entry
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
-    public function duplicate() : Entry
+    public function duplicate() : self
     {
         return new self($this->name, $this->value, $this->metadata);
     }
@@ -92,7 +92,7 @@ final class FloatEntry implements Entry
             && \bccomp((string) $thisValue, (string) $entryValue) === 0;
     }
 
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value()));
     }
@@ -105,7 +105,7 @@ final class FloatEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function rename(string $name) : Entry
+    public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
@@ -129,8 +129,8 @@ final class FloatEntry implements Entry
         return $this->value;
     }
 
-    public function withValue(mixed $value) : Entry
+    public function withValue(mixed $value) : self
     {
-        return new self($this->name, $value);
+        return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);
     }
 }

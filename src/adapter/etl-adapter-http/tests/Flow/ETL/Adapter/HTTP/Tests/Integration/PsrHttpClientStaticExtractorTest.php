@@ -60,8 +60,15 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
         /** @var Rows $tomekRows */
         $tomekRows = $rowsGenerator->current();
 
-        $norbertResponseBody = \json_decode((string) $norbertRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
-        $tomekResponseBody = \json_decode((string) $tomekRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
+        $norbertResponseBodyValue = $norbertRows->first()->valueOf('response_body');
+        $norbertBodyJson = \is_scalar($norbertResponseBodyValue) || $norbertResponseBodyValue instanceof \Stringable ? (string) $norbertResponseBodyValue : '';
+        $norbertResponseBody = \json_decode($norbertBodyJson, true, 512, JSON_THROW_ON_ERROR);
+        \assert(\is_array($norbertResponseBody));
+
+        $tomekResponseBodyValue = $tomekRows->first()->valueOf('response_body');
+        $tomekBodyJson = \is_scalar($tomekResponseBodyValue) || $tomekResponseBodyValue instanceof \Stringable ? (string) $tomekResponseBodyValue : '';
+        $tomekResponseBody = \json_decode($tomekBodyJson, true, 512, JSON_THROW_ON_ERROR);
+        \assert(\is_array($tomekResponseBody));
 
         self::assertSame('norberttech', $norbertResponseBody['login']);
         self::assertSame('tomaszhanc', $tomekResponseBody['login']);

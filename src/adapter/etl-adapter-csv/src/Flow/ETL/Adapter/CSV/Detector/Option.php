@@ -13,7 +13,7 @@ final class Option
     private const COLUMNS_LENGTH_WEIGHT = 10_000;
 
     /**
-     * @var array<mixed>
+     * @var array<array<mixed>>
      */
     private array $rows;
 
@@ -38,6 +38,10 @@ final class Option
         $columnsCount = null;
 
         foreach ($this->rows as $row) {
+            if (!\is_array($row)) {
+                return false;
+            }
+
             if ($columnsCount === null) {
                 $columnsCount = \count($row);
 
@@ -76,12 +80,18 @@ final class Option
             return 0;
         }
 
-        $columnScore = \count($this->rows[0]) * self::COLUMN_SCORE_WEIGHT;
+        $firstRow = $this->rows[0];
+
+        if (!\is_array($firstRow)) {
+            return 0;
+        }
+
+        $columnScore = \count($firstRow) * self::COLUMN_SCORE_WEIGHT;
         $totalLength = \array_reduce(
             $this->rows,
             static fn (int $carry, array $row) : int => $carry + \array_reduce(
                 $row,
-                static fn (int $carry, $column) : int => $carry + (\is_string($column) ? \mb_strlen($column) : 0),
+                static fn (int $carry, mixed $column) : int => $carry + (\is_string($column) ? \mb_strlen($column) : 0),
                 0
             ),
             0

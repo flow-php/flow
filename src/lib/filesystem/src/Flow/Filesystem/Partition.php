@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\{
@@ -54,7 +55,7 @@ final class Partition
         $partitions = [];
 
         foreach ($data as $partition => $value) {
-            $partitions[] = new self($partition, (string) $value);
+            $partitions[] = new self($partition, type_string()->cast($value));
         }
 
         return $partitions;

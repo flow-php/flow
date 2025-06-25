@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\array_to_rows;
+use function Flow\Types\DSL\{type_integer, type_string, type_union};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Hash\NativePHPHash;
@@ -95,12 +96,18 @@ final class GroupBy
                     continue;
                 }
 
+                $pivotValue = type_union(type_string(), type_integer())->assert($pivotValue);
+
                 if (!\array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
                     /** @phpstan-ignore-next-line */
                     $this->pivotedTable[$indexValue][$pivotValue] = clone \current($this->aggregations);
                 }
 
-                $this->pivotedTable[$indexValue][$pivotValue]->aggregate($row);
+                $aggregator = $this->pivotedTable[$indexValue][$pivotValue];
+
+                if ($aggregator instanceof AggregatingFunction) {
+                    $aggregator->aggregate($row);
+                }
             }
 
         } else {
@@ -157,6 +164,8 @@ final class GroupBy
                 }
 
                 foreach ($this->pivotColumns as $column) {
+                    $column = type_union(type_string(), type_integer())->assert($column);
+
                     if (!\array_key_exists($column, $row)) {
                         $row[$column] = null;
                     }

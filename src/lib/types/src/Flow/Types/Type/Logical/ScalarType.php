@@ -6,17 +6,16 @@ namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\{type_boolean, type_float, type_integer, type_string, type_union};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\UnionType;
 
 /**
- * @implements Type<int|float|string|bool>
+ * @implements Type<string|int|bool|float>
  */
 final readonly class ScalarType implements Type
 {
     /**
-     * @var UnionType<bool|float|int|string,bool|float|int|string>
+     * @var Type<bool|float|int|string>
      */
-    private UnionType $innerType;
+    private Type $innerType;
 
     public function __construct()
     {
@@ -28,7 +27,7 @@ final readonly class ScalarType implements Type
         );
     }
 
-    public function assert(mixed $value) : int|float|string|bool
+    public function assert(mixed $value) : string|int|bool|float
     {
         return $this->innerType->assert($value);
     }

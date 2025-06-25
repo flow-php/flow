@@ -6,7 +6,7 @@ namespace Flow\ETL\Pipeline;
 
 use function Flow\ETL\DSL\{chunks_from, from_pipeline};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
+use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
 final readonly class BatchingPipeline implements OverridingPipeline, Pipeline
 {
@@ -45,6 +45,9 @@ final readonly class BatchingPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->pipes();
     }
 
+    /**
+     * @return \Generator<int, Rows>
+     */
     public function process(FlowContext $context) : \Generator
     {
         return chunks_from(from_pipeline($this->pipeline), $this->size)->extract($context);

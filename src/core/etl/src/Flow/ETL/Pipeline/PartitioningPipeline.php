@@ -12,6 +12,7 @@ use Flow\ETL\{Cache\CacheIndex,
     Hash\NativePHPHash,
     Loader,
     Pipeline,
+    Rows,
     Transformer};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CollectingExtractor;
@@ -65,6 +66,9 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
         return $this->pipeline->pipes();
     }
 
+    /**
+     * @return \Generator<int, Rows>
+     */
     public function process(FlowContext $context) : \Generator
     {
         /**

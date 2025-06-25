@@ -19,6 +19,10 @@ final class CartesianProduct
         $result = [[]];
 
         foreach ($input as $key => $values) {
+            if (!\is_iterable($values)) {
+                continue;
+            }
+
             $append = [];
 
             foreach ($result as $product) {

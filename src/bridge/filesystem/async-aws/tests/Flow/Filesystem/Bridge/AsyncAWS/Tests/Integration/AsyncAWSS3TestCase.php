@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_client;
+use function Flow\Types\DSL\type_string;
 use AsyncAws\S3\S3Client;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
@@ -47,7 +48,7 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
 
     public function bucket() : string
     {
-        return $_ENV['S3_BUCKET'];
+        return type_string()->assert($_ENV['S3_BUCKET']);
     }
 
     public function s3Client() : S3Client

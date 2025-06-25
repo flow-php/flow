@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, string_schema, struct_schema};
+use function Flow\ETL\DSL\{int_schema, list_schema, map_schema, string_schema, struct_schema, structure_schema};
 use function Flow\Types\DSL\{type_boolean,
     type_integer,
     type_list,
@@ -116,7 +116,7 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         ];
 
         yield [
-            struct_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
+            structure_schema('structure', type_structure(['id' => type_integer(), 'name' => type_string()])),
             struct_schema('structure', type_structure(['different_id' => type_integer(), 'name' => type_string()])),
             false,
         ];
@@ -134,24 +134,40 @@ final class DefinitionCompatibilityTest extends FlowTestCase
         ];
     }
 
+    /**
+     * @param Definition<mixed> $given
+     * @param Definition<mixed> $expected
+     */
     #[DataProvider('list_compatibility_provider')]
     public function test_list_type_compatibility(Definition $given, Definition $expected, bool $compatible) : void
     {
         self::assertSame($compatible, $given->isCompatible($expected));
     }
 
+    /**
+     * @param Definition<mixed> $given
+     * @param Definition<mixed> $expected
+     */
     #[DataProvider('map_compatibility_provider')]
     public function test_map_type_compatibility(Definition $given, Definition $expected, bool $compatible) : void
     {
         self::assertSame($compatible, $given->isCompatible($expected));
     }
 
+    /**
+     * @param Definition<mixed> $given
+     * @param Definition<mixed> $expected
+     */
     #[DataProvider('scalar_types_compatibility_provider')]
     public function test_scalar_type_compatibility(Definition $given, Definition $expected, bool $compatible) : void
     {
         self::assertSame($compatible, $given->isCompatible($expected));
     }
 
+    /**
+     * @param Definition<mixed> $given
+     * @param Definition<mixed> $expected
+     */
     #[DataProvider('structure_types_compatibility_provider')]
     public function test_structure_type_compatibility(Definition $given, Definition $expected, bool $compatible) : void
     {

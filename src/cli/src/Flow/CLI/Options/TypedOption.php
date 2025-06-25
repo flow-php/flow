@@ -104,7 +104,7 @@ final readonly class TypedOption
         $options = [];
 
         foreach ($option as $value) {
-            $options[] = (string) $value;
+            $options[] = \is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
         }
 
         return $options;

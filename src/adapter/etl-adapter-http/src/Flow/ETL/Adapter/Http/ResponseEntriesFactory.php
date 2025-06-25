@@ -26,7 +26,7 @@ final class ResponseEntriesFactory
         $responseType = 'html';
 
         foreach ($response->getHeader('Content-Type') as $header) {
-            if (\str_contains('application/json', $header)) {
+            if (\str_contains($header, 'application/json')) {
                 $responseType = 'json';
             }
         }
@@ -47,7 +47,13 @@ final class ResponseEntriesFactory
             switch ($responseType) {
                 case 'json':
                     if (\class_exists(JsonEntry::class)) {
-                        $responseBodyEntry = new JsonEntry('response_body', (array) \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR));
+                        $decodedJson = \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR);
+
+                        if (!\is_array($decodedJson)) {
+                            throw new InvalidArgumentException('Invalid JSON response body, expected array or object');
+                        }
+
+                        $responseBodyEntry = new JsonEntry('response_body', $decodedJson);
                     } else {
                         $responseBodyEntry = string_entry('response_body', $responseBodyContent);
                     }

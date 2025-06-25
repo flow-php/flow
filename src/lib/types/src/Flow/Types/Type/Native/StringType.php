@@ -58,7 +58,15 @@ final readonly class StringType implements Type
                 return (string) dom_element_to_string($value);
             }
 
-            return (string) $value;
+            if (null === $value) {
+                return '';
+            }
+
+            if (\is_scalar($value) || (\is_object($value) && method_exists($value, '__toString'))) {
+                return (string) $value;
+            }
+
+            throw new CastingException($value, $this);
         } catch (\Throwable) {
             throw new CastingException($value, $this);
         }

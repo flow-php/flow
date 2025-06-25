@@ -17,6 +17,7 @@ final class EntryFactoryBench
     #[ParamProviders('provideRows')]
     public function bench_entry_factory(array $params) : void
     {
+        /** @phpstan-ignore-next-line */
         array_to_rows($params['rows'], new EntryFactory());
     }
 

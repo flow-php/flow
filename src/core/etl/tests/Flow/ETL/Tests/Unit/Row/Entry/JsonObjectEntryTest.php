@@ -73,22 +73,10 @@ final class JsonObjectEntryTest extends FlowTestCase
     public function test_map() : void
     {
         $item = ['item-id' => 1, 'name' => 'one'];
-        $entry = (JsonEntry::object('item', $item))->map(function (array $value) : string {
-            \array_walk($value, function (&$v) : void {
-                if (\is_string($v)) {
-                    $v = \mb_strtoupper($v);
-                }
-            });
+        $entry = JsonEntry::object('item', $item);
+        $mappedEntry = $entry->map(fn (?array $value) : array => ['item-id' => 1, 'name' => 'ONE']);
 
-            return (string) \json_encode($value, JSON_THROW_ON_ERROR);
-        });
-
-        self::assertEquals(
-            \json_encode(
-                ['item-id' => 1, 'name' => 'ONE']
-            ),
-            $entry->toString()
-        );
+        self::assertEquals(JsonEntry::object('item', ['item-id' => 1, 'name' => 'ONE']), $mappedEntry);
     }
 
     public function test_renames_entry() : void
