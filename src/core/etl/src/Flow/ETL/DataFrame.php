@@ -757,6 +757,7 @@ final class DataFrame
         $analyze = $analyze === true ? analyze() : $analyze;
 
         if ($analyze) {
+            gc_collect_cycles();
             $memory = new Consumption();
             $startedAt = $this->context->config->clock()->now();
             $startTime = HighResolutionTime::now();

@@ -12,9 +12,9 @@ in
 {
     pkgs ? lockedPkgs,
     php-version ? 8.2,
-    with-pcov ? true,
+    with-blackfire ? false,
     with-xdebug ? false,
-    with-blackfire ? false
+    with-pcov ? !with-blackfire,
 }:
 
 let

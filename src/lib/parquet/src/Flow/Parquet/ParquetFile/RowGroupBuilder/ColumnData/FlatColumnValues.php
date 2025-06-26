@@ -92,9 +92,9 @@ final class FlatColumnValues
             throw new RuntimeException('Cannot merge different column, attempt to merge: ' . $this->column->flatPath() . ' with ' . $flatData->column->flatPath());
         }
 
-        $this->repetitionLevels = [...$this->repetitionLevels, ...$flatData->repetitionLevels];
-        $this->definitionLevels = [...$this->definitionLevels, ...$flatData->definitionLevels];
-        $this->values = [...$this->values, ...$flatData->values];
+        array_push($this->repetitionLevels, ...$flatData->repetitionLevels);
+        array_push($this->definitionLevels, ...$flatData->definitionLevels);
+        array_push($this->values, ...$flatData->values);
 
         return $this;
     }

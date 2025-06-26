@@ -161,8 +161,8 @@ use Flow\ETL\Row\{Entries, EntryFactory, SortOrder};
 use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Schema\{Definition};
-use Flow\ETL\Schema\Formatter\JsonSchemaFormatter;
+use Flow\ETL\Schema\{Definition, Formatter\PHPFormatter\TypeFormatter, Formatter\PHPFormatter\ValueFormatter};
+use Flow\ETL\Schema\Formatter\{JsonSchemaFormatter, PHPSchemaFormatter};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\{EvolvingValidator, SelectiveValidator, StrictValidator};
 use Flow\ETL\Transformer\OrderEntries\{CombinedComparator, Comparator, NameComparator, Order, TypeComparator, TypePriorities};
@@ -1671,6 +1671,15 @@ function schema(Definition ...$definitions) : Schema
 function schema_to_json(Schema $schema, bool $pretty = false) : string
 {
     return (new JsonSchemaFormatter($pretty))->format($schema);
+}
+
+/**
+ * @param Schema $schema
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function schema_to_php(Schema $schema, ValueFormatter $valueFormatter = new ValueFormatter(), TypeFormatter $typeFormatter = new TypeFormatter()) : string
+{
+    return (new PHPSchemaFormatter($valueFormatter, $typeFormatter))->format($schema);
 }
 
 /**
