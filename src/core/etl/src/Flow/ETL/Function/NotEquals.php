@@ -18,9 +18,11 @@ final class NotEquals extends ScalarFunctionChain
     public function eval(Row $row) : bool
     {
         $left = (new Parameter($this->left))->eval($row);
+        $leftType = (new Parameter($this->left))->asType($row);
         $right = (new Parameter($this->right))->eval($row);
+        $rightType = (new Parameter($this->right))->asType($row);
 
-        (new ValueComparator())->assertComparable($left, $right, '!=');
+        (new ValueComparator())->assertComparableTypes($leftType, $rightType, '!=');
 
         return $left != $right;
     }

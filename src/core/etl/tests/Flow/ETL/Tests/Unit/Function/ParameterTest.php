@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{lit, ref, row, str_entry};
+use function Flow\ETL\DSL\{int_entry, lit, ref, row, str_entry};
 use function Flow\Types\DSL\{type_boolean, type_integer, type_string};
 use Flow\ETL\Function\Parameter;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
@@ -42,5 +42,49 @@ final class ParameterTest extends FlowTestCase
 
         self::assertNull($parameter->as(row(), type_integer()));
         self::assertSame('test', $parameter->as(row(), type_string()));
+    }
+
+    public function test_as_type_with_literal_value() : void
+    {
+        $parameter = new Parameter(lit('string_value'));
+        $type = $parameter->asType(row());
+        self::assertTrue($type->isValid('string_value'));
+        self::assertFalse($type->isValid(42));
+
+        $parameter = new Parameter(lit(42));
+        $type = $parameter->asType(row());
+        self::assertTrue($type->isValid(42));
+        self::assertFalse($type->isValid('string'));
+
+        $parameter = new Parameter(lit(true));
+        $type = $parameter->asType(row());
+        self::assertTrue($type->isValid(true));
+        self::assertFalse($type->isValid(42));
+    }
+
+    public function test_as_type_with_reference() : void
+    {
+        $parameter = new Parameter(ref('value'));
+
+        $type = $parameter->asType(row(str_entry('value', 'test')));
+        self::assertTrue($type->isValid('test'));
+        self::assertFalse($type->isValid(42));
+
+        $type = $parameter->asType(row(int_entry('value', 42)));
+        self::assertTrue($type->isValid(42));
+        self::assertFalse($type->isValid('test'));
+    }
+
+    public function test_as_type_with_scalar_result() : void
+    {
+        $parameter = new Parameter(lit(ScalarResult::from('test')));
+        $type = $parameter->asType(row());
+        self::assertTrue($type->isValid('test'));
+        self::assertFalse($type->isValid(42));
+
+        $parameter = new Parameter(lit(ScalarResult::from(123)));
+        $type = $parameter->asType(row());
+        self::assertTrue($type->isValid(123));
+        self::assertFalse($type->isValid('string'));
     }
 }

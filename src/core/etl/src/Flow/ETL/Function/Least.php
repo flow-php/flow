@@ -20,16 +20,18 @@ final class Least extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         $extractedValues = [];
+        $extractedTypes = [];
 
         foreach ($this->values as $value) {
             $extractedValues[] = (new Parameter($value))->eval($row);
+            $extractedTypes[] = (new Parameter($value))->asType($row);
         }
 
         if (!\count($extractedValues)) {
             return null;
         }
 
-        (new ValueComparator())->assertAllComparable($extractedValues, '<');
+        (new ValueComparator())->assertAllTypesComparable($extractedTypes, '<');
 
         return \min($extractedValues);
     }

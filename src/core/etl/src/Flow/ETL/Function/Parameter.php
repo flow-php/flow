@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\lit;
+use function Flow\Types\DSL\get_type;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
@@ -169,6 +170,20 @@ final readonly class Parameter
         $result = $this->eval($row);
 
         return \is_string($result) ? $result : $default;
+    }
+
+    /**
+     * @return Type<mixed>
+     */
+    public function asType(Row $row) : Type
+    {
+        if ($this->function instanceof Reference) {
+            return $row->get($this->function)->type();
+        }
+
+        $result = $this->eval($row);
+
+        return get_type($result);
     }
 
     public function eval(Row $row) : mixed

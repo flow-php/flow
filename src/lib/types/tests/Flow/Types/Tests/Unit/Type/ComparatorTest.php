@@ -10,6 +10,7 @@ use function Flow\Types\DSL\{type_boolean,
     type_integer,
     type_is,
     type_is_any,
+    type_json,
     type_list,
     type_map,
     type_null,
@@ -29,6 +30,7 @@ final class ComparatorTest extends TestCase
     public static function type_comparable_data_provider() : \Generator
     {
         yield [type_integer(), type_integer()];
+        yield [type_json(), type_string()];
         yield [type_integer(), type_float()];
         yield [type_float(), type_integer()];
         yield [type_float(), type_float()];

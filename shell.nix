@@ -1,6 +1,7 @@
 let
     nixpkgs = fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/d2e52032da935f4972579f132250f3c3f47136d1.tar.gz";
+        url = "https://github.com/NixOS/nixpkgs/archive/88a5945d774ff733c2ecd65247aba714a1731fe7.tar.gz";
+
     };
 
     lockedPkgs = import nixpkgs {

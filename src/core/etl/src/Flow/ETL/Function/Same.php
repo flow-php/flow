@@ -17,11 +17,13 @@ final class Same extends ScalarFunctionChain
 
     public function eval(Row $row) : bool
     {
-        $base = (new Parameter($this->left))->eval($row);
-        $next = (new Parameter($this->right))->eval($row);
+        $left = (new Parameter($this->left))->eval($row);
+        $leftType = (new Parameter($this->left))->asType($row);
+        $right = (new Parameter($this->right))->eval($row);
+        $rightType = (new Parameter($this->right))->asType($row);
 
-        (new ValueComparator())->assertComparable($base, $next, '===');
+        (new ValueComparator())->assertComparableTypes($leftType, $rightType, '===');
 
-        return $base === $next;
+        return $left === $right;
     }
 }

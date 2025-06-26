@@ -103,7 +103,15 @@ final class FlatColumnValues
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
-        return \count(\array_filter($this->definitionLevels, fn (int $d) => $d !== $maxDefinitionLevel));
+        $nullCount = 0;
+
+        foreach ($this->definitionLevels as $definitionLevel) {
+            if ($definitionLevel !== $maxDefinitionLevel) {
+                $nullCount++;
+            }
+        }
+
+        return $nullCount;
     }
 
     /**
@@ -116,8 +124,15 @@ final class FlatColumnValues
 
     public function rowsCount() : int
     {
-        // rows count is count of repetitions equal to 0
-        return \count(\array_filter($this->repetitionLevels, static fn (int $r) => $r === 0));
+        $rowsCount = 0;
+
+        foreach ($this->repetitionLevels as $repetitionLevel) {
+            if ($repetitionLevel === 0) {
+                $rowsCount++;
+            }
+        }
+
+        return $rowsCount;
     }
 
     public function skipRows(?int $skipRows) : self

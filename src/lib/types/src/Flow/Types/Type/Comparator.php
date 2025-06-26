@@ -6,7 +6,14 @@ namespace Flow\Types\Type;
 
 use function Flow\Types\DSL\{type_equals, type_instance_of};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType, DateType, ListType, MapType, OptionalType, StructureType, TimeType};
+use Flow\Types\Type\Logical\{DateTimeType,
+    DateType,
+    JsonType,
+    ListType,
+    MapType,
+    OptionalType,
+    StructureType,
+    TimeType};
 use Flow\Types\Type\Native\{FloatType, IntegerType, NullType, StringType, UnionType};
 
 final class Comparator
@@ -54,6 +61,10 @@ final class Comparator
         }
 
         if ($left instanceof TimeType && $right instanceof TimeType) {
+            return true;
+        }
+
+        if (\in_array($left::class, [StringType::class, JsonType::class], true) && \in_array($right::class, [StringType::class, JsonType::class], true)) {
             return true;
         }
 
