@@ -83,9 +83,19 @@ final class PathTest extends TestCase
 
     public function test_add_partitions_to_path_with_extension() : void
     {
+        // expected path to be '/path/to/group=a/file.txt' on *nix, to be '\path\to\group=a\file.txt' on windows
+        $expected = DIRECTORY_SEPARATOR . 'path' .
+            DIRECTORY_SEPARATOR . 'to' .
+            DIRECTORY_SEPARATOR . 'group=a' .
+            DIRECTORY_SEPARATOR . 'file.txt';
+        // base actual path to be '/path/to/file.txt' on *nix, to be '\path\to\file.txt' on windows
+        $actual = DIRECTORY_SEPARATOR . 'path' .
+            DIRECTORY_SEPARATOR . 'to' .
+            DIRECTORY_SEPARATOR . 'file.txt';
+
         self::assertEquals(
-            path('/path/to/group=a/file.txt'),
-            (path('/path/to/file.txt'))->addPartitions(partition('group', 'a'))
+            expected: path($expected),
+            actual: (path($actual))->addPartitions(partition('group', 'a'))
         );
     }
 
