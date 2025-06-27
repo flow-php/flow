@@ -55,13 +55,9 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
             $partitions = $stream->path()->partitions();
 
-            $csvLineReader = new CSVLineReader($enclosure, $this->charactersReadInLine);
+            $csvLineReader = new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM);
 
-            foreach ($csvLineReader->readLines($stream) as $line => $csvLine) {
-                if ($line === 0 && $this->removeBOM) {
-                    $csvLine = $this->removeBOMFromLine($csvLine);
-                }
-
+            foreach ($csvLineReader->readLines($stream) as $csvLine) {
                 $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
                 $rowDataCount = \count($rowData);
 
@@ -244,30 +240,5 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         }
 
         return $rowData;
-    }
-
-    private function removeBOMFromLine(string $line) : string
-    {
-        if (\str_starts_with($line, "\xEF\xBB\xBF")) {
-            return \substr($line, 3);
-        }
-
-        if (\str_starts_with($line, "\xFF\xFE\x00\x00")) {
-            return \substr($line, 4);
-        }
-
-        if (\str_starts_with($line, "\x00\x00\xFE\xFF")) {
-            return \substr($line, 4);
-        }
-
-        if (\str_starts_with($line, "\xFF\xFE")) {
-            return \substr($line, 2);
-        }
-
-        if (\str_starts_with($line, "\xFE\xFF")) {
-            return \substr($line, 2);
-        }
-
-        return $line;
     }
 }

@@ -14,6 +14,7 @@ final readonly class CSVLineReader
     public function __construct(
         private string $enclosure,
         private ?int $charactersReadInLine = null,
+        private bool $removeBOM = true,
     ) {
     }
 
@@ -29,12 +30,12 @@ final readonly class CSVLineReader
             $buffer .= $rawLine;
 
             if (!\str_contains($buffer, $this->enclosure)) {
-                yield $lineNumber => rtrim($buffer, "\r\n");
+                yield $this->removeBOM && $lineNumber === 0 ? $this->removeBOMFromLine(\rtrim($buffer, "\r\n")) : rtrim($buffer, "\r\n");
                 $lineNumber++;
                 $buffer = '';
             } else {
                 if ($this->isCompleteCSVRecord($buffer)) {
-                    yield $lineNumber => \rtrim($buffer, "\r\n");
+                    yield $this->removeBOM && $lineNumber === 0 ? $this->removeBOMFromLine(\rtrim($buffer, "\r\n")) : \rtrim($buffer, "\r\n");
                     $lineNumber++;
                     $buffer = '';
                 } else {
@@ -44,7 +45,7 @@ final readonly class CSVLineReader
         }
 
         if ($buffer !== '') {
-            yield $lineNumber => \rtrim($buffer, "\r\n");
+            yield $this->removeBOM && $lineNumber === 0 ? $this->removeBOMFromLine(\rtrim($buffer, "\r\n")) : \rtrim($buffer, "\r\n");
         }
     }
 
@@ -59,5 +60,33 @@ final readonly class CSVLineReader
         }
 
         return \substr_count($buffer, $this->enclosure) % 2 === 0;
+    }
+
+    /**
+     * Remove Byte Order Mark (BOM) from the beginning of a line if present.
+     */
+    private function removeBOMFromLine(string $line) : string
+    {
+        if (\str_starts_with($line, "\xEF\xBB\xBF")) {
+            return \substr($line, 3);
+        }
+
+        if (\str_starts_with($line, "\xFF\xFE\x00\x00")) {
+            return \substr($line, 4);
+        }
+
+        if (\str_starts_with($line, "\x00\x00\xFE\xFF")) {
+            return \substr($line, 4);
+        }
+
+        if (\str_starts_with($line, "\xFF\xFE")) {
+            return \substr($line, 2);
+        }
+
+        if (\str_starts_with($line, "\xFE\xFF")) {
+            return \substr($line, 2);
+        }
+
+        return $line;
     }
 }
