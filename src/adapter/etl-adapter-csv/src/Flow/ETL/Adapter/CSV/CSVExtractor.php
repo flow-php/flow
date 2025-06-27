@@ -56,6 +56,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $partitions = $stream->path()->partitions();
 
             $csvLineReader = new CSVLineReader($enclosure, $this->charactersReadInLine, $this->removeBOM);
+            $rowNormalizer = new CSVRowNormalizer($this->emptyToNull);
 
             foreach ($csvLineReader->readLines($stream) as $csvLine) {
                 $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
@@ -74,7 +75,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     $headersCount = $rowDataCount;
                 }
 
-                $rowData = $this->normalizeRowData($rowData, $headersCount);
+                $rowData = $rowNormalizer->normalize($rowData, $headersCount);
 
                 $row = \array_combine($headers, $rowData);
 
@@ -210,35 +211,5 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $headers,
             \array_keys($headers)
         );
-    }
-
-    /**
-     * @param array<int, null|string> $rowData
-     *
-     * @return array<int, null|string>
-     */
-    private function normalizeRowData(array $rowData, int $headersCount) : array
-    {
-        $rowDataCount = \count($rowData);
-
-        if ($rowDataCount < $headersCount) {
-            $fillValue = $this->emptyToNull ? null : '';
-
-            for ($i = $rowDataCount; $i < $headersCount; $i++) {
-                $rowData[$i] = $fillValue;
-            }
-        } elseif ($rowDataCount > $headersCount) {
-            $rowData = \array_slice($rowData, 0, $headersCount, true);
-        }
-
-        if ($this->emptyToNull) {
-            foreach ($rowData as $i => $data) {
-                if ($data === '') {
-                    $rowData[$i] = null;
-                }
-            }
-        }
-
-        return $rowData;
     }
 }
