@@ -52,14 +52,17 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
 
             $headers = [];
             $headersCount = 0;
+            $streamUri = $shouldPutInputIntoRows ? $stream->path()->uri() : null;
+            $partitions = $stream->path()->partitions();
 
-            foreach ($stream->readLines(length: $this->charactersReadInLine) as $line => $csvLine) {
+            $csvLineReader = new CSVLineReader($enclosure, $this->charactersReadInLine);
+
+            foreach ($csvLineReader->readLines($stream) as $line => $csvLine) {
                 if ($line === 0 && $this->removeBOM) {
-                    $csvLine = preg_replace('/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF|\xFF\xFE\x00\x00|\x00\x00\xFE\xFF)/', '', $csvLine);
+                    $csvLine = $this->removeBOMFromLine($csvLine);
                 }
 
-                /** @var non-empty-list<null|string> $rowData */
-                $rowData = \str_getcsv((string) $csvLine, $separator, $enclosure, $escape);
+                $rowData = \str_getcsv($csvLine, $separator, $enclosure, $escape);
                 $rowDataCount = \count($rowData);
 
                 if ([] === $headers) {
@@ -71,36 +74,19 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                         continue;
                     }
 
-                    $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
-                    $headers = $this->mapHeaders($headers);
-                    $headersCount = \count($headers);
+                    $headers = $this->generateAutoHeaders($rowDataCount);
+                    $headersCount = $rowDataCount;
                 }
 
-                // Expand columns to the size of the previous row
-                for ($i = $rowDataCount; $i < $headersCount; $i++) {
-                    $rowData[$i] = $this->emptyToNull ? null : '';
-                }
-
-                // Cut columns to the size of the header row
-                if ($rowDataCount > $headersCount) {
-                    $rowData = \array_slice($rowData, 0, $headersCount);
-                }
-
-                if ($this->emptyToNull) {
-                    foreach ($rowData as $i => $data) {
-                        if ($data === '') {
-                            $rowData[$i] = null;
-                        }
-                    }
-                }
+                $rowData = $this->normalizeRowData($rowData, $headersCount);
 
                 $row = \array_combine($headers, $rowData);
 
-                if ($shouldPutInputIntoRows) {
-                    $row['_input_file_uri'] = $stream->path()->uri();
+                if ($streamUri !== null) {
+                    $row['_input_file_uri'] = $streamUri;
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions(), $this->schema);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions, $this->schema);
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
@@ -186,6 +172,20 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     }
 
     /**
+     * @return array<int, string>
+     */
+    private function generateAutoHeaders(int $count) : array
+    {
+        $headers = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $headers[$i] = 'e' . \str_pad((string) $i, 2, '0', STR_PAD_LEFT);
+        }
+
+        return $headers;
+    }
+
+    /**
      * @param array<array-key, mixed> $headers
      *
      * @return array<int, string>
@@ -214,5 +214,60 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
             $headers,
             \array_keys($headers)
         );
+    }
+
+    /**
+     * @param array<int, null|string> $rowData
+     *
+     * @return array<int, null|string>
+     */
+    private function normalizeRowData(array $rowData, int $headersCount) : array
+    {
+        $rowDataCount = \count($rowData);
+
+        if ($rowDataCount < $headersCount) {
+            $fillValue = $this->emptyToNull ? null : '';
+
+            for ($i = $rowDataCount; $i < $headersCount; $i++) {
+                $rowData[$i] = $fillValue;
+            }
+        } elseif ($rowDataCount > $headersCount) {
+            $rowData = \array_slice($rowData, 0, $headersCount, true);
+        }
+
+        if ($this->emptyToNull) {
+            foreach ($rowData as $i => $data) {
+                if ($data === '') {
+                    $rowData[$i] = null;
+                }
+            }
+        }
+
+        return $rowData;
+    }
+
+    private function removeBOMFromLine(string $line) : string
+    {
+        if (\str_starts_with($line, "\xEF\xBB\xBF")) {
+            return \substr($line, 3);
+        }
+
+        if (\str_starts_with($line, "\xFF\xFE\x00\x00")) {
+            return \substr($line, 4);
+        }
+
+        if (\str_starts_with($line, "\x00\x00\xFE\xFF")) {
+            return \substr($line, 4);
+        }
+
+        if (\str_starts_with($line, "\xFF\xFE")) {
+            return \substr($line, 2);
+        }
+
+        if (\str_starts_with($line, "\xFE\xFF")) {
+            return \substr($line, 2);
+        }
+
+        return $line;
     }
 }

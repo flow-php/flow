@@ -412,6 +412,28 @@ SCHEMA,
         );
     }
 
+    public function test_extracting_csv_with_multiline_strings() : void
+    {
+        $extractor = from_csv(
+            __DIR__ . '/../Fixtures/multiline_strings.csv'
+        );
+
+        $rows = df()
+            ->read($extractor)
+            ->fetch();
+
+        self::assertSame(1, $rows->count());
+
+        $row = $rows->first();
+        self::assertSame('ABBA', $row->valueOf('artist'));
+        self::assertSame("Ahe's My Kind Of Girl", $row->valueOf('song'));
+        self::assertSame('/a/abba/ahes+my+kind+of+girl_20598417.html', $row->valueOf('link'));
+
+        $expectedText = "Look at her face, it's a wonderful face  \nAnd it means something special to me  \nLook at the way that she smiles when she sees me  \nHow lucky can one fellow be?  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?  \n  \nAnd when we go for a walk in the park  \nAnd she holds me and squeezes my hand  \nWe'll go on walking for hours and talking  \nAbout all the things that we plan  \n  \nShe's just my kind of girl, she makes me feel fine  \nWho could ever believe that she could be mine?  \nShe's just my kind of girl, without her I'm blue  \nAnd if she ever leaves me what could I do, what could I do?\n\n";
+
+        self::assertSame($expectedText, $row->valueOf('text'));
+    }
+
     public function test_limit() : void
     {
 
