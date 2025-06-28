@@ -88,35 +88,44 @@ final readonly class DremelAssembler
     }
 
     /**
-     * @return array<mixed>
+     * @return \Generator<mixed>
      */
-    private function assemblyList(NestedColumn $column, ReadFlatColumnData $flatData, int $depth) : array
+    private function assemblyList(NestedColumn $column, ReadFlatColumnData $flatData, int $depth) : \Generator
     {
         $depth++;
 
-        $rows = [];
         $listElementColumn = $column->getListElement();
 
         if ($listElementColumn instanceof FlatColumn) {
             foreach ($this->assemblyFlat($listElementColumn, $flatData) as $row) {
-                $rows[] = $row;
+                yield $row;
             }
 
-            return $rows;
+            return;
         }
 
         /**
          * @var NestedColumn $listElementColumn
          */
         if ($listElementColumn->isList()) {
-            return \array_merge($rows, $this->assemblyList($listElementColumn, $flatData, $depth));
+            foreach ($this->assemblyList($listElementColumn, $flatData, $depth) as $row) {
+                yield $row;
+            }
+
+            return;
         }
 
         if ($listElementColumn->isMap()) {
-            return \array_merge($rows, $this->assemblyMap($listElementColumn, $flatData, $depth));
+            foreach ($this->assemblyMap($listElementColumn, $flatData, $depth) as $row) {
+                yield $row;
+            }
+
+            return;
         }
 
-        return \array_merge($rows, $this->assemblyStructure($listElementColumn, $flatData, $depth, repeated: true));
+        foreach ($this->assemblyStructure($listElementColumn, $flatData, $depth, repeated: true) as $row) {
+            yield $row;
+        }
     }
 
     /**
@@ -155,7 +164,7 @@ final readonly class DremelAssembler
             $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
             $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
-            $iterator->attachIterator(new \ArrayIterator($this->assemblyList($mapValueColumn, $flatData, $depth)), 'value');
+            $iterator->attachIterator($this->assemblyList($mapValueColumn, $flatData, $depth), 'value');
 
             foreach ($iterator as $iteration) {
                 if ($iteration['key'] instanceof NullLevel) {
@@ -225,7 +234,7 @@ final readonly class DremelAssembler
              * @var NestedColumn $child
              */
             if ($child->isList()) {
-                $iterator->attachIterator(new \ArrayIterator($this->assemblyList($child, $flatData, $depth)), $child->name());
+                $iterator->attachIterator($this->assemblyList($child, $flatData, $depth), $child->name());
 
                 continue;
             }
