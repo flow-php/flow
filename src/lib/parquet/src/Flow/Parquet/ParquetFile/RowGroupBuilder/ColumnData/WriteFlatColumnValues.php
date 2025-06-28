@@ -61,17 +61,16 @@ final class WriteFlatColumnValues
     }
 
     /**
-     * @return \ArrayIterator<array-key, FlatValue>
+     * @return \Generator<FlatValue>
      */
-    public function iterator() : \ArrayIterator
+    public function iterator() : \Generator
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
         $valueIndex = 0;
-        $values = [];
 
         foreach ($this->definitionLevels as $index => $definitionLevel) {
-            $values[] = new FlatValue(
+            yield new FlatValue(
                 $this->column,
                 $this->repetitionLevels[$index],
                 $definitionLevel,
@@ -82,8 +81,6 @@ final class WriteFlatColumnValues
                 $valueIndex++;
             }
         }
-
-        return new \ArrayIterator($values);
     }
 
     public function merge(self $flatData) : self

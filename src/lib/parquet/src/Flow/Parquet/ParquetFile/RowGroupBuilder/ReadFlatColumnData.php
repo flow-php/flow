@@ -12,6 +12,9 @@ final readonly class ReadFlatColumnData
 {
     public Column $column;
 
+    /**
+     * @var array<string, ReadFlatColumnValues>
+     */
     private array $flatValues;
 
     /**
@@ -49,12 +52,12 @@ final readonly class ReadFlatColumnData
         $flatValues = [];
 
         if ($column instanceof FlatColumn) {
-            $flatValues[] = new ReadFlatColumnValues($column);
+            $flatValues[$column->flatPath()] = new ReadFlatColumnValues($column);
         }
 
         if ($column instanceof NestedColumn) {
             foreach ($column->childrenFlat() as $columnChild) {
-                $flatValues[] = new ReadFlatColumnValues($columnChild);
+                $flatValues[$columnChild->flatPath()] = new ReadFlatColumnValues($columnChild);
             }
         }
 
