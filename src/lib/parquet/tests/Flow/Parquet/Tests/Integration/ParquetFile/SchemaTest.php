@@ -24,7 +24,7 @@ final class SchemaTest extends TestCase
 
         foreach ($data as $row) {
             foreach ($schema->columns() as $column) {
-                $data = $shredder->shred($column, $row);
+                $data = $shredder->shred($column, $row)->toReadColumnData();
                 self::assertEquals($row[$column->name()], $assembler->assemble($column, $data)[0][$column->name()]);
             }
         }

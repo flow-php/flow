@@ -130,7 +130,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }
@@ -233,7 +233,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }
@@ -365,7 +365,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }
@@ -484,7 +484,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }
@@ -587,7 +587,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }
@@ -666,7 +666,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }
@@ -760,7 +760,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }
@@ -862,7 +862,7 @@ final class DremelStructuresTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('s'), $dremel->shred($schema->get('s'), $row)->toReadColumnData())
             );
         }
     }

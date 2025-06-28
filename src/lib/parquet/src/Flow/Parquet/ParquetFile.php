@@ -12,12 +12,12 @@ use Flow\Parquet\ParquetFile\ColumnChunkViewer\WholeChunkViewer;
 use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     Metadata,
     PageReader,
+    RowGroupBuilder\ColumnData\ReadFlatColumnValues,
     RowGroupBuilder\DremelAssembler,
-    RowGroupBuilder\WriteFlatColumnData,
+    RowGroupBuilder\ReadFlatColumnData,
     Schema};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Thrift\FileMetaData;
@@ -89,7 +89,10 @@ final class ParquetFile
         }
     }
 
-    public function readChunks(FlatColumn $column, ?int $limit = null, ?int $offset = null) : \Generator
+    /**
+     * @return \Generator<ReadFlatColumnValues>
+     */
+    public function readChunks(FlatColumn $column, ?int $offset = null) : \Generator
     {
         $reader = new WholeChunkReader(
             new PageReader($this->byteOrder, $this->options),
@@ -211,15 +214,12 @@ final class ParquetFile
      */
     private function read(Column $column, ?int $limit = null, ?int $offset = null) : array
     {
-        $columnData = WriteFlatColumnData::initialize($column);
+        $columnData = ReadFlatColumnData::initialize($column);
 
         if ($column instanceof FlatColumn) {
             $rows = [];
 
-            foreach ($this->readChunks($column, $limit, $offset) as $data) {
-                if (!$data instanceof WriteFlatColumnValues) {
-                    throw new \InvalidArgumentException(\sprintf('Expected FlatColumnValues, got %s', \get_debug_type($data)));
-                }
+            foreach ($this->readChunks($column, $offset) as $data) {
                 $columnData->addValues($data);
             }
 
@@ -235,10 +235,7 @@ final class ParquetFile
         }
 
         foreach ($column->childrenFlat() as $child) {
-            foreach ($this->readChunks($child, $limit, $offset) as $data) {
-                if (!$data instanceof WriteFlatColumnValues) {
-                    throw new \InvalidArgumentException(\sprintf('Expected FlatColumnValues, got %s', \get_debug_type($data)));
-                }
+            foreach ($this->readChunks($child, $offset) as $data) {
                 $columnData->addValues($data);
             }
         }

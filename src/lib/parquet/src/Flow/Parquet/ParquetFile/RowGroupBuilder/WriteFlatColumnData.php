@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatValue, WriteFlatColumnValues};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatValue, ReadFlatColumnValues, WriteFlatColumnValues};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final readonly class WriteFlatColumnData
@@ -99,6 +99,22 @@ final readonly class WriteFlatColumnData
         }
 
         return $normalized;
+    }
+
+    public function toReadColumnData() : ReadFlatColumnData
+    {
+        $readFlatValues = [];
+
+        foreach ($this->flatValues as $flatValue) {
+            $readFlatValues[$flatValue->column->flatPath()] = new ReadFlatColumnValues(
+                $flatValue->column,
+                $flatValue->repetitionLevels(),
+                $flatValue->definitionLevels(),
+                $flatValue->values()
+            );
+        }
+
+        return new ReadFlatColumnData($this->column, $readFlatValues);
     }
 
     public function values(string $flatPath) : WriteFlatColumnValues

@@ -154,7 +154,7 @@ final class DremelMapsTest extends TestCase
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -359,7 +359,7 @@ final class DremelMapsTest extends TestCase
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -596,7 +596,7 @@ final class DremelMapsTest extends TestCase
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -796,7 +796,7 @@ final class DremelMapsTest extends TestCase
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -890,7 +890,7 @@ final class DremelMapsTest extends TestCase
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -967,7 +967,7 @@ final class DremelMapsTest extends TestCase
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -1038,7 +1038,7 @@ final class DremelMapsTest extends TestCase
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -1118,7 +1118,7 @@ final class DremelMapsTest extends TestCase
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -1224,7 +1224,7 @@ final class DremelMapsTest extends TestCase
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 
@@ -1353,7 +1353,7 @@ final class DremelMapsTest extends TestCase
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData));
+            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('m'), $flatData->toReadColumnData()));
         }
     }
 }

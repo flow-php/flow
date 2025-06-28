@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatValue, WriteFlatColumnValues};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatValue, ReadFlatColumnValues};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final readonly class ReadFlatColumnData
 {
     /**
      * @param Column $column
-     * @param array<string, WriteFlatColumnValues> $flatValues
+     * @param array<string, ReadFlatColumnValues> $flatValues
      */
-    private function __construct(public Column $column, private array $flatValues = [])
+    public function __construct(public Column $column, public array $flatValues = [])
     {
     }
 
@@ -23,12 +23,12 @@ final readonly class ReadFlatColumnData
         $flatValues = [];
 
         if ($column instanceof FlatColumn) {
-            $flatValues[$column->flatPath()] = new WriteFlatColumnValues($column);
+            $flatValues[$column->flatPath()] = new ReadFlatColumnValues($column);
         }
 
         if ($column instanceof NestedColumn) {
             foreach ($column->childrenFlat() as $columnChild) {
-                $flatValues[$columnChild->flatPath()] = new WriteFlatColumnValues($columnChild);
+                $flatValues[$columnChild->flatPath()] = new ReadFlatColumnValues($columnChild);
             }
         }
 
@@ -42,13 +42,13 @@ final readonly class ReadFlatColumnData
         }
     }
 
-    public function addValues(WriteFlatColumnValues $values) : void
+    public function addValues(ReadFlatColumnValues $values) : void
     {
         $this->flatValues[$values->column->flatPath()]->merge($values);
     }
 
     /**
-     * @return array<string, WriteFlatColumnValues>
+     * @return array<string, ReadFlatColumnValues>
      */
     public function flatValues() : array
     {
@@ -101,7 +101,7 @@ final readonly class ReadFlatColumnData
         return $normalized;
     }
 
-    public function values(string $flatPath) : WriteFlatColumnValues
+    public function values(string $flatPath) : ReadFlatColumnValues
     {
         return $this->flatValues[$flatPath];
     }

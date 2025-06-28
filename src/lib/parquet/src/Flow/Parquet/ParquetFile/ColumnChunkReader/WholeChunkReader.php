@@ -7,7 +7,9 @@ namespace Flow\Parquet\ParquetFile\ColumnChunkReader;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\{ColumnChunkReader, PageReader, RowGroupBuilder\ColumnData\WriteFlatColumnValues};
+use Flow\Parquet\ParquetFile\{ColumnChunkReader,
+    PageReader,
+    RowGroupBuilder\ColumnData\ReadFlatColumnValues};
 use Flow\Parquet\ParquetFile\Page\{PageHeader};
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -23,6 +25,9 @@ final readonly class WholeChunkReader implements ColumnChunkReader
     ) {
     }
 
+    /**
+     * @return \Generator<ReadFlatColumnValues>
+     */
     public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
@@ -52,7 +57,7 @@ final readonly class WholeChunkReader implements ColumnChunkReader
             $dictionary = null;
         }
 
-        $data = new WriteFlatColumnValues($column);
+        $data = new ReadFlatColumnValues($column);
 
         $rowsToRead = $columnChunk->valuesCount();
 

@@ -54,7 +54,11 @@ final class DremelFlatTest extends TestCase
             [
                 $row,
             ],
-            (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
+            (new DremelAssembler(DataConverter::initialize(Options::default())))
+                ->assemble(
+                    $schema->get('int32'),
+                    $dremel->shred($schema->get('int32'), $row)->toReadColumnData()
+                )
         );
     }
 
@@ -91,7 +95,11 @@ final class DremelFlatTest extends TestCase
                 [
                     $row,
                 ],
-                (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('int32'), $dremel->shred($schema->get('int32'), $row))
+                (new DremelAssembler(DataConverter::initialize(Options::default())))
+                    ->assemble(
+                        $schema->get('int32'),
+                        $dremel->shred($schema->get('int32'), $row)->toReadColumnData()
+                    )
             );
         }
     }
