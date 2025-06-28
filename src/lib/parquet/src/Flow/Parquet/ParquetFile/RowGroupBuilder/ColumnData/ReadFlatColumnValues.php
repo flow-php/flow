@@ -99,21 +99,6 @@ final class ReadFlatColumnValues
         return $this;
     }
 
-    public function nullCount() : int
-    {
-        $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
-
-        $nullCount = 0;
-
-        foreach ($this->definitionLevels as $definitionLevel) {
-            if ($definitionLevel !== $maxDefinitionLevel) {
-                $nullCount++;
-            }
-        }
-
-        return $nullCount;
-    }
-
     /**
      * @return array<int>
      */
@@ -181,55 +166,6 @@ final class ReadFlatColumnValues
         }
 
         return new self($this->column, $chunk['repetitions'], $chunk['definitions'], $chunk['values']);
-    }
-
-    /**
-     * @param int $rowsInChunk
-     *
-     * @return array<ReadFlatColumnValues>
-     */
-    public function splitByRows(int $rowsInChunk) : array
-    {
-        $rows = [];
-        $rowsChunkData = [
-            'repetitions' => [],
-            'definitions' => [],
-            'values' => [],
-        ];
-
-        $valueIndex = 0;
-        $maxDefinitionsLevel = $this->column->maxDefinitionsLevel();
-
-        foreach ($this->definitionLevels as $index => $definitionLevel) {
-            if ($definitionLevel === $maxDefinitionsLevel) {
-                $value = $this->values[$valueIndex];
-                $valueIndex++;
-            } else {
-                $value = null;
-            }
-
-            $repetitionLevel = $this->repetitionLevels[$index];
-
-            if ($repetitionLevel === 0 && \count($rowsChunkData['repetitions']) >= $rowsInChunk) {
-                $rows[] = new self($this->column, $rowsChunkData['repetitions'], $rowsChunkData['definitions'], $rowsChunkData['values']);
-                $rowsChunkData['repetitions'] = [];
-                $rowsChunkData['definitions'] = [];
-                $rowsChunkData['values'] = [];
-            }
-
-            $rowsChunkData['repetitions'][] = $repetitionLevel;
-            $rowsChunkData['definitions'][] = $definitionLevel;
-
-            if ($value !== null) {
-                $rowsChunkData['values'][] = $value;
-            }
-        }
-
-        if (\count($rowsChunkData['repetitions']) > 0) {
-            $rows[] = new self($this->column, $rowsChunkData['repetitions'], $rowsChunkData['definitions'], $rowsChunkData['values']);
-        }
-
-        return $rows;
     }
 
     /**
