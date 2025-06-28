@@ -129,12 +129,11 @@ final readonly class DremelAssembler
     }
 
     /**
-     * @return array<mixed>
+     * @return \Generator<mixed>
      */
-    private function assemblyMap(NestedColumn $column, ReadFlatColumnData $flatData, int $depth) : array
+    private function assemblyMap(NestedColumn $column, ReadFlatColumnData $flatData, int $depth) : \Generator
     {
         $depth++;
-        $rows = [];
         $mapKeyColumn = $column->getMapKeyColumn();
         $mapValueColumn = $column->getMapValueColumn();
 
@@ -145,22 +144,21 @@ final readonly class DremelAssembler
 
             foreach ($iterator as $iteration) {
                 if ($iteration['key'] instanceof NullLevel) {
-                    $rows[] = $iteration['key'];
+                    yield $iteration['key'];
 
                     continue;
                 }
 
-                $rows[] = array_combine_recursive($iteration['key'], $iteration['value']);
+                yield array_combine_recursive($iteration['key'], $iteration['value']);
             }
 
-            return $rows;
+            return;
         }
 
         /**
          * @var NestedColumn $mapValueColumn
          */
         if ($mapValueColumn->isList()) {
-
             $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
             $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
@@ -168,57 +166,55 @@ final readonly class DremelAssembler
 
             foreach ($iterator as $iteration) {
                 if ($iteration['key'] instanceof NullLevel) {
-                    $rows[] = $iteration['key'];
+                    yield $iteration['key'];
 
                     continue;
                 }
 
-                $rows[] = array_combine_recursive($iteration['key'], $iteration['value']);
+                yield array_combine_recursive($iteration['key'], $iteration['value']);
             }
 
-            return $rows;
+            return;
         }
 
         if ($mapValueColumn->isMap()) {
             $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
             $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
-            $iterator->attachIterator(new \ArrayIterator($this->assemblyMap($mapValueColumn, $flatData, $depth)), 'value');
+            $iterator->attachIterator($this->assemblyMap($mapValueColumn, $flatData, $depth), 'value');
 
             foreach ($iterator as $iteration) {
                 if ($iteration['key'] instanceof NullLevel) {
-                    $rows[] = $iteration['key'];
+                    yield $iteration['key'];
 
                     continue;
                 }
 
-                $rows[] = array_combine_recursive($iteration['key'], $iteration['value']);
+                yield array_combine_recursive($iteration['key'], $iteration['value']);
             }
 
-            return $rows;
+            return;
         }
 
         $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
         $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
-        $iterator->attachIterator(new \ArrayIterator($this->assemblyStructure($mapValueColumn, $flatData, $depth, repeated: true)), 'value');
+        $iterator->attachIterator($this->assemblyStructure($mapValueColumn, $flatData, $depth, repeated: true), 'value');
 
         foreach ($iterator as $iteration) {
             if ($iteration['key'] instanceof NullLevel) {
-                $rows[] = $iteration['key'];
+                yield $iteration['key'];
 
                 continue;
             }
 
-            $rows[] = array_combine_recursive($iteration['key'], $iteration['value']);
+            yield array_combine_recursive($iteration['key'], $iteration['value']);
         }
-
-        return $rows;
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return \Generator<array-key, mixed>
      */
-    private function assemblyStructure(NestedColumn $column, ReadFlatColumnData $flatData, int $depth, bool $repeated = false) : array
+    private function assemblyStructure(NestedColumn $column, ReadFlatColumnData $flatData, int $depth, bool $repeated = false) : \Generator
     {
         $depth++;
         $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
@@ -240,24 +236,22 @@ final readonly class DremelAssembler
             }
 
             if ($child->isMap()) {
-                $iterator->attachIterator(new \ArrayIterator($this->assemblyMap($child, $flatData, $depth)), $child->name());
+                $iterator->attachIterator($this->assemblyMap($child, $flatData, $depth), $child->name());
 
                 continue;
             }
 
-            $iterator->attachIterator(new \ArrayIterator($this->assemblyStructure($child, $flatData, $depth, $repeated)), $child->name());
+            $iterator->attachIterator($this->assemblyStructure($child, $flatData, $depth, $repeated), $child->name());
         }
 
         if (!$repeated) {
-            $rows = [];
-
             foreach ($iterator as $iteration) {
                 $structure = [];
 
                 foreach ($iteration as $propertyName => $propertyValue) {
 
                     if ($propertyValue instanceof NullLevel && $propertyValue->level < $depth) {
-                        $rows[] = new NullLevel($propertyValue->level);
+                        yield new NullLevel($propertyValue->level);
 
                         continue 2;
                     }
@@ -265,13 +259,11 @@ final readonly class DremelAssembler
                     $structure[$propertyName] = $propertyValue;
                 }
 
-                $rows[] = $structure;
+                yield $structure;
             }
 
-            return $rows;
+            return;
         }
-
-        $rows = [];
 
         foreach ($iterator as $iteration) {
             $structures = [];
@@ -279,7 +271,7 @@ final readonly class DremelAssembler
             foreach ($iteration as $propertyName => $propertyValues) {
 
                 if ($propertyValues instanceof NullLevel && $propertyValues->level <= $depth) {
-                    $rows[] = new NullLevel($propertyValues->level);
+                    yield new NullLevel($propertyValues->level);
 
                     continue 2;
                 }
@@ -300,10 +292,8 @@ final readonly class DremelAssembler
                 $structures = array_merge_recursive($structures, $propertyValues);
             }
 
-            $rows[] = $structures;
+            yield $structures;
         }
-
-        return $rows;
     }
 
     /**
