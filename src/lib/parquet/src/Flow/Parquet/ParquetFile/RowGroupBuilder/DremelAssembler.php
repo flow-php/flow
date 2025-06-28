@@ -29,10 +29,8 @@ final readonly class DremelAssembler
             $rows = [];
 
             foreach ($this->assemblyFlat($column, $flatData) as $value) {
-                $rows[] = [$column->name() => $value];
+                $rows[] = $this->processRowNullLevels([$column->name() => $value]);
             }
-
-            $this->nullLevelToNull($rows);
 
             return $rows;
         }
@@ -44,10 +42,8 @@ final readonly class DremelAssembler
             $rows = [];
 
             foreach ($this->assemblyList($column, $flatData, $depth) as $value) {
-                $rows[] = [$column->name() => $value];
+                $rows[] = $this->processRowNullLevels([$column->name() => $value]);
             }
-
-            $this->nullLevelToNull($rows);
 
             return $rows;
         }
@@ -56,10 +52,8 @@ final readonly class DremelAssembler
             $rows = [];
 
             foreach ($this->assemblyMap($column, $flatData, $depth) as $value) {
-                $rows[] = [$column->name() => $value];
+                $rows[] = $this->processRowNullLevels([$column->name() => $value]);
             }
-
-            $this->nullLevelToNull($rows);
 
             return $rows;
         }
@@ -67,10 +61,8 @@ final readonly class DremelAssembler
         $rows = [];
 
         foreach ($this->assemblyStructure($column, $flatData, $depth) as $value) {
-            $rows[] = [$column->name() => $value instanceof NullLevel ? null : $value];
+            $rows[] = $this->processRowNullLevels([$column->name() => $value instanceof NullLevel ? null : $value]);
         }
-
-        $this->nullLevelToNull($rows);
 
         return $rows;
     }
@@ -302,9 +294,6 @@ final readonly class DremelAssembler
         return $rows;
     }
 
-    /**
-     * @param array<array-key, mixed> $array
-     */
     private function nullLevelToNull(array &$array) : void
     {
         foreach ($array as &$value) {
@@ -316,5 +305,24 @@ final readonly class DremelAssembler
         }
 
         unset($value);
+    }
+
+    /**
+     * @param array<array-key, mixed> $row
+     *
+     * @return array<array-key, mixed>
+     */
+    private function processRowNullLevels(array $row) : array
+    {
+        foreach ($row as &$value) {
+            if (is_array($value)) {
+                $value = $this->processRowNullLevels($value);
+            } elseif ($value instanceof NullLevel) {
+                $value = null;
+            }
+        }
+        unset($value);
+
+        return $row;
     }
 }
