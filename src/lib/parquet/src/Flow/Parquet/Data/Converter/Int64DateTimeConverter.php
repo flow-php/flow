@@ -6,7 +6,6 @@ namespace Flow\Parquet\Data\Converter;
 
 use function Flow\Types\DSL\{type_instance_of, type_integer};
 use Flow\Parquet\Data\Converter;
-use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
@@ -38,15 +37,6 @@ final class Int64DateTimeConverter implements Converter
 
     private function microsecondsToDateTimeImmutable(int $microseconds) : \DateTimeImmutable
     {
-        $seconds = (int) ($microseconds / 1000000);
-        $fraction = \str_pad((string) ($microseconds % 1000000), 6, '0', STR_PAD_LEFT);
-
-        $dateTime = \DateTimeImmutable::createFromFormat('U.u', \sprintf('%d.%s', $seconds, $fraction));
-
-        if ($dateTime === false) {
-            throw new RuntimeException('Failed to convert INT64 to DateTime, given microseconds: ' . \json_encode(['microseconds' => $microseconds, 'fraction' => $fraction], JSON_THROW_ON_ERROR));
-        }
-
-        return $dateTime;
+        return new \DateTimeImmutable('@' . \number_format($microseconds / 1_000_000, 6, '.', ''));
     }
 }
