@@ -159,25 +159,30 @@ final class ParquetFile
 
         $totalRows = min($totalRows, $limit ?? $totalRows);
 
-        $columnsData = [];
-
-        foreach ($columns as $columnName) {
-            $columnsData[$columnName] = $this->read($this->schema()->get($columnName), $limit, $offset);
+        if ($totalRows === 0) {
+            return;
         }
 
-        for ($i = 0; $i < $totalRows; $i++) {
-            $row = [];
+        $multipleIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
-            foreach ($columnsData as $columnData) {
-                $rowData = $columnData[$i];
+        foreach ($columns as $columnName) {
+            $multipleIterator->attachIterator($this->read($this->schema()->get($columnName), $limit, $offset), $columnName);
+        }
 
-                if (!\is_array($rowData)) {
-                    throw new \InvalidArgumentException(\sprintf('Expected array for row data, got %s', \get_debug_type($rowData)));
-                }
-                $row = \array_merge($row, $rowData);
+        $rowCount = 0;
+
+        foreach ($multipleIterator as $rowData) {
+            if ($limit !== null && $rowCount >= $limit) {
+                break;
             }
 
+            $row = [];
+
+            foreach ($rowData as $columnData) {
+                $row = \array_merge($row, $columnData);
+            }
             yield $row;
+            $rowCount++;
         }
     }
 
@@ -210,24 +215,27 @@ final class ParquetFile
     }
 
     /**
-     * @return array<mixed>
+     * @return \Generator<mixed>
      */
-    private function read(Column $column, ?int $limit = null, ?int $offset = null) : array
+    private function read(Column $column, ?int $limit = null, ?int $offset = null) : \Generator
     {
         $columnData = ReadFlatColumnData::initialize($column);
+        $yieldedRows = 0;
 
         if ($column instanceof FlatColumn) {
-            $rows = [];
-
             foreach ($this->readChunks($column, $offset) as $data) {
                 $columnData->addValues($data);
             }
 
             foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-                $rows[] = $row;
+                if ($limit !== null && $yieldedRows >= $limit) {
+                    return;
+                }
+                yield $row;
+                $yieldedRows++;
             }
 
-            return $rows;
+            return;
         }
 
         if (!$column instanceof NestedColumn) {
@@ -240,13 +248,13 @@ final class ParquetFile
             }
         }
 
-        $rows = [];
-
         foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-            $rows[] = $row;
+            if ($limit !== null && $yieldedRows >= $limit) {
+                return;
+            }
+            yield $row;
+            $yieldedRows++;
         }
-
-        return $rows;
     }
 
     /**
