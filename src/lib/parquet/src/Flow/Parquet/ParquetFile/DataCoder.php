@@ -8,7 +8,7 @@ use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\{ByteOrder,
     Options,
     ParquetFile\RowGroupBuilder\ColumnData\ReadFlatColumnValues
-    };
+};
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValueUnpacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\{Dictionary};
@@ -35,7 +35,7 @@ final readonly class DataCoder
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
 
         if ($column->maxRepetitionsLevel()) {
-            $reader->readInts32(1); // read length of encoded data
+            $reader->seekBytes(4);
             $repetitionLevels = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
@@ -47,7 +47,7 @@ final readonly class DataCoder
         }
 
         if ($column->maxDefinitionsLevel()) {
-            $reader->readInts32(1); // read length of encoded data
+            $reader->seekBytes(4);
             $definitionLevels = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,

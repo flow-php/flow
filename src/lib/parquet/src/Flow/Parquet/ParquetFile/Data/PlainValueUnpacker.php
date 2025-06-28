@@ -26,7 +26,7 @@ final readonly class PlainValueUnpacker
             return [];
         }
 
-        return match ($column->type()) {
+        $generator = match ($column->type()) {
             PhysicalType::INT32 => match ($column->convertedType()) {
                 ConvertedType::INT_16 => $this->reader->readInts16($total),
                 default => $this->reader->readInts32($total),
@@ -49,5 +49,7 @@ final readonly class PlainValueUnpacker
             },
             PhysicalType::BOOLEAN => $this->reader->readBooleans($total),
         };
+
+        return \iterator_to_array($generator);
     }
 }

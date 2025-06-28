@@ -141,7 +141,7 @@ final class RLEBitPackedHybridTest extends TestCase
 
         $binaryReader->expects(self::exactly(1))
             ->method('readBits')
-            ->willReturnOnConsecutiveCalls([1]);
+            ->willReturnOnConsecutiveCalls((function () { yield 1; })());
 
         $result = [];
         $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);

@@ -13,71 +13,71 @@ interface BinaryReader
     public function position() : DataSize;
 
     /**
-     * @return array<int>
+     * @return \Generator<int>
      */
-    public function readBits(int $total) : array;
+    public function readBits(int $total) : \Generator;
 
     /**
-     * @return array<bool>
+     * @return \Generator<bool>
      */
-    public function readBooleans(int $total) : array;
+    public function readBooleans(int $total) : \Generator;
 
     /**
-     * @return array<Bytes>
+     * @return \Generator<Bytes>
      */
-    public function readByteArrays(int $total) : array;
+    public function readByteArrays(int $total) : \Generator;
 
     public function readBytes(int $total) : Bytes;
 
     /**
-     * @return array<mixed>
+     * @return \Generator<mixed>
      */
-    public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : array;
+    public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : \Generator;
 
     /**
-     * @return array<float>
+     * @return \Generator<float>
      */
-    public function readDoubles(int $total) : array;
+    public function readDoubles(int $total) : \Generator;
 
     /**
-     * @return array<float>
+     * @return \Generator<float>
      */
-    public function readFloats(int $total) : array;
+    public function readFloats(int $total) : \Generator;
 
     /**
-     * @return array<int>
+     * @return \Generator<int>
      */
-    public function readInts16(int $total) : array;
+    public function readInts16(int $total) : \Generator;
 
     /**
-     * @return array<int>
+     * @return \Generator<int>
      */
-    public function readInts32(int $total) : array;
+    public function readInts32(int $total) : \Generator;
 
     /**
-     * @return array<int>
+     * @return \Generator<int>
      */
-    public function readInts64(int $total) : array;
+    public function readInts64(int $total) : \Generator;
 
     /**
-     * @return array<Bytes>
+     * @return \Generator<Bytes>
      */
-    public function readInts96(int $total) : array;
+    public function readInts96(int $total) : \Generator;
 
     /**
-     * @return array<string>
+     * @return \Generator<string>
      */
-    public function readStrings(int $total) : array;
+    public function readStrings(int $total) : \Generator;
 
     /**
-     * @return array<int>
+     * @return \Generator<int>
      */
-    public function readUInts32(int $total) : array;
+    public function readUInts32(int $total) : \Generator;
 
     /**
-     * @return array<int>
+     * @return \Generator<int>
      */
-    public function readUInts64(int $total) : array;
+    public function readUInts64(int $total) : \Generator;
 
     public function readVarInt() : int;
 

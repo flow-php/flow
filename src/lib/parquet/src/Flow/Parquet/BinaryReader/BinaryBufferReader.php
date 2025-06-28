@@ -32,54 +32,45 @@ final readonly class BinaryBufferReader implements BinaryReader
         return $this->position;
     }
 
-    /**
-     * @return array<int>
-     */
-    public function readBits(int $total) : array
+    public function readBits(int $total) : \Generator
     {
-        $bits = [];
         $bytePosition = $this->position()->bytes();
         $bitOffset = $this->position->bits() % 8;
         $bytesNeeded = \intdiv($bitOffset + $total - 1, 8) + 1;
         $currentBytes = \substr($this->buffer, $bytePosition, $bytesNeeded);
+        $bitsRead = 0;
 
         for ($i = 0; $i < $bytesNeeded; $i++) {
             $byte = \ord($currentBytes[$i] ?? '');
 
             for ($j = $bitOffset; $j < 8; $j++) {
-                $bits[] = ($byte >> $j) & 1;
+                yield ($byte >> $j) & 1;
+                $bitsRead++;
 
-                if (--$total === 0) {
+                if ($bitsRead === $total) {
                     $this->position->add($i * 8 + $j + 1 - $bitOffset);
                     $this->remainingLength->sub($i * 8 + $j + 1 - $bitOffset);
 
-                    return $bits;
+                    return;
                 }
             }
             $bitOffset = 0;
         }
-
-        return $bits;  // This should never be reached
     }
 
-    public function readBooleans(int $total) : array
+    public function readBooleans(int $total) : \Generator
     {
-        $bits = $this->readBits($total);
-        $booleans = [];
-
-        foreach ($bits as $bit) {
-            $booleans[] = (bool) $bit;
+        foreach ($this->readBits($total) as $bit) {
+            yield (bool) $bit;
         }
-
-        return $booleans;
     }
 
-    public function readByteArrays(int $total) : array
+    public function readByteArrays(int $total) : \Generator
     {
         $position = $this->position()->bytes();
-        $byteArrays = [];
+        $count = 0;
 
-        while (\count($byteArrays) < $total) {
+        while ($count < $total) {
             $rawStr = \substr($this->buffer, $position, 4);
 
             if ($rawStr === '') {
@@ -93,14 +84,13 @@ final readonly class BinaryBufferReader implements BinaryReader
 
             $byteArray = \unpack('C*', $byteStr);
 
-            $byteArrays[] = new Bytes($byteArray, $this->byteOrder);
+            yield new Bytes($byteArray, $this->byteOrder);
             $position += $bytesLength;
+            $count++;
         }
 
         $this->position->add($position * 8);
         $this->remainingLength->sub($position * 8);
-
-        return $byteArrays;
     }
 
     public function readBytes(int $total) : Bytes
@@ -113,11 +103,10 @@ final readonly class BinaryBufferReader implements BinaryReader
         return new Bytes($bytes);
     }
 
-    public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : array
+    public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : \Generator
     {
-        $decimalBytes = \array_chunk($this->readBytes($byteLength * $total)->toArray(), $byteLength);
-
-        $decimals = [];
+        $allBytes = $this->readBytes($byteLength * $total)->toArray();
+        $decimalBytes = \array_chunk($allBytes, $byteLength);
 
         $divisor = \bcpow('10', (string) $scale);
 
@@ -129,45 +118,31 @@ final readonly class BinaryBufferReader implements BinaryReader
                 $intValue |= ($byte << $shift);
             }
 
-            $decimals[] = (float) \bcdiv((string) $intValue, $divisor, $scale);
+            yield (float) \bcdiv((string) $intValue, $divisor, $scale);
         }
-
-        return $decimals;
     }
 
-    public function readDoubles(int $total) : array
+    public function readDoubles(int $total) : \Generator
     {
         $doubleBytes = \array_chunk($this->readBytes(8 * $total)->toArray(), 8);
 
-        $doubles = [];
-
         foreach ($doubleBytes as $bytes) {
-            $doubles[] = \unpack($this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'e' : 'E', \pack('C*', ...$bytes))[1];
+            yield \unpack($this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'e' : 'E', \pack('C*', ...$bytes))[1];
         }
-
-        return $doubles;
     }
 
-    public function readFloats(int $total) : array
+    public function readFloats(int $total) : \Generator
     {
         $floatBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
 
-        $floats = [];
-
         foreach ($floatBytes as $bytes) {
-            $floats[] = \round(\unpack($this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'g' : 'G', \pack('C*', ...$bytes))[1], 7);
+            yield \round(\unpack($this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'g' : 'G', \pack('C*', ...$bytes))[1], 7);
         }
-
-        return $floats;
     }
 
-    /**
-     * @return array<int>
-     */
-    public function readInts16(int $total) : array
+    public function readInts16(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(2 * $total)->toArray(), 2);
-        $ints = [];
 
         foreach ($intBytes as $bytes) {
 
@@ -181,42 +156,32 @@ final readonly class BinaryBufferReader implements BinaryReader
                 $integer = -((~$integer & 0xFFFF) + 1);
             }
 
-            $ints[] = $integer;
+            yield $integer;
         }
-
-        return $ints;
     }
 
-    /**
-     * @return array<int>
-     */
-    public function readInts32(int $total) : array
+    public function readInts32(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
-        $ints = [];
 
         foreach ($intBytes as $bytes) {
             if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
                 $int = $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24);
             } else {
-                $ints = ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
+                $int = ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
             }
 
             if ($int & 0x80000000) {
                 $int = -((~$int & 0xFFFFFFFF) + 1);  // Two's complement
             }
 
-            $ints[] = $int;
+            yield $int;
         }
-
-        return $ints;
     }
 
-    public function readInts64(int $total) : array
+    public function readInts64(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(8 * $total)->toArray(), 8);
-
-        $ints = [];
 
         foreach ($intBytes as $bytes) {
             if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
@@ -235,17 +200,13 @@ final readonly class BinaryBufferReader implements BinaryReader
                 $int |= $sign << 56;
             }
 
-            $ints[] = $int;
+            yield $int;
         }
-
-        return $ints;
     }
 
-    public function readInts96(int $total) : array
+    public function readInts96(int $total) : \Generator
     {
         $intsData = \substr($this->buffer, $this->position()->bytes(), 12 * $total);
-
-        $ints96 = [];
 
         foreach (\str_split($intsData, 12) as $data) {
             $int96Bytes = [];
@@ -254,21 +215,19 @@ final readonly class BinaryBufferReader implements BinaryReader
                 $int96Bytes[] = \ord($byte);
             }
 
-            $ints96[] = new Bytes($int96Bytes, $this->byteOrder);
+            yield new Bytes($int96Bytes, $this->byteOrder);
         }
 
         $this->position->add(12 * $total * 8);
         $this->remainingLength->sub(12 * $total * 8);
-
-        return $ints96;
     }
 
-    public function readStrings(int $total) : array
+    public function readStrings(int $total) : \Generator
     {
         $position = $this->position()->bytes();
-        $strings = [];
+        $count = 0;
 
-        while (\count($strings) < $total) {
+        while ($count < $total) {
             $rawStr = \substr($this->buffer, $position, 4);
 
             if ($rawStr === '') {
@@ -279,50 +238,41 @@ final readonly class BinaryBufferReader implements BinaryReader
             $position += 4;
 
             // Read the string based on the length
-            $strings[] = \substr($this->buffer, $position, $strLength);
+            yield \substr($this->buffer, $position, $strLength);
             $position += $strLength;
+            $count++;
         }
 
         $this->position->add($position * 8);
         $this->remainingLength->sub($position * 8);
-
-        return $strings;
     }
 
-    public function readUInts32(int $total) : array
+    public function readUInts32(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
 
-        $ints = [];
-
         foreach ($intBytes as $bytes) {
             if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
-                $ints[] = $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24);
+                yield $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24);
             } else {
-                $ints[] = ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
+                yield ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
             }
         }
-
-        return $ints;
     }
 
-    public function readUInts64(int $total) : array
+    public function readUInts64(int $total) : \Generator
     {
-        $intBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
-
-        $ints = [];
+        $intBytes = \array_chunk($this->readBytes(8 * $total)->toArray(), 8);
 
         foreach ($intBytes as $bytes) {
             if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
-                $ints[] = $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24) |
+                yield $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24) |
                     ($bytes[4] << 32) | ($bytes[5] << 40) | ($bytes[6] << 48) | ($bytes[7] << 56);
             } else {
-                $ints[] = ($bytes[0] << 56) | ($bytes[1] << 48) | ($bytes[2] << 40) | ($bytes[3] << 32) |
+                yield ($bytes[0] << 56) | ($bytes[1] << 48) | ($bytes[2] << 40) | ($bytes[3] << 32) |
                     ($bytes[4] << 24) | ($bytes[5] << 16) | ($bytes[6] << 8) | $bytes[7];
             }
         }
-
-        return $ints;
     }
 
     public function readVarInt() : int

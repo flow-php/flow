@@ -50,7 +50,7 @@ final class BinaryReaderWriterTest extends TestCase
         (new BinaryBufferWriter($buffer))->writeInts64($ints);
         self::assertEquals(
             $ints,
-            (new BinaryBufferReader($buffer))->readInts64(\count($ints)),
+            \iterator_to_array((new BinaryBufferReader($buffer))->readInts64(\count($ints))),
         );
     }
 
@@ -64,7 +64,7 @@ final class BinaryReaderWriterTest extends TestCase
         (new BinaryBufferWriter($buffer))->writeDecimals($decimals, $byteLength, $precision, $scale);
         self::assertSame(
             $decimals,
-            (new BinaryBufferReader($buffer))->readDecimals(\count($decimals), $byteLength, $precision, $scale)
+            \iterator_to_array((new BinaryBufferReader($buffer))->readDecimals(\count($decimals), $byteLength, $precision, $scale))
         );
     }
 
@@ -76,7 +76,7 @@ final class BinaryReaderWriterTest extends TestCase
         (new BinaryBufferWriter($buffer))->writeFloats($floats);
         self::assertEqualsWithDelta(
             $floats,
-            (new BinaryBufferReader($buffer))->readFloats(\count($floats)),
+            \iterator_to_array((new BinaryBufferReader($buffer))->readFloats(\count($floats))),
             0.000001,
         );
     }
@@ -94,7 +94,7 @@ final class BinaryReaderWriterTest extends TestCase
         (new BinaryBufferWriter($buffer))->writeInts32($ints);
         self::assertEquals(
             $ints,
-            (new BinaryBufferReader($buffer))->readInts32(\count($ints)),
+            \iterator_to_array((new BinaryBufferReader($buffer))->readInts32(\count($ints))),
         );
     }
 
@@ -111,7 +111,7 @@ final class BinaryReaderWriterTest extends TestCase
         (new BinaryBufferWriter($buffer))->writeInts16($ints);
         self::assertEquals(
             $ints,
-            (new BinaryBufferReader($buffer))->readInts16(\count($ints)),
+            \iterator_to_array((new BinaryBufferReader($buffer))->readInts16(\count($ints))),
         );
     }
 
@@ -121,7 +121,7 @@ final class BinaryReaderWriterTest extends TestCase
         (new BinaryBufferWriter($buffer))->writeStrings($strings = ['some_string_01', 'some_string_02', 'some_string_02', 'ĄCZXCĄŚQWRQW']);
         self::assertSame(
             $strings,
-            (new BinaryBufferReader($buffer))->readStrings(\count($strings))
+            \iterator_to_array((new BinaryBufferReader($buffer))->readStrings(\count($strings)))
         );
     }
 }

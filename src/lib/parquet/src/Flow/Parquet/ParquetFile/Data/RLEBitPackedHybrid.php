@@ -117,7 +117,7 @@ final class RLEBitPackedHybrid
         if ($isLiteralRun) {
             for ($i = 0; $i < $count; $i++) {
                 /** @phpstan-ignore-next-line */
-                $output[] = $reader->readBits($bitWidth);
+                $output[] = \iterator_to_array($reader->readBits($bitWidth));
             }
         } else {
             for ($i = 0; $i < $count; $i++) {

@@ -37,7 +37,7 @@ final class RLEBitPackedTest extends TestCase
 
         $buffer = $packer->packWithLength(BitWidth::fromArray($values), $values);
         $reader = new BinaryBufferReader($buffer);
-        self::assertSame($length, $reader->readInts32(1)[0]);
+        self::assertSame($length, \iterator_to_array($reader->readInts32(1))[0]);
         $unpacked = $rleBitPackedHybrid->decodeHybrid($reader, BitWidth::fromArray($values), \count($values));
 
         self::assertSame(
