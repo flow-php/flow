@@ -19,52 +19,42 @@ final readonly class DremelAssembler
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return \Generator<array-key, mixed>
      */
-    public function assemble(Column $column, ReadFlatColumnData $flatData) : array
+    public function assemble(Column $column, ReadFlatColumnData $flatData) : \Generator
     {
         $depth = 0;
 
         if ($column instanceof FlatColumn) {
-            $rows = [];
-
             foreach ($this->assemblyFlat($column, $flatData) as $value) {
-                $rows[] = $this->processRowNullLevels([$column->name() => $value]);
+                yield $this->processRowNullLevels([$column->name() => $value]);
             }
 
-            return $rows;
+            return;
         }
 
         /**
          * @var NestedColumn $column
          */
         if ($column->isList()) {
-            $rows = [];
-
             foreach ($this->assemblyList($column, $flatData, $depth) as $value) {
-                $rows[] = $this->processRowNullLevels([$column->name() => $value]);
+                yield $this->processRowNullLevels([$column->name() => $value]);
             }
 
-            return $rows;
+            return;
         }
 
         if ($column->isMap()) {
-            $rows = [];
-
             foreach ($this->assemblyMap($column, $flatData, $depth) as $value) {
-                $rows[] = $this->processRowNullLevels([$column->name() => $value]);
+                yield $this->processRowNullLevels([$column->name() => $value]);
             }
 
-            return $rows;
+            return;
         }
-
-        $rows = [];
 
         foreach ($this->assemblyStructure($column, $flatData, $depth) as $value) {
-            $rows[] = $this->processRowNullLevels([$column->name() => $value instanceof NullLevel ? null : $value]);
+            yield $this->processRowNullLevels([$column->name() => $value instanceof NullLevel ? null : $value]);
         }
-
-        return $rows;
     }
 
     /**

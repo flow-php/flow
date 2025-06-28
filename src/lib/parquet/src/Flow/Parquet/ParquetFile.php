@@ -181,6 +181,10 @@ final class ParquetFile
             $row = [];
 
             foreach ($rowData as $columnData) {
+                if (!\is_array($columnData)) {
+                    continue;
+                }
+
                 $row = \array_merge($row, $columnData);
             }
             yield $row;

@@ -59,20 +59,20 @@ final readonly class ColumnChunkReader
         $data = new ReadFlatColumnValues($column);
         $rowsToRead = $columnChunk->valuesCount();
 
+        $yieldedRows = 0;
+
         while (true) {
             $dataHeader = $dictionary ? $this->readHeader($pageStream) : $header;
 
-            /** There are no more pages in given column chunk */
             if ($dataHeader === null || $dataHeader->type()->isDataPage() === false) {
                 break;
             }
 
-            /** Early termination if we already have enough rows */
-            if ($data->rowsCount() >= $rowsToRead) {
+            if ($yieldedRows >= $rowsToRead) {
                 break;
             }
 
-            $pageData = $this->pageReader->readData(
+            $data = $this->pageReader->readData(
                 $column,
                 $dataHeader,
                 $columnChunk->codec(),
@@ -80,15 +80,13 @@ final readonly class ColumnChunkReader
                 $pageStream
             );
 
-            $data = $data->merge($pageData);
+            $yieldedRows += $data->rowsCount();
+
+            yield $data;
 
             if ($dictionary === null) {
                 $header = $this->readHeader($pageStream);
             }
-        }
-
-        if (!$data->isEmpty()) {
-            yield $data;
         }
 
         \fclose($pageStream);

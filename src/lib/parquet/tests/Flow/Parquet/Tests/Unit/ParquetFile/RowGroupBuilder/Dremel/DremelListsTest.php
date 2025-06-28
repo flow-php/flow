@@ -100,7 +100,7 @@ final class DremelListsTest extends TestCase
         );
 
         self::assertEquals($expectedColumnData, $flatData->normalize());
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -246,7 +246,7 @@ final class DremelListsTest extends TestCase
         self::assertEquals($expectedFlatData, $flatData->normalize());
         self::assertEquals(
             $rows,
-            (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())
+            \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()))
         );
     }
 
@@ -330,7 +330,7 @@ final class DremelListsTest extends TestCase
 
         self::assertEquals($expectedFlatData, $flatData->normalize());
 
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -583,7 +583,7 @@ final class DremelListsTest extends TestCase
         self::assertEquals($expectedFlatData, $flatData->normalize());
         self::assertEquals(
             $rows,
-            $assembledRows = (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()),
+            $assembledRows = \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())),
             'Expected rows: ' . json_encode($rows, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . "\n" . 'Actual rows: ' . json_encode($assembledRows, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
         );
     }
@@ -665,7 +665,7 @@ final class DremelListsTest extends TestCase
 
         self::assertEquals($expectedFlatData, $flatData->normalize());
 
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith(
@@ -885,7 +885,7 @@ final class DremelListsTest extends TestCase
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+            self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
         }
     }
 
@@ -1029,7 +1029,7 @@ final class DremelListsTest extends TestCase
         );
 
         //        self::assertEquals($expectedColumnData, $flatData->normalize());
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -1150,7 +1150,7 @@ final class DremelListsTest extends TestCase
         );
 
         self::assertEquals($expectedColumnData, $flatData->normalize());
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -1331,7 +1331,7 @@ final class DremelListsTest extends TestCase
         );
 
         self::assertEquals($expectedColumnData, $flatData->normalize());
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -1394,7 +1394,7 @@ final class DremelListsTest extends TestCase
         );
 
         self::assertEquals($expectedColumnData, $flatData->normalize());
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -1442,7 +1442,7 @@ final class DremelListsTest extends TestCase
         );
 
         self::assertEquals($expectedColumnData, $flatData->normalize());
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -1478,7 +1478,7 @@ final class DremelListsTest extends TestCase
         );
 
         self::assertEquals($expectedFlatData, $flatData->normalize());
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith([
@@ -1524,7 +1524,7 @@ final class DremelListsTest extends TestCase
 
         self::assertEquals($expectedFlatData, $flatData->normalize());
 
-        self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+        self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
     }
 
     #[TestWith(
@@ -1617,7 +1617,7 @@ final class DremelListsTest extends TestCase
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+            self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
         }
     }
 
@@ -1731,7 +1731,7 @@ final class DremelListsTest extends TestCase
             );
 
             self::assertEquals($expectedFlatData, $flatData->normalize());
-            self::assertEquals($rows, (new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData()));
+            self::assertEquals($rows, \iterator_to_array((new DremelAssembler(DataConverter::initialize(Options::default())))->assemble($schema->get('l'), $flatData->toReadColumnData())));
         }
     }
 }
