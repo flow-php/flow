@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryBuilder;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\Dictionary;
 
 final class ObjectDictionaryBuilder
 {
-    public function build(FlatColumnValues $data) : Dictionary
+    public function build(WriteFlatColumnValues $data) : Dictionary
     {
         $dictionary = [];
         $indices = [];

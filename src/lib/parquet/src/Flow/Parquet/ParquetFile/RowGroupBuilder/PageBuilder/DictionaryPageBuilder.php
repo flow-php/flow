@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings, RowGroupBuilder\ColumnData\FlatColumnValues};
+use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings, RowGroupBuilder\ColumnData\WriteFlatColumnValues};
 use Flow\Parquet\ParquetFile\Data\PlainValuesPacker;
 use Flow\Parquet\ParquetFile\Page\Header\{DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
@@ -23,7 +23,7 @@ final readonly class DictionaryPageBuilder
     ) {
     }
 
-    public function build(FlatColumn $column, FlatColumnValues $data) : PageContainer
+    public function build(FlatColumn $column, WriteFlatColumnValues $data) : PageContainer
     {
         $dictionary = (new DictionaryBuilder())->build($column, $data);
 

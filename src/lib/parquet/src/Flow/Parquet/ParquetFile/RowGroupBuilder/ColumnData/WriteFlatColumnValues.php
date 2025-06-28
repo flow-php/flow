@@ -7,7 +7,7 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
-final class FlatColumnValues
+final class WriteFlatColumnValues
 {
     /**
      * @param FlatColumn $column
@@ -186,7 +186,7 @@ final class FlatColumnValues
     /**
      * @param int $rowsInChunk
      *
-     * @return array<FlatColumnValues>
+     * @return array<WriteFlatColumnValues>
      */
     public function splitByRows(int $rowsInChunk) : array
     {

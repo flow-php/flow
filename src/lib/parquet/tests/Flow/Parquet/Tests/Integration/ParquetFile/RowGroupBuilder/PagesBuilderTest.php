@@ -11,12 +11,14 @@ use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, Encodings, Schema};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkStatistics,
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{
+    ColumnChunkStatistics,
     DremelShredder,
-    FlatColumnData,
     PageSizeCalculator,
     PagesBuilder,
-    Validator\ColumnDataValidator};
+    Validator\ColumnDataValidator,
+    WriteFlatColumnData
+};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\TestCase;
 
@@ -31,7 +33,7 @@ final class PagesBuilderTest extends TestCase
         $options->set(Option::PAGE_SIZE_BYTES, 1024); // 1024 / 4 = 256 - this is the total number of integers we want to keep in a single page
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('int32'));
 
-        $data = FlatColumnData::initialize($flatColumn);
+        $data = WriteFlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -75,7 +77,7 @@ final class PagesBuilderTest extends TestCase
         $values = \array_map(static fn ($i) => $enum[generate_random_int(0, 2)], \range(0, 99));
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('enum'));
 
-        $data = FlatColumnData::initialize($flatColumn);
+        $data = WriteFlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -129,7 +131,7 @@ final class PagesBuilderTest extends TestCase
 
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('int32'));
 
-        $data = FlatColumnData::initialize($flatColumn);
+        $data = WriteFlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -170,7 +172,7 @@ final class PagesBuilderTest extends TestCase
         $values = \array_map(static fn ($i) => \json_encode(['id' => $faker->uuid], JSON_THROW_ON_ERROR), \range(0, 99));
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('json'));
 
-        $data = FlatColumnData::initialize($flatColumn);
+        $data = WriteFlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -211,7 +213,7 @@ final class PagesBuilderTest extends TestCase
         $options = Options::default()->set(Option::PAGE_SIZE_BYTES, 50);
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('string'));
 
-        $data = FlatColumnData::initialize($flatColumn);
+        $data = WriteFlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -266,7 +268,7 @@ final class PagesBuilderTest extends TestCase
         /** @var FlatColumn $flatColumn */
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('uuid'));
 
-        $data = FlatColumnData::initialize($flatColumn);
+        $data = WriteFlatColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);

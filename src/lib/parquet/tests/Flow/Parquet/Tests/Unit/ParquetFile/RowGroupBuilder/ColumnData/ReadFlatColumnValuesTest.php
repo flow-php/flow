@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\ColumnData;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\ReadFlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use PHPUnit\Framework\TestCase;
 
-final class FlatColumnValuesTest extends TestCase
+final class ReadFlatColumnValuesTest extends TestCase
 {
     public function test_flat_column() : void
     {
-        $data = new FlatColumnValues(FlatColumn::int32('int32'), repetitionLevels: [0, 0, 0], definitionLevels: [0, 1, 1], values: [2, 3]);
+        $data = new ReadFlatColumnValues(FlatColumn::int32('int32'), repetitionLevels: [0, 0, 0], definitionLevels: [0, 1, 1], values: [2, 3]);
 
         self::assertSame(1, $data->nullCount());
         self::assertSame(3, $data->rowsCount());
@@ -25,7 +25,7 @@ final class FlatColumnValuesTest extends TestCase
             NestedColumn::list('list', ListElement::int32())
         );
 
-        $data = new FlatColumnValues($schema->columnsFlat()[0], repetitionLevels: [0, 1, 0], definitionLevels: [0, 3, 3], values: [2, 3]);
+        $data = new ReadFlatColumnValues($schema->columnsFlat()[0], repetitionLevels: [0, 1, 0], definitionLevels: [0, 3, 3], values: [2, 3]);
 
         self::assertSame(1, $data->nullCount());
         self::assertSame(2, $data->rowsCount());
@@ -33,7 +33,7 @@ final class FlatColumnValuesTest extends TestCase
 
     public function test_skipping_rows_in_flat_column() : void
     {
-        $data = new FlatColumnValues(
+        $data = new ReadFlatColumnValues(
             FlatColumn::int32('int32'),
             repetitionLevels: [0, 0, 0, 0, 0, 0, 0],
             definitionLevels: [1, 1, 1, 1, 1, 1, 1],
@@ -54,7 +54,7 @@ final class FlatColumnValuesTest extends TestCase
             NestedColumn::list('list', ListElement::int32())
         );
 
-        $data = new FlatColumnValues(
+        $data = new ReadFlatColumnValues(
             $schema->columnsFlat()[0],
             repetitionLevels: [0, 1, 0, 0, 0, 1],
             definitionLevels: [3, 3, 3, 2, 3, 3],
@@ -77,7 +77,7 @@ final class FlatColumnValuesTest extends TestCase
             NestedColumn::list('list', ListElement::int32())
         );
 
-        $data = new FlatColumnValues(
+        $data = new ReadFlatColumnValues(
             $schema->columnsFlat()[0],
             repetitionLevels: [0, 1, 0, 1, 0, 1],
             definitionLevels: [3, 3, 3, 2, 3, 3],
@@ -96,7 +96,7 @@ final class FlatColumnValuesTest extends TestCase
 
     public function test_splitting_flat_columns_by_rows() : void
     {
-        $data = new FlatColumnValues(
+        $data = new ReadFlatColumnValues(
             FlatColumn::int32('int32'),
             repetitionLevels: [0, 0, 0, 0, 0, 0, 0],
             definitionLevels: [1, 1, 1, 1, 1, 1, 1],
@@ -118,7 +118,7 @@ final class FlatColumnValuesTest extends TestCase
             NestedColumn::list('list', ListElement::int32())
         );
 
-        $data = new FlatColumnValues(
+        $data = new ReadFlatColumnValues(
             $schema->columnsFlat()[0],
             repetitionLevels: [0, 1, 0, 0, 0, 1],
             definitionLevels: [3, 3, 3, 2, 3, 3],

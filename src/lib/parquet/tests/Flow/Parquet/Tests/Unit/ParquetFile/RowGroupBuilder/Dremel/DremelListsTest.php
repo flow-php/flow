@@ -6,7 +6,7 @@ namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder, FlatColumnData};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder, WriteFlatColumnData};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -90,11 +90,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -234,11 +234,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -319,11 +319,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(3, $schema->get('l.list.element.list.element.key_value.value')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -571,11 +571,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(4, $schema->get('l.list.element.list.element.key_value.value.map.key_value.value')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -654,11 +654,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(2, $schema->get('l.list.element.list.element.string')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -869,17 +869,17 @@ final class DremelListsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('l'), $row)
                     : $flatData->merge($dremel->shred($schema->get('l'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('l'), $row)
                     : $flatData->merge($dremel->shred($schema->get('l'), $row))
             );
@@ -1019,11 +1019,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(2, $schema->get('l.list.element.l.list.element')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -1140,11 +1140,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(2, $schema->get('l.list.element.m.key_value.value')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -1321,11 +1321,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(1, $schema->get('l.list.element.string')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -1384,11 +1384,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(1, $schema->get('l.list.element.s.string')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -1432,11 +1432,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -1468,11 +1468,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(1, $schema->get('l.list.element')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -1513,11 +1513,11 @@ final class DremelListsTest extends TestCase
         self::assertEquals(2, $schema->get('l.list.element.list.element')->repetitions()->maxRepetitionLevel());
 
         /**
-         * @var ?FlatColumnData $flatData
+         * @var ?WriteFlatColumnData $flatData
          */
         $flatData = \array_reduce(
             $rows,
-            static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+            static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                 ? $dremel->shred($schema->get('l'), $row)
                 : $flatData->merge($dremel->shred($schema->get('l'), $row))
         );
@@ -1601,17 +1601,17 @@ final class DremelListsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('l'), $row)
                     : $flatData->merge($dremel->shred($schema->get('l'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('l'), $row)
                     : $flatData->merge($dremel->shred($schema->get('l'), $row))
             );
@@ -1715,17 +1715,17 @@ final class DremelListsTest extends TestCase
             $this->expectExceptionMessage($exceptMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('l'), $row)
                     : $flatData->merge($dremel->shred($schema->get('l'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('l'), $row)
                     : $flatData->merge($dremel->shred($schema->get('l'), $row))
             );

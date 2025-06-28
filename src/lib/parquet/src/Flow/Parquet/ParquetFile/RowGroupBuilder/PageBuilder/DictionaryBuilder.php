@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryBuilder\{FloatDictionaryBuilder, ObjectDictionaryBuilder, ScalarDictionaryBuilder};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class DictionaryBuilder
 {
-    public function build(FlatColumn $column, FlatColumnValues $data) : Dictionary
+    public function build(FlatColumn $column, WriteFlatColumnValues $data) : Dictionary
     {
         switch ($column->type()) {
             case PhysicalType::INT64:

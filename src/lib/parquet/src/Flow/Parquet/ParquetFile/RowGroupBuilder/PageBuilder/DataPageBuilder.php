@@ -9,7 +9,7 @@ use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Codec,
     Compressions,
     Encodings,
-    RowGroupBuilder\ColumnData\FlatColumnValues};
+    RowGroupBuilder\ColumnData\WriteFlatColumnValues};
 use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValuesPacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
@@ -30,7 +30,7 @@ final readonly class DataPageBuilder
      * @param null|array<mixed> $dictionary
      * @param null|array<mixed> $indices
      */
-    public function build(FlatColumn $column, FlatColumnValues $rows, ?array $dictionary = null, ?array $indices = null) : PageContainer
+    public function build(FlatColumn $column, WriteFlatColumnValues $rows, ?array $dictionary = null, ?array $indices = null) : PageContainer
     {
         return match ($this->options->get(Option::WRITER_VERSION)) {
             1 => $this->buildDataPage($rows, $column, $dictionary, $indices),
@@ -43,7 +43,7 @@ final readonly class DataPageBuilder
      * @param null|array<mixed> $dictionary
      * @param null|array<mixed> $indices
      */
-    private function buildDataPage(FlatColumnValues $data, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
+    private function buildDataPage(WriteFlatColumnValues $data, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
 
@@ -95,7 +95,7 @@ final readonly class DataPageBuilder
      * @param null|array<mixed> $dictionary
      * @param null|array<mixed> $indices
      */
-    private function buildDataPageV2(FlatColumnValues $data, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
+    private function buildDataPageV2(WriteFlatColumnValues $data, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
     {
         $pageStatistics = new DataPageV2Statistics();
 

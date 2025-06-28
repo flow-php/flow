@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatColumnValues, FlatValue};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatValue, WriteFlatColumnValues};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
-final readonly class FlatColumnData
+final readonly class WriteFlatColumnData
 {
     /**
      * @param Column $column
-     * @param array<string, FlatColumnValues> $flatValues
+     * @param array<string, WriteFlatColumnValues> $flatValues
      */
     private function __construct(public Column $column, private array $flatValues = [])
     {
@@ -23,12 +23,12 @@ final readonly class FlatColumnData
         $flatValues = [];
 
         if ($column instanceof FlatColumn) {
-            $flatValues[$column->flatPath()] = new FlatColumnValues($column);
+            $flatValues[$column->flatPath()] = new WriteFlatColumnValues($column);
         }
 
         if ($column instanceof NestedColumn) {
             foreach ($column->childrenFlat() as $columnChild) {
-                $flatValues[$columnChild->flatPath()] = new FlatColumnValues($columnChild);
+                $flatValues[$columnChild->flatPath()] = new WriteFlatColumnValues($columnChild);
             }
         }
 
@@ -42,13 +42,13 @@ final readonly class FlatColumnData
         }
     }
 
-    public function addValues(FlatColumnValues $values) : void
+    public function addValues(WriteFlatColumnValues $values) : void
     {
         $this->flatValues[$values->column->flatPath()]->merge($values);
     }
 
     /**
-     * @return array<string, FlatColumnValues>
+     * @return array<string, WriteFlatColumnValues>
      */
     public function flatValues() : array
     {
@@ -101,7 +101,7 @@ final readonly class FlatColumnData
         return $normalized;
     }
 
-    public function values(string $flatPath) : FlatColumnValues
+    public function values(string $flatPath) : WriteFlatColumnValues
     {
         return $this->flatValues[$flatPath];
     }

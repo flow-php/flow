@@ -6,7 +6,7 @@ namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder\Dremel;
 
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder, FlatColumnData};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelAssembler, DremelShredder, WriteFlatColumnData};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
@@ -138,17 +138,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -344,17 +344,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -580,17 +580,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -781,17 +781,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -875,17 +875,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -951,17 +951,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -1023,17 +1023,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -1103,17 +1103,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -1208,18 +1208,18 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
 
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
@@ -1338,17 +1338,17 @@ final class DremelMapsTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
             \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );
         } else {
             /**
-             * @var ?FlatColumnData $flatData
+             * @var ?WriteFlatColumnData $flatData
              */
             $flatData = \array_reduce(
                 $rows,
-                static fn (?FlatColumnData $flatData, array $row) => $flatData === null
+                static fn (?WriteFlatColumnData $flatData, array $row) => $flatData === null
                     ? $dremel->shred($schema->get('m'), $row)
                     : $flatData->merge($dremel->shred($schema->get('m'), $row))
             );

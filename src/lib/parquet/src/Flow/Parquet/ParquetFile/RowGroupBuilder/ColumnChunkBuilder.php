@@ -7,12 +7,12 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final readonly class ColumnChunkBuilder
 {
-    private FlatColumnValues $columnData;
+    private WriteFlatColumnValues $columnData;
 
     private ColumnChunkStatistics $statistics;
 
@@ -23,10 +23,10 @@ final readonly class ColumnChunkBuilder
         private Options $options,
     ) {
         $this->statistics = new ColumnChunkStatistics($this->column);
-        $this->columnData = new FlatColumnValues($this->column);
+        $this->columnData = new WriteFlatColumnValues($this->column);
     }
 
-    public function addRow(FlatColumnValues $row) : void
+    public function addRow(WriteFlatColumnValues $row) : void
     {
         $this->columnData->merge($row);
 
@@ -64,7 +64,7 @@ final readonly class ColumnChunkBuilder
         );
     }
 
-    public function rows() : FlatColumnValues
+    public function rows() : WriteFlatColumnValues
     {
         return $this->columnData;
     }

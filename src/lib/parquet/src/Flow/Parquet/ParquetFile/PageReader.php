@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
-use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
+use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues};
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Page\{Dictionary, PageHeader};
 use Flow\Parquet\ParquetFile\Page\Header\Type;
@@ -21,7 +21,7 @@ final readonly class PageReader
     /**
      * @param resource $stream
      */
-    public function readData(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : FlatColumnValues
+    public function readData(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : WriteFlatColumnValues
     {
         switch ($pageHeader->type()) {
             case Type::DATA_PAGE:

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues};
+use Flow\Parquet\{ByteOrder, Options, ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues};
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValueUnpacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\{Dictionary};
@@ -25,7 +25,7 @@ final readonly class DataCoder
         FlatColumn $column,
         DataPageHeader $pageHeader,
         ?Dictionary $dictionary = null,
-    ) : FlatColumnValues {
+    ) : WriteFlatColumnValues {
 
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
@@ -58,7 +58,7 @@ final readonly class DataCoder
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
 
         if ($pageHeader->encoding() === Encodings::PLAIN) {
-            return new FlatColumnValues(
+            return new WriteFlatColumnValues(
                 $column,
                 $repetitionLevels,
                 $definitionLevels,
@@ -90,7 +90,7 @@ final readonly class DataCoder
                 $values = [];
             }
 
-            return new FlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
+            return new WriteFlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');
@@ -101,7 +101,7 @@ final readonly class DataCoder
         FlatColumn $column,
         DataPageHeaderV2 $pageHeader,
         ?Dictionary $dictionary = null,
-    ) : FlatColumnValues {
+    ) : WriteFlatColumnValues {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
@@ -131,7 +131,7 @@ final readonly class DataCoder
         $nonEmptyValuesCount = $this->countValues($definitionLevels, $column);
 
         if ($pageHeader->encoding() === Encodings::PLAIN) {
-            return new FlatColumnValues(
+            return new WriteFlatColumnValues(
                 $column,
                 $repetitionLevels,
                 $definitionLevels,
@@ -163,7 +163,7 @@ final readonly class DataCoder
                 $values = [];
             }
 
-            return new FlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
+            return new WriteFlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');

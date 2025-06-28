@@ -13,11 +13,11 @@ use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     Metadata,
     PageReader,
     RowGroupBuilder\DremelAssembler,
-    RowGroupBuilder\FlatColumnData,
+    RowGroupBuilder\WriteFlatColumnData,
     Schema};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\FlatColumnValues;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Thrift\FileMetaData;
@@ -211,13 +211,13 @@ final class ParquetFile
      */
     private function read(Column $column, ?int $limit = null, ?int $offset = null) : array
     {
-        $columnData = FlatColumnData::initialize($column);
+        $columnData = WriteFlatColumnData::initialize($column);
 
         if ($column instanceof FlatColumn) {
             $rows = [];
 
             foreach ($this->readChunks($column, $limit, $offset) as $data) {
-                if (!$data instanceof FlatColumnValues) {
+                if (!$data instanceof WriteFlatColumnValues) {
                     throw new \InvalidArgumentException(\sprintf('Expected FlatColumnValues, got %s', \get_debug_type($data)));
                 }
                 $columnData->addValues($data);
@@ -236,7 +236,7 @@ final class ParquetFile
 
         foreach ($column->childrenFlat() as $child) {
             foreach ($this->readChunks($child, $limit, $offset) as $data) {
-                if (!$data instanceof FlatColumnValues) {
+                if (!$data instanceof WriteFlatColumnValues) {
                     throw new \InvalidArgumentException(\sprintf('Expected FlatColumnValues, got %s', \get_debug_type($data)));
                 }
                 $columnData->addValues($data);

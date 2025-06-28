@@ -21,7 +21,7 @@ final readonly class DremelAssembler
     /**
      * @return array<array-key, mixed>
      */
-    public function assemble(Column $column, FlatColumnData $flatData) : array
+    public function assemble(Column $column, WriteFlatColumnData $flatData) : array
     {
         $depth = 0;
 
@@ -78,7 +78,7 @@ final readonly class DremelAssembler
     /**
      * @return array<array-key, mixed>
      */
-    private function assemblyFlat(FlatColumn $column, FlatColumnData $flatData) : array
+    private function assemblyFlat(FlatColumn $column, WriteFlatColumnData $flatData) : array
     {
         $stack = new Stack($column->repetitions()->maxRepetitionLevel());
 
@@ -99,7 +99,7 @@ final readonly class DremelAssembler
     /**
      * @return array<mixed>
      */
-    private function assemblyList(NestedColumn $column, FlatColumnData $flatData, int $depth) : array
+    private function assemblyList(NestedColumn $column, WriteFlatColumnData $flatData, int $depth) : array
     {
         $depth++;
 
@@ -127,7 +127,7 @@ final readonly class DremelAssembler
     /**
      * @return array<mixed>
      */
-    private function assemblyMap(NestedColumn $column, FlatColumnData $flatData, int $depth) : array
+    private function assemblyMap(NestedColumn $column, WriteFlatColumnData $flatData, int $depth) : array
     {
         $depth++;
         $rows = [];
@@ -214,7 +214,7 @@ final readonly class DremelAssembler
     /**
      * @return array<array-key, mixed>
      */
-    private function assemblyStructure(NestedColumn $column, FlatColumnData $flatData, int $depth, bool $repeated = false) : array
+    private function assemblyStructure(NestedColumn $column, WriteFlatColumnData $flatData, int $depth, bool $repeated = false) : array
     {
         $depth++;
         $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
