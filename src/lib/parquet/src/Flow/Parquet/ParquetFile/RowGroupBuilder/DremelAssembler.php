@@ -68,13 +68,20 @@ final readonly class DremelAssembler
     }
 
     /**
-     * @return array<array-key, mixed>
+     * @return \Generator<array-key, mixed>
      */
-    private function assemblyFlat(FlatColumn $column, ReadFlatColumnData $flatData) : array
+    private function assemblyFlat(FlatColumn $column, ReadFlatColumnData $flatData) : \Generator
     {
         $stack = new Stack($column->repetitions()->maxRepetitionLevel());
 
-        foreach ($flatData->iterator($column) as $i => $value) {
+        foreach ($flatData->iterator($column) as $value) {
+            if ($value->repetitionLevel === 0) {
+                foreach ($stack->dump() as $row) {
+                    yield $row;
+                }
+                $stack = new Stack($column->repetitions()->maxRepetitionLevel());
+            }
+
             $stack->push(
                 $value->repetitionLevel,
                 $this->definitionConverter->toValue(
@@ -85,7 +92,9 @@ final readonly class DremelAssembler
             );
         }
 
-        return $stack->dump();
+        foreach ($stack->dump() as $row) {
+            yield $row;
+        }
     }
 
     /**
@@ -99,7 +108,11 @@ final readonly class DremelAssembler
         $listElementColumn = $column->getListElement();
 
         if ($listElementColumn instanceof FlatColumn) {
-            return \array_merge($rows, $this->assemblyFlat($listElementColumn, $flatData));
+            foreach ($this->assemblyFlat($listElementColumn, $flatData) as $row) {
+                $rows[] = $row;
+            }
+
+            return $rows;
         }
 
         /**
@@ -128,8 +141,8 @@ final readonly class DremelAssembler
 
         if ($mapValueColumn instanceof FlatColumn) {
             $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
-            $iterator->attachIterator(new \ArrayIterator($this->assemblyFlat($mapKeyColumn, $flatData)), 'key');
-            $iterator->attachIterator(new \ArrayIterator($this->assemblyFlat($mapValueColumn, $flatData)), 'value');
+            $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
+            $iterator->attachIterator($this->assemblyFlat($mapValueColumn, $flatData), 'value');
 
             foreach ($iterator as $iteration) {
                 if ($iteration['key'] instanceof NullLevel) {
@@ -151,7 +164,7 @@ final readonly class DremelAssembler
 
             $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
-            $iterator->attachIterator(new \ArrayIterator($this->assemblyFlat($mapKeyColumn, $flatData)), 'key');
+            $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
             $iterator->attachIterator(new \ArrayIterator($this->assemblyList($mapValueColumn, $flatData, $depth)), 'value');
 
             foreach ($iterator as $iteration) {
@@ -170,7 +183,7 @@ final readonly class DremelAssembler
         if ($mapValueColumn->isMap()) {
             $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
-            $iterator->attachIterator(new \ArrayIterator($this->assemblyFlat($mapKeyColumn, $flatData)), 'key');
+            $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
             $iterator->attachIterator(new \ArrayIterator($this->assemblyMap($mapValueColumn, $flatData, $depth)), 'value');
 
             foreach ($iterator as $iteration) {
@@ -187,7 +200,7 @@ final readonly class DremelAssembler
         }
 
         $iterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
-        $iterator->attachIterator(new \ArrayIterator($this->assemblyFlat($mapKeyColumn, $flatData)), 'key');
+        $iterator->attachIterator($this->assemblyFlat($mapKeyColumn, $flatData), 'key');
         $iterator->attachIterator(new \ArrayIterator($this->assemblyStructure($mapValueColumn, $flatData, $depth, repeated: true)), 'value');
 
         foreach ($iterator as $iteration) {
@@ -213,7 +226,7 @@ final readonly class DremelAssembler
 
         foreach ($column->children() as $child) {
             if ($child instanceof FlatColumn) {
-                $iterator->attachIterator(new \ArrayIterator($this->assemblyFlat($child, $flatData)), $child->name());
+                $iterator->attachIterator($this->assemblyFlat($child, $flatData), $child->name());
 
                 continue;
             }
@@ -292,19 +305,6 @@ final readonly class DremelAssembler
         }
 
         return $rows;
-    }
-
-    private function nullLevelToNull(array &$array) : void
-    {
-        foreach ($array as &$value) {
-            if (is_array($value)) {
-                $this->nullLevelToNull($value);
-            } elseif ($value instanceof NullLevel) {
-                $value = null;
-            }
-        }
-
-        unset($value);
     }
 
     /**
