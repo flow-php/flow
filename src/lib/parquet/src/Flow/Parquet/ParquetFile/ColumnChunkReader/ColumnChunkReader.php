@@ -7,17 +7,16 @@ namespace Flow\Parquet\ParquetFile\ColumnChunkReader;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\{ColumnChunkReader,
-    PageReader,
-    RowGroupBuilder\ColumnData\ReadFlatColumnValues};
 use Flow\Parquet\ParquetFile\Page\{PageHeader};
+use Flow\Parquet\ParquetFile\{PageReader,
+    RowGroupBuilder\ColumnData\ReadFlatColumnValues};
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ThriftStream\{TPhpFileStream};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\{TBufferedTransport};
 
-final readonly class WholeChunkReader implements ColumnChunkReader
+final readonly class ColumnChunkReader
 {
     public function __construct(
         private PageReader $pageReader,
@@ -58,39 +57,38 @@ final readonly class WholeChunkReader implements ColumnChunkReader
         }
 
         $data = new ReadFlatColumnValues($column);
-
         $rowsToRead = $columnChunk->valuesCount();
 
         while (true) {
             $dataHeader = $dictionary ? $this->readHeader($pageStream) : $header;
 
             /** There are no more pages in given column chunk */
-            if ($dataHeader === null || $data->rowsCount() >= $rowsToRead || $dataHeader->type()->isDataPage() === false) {
-                $yieldedRows = 0;
-
-                yield $data;
-                $yieldedRows += $data->rowsCount();
-
-                if ($yieldedRows >= $rowsToRead) {
-                    \fclose($pageStream);
-
-                    return;
-                }
-
+            if ($dataHeader === null || $dataHeader->type()->isDataPage() === false) {
                 break;
             }
 
-            $data = $data->merge($this->pageReader->readData(
+            /** Early termination if we already have enough rows */
+            if ($data->rowsCount() >= $rowsToRead) {
+                break;
+            }
+
+            $pageData = $this->pageReader->readData(
                 $column,
                 $dataHeader,
                 $columnChunk->codec(),
                 $dictionary,
                 $pageStream
-            ));
+            );
+
+            $data = $data->merge($pageData);
 
             if ($dictionary === null) {
                 $header = $this->readHeader($pageStream);
             }
+        }
+
+        if (!$data->isEmpty()) {
+            yield $data;
         }
 
         \fclose($pageStream);

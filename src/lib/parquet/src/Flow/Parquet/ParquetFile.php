@@ -7,7 +7,7 @@ namespace Flow\Parquet;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\{InvalidArgumentException};
-use Flow\Parquet\ParquetFile\ColumnChunkReader\WholeChunkReader;
+use Flow\Parquet\ParquetFile\ColumnChunkReader\ColumnChunkReader;
 use Flow\Parquet\ParquetFile\ColumnChunkViewer\WholeChunkViewer;
 use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     Metadata,
@@ -90,16 +90,18 @@ final class ParquetFile
     }
 
     /**
+     * In one row group each column has always exactly one column chunk.
+     * When nested columns, each flat child column has its own column chunk.
+     *
      * @return \Generator<ReadFlatColumnValues>
      */
     public function readChunks(FlatColumn $column, ?int $offset = null) : \Generator
     {
-        $reader = new WholeChunkReader(
+        $reader = new ColumnChunkReader(
             new PageReader($this->byteOrder, $this->options),
             $this->options
         );
 
-        /** @var FlowColumnChunk $columnChunk */
         foreach ($this->getColumnChunks($column, offset: $offset) as $columnChunk) {
             $skipRows = $offset - $columnChunk->rowsOffset;
 
