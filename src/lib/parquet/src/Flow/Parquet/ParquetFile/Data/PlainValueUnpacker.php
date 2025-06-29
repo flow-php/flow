@@ -18,12 +18,12 @@ final readonly class PlainValueUnpacker
     }
 
     /**
-     * @return array<mixed>
+     * @return \Generator<mixed>
      */
-    public function unpack(FlatColumn $column, int $total) : array
+    public function unpack(FlatColumn $column, int $total) : \Generator
     {
         if ($total === 0) {
-            return [];
+            return;
         }
 
         $generator = match ($column->type()) {
@@ -50,6 +50,8 @@ final readonly class PlainValueUnpacker
             PhysicalType::BOOLEAN => $this->reader->readBooleans($total),
         };
 
-        return \iterator_to_array($generator);
+        foreach ($generator as $value) {
+            yield $value;
+        }
     }
 }

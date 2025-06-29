@@ -15,7 +15,7 @@ use Flow\Parquet\ParquetFile\Page\{Dictionary};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
-final readonly class DataCoder
+final readonly class ColumnDataDecoder
 {
     public function __construct(
         private Options $options,
@@ -66,7 +66,7 @@ final readonly class DataCoder
                 $repetitionLevels,
                 $definitionLevels,
                 /** @phpstan-ignore-next-line */
-                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount)
+                \iterator_to_array((new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount))
             );
         }
 
@@ -139,7 +139,7 @@ final readonly class DataCoder
                 $repetitionLevels,
                 $definitionLevels,
                 /** @phpstan-ignore-next-line */
-                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount)
+                \iterator_to_array((new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount))
             );
         }
 
@@ -180,7 +180,7 @@ final readonly class DataCoder
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         return new Dictionary(
-            (new PlainValueUnpacker($reader, $this->options))->unpack($column, $pageHeader->valuesCount())
+            \iterator_to_array((new PlainValueUnpacker($reader, $this->options))->unpack($column, $pageHeader->valuesCount()))
         );
     }
 

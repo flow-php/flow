@@ -40,7 +40,7 @@ final readonly class PageReader
                     );
 
                 /** @phpstan-ignore-next-line  */
-                return (new DataCoder($this->options, $this->byteOrder))->decodeData($data, $column, $pageHeader->dataPageHeader(), $dictionary);
+                return (new ColumnDataDecoder($this->options, $this->byteOrder))->decodeData($data, $column, $pageHeader->dataPageHeader(), $dictionary);
             case Type::DATA_PAGE_V2:
 
                 /* @phpstan-ignore-next-line */
@@ -60,7 +60,7 @@ final readonly class PageReader
                         $codec
                     );
 
-                return (new DataCoder($this->options, $this->byteOrder))
+                return (new ColumnDataDecoder($this->options, $this->byteOrder))
                     /** @phpstan-ignore-next-line */
                     ->decodeDataV2($levels . $data, $column, $pageHeader->dataPageHeaderV2(), $dictionary);
 
@@ -78,7 +78,7 @@ final readonly class PageReader
             throw new RuntimeException("Can't read dictionary from non dictionary page header");
         }
 
-        return (new DataCoder($this->options, $this->byteOrder))
+        return (new ColumnDataDecoder($this->options, $this->byteOrder))
             ->decodeDictionary(
                 (new Codec($this->options))
                     ->decompress(
