@@ -87,32 +87,6 @@ final class ParquetFile
         }
     }
 
-    //    /**
-    //     * In one row group each column has always exactly one column chunk.
-    //     * When nested columns, each flat child column has its own column chunk.
-    //     *
-    //     * @return \Generator<ReadFlatColumnValues>
-    //     */
-    //    public function readChunks(FlatColumn $column, ?int $offset = null) : \Generator
-    //    {
-    //        $reader = new ColumnChunkReader(
-    //            new PageReader($this->byteOrder, $this->options),
-    //            $this->options
-    //        );
-    //
-    //        foreach ($this->getColumnChunks($column, offset: $offset) as $columnChunk) {
-    //            $skipRows = $offset - $columnChunk->rowsOffset;
-    //
-    //            foreach ($reader->read($columnChunk->chunk, $column, $this->stream) as $data) {
-    //                if ($skipRows > 0) {
-    //                    yield $data->skipRows($skipRows);
-    //                } else {
-    //                    yield $data;
-    //                }
-    //            }
-    //        }
-    //    }
-
     public function schema() : Schema
     {
         return $this->metadata()->schema();
@@ -179,44 +153,15 @@ final class ParquetFile
             $row = [];
 
             foreach ($rowData as $columnData) {
-                if (!\is_array($columnData)) {
-                    continue;
+                foreach ($columnData as $key => $value) {
+                    $row[$key] = $value;
                 }
-
-                $row = \array_merge($row, $columnData);
             }
+
             yield $row;
             $rowCount++;
         }
     }
-
-    //    /**
-    //     * @return \Generator<FlowColumnChunk>
-    //     */
-    //    private function getColumnChunks(Column $column, ?int $offset = null) : \Generator
-    //    {
-    //        $fetchedRows = 0;
-    //
-    //        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
-    //            if ($offset !== null) {
-    //
-    //                if ($fetchedRows + $rowGroup->rowsCount() < $offset) {
-    //                    $fetchedRows += $rowGroup->rowsCount();
-    //
-    //                    continue;
-    //                }
-    //            }
-    //
-    //            foreach ($rowGroup->columnChunks() as $columnChunk) {
-    //                if ($columnChunk->flatPath() === $column->flatPath()) {
-    //                    yield new FlowColumnChunk($columnChunk, $fetchedRows, $rowGroup->rowsCount());
-    //                    $fetchedRows += $rowGroup->rowsCount();
-    //
-    //                    break;
-    //                }
-    //            }
-    //        }
-    //    }
 
     private function read(Column $column, ?int $limit = null, ?int $offset = null) : \Generator
     {
@@ -263,7 +208,7 @@ final class ParquetFile
                     $childrenFlatValuesIterator->attachIterator($chunkReader->read($rowGroup->getColumnChunk($child), $child, $this->stream), $child->flatPath());
                 }
 
-                foreach ($childrenFlatValuesIterator as $childrenFlatPaths => $childrenFlatValues) {
+                foreach ($childrenFlatValuesIterator as $childrenFlatValues) {
                     $columnFlatData = [];
 
                     foreach ($childrenFlatValues as $flatPath => $childFlatValues) {
@@ -272,7 +217,6 @@ final class ParquetFile
                             // we write each nested column child as a separate flat column.
                             // Now when the mechanism that calculates how many rows will fit in the page
                             // it's unaware of the fact that some of the columns should share the rows count with their siblings.
-                            //                            dd($childrenFlatPaths);
                             throw new RuntimeException('Unexpected child flat values');
                         }
 
