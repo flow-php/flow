@@ -6,9 +6,9 @@ namespace Flow\Parquet;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\Exception\{InvalidArgumentException};
+use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\ParquetFile\ColumnChunkReader\ColumnChunkReader;
-use Flow\Parquet\ParquetFile\ColumnChunkViewer\WholeChunkViewer;
+use Flow\Parquet\ParquetFile\ColumnChunkViewer\ColumnChunkViewer;
 use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     Metadata,
     PageReader,
@@ -16,8 +16,6 @@ use Flow\Parquet\ParquetFile\{ColumnPageHeader,
     RowGroupBuilder\DremelAssembler,
     RowGroupBuilder\ReadFlatColumnData,
     Schema};
-use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Thrift\FileMetaData;
@@ -89,31 +87,31 @@ final class ParquetFile
         }
     }
 
-    /**
-     * In one row group each column has always exactly one column chunk.
-     * When nested columns, each flat child column has its own column chunk.
-     *
-     * @return \Generator<ReadFlatColumnValues>
-     */
-    public function readChunks(FlatColumn $column, ?int $offset = null) : \Generator
-    {
-        $reader = new ColumnChunkReader(
-            new PageReader($this->byteOrder, $this->options),
-            $this->options
-        );
-
-        foreach ($this->getColumnChunks($column, offset: $offset) as $columnChunk) {
-            $skipRows = $offset - $columnChunk->rowsOffset;
-
-            foreach ($reader->read($columnChunk->chunk, $column, $this->stream) as $data) {
-                if ($skipRows > 0) {
-                    yield $data->skipRows($skipRows);
-                } else {
-                    yield $data;
-                }
-            }
-        }
-    }
+    //    /**
+    //     * In one row group each column has always exactly one column chunk.
+    //     * When nested columns, each flat child column has its own column chunk.
+    //     *
+    //     * @return \Generator<ReadFlatColumnValues>
+    //     */
+    //    public function readChunks(FlatColumn $column, ?int $offset = null) : \Generator
+    //    {
+    //        $reader = new ColumnChunkReader(
+    //            new PageReader($this->byteOrder, $this->options),
+    //            $this->options
+    //        );
+    //
+    //        foreach ($this->getColumnChunks($column, offset: $offset) as $columnChunk) {
+    //            $skipRows = $offset - $columnChunk->rowsOffset;
+    //
+    //            foreach ($reader->read($columnChunk->chunk, $column, $this->stream) as $data) {
+    //                if ($skipRows > 0) {
+    //                    yield $data->skipRows($skipRows);
+    //                } else {
+    //                    yield $data;
+    //                }
+    //            }
+    //        }
+    //    }
 
     public function schema() : Schema
     {
@@ -192,74 +190,113 @@ final class ParquetFile
         }
     }
 
-    /**
-     * @return \Generator<FlowColumnChunk>
-     */
-    private function getColumnChunks(Column $column, ?int $offset = null) : \Generator
+    //    /**
+    //     * @return \Generator<FlowColumnChunk>
+    //     */
+    //    private function getColumnChunks(Column $column, ?int $offset = null) : \Generator
+    //    {
+    //        $fetchedRows = 0;
+    //
+    //        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
+    //            if ($offset !== null) {
+    //
+    //                if ($fetchedRows + $rowGroup->rowsCount() < $offset) {
+    //                    $fetchedRows += $rowGroup->rowsCount();
+    //
+    //                    continue;
+    //                }
+    //            }
+    //
+    //            foreach ($rowGroup->columnChunks() as $columnChunk) {
+    //                if ($columnChunk->flatPath() === $column->flatPath()) {
+    //                    yield new FlowColumnChunk($columnChunk, $fetchedRows, $rowGroup->rowsCount());
+    //                    $fetchedRows += $rowGroup->rowsCount();
+    //
+    //                    break;
+    //                }
+    //            }
+    //        }
+    //    }
+
+    private function read(Column $column, ?int $limit = null, ?int $offset = null) : \Generator
     {
-        $fetchedRows = 0;
+        $yieldedRows = 0;
+        $rowGroupOffset = 0;
+        $chunkReader = new ColumnChunkReader(
+            new PageReader($this->byteOrder, $this->options),
+            $this->options
+        );
 
         foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
             if ($offset !== null) {
 
-                if ($fetchedRows + $rowGroup->rowsCount() < $offset) {
-                    $fetchedRows += $rowGroup->rowsCount();
+                if ($rowGroupOffset + $rowGroup->rowsCount() <= $offset) {
+                    $rowGroupOffset += $rowGroup->rowsCount();
 
                     continue;
                 }
             }
+            $skipRows = $offset - $rowGroupOffset;
 
-            foreach ($rowGroup->columnChunks() as $columnChunk) {
-                if ($columnChunk->flatPath() === $column->flatPath()) {
-                    yield new FlowColumnChunk($columnChunk, $fetchedRows, $rowGroup->rowsCount());
-                    $fetchedRows += $rowGroup->rowsCount();
+            if ($column instanceof FlatColumn) {
+                foreach ($chunkReader->read($rowGroup->getColumnChunk($column), $column, $this->stream) as $flatColumnValues) {
 
-                    break;
+                    if ($skipRows > 0) {
+                        $flatColumnValues = $flatColumnValues->skipRows($skipRows);
+                    }
+
+                    $columnData = new ReadFlatColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
+
+                    foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
+                        if ($limit !== null && $yieldedRows >= $limit) {
+                            return;
+                        }
+                        yield $row;
+                        $yieldedRows++;
+                    }
                 }
-            }
-        }
-    }
+            } elseif ($column instanceof NestedColumn) {
 
-    /**
-     * @return \Generator<mixed>
-     */
-    private function read(Column $column, ?int $limit = null, ?int $offset = null) : \Generator
-    {
-        $columnData = ReadFlatColumnData::initialize($column);
-        $yieldedRows = 0;
+                $childrenFlatValuesIterator = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
-        if ($column instanceof FlatColumn) {
-            foreach ($this->readChunks($column, $offset) as $data) {
-                $columnData->addValues($data);
-            }
-
-            foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-                if ($limit !== null && $yieldedRows >= $limit) {
-                    return;
+                foreach ($column->childrenFlat() as $child) {
+                    $childrenFlatValuesIterator->attachIterator($chunkReader->read($rowGroup->getColumnChunk($child), $child, $this->stream), $child->flatPath());
                 }
-                yield $row;
-                $yieldedRows++;
+
+                foreach ($childrenFlatValuesIterator as $childrenFlatPaths => $childrenFlatValues) {
+                    $columnFlatData = [];
+
+                    foreach ($childrenFlatValues as $flatPath => $childFlatValues) {
+                        if (!$childFlatValues instanceof ReadFlatColumnValues) {
+                            // The reason why this might happen is because when we are writing to parquet file
+                            // we write each nested column child as a separate flat column.
+                            // Now when the mechanism that calculates how many rows will fit in the page
+                            // it's unaware of the fact that some of the columns should share the rows count with their siblings.
+                            //                            dd($childrenFlatPaths);
+                            throw new RuntimeException('Unexpected child flat values');
+                        }
+
+                        if ($skipRows > 0) {
+                            $childFlatValues = $childFlatValues->skipRows($skipRows);
+                        }
+                        $columnFlatData[$flatPath] = $childFlatValues;
+                    }
+
+                    $columnData = new ReadFlatColumnData($column, \array_values($columnFlatData));
+
+                    foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
+                        if ($limit !== null && $yieldedRows >= $limit) {
+                            return;
+                        }
+                        yield $row;
+                        $yieldedRows++;
+                    }
+                }
+            } else {
+                throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
             }
 
-            return;
-        }
-
-        if (!$column instanceof NestedColumn) {
-            throw new InvalidArgumentException('Column must be instance of FlatColumn or NestedColumn');
-        }
-
-        foreach ($column->childrenFlat() as $child) {
-            foreach ($this->readChunks($child, $offset) as $data) {
-                $columnData->addValues($data);
-            }
-        }
-
-        foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
-            if ($limit !== null && $yieldedRows >= $limit) {
-                return;
-            }
-            yield $row;
-            $yieldedRows++;
+            $rowGroupOffset += $rowGroup->rowsCount();
         }
     }
 
@@ -268,14 +305,13 @@ final class ParquetFile
      */
     private function viewChunksPages(FlatColumn $column) : \Generator
     {
-        $viewer = new WholeChunkViewer($this->options);
+        $viewer = new ColumnChunkViewer($this->options);
 
-        foreach ($this->getColumnChunks($column) as $columnChunk) {
-            foreach ($viewer->view($columnChunk->chunk, $column, $this->stream) as $pageHeader) {
-                if (!$pageHeader instanceof PageHeader) {
-                    throw new \InvalidArgumentException(\sprintf('Expected PageHeader, got %s', \get_debug_type($pageHeader)));
+        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
+            foreach ($rowGroup->columnChunks() as $columnChunk) {
+                foreach ($viewer->view($columnChunk, $this->stream) as $pageHeader) {
+                    yield new ColumnPageHeader($column, $columnChunk, $pageHeader);
                 }
-                yield new ColumnPageHeader($column, $columnChunk->chunk, $pageHeader);
             }
         }
     }

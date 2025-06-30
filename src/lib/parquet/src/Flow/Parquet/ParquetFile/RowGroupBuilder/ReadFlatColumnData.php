@@ -15,7 +15,7 @@ final readonly class ReadFlatColumnData
     /**
      * @var array<string, ReadFlatColumnValues>
      */
-    private array $flatValues;
+    public array $flatValues;
 
     /**
      * @param Column $column
@@ -45,35 +45,6 @@ final readonly class ReadFlatColumnData
 
         $this->column = $column;
         $this->flatValues = $indexedFlatValues;
-    }
-
-    public static function initialize(Column $column) : self
-    {
-        $flatValues = [];
-
-        if ($column instanceof FlatColumn) {
-            $flatValues[$column->flatPath()] = new ReadFlatColumnValues($column);
-        }
-
-        if ($column instanceof NestedColumn) {
-            foreach ($column->childrenFlat() as $columnChild) {
-                $flatValues[$columnChild->flatPath()] = new ReadFlatColumnValues($columnChild);
-            }
-        }
-
-        return new self($column, $flatValues);
-    }
-
-    public function addValue(FlatValue ...$values) : void
-    {
-        foreach ($values as $cell) {
-            $this->flatValues[$cell->column->flatPath()]->add($cell);
-        }
-    }
-
-    public function addValues(ReadFlatColumnValues $values) : void
-    {
-        $this->flatValues[$values->column->flatPath()]->merge($values);
     }
 
     /**

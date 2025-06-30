@@ -23,31 +23,12 @@ final class ReadFlatColumnValues
     ) {
     }
 
-    public function add(FlatValue $cell) : void
-    {
-        if ($cell->column->flatPath() !== $this->column->flatPath()) {
-            throw new RuntimeException('Cannot add data from different column, attempt to merge: ' . $this->column->flatPath() . ' with ' . $cell->column->flatPath());
-        }
-
-        $this->repetitionLevels[] = $cell->repetitionLevel;
-        $this->definitionLevels[] = $cell->definitionLevel;
-
-        if ($cell->value !== null) {
-            $this->values[] = $cell->value;
-        }
-    }
-
     /**
      * @return array<int>
      */
     public function definitionLevels() : array
     {
         return $this->definitionLevels;
-    }
-
-    public function definitionLevelsCount() : int
-    {
-        return \count($this->definitionLevels);
     }
 
     public function flatPath() : string

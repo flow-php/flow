@@ -7,21 +7,22 @@ namespace Flow\Parquet\ParquetFile\ColumnChunkViewer;
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\ColumnChunkViewer;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TBufferedTransport;
 
-final readonly class WholeChunkViewer implements ColumnChunkViewer
+final readonly class ColumnChunkViewer
 {
     public function __construct(private Options $options)
     {
     }
 
-    public function view(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
+    /**
+     * @return \Generator<PageHeader>
+     */
+    public function view(ColumnChunk $columnChunk, SourceStream $stream) : \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
 

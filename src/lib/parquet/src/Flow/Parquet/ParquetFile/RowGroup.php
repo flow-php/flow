@@ -7,6 +7,7 @@ namespace Flow\Parquet\ParquetFile;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class RowGroup
 {
@@ -39,6 +40,17 @@ final class RowGroup
     public function columnChunks() : array
     {
         return $this->columnChunks;
+    }
+
+    public function getColumnChunk(FlatColumn $column) : ColumnChunk
+    {
+        foreach ($this->columnChunks as $chunk) {
+            if ($chunk->flatPath() === $column->flatPath()) {
+                return $chunk;
+            }
+        }
+
+        throw new InvalidArgumentException("Column chunk '{$column->flatPath()}' not found in row group, when looking for chunks for NestedColumns, look for chunks for each child.");
     }
 
     public function rowsCount() : int

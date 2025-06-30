@@ -56,7 +56,6 @@ final readonly class ColumnChunkReader
             $dictionary = null;
         }
 
-        $data = new ReadFlatColumnValues($column);
         $rowsToRead = $columnChunk->valuesCount();
 
         $yieldedRows = 0;

@@ -47,17 +47,17 @@ final class PagesBuilderTest extends TestCase
                 $statistics
             );
 
-        self::assertCount(4, $pages->dataPageContainers());
+        self::assertCount(11, $pages->dataPageContainers());
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
-                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
                     Encodings::RLE,
                     Encodings::RLE,
-                    256,
+                    100,
                 ),
                 null,
                 null
@@ -109,8 +109,8 @@ final class PagesBuilderTest extends TestCase
         self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
-                \strlen((string) $pages->dataPageContainers()[0]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::RLE_DICTIONARY,
                     Encodings::RLE,
