@@ -13,9 +13,9 @@ final class PathTest extends TestCase
 {
     public static function directories() : \Generator
     {
-        yield '/some_file.txt' => ['/some_file.txt', '/'];
-        yield '/some/nested/file.csv' => ['/some/nested/file.csv', '/some/nested'];
-        yield 'flow-file://nested/file/path/file.txt' => ['flow-file://nested/file/path/file.txt', '/nested/file/path'];
+        yield '/some_file.txt' => [DIRECTORY_SEPARATOR . 'some_file.txt', DIRECTORY_SEPARATOR];
+        yield '/some/nested/file.csv' => [DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['some', 'nested', 'file.csv']), DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['some', 'nested'])];
+        yield 'flow-file://nested/file/path/file.txt' => ['flow-file://' . implode(DIRECTORY_SEPARATOR, ['nested', 'file', 'path', 'file.txt']), DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['nested', 'file', 'path'])];
     }
 
     /**
@@ -69,8 +69,8 @@ final class PathTest extends TestCase
 
     protected function setUp() : void
     {
-        if (!\file_exists(__DIR__ . '/var')) {
-            \mkdir(__DIR__ . '/var');
+        if (!\file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'var')) {
+            \mkdir(__DIR__ . DIRECTORY_SEPARATOR . 'var');
         }
     }
 
@@ -78,48 +78,50 @@ final class PathTest extends TestCase
     {
         $this->expectExceptionMessage("Can't add partitions to path pattern.");
 
-        (path('/path/to/group=*/file.txt'))->addPartitions(partition('group', 'a'));
+        $path = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['path', 'to', 'group=*', 'file.txt']);
+        (path($path))->addPartitions(partition('group', 'a'));
     }
 
     public function test_add_partitions_to_path_with_extension() : void
     {
         // expected path to be '/path/to/group=a/file.txt' on *nix, to be '\path\to\group=a\file.txt' on windows
-        $expected = DIRECTORY_SEPARATOR . 'path' .
-            DIRECTORY_SEPARATOR . 'to' .
-            DIRECTORY_SEPARATOR . 'group=a' .
-            DIRECTORY_SEPARATOR . 'file.txt';
+        $expected = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['path', 'to', 'group=a', 'file.txt']);
         // base actual path to be '/path/to/file.txt' on *nix, to be '\path\to\file.txt' on windows
-        $actual = DIRECTORY_SEPARATOR . 'path' .
-            DIRECTORY_SEPARATOR . 'to' .
-            DIRECTORY_SEPARATOR . 'file.txt';
+        $actual = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['path', 'to', 'file.txt']);
 
         self::assertEquals(
-            expected: path($expected),
-            actual: (path($actual))->addPartitions(partition('group', 'a'))
+            path($expected),
+            (path($actual))->addPartitions(partition('group', 'a'))
         );
     }
 
     public function test_add_partitions_to_path_without_extension() : void
     {
+        $expected = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['path', 'to', 'group=a', 'folder']);
+        $actual = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['path', 'to', 'folder']);
         self::assertEquals(
-            path('/path/to/group=a/folder'),
-            (path('/path/to/folder'))->addPartitions(partition('group', 'a'))
+            path($expected),
+            (path($actual))->addPartitions(partition('group', 'a'))
         );
     }
 
     public function test_add_partitions_to_root_path_with_extension() : void
     {
+        $expected = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['group=a', 'file.txt']);
+        $actual = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['file.txt']);
         self::assertEquals(
-            path('/group=a/file.txt'),
-            (path('/file.txt'))->addPartitions(partition('group', 'a'))
+            path($expected),
+            (path($actual))->addPartitions(partition('group', 'a'))
         );
     }
 
     public function test_add_partitions_to_root_path_without_extension() : void
     {
+        $expected = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['group=a', 'folder']);
+        $actual = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, ['folder']);
         self::assertEquals(
-            path('/group=a/folder'),
-            (path('/folder'))->addPartitions(partition('group', 'a'))
+            path($expected),
+            (path($actual))->addPartitions(partition('group', 'a'))
         );
     }
 

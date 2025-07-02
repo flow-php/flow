@@ -36,7 +36,8 @@ final class Path
 
         $path = \str_replace($scheme . '://', '', $uri);
 
-        if (!\str_starts_with($path, DIRECTORY_SEPARATOR)) {
+        // Put a slash in front, if it's missing and we are NOT on windows
+        if (PHP_OS_FAMILY !== 'Windows' && !\str_starts_with($path, DIRECTORY_SEPARATOR)) {
             $path = DIRECTORY_SEPARATOR . $path;
         }
 
@@ -230,7 +231,7 @@ final class Path
         $path = \pathinfo($this->path);
         $dirname = \array_key_exists('dirname', $path) ? \ltrim($path['dirname'], DIRECTORY_SEPARATOR) : '';
 
-        $dirname = $dirname === '' ? '/' : $dirname;
+        $dirname = $dirname === '' ? DIRECTORY_SEPARATOR : $dirname;
 
         return new self(
             $this->protocol->scheme() . $dirname,
