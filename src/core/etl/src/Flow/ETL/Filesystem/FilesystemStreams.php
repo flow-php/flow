@@ -16,17 +16,15 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
     public const FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';
 
-    private SaveMode $saveMode;
+    private SaveMode $saveMode = SaveMode::ExceptionIfExists;
 
     /**
      * @var array<string, array<string, DestinationStream>>
      */
-    private array $writingStreams;
+    private array $writingStreams = [];
 
     public function __construct(private readonly FilesystemTable $fstab)
     {
-        $this->writingStreams = [];
-        $this->saveMode = SaveMode::ExceptionIfExists;
     }
 
     public function closeStreams(Path $path) : void
@@ -38,14 +36,13 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         foreach ($this->writingStreams as $nextBasePath => $nextStreams) {
             if ($path->uri() === $nextBasePath) {
                 foreach ($nextStreams as $fileStream) {
-
                     if ($fileStream->isOpen()) {
                         $fileStream->close();
                     }
 
                     if ($this->saveMode === SaveMode::Overwrite) {
                         if ($fileStream->path()->partitions()->count()) {
-                            $partitionFilesPatter = new Path($fileStream->path()->parentDirectory()->path() . '/*', $fileStream->path()->options());
+                            $partitionFilesPatter = new Path($fileStream->path()->parentDirectory()->uri() . '/*', $fileStream->path()->options());
 
                             foreach ($fs->list($partitionFilesPatter) as $partitionFile) {
                                 if (\str_contains($partitionFile->path->path(), self::FLOW_TMP_FILE_PREFIX)) {
