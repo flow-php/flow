@@ -75,7 +75,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     $headersCount = $rowDataCount;
                 }
 
-                $rowData = $rowNormalizer->normalize($rowData, $headersCount);
+                $rowData = $rowNormalizer->normalize($rowData, $rowDataCount, $headersCount);
 
                 $row = \array_combine($headers, $rowData);
 

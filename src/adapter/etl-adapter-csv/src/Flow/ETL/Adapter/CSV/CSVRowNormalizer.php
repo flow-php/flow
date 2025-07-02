@@ -17,14 +17,13 @@ final readonly class CSVRowNormalizer
      * - Converts empty strings to null if emptyToNull is enabled.
      *
      * @param array<int, null|string> $rowData
+     * @param int $rowDataCount
      * @param int $headersCount
      *
      * @return array<int, null|string>
      */
-    public function normalize(array $rowData, int $headersCount) : array
+    public function normalize(array $rowData, int $rowDataCount, int $headersCount) : array
     {
-        $rowDataCount = \count($rowData);
-
         if ($rowDataCount < $headersCount) {
             $fillValue = $this->emptyToNull ? null : '';
 
