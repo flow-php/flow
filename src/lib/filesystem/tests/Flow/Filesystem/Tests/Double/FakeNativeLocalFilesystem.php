@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Double;
+namespace Flow\Filesystem\Tests\Double;
 
 use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Protocol, SourceStream};
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
