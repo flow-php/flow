@@ -167,7 +167,6 @@ final class WriteFlatColumnValues
                     continue;
                 }
                 $collect = true;
-
             }
 
             if ($collect) {

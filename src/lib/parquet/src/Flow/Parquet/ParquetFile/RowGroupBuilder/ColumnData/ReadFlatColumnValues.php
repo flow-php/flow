@@ -119,7 +119,6 @@ final class ReadFlatColumnValues
                     continue;
                 }
                 $collect = true;
-
             }
 
             if ($collect) {

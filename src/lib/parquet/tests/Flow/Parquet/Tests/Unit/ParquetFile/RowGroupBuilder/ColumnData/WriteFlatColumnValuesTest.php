@@ -36,6 +36,29 @@ final class WriteFlatColumnValuesTest extends TestCase
         self::assertSame(2, $data->rowsCount());
     }
 
+    public function test_skip_rows_bug_with_repeated_values_in_same_row() : void
+    {
+        $schema = Schema::with(
+            NestedColumn::list('list', ListElement::int32())
+        );
+
+        $data = new WriteFlatColumnValues(
+            $schema->columnsFlat()[0],
+            repetitionLevels: [0, 1, 1, 0, 1],
+            definitionLevels: [3, 3, 3, 3, 3],
+            values: [1, 2, 3, 4, 5]
+        );
+
+        self::assertSame(2, $data->rowsCount());
+
+        $skipped = $data->skipRows(1);
+
+        self::assertSame(1, $skipped->rowsCount());
+        self::assertSame([4, 5], $skipped->values());
+        self::assertSame([3, 3], $skipped->definitionLevels());
+        self::assertSame([0, 1], $skipped->repetitionLevels());
+    }
+
     public function test_skip_rows_with_struct_containing_list_of_strings() : void
     {
         $schema = Schema::with(NestedColumn::struct('struct', [
@@ -136,6 +159,29 @@ final class WriteFlatColumnValuesTest extends TestCase
         self::assertSame([4, 5], $skipped->values());
         self::assertSame([3, 3], $skipped->definitionLevels());
         self::assertSame([0, 1], $skipped->repetitionLevels());
+    }
+
+    public function test_split_by_rows_bug_with_repeated_values_in_same_row() : void
+    {
+        $schema = Schema::with(
+            NestedColumn::list('list', ListElement::int32())
+        );
+
+        $data = new WriteFlatColumnValues(
+            $schema->columnsFlat()[0],
+            repetitionLevels: [0, 1, 1, 0, 1, 0],
+            definitionLevels: [3, 3, 3, 3, 3, 3],
+            values: [1, 2, 3, 4, 5, 6]
+        );
+
+        self::assertSame(3, $data->rowsCount());
+
+        $split = $data->splitByRows(1);
+
+        self::assertCount(3, $split);
+        self::assertSame([1, 2, 3], $split[0]->values());
+        self::assertSame([4, 5], $split[1]->values());
+        self::assertSame([6], $split[2]->values());
     }
 
     public function test_split_by_rows_with_struct_containing_list_of_strings() : void

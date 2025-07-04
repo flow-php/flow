@@ -38,6 +38,28 @@ final class ReadFlatColumnValuesTest extends TestCase
         self::assertSame(2, $data->rowsCount());
     }
 
+    public function test_skip_rows_bug_with_repeated_values_in_same_row() : void
+    {
+        $schema = Schema::with(
+            NestedColumn::list('list', ListElement::int32())
+        );
+
+        $data = new ReadFlatColumnValues(
+            $schema->columnsFlat()[0],
+            repetitionLevels: [0, 1, 1, 0, 1],
+            definitionLevels: [3, 3, 3, 3, 3],
+            values: [1, 2, 3, 4, 5]
+        );
+
+        self::assertSame(2, $data->rowsCount());
+
+        $skipped = $data->skipRows(1);
+
+        self::assertSame(1, $skipped->rowsCount());
+        self::assertSame([3, 3], $skipped->definitionLevels());
+        self::assertSame([0, 1], $skipped->repetitionLevels());
+    }
+
     public function test_skipping_rows_in_flat_column() : void
     {
         $data = new ReadFlatColumnValues(
