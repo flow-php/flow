@@ -153,8 +153,10 @@ final class ParquetFile
             $row = [];
 
             foreach ($rowData as $columnData) {
-                foreach ($columnData as $key => $value) {
-                    $row[$key] = $value;
+                if ($columnData !== null) {
+                    foreach ($columnData as $key => $value) {
+                        $row[$key] = $value;
+                    }
                 }
             }
 
@@ -185,14 +187,17 @@ final class ParquetFile
 
             if ($column instanceof FlatColumn) {
                 foreach ($chunkReader->read($rowGroup->getColumnChunk($column), $column, $this->stream) as $flatColumnValues) {
-
-                    if ($skipRows > 0) {
-                        $flatColumnValues = $flatColumnValues->skipRows($skipRows);
-                    }
-
                     $columnData = new ReadFlatColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
 
+                    $rowsSkipped = 0;
+
                     foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
+                        if ($skipRows > 0 && $rowsSkipped < $skipRows) {
+                            $rowsSkipped++;
+
+                            continue;
+                        }
+
                         if ($limit !== null && $yieldedRows >= $limit) {
                             return;
                         }
@@ -220,15 +225,20 @@ final class ParquetFile
                             throw new RuntimeException('Unexpected child flat values');
                         }
 
-                        if ($skipRows > 0) {
-                            $childFlatValues = $childFlatValues->skipRows($skipRows);
-                        }
                         $columnFlatData[$flatPath] = $childFlatValues;
                     }
 
                     $columnData = new ReadFlatColumnData($column, \array_values($columnFlatData));
 
+                    $rowsSkipped = 0;
+
                     foreach ($this->dremelAssembler->assemble($column, $columnData) as $row) {
+                        if ($skipRows > 0 && $rowsSkipped < $skipRows) {
+                            $rowsSkipped++;
+
+                            continue;
+                        }
+
                         if ($limit !== null && $yieldedRows >= $limit) {
                             return;
                         }
