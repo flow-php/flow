@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\{Option, Options};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkBuilder, DremelShredder, PageSizeCalculator, RowGroupContainer, RowGroupStatistics};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkBuilder, DremelShredder, RowGroupContainer, RowGroupStatistics};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, DisabledValidator};
 
 final class RowGroupBuilder
@@ -25,7 +25,6 @@ final class RowGroupBuilder
         private readonly Compressions $compression,
         private readonly Options $options,
         private readonly DataConverter $dataConverter,
-        private readonly PageSizeCalculator $calculator,
     ) {
         $this->shredder = new DremelShredder(
             $this->options->getBool(Option::VALIDATE_DATA)
@@ -114,7 +113,7 @@ final class RowGroupBuilder
         $builders = [];
 
         foreach ($schema->columnsFlat() as $column) {
-            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $compression, $this->calculator, $this->options);
+            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $compression, $this->options);
         }
 
         return $builders;

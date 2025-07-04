@@ -70,14 +70,11 @@ enum Option
 
     /**
      * PageBuilder is going to use this value to determine how many rows should be stored in one page.
-     * PageBuilder is not going to make it precisely equal to this value, but it will try to make it as close as possible.
-     * This should be considered as a threshold rather than a strict value.
+     * Smaller pages will reduce memory usage, but will increase the number of pages in the file increasing the IO operations.
      *
-     * Default value is 8Kb
-     *
-     * https://parquet.apache.org/docs/file-format/configurations/#data-page--size
+     * Default value is 1000 rows
      */
-    case PAGE_SIZE_BYTES;
+    case PAGE_MAXIMUM_ROWS_COUNT;
 
     /**
      * Since PHP does not support nanoseconds precision for DateTime objects, when this options is set to true,

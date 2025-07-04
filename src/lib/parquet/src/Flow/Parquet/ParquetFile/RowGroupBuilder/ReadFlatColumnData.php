@@ -19,7 +19,7 @@ final readonly class ReadFlatColumnData
 
     /**
      * @param Column $column
-     * @param array<string, ReadFlatColumnValues> $flatValues
+     * @param array<ReadFlatColumnValues> $flatValues
      */
     public function __construct(Column $column, array $flatValues = [])
     {

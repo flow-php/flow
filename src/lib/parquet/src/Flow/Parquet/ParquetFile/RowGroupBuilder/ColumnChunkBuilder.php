@@ -19,7 +19,6 @@ final readonly class ColumnChunkBuilder
     public function __construct(
         private FlatColumn $column,
         private Compressions $compression,
-        private PageSizeCalculator $calculator,
         private Options $options,
     ) {
         $this->statistics = new ColumnChunkStatistics($this->column);
@@ -37,7 +36,7 @@ final readonly class ColumnChunkBuilder
 
     public function flush(int $fileOffset) : ColumnChunkContainer
     {
-        $pageContainers = (new PagesBuilder($this->compression, $this->calculator, $this->options))
+        $pageContainers = (new PagesBuilder($this->compression, $this->options))
             ->build($this->column, $this->columnData, $this->statistics);
 
         $statistics = (new StatisticsBuilder())->build($this->column, $this->statistics);

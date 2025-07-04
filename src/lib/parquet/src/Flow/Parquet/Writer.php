@@ -10,7 +10,6 @@ use Flow\Filesystem\Stream\{NativeLocalDestinationStream};
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\ParquetFile\{Compressions, Metadata, RowGroupBuilder, RowGroups, Schema};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 
@@ -202,8 +201,7 @@ final class Writer
                 $schema,
                 $this->compression,
                 $this->options,
-                DataConverter::initialize($this->options),
-                new PageSizeCalculator($this->options)
+                DataConverter::initialize($this->options)
             );
         } else {
             throw new RuntimeException('RowGroupBuilder is already initialized, please close the writer first before initializing a new RowGroupBuilder');

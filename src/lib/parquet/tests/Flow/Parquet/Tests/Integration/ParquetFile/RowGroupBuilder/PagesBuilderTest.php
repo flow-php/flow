@@ -14,7 +14,6 @@ use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{
     ColumnChunkStatistics,
     DremelShredder,
-    PageSizeCalculator,
     PagesBuilder,
     Validator\ColumnDataValidator,
     WriteFlatColumnData
@@ -30,7 +29,7 @@ final class PagesBuilderTest extends TestCase
         $values = \array_map(static fn ($i) => $i, \range(1, 1024));
 
         $options = new Options();
-        $options->set(Option::PAGE_SIZE_BYTES, 1024); // 1024 / 4 = 256 - this is the total number of integers we want to keep in a single page
+        $options->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 100); // 1024 / 100 = 11 pages
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('int32'));
 
         $data = WriteFlatColumnData::initialize($flatColumn);
@@ -40,7 +39,7 @@ final class PagesBuilderTest extends TestCase
             $data->merge($this->dremelShredder()->shred($flatColumn, ['int32' => $value]));
         }
 
-        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, $options))
             ->build(
                 $flatColumn,
                 $data->values('int32'),
@@ -85,7 +84,7 @@ final class PagesBuilderTest extends TestCase
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, $options))
             ->build(
                 $flatColumn,
                 $data->values('enum'),
@@ -139,7 +138,7 @@ final class PagesBuilderTest extends TestCase
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, $options))
             ->build(
                 $flatColumn,
                 $data->values('int32'),
@@ -180,7 +179,7 @@ final class PagesBuilderTest extends TestCase
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, $options))
             ->build(
                 $flatColumn,
                 $data->values('json'),
@@ -210,7 +209,7 @@ final class PagesBuilderTest extends TestCase
     {
         $schema = Schema::with(FlatColumn::string('string'));
         $values = \array_map(static fn ($i) => 'abcdefghij', \range(0, 99));
-        $options = Options::default()->set(Option::PAGE_SIZE_BYTES, 50);
+        $options = Options::default()->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 50);
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('string'));
 
         $data = WriteFlatColumnData::initialize($flatColumn);
@@ -220,7 +219,7 @@ final class PagesBuilderTest extends TestCase
             $data->merge($this->dremelShredder()->shred($flatColumn, ['string' => $value]));
         }
 
-        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, $options))
             ->build(
                 $flatColumn,
                 $data->values('string'),
@@ -276,7 +275,7 @@ final class PagesBuilderTest extends TestCase
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(Compressions::UNCOMPRESSED, $options))
             ->build(
                 $schema->getFlat('uuid'),
                 $data->values('uuid'),

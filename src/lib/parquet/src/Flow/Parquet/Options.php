@@ -20,7 +20,7 @@ final class Options
             Option::BYTE_ARRAY_TO_STRING->name => true,
             Option::ROUND_NANOSECONDS->name => false,
             Option::INT_96_AS_DATETIME->name => true,
-            Option::PAGE_SIZE_BYTES->name => SizeUnits::KiB_SIZE * 8,
+            Option::PAGE_MAXIMUM_ROWS_COUNT->name => 1000,
             Option::ROW_GROUP_SIZE_BYTES->name => SizeUnits::MiB_SIZE * 4,
             Option::ROW_GROUP_SIZE_CHECK_INTERVAL->name => 1000,
             Option::DICTIONARY_PAGE_SIZE->name => SizeUnits::MiB_SIZE,
