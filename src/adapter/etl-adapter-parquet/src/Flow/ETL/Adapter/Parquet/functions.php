@@ -68,3 +68,22 @@ function to_parquet(
 
     return $loader;
 }
+
+/**
+ * @template T
+ *
+ * @param array<T> $data
+ *
+ * @return \Generator<T>
+ */
+function array_to_generator(array $data) : \Generator
+{
+    foreach ($data as $row) {
+        yield $row;
+    }
+}
+
+function empty_generator() : \Generator
+{
+    yield from [];
+}

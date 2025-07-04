@@ -106,11 +106,17 @@ final readonly class WriteFlatColumnData
         $readFlatValues = [];
 
         foreach ($this->flatValues as $flatValue) {
+            $valuesGenerator = function () use ($flatValue) {
+                foreach ($flatValue->values() as $value) {
+                    yield $value;
+                }
+            };
+
             $readFlatValues[$flatValue->column->flatPath()] = new ReadFlatColumnValues(
                 $flatValue->column,
+                $valuesGenerator(),
                 $flatValue->repetitionLevels(),
-                $flatValue->definitionLevels(),
-                $flatValue->values()
+                $flatValue->definitionLevels()
             );
         }
 

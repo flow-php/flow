@@ -6,19 +6,19 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData;
 
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
-final class ReadFlatColumnValues
+final readonly class ReadFlatColumnValues
 {
     /**
      * @param FlatColumn $column
+     * @param \Generator<mixed, mixed, mixed, mixed> $values
      * @param array<int> $repetitionLevels
      * @param array<int> $definitionLevels
-     * @param array<null|scalar> $values
      */
     public function __construct(
-        public readonly FlatColumn $column,
-        private array $repetitionLevels = [],
-        private readonly array $definitionLevels = [],
-        private array $values = [],
+        public FlatColumn $column,
+        private \Generator $values,
+        private array $repetitionLevels,
+        private array $definitionLevels,
     ) {
     }
 
@@ -47,19 +47,21 @@ final class ReadFlatColumnValues
     {
         $maxDefinitionLevel = $this->column->repetitions()->maxDefinitionLevel();
 
-        $valueIndex = 0;
-
         foreach ($this->definitionLevels as $index => $definitionLevel) {
+            if ($definitionLevel === $maxDefinitionLevel) {
+                /** @var null|scalar $value */
+                $value = $this->values->valid() ? $this->values->current() : null;
+                $this->values->next();
+            } else {
+                $value = null;
+            }
+
             yield new FlatValue(
                 $this->column,
                 $this->repetitionLevels[$index],
                 $definitionLevel,
-                $definitionLevel === $maxDefinitionLevel ? $this->values[$valueIndex] : null
+                $value
             );
-
-            if ($definitionLevel === $maxDefinitionLevel) {
-                $valueIndex++;
-            }
         }
     }
 

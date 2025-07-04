@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
+use function Flow\ETL\Adapter\Parquet\empty_generator;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\{ByteOrder,
     Options,
@@ -63,10 +64,9 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ReadFlatColumnValues(
                 $column,
+                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
-                $definitionLevels,
-                /** @phpstan-ignore-next-line */
-                \iterator_to_array((new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount))
+                $definitionLevels
             );
         }
 
@@ -83,17 +83,17 @@ final readonly class ColumnDataDecoder
                     $nonEmptyValuesCount
                 );
 
-                /** @var array<mixed> $values */
-                $values = [];
+                $valuesGenerator = function () use ($indices, $dictionary) {
+                    foreach ($indices as $index) {
+                        yield $dictionary && \array_key_exists($index, $dictionary->values) ? $dictionary->values[$index] : null;
+                    }
+                };
 
-                foreach ($indices as $index) {
-                    $values[] = $dictionary && \array_key_exists($index, $dictionary->values) ? $dictionary->values[$index] : null;
-                }
-            } else {
-                $values = [];
+                return new ReadFlatColumnValues($column, $valuesGenerator(), $repetitionLevels, $definitionLevels);
             }
 
-            return new ReadFlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
+            return new ReadFlatColumnValues($column, empty_generator(), $repetitionLevels, $definitionLevels);
+
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');
@@ -136,10 +136,9 @@ final readonly class ColumnDataDecoder
         if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ReadFlatColumnValues(
                 $column,
+                (new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount),
                 $repetitionLevels,
-                $definitionLevels,
-                /** @phpstan-ignore-next-line */
-                \iterator_to_array((new PlainValueUnpacker($reader, $this->options))->unpack($column, $nonEmptyValuesCount))
+                $definitionLevels
             );
         }
 
@@ -156,17 +155,17 @@ final readonly class ColumnDataDecoder
                     $nonEmptyValuesCount,
                 );
 
-                /** @var array<mixed> $values */
-                $values = [];
+                $valuesGenerator = function () use ($indices, $dictionary) {
+                    foreach ($indices as $index) {
+                        yield $dictionary?->values[$index];
+                    }
+                };
 
-                foreach ($indices as $index) {
-                    $values[] = $dictionary?->values[$index];
-                }
-            } else {
-                $values = [];
+                return new ReadFlatColumnValues($column, $valuesGenerator(), $repetitionLevels, $definitionLevels);
             }
 
-            return new ReadFlatColumnValues($column, $repetitionLevels, $definitionLevels, $values);
+            return new ReadFlatColumnValues($column, empty_generator(), $repetitionLevels, $definitionLevels);
+
         }
 
         throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');

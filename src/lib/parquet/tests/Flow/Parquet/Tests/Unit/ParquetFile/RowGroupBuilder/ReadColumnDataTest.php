@@ -23,11 +23,20 @@ final class ReadColumnDataTest extends TestCase
         $keyColumn = $schema->get('m.key_value.key');
         $valueColumn = $schema->get('m.key_value.value');
 
+        $keyValuesGenerator = function () {
+            yield 'a';
+            yield 'b';
+        };
+        $valueValuesGenerator = function () {
+            yield 1;
+            yield 2;
+        };
+
         $columnData = new ReadFlatColumnData(
             $schema->get('m'),
             [
-                $keyColumn->flatPath() => new ReadFlatColumnValues($keyColumn, [0, 2], [2, 2], ['a', 'b']),
-                $valueColumn->flatPath() => new ReadFlatColumnValues($valueColumn, [0, 2], [3, 3], [1, 2]),
+                $keyColumn->flatPath() => new ReadFlatColumnValues($keyColumn, $keyValuesGenerator(), [0, 2], [2, 2]),
+                $valueColumn->flatPath() => new ReadFlatColumnValues($valueColumn, $valueValuesGenerator(), [0, 2], [3, 3]),
             ]
         );
 
@@ -52,10 +61,16 @@ final class ReadColumnDataTest extends TestCase
         /** @var FlatColumn $column */
         $column = Schema::with(FlatColumn::int32('int32'))->get('int32');
 
+        $valuesGenerator = function () {
+            yield 1;
+            yield 2;
+            yield 3;
+        };
+
         $columnData = new ReadFlatColumnData(
             $column,
             [
-                $column->flatPath() => new ReadFlatColumnValues($column, [0, 0, 0], [1, 1, 1], [1, 2, 3]),
+                $column->flatPath() => new ReadFlatColumnValues($column, $valuesGenerator(), [0, 0, 0], [1, 1, 1]),
             ]
         );
 
@@ -81,11 +96,20 @@ final class ReadColumnDataTest extends TestCase
         $keyColumn = $schema->get('m.key_value.key');
         $valueColumn = $schema->get('m.key_value.value');
 
+        $keyValuesGenerator = function () {
+            yield 'a';
+            yield 'b';
+        };
+        $valueValuesGenerator = function () {
+            yield 1;
+            yield 2;
+        };
+
         $columnData = new ReadFlatColumnData(
             $schema->get('m'),
             [
-                $keyColumn->flatPath() => new ReadFlatColumnValues($keyColumn, [0, 2], [2, 2], ['a', 'b']),
-                $valueColumn->flatPath() => new ReadFlatColumnValues($valueColumn, [0, 2], [3, 3], [1, 2]),
+                $keyColumn->flatPath() => new ReadFlatColumnValues($keyColumn, $keyValuesGenerator(), [0, 2], [2, 2]),
+                $valueColumn->flatPath() => new ReadFlatColumnValues($valueColumn, $valueValuesGenerator(), [0, 2], [3, 3]),
             ]
         );
 
