@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type as DSLType};
+use Flow\ETL\{Attribute\DocumentationDSL,
+    Attribute\DocumentationExample,
+    Attribute\Module,
+    Attribute\Type as DSLType
+    };
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
 use Flow\Parquet\{ByteOrder, Options};
@@ -76,6 +80,7 @@ function to_parquet(
  *
  * @return \Generator<T>
  */
+#[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
 function array_to_generator(array $data) : \Generator
 {
     foreach ($data as $row) {
@@ -83,6 +88,7 @@ function array_to_generator(array $data) : \Generator
     }
 }
 
+#[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
 function empty_generator() : \Generator
 {
     yield from [];
