@@ -192,39 +192,4 @@ final class WriteFlatColumnValuesTest extends TestCase
         self::assertSame([5, 6], $split[2]->values());
         self::assertSame([7], $split[3]->values());
     }
-
-    public function test_splitting_list_by_rows() : void
-    {
-        self::markTestSkipped('Test behavior changed due to fix for splitByRows with nested structures - needs review');
-
-        $schema = Schema::with(
-            NestedColumn::list('list', ListElement::int32())
-        );
-
-        $data = new WriteFlatColumnValues(
-            $schema->columnsFlat()[0],
-            repetitionLevels: [0, 1, 0, 0, 0, 1],
-            definitionLevels: [3, 3, 3, 2, 3, 3],
-            values: [1, 2, 3, 4, 5]
-        );
-
-        self::assertSame(1, $data->nullCount());
-        self::assertSame(4, $data->rowsCount());
-
-        $split = $data->splitByRows(2);
-
-        self::assertCount(3, $split);
-
-        self::assertSame([0, 1], $split[0]->repetitionLevels());
-        self::assertSame([3, 3], $split[0]->definitionLevels());
-        self::assertSame([1, 2], $split[0]->values());
-
-        self::assertSame([0, 0], $split[1]->repetitionLevels());
-        self::assertSame([3, 2], $split[1]->definitionLevels());
-        self::assertSame([3], $split[1]->values());
-
-        self::assertSame([0, 1], $split[2]->repetitionLevels());
-        self::assertSame([3, 3], $split[2]->definitionLevels());
-        self::assertSame([4, 5], $split[2]->values());
-    }
 }

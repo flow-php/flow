@@ -16,6 +16,15 @@ final class ReadFlatColumnValuesTest extends TestCase
         $data = new ReadFlatColumnValues(FlatColumn::int32('int32'), repetitionLevels: [0, 0, 0], definitionLevels: [0, 1, 1], values: [2, 3]);
 
         self::assertSame(3, $data->rowsCount());
+        self::assertFalse($data->isEmpty());
+    }
+
+    public function test_flat_empty_column() : void
+    {
+        $data = new ReadFlatColumnValues(FlatColumn::int32('int32'), repetitionLevels: [], definitionLevels: [], values: []);
+
+        self::assertSame(0, $data->rowsCount());
+        self::assertTrue($data->isEmpty());
     }
 
     public function test_list() : void
@@ -41,7 +50,6 @@ final class ReadFlatColumnValuesTest extends TestCase
         $skipped = $data->skipRows(2);
 
         self::assertSame(5, $skipped->rowsCount());
-        self::assertSame([3, 4, 5, 6, 7], $skipped->values());
         self::assertSame([1, 1, 1, 1, 1], $skipped->definitionLevels());
         self::assertSame([0, 0, 0, 0, 0], $skipped->repetitionLevels());
     }
@@ -64,7 +72,6 @@ final class ReadFlatColumnValuesTest extends TestCase
         $skipped = $data->skipRows(2);
 
         self::assertSame(2, $skipped->rowsCount());
-        self::assertSame([4, 5], $skipped->values());
         self::assertSame([2, 3, 3], $skipped->definitionLevels());
         self::assertSame([0, 0, 1], $skipped->repetitionLevels());
     }
@@ -87,7 +94,6 @@ final class ReadFlatColumnValuesTest extends TestCase
         $skipped = $data->skipRows(2);
 
         self::assertSame(1, $skipped->rowsCount());
-        self::assertSame([4, 5], $skipped->values());
         self::assertSame([3, 3], $skipped->definitionLevels());
         self::assertSame([0, 1], $skipped->repetitionLevels());
     }

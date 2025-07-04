@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData;
 
-use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class ReadFlatColumnValues
@@ -18,7 +17,7 @@ final class ReadFlatColumnValues
     public function __construct(
         public readonly FlatColumn $column,
         private array $repetitionLevels = [],
-        private array $definitionLevels = [],
+        private readonly array $definitionLevels = [],
         private array $values = [],
     ) {
     }
@@ -38,7 +37,7 @@ final class ReadFlatColumnValues
 
     public function isEmpty() : bool
     {
-        return !\count($this->values) && !\count($this->repetitionLevels) && !\count($this->definitionLevels);
+        return !\count($this->repetitionLevels) && !\count($this->definitionLevels);
     }
 
     /**
@@ -64,19 +63,6 @@ final class ReadFlatColumnValues
         }
     }
 
-    public function merge(self $flatData) : self
-    {
-        if ($flatData->column->flatPath() !== $this->column->flatPath()) {
-            throw new RuntimeException('Cannot merge different column, attempt to merge: ' . $this->column->flatPath() . ' with ' . $flatData->column->flatPath());
-        }
-
-        array_push($this->repetitionLevels, ...$flatData->repetitionLevels);
-        array_push($this->definitionLevels, ...$flatData->definitionLevels);
-        array_push($this->values, ...$flatData->values);
-
-        return $this;
-    }
-
     /**
      * @return array<int>
      */
@@ -100,6 +86,10 @@ final class ReadFlatColumnValues
 
     public function skipRows(?int $skipRows) : self
     {
+        if ($skipRows === null || $skipRows <= 0) {
+            return $this;
+        }
+
         $chunk = [
             'repetitions' => [],
             'definitions' => [],
@@ -110,7 +100,6 @@ final class ReadFlatColumnValues
         $maxDefinitionsLevel = $this->column->maxDefinitionsLevel();
 
         $skippedRows = 0;
-
         $collect = false;
 
         foreach ($this->definitionLevels as $index => $definitionLevel) {
@@ -123,14 +112,14 @@ final class ReadFlatColumnValues
 
             $repetitionLevel = $this->repetitionLevels[$index];
 
-            if ($skippedRows >= $skipRows && $repetitionLevel === 0) {
+            if ($repetitionLevel === 0) {
+                if ($skippedRows < $skipRows) {
+                    $skippedRows++;
+
+                    continue;
+                }
                 $collect = true;
-            }
 
-            if ($repetitionLevel === 0 && $collect === false) {
-                $skippedRows++;
-
-                continue;
             }
 
             if ($collect) {
