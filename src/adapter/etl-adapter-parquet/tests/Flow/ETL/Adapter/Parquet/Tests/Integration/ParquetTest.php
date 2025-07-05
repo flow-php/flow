@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
-use function Flow\ETL\DSL\{config, from_array, json_schema, schema, str_schema};
+use function Flow\ETL\DSL\{config, from_array, json_schema, overwrite, schema, str_schema};
 use function Flow\ETL\DSL\data_frame;
 use function Flow\Filesystem\DSL\{path};
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\{Tests\Double\FakeOrdersExtractor, Tests\FlowTestCase};
+use Flow\Filesystem\SizeUnits;
+use Flow\Parquet\{Option, Options};
 use Ramsey\Uuid\Uuid;
 
 final class ParquetTest extends FlowTestCase
@@ -27,6 +29,32 @@ final class ParquetTest extends FlowTestCase
 
         self::assertEquals(
             10,
+            (data_frame($config))
+                ->read(from_parquet($path))
+                ->count()
+        );
+    }
+
+    public function test_writing_and_reading_parquet_orders() : void
+    {
+        $path = path(__DIR__ . '/var/orders.snappy.parquet');
+        $config = config();
+        data_frame($config)
+            ->read(new FakeOrdersExtractor(1000))
+            ->mode(overwrite())
+            ->write(
+                to_parquet($path)
+                    ->withOptions(
+                        Options::default()
+                            ->set(Option::ROW_GROUP_SIZE_CHECK_INTERVAL, 500)
+                            ->set(Option::ROW_GROUP_SIZE_BYTES, SizeUnits::MiB_SIZE)
+                            ->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 10)
+                    )
+            )
+            ->run();
+
+        self::assertEquals(
+            1000,
             (data_frame($config))
                 ->read(from_parquet($path))
                 ->count()
