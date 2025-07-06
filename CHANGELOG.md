@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-06-27
+## [Unreleased] - 2025-07-04
 
 ### Added
 - [#1735](https://github.com/flow-php/flow/pull/1735) - **trigger gc_collect_cycles before starting pipeline execution hr time** - [@norberttech](https://github.com/norberttech)
@@ -10,11 +10,13 @@
 - [#1731](https://github.com/flow-php/flow/pull/1731) - **literal type to types library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1753](https://github.com/flow-php/flow/pull/1753) - **Moved Filesystem test double to Filesystem package** - [@norberttech](https://github.com/norberttech)
 - [#1739](https://github.com/flow-php/flow/pull/1739) - **updated nix packages version in nix shell** - [@norberttech](https://github.com/norberttech)
 - [#1723](https://github.com/flow-php/flow/pull/1723) - **Increased phpstan lvl to 9** - [@norberttech](https://github.com/norberttech)
 - [#1727](https://github.com/flow-php/flow/pull/1727) - **Update Homebrew TAP formula: flow-php to version: 0.19.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1752](https://github.com/flow-php/flow/pull/1752) - **Partitioning should not overwrite schema** - [@stloyd](https://github.com/stloyd)
 - [#1740](https://github.com/flow-php/flow/pull/1740) - **reading multiline strings in CSV files** - [@norberttech](https://github.com/norberttech)
 - [#1739](https://github.com/flow-php/flow/pull/1739) - **performance of comparison transformations** - [@norberttech](https://github.com/norberttech)
 - [#1739](https://github.com/flow-php/flow/pull/1739) - **performance of calculating rows/nulls in parquet row groups** - [@norberttech](https://github.com/norberttech)

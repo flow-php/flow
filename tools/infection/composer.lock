@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c0c961944876794898fb094b38d83038",
+    "content-hash": "4fca78a3db9a771a3a7b2539a0ea72d8",
     "packages": [],
     "packages-dev": [
         {
@@ -480,16 +480,16 @@
         },
         {
             "name": "infection/infection",
-            "version": "0.29.14",
+            "version": "0.30.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/infection/infection.git",
-                "reference": "feea2a48a8aeedd3a4d2105167b41a46f0e568a3"
+                "reference": "70cd94675f6372cf13962d9d52de86b02a909c09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/infection/infection/zipball/feea2a48a8aeedd3a4d2105167b41a46f0e568a3",
-                "reference": "feea2a48a8aeedd3a4d2105167b41a46f0e568a3",
+                "url": "https://api.github.com/repos/infection/infection/zipball/70cd94675f6372cf13962d9d52de86b02a909c09",
+                "reference": "70cd94675f6372cf13962d9d52de86b02a909c09",
                 "shasum": ""
             },
             "require": {
@@ -509,8 +509,8 @@
                 "nikic/php-parser": "^5.3",
                 "ondram/ci-detector": "^4.1.0",
                 "php": "^8.2",
-                "sanmai/later": "^0.1.1",
-                "sanmai/pipeline": "^5.1 || ^6",
+                "sanmai/later": "^0.1.7",
+                "sanmai/pipeline": "^6.16",
                 "sebastian/diff": "^3.0.2 || ^4.0 || ^5.0 || ^6.0 || ^7.0",
                 "symfony/console": "^6.4 || ^7.0",
                 "symfony/filesystem": "^6.4 || ^7.0",
@@ -534,6 +534,8 @@
                 "phpstan/phpstan-webmozart-assert": "^2.0",
                 "phpunit/phpunit": "^11.5",
                 "rector/rector": "^2.0",
+                "shipmonk/dead-code-detector": "^0.12.0",
+                "shipmonk/name-collision-detector": "^2.1",
                 "sidz/phpstan-rules": "^0.5.1",
                 "symfony/yaml": "^6.4 || ^7.0",
                 "thecodingmachine/phpstan-safe-rule": "^1.4"
@@ -592,7 +594,7 @@
             ],
             "support": {
                 "issues": "https://github.com/infection/infection/issues",
-                "source": "https://github.com/infection/infection/tree/0.29.14"
+                "source": "https://github.com/infection/infection/tree/0.30.1"
             },
             "funding": [
                 {
@@ -604,7 +606,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2025-03-02T18:49:12+00:00"
+            "time": "2025-07-03T22:10:25+00:00"
         },
         {
             "name": "infection/mutator",
@@ -1112,16 +1114,16 @@
         },
         {
             "name": "sanmai/pipeline",
-            "version": "6.17",
+            "version": "6.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sanmai/pipeline.git",
-                "reference": "491b172349d77c9e2f2f2aa1791c9de95bfd1abe"
+                "reference": "d9fbdf2a4a363f44f4d8155f71766f35d49b8fb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sanmai/pipeline/zipball/491b172349d77c9e2f2f2aa1791c9de95bfd1abe",
-                "reference": "491b172349d77c9e2f2f2aa1791c9de95bfd1abe",
+                "url": "https://api.github.com/repos/sanmai/pipeline/zipball/d9fbdf2a4a363f44f4d8155f71766f35d49b8fb2",
+                "reference": "d9fbdf2a4a363f44f4d8155f71766f35d49b8fb2",
                 "shasum": ""
             },
             "require": {
@@ -1165,7 +1167,7 @@
             "description": "General-purpose collections pipeline",
             "support": {
                 "issues": "https://github.com/sanmai/pipeline/issues",
-                "source": "https://github.com/sanmai/pipeline/tree/6.17"
+                "source": "https://github.com/sanmai/pipeline/tree/v6.12"
             },
             "funding": [
                 {
@@ -1173,7 +1175,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-06-16T07:09:33+00:00"
+            "time": "2025-06-30T23:36:16+00:00"
         },
         {
             "name": "sebastian/diff",
@@ -1244,16 +1246,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v7.3.0",
+            "version": "v7.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "66c1440edf6f339fd82ed6c7caa76cb006211b44"
+                "reference": "9e27aecde8f506ba0fd1d9989620c04a87697101"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/66c1440edf6f339fd82ed6c7caa76cb006211b44",
-                "reference": "66c1440edf6f339fd82ed6c7caa76cb006211b44",
+                "url": "https://api.github.com/repos/symfony/console/zipball/9e27aecde8f506ba0fd1d9989620c04a87697101",
+                "reference": "9e27aecde8f506ba0fd1d9989620c04a87697101",
                 "shasum": ""
             },
             "require": {
@@ -1318,7 +1320,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v7.3.0"
+                "source": "https://github.com/symfony/console/tree/v7.3.1"
             },
             "funding": [
                 {
@@ -1334,7 +1336,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-05-24T10:34:04+00:00"
+            "time": "2025-06-27T19:55:54+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -2283,10 +2285,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": {},
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
