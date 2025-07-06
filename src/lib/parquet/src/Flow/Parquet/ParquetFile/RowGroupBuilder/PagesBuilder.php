@@ -52,8 +52,15 @@ final readonly class PagesBuilder
 
         $rowsPerPage = $this->options->getInt(Option::PAGE_MAXIMUM_ROWS_COUNT);
 
-        foreach ($data->splitByRows($rowsPerPage) as $rowsChunk) {
-            $containers->add((new DataPageBuilder($this->compression, $this->options))->build($column, $rowsChunk));
+        // For nested columns, avoid page splitting to prevent sibling synchronization issues
+        if (\str_contains($column->flatPath(), '.')) {
+            // Nested column: use single page to ensure siblings stay synchronized
+            $containers->add((new DataPageBuilder($this->compression, $this->options))->build($column, $data));
+        } else {
+            // Root-level column: use normal page splitting
+            foreach ($data->splitByRows($rowsPerPage) as $rowsChunk) {
+                $containers->add((new DataPageBuilder($this->compression, $this->options))->build($column, $rowsChunk));
+            }
         }
 
         return $containers;

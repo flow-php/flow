@@ -199,6 +199,7 @@ final class WriteFlatColumnValues
         $valueIndex = 0;
         $maxDefinitionsLevel = $this->column->maxDefinitionsLevel();
         $rowsInCurrentChunk = 0;
+        $pageBreakIndexes = [];
 
         foreach ($this->definitionLevels as $index => $definitionLevel) {
             if ($definitionLevel === $maxDefinitionsLevel) {
@@ -211,6 +212,7 @@ final class WriteFlatColumnValues
             $repetitionLevel = $this->repetitionLevels[$index];
 
             if ($repetitionLevel === 0 && $rowsInCurrentChunk >= $rowsInChunk && \count($currentChunk['repetitions']) > 0) {
+                $pageBreakIndexes[] = $index;
                 $chunks[] = new self($this->column, $currentChunk['repetitions'], $currentChunk['definitions'], $currentChunk['values']);
                 $currentChunk = [
                     'repetitions' => [],
