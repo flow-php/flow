@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\EfficientRowGroupBuilder;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\{Option, Options};
+use Flow\Parquet\{Exception\RuntimeException, Option, Options};
 use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings};
 use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValuesPacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
@@ -94,9 +94,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        $hasData = \count($this->pageValues) > 0 || \count($this->definitionLevels) > 0;
-
-        if ($hasData) {
+        if (\count($this->pageValues) > 0 || \count($this->definitionLevels) > 0) {
             $this->closePage(new Codec($this->options), $this->compression);
         }
 
@@ -233,7 +231,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     private function buildDictionaryPage(Codec $codec, Compressions $compression) : PageContainer
     {
         if (!$this->dictionary) {
-            throw new \RuntimeException('Cannot build dictionary page without dictionary');
+            throw new RuntimeException('Cannot build dictionary page without dictionary');
         }
 
         $pageBuffer = '';
@@ -285,7 +283,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
             1 => $this->buildDataPage($codec, $compression),
             2 => $this->buildDataPageV2($codec, $compression),
-            default => throw new \RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $writerVersion),
+            default => throw new RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $writerVersion),
         };
 
         $this->pages->add($pageContainer);

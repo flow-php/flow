@@ -80,7 +80,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        if ($this->pageValueBuffer !== '') {
+        if ($this->pageValueBuffer !== '' || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
             $this->closePage(new Codec($this->options), $this->compression);
         }
 
