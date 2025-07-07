@@ -44,6 +44,18 @@ final class ColumnChunkBuilders
     public function add(WriteColumnData $columnData) : void
     {
         $this->builders[$columnData->column->name()]->addRow($columnData);
+
+        // Check if any builder is full and coordinate page closing across all builders
+        foreach ($this->builders as $builder) {
+            if ($builder->isFull()) {
+                // If any builder is full, close pages on all builders to maintain synchronization
+                foreach ($this->builders as $builderToClose) {
+                    $builderToClose->closePage();
+                }
+
+                break;
+            }
+        }
     }
 
     /**

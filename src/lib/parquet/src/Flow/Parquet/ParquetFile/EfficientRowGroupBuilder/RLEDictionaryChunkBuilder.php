@@ -79,12 +79,43 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         }
 
         $this->rowsCount++;
+    }
 
-        $currentPageSize = \count($this->pageValues) * 4;
+    public function closePage() : void
+    {
+        $codec = new Codec($this->options);
 
-        if ($currentPageSize >= $this->options->get(Option::PAGE_SIZE_BYTES)) {
-            $this->closePage(new Codec($this->options), $this->compression);
+        if (\count($this->pageValues) > 0) {
+            $flatColumnValues = new WriteFlatColumnValues(
+                $this->column,
+                $this->repetitionLevels,
+                $this->definitionLevels,
+                $this->pageValues
+            );
+
+            $this->dictionary = (new DictionaryBuilder())->build($this->column, $flatColumnValues);
+
+            if (!$this->pages->dictionaryPageContainer()) {
+                $dictionaryPageContainer = $this->buildDictionaryPage($codec, $this->compression);
+                $this->pages->add($dictionaryPageContainer);
+            }
         }
+
+        $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
+            1 => $this->buildDataPage($codec, $this->compression),
+            2 => $this->buildDataPageV2($codec, $this->compression),
+            default => throw new RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $writerVersion),
+        };
+
+        $this->pages->add($pageContainer);
+        $this->chunkStatistics = $this->chunkStatistics->merge($this->pageStatistics);
+
+        $this->repetitionLevels = [];
+        $this->definitionLevels = [];
+        $this->pageValues = [];
+        $this->rowsCount = 0;
+        $this->nullCount = 0;
+        $this->pageStatistics = new StatisticsCounter($this->column);
     }
 
     public function column() : Column
@@ -95,7 +126,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
     public function flush(int $fileOffset) : array
     {
         if (\count($this->pageValues) > 0 || \count($this->definitionLevels) > 0) {
-            $this->closePage(new Codec($this->options), $this->compression);
+            $this->closePage();
         }
 
         return [new ColumnChunkContainer(
@@ -116,6 +147,11 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 options: $this->options
             )
         )];
+    }
+
+    public function isFull() : bool
+    {
+        return \count($this->pageValues) * 4 >= $this->options->get(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize() : int
@@ -260,40 +296,5 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             $this->dictionary->dictionary,
             $pageHeader
         );
-    }
-
-    private function closePage(Codec $codec, Compressions $compression) : void
-    {
-        if (\count($this->pageValues) > 0) {
-            $flatColumnValues = new WriteFlatColumnValues(
-                $this->column,
-                $this->repetitionLevels,
-                $this->definitionLevels,
-                $this->pageValues
-            );
-
-            $this->dictionary = (new DictionaryBuilder())->build($this->column, $flatColumnValues);
-
-            if (!$this->pages->dictionaryPageContainer()) {
-                $dictionaryPageContainer = $this->buildDictionaryPage($codec, $compression);
-                $this->pages->add($dictionaryPageContainer);
-            }
-        }
-
-        $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
-            1 => $this->buildDataPage($codec, $compression),
-            2 => $this->buildDataPageV2($codec, $compression),
-            default => throw new RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $writerVersion),
-        };
-
-        $this->pages->add($pageContainer);
-        $this->chunkStatistics = $this->chunkStatistics->merge($this->pageStatistics);
-
-        $this->repetitionLevels = [];
-        $this->definitionLevels = [];
-        $this->pageValues = [];
-        $this->rowsCount = 0;
-        $this->nullCount = 0;
-        $this->pageStatistics = new StatisticsCounter($this->column);
     }
 }

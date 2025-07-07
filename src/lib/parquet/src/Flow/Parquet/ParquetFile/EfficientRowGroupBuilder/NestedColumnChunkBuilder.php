@@ -32,6 +32,13 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         }
     }
 
+    public function closePage() : void
+    {
+        foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
+            $childBuilder->closePage();
+        }
+    }
+
     public function column() : Column
     {
         return $this->column;
@@ -50,6 +57,17 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         }
 
         return $containers;
+    }
+
+    public function isFull() : bool
+    {
+        foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
+            if ($childBuilder->isFull()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function uncompressedSize() : int

@@ -67,10 +67,27 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
         }
 
         $this->rowsCount++;
+    }
 
-        if (\strlen($this->pageValueBuffer) >= $this->options->get(Option::PAGE_SIZE_BYTES)) {
-            $this->closePage(new Codec($this->options), $this->compression);
-        }
+    public function closePage() : void
+    {
+        $codec = new Codec($this->options);
+
+        $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
+            1 => $this->buildDataPage($codec, $this->compression),
+            2 => $this->buildDataPageV2($codec, $this->compression),
+            default => throw new \RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $writerVersion),
+        };
+
+        $this->pages->add($pageContainer);
+        $this->chunkStatistics = $this->chunkStatistics->merge($this->pageStatistics);
+
+        $this->repetitionLevels = [];
+        $this->definitionLevels = [];
+        $this->pageValueBuffer = '';
+        $this->rowsCount = 0;
+        $this->nullCount = 0;
+        $this->pageStatistics = new StatisticsCounter($this->column);
     }
 
     public function column() : Column
@@ -81,7 +98,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
     public function flush(int $fileOffset) : array
     {
         if ($this->pageValueBuffer !== '' || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
-            $this->closePage(new Codec($this->options), $this->compression);
+            $this->closePage();
         }
 
         return [new ColumnChunkContainer(
@@ -102,6 +119,11 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
                 options: $this->options
             )
         )];
+    }
+
+    public function isFull() : bool
+    {
+        return \strlen($this->pageValueBuffer) >= $this->options->get(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize() : int
@@ -204,22 +226,8 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
         );
     }
 
-    private function closePage(Codec $codec, Compressions $compression) : void
+    private function flushCurrentPage() : void
     {
-        $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
-            1 => $this->buildDataPage($codec, $compression),
-            2 => $this->buildDataPageV2($codec, $compression),
-            default => throw new \RuntimeException('Flow Parquet Writer does not support given version of Parquet format, supported versions are [1,2], given: ' . $writerVersion),
-        };
 
-        $this->pages->add($pageContainer);
-        $this->chunkStatistics = $this->chunkStatistics->merge($this->pageStatistics);
-
-        $this->repetitionLevels = [];
-        $this->definitionLevels = [];
-        $this->pageValueBuffer = '';
-        $this->rowsCount = 0;
-        $this->nullCount = 0;
-        $this->pageStatistics = new StatisticsCounter($this->column);
     }
 }
