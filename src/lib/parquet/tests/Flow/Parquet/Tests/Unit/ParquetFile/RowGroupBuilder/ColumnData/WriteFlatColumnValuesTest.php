@@ -8,7 +8,7 @@ use Faker\Factory;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelShredder, WriteFlatColumnData};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelShredder, WriteColumnData};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
@@ -81,7 +81,7 @@ final class WriteFlatColumnValuesTest extends TestCase
 
         $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options = Options::default()));
 
-        $flatColumnData = WriteFlatColumnData::initialize($schema->get('struct'));
+        $flatColumnData = WriteColumnData::initialize($schema->get('struct'));
 
         foreach ($rows as $row) {
             foreach ($dremel->shred($schema->get('struct'), $row)->flatValues() as $nextFlatValues) {
@@ -206,7 +206,7 @@ final class WriteFlatColumnValuesTest extends TestCase
 
         $dremel = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize($options = Options::default()));
 
-        $flatColumnData = WriteFlatColumnData::initialize($schema->get('struct'));
+        $flatColumnData = WriteColumnData::initialize($schema->get('struct'));
 
         foreach ($rows as $row) {
             foreach ($dremel->shred($schema->get('struct'), $row)->flatValues() as $nextFlatValues) {

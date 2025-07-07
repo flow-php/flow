@@ -13,6 +13,8 @@ final readonly class Statistics
         public ?int $distinctCount,
         public ?string $maxValue,
         public ?string $minValue,
+        public ?bool $isMaxValueExact = null,
+        public ?bool $isMinValueExact = null,
     ) {
 
     }
@@ -26,6 +28,8 @@ final readonly class Statistics
             $thrift->distinct_count,
             $thrift->max_value,
             $thrift->min_value,
+            $thrift->is_max_value_exact,
+            $thrift->is_min_value_exact,
         );
     }
 
@@ -38,6 +42,8 @@ final readonly class Statistics
             'distinct_count' => $this->distinctCount,
             'max_value' => $this->maxValue,
             'min_value' => $this->minValue,
+            'is_max_value_exact' => $this->isMaxValueExact,
+            'is_min_value_exact' => $this->isMinValueExact,
         ]);
     }
 }

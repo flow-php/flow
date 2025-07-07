@@ -149,7 +149,6 @@ final readonly class DataPageBuilder
                 repetitionsByteLength: $repetitionsLength,
                 isCompressed: !($this->compression === Compressions::UNCOMPRESSED),
                 statistics: $statistics,
-                options: $this->options
             ),
             dictionaryPageHeader: null,
         );

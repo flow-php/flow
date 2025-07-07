@@ -16,7 +16,7 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder\{
     DremelShredder,
     PagesBuilder,
     Validator\ColumnDataValidator,
-    WriteFlatColumnData
+    WriteColumnData
 };
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\TestCase;
@@ -32,7 +32,7 @@ final class PagesBuilderTest extends TestCase
         $options->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 100); // 1024 / 100 = 11 pages
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('int32'));
 
-        $data = WriteFlatColumnData::initialize($flatColumn);
+        $data = WriteColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -76,7 +76,7 @@ final class PagesBuilderTest extends TestCase
         $values = \array_map(static fn ($i) => $enum[generate_random_int(0, 2)], \range(0, 99));
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('enum'));
 
-        $data = WriteFlatColumnData::initialize($flatColumn);
+        $data = WriteColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -130,7 +130,7 @@ final class PagesBuilderTest extends TestCase
 
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('int32'));
 
-        $data = WriteFlatColumnData::initialize($flatColumn);
+        $data = WriteColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -171,7 +171,7 @@ final class PagesBuilderTest extends TestCase
         $values = \array_map(static fn ($i) => \json_encode(['id' => $faker->uuid], JSON_THROW_ON_ERROR), \range(0, 99));
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('json'));
 
-        $data = WriteFlatColumnData::initialize($flatColumn);
+        $data = WriteColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -212,7 +212,7 @@ final class PagesBuilderTest extends TestCase
         $options = Options::default()->set(Option::PAGE_MAXIMUM_ROWS_COUNT, 50);
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('string'));
 
-        $data = WriteFlatColumnData::initialize($flatColumn);
+        $data = WriteColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);
@@ -267,7 +267,7 @@ final class PagesBuilderTest extends TestCase
         /** @var FlatColumn $flatColumn */
         $statistics = new ColumnChunkStatistics($flatColumn = $schema->getFlat('uuid'));
 
-        $data = WriteFlatColumnData::initialize($flatColumn);
+        $data = WriteColumnData::initialize($flatColumn);
 
         foreach ($values as $value) {
             $statistics->add($value);

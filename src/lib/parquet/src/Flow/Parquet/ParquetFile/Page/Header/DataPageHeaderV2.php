@@ -19,7 +19,6 @@ final readonly class DataPageHeaderV2
         private int $repetitionsByteLength,
         private ?bool $isCompressed,
         private ?Statistics $statistics,
-        private Options $options,
     ) {
     }
 
@@ -35,7 +34,6 @@ final readonly class DataPageHeaderV2
             /** @phpstan-ignore-next-line */
             $thrift->is_compressed ?? null,
             $thrift->statistics ? Statistics::fromThrift($thrift->statistics) : null,
-            $options
         );
     }
 
@@ -54,13 +52,13 @@ final readonly class DataPageHeaderV2
         return $this->repetitionsByteLength;
     }
 
-    public function statistics() : ?StatisticsReader
+    public function statistics(Options $options) : ?StatisticsReader
     {
         if ($this->statistics === null) {
             return null;
         }
 
-        return new StatisticsReader($this->statistics, $this->options);
+        return new StatisticsReader($this->statistics, $options);
     }
 
     public function toThrift() : \Flow\Parquet\Thrift\DataPageHeaderV2

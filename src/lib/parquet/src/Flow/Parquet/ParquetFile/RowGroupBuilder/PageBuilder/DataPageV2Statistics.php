@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
 use function Flow\Parquet\array_flatten;
-use Flow\Parquet\Data\ObjectToString;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Statistics\Comparator;
 
 final class DataPageV2Statistics
@@ -65,8 +64,6 @@ final class DataPageV2Statistics
                 if ($this->comparator->isGreaterThan($val, $this->max)) {
                     $this->max = $val;
                 }
-
-                $this->values[] = \is_object($val) ? ObjectToString::toString($val) : $val;
             }
         } else {
             if ($this->comparator->isLessThan($value, $this->min)) {
@@ -76,8 +73,6 @@ final class DataPageV2Statistics
             if ($this->comparator->isGreaterThan($value, $this->max)) {
                 $this->max = $value;
             }
-
-            $this->values[] = \is_object($value) ? ObjectToString::toString($value) : $value;
         }
     }
 
@@ -103,14 +98,6 @@ final class DataPageV2Statistics
     public function nullCount() : int
     {
         return $this->nullCount;
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    public function values() : array
-    {
-        return $this->values;
     }
 
     public function valuesCount() : int

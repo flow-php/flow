@@ -19,9 +19,9 @@ final readonly class DremelShredder
     /**
      * @param array<string,mixed> $row
      */
-    public function shred(Column $column, array $row) : WriteFlatColumnData
+    public function shred(Column $column, array $row) : WriteColumnData
     {
-        $flatData = WriteFlatColumnData::initialize($column);
+        $flatData = WriteColumnData::initialize($column);
         $definitionLevel = 0;
         $repetitionLevel = 0;
         $depth = 0;
@@ -52,7 +52,7 @@ final readonly class DremelShredder
         return $flatData;
     }
 
-    private function shredFlat(FlatColumn $column, mixed $value, int $definitionLevel, int $repetitionLevel, WriteFlatColumnData $data, bool $validate = true) : void
+    private function shredFlat(FlatColumn $column, mixed $value, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, bool $validate = true) : void
     {
         if ($validate) {
             $this->validator->validate($column, $value);
@@ -83,7 +83,7 @@ final readonly class DremelShredder
     /**
      * @param null|array<mixed> $listValue
      */
-    private function shredList(NestedColumn $column, ?array $listValue, int $definitionLevel, int $repetitionLevel, WriteFlatColumnData $data, int $depth) : void
+    private function shredList(NestedColumn $column, ?array $listValue, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, int $depth) : void
     {
         $repetitionLevel++;
         $depth++;
@@ -198,7 +198,7 @@ final readonly class DremelShredder
     /**
      * @param null|array<mixed> $mapValue
      */
-    private function shredMap(NestedColumn $column, ?array $mapValue, int $definitionLevel, int $repetitionLevel, WriteFlatColumnData $data, int $depth) : void
+    private function shredMap(NestedColumn $column, ?array $mapValue, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, int $depth) : void
     {
         $repetitionLevel++;
         $depth++;
@@ -337,7 +337,7 @@ final readonly class DremelShredder
         }
     }
 
-    private function shredStructure(NestedColumn $column, mixed $structureData, int $definitionLevel, int $repetitionLevel, WriteFlatColumnData $data, int $depth) : void
+    private function shredStructure(NestedColumn $column, mixed $structureData, int $definitionLevel, int $repetitionLevel, WriteColumnData $data, int $depth) : void
     {
         $this->validator->validate($column, $structureData);
 

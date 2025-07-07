@@ -96,7 +96,7 @@ final class WriterTest extends TestCase
         self::assertSame(100, $statistics->max($column));
         self::assertSame(1, $statistics->minValue($column));
         self::assertSame(100, $statistics->maxValue($column));
-        self::assertSame(100, $statistics->distinctCount());
+        self::assertNull($statistics->distinctCount());
         self::assertSame(0, $statistics->nullCount());
 
         self::assertFileExists($path);
@@ -106,7 +106,7 @@ final class WriterTest extends TestCase
     public function test_writing_data_page_v2_statistics() : void
     {
         $writer = new Writer(
-            options: Options::default()
+            options: $options = Options::default()
                 ->set(Option::WRITER_VERSION, 2)
         );
 
@@ -120,13 +120,13 @@ final class WriterTest extends TestCase
         ));
 
         foreach ((new Reader())->read($path)->pageHeaders() as $pageHeader) {
-            $statistics = $pageHeader->pageHeader->dataPageHeaderV2()->statistics();
+            $statistics = $pageHeader->pageHeader->dataPageHeaderV2()->statistics($options);
 
             self::assertSame(1, $statistics->min($column));
             self::assertSame(100, $statistics->max($column));
             self::assertSame(1, $statistics->minValue($column));
             self::assertSame(100, $statistics->maxValue($column));
-            self::assertSame(100, $statistics->distinctCount());
+            self::assertNull($statistics->distinctCount());
             self::assertSame(0, $statistics->nullCount());
         }
 

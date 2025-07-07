@@ -8,7 +8,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\{FlatValue, ReadFlatColumnValues, WriteFlatColumnValues};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
-final readonly class WriteFlatColumnData
+final readonly class WriteColumnData
 {
     /**
      * @param Column $column
@@ -99,6 +99,14 @@ final readonly class WriteFlatColumnData
         }
 
         return $normalized;
+    }
+
+    public function toFlatColumnData(string $flatPath) : self
+    {
+        return new self(
+            $this->flatValues[$flatPath]->column,
+            [$flatPath => $this->flatValues[$flatPath]]
+        );
     }
 
     public function toReadColumnData() : ReadFlatColumnData

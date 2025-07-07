@@ -9,7 +9,9 @@ use Flow\Filesystem\{DestinationStream, Path};
 use Flow\Filesystem\Stream\{NativeLocalDestinationStream};
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\ParquetFile\{Compressions, Metadata, RowGroupBuilder, RowGroups, Schema};
+use Flow\Parquet\ParquetFile\{Compressions, EfficientRowGroupBuilder, Metadata, RowGroups, Schema};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelShredder};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, DisabledValidator};
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 
@@ -19,7 +21,7 @@ final class Writer
 
     private ?Metadata $metadata = null;
 
-    private ?RowGroupBuilder $rowGroupBuilder = null;
+    private ?EfficientRowGroupBuilder $rowGroupBuilder = null;
 
     private ?DestinationStream $stream = null;
 
@@ -172,7 +174,7 @@ final class Writer
         $this->rowGroupBuilder()->addRow($row);
         $interval = (int) $this->options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL);
 
-        if (($this->rowGroupBuilder()->statistics()->rowsCount() % $interval === 0) && $this->rowGroupBuilder()->isFull()) {
+        if (($this->rowGroupBuilder()->rowsCount() % $interval === 0) && $this->rowGroupBuilder()->isFull()) {
             $rowGroupContainer = $this->rowGroupBuilder()->flush($this->fileOffset);
             $this->stream()->append($rowGroupContainer->binaryBuffer);
             $this->metadata()->rowGroups()->add($rowGroupContainer->rowGroup);
@@ -197,11 +199,19 @@ final class Writer
     private function initGroupBuilder(Schema $schema) : void
     {
         if ($this->rowGroupBuilder === null) {
-            $this->rowGroupBuilder = new RowGroupBuilder(
+            $dataConverter = DataConverter::initialize($this->options);
+            $shredder = new DremelShredder(
+                $this->options->getBool(Option::VALIDATE_DATA)
+                    ? new ColumnDataValidator()
+                    : new DisabledValidator(),
+                $dataConverter
+            );
+
+            $this->rowGroupBuilder = new EfficientRowGroupBuilder(
                 $schema,
                 $this->compression,
                 $this->options,
-                DataConverter::initialize($this->options)
+                $shredder
             );
         } else {
             throw new RuntimeException('RowGroupBuilder is already initialized, please close the writer first before initializing a new RowGroupBuilder');
@@ -222,7 +232,7 @@ final class Writer
         return $this->metadata;
     }
 
-    private function rowGroupBuilder() : RowGroupBuilder
+    private function rowGroupBuilder() : EfficientRowGroupBuilder
     {
         if ($this->rowGroupBuilder === null) {
             throw new RuntimeException('Writer is not open');
