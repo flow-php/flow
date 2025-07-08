@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnData\NullLevel;
+use Flow\Parquet\Dremel\ColumnData\NullLevel;
 
 /**
  * @param array<array-key, mixed> $array1
@@ -33,7 +33,7 @@ function array_merge_recursive(array $array1, array $array2) : array
  *
  * @return array<array-key, mixed>
  */
-function array_combine_recursive(array $keys, array $values) : array
+function dremel_array_combine_recursive(array $keys, array $values) : array
 {
     $result = [];
 
@@ -61,7 +61,7 @@ function array_combine_recursive(array $keys, array $values) : array
         }
 
         if (\is_array($keyValue) && \is_array($value)) {
-            $result[] = array_combine_recursive($keyValue, $value);
+            $result[] = dremel_array_combine_recursive($keyValue, $value);
         } else {
             $result[$keyValue] = $value;
         }

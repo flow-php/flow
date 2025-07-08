@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetFile\{ColumnPageHeader};
+use Flow\Parquet\ParquetFile\{Page\ColumnPageHeader};
 use Flow\Parquet\{Reader};
 use PHPUnit\Framework\TestCase;
 

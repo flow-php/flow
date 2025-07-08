@@ -6,18 +6,17 @@ namespace Flow\Parquet;
 
 use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\{Dremel\ColumnData\ReadFlatColumnValues,
+    Dremel\DremelAssembler,
+    Dremel\ReadColumnData,
+    ParquetFile\Metadata,
+    ParquetFile\Page\ColumnPageHeader,
+    ParquetFile\Schema,
+    Reader\PageReader};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\ParquetFile\ColumnChunkReader\ColumnChunkReader;
-use Flow\Parquet\ParquetFile\ColumnChunkViewer\ColumnChunkViewer;
-use Flow\Parquet\ParquetFile\{ColumnPageHeader,
-    Metadata,
-    PageReader,
-    RowGroupBuilder\ColumnData\ReadFlatColumnValues,
-    RowGroupBuilder\DremelAssembler,
-    RowGroupBuilder\ReadFlatColumnData,
-    Schema};
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\Reader\{ColumnChunkReader, ColumnChunkViewer};
 use Flow\Parquet\Thrift\FileMetaData;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
@@ -187,7 +186,7 @@ final class ParquetFile
 
             if ($column instanceof FlatColumn) {
                 foreach ($chunkReader->read($rowGroup->getColumnChunk($column), $column, $this->stream) as $flatColumnValues) {
-                    $columnData = new ReadFlatColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
+                    $columnData = new ReadColumnData($column, [$flatColumnValues->flatPath() => $flatColumnValues]);
 
                     $rowsSkipped = 0;
 
@@ -228,7 +227,7 @@ final class ParquetFile
                         $columnFlatData[$flatPath] = $childFlatValues;
                     }
 
-                    $columnData = new ReadFlatColumnData($column, \array_values($columnFlatData));
+                    $columnData = new ReadColumnData($column, \array_values($columnFlatData));
 
                     $rowsSkipped = 0;
 

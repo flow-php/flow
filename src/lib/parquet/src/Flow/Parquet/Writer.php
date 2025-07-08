@@ -8,11 +8,16 @@ use Composer\InstalledVersions;
 use Flow\Filesystem\{DestinationStream, Path};
 use Flow\Filesystem\Stream\{NativeLocalDestinationStream};
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Dremel\{DremelShredder};
+use Flow\Parquet\Dremel\Validator\{ColumnDataValidator, DisabledValidator};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\ParquetFile\{Compressions, EfficientRowGroupBuilder, Metadata, RowGroups, Schema};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\{DremelShredder};
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, DisabledValidator};
+use Flow\Parquet\ParquetFile\{Compressions,
+    Metadata,
+    RowGroups,
+    Schema
+};
 use Flow\Parquet\ThriftStream\TPhpFileStream;
+use Flow\Parquet\Writer\RowGroupBuilder;
 use Thrift\Protocol\TCompactProtocol;
 
 final class Writer
@@ -21,7 +26,7 @@ final class Writer
 
     private ?Metadata $metadata = null;
 
-    private ?EfficientRowGroupBuilder $rowGroupBuilder = null;
+    private ?RowGroupBuilder $rowGroupBuilder = null;
 
     private ?DestinationStream $stream = null;
 
@@ -207,7 +212,7 @@ final class Writer
                 $dataConverter
             );
 
-            $this->rowGroupBuilder = new EfficientRowGroupBuilder(
+            $this->rowGroupBuilder = new RowGroupBuilder(
                 $schema,
                 $this->compression,
                 $this->options,
@@ -232,7 +237,7 @@ final class Writer
         return $this->metadata;
     }
 
-    private function rowGroupBuilder() : EfficientRowGroupBuilder
+    private function rowGroupBuilder() : RowGroupBuilder
     {
         if ($this->rowGroupBuilder === null) {
             throw new RuntimeException('Writer is not open');
