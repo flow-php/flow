@@ -2,10 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\Writer;
+namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\{Data\Codec, Dremel\WriteColumnData, Exception\RuntimeException, Option, Options};
+use Flow\Parquet\{Data\Codec,
+    Dremel\WriteColumnData,
+    Exception\RuntimeException,
+    Option,
+    Options,
+    Writer\ColumnChunkBuilder,
+    Writer\ColumnChunkContainer,
+    Writer\PageContainer,
+    Writer\PageContainers,
+    Writer\StatisticsCounter};
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\{Compressions,
     Encodings

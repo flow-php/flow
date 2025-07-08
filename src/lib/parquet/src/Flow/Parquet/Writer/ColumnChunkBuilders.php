@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer;
 
-use Flow\Parquet\{Dremel\WriteColumnData, Options};
+use Flow\Parquet\{Dremel\WriteColumnData,
+    Options,
+    Writer\ColumnChunkBuilder\NestedColumnChunkBuilder,
+    Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder};
 use Flow\Parquet\ParquetFile\{Compressions, Schema};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
 

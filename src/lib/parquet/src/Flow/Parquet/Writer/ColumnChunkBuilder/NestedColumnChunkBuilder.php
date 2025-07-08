@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\Parquet\Writer;
+namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
 use Flow\Parquet\Dremel\WriteColumnData;
 use Flow\Parquet\ParquetFile\Schema\{Column, NestedColumn};
+use Flow\Parquet\Writer\ColumnChunkBuilder;
 
 final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
 {
