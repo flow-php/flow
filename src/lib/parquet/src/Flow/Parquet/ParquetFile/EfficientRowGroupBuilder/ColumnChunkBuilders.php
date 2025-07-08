@@ -44,23 +44,15 @@ final class ColumnChunkBuilders
     public function add(WriteColumnData $columnData) : void
     {
         $this->builders[$columnData->column->name()]->addRow($columnData);
+    }
 
-        // Check if any builder is full and coordinate page closing across all builders
-        $anyBuilderFull = false;
-
+    /**
+     * Close all pages in the column chunk builders.
+     */
+    public function closePages() : void
+    {
         foreach ($this->builders as $builder) {
-            if ($builder->isFull()) {
-                $anyBuilderFull = true;
-
-                break;
-            }
-        }
-
-        if ($anyBuilderFull) {
-            // If any builder is full, close pages on all builders to maintain synchronization
-            foreach ($this->builders as $builderToClose) {
-                $builderToClose->closePage();
-            }
+            $builder->closePage();
         }
     }
 
@@ -82,6 +74,20 @@ final class ColumnChunkBuilders
         return $containers;
     }
 
+    /**
+     * Check if any of the column chunk builders has reached the maximum page size.
+     */
+    public function isAnyPageFull() : bool
+    {
+        foreach ($this->builders as $builder) {
+            if ($builder->isFull()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function uncompressedSize() : int
     {
         $size = 0;
@@ -95,8 +101,6 @@ final class ColumnChunkBuilders
 
     private static function createFlatColumnBuilder(FlatColumn $column, Options $options, Compressions $compressions) : ColumnChunkBuilder
     {
-        // Use PlainFlatColumnChunkBuilder for all types including booleans
-        // This ensures boolean columns use BooleanValueStorage for proper bit-packing alignment
         return new PlainFlatColumnChunkBuilder($column, $options, $compressions);
     }
 }

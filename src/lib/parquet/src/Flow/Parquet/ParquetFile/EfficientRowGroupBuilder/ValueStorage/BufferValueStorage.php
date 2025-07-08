@@ -12,11 +12,14 @@ final class BufferValueStorage implements ValueStorage
 {
     private string $buffer = '';
 
+    private int $size = 0;
+
     public function addValues(FlatColumn $column, array $values) : void
     {
         $localBuffer = '';
         (new PlainValuesPacker(new BinaryBufferWriter($localBuffer)))->packValues($column, $values);
         $this->buffer .= $localBuffer;
+        $this->size += \strlen($localBuffer);
     }
 
     public function getBuffer() : string
@@ -32,10 +35,11 @@ final class BufferValueStorage implements ValueStorage
     public function reset() : void
     {
         $this->buffer = '';
+        $this->size = 0;
     }
 
     public function size() : int
     {
-        return \strlen($this->buffer);
+        return $this->size;
     }
 }

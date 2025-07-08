@@ -27,7 +27,9 @@ final readonly class RowsNormalizer
             $columns = [];
 
             foreach ($row->entries() as $entry) {
-                if ($schema->get($entry->ref())->isNullable() && $entry->value() === null) {
+                $definition = $schema->get($entry->ref());
+
+                if ($definition->isNullable() && $entry->value() === null) {
                     $columns[$entry->name()] = null;
 
                     continue;

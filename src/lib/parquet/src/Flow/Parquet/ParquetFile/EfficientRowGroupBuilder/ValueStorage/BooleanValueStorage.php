@@ -51,6 +51,6 @@ final class BooleanValueStorage implements ValueStorage
 
     public function size() : int
     {
-        return \strlen($this->getBuffer());
+        return \count($this->values);
     }
 }

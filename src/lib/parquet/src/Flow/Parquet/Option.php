@@ -88,6 +88,15 @@ enum Option
     case PAGE_SIZE_BYTES;
 
     /**
+     * ColumnChunksBuilder is going to use this value to determine how often it should check if ColumnChunk Page size is not exceeded.
+     * This is a performance optimization, since checking Page size is a costly operation.
+     * If the value is set to 100, ColumnChunksBuilder is going to check the size only after adding 100 rows to the buffer.
+     *
+     * Default value is 100
+     */
+    case PAGE_SIZE_CHECK_INTERVAL;
+
+    /**
      * Since PHP does not support nanoseconds precision for DateTime objects, when this options is set to true,
      * reader will round nanoseconds to microseconds.
      *

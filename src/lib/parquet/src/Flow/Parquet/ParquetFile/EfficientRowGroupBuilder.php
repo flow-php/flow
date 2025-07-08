@@ -31,7 +31,13 @@ final class EfficientRowGroupBuilder
         foreach ($this->schema->columns() as $column) {
             $this->columnChunkBuilders->add($this->shredder->shred($column, $row));
         }
+
         $this->rowsCount++;
+        $interval = $this->options->getInt(Option::PAGE_SIZE_CHECK_INTERVAL);
+
+        if (($this->rowsCount % $interval === 0) && $this->columnChunkBuilders->isAnyPageFull()) {
+            $this->columnChunkBuilders->closePages();
+        }
     }
 
     public function flush(int $fileOffset) : RowGroupContainer
