@@ -7,7 +7,7 @@ namespace Flow\Parquet\ParquetFile\EfficientRowGroupBuilder;
 use Flow\Parquet\{Options};
 use Flow\Parquet\ParquetFile\{Compressions, Schema};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkContainer, WriteColumnData};
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
 
 final class ColumnChunkBuilders
 {
@@ -46,14 +46,20 @@ final class ColumnChunkBuilders
         $this->builders[$columnData->column->name()]->addRow($columnData);
 
         // Check if any builder is full and coordinate page closing across all builders
+        $anyBuilderFull = false;
+
         foreach ($this->builders as $builder) {
             if ($builder->isFull()) {
-                // If any builder is full, close pages on all builders to maintain synchronization
-                foreach ($this->builders as $builderToClose) {
-                    $builderToClose->closePage();
-                }
+                $anyBuilderFull = true;
 
                 break;
+            }
+        }
+
+        if ($anyBuilderFull) {
+            // If any builder is full, close pages on all builders to maintain synchronization
+            foreach ($this->builders as $builderToClose) {
+                $builderToClose->closePage();
             }
         }
     }
@@ -89,12 +95,8 @@ final class ColumnChunkBuilders
 
     private static function createFlatColumnBuilder(FlatColumn $column, Options $options, Compressions $compressions) : ColumnChunkBuilder
     {
-        // Use RLE_DICTIONARY encoding for boolean columns for better compression
-        if ($column->type() === PhysicalType::BOOLEAN) {
-            return new RLEDictionaryChunkBuilder($column, $options, $compressions);
-        }
-
-        // For other types, continue using PlainFlatColumnChunkBuilder
+        // Use PlainFlatColumnChunkBuilder for all types including booleans
+        // This ensures boolean columns use BooleanValueStorage for proper bit-packing alignment
         return new PlainFlatColumnChunkBuilder($column, $options, $compressions);
     }
 }

@@ -7,13 +7,14 @@ namespace Flow\Parquet\ParquetFile\EfficientRowGroupBuilder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings};
-use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValuesPacker, RLEBitPackedHybrid};
+use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
+use Flow\Parquet\ParquetFile\EfficientRowGroupBuilder\ValueStorage\{BooleanValueStorage, BufferValueStorage, ValueStorage};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkContainer, PageContainer, PageContainers, WriteColumnData};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\{RLEBitPackedPacker};
-use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
+use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, PhysicalType};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 
@@ -26,13 +27,13 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
      */
     private array $definitionLevels = [];
 
+    private int $nonNullValuesCount = 0;
+
     private int $nullCount = 0;
 
     private readonly PageContainers $pages;
 
     private StatisticsCounter $pageStatistics;
-
-    private string $pageValueBuffer = '';
 
     /**
      * @var array<int>
@@ -40,6 +41,8 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
     private array $repetitionLevels = [];
 
     private int $rowsCount = 0;
+
+    private readonly ValueStorage $valueStorage;
 
     public function __construct(
         private readonly FlatColumn $column,
@@ -49,6 +52,11 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
         $this->pages = new PageContainers();
         $this->chunkStatistics = new StatisticsCounter($this->column);
         $this->pageStatistics = new StatisticsCounter($this->column);
+
+        // Use specialized storage for boolean columns to ensure proper bit-packing
+        $this->valueStorage = $this->column->type() === PhysicalType::BOOLEAN
+            ? new BooleanValueStorage()
+            : new BufferValueStorage();
     }
 
     public function addRow(WriteColumnData $columnData) : void
@@ -57,10 +65,17 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
         $this->repetitionLevels = array_merge($this->repetitionLevels, $flatValues->repetitionLevels());
         $this->definitionLevels = array_merge($this->definitionLevels, $flatValues->definitionLevels());
 
-        $buffer = '';
-        (new PlainValuesPacker(new BinaryBufferWriter($buffer)))->packValues($this->column, $flatValues->values());
+        $maxDefinitionLevel = $this->column->maxDefinitionsLevel();
 
-        $this->pageValueBuffer .= $buffer;
+        foreach ($flatValues->definitionLevels() as $definitionLevel) {
+            if ($definitionLevel < $maxDefinitionLevel) {
+                $this->nullCount++;
+            } else {
+                $this->nonNullValuesCount++;
+            }
+        }
+
+        $this->valueStorage->addValues($this->column, $flatValues->values());
 
         foreach ($flatValues->values() as $value) {
             $this->pageStatistics->add($value);
@@ -84,9 +99,10 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
         $this->repetitionLevels = [];
         $this->definitionLevels = [];
-        $this->pageValueBuffer = '';
+        $this->valueStorage->reset();
         $this->rowsCount = 0;
         $this->nullCount = 0;
+        $this->nonNullValuesCount = 0;
         $this->pageStatistics = new StatisticsCounter($this->column);
     }
 
@@ -97,7 +113,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        if ($this->pageValueBuffer !== '' || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
+        if (!$this->valueStorage->isEmpty() || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
             $this->closePage();
         }
 
@@ -123,7 +139,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function isFull() : bool
     {
-        return \strlen($this->pageValueBuffer) >= $this->options->get(Option::PAGE_SIZE_BYTES);
+        return $this->valueStorage->size() >= $this->options->get(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize() : int
@@ -146,7 +162,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels));
         }
 
-        $pageWriter->append($this->pageValueBuffer);
+        $pageWriter->append($this->valueStorage->getBuffer());
 
         $compressedBuffer = $codec->compress($pageBuffer, $compression);
 
@@ -196,12 +212,12 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             $definitionsLength = 0;
         }
 
-        $compressedBuffer = $codec->compress($this->pageValueBuffer, $compression);
+        $compressedBuffer = $codec->compress($this->valueStorage->getBuffer(), $compression);
 
         $pageHeader = new PageHeader(
             Type::DATA_PAGE_V2,
             \strlen($compressedBuffer) + $repetitionsLength + $definitionsLength,
-            \strlen($this->pageValueBuffer) + $repetitionsLength + $definitionsLength,
+            \strlen($this->valueStorage->getBuffer()) + $repetitionsLength + $definitionsLength,
             dataPageHeader: null,
             dataPageHeaderV2: new DataPageHeaderV2(
                 valuesCount: \count($this->definitionLevels),
@@ -224,10 +240,5 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             null,
             $pageHeader
         );
-    }
-
-    private function flushCurrentPage() : void
-    {
-
     }
 }
