@@ -57,7 +57,7 @@ use Rector\DeadCode\Rector\StaticCall\RemoveParentCallWithoutParentRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Transform\Rector\StaticCall\StaticCallToFuncCallRector;
 use \Rector\Transform\ValueObject\StaticCallToFuncCall;
-use Rector\Renaming\Rector\FuncCall\RenameFunctionRector;
+use Rector\PHPUnit\AnnotationsToAttributes\Rector\ClassMethod\DataProviderAnnotationToAttributeRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -70,6 +70,9 @@ return RectorConfig::configure()
     ])
     ->withSets([
         LevelSetList::UP_TO_PHP_82
+    ])
+    ->withRules([
+        DataProviderAnnotationToAttributeRector::class,
     ])
     ->withConfiguredRule(
         StaticCallToFuncCallRector::class,
