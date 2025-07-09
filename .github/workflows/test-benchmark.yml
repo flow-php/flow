@@ -43,7 +43,9 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
+          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1
+        env:
+          SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
 
       - name: "Get Composer Cache Directory"
         id: composer-cache
