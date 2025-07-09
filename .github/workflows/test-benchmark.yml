@@ -107,6 +107,14 @@ jobs:
             echo '  '
             echo '</details>'
             echo '  '
+            echo '<details><summary>Parquet Library</summary>'
+            echo '  '
+            echo '```shell'
+            composer test:benchmark:parquet-library -- --ref=1.x --progress=none
+            echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
           } >> "./var/phpbench/summary.txt"
 
       - uses: actions/upload-artifact@v4
