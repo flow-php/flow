@@ -22,7 +22,8 @@
     "src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Benchmark/",
     "src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Benchmark/",
     "src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Benchmark/",
-    "src/core/etl/tests/Flow/ETL/Tests/Benchmark/"
+    "src/core/etl/tests/Flow/ETL/Tests/Benchmark/",
+    "src/lib/parquet/tests/Flow/Parquet/Tests/Benchmark/"
   ],
   "runner.php_config": { "memory_limit": "1G" },
   "runner.iterations": 3,

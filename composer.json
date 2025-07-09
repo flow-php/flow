@@ -361,7 +361,8 @@
             "@test:benchmark:building_blocks",
             "@test:benchmark:extractor",
             "@test:benchmark:loader",
-            "@test:benchmark:transformer"
+            "@test:benchmark:transformer",
+            "@test:benchmark:parquet-library"
         ],
         "test:website": [
             "composer test --working-dir=./web/landing"
@@ -380,6 +381,9 @@
         ],
         "test:benchmark:transformer": [
             "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=transformer"
+        ],
+        "test:benchmark:parquet-library": [
+            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=parquet-library"
         ],
         "test:mutation": [
             "tools/infection/vendor/bin/infection --threads=max"

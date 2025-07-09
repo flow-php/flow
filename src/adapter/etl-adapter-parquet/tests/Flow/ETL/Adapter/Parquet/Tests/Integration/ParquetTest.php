@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, from_array, json_schema, overwrite, schema, s
 use function Flow\ETL\DSL\data_frame;
 use function Flow\Filesystem\DSL\{path};
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Tests\Double\FakeOrdersExtractor, Tests\FlowTestCase};
+use Flow\ETL\{Tests\Double\FakeRandomOrdersExtractor, Tests\FlowTestCase};
 use Flow\Filesystem\SizeUnits;
 use Flow\Parquet\{Option, Options};
 use Ramsey\Uuid\Uuid;
@@ -40,7 +40,7 @@ final class ParquetTest extends FlowTestCase
         $path = path(__DIR__ . '/var/orders.snappy.parquet');
         $config = config();
         data_frame($config)
-            ->read(new FakeOrdersExtractor(1000))
+            ->read(new FakeRandomOrdersExtractor(1000))
             ->mode(overwrite())
             ->write(
                 to_parquet($path)
