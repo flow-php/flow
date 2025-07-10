@@ -23,7 +23,7 @@ This bridge allows you to convert Flow PHP schemas to OpenAPI specification form
 <?php
 
 use function Flow\ETL\DSL\{schema, int_schema, str_schema, bool_schema};
-use function Flow\Bridge\OpenAPI\Specification\DSL\to_openapi_spec;
+use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
 use Flow\ETL\Schema\Metadata;
 
 $userSchema = schema(
@@ -40,7 +40,7 @@ $userSchema = schema(
     )
 );
 
-$openApiSpec = to_openapi_spec($userSchema);
+$openApiSpec = schema_to_openapi_specification($userSchema);
 
 // Output:
 // [
@@ -72,7 +72,7 @@ $openApiSpec = to_openapi_spec($userSchema);
 ```php
 <?php
 
-use function Flow\Bridge\OpenAPI\Specification\DSL\from_openapi_spec;
+use function Flow\Bridge\OpenAPI\Specification\DSL\schema_from_openapi_specification;
 
 $openApiSpec = [
     'type' => 'object',
@@ -100,7 +100,7 @@ $openApiSpec = [
     ]
 ];
 
-$flowSchema = from_openapi_spec($openApiSpec);
+$flowSchema = schema_from_openapi_specification($openApiSpec);
 
 // Now you can use $flowSchema in Flow ETL pipelines
 ```
@@ -113,7 +113,7 @@ $flowSchema = from_openapi_spec($openApiSpec);
 
 use function Flow\ETL\DSL\{schema, int_schema, str_schema, list_schema, structure_schema};
 use function Flow\Types\DSL\{type_list, type_string, type_structure};
-use function Flow\Bridge\OpenAPI\Specification\DSL\to_openapi_spec;
+use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
 
 // Define your data schema
 $productSchema = schema(
@@ -127,8 +127,7 @@ $productSchema = schema(
     list_schema('tags', type_list(type_string()), true)
 );
 
-// Generate OpenAPI specification
-$apiSpec = to_openapi_spec($productSchema);
+$apiSpec = schema_to_openapi_specification($productSchema);
 
 // Use in your API documentation
 $fullApiSpec = [

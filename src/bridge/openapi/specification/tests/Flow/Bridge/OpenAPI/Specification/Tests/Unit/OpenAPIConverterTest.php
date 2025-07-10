@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
-use function Flow\Bridge\OpenAPI\Specification\DSL\{from_openapi_spec, to_openapi_spec};
+use function Flow\Bridge\OpenAPI\Specification\DSL\{schema_from_openapi_specification, schema_to_openapi_specification};
 use function Flow\ETL\DSL\{bool_schema, enum_schema, int_schema, list_schema, schema, str_schema, structure_schema};
 use function Flow\Types\DSL\{type_array, type_list, type_string, type_structure};
 use Flow\Bridge\OpenAPI\Specification\Exception\InvalidArgumentException;
@@ -82,7 +82,7 @@ final class OpenAPIConverterTest extends TestCase
             bool_schema('active', false)
         );
 
-        $openApiSpec = to_openapi_spec($schema);
+        $openApiSpec = schema_to_openapi_specification($schema);
 
         self::assertSame('object', $openApiSpec['type']);
         $properties = type_array()->assert($openApiSpec['properties']);
@@ -91,7 +91,7 @@ final class OpenAPIConverterTest extends TestCase
         self::assertArrayHasKey('name', $properties);
         self::assertArrayHasKey('active', $properties);
 
-        $convertedSchema = from_openapi_spec($openApiSpec);
+        $convertedSchema = schema_from_openapi_specification($openApiSpec);
 
         self::assertCount(3, $convertedSchema->definitions());
         $definitions = \array_values($convertedSchema->definitions());

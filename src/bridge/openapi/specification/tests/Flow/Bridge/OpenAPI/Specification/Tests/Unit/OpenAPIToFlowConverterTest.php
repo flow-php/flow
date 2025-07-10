@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
-use function Flow\Bridge\OpenAPI\Specification\DSL\{from_openapi_spec, to_openapi_spec};
+use function Flow\Bridge\OpenAPI\Specification\DSL\{schema_from_openapi_specification, schema_to_openapi_specification};
 use function Flow\ETL\DSL\{bool_schema, int_schema, schema, str_schema};
 use Flow\Bridge\OpenAPI\Specification\Exception\InvalidArgumentException;
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
@@ -22,8 +22,8 @@ final class OpenAPIToFlowConverterTest extends TestCase
             bool_schema('active', false)
         );
 
-        $openApiSpec = to_openapi_spec($originalSchema);
-        $convertedSchema = from_openapi_spec($openApiSpec);
+        $openApiSpec = schema_to_openapi_specification($originalSchema);
+        $convertedSchema = schema_from_openapi_specification($openApiSpec);
 
         self::assertCount(3, $convertedSchema->definitions());
         $definitions = \array_values($convertedSchema->definitions());
@@ -50,7 +50,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
             ],
         ];
 
-        $schema = from_openapi_spec($openApiSpec);
+        $schema = schema_from_openapi_specification($openApiSpec);
 
         self::assertCount(2, $schema->definitions());
         $definitions = \array_values($schema->definitions());
@@ -203,7 +203,7 @@ final class OpenAPIToFlowConverterTest extends TestCase
             ],
         ];
 
-        $schema = from_openapi_spec($openApiSpec);
+        $schema = schema_from_openapi_specification($openApiSpec);
 
         self::assertCount(5, $schema->definitions());
         $definitions = \array_values($schema->definitions());

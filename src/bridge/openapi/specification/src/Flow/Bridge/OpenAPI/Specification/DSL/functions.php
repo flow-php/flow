@@ -12,7 +12,7 @@ use Flow\ETL\Schema;
  *
  * @return array<string, mixed>
  */
-function to_openapi_spec(Schema $schema) : array
+function schema_to_openapi_specification(Schema $schema) : array
 {
     return (new OpenAPIConverter())->toOpenAPI($schema);
 }
@@ -22,7 +22,7 @@ function to_openapi_spec(Schema $schema) : array
  *
  * @param array<string, mixed> $openApiSpec
  */
-function from_openapi_spec(array $openApiSpec) : Schema
+function schema_from_openapi_specification(array $openApiSpec) : Schema
 {
     return (new OpenAPIConverter())->fromOpenAPI($openApiSpec);
 }

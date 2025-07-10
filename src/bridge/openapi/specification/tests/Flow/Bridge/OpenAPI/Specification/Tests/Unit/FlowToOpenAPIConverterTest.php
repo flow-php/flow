@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\OpenAPI\Specification\Tests\Unit;
 
-use function Flow\Bridge\OpenAPI\Specification\DSL\to_openapi_spec;
+use function Flow\Bridge\OpenAPI\Specification\DSL\schema_to_openapi_specification;
 use function Flow\ETL\DSL\{bool_schema, date_schema, datetime_schema, enum_schema, float_schema, int_schema, json_schema, list_schema, map_schema, schema, str_schema, structure_schema, time_schema, uuid_schema, xml_element_schema, xml_schema};
 use function Flow\Types\DSL\{type_array, type_callable, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\Bridge\OpenAPI\Specification\OpenAPIConverter;
@@ -705,7 +705,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
             str_schema('name', true)
         );
 
-        $result = to_openapi_spec($schema);
+        $result = schema_to_openapi_specification($schema);
 
         self::assertSame([
             'type' => 'object',
@@ -766,7 +766,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
             )
         );
 
-        $openApiSpec = to_openapi_spec($userSchema);
+        $openApiSpec = schema_to_openapi_specification($userSchema);
 
         self::assertSame('object', $openApiSpec['type']);
         $properties = type_array()->assert($openApiSpec['properties']);
@@ -797,7 +797,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
             list_schema('tags', type_list(type_string()), true)
         );
 
-        $result = to_openapi_spec($schema);
+        $result = schema_to_openapi_specification($schema);
 
         self::assertSame([
             'type' => 'object',
@@ -822,7 +822,7 @@ final class FlowToOpenAPIConverterTest extends TestCase
             )
         );
 
-        $result = to_openapi_spec($schema);
+        $result = schema_to_openapi_specification($schema);
 
         self::assertSame([
             'type' => 'object',
