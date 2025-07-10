@@ -55,6 +55,10 @@ component_management:
       name: bridge-monolog-http
       paths:
         - src/bridge/monolog/http/**
+    - component_id: bridge-openapi-specification
+      name: bridge-openapi-specification
+      paths:
+        - src/bridge/openapi/specification/**
     - component_id: symfony-http-foundation
       name: symfony-http-foundation
       paths:
