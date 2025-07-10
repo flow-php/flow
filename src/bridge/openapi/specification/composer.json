@@ -1,0 +1,37 @@
+{
+    "name": "flow-php/openapi-specification-bridge",
+    "type": "library",
+    "description": "Flow PHP - OpenAPI Specification bridge",
+    "keywords": [
+        "openapi",
+        "specification",
+        "bridge",
+        "api",
+        "schema"
+    ],
+    "require": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -207,6 +207,9 @@ jobs:
       - name: "Test - Bridge - Monolog Http"
         run: "composer test:bridge:monolog-http"
 
+      - name: "Test - Bridge - OpenAPI Specification"
+        run: "composer test:bridge:openapi-specification"
+
       - name: "Test - Bridge - Symfony Http Foundation"
         run: "composer test:bridge:symfony-http-foundation"
 

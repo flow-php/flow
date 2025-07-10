@@ -90,6 +90,9 @@
     <testsuite name="bridge-monolog-http-unit">
       <directory>src/bridge/monolog/http/tests/Flow/Bridge/Monolog/Http/Tests/Unit</directory>
     </testsuite>
+    <testsuite name="bridge-openapi-specification-unit">
+      <directory>src/bridge/openapi/specification/tests/Flow/Bridge/OpenAPI/Specification/Tests/Unit</directory>
+    </testsuite>
     <testsuite name="bridge-symfony-http-foundation-unit">
       <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Unit</directory>
     </testsuite>

@@ -87,6 +87,7 @@
         "flow-php/filesytem-async-aws-bridge": "self.version",
         "flow-php/filesytem-azure-bridge": "self.version",
         "flow-php/monolog-http-bridge": "self.version",
+        "flow-php/openapi-specification-bridge": "self.version",
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
         "flow-php/snappy": "self.version",
@@ -115,6 +116,7 @@
                 "src/bridge/filesystem/async-aws/src/Flow",
                 "src/bridge/filesystem/azure/src/Flow",
                 "src/bridge/monolog/http/src/Flow",
+                "src/bridge/openapi/specification/src/Flow",
                 "src/bridge/symfony/http-foundation/src/Flow",
                 "src/cli/src/Flow",
                 "src/core/etl/src/Flow",
@@ -153,6 +155,11 @@
             "src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php",
             "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
             "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
+            "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
+            "src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php",
+            "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
+            "src/cli/src/Flow/CLI/DSL/functions.php",
+            "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/cli/src/Flow/CLI/DSL/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/functions.php",
@@ -185,6 +192,7 @@
                 "src/bridge/filesystem/async-aws/tests/Flow",
                 "src/bridge/filesystem/azure/tests/Flow",
                 "src/bridge/monolog/http/tests/Flow",
+                "src/bridge/openapi/specification/tests/Flow",
                 "src/bridge/symfony/http-foundation/tests/Flow",
                 "src/cli/tests/Flow",
                 "src/core/etl/tests/Flow",
@@ -241,6 +249,7 @@
             "@test:bridge:filesystem-azure",
             "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
+            "@test:bridge:openapi-specification",
             "@test:bridge:symfony-http-foundation",
             "@test:adapter:chartjs",
             "@test:adapter:csv",
@@ -300,6 +309,9 @@
         ],
         "test:bridge:monolog-http": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-monolog-http-unit --log-junit ./var/phpunit/logs/bridge-monolog-http-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-monolog-http-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-monolog-http-unit"
+        ],
+        "test:bridge:openapi-specification": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-openapi-specification-unit --log-junit ./var/phpunit/logs/bridge-openapi-specification-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-openapi-specification-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-openapi-specification-unit"
         ],
         "test:bridge:symfony-http-foundation": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-symfony-http-foundation-unit --log-junit ./var/phpunit/logs/bridge-symfony-http-foundation-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-symfony-http-foundation-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-symfony-http-foundation-unit",

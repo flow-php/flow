@@ -24,6 +24,7 @@ parameters:
         - src/bridge/filesystem/azure/src
         - src/bridge/filesystem/async-aws/src
         - src/bridge/monolog/http/src
+        - src/bridge/openapi/specification/src
         - src/bridge/symfony/http-foundation/src
         - src/lib/array-dot/src
         - src/lib/azure-sdk/src
@@ -53,6 +54,7 @@ parameters:
         - src/bridge/filesystem/async-aws/tests
         - src/bridge/filesystem/azure/tests
         - src/bridge/monolog/http/tests
+        - src/bridge/openapi/specification/tests
         - src/bridge/symfony/http-foundation/tests
 
     excludePaths:
