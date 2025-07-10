@@ -454,8 +454,9 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.xml.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.filesystem.async-aws.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.filesystem.azure.xml",
-            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml",
-            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.monolog.http.xml"
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.monolog.http.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.openapi.specification.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml"
         ],
         "build:parquet:thrift": [
             "grep -q 'namespace php Flow.Parquet.Thrift' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
