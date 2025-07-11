@@ -39,6 +39,13 @@ final readonly class DeltaEncoder
             return '';
         }
 
+        // Validate that all values are integers
+        foreach ($values as $index => $value) {
+            if (!is_int($value)) {
+                throw new InvalidArgumentException('Delta encoding requires integer values, got ' . gettype($value) . " at index {$index}: " . var_export($value, true));
+            }
+        }
+
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
 
@@ -60,7 +67,9 @@ final readonly class DeltaEncoder
         $valuesCount = \count($values);
 
         for ($i = 1; $i < $valuesCount; $i++) {
-            $deltas[] = $values[$i] - $values[$i - 1];
+            $delta = $values[$i] - $values[$i - 1];
+            // Ensure the delta is an integer (in case of overflow issues)
+            $deltas[] = (int) $delta;
         }
 
         return $deltas;
@@ -133,7 +142,7 @@ final readonly class DeltaEncoder
         $minDelta = min($blockDeltas);
         $this->writeSignedLEB128($writer, $minDelta);
 
-        $relativeDeltas = array_map(fn ($delta) => $delta - $minDelta, $blockDeltas);
+        $relativeDeltas = array_map(fn ($delta) => (int) ($delta - $minDelta), $blockDeltas);
         $miniblockCount = (int) ceil(count($relativeDeltas) / $this->miniblockSize);
 
         $bitWidths = [];

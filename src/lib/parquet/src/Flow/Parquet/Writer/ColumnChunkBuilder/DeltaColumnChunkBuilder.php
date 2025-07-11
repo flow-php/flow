@@ -65,7 +65,6 @@ final class DeltaColumnChunkBuilder implements ColumnChunkBuilder
         $this->chunkStatistics = new StatisticsCounter($this->column);
         $this->pageStatistics = new StatisticsCounter($this->column);
 
-        // Delta encoding only supports INT32 and INT64 types
         if (!in_array($this->column->type(), [PhysicalType::INT32, PhysicalType::INT64], true)) {
             throw new \InvalidArgumentException('Delta encoding only supports INT32 and INT64 physical types');
         }
