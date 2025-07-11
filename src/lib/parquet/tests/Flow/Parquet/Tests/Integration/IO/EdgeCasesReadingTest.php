@@ -58,7 +58,7 @@ final class EdgeCasesReadingTest extends TestCase
 
     public function test_read_datapage_v2_snappy_list() : void
     {
-        $this->expectExceptionMessage('Encoding DELTA_BINARY_PACKED not supported');
+        $this->expectExceptionMessage('Encoding RLE not supported');
 
         $path = __DIR__ . '/Fixtures/EdgeCases/datapage_v2.snappy.parquet';
 

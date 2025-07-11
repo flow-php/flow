@@ -1,0 +1,206 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Parquet\ParquetFile\Data;
+
+use Flow\Parquet\BinaryReader\BinaryBufferReader;
+use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
+
+final readonly class DeltaDecoder
+{
+    private const DEFAULT_BLOCK_SIZE = 128;
+
+    private const DEFAULT_MINIBLOCK_SIZE = 32;
+
+    public function __construct(
+        private int $blockSize = self::DEFAULT_BLOCK_SIZE,
+        private int $miniblockSize = self::DEFAULT_MINIBLOCK_SIZE,
+    ) {
+        if ($this->blockSize % 128 !== 0) {
+            throw new InvalidArgumentException('Block size must be a multiple of 128');
+        }
+
+        if ($this->miniblockSize % 32 !== 0) {
+            throw new InvalidArgumentException('Miniblock size must be a multiple of 32');
+        }
+
+        if ($this->blockSize % $this->miniblockSize !== 0) {
+            throw new InvalidArgumentException('Block size must be a multiple of miniblock size');
+        }
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function decode(string $data, int $valueCount) : array
+    {
+        if ($valueCount === 0) {
+            return [];
+        }
+
+        if ($data === '') {
+            throw new RuntimeException('Cannot decode empty data when value count is greater than 0');
+        }
+
+        $header = $this->readHeader($reader = new BinaryBufferReader($data));
+
+        if ($header->totalValues !== $valueCount) {
+            throw new RuntimeException("Value count mismatch: expected {$valueCount}, got {$header->totalValues}");
+        }
+
+        if ($valueCount === 1) {
+            return [$header->firstValue];
+        }
+
+        return $this->reconstructValues(
+            $header->firstValue,
+            $this->readBlocks($reader, $valueCount - 1, $header->blockSize)
+        );
+    }
+
+    /**
+     * @return array<int>
+     */
+    private function readBlock(BinaryBufferReader $reader, int $blockDeltaCount) : array
+    {
+        $minDelta = $this->readSignedLEB128($reader);
+
+        $miniblockCount = (int) ceil($blockDeltaCount / $this->miniblockSize);
+
+        $bitWidths = [];
+
+        for ($i = 0; $i < $miniblockCount; $i++) {
+            $bitWidths[] = $reader->readBytes(1)->toArray()[0];
+        }
+
+        $deltas = [];
+        $deltasRead = 0;
+
+        for ($miniblockIndex = 0; $miniblockIndex < $miniblockCount && $deltasRead < $blockDeltaCount; $miniblockIndex++) {
+            $bitWidth = $bitWidths[$miniblockIndex];
+            $miniblockSize = $this->miniblockSize;
+
+            $remainingDeltas = $blockDeltaCount - $deltasRead;
+            $valuesToRead = min($miniblockSize, $remainingDeltas);
+
+            if ($bitWidth === 0) {
+                $miniblockDeltas = array_fill(0, $valuesToRead, 0);
+            } else {
+                $packedSize = (int) ceil(($miniblockSize * $bitWidth) / 8);
+                $packedData = $reader->readBytes($packedSize);
+                $miniblockDeltas = $this->unpackMiniblock($packedData->toArray(), $bitWidth, $valuesToRead);
+            }
+
+            $actualDeltas = array_map(fn ($delta) => $delta + $minDelta, $miniblockDeltas);
+            $deltas = array_merge($deltas, $actualDeltas);
+            $deltasRead += count($actualDeltas);
+        }
+
+        return array_slice($deltas, 0, $blockDeltaCount);
+    }
+
+    /**
+     * @return array<int>
+     */
+    private function readBlocks(BinaryBufferReader $reader, int $deltaCount, int $blockSize) : array
+    {
+        $deltas = [];
+        $deltasRead = 0;
+
+        while ($deltasRead < $deltaCount) {
+            $remainingDeltas = $deltaCount - $deltasRead;
+            $blockDeltaCount = min($blockSize, $remainingDeltas);
+
+            $blockDeltas = $this->readBlock($reader, $blockDeltaCount);
+            $deltas = array_merge($deltas, $blockDeltas);
+            $deltasRead += count($blockDeltas);
+        }
+
+        return $deltas;
+    }
+
+    private function readHeader(BinaryBufferReader $reader) : DeltaHeader
+    {
+        $blockSize = $this->readULEB128($reader);
+        $miniblockCount = $this->readULEB128($reader);
+        $totalValues = $this->readULEB128($reader);
+        $firstValue = $this->readSignedLEB128($reader);
+
+        return new DeltaHeader(
+            blockSize: $blockSize,
+            miniblockCount: $miniblockCount,
+            totalValues: $totalValues,
+            firstValue: $firstValue,
+        );
+    }
+
+    private function readSignedLEB128(BinaryBufferReader $reader) : int
+    {
+        $zigzag = $this->readULEB128($reader);
+
+        return $this->zigzagDecode($zigzag);
+    }
+
+    private function readULEB128(BinaryBufferReader $reader) : int
+    {
+        return $reader->readVarInt();
+    }
+
+    /**
+     * @param array<int> $deltas
+     *
+     * @return array<int>
+     */
+    private function reconstructValues(int $firstValue, array $deltas) : array
+    {
+        $values = [$firstValue];
+        $currentValue = $firstValue;
+
+        foreach ($deltas as $delta) {
+            $currentValue += $delta;
+            $values[] = $currentValue;
+        }
+
+        return $values;
+    }
+
+    /**
+     * @param array<int> $packedBytes
+     *
+     * @return array<int>
+     */
+    private function unpackMiniblock(array $packedBytes, int $bitWidth, int $valuesToRead) : array
+    {
+        $values = [];
+        $bitOffset = 0;
+        $packedData = \pack('C*', ...$packedBytes);
+
+        for ($valueIndex = 0; $valueIndex < $valuesToRead; $valueIndex++) {
+            $value = 0;
+
+            for ($bit = 0; $bit < $bitWidth; $bit++) {
+                $byteIndex = intdiv($bitOffset, 8);
+                $bitIndex = $bitOffset % 8;
+
+                if ($byteIndex >= strlen($packedData)) {
+                    break;
+                }
+
+                $byte = ord($packedData[$byteIndex]);
+                $bitValue = ($byte >> $bitIndex) & 1;
+                $value |= ($bitValue << $bit);
+                $bitOffset++;
+            }
+
+            $values[] = $value;
+        }
+
+        return $values;
+    }
+
+    private function zigzagDecode(int $value) : int
+    {
+        return ($value >> 1) ^ (-($value & 1));
+    }
+}

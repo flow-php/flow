@@ -200,11 +200,18 @@ final readonly class DeltaEncoder
 
     private function writeULEB128(BinaryBufferWriter $writer, int $value) : void
     {
-        if ($value < 0) {
-            throw new InvalidArgumentException("ULEB128 encoding requires non-negative values, got: {$value}");
-        }
+        if ($value > 0x7FFFFFFF) {
+            $bytes = [];
 
-        $writer->writeVarInts32([$value]);
+            while ($value >= 0x80) {
+                $bytes[] = ($value & 0x7F) | 0x80;
+                $value >>= 7;
+            }
+            $bytes[] = $value & 0x7F;
+            $writer->writeBytes($bytes);
+        } else {
+            $writer->writeVarInts32([$value]);
+        }
     }
 
     private function zigzagEncode(int $value) : int
