@@ -41,7 +41,6 @@ final readonly class DeltaEncoder
             return '';
         }
 
-        // Validate that all values are integers
         foreach ($values as $index => $value) {
             if (!is_int($value)) {
                 throw new InvalidArgumentException('Delta encoding requires integer values, got ' . gettype($value) . " at index {$index}: " . var_export($value, true));
@@ -55,53 +54,6 @@ final readonly class DeltaEncoder
         $this->writeBlocks($writer, $values);
 
         return $buffer;
-    }
-
-    /**
-     * @param array<int> $values
-     *
-     * @return array<int>
-     */
-    private function calculateDeltas(array $values) : array
-    {
-        return $this->deltaCalculator->calculateDeltas($values);
-    }
-
-    private function calculateRelativeDelta(int $delta, int $minDelta) : int
-    {
-        // Check if simple subtraction would overflow to float
-        $result = $delta - $minDelta;
-
-        // @phpstan-ignore-next-line function.impossibleType - PHP can convert int overflow to float
-        if (\is_float($result)) {
-            // Use BCMath for precise calculation without overflow
-            $deltaString = \bcsub((string) $delta, (string) $minDelta, 0);
-
-            // For 64-bit systems, implement proper 2's complement wrapping
-            if (PHP_INT_SIZE === 8) {
-                // If delta is out of range, wrap it using 2^64
-                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
-                    $deltaString = \bcsub($deltaString, '18446744073709551616', 0); // 2^64
-                }
-
-                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
-                    $deltaString = \bcadd($deltaString, '18446744073709551616', 0); // 2^64
-                }
-            } else {
-                // For 32-bit systems
-                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
-                    $deltaString = \bcsub($deltaString, '4294967296', 0); // 2^32
-                }
-
-                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
-                    $deltaString = \bcadd($deltaString, '4294967296', 0); // 2^32
-                }
-            }
-
-            return (int) $deltaString;
-        }
-
-        return (int) $result;
     }
 
     /**
@@ -171,7 +123,7 @@ final readonly class DeltaEncoder
         $minDelta = min($blockDeltas);
         $this->writeSignedLEB128($writer, $minDelta);
 
-        $relativeDeltas = array_map(fn ($delta) => $this->calculateRelativeDelta($delta, $minDelta), $blockDeltas);
+        $relativeDeltas = array_map(fn ($delta) => $this->deltaCalculator->calculateRelativeDelta($delta, $minDelta), $blockDeltas);
         $miniblockCount = (int) ceil(count($relativeDeltas) / $this->miniblockSize);
 
         $bitWidths = [];
@@ -205,7 +157,7 @@ final readonly class DeltaEncoder
             return;
         }
 
-        $deltas = $this->calculateDeltas($values);
+        $deltas = $this->deltaCalculator->calculateDeltas($values);
         $blockCount = (int) ceil(count($deltas) / $this->blockSize);
 
         for ($blockIndex = 0; $blockIndex < $blockCount; $blockIndex++) {

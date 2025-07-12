@@ -60,6 +60,47 @@ final readonly class DeltaCalculator
         return $deltas;
     }
 
+    public function calculateRelativeDelta(int $delta, int $minDelta) : int
+    {
+        // Check if simple subtraction would overflow to float
+        $result = $delta - $minDelta;
+
+        /**
+         * PHP will convert int overflow to float.
+         *
+         * @phpstan-ignore-next-line function.impossibleType
+         */
+        if (\is_float($result)) {
+            // Use BCMath for precise calculation without overflow
+            $deltaString = \bcsub((string) $delta, (string) $minDelta, 0);
+
+            // For 64-bit systems, implement proper 2's complement wrapping
+            if (PHP_INT_SIZE === 8) {
+                // If delta is out of range, wrap it using 2^64
+                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = \bcsub($deltaString, '18446744073709551616', 0); // 2^64
+                }
+
+                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = \bcadd($deltaString, '18446744073709551616', 0); // 2^64
+                }
+            } else {
+                // For 32-bit systems
+                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = \bcsub($deltaString, '4294967296', 0); // 2^32
+                }
+
+                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = \bcadd($deltaString, '4294967296', 0); // 2^32
+                }
+            }
+
+            return (int) $deltaString;
+        }
+
+        return (int) $result;
+    }
+
     /**
      * @param array<int> $deltas
      *
