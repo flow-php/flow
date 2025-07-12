@@ -7,6 +7,7 @@ namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\{Data\Codec,
     Dremel\WriteColumnData,
+    Exception\InvalidArgumentException,
     Exception\RuntimeException,
     Option,
     Options,
@@ -73,6 +74,21 @@ final class DeltaColumnChunkBuilder implements ColumnChunkBuilder
     public function addRow(WriteColumnData $columnData) : void
     {
         $flatValues = $columnData->values($this->column->flatPath());
+
+        $rawValues = $flatValues->values();
+
+        // Ensure all values are integers (required for delta encoding)
+        $values = [];
+
+        foreach ($rawValues as $value) {
+            if ($value !== null) {
+                if (!\is_int($value)) {
+                    throw new InvalidArgumentException(\sprintf('Delta encoding requires integer values, got %s', \gettype($value)));
+                }
+                $values[] = $value;
+            }
+        }
+
         $this->repetitionLevels = array_merge($this->repetitionLevels, $flatValues->repetitionLevels());
         $this->definitionLevels = array_merge($this->definitionLevels, $flatValues->definitionLevels());
 
@@ -86,10 +102,9 @@ final class DeltaColumnChunkBuilder implements ColumnChunkBuilder
             }
         }
 
-        array_push($this->values, ...$flatValues->values());
-
-        foreach ($flatValues->values() as $value) {
+        foreach ($values as $value) {
             $this->pageStatistics->add($value);
+            $this->values[] = $value;
         }
 
         $this->rowsCount++;

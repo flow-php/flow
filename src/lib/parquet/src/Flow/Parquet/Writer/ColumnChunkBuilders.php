@@ -104,7 +104,7 @@ final class ColumnChunkBuilders
 
     private static function createFlatColumnBuilder(FlatColumn $column, Options $options, Compressions $compressions) : ColumnChunkBuilder
     {
-        if ($column->type() === PhysicalType::INT32) {
+        if ($column->type() === PhysicalType::INT32 || $column->type() === PhysicalType::INT64) {
             return new DeltaColumnChunkBuilder($column, $options, $compressions);
         }
 

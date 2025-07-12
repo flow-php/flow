@@ -16,6 +16,7 @@ final readonly class DeltaDecoder
     public function __construct(
         private int $blockSize = self::DEFAULT_BLOCK_SIZE,
         private int $miniblockSize = self::DEFAULT_MINIBLOCK_SIZE,
+        private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
     ) {
         if ($this->blockSize % 128 !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
@@ -154,15 +155,7 @@ final readonly class DeltaDecoder
      */
     private function reconstructValues(int $firstValue, array $deltas) : array
     {
-        $values = [$firstValue];
-        $currentValue = $firstValue;
-
-        foreach ($deltas as $delta) {
-            $currentValue += $delta;
-            $values[] = $currentValue;
-        }
-
-        return $values;
+        return $this->deltaCalculator->reconstructValues($firstValue, $deltas);
     }
 
     /**

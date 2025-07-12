@@ -23,7 +23,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         foreach ($columnData->flatValues() as $flatValues) {
             // We need to find the correct child column chunk builder for the flat values.
             // This is done by matching the flat path of the flat values with the child column's flat path.
-            foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
+            foreach ($this->childrenColumnChunkBuilders as $index => $childBuilder) {
                 if ($childBuilder->column()->flatPath() === $flatValues->flatPath()) {
                     $childBuilder->addRow($columnData->toFlatColumnData($flatValues->flatPath()));
 

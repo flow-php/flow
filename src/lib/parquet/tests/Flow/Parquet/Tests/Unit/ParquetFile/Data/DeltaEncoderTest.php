@@ -54,6 +54,90 @@ final class DeltaEncoderTest extends TestCase
         self::assertSame('', $result);
     }
 
+    public function test_encode_extreme_values() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        $values = [
+            PHP_INT_MAX,
+            PHP_INT_MIN + 1000,  // Large delta that would overflow in naive calculation
+        ];
+
+        // This should now handle overflow using 2's complement wrapping
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
+    public function test_encode_handles_extreme_large_jump_with_wrapping() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        // Large jump that would cause overflow: delta would be ~-1.8e19
+        $values = [9223372036854775800, -9223372036854775800];
+
+        // Should now handle this with 2's complement wrapping
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
+    public function test_encode_handles_large_jump_with_wrapping() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        // Large jump that would cause overflow in naive calculation
+        $values = [5000000000000000000, -5000000000000000000];
+
+        // Should now handle this with 2's complement wrapping
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
+    public function test_encode_handles_php_int_max_to_min_with_wrapping() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        // PHP_INT_MAX to PHP_INT_MIN transition
+        $values = [PHP_INT_MAX, PHP_INT_MIN];
+
+        // Should now handle this with 2's complement wrapping
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
+    public function test_encode_handles_safe_large_values() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        // Sequential large values - deltas are small, should work fine
+        $values = [9223372036854775800, 9223372036854775801, 9223372036854775802];
+
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
+    public function test_encode_handles_small_jumps_with_large_values() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        // Small jumps even with large values - should work
+        $values = [PHP_INT_MAX - 100, PHP_INT_MAX - 50, PHP_INT_MAX];
+
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
     public function test_encode_large_dataset() : void
     {
         $encoder = new DeltaEncoder();
@@ -69,10 +153,61 @@ final class DeltaEncoderTest extends TestCase
         self::assertGreaterThan(0, strlen($result));
     }
 
+    public function test_encode_large_int64_values_no_overflow() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        $baseValue = PHP_INT_MAX - 1000;
+        $values = [];
+
+        for ($i = 0; $i < 10; $i++) {
+            $values[] = $baseValue + $i;
+        }
+
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
+    public function test_encode_large_int64_values_with_safe_deltas() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        $values = [
+            PHP_INT_MAX >> 1,      // Large positive
+            (PHP_INT_MAX >> 1) + 100,  // Slightly larger
+            (PHP_INT_MAX >> 1) - 50,   // Slightly smaller
+            (PHP_INT_MAX >> 1) + 200,  // Larger again
+        ];
+
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
     public function test_encode_large_values() : void
     {
         $encoder = new DeltaEncoder();
         $values = [1000000, 1000001, 1000002, 1000003, 1000004, 1000005, 1000006, 1000007];
+        $result = $encoder->encode($values);
+
+        self::assertNotEmpty($result);
+        self::assertGreaterThan(0, strlen($result));
+    }
+
+    public function test_encode_mixed_large_values() : void
+    {
+        $encoder = new DeltaEncoder();
+
+        $values = [
+            PHP_INT_MAX >> 2,      // Large positive
+            -(PHP_INT_MAX >> 2),   // Large negative
+            (PHP_INT_MAX >> 2) + 1000,  // Back to positive
+            -(PHP_INT_MAX >> 2) - 1000, // Back to negative
+        ];
+
         $result = $encoder->encode($values);
 
         self::assertNotEmpty($result);

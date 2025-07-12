@@ -16,6 +16,7 @@ final readonly class DeltaEncoder
     public function __construct(
         private int $blockSize = self::DEFAULT_BLOCK_SIZE,
         private int $miniblockSize = self::DEFAULT_MINIBLOCK_SIZE,
+        private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
     ) {
         if ($this->blockSize % 128 !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
@@ -62,17 +63,7 @@ final readonly class DeltaEncoder
      */
     private function calculateDeltas(array $values) : array
     {
-        $deltas = [];
-
-        $valuesCount = \count($values);
-
-        for ($i = 1; $i < $valuesCount; $i++) {
-            $delta = $values[$i] - $values[$i - 1];
-            // Ensure the delta is an integer (in case of overflow issues)
-            $deltas[] = (int) $delta;
-        }
-
-        return $deltas;
+        return $this->deltaCalculator->calculateDeltas($values);
     }
 
     /**
@@ -209,18 +200,14 @@ final readonly class DeltaEncoder
 
     private function writeULEB128(BinaryBufferWriter $writer, int $value) : void
     {
-        if ($value > 0x7FFFFFFF) {
-            $bytes = [];
+        $bytes = [];
 
-            while ($value >= 0x80) {
-                $bytes[] = ($value & 0x7F) | 0x80;
-                $value >>= 7;
-            }
-            $bytes[] = $value & 0x7F;
-            $writer->writeBytes($bytes);
-        } else {
-            $writer->writeVarInts32([$value]);
+        while ($value >= 0x80) {
+            $bytes[] = ($value & 0x7F) | 0x80;
+            $value >>= 7;
         }
+        $bytes[] = $value & 0x7F;
+        $writer->writeBytes($bytes);
     }
 
     private function zigzagEncode(int $value) : int
