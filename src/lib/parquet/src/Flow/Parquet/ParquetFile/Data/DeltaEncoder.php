@@ -17,6 +17,7 @@ final readonly class DeltaEncoder
         private int $blockSize = self::DEFAULT_BLOCK_SIZE,
         private int $miniblockSize = self::DEFAULT_MINIBLOCK_SIZE,
         private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
+        private ZigZag $zigzag = new ZigZag(),
     ) {
         if ($this->blockSize % 128 !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
@@ -64,6 +65,43 @@ final readonly class DeltaEncoder
     private function calculateDeltas(array $values) : array
     {
         return $this->deltaCalculator->calculateDeltas($values);
+    }
+
+    private function calculateRelativeDelta(int $delta, int $minDelta) : int
+    {
+        // Check if simple subtraction would overflow to float
+        $result = $delta - $minDelta;
+
+        // @phpstan-ignore-next-line function.impossibleType - PHP can convert int overflow to float
+        if (\is_float($result)) {
+            // Use BCMath for precise calculation without overflow
+            $deltaString = \bcsub((string) $delta, (string) $minDelta, 0);
+
+            // For 64-bit systems, implement proper 2's complement wrapping
+            if (PHP_INT_SIZE === 8) {
+                // If delta is out of range, wrap it using 2^64
+                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = \bcsub($deltaString, '18446744073709551616', 0); // 2^64
+                }
+
+                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = \bcadd($deltaString, '18446744073709551616', 0); // 2^64
+                }
+            } else {
+                // For 32-bit systems
+                while (\bccomp($deltaString, (string) PHP_INT_MAX, 0) > 0) {
+                    $deltaString = \bcsub($deltaString, '4294967296', 0); // 2^32
+                }
+
+                while (\bccomp($deltaString, (string) PHP_INT_MIN, 0) < 0) {
+                    $deltaString = \bcadd($deltaString, '4294967296', 0); // 2^32
+                }
+            }
+
+            return (int) $deltaString;
+        }
+
+        return (int) $result;
     }
 
     /**
@@ -133,7 +171,7 @@ final readonly class DeltaEncoder
         $minDelta = min($blockDeltas);
         $this->writeSignedLEB128($writer, $minDelta);
 
-        $relativeDeltas = array_map(fn ($delta) => (int) ($delta - $minDelta), $blockDeltas);
+        $relativeDeltas = array_map(fn ($delta) => $this->calculateRelativeDelta($delta, $minDelta), $blockDeltas);
         $miniblockCount = (int) ceil(count($relativeDeltas) / $this->miniblockSize);
 
         $bitWidths = [];
@@ -194,28 +232,37 @@ final readonly class DeltaEncoder
 
     private function writeSignedLEB128(BinaryBufferWriter $writer, int $value) : void
     {
-        $zigzag = $this->zigzagEncode($value);
+        $zigzag = $this->zigzag->encode($value);
         $this->writeULEB128($writer, $zigzag);
     }
 
     private function writeULEB128(BinaryBufferWriter $writer, int $value) : void
     {
+        // Implement proper ULEB128 encoding for signed zigzag values
         $bytes = [];
 
-        while ($value >= 0x80) {
-            $bytes[] = ($value & 0x7F) | 0x80;
-            $value >>= 7;
+        // Convert negative values to unsigned representation
+        if ($value < 0) {
+            // For negative values, we need to treat them as unsigned 64-bit
+            // PHP doesn't have native unsigned types, so we use string arithmetic
+            $unsigned = \bcadd((string) $value, '18446744073709551616', 0); // Add 2^64
+
+            // Encode the unsigned value
+            while (\bccomp($unsigned, '127', 0) > 0) {
+                $remainder = \bcmod($unsigned, '128', 0);
+                $bytes[] = ((int) $remainder) | 0x80;
+                $unsigned = \bcdiv($unsigned, '128', 0);
+            }
+            $bytes[] = (int) $unsigned;
+        } else {
+            // For positive values, use standard encoding
+            while ($value >= 0x80) {
+                $bytes[] = ($value & 0x7F) | 0x80;
+                $value >>= 7;
+            }
+            $bytes[] = $value & 0x7F;
         }
-        $bytes[] = $value & 0x7F;
+
         $writer->writeBytes($bytes);
-    }
-
-    private function zigzagEncode(int $value) : int
-    {
-        if (PHP_INT_SIZE === 8) {
-            return ($value << 1) ^ ($value >> 63);
-        }
-
-        return ($value << 1) ^ ($value >> 31);
     }
 }

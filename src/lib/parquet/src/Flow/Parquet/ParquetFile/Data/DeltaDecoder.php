@@ -17,6 +17,7 @@ final readonly class DeltaDecoder
         private int $blockSize = self::DEFAULT_BLOCK_SIZE,
         private int $miniblockSize = self::DEFAULT_MINIBLOCK_SIZE,
         private DeltaCalculator $deltaCalculator = new DeltaCalculator(),
+        private ZigZag $zigzag = new ZigZag(),
     ) {
         if ($this->blockSize % 128 !== 0) {
             throw new InvalidArgumentException('Block size must be a multiple of 128');
@@ -93,7 +94,29 @@ final readonly class DeltaDecoder
                 $miniblockDeltas = $this->unpackMiniblock($packedData->toArray(), $bitWidth, $valuesToRead);
             }
 
-            $actualDeltas = array_map(fn ($delta) => $delta + $minDelta, $miniblockDeltas);
+            $actualDeltas = array_map(function ($delta) use ($minDelta) {
+                $result = $delta + $minDelta;
+
+                // Handle float overflow precisely using BCMath
+                // @phpstan-ignore-next-line function.impossibleType - PHP can convert int overflow to float
+                if (\is_float($result)) {
+                    // Use BCMath for precise integer arithmetic
+                    $preciseResult = \bcadd((string) $delta, (string) $minDelta, 0);
+
+                    // Apply 2's complement wrapping for 64-bit integers
+                    if (PHP_INT_SIZE === 8) {
+                        if (\bccomp($preciseResult, (string) PHP_INT_MAX, 0) > 0) {
+                            $preciseResult = \bcsub($preciseResult, '18446744073709551616', 0);
+                        } elseif (\bccomp($preciseResult, (string) PHP_INT_MIN, 0) < 0) {
+                            $preciseResult = \bcadd($preciseResult, '18446744073709551616', 0);
+                        }
+                    }
+
+                    return (int) $preciseResult;
+                }
+
+                return $result;
+            }, $miniblockDeltas);
             $deltas = array_merge($deltas, $actualDeltas);
             $deltasRead += count($actualDeltas);
         }
@@ -140,7 +163,7 @@ final readonly class DeltaDecoder
     {
         $zigzag = $this->readULEB128($reader);
 
-        return $this->zigzagDecode($zigzag);
+        return $this->zigzag->decode($zigzag);
     }
 
     private function readULEB128(BinaryBufferReader $reader) : int
@@ -190,10 +213,5 @@ final readonly class DeltaDecoder
         }
 
         return $values;
-    }
-
-    private function zigzagDecode(int $value) : int
-    {
-        return ($value >> 1) ^ (-($value & 1));
     }
 }
