@@ -149,22 +149,35 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
-    public function writeVarInts32(array $values) : void
+    public function writeVarInts(array $values) : void
     {
         foreach ($values as $value) {
-            if ($value < 128) {
-                $this->buffer .= \chr($value);
-            } else {
-                do {
-                    $temp = $value & 0x7F;
-                    $value >>= 7;
+            // VarInt/ULEB128 encoding for signed values (may include ZigZag encoded values)
+            $bytes = [];
 
-                    if ($value) {
-                        $temp |= 0x80;
-                    }
-                    $this->buffer .= \chr($temp);
-                } while ($value);
+            // Convert negative values to unsigned representation
+            if ($value < 0) {
+                // For negative values, we need to treat them as unsigned 64-bit
+                // PHP doesn't have native unsigned types, so we use string arithmetic
+                $unsigned = \bcadd((string) $value, '18446744073709551616', 0); // Add 2^64
+
+                // Encode the unsigned value
+                while (\bccomp($unsigned, '127', 0) > 0) {
+                    $remainder = \bcmod($unsigned, '128', 0);
+                    $bytes[] = ((int) $remainder) | 0x80;
+                    $unsigned = \bcdiv($unsigned, '128', 0);
+                }
+                $bytes[] = (int) $unsigned;
+            } else {
+                // For positive values, use standard encoding
+                while ($value >= 0x80) {
+                    $bytes[] = ($value & 0x7F) | 0x80;
+                    $value >>= 7;
+                }
+                $bytes[] = $value & 0x7F;
             }
+
+            $this->writeBytes($bytes);
         }
     }
 }

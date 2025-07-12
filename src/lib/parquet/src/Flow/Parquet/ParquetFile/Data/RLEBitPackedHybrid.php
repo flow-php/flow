@@ -134,7 +134,7 @@ final class RLEBitPackedHybrid
         $numGroups = (int) \ceil(\count($values) / 8.0);
         $varInt = ($numGroups << 1) | 1;
 
-        $writer->writeVarInts32([$varInt]);
+        $writer->writeVarInts([$varInt]);
 
         $buffer = 0;
         $bitsInBuffer = 0;
@@ -245,7 +245,7 @@ final class RLEBitPackedHybrid
 
         $value = $values[0];
 
-        $writer->writeVarInts32([$intVar]);
+        $writer->writeVarInts([$intVar]);
         $writer->writeBytes(BitWidth::toBytes($value, $bitWidth));
     }
 }

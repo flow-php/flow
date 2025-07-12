@@ -161,13 +161,14 @@ final readonly class DeltaDecoder
 
     private function readSignedLEB128(BinaryBufferReader $reader) : int
     {
-        $zigzag = $this->readULEB128($reader);
+        $zigzag = $reader->readVarInt();
 
         return $this->zigzag->decode($zigzag);
     }
 
     private function readULEB128(BinaryBufferReader $reader) : int
     {
+        // Delegate to the BinaryReader's readVarInt method (VarInt = ULEB128)
         return $reader->readVarInt();
     }
 

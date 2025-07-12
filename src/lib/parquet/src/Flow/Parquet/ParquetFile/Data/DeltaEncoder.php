@@ -232,37 +232,11 @@ final readonly class DeltaEncoder
 
     private function writeSignedLEB128(BinaryBufferWriter $writer, int $value) : void
     {
-        $zigzag = $this->zigzag->encode($value);
-        $this->writeULEB128($writer, $zigzag);
+        $writer->writeVarInts([$this->zigzag->encode($value)]);
     }
 
     private function writeULEB128(BinaryBufferWriter $writer, int $value) : void
     {
-        // Implement proper ULEB128 encoding for signed zigzag values
-        $bytes = [];
-
-        // Convert negative values to unsigned representation
-        if ($value < 0) {
-            // For negative values, we need to treat them as unsigned 64-bit
-            // PHP doesn't have native unsigned types, so we use string arithmetic
-            $unsigned = \bcadd((string) $value, '18446744073709551616', 0); // Add 2^64
-
-            // Encode the unsigned value
-            while (\bccomp($unsigned, '127', 0) > 0) {
-                $remainder = \bcmod($unsigned, '128', 0);
-                $bytes[] = ((int) $remainder) | 0x80;
-                $unsigned = \bcdiv($unsigned, '128', 0);
-            }
-            $bytes[] = (int) $unsigned;
-        } else {
-            // For positive values, use standard encoding
-            while ($value >= 0x80) {
-                $bytes[] = ($value & 0x7F) | 0x80;
-                $value >>= 7;
-            }
-            $bytes[] = $value & 0x7F;
-        }
-
-        $writer->writeBytes($bytes);
+        $writer->writeVarInts([$value]);
     }
 }
