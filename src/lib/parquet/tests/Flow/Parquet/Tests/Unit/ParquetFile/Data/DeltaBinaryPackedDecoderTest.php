@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Data;
 
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Parquet\ParquetFile\Data\{DeltaDecoder, DeltaEncoder};
+use Flow\Parquet\ParquetFile\Data\{DeltaBinaryPackedDecoder, DeltaBinaryPackedEncoder};
 use PHPUnit\Framework\TestCase;
 
-final class DeltaDecoderTest extends TestCase
+final class DeltaBinaryPackedDecoderTest extends TestCase
 {
     public function test_constructor_validates_block_miniblock_relationship() : void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Block size must be a multiple of miniblock size');
 
-        new DeltaDecoder(128, 96);
+        new DeltaBinaryPackedDecoder(128, 96);
     }
 
     public function test_constructor_validates_block_size() : void
@@ -23,7 +23,7 @@ final class DeltaDecoderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Block size must be a multiple of 128');
 
-        new DeltaDecoder(100);
+        new DeltaBinaryPackedDecoder(100);
     }
 
     public function test_constructor_validates_miniblock_size() : void
@@ -31,13 +31,13 @@ final class DeltaDecoderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Miniblock size must be a multiple of 32');
 
-        new DeltaDecoder(128, 30);
+        new DeltaBinaryPackedDecoder(128, 30);
     }
 
     public function test_decode_different_patterns_produce_correct_output() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values1 = [1, 2, 3, 4, 5, 6, 7, 8];
         $values2 = [1, 3, 5, 7, 9, 11, 13, 15];
@@ -55,7 +55,7 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_empty_data_with_non_zero_count_throws_error() : void
     {
-        $decoder = new DeltaDecoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot decode empty data when value count is greater than 0');
@@ -65,7 +65,7 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_empty_data_with_zero_count() : void
     {
-        $decoder = new DeltaDecoder();
+        $decoder = new DeltaBinaryPackedDecoder();
         $result = $decoder->decode('', 0);
 
         self::assertSame([], $result);
@@ -73,8 +73,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_large_dataset() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [];
 
@@ -94,8 +94,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_large_values() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [1000000, 1000001, 1000002, 1000003, 1000004, 1000005, 1000006, 1000007];
         $encoded = $encoder->encode($values);
@@ -106,8 +106,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_negative_values() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [-10, -8, -6, -4, -2, 0, 2, 4];
         $encoded = $encoder->encode($values);
@@ -118,8 +118,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_produces_consistent_output() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [1, 3, 5, 7, 9, 11, 13, 15];
         $encoded = $encoder->encode($values);
@@ -133,8 +133,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_random_pattern() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [10, 15, 12, 18, 14, 20, 16, 22];
         $encoded = $encoder->encode($values);
@@ -145,8 +145,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_sequential_values() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [1, 2, 3, 4, 5, 6, 7, 8];
         $encoded = $encoder->encode($values);
@@ -157,8 +157,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_single_value() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [42];
         $encoded = $encoder->encode($values);
@@ -169,8 +169,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_timestamp_like_sequence() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $baseTimestamp = 1609459200; // 2021-01-01 00:00:00
         $values = [];
@@ -187,8 +187,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_value_count_mismatch_throws_error() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [1, 2, 3, 4, 5];
         $encoded = $encoder->encode($values);
@@ -201,8 +201,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_values_with_negative_deltas() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [100, 90, 80, 70, 60, 50, 40, 30];
         $encoded = $encoder->encode($values);
@@ -213,8 +213,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_values_with_varying_deltas() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [100, 102, 98, 105, 95, 110, 90, 115];
         $encoded = $encoder->encode($values);
@@ -225,8 +225,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_values_with_zero_deltas() : void
     {
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $values = [42, 42, 42, 42, 42, 42, 42, 42];
         $encoded = $encoder->encode($values);
@@ -237,8 +237,8 @@ final class DeltaDecoderTest extends TestCase
 
     public function test_decode_with_custom_block_size() : void
     {
-        $encoder = new DeltaEncoder(256, 64);
-        $decoder = new DeltaDecoder(256, 64);
+        $encoder = new DeltaBinaryPackedEncoder(256, 64);
+        $decoder = new DeltaBinaryPackedDecoder(256, 64);
 
         $values = range(1, 100);
         $encoded = $encoder->encode($values);

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Data;
 
-use Flow\Parquet\ParquetFile\Data\{DeltaDecoder, DeltaEncoder};
+use Flow\Parquet\ParquetFile\Data\{DeltaBinaryPackedDecoder, DeltaBinaryPackedEncoder};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-final class DeltaEncodingRoundtripTest extends TestCase
+final class DeltaBinaryPackedEncodingRoundtripTest extends TestCase
 {
     /**
      * @return array<string, array<array<int>>>
@@ -33,10 +33,10 @@ final class DeltaEncodingRoundtripTest extends TestCase
     #[DataProvider('problematicInt64ValuesProvider')]
     public function test_roundtrip_problematic_int64_values(array $values) : void
     {
-        self::markTestSkipped('This test demonstrates the issue with int64 delta encoding roundtrip');
+        // Test should now pass with the ZigZag fixes
 
-        $encoder = new DeltaEncoder();
-        $decoder = new DeltaDecoder();
+        $encoder = new DeltaBinaryPackedEncoder();
+        $decoder = new DeltaBinaryPackedDecoder();
 
         $encoded = $encoder->encode($values);
         $decoded = $decoder->decode($encoded, count($values));

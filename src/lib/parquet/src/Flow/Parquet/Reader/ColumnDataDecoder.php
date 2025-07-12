@@ -13,7 +13,7 @@ use Flow\Parquet\{
 };
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Data\{BitWidth, DeltaDecoder, PlainValueUnpacker, RLEBitPackedHybrid};
+use Flow\Parquet\ParquetFile\Data\{BitWidth, DeltaBinaryPackedDecoder, PlainValueUnpacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\{Dictionary};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
@@ -84,7 +84,7 @@ final readonly class ColumnDataDecoder
             $remainingBuffer = $reader->readBytes($reader->remainingLength()->bytes())->toArray();
             $remainingData = implode('', array_map('chr', $remainingBuffer));
 
-            $decoder = new DeltaDecoder();
+            $decoder = new DeltaBinaryPackedDecoder();
             $values = $decoder->decode($remainingData, $nonEmptyValuesCount);
 
             $valuesGenerator = function () use ($values) {
@@ -180,7 +180,7 @@ final readonly class ColumnDataDecoder
             $remainingBuffer = $reader->readBytes($reader->remainingLength()->bytes())->toArray();
             $remainingData = implode('', array_map('chr', $remainingBuffer));
 
-            $decoder = new DeltaDecoder();
+            $decoder = new DeltaBinaryPackedDecoder();
             $values = $decoder->decode($remainingData, $nonEmptyValuesCount);
 
             $valuesGenerator = function () use ($values) {

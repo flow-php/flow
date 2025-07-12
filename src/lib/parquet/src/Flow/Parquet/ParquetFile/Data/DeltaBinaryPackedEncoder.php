@@ -7,7 +7,7 @@ namespace Flow\Parquet\ParquetFile\Data;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 
-final readonly class DeltaEncoder
+final readonly class DeltaBinaryPackedEncoder
 {
     private const DEFAULT_BLOCK_SIZE = 128;
 

@@ -11,7 +11,11 @@ final readonly class DeltaCalculator
         // Check if simple subtraction would overflow to float
         $result = $current - $previous;
 
-        // @phpstan-ignore-next-line function.impossibleType - PHP can convert int overflow to float
+        /**
+         * PHP will convert int overflow to float.
+         *
+         * @phpstan-ignore-next-line function.impossibleType
+         */
         if (\is_float($result)) {
             // Use BCMath for precise calculation without overflow
             $deltaString = \bcsub((string) $current, (string) $previous, 0);

@@ -19,7 +19,7 @@ use Flow\Parquet\{Data\Codec,
 use Flow\Parquet\ParquetFile\{Compressions,
     Encodings
 };
-use Flow\Parquet\ParquetFile\Data\{BitWidth, DeltaEncoder, RLEBitPackedHybrid};
+use Flow\Parquet\ParquetFile\Data\{BitWidth, DeltaBinaryPackedEncoder, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
@@ -188,7 +188,7 @@ final class DeltaColumnChunkBuilder implements ColumnChunkBuilder
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels));
         }
 
-        $pageWriter->append((new DeltaEncoder())->encode($this->values));
+        $pageWriter->append((new DeltaBinaryPackedEncoder())->encode($this->values));
 
         $compressedBuffer = $codec->compress($pageBuffer, $compression);
 
@@ -238,7 +238,7 @@ final class DeltaColumnChunkBuilder implements ColumnChunkBuilder
             $definitionsLength = 0;
         }
 
-        $encodedValues = (new DeltaEncoder())->encode($this->values);
+        $encodedValues = (new DeltaBinaryPackedEncoder())->encode($this->values);
         $compressedBuffer = $codec->compress($encodedValues, $compression);
 
         $pageHeader = new PageHeader(

@@ -7,7 +7,7 @@ namespace Flow\Parquet\ParquetFile\Data;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 
-final readonly class DeltaDecoder
+final readonly class DeltaBinaryPackedDecoder
 {
     private const DEFAULT_BLOCK_SIZE = 128;
 
