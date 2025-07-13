@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Writer\ValueStorage;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\ParquetFile\Data\PlainValuesPacker;
+use Flow\Parquet\Data\PlainValuesPacker;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class BufferValueStorage implements ValueStorage

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer;
 
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Dremel\{DremelShredder, RowGroupContainer};
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, RowGroup, Schema};
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
 use Flow\Parquet\Writer\{RowGroupBuilder};
 use PHPUnit\Framework\Attributes\DataProvider;

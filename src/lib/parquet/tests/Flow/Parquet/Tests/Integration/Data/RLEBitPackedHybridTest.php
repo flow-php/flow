@@ -7,7 +7,7 @@ namespace Flow\Parquet\Tests\Integration\Data;
 use function Flow\ETL\DSL\generate_random_int;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
+use Flow\Parquet\Data\{BitWidth, RLEBitPackedHybrid};
 use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase

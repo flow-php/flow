@@ -6,8 +6,8 @@ namespace Flow\Parquet\Dremel;
 
 use function Flow\Parquet\{array_iterate_at_level, dremel_array_combine_recursive};
 use function Flow\Parquet\array_merge_recursive;
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Dremel\ColumnData\{DefinitionConverter, NullLevel, Stack};
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final readonly class DremelAssembler

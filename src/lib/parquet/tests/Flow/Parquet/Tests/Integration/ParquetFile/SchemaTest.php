@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile;
 
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Dremel\{DremelAssembler, DremelShredder};
 use Flow\Parquet\Dremel\Validator\{ColumnDataValidator};
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
 use PHPUnit\Framework\TestCase;

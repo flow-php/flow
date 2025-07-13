@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet;
 
 use Flow\Filesystem\SourceStream;
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\{Dremel\ColumnData\ReadFlatColumnValues,
     Dremel\DremelAssembler,
     Dremel\ReadColumnData,
@@ -14,6 +13,7 @@ use Flow\Parquet\{Dremel\ColumnData\ReadFlatColumnValues,
     ParquetFile\Schema,
     Reader\PageReader};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader\{ColumnChunkReader, ColumnChunkViewer};

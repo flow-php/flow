@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Dremel\ColumnData;
 
 use Faker\Factory;
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\Dremel\{DremelShredder};
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
 use Flow\Parquet\Dremel\WriteColumnData;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use PHPUnit\Framework\TestCase;

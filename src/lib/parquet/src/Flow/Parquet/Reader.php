@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet;
 
 use Flow\Filesystem\{Path, SourceStream, Stream\NativeLocalSourceStream};
-use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 
 final readonly class Reader
 {

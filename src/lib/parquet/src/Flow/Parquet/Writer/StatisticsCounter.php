@@ -6,9 +6,9 @@ namespace Flow\Parquet\Writer;
 
 use function Flow\Parquet\array_flatten;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
+use Flow\Parquet\Data\PlainValuesPacker;
 use Flow\Parquet\Dremel\Statistics\Comparator;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Data\PlainValuesPacker;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn};
 use Flow\Parquet\ParquetFile\Statistics;
 

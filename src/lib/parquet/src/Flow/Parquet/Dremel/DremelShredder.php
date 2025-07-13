@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel;
 
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Dremel\ColumnData\{FlatValue};
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final readonly class DremelShredder

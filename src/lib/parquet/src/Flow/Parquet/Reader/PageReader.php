@@ -6,10 +6,10 @@ namespace Flow\Parquet\Reader;
 
 use Flow\Parquet\{
     ByteOrder,
-    Data\Codec,
     Dremel\ColumnData\ReadFlatColumnValues,
     Options,
-    ParquetFile\Compressions
+    ParquetFile\Compressions,
+    ParquetFile\Data\Codec
 };
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Page\{Dictionary, PageHeader};

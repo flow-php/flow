@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Dremel\Statistics;
 
-use Flow\Parquet\Data\Converter\TimeConverter;
+use Flow\Parquet\ParquetFile\Data\Converter\TimeConverter;
 
 final class Comparator
 {

@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\{Data\Codec,
+use Flow\Parquet\{
+    Data\BitWidth,
+    Data\PlainValuesPacker,
     Dremel\WriteColumnData,
     Exception\RuntimeException,
     Option,
     Options,
+    ParquetFile\Data\Codec,
     Writer\ColumnChunkBuilder,
     Writer\ColumnChunkContainer,
     Writer\PageContainer,
     Writer\PageContainers,
-    Writer\StatisticsCounter};
+    Writer\StatisticsCounter
+};
+use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
+use Flow\Parquet\Data\{RLEBitPackedHybrid};
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\{Compressions,
     Encodings
 };
-use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValuesPacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;

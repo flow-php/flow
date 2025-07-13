@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
+use Flow\Parquet\Data\PlainValueUnpacker;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Data\PlainValueUnpacker;
 use Flow\Parquet\ParquetFile\Schema\{ColumnPrimitiveType, FlatColumn};
 use Flow\Parquet\ParquetFile\Statistics;
 

@@ -7,7 +7,6 @@ namespace Flow\Parquet;
 use Composer\InstalledVersions;
 use Flow\Filesystem\{DestinationStream, Path};
 use Flow\Filesystem\Stream\{NativeLocalDestinationStream};
-use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Dremel\{DremelShredder};
 use Flow\Parquet\Dremel\Validator\{ColumnDataValidator, DisabledValidator};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
@@ -16,6 +15,7 @@ use Flow\Parquet\ParquetFile\{Compressions,
     RowGroups,
     Schema
 };
+use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Flow\Parquet\Writer\RowGroupBuilder;
 use Thrift\Protocol\TCompactProtocol;

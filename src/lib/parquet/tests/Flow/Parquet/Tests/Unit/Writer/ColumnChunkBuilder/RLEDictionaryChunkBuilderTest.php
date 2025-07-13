@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\Data\Codec;
 use Flow\Parquet\Dremel\ColumnData\FlatValue;
 use Flow\Parquet\Dremel\WriteColumnData;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions};
+use Flow\Parquet\ParquetFile\Data\Codec;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 use Flow\Parquet\Writer\ColumnChunkBuilder\RLEDictionaryChunkBuilder;

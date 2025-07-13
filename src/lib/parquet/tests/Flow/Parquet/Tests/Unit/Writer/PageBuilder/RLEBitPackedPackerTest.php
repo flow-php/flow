@@ -6,7 +6,8 @@ namespace Flow\Parquet\Tests\Unit\Writer\PageBuilder;
 
 use Flow\Parquet\BinaryReader\{BinaryBufferReader};
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
+use Flow\Parquet\Data\BitWidth;
+use Flow\Parquet\Data\{RLEBitPackedHybrid};
 use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

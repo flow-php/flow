@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Writer\ValueStorage;
 
+use Flow\Parquet\Data\DeltaBinaryPackedEncoder;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Data\DeltaBinaryPackedEncoder;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
 
 final class DeltaBinaryPackedValueStorage implements ValueStorage

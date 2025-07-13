@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Flow\Parquet\Reader;
 
 use function Flow\ETL\Adapter\Parquet\empty_generator;
-use Flow\Parquet\{
-    ByteOrder,
+use Flow\Parquet\BinaryReader\BinaryBufferReader;
+use Flow\Parquet\{ByteOrder,
+    Data\BitWidth,
+    Data\DeltaBinaryPackedDecoder,
+    Data\PlainValueUnpacker,
     Dremel\ColumnData\ReadFlatColumnValues,
     Options,
-    ParquetFile\Encodings
-};
-use Flow\Parquet\BinaryReader\BinaryBufferReader;
+    ParquetFile\Encodings};
+use Flow\Parquet\Data\{RLEBitPackedHybrid};
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Data\{BitWidth, DeltaBinaryPackedDecoder, PlainValueUnpacker, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\{Dictionary};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};

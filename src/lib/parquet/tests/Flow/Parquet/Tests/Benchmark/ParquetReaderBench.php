@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Benchmark;
 
 use Flow\Filesystem\{Path, Stream\NativeLocalSourceStream};
-use Flow\Parquet\{ByteOrder, Data\DataConverter, Options, ParquetFile};
+use Flow\Parquet\{ByteOrder, Options, ParquetFile, ParquetFile\Data\DataConverter};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['parquet-library'])]

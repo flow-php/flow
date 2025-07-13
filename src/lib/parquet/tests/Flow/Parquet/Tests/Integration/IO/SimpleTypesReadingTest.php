@@ -144,6 +144,52 @@ final class SimpleTypesReadingTest extends TestCase
         self::assertSame($file->metadata()->rowsNumber(), $count);
     }
 
+    public function test_reading_delta_binary_packed_encoded_integers() : void
+    {
+        $reader = new Reader();
+        $file = $reader->read(__DIR__ . '/Fixtures/delta_binary_acked_encoded_integers.parquet');
+
+        // Verify schema structure
+        self::assertEquals(PhysicalType::INT32, $file->metadata()->schema()->get('int32_column')->type());
+        self::assertNull($file->metadata()->schema()->get('int32_column')->logicalType());
+        self::assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('int64_column')->type());
+        self::assertNull($file->metadata()->schema()->get('int64_column')->logicalType());
+        self::assertEquals(PhysicalType::FLOAT, $file->metadata()->schema()->get('float_column')->type());
+        self::assertNull($file->metadata()->schema()->get('float_column')->logicalType());
+
+        // Verify file contains expected number of rows
+        self::assertSame(1000, $file->metadata()->rowsNumber());
+
+        // Test reading delta binary packed encoded integers
+        $int32Values = [];
+        $int64Values = [];
+        $floatValues = [];
+        $count = 0;
+
+        foreach ($file->values(['int32_column', 'int64_column', 'float_column']) as $row) {
+            $int32Values[] = $row['int32_column'];
+            $int64Values[] = $row['int64_column'];
+            $floatValues[] = $row['float_column'];
+            $count++;
+        }
+
+        // Verify we read the expected number of rows
+        self::assertSame(1000, $count);
+        self::assertCount(1000, $int32Values);
+        self::assertCount(1000, $int64Values);
+        self::assertCount(1000, $floatValues);
+
+        // Verify data types
+        self::assertContainsOnly('int', $int32Values);
+        self::assertContainsOnly('int', $int64Values);
+        self::assertContainsOnly('float', $floatValues);
+
+        // Verify some sample values are reasonable
+        self::assertGreaterThan(0, count(array_filter($int32Values, fn ($v) => $v !== 0)));
+        self::assertGreaterThan(0, count(array_filter($int64Values, fn ($v) => $v !== 0)));
+        self::assertGreaterThan(0, count(array_filter($floatValues, fn ($v) => $v !== 0.0)));
+    }
+
     public function test_reading_double_column() : void
     {
         $reader = new Reader();
