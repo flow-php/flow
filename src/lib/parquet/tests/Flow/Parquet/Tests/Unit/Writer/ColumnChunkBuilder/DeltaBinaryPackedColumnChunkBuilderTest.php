@@ -57,8 +57,9 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
     public function test_empty_builder_properties() : void
     {
+        $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('test_col', PhysicalType::INT32);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, new Options(), Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
 
         self::assertSame($column, $builder->column());
         self::assertFalse($builder->isFull());
@@ -67,8 +68,9 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
     public function test_flush_empty_builder() : void
     {
+        $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('test_col', PhysicalType::INT32);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, new Options(), Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
 
         $containers = $builder->flush(0);
 
@@ -79,8 +81,9 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
     public function test_flush_with_data() : void
     {
+        $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('test_col', PhysicalType::INT32);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, new Options(), Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
 
         $values = [1, 2, 3, 4, 5];
 
@@ -101,8 +104,9 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
     public function test_is_full_calculation_for_int32() : void
     {
-        $options = new Options();
-        $options = $options->set(Option::PAGE_SIZE_BYTES, 100);
+        $options = (new Options())
+            ->set(Option::PAGE_SIZE_BYTES, 100)
+            ->set(Option::WRITER_VERSION, 2);
 
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
@@ -120,8 +124,9 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
 
     public function test_is_full_calculation_for_int64() : void
     {
-        $options = new Options();
-        $options = $options->set(Option::PAGE_SIZE_BYTES, 100);
+        $options = (new Options())
+            ->set(Option::PAGE_SIZE_BYTES, 100)
+            ->set(Option::WRITER_VERSION, 2);
 
         $column = new FlatColumn('test_col', PhysicalType::INT64);
         $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
@@ -140,18 +145,18 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     #[DataProvider('compression_types_provider')]
     public function test_supports_different_compression_types(Compressions $compression) : void
     {
+        $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('test_col', PhysicalType::INT32);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, new Options(), $compression);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, $compression);
 
         self::assertSame($column, $builder->column());
         self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $builder);
     }
 
-    #[DataProvider('page_size_provider')]
+    #[DataProvider('writer_version_provider')]
     public function test_supports_different_writer_versions(int $version) : void
     {
-        $options = new Options();
-        $options = $options->set(Option::WRITER_VERSION, $version);
+        $options = (new Options())->set(Option::WRITER_VERSION, $version);
 
         $column = new FlatColumn('test_col', PhysicalType::INT32);
         $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
@@ -163,8 +168,9 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
     #[DataProvider('physical_types_provider')]
     public function test_supports_integer_types(PhysicalType $type, int $value) : void
     {
+        $options = (new Options())->set(Option::WRITER_VERSION, 2);
         $column = new FlatColumn('test_col', $type);
-        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, new Options(), Compressions::UNCOMPRESSED);
+        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, Compressions::UNCOMPRESSED);
 
         self::assertSame($column, $builder->column());
         self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $builder);
