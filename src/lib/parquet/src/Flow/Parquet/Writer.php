@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use function Flow\Types\DSL\type_integer;
 use Composer\InstalledVersions;
 use Flow\Filesystem\{DestinationStream, Path};
 use Flow\Filesystem\Stream\{NativeLocalDestinationStream};
@@ -177,7 +178,7 @@ final class Writer
     public function writeRow(array $row) : void
     {
         $this->rowGroupBuilder()->addRow($row);
-        $interval = (int) $this->options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL);
+        $interval = type_integer()->assert($this->options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL));
 
         if (($this->rowGroupBuilder()->rowsCount() % $interval === 0) && $this->rowGroupBuilder()->isFull()) {
             $rowGroupContainer = $this->rowGroupBuilder()->flush($this->fileOffset);

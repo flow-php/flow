@@ -6,11 +6,13 @@ namespace Flow\Parquet;
 
 use Flow\Filesystem\SizeUnits;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Options\ColumnsEncodings;
+use Flow\Parquet\ParquetFile\Encodings;
 
 final class Options
 {
     /**
-     * @var array<string, bool|float|int>
+     * @var array<string, null|array<mixed>|bool|ColumnsEncodings|float|int>
      */
     private array $options;
 
@@ -33,6 +35,7 @@ final class Options
             Option::ZSTD_COMPRESSION_LEVEL->name => 3,
             Option::WRITER_VERSION->name => 1,
             Option::VALIDATE_DATA->name => true,
+            Option::COLUMNS_ENCODINGS->name => null,
         ];
     }
 
@@ -41,7 +44,10 @@ final class Options
         return new self;
     }
 
-    public function get(Option $option) : bool|int|float
+    /**
+     * @return null|array<mixed>|bool|ColumnsEncodings|float|int
+     */
+    public function get(Option $option) : bool|int|float|array|ColumnsEncodings|null
     {
         return $this->options[$option->name];
     }
@@ -57,6 +63,21 @@ final class Options
         return $value;
     }
 
+    public function getColumnsEncodings() : ?ColumnsEncodings
+    {
+        $value = $this->options[Option::COLUMNS_ENCODINGS->name] ?? null;
+
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof ColumnsEncodings) {
+            return $value;
+        }
+
+        throw new InvalidArgumentException('Option COLUMNS_ENCODINGS is not a ColumnsEncodings instance, but: ' . \gettype($value));
+    }
+
     public function getInt(Option $option) : int
     {
         $value = $this->options[$option->name];
@@ -68,9 +89,32 @@ final class Options
         return $value;
     }
 
-    public function set(Option $option, bool|int|float $value) : self
+    public function has(Option $option) : bool
     {
-        $this->options[$option->name] = $value;
+        $value = $this->options[$option->name] ?? null;
+
+        return $value !== null;
+    }
+
+    /**
+     * @param null|array<mixed>|bool|ColumnsEncodings|float|int $value
+     */
+    public function set(Option $option, bool|int|float|array|ColumnsEncodings|null $value) : self
+    {
+        if ($option === Option::COLUMNS_ENCODINGS) {
+            if ($value === null) {
+                $this->options[$option->name] = null;
+            } elseif ($value instanceof ColumnsEncodings) {
+                $this->options[$option->name] = $value;
+            } elseif (\is_array($value)) {
+                /** @var array<string, Encodings|string> $value */
+                $this->options[$option->name] = ColumnsEncodings::fromArray($value);
+            } else {
+                throw new InvalidArgumentException('Option COLUMNS_ENCODINGS must be an array, ColumnsEncodings instance, or null, got: ' . \gettype($value));
+            }
+        } else {
+            $this->options[$option->name] = $value;
+        }
 
         return $this;
     }

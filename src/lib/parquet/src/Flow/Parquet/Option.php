@@ -22,6 +22,22 @@ enum Option
     case BYTE_ARRAY_TO_STRING;
 
     /**
+     * Per-column encoding configuration using flat path notation.
+     * Accepts array<string, string> where key is column flat path and value is encoding name.
+     *
+     * Flat path examples:
+     * - Simple columns: 'column_name'
+     * - Nested structs: 'user.address.street'
+     * - List elements: 'items.list.element'
+     * - Map keys/values: 'metadata.key_value.key', 'metadata.key_value.value'
+     *
+     * Supported encodings: PLAIN, RLE_DICTIONARY, DELTA_BINARY_PACKED
+     *
+     * Default: null (use automatic encoding selection)
+     */
+    case COLUMNS_ENCODINGS;
+
+    /**
      * Whenever cardinality ratio of the dictionary goes below this value, PagesBuilders is going to fallback to PLAIN encoding.
      * Cardinality ration is calculated as distinct values / total values.
      * Please notice that even when cardinality ration is above this value, PageBuilder will still fallback to PLAIN encoding
