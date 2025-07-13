@@ -28,7 +28,7 @@ use Flow\Parquet\Writer\PageBuilder\{RLEBitPackedPacker};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 
-final class DeltaColumnChunkBuilder implements ColumnChunkBuilder
+final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 {
     private StatisticsCounter $chunkStatistics;
 
@@ -67,7 +67,7 @@ final class DeltaColumnChunkBuilder implements ColumnChunkBuilder
         $this->pageStatistics = new StatisticsCounter($this->column);
 
         if (!in_array($this->column->type(), [PhysicalType::INT32, PhysicalType::INT64], true)) {
-            throw new \InvalidArgumentException('Delta encoding only supports INT32 and INT64 physical types');
+            throw new InvalidArgumentException('Delta encoding only supports INT32 and INT64 physical types');
         }
     }
 
