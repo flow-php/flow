@@ -76,6 +76,8 @@ final readonly class ZigZag
 
     /**
      * Wrap a BCMath string result to 64-bit signed integer range.
+     *
+     * @param numeric-string $value
      */
     private function wrapTo64BitSigned(string $value) : int
     {
