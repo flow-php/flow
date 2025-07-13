@@ -13,7 +13,6 @@ final readonly class ZigZag
      */
     public function decode(int $value) : int
     {
-        // Use logical right shift and handle the sign bit correctly
         return $this->logicalRightShift($value, 1) ^ (-($value & 1));
     }
 
@@ -29,19 +28,11 @@ final readonly class ZigZag
      */
     public function encode(int $value) : int
     {
-        // Use the mathematical approach that works correctly for all values:
-        // For positive values: 2 * value
-        // For negative values: 2 * abs(value) - 1
         if ($value >= 0) {
-            // For non-negative values, just shift left by 1
             return $this->safeLeftShift($value, 1);
         }
-        // For negative values: encode as 2 * |value| - 1
-        // This maps -1->1, -2->3, -3->5, etc.
 
-        // Handle PHP_INT_MIN special case where -$value would overflow to float
         if ($value === PHP_INT_MIN) {
-            // For PHP_INT_MIN, use BCMath to handle the absolute value calculation
             $absValue = \bcsub('0', (string) $value, 0); // |PHP_INT_MIN|
             $doubled = \bcmul($absValue, '2', 0);
             $result = \bcsub($doubled, '1', 0);
@@ -59,10 +50,7 @@ final readonly class ZigZag
     private function logicalRightShift(int $value, int $bits) : int
     {
         if (PHP_INT_SIZE === 8 && $bits === 1) {
-            // For 64-bit systems, handle logical right shift
             if ($value < 0) {
-                // Convert to unsigned representation, shift, then back to signed
-                // This effectively does an unsigned right shift
                 return (($value & 0x7FFFFFFFFFFFFFFF) >> 1) | (0x4000000000000000);
             }
         }
@@ -76,9 +64,7 @@ final readonly class ZigZag
     private function safeLeftShift(int $value, int $bits) : int
     {
         if (PHP_INT_SIZE === 8 && $bits === 1) {
-            // Check if shifting left by 1 would cause overflow
             if ($value > (PHP_INT_MAX >> 1)) {
-                // Use BCMath to handle the overflow case
                 $result = \bcmul((string) $value, '2', 0);
 
                 return $this->wrapTo64BitSigned($result);
@@ -93,7 +79,6 @@ final readonly class ZigZag
      */
     private function wrapTo64BitSigned(string $value) : int
     {
-        // For 64-bit systems, wrap the value to fit in signed 64-bit range
         while (\bccomp($value, '9223372036854775807', 0) > 0) {
             $value = \bcsub($value, '18446744073709551616', 0); // 2^64
         }

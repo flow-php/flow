@@ -68,6 +68,12 @@ final readonly class DeltaBinaryPackedEncoder
         $buffer = '';
         $writer = new BinaryBufferWriter($buffer);
 
+        // For large bit widths (>= 62), use bit-by-bit packing to avoid overflow
+        if ($bitWidth >= 62) {
+            return $this->packMiniblockSafe($values, $bitWidth, $writer);
+        }
+
+        // Use the original fast method for smaller bit widths
         $currentByte = 0;
         $bitsInByte = 0;
 
@@ -93,6 +99,41 @@ final readonly class DeltaBinaryPackedEncoder
         }
 
         return $buffer;
+    }
+
+    /**
+     * Safe bit packing for large bit widths to avoid integer overflow.
+     * Uses manual bit manipulation with array of bytes instead of integer accumulation.
+     *
+     * @param array<int> $values
+     */
+    private function packMiniblockSafe(array $values, int $bitWidth, BinaryBufferWriter $writer) : string
+    {
+        $expectedByteCount = (int) ceil(($this->miniblockSize * $bitWidth) / 8);
+        $bytes = array_fill(0, $expectedByteCount, 0);
+
+        $globalBitOffset = 0;
+
+        foreach ($values as $value) {
+            // Pack this value bit by bit
+            for ($bit = 0; $bit < $bitWidth; $bit++) {
+                $bitValue = ($value >> $bit) & 1;
+
+                if ($bitValue) {
+                    $byteIndex = intdiv($globalBitOffset, 8);
+                    $bitIndex = $globalBitOffset % 8;
+
+                    if ($byteIndex < $expectedByteCount) {
+                        $bytes[$byteIndex] |= (1 << $bitIndex);
+                    }
+                }
+
+                $globalBitOffset++;
+            }
+        }
+
+        // Return the packed data as a string (don't write to the passed writer)
+        return pack('C*', ...$bytes);
     }
 
     /**

@@ -161,14 +161,11 @@ final readonly class DeltaBinaryPackedDecoder
 
     private function readSignedLEB128(BinaryBufferReader $reader) : int
     {
-        $zigzag = $reader->readVarInt();
-
-        return $this->zigzag->decode($zigzag);
+        return $this->zigzag->decode($reader->readVarInt());
     }
 
     private function readULEB128(BinaryBufferReader $reader) : int
     {
-        // Delegate to the BinaryReader's readVarInt method (VarInt = ULEB128)
         return $reader->readVarInt();
     }
 
@@ -189,6 +186,12 @@ final readonly class DeltaBinaryPackedDecoder
      */
     private function unpackMiniblock(array $packedBytes, int $bitWidth, int $valuesToRead) : array
     {
+        // For large bit widths (>= 62), use safe unpacking to avoid overflow
+        if ($bitWidth >= 62) {
+            return $this->unpackMiniblockSafe($packedBytes, $bitWidth, $valuesToRead);
+        }
+
+        // Use the original fast method for smaller bit widths
         $values = [];
         $bitOffset = 0;
         $packedData = \pack('C*', ...$packedBytes);
@@ -208,6 +211,47 @@ final readonly class DeltaBinaryPackedDecoder
                 $bitValue = ($byte >> $bitIndex) & 1;
                 $value |= ($bitValue << $bit);
                 $bitOffset++;
+            }
+
+            $values[] = $value;
+        }
+
+        return $values;
+    }
+
+    /**
+     * Safe bit unpacking for large bit widths to avoid integer overflow.
+     * Uses the exact inverse of the safe packing algorithm.
+     *
+     * @param array<int> $packedBytes
+     *
+     * @return array<int>
+     */
+    private function unpackMiniblockSafe(array $packedBytes, int $bitWidth, int $valuesToRead) : array
+    {
+        $values = [];
+        $packedData = \pack('C*', ...$packedBytes);
+
+        $globalBitOffset = 0;
+
+        for ($valueIndex = 0; $valueIndex < $valuesToRead; $valueIndex++) {
+            $value = 0;
+
+            // Unpack this value bit by bit
+            for ($bit = 0; $bit < $bitWidth; $bit++) {
+                $byteIndex = intdiv($globalBitOffset, 8);
+                $bitIndex = $globalBitOffset % 8;
+
+                if ($byteIndex < strlen($packedData)) {
+                    $byte = ord($packedData[$byteIndex]);
+                    $bitValue = ($byte >> $bitIndex) & 1;
+
+                    if ($bitValue) {
+                        $value |= (1 << $bit);
+                    }
+                }
+
+                $globalBitOffset++;
             }
 
             $values[] = $value;
