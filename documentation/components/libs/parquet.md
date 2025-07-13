@@ -307,3 +307,217 @@ If you want to achieve the best compression, you should use `GZIP` or `SNAPPY` w
 
 For not yet supported algorithms, please check our [Roadmap](https://github.com/orgs/flow-php/projects/1) to understand when they will be supported.
 
+## Column Encodings
+
+Parquet supports various column encoding algorithms that can significantly impact file size and query performance. 
+You can specify custom encodings for individual columns using flat path notation.
+
+### Available Encodings
+
+#### PLAIN
+The default encoding that stores values as-is without any compression scheme.
+
+**When to use:**
+- Small datasets where compression overhead isn't justified
+- Columns with high cardinality and random distribution
+- When you need maximum compatibility with other Parquet readers
+
+**Supported types:** All column types
+
+```php
+use Flow\Parquet\Options;
+use Flow\Parquet\Option;
+
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    'description' => 'PLAIN',
+    'uuid' => 'PLAIN'
+]);
+```
+
+#### RLE_DICTIONARY
+Run Length Encoding with Dictionary compression. Values are stored in a dictionary and replaced with indices.
+
+**When to use:**
+- Columns with low cardinality (many repeated values)
+- String columns with repeated categories (status, country, department)
+- Enumeration-like data
+- Significant file size reduction (often 50-90% smaller)
+
+**Supported types:** All types except `FIXED_LEN_BYTE_ARRAY`
+
+```php
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    'status' => 'RLE_DICTIONARY',          // 'active', 'inactive', 'pending'  
+    'country_code' => 'RLE_DICTIONARY',    // 'US', 'UK', 'DE', 'FR'
+    'department' => 'RLE_DICTIONARY'       // 'engineering', 'sales', 'marketing'
+]);
+```
+
+#### DELTA_BINARY_PACKED
+Delta encoding with binary packing for integer columns. Stores differences between consecutive values.
+
+**When to use:**
+- Sequential or monotonic integer data (IDs, timestamps, counters)
+- Time series data with incremental values
+- Can achieve 70-95% compression for sequential data
+
+**Supported types:** Only `INT32` and `INT64`
+
+```php
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    'user_id' => 'DELTA_BINARY_PACKED',     // 1, 2, 3, 4, 5...
+    'timestamp_ms' => 'DELTA_BINARY_PACKED', // 1634567890123, 1634567890124...
+    'order_number' => 'DELTA_BINARY_PACKED'  // Sequential order IDs
+]);
+```
+
+### Using Custom Encodings
+
+#### Basic Column Encoding
+
+```php
+use Flow\Parquet\{Writer, Options, Option};
+use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+
+$schema = Schema::with(
+    FlatColumn::int64('user_id'),
+    FlatColumn::string('status'),
+    FlatColumn::string('description')
+);
+
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    'user_id' => 'DELTA_BINARY_PACKED',  // Sequential IDs
+    'status' => 'RLE_DICTIONARY',        // Limited set of values
+    'description' => 'PLAIN'             // High variance text
+]);
+
+$writer = new Writer(compressions: Compressions::SNAPPY, options: $options);
+```
+
+#### Nested Column Encoding (Flat Path Notation)
+
+For nested structures, use dot notation to specify the exact column path. 
+The flat path follows Parquet's internal structure conventions:
+
+**Flat Path Patterns:**
+- **Struct fields**: `parent.field_name` 
+- **List elements**: `list_name.list.element`
+- **Map keys**: `map_name.key_value.key`
+- **Map values**: `map_name.key_value.value`
+
+```php
+use Flow\Parquet\ParquetFile\Schema\{NestedColumn, ListElement, MapKey, MapValue};
+
+$schema = Schema::with(
+    NestedColumn::struct('user', [
+        FlatColumn::int64('id'),
+        FlatColumn::string('name'),
+        NestedColumn::struct('address', [
+            FlatColumn::string('street'),
+            FlatColumn::string('city'),
+            FlatColumn::string('country')
+        ])
+    ]),
+    NestedColumn::list('tags', ListElement::string()),
+    NestedColumn::map('metadata', MapKey::string(), MapValue::string())
+);
+```
+
+**Understanding Flat Paths:**
+
+```php
+// STRUCT: Direct field access with dot notation
+'user.id'              // user struct → id field
+'user.name'            // user struct → name field  
+'user.address.street'  // user struct → address struct → street field
+'user.address.city'    // user struct → address struct → city field
+'user.address.country' // user struct → address struct → country field
+
+// LIST: Always includes intermediate '.list.element' structure
+'tags.list.element'    // tags list → list wrapper → element (the actual string values)
+
+// MAP: Always includes intermediate '.key_value' structure  
+'metadata.key_value.key'   // metadata map → key_value wrapper → key (string keys)
+'metadata.key_value.value' // metadata map → key_value wrapper → value (string values)
+```
+
+**Applying Custom Encodings:**
+
+```php
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    // Struct fields - direct access
+    'user.id' => 'DELTA_BINARY_PACKED',
+    'user.name' => 'RLE_DICTIONARY', 
+    'user.address.street' => 'PLAIN',
+    'user.address.city' => 'RLE_DICTIONARY',
+    'user.address.country' => 'RLE_DICTIONARY',
+    
+    // List elements - note the '.list.element' suffix
+    'tags.list.element' => 'RLE_DICTIONARY',
+    
+    // Map key/value pairs - note the '.key_value.key/value' suffix
+    'metadata.key_value.key' => 'RLE_DICTIONARY',
+    'metadata.key_value.value' => 'PLAIN'
+]);
+```
+
+**Complex Nested Example:**
+
+```php
+// Complex nested structure with lists of structs and maps
+$schema = Schema::with(
+    NestedColumn::list('orders', ListElement::structure([
+        FlatColumn::int64('order_id'),
+        FlatColumn::string('status'),
+        NestedColumn::map('attributes', MapKey::string(), MapValue::string())
+    ]))
+);
+
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    // List of structs: list_name.list.element.field_name
+    'orders.list.element.order_id' => 'DELTA_BINARY_PACKED',
+    'orders.list.element.status' => 'RLE_DICTIONARY',
+    
+    // Map inside list element: list_name.list.element.map_name.key_value.key/value
+    'orders.list.element.attributes.key_value.key' => 'RLE_DICTIONARY',
+    'orders.list.element.attributes.key_value.value' => 'PLAIN'
+]);
+```
+
+#### Mixed Encoding Strategy
+
+```php
+$options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+    // High cardinality sequential data
+    'order_id' => 'DELTA_BINARY_PACKED',
+    'created_timestamp' => 'DELTA_BINARY_PACKED',
+    
+    // Low cardinality categorical data  
+    'order_status' => 'RLE_DICTIONARY',
+    'payment_method' => 'RLE_DICTIONARY',
+    'shipping_country' => 'RLE_DICTIONARY',
+    
+    // High variance descriptive data
+    'customer_notes' => 'PLAIN',
+    'product_description' => 'PLAIN'
+]);
+```
+
+### Encoding Compatibility
+
+| Encoding | INT32/INT64 | BYTE_ARRAY | BOOLEAN | FLOAT/DOUBLE | FIXED_LEN_BYTE_ARRAY |
+|----------|-------------|------------|---------|--------------|----------------------|
+| PLAIN | ✅ | ✅ | ✅ | ✅ | ✅ |
+| RLE_DICTIONARY | ✅ | ✅ | ✅ | ✅ | ❌ |
+| DELTA_BINARY_PACKED | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+### Performance Guidelines
+
+1. **Analyze your data first** - Check cardinality and distribution patterns
+2. **Use RLE_DICTIONARY for categorical data** - Countries, statuses, departments
+3. **Use DELTA_BINARY_PACKED for sequential integers** - IDs, timestamps, counters  
+4. **Use PLAIN for high-variance data** - Descriptions, UUIDs, random data
+5. **Test different combinations** - Measure file size and query performance
+6. **Consider query patterns** - Frequently filtered columns benefit from dictionary encoding
+

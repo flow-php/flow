@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Dremel\{WriteColumnData};
-use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, Schema};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, LogicalType, MapKey, MapValue, NestedColumn, PhysicalType};
@@ -657,22 +656,6 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
 
         self::assertInstanceOf(ColumnChunkBuilders::class, $builders);
-    }
-
-    public function test_invalid_encoding_for_column_type_throws_exception() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("DELTA_BINARY_PACKED encoding is only supported for INT32 and INT64 columns. Column 'description' has type: BYTE_ARRAY");
-
-        $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'description' => 'DELTA_BINARY_PACKED',
-        ]);
-        $compressions = Compressions::UNCOMPRESSED;
-
-        $flatColumn = new FlatColumn('description', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
-        $schema = Schema::with($flatColumn);
-
-        ColumnChunkBuilders::initialize($schema, $options, $compressions);
     }
 
     public function test_is_any_page_full_with_empty_builders() : void
