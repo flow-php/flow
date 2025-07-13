@@ -19,12 +19,13 @@ use Flow\Parquet\{Data\Codec,
 use Flow\Parquet\ParquetFile\{Compressions,
     Encodings
 };
-use Flow\Parquet\ParquetFile\Data\{BitWidth, DeltaBinaryPackedEncoder, RLEBitPackedHybrid};
+use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, PhysicalType};
 use Flow\Parquet\Writer\PageBuilder\{RLEBitPackedPacker};
+use Flow\Parquet\Writer\ValueStorage\{DeltaBinaryPackedValueStorage, ValueStorage};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 
@@ -52,10 +53,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
     private int $rowsCount = 0;
 
-    /**
-     * @var array<int>
-     */
-    private array $values = [];
+    private readonly ValueStorage $valueStorage;
 
     public function __construct(
         private readonly FlatColumn $column,
@@ -65,6 +63,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         $this->pages = new PageContainers();
         $this->chunkStatistics = new StatisticsCounter($this->column);
         $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->valueStorage = new DeltaBinaryPackedValueStorage();
 
         if (!in_array($this->column->type(), [PhysicalType::INT32, PhysicalType::INT64], true)) {
             throw new InvalidArgumentException('Delta encoding only supports INT32 and INT64 physical types');
@@ -74,21 +73,6 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
     public function addRow(WriteColumnData $columnData) : void
     {
         $flatValues = $columnData->values($this->column->flatPath());
-
-        $rawValues = $flatValues->values();
-
-        // Ensure all values are integers (required for delta encoding)
-        $values = [];
-
-        foreach ($rawValues as $value) {
-            if ($value !== null) {
-                if (!\is_int($value)) {
-                    throw new InvalidArgumentException(\sprintf('Delta encoding requires integer values, got %s', \gettype($value)));
-                }
-                $values[] = $value;
-            }
-        }
-
         $this->repetitionLevels = array_merge($this->repetitionLevels, $flatValues->repetitionLevels());
         $this->definitionLevels = array_merge($this->definitionLevels, $flatValues->definitionLevels());
 
@@ -102,9 +86,10 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
             }
         }
 
-        foreach ($values as $value) {
+        $this->valueStorage->addValues($this->column, $flatValues->values());
+
+        foreach ($flatValues->values() as $value) {
             $this->pageStatistics->add($value);
-            $this->values[] = $value;
         }
 
         $this->rowsCount++;
@@ -125,7 +110,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
         $this->repetitionLevels = [];
         $this->definitionLevels = [];
-        $this->values = [];
+        $this->valueStorage->reset();
         $this->rowsCount = 0;
         $this->nullCount = 0;
         $this->nonNullValuesCount = 0;
@@ -139,7 +124,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        if (!empty($this->values) || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
+        if (!$this->valueStorage->isEmpty() || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
             $this->closePage();
         }
 
@@ -165,7 +150,8 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
     public function isFull() : bool
     {
-        return \count($this->values) * ($this->column->type() === PhysicalType::INT32 ? 4 : 8) >= $this->options->get(Option::PAGE_SIZE_BYTES);
+        // Use the original estimation logic for compatibility with existing tests
+        return $this->valueStorage->size() * ($this->column->type() === PhysicalType::INT32 ? 4 : 8) >= $this->options->get(Option::PAGE_SIZE_BYTES);
     }
 
     public function uncompressedSize() : int
@@ -188,7 +174,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithLength(BitWidth::calculate($this->column->maxDefinitionsLevel()), $this->definitionLevels));
         }
 
-        $pageWriter->append((new DeltaBinaryPackedEncoder())->encode($this->values));
+        $pageWriter->append($this->valueStorage->getBuffer());
 
         $compressedBuffer = $codec->compress($pageBuffer, $compression);
 
@@ -238,7 +224,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
             $definitionsLength = 0;
         }
 
-        $encodedValues = (new DeltaBinaryPackedEncoder())->encode($this->values);
+        $encodedValues = $this->valueStorage->getBuffer();
         $compressedBuffer = $codec->compress($encodedValues, $compression);
 
         $pageHeader = new PageHeader(
