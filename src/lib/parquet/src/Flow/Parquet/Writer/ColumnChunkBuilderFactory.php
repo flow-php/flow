@@ -14,24 +14,38 @@ final class ColumnChunkBuilderFactory
 {
     public static function createBuilder(FlatColumn $column, Options $options, Compressions $compressions) : ColumnChunkBuilder
     {
+        $columnCompression = $compressions;
+        $flatPath = $column->flatPath();
+
+        if ($options->has(Option::COLUMNS_COMPRESSIONS)) {
+            $columnsCompressions = $options->getArray(Option::COLUMNS_COMPRESSIONS);
+
+            if ($columnsCompressions !== null && \array_key_exists($flatPath, $columnsCompressions)) {
+                $compression = $columnsCompressions[$flatPath];
+
+                if ($compression instanceof Compressions) {
+                    $columnCompression = $compression;
+                }
+            }
+        }
+
         if ($options->has(Option::COLUMNS_ENCODINGS)) {
-            $columnsEncodings = $options->getColumnsEncodings();
-            $flatPath = $column->flatPath();
+            $columnsEncodings = $options->getArray(Option::COLUMNS_ENCODINGS);
 
-            if ($columnsEncodings !== null && $columnsEncodings->hasFlatPath($flatPath)) {
-                $encoding = $columnsEncodings->getEncodingForFlatPath($flatPath);
+            if ($columnsEncodings !== null && \array_key_exists($flatPath, $columnsEncodings)) {
+                $encoding = $columnsEncodings[$flatPath];
 
-                if ($encoding !== null) {
-                    return self::createForEncoding($column, $encoding, $options, $compressions);
+                if ($encoding instanceof Encodings) {
+                    return self::createForEncoding($column, $encoding, $options, $columnCompression);
                 }
             }
         }
 
         if (($column->type() === PhysicalType::INT32 || $column->type() === PhysicalType::INT64) && $options->getInt(Option::WRITER_VERSION) === 2) {
-            return new DeltaBinaryPackedColumnChunkBuilder($column, $options, $compressions);
+            return new DeltaBinaryPackedColumnChunkBuilder($column, $options, $columnCompression);
         }
 
-        return new PlainFlatColumnChunkBuilder($column, $options, $compressions);
+        return new PlainFlatColumnChunkBuilder($column, $options, $columnCompression);
     }
 
     private static function createForEncoding(FlatColumn $column, Encodings $encoding, Options $options, Compressions $compressions) : ColumnChunkBuilder
