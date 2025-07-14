@@ -6,7 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\{Option, Options};
-use Flow\Parquet\ParquetFile\{Compressions};
+use Flow\Parquet\ParquetFile\{Compressions, Encodings};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 use Flow\Parquet\Writer\ColumnChunkBuilder\{DeltaBinaryPackedColumnChunkBuilder, PlainFlatColumnChunkBuilder, RLEDictionaryChunkBuilder};
 use Flow\Parquet\Writer\ColumnChunkBuilderFactory;
@@ -20,7 +20,7 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         $options = Options::default()
             ->set(Option::WRITER_VERSION, 2)
             ->set(Option::COLUMNS_ENCODINGS, [
-                'user_id' => 'PLAIN',
+                'user_id' => Encodings::PLAIN,
             ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -73,24 +73,11 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
 
-    public function test_create_builder_with_case_insensitive_encoding_names() : void
-    {
-        $column = new FlatColumn('status', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
-        $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'status' => 'rle_dictionary',  // lowercase
-        ]);
-        $compressions = Compressions::UNCOMPRESSED;
-
-        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
-
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
-    }
-
     public function test_create_builder_with_custom_delta_binary_packed_encoding() : void
     {
         $column = new FlatColumn('user_id', PhysicalType::INT32);
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'user_id' => 'DELTA_BINARY_PACKED',
+            'user_id' => Encodings::DELTA_BINARY_PACKED,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -103,7 +90,7 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
     {
         $column = new FlatColumn('description', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'description' => 'PLAIN',
+            'description' => Encodings::PLAIN,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -116,7 +103,7 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
     {
         $column = new FlatColumn('status', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'status' => 'RLE_DICTIONARY',
+            'status' => Encodings::RLE_DICTIONARY,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -130,13 +117,26 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
         $column = new FlatColumn('user.id', PhysicalType::INT32);
 
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'user.id' => 'DELTA_BINARY_PACKED',
+            'user.id' => Encodings::DELTA_BINARY_PACKED,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
         $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
 
         self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $builder);
+    }
+
+    public function test_create_builder_with_rle_dictionary_encoding() : void
+    {
+        $column = new FlatColumn('status', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
+        $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+            'status' => Encodings::RLE_DICTIONARY,
+        ]);
+        $compressions = Compressions::UNCOMPRESSED;
+
+        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+
+        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $builder);
     }
 
     public function test_empty_columns_encodings_option() : void
@@ -154,7 +154,7 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
     {
         $column = new FlatColumn('description', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'other_column' => 'RLE_DICTIONARY',
+            'other_column' => Encodings::RLE_DICTIONARY,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -170,7 +170,7 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
 
         $column = new FlatColumn('description', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'description' => 'DELTA_BINARY_PACKED',
+            'description' => Encodings::DELTA_BINARY_PACKED,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -184,24 +184,24 @@ final class ColumnChunkBuilderFactoryTest extends TestCase
 
         $column = new FlatColumn('fixed_data', PhysicalType::FIXED_LEN_BYTE_ARRAY);
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'fixed_data' => 'RLE_DICTIONARY',
+            'fixed_data' => Encodings::RLE_DICTIONARY,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
         ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
     }
 
-    public function test_unsupported_encoding_name_throws_exception() : void
+    public function test_non_enum_encoding_value_is_ignored() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Unsupported encoding: 'INVALID_ENCODING'. Supported encodings: PLAIN, RLE_DICTIONARY, DELTA_BINARY_PACKED");
-
         $column = new FlatColumn('data', PhysicalType::BYTE_ARRAY);
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'data' => 'INVALID_ENCODING',
+            'data' => 'INVALID_ENCODING',  // Non-enum value should be ignored
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
-        ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+        $builder = ColumnChunkBuilderFactory::createBuilder($column, $options, $compressions);
+
+        // Should fallback to default behavior since non-enum is ignored
+        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
 }
