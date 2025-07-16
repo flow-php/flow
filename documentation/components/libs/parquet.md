@@ -307,6 +307,165 @@ If you want to achieve the best compression, you should use `GZIP` or `SNAPPY` w
 
 For not yet supported algorithms, please check our [Roadmap](https://github.com/orgs/flow-php/projects/1) to understand when they will be supported.
 
+### Per-Column Compression
+
+You can specify different compression algorithms for individual columns using flat path notation. This allows fine-grained control over the compression strategy for optimal storage and performance.
+
+#### When to Use Per-Column Compression
+
+**Different data characteristics require different compression strategies:**
+
+- **Fast access columns** (IDs, timestamps) - Use `UNCOMPRESSED` or `LZ4` for minimal decompression overhead
+- **Categorical data** (status, country codes) - Use `SNAPPY` for balanced compression with good performance
+- **Text/JSON data** (descriptions, metadata) - Use `ZSTD` or `BROTLI` for maximum compression
+- **Numerical data** - Use `LZ4` or `SNAPPY` for good compression with fast access
+- **Archival columns** - Use `ZSTD` for maximum compression when access speed is less critical
+
+#### Basic Per-Column Compression
+
+```php
+use Flow\Parquet\{Writer, Options, Option};
+use Flow\Parquet\ParquetFile\{Schema, Compressions};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+
+$schema = Schema::with(
+    FlatColumn::int64('user_id'),
+    FlatColumn::string('status'),
+    FlatColumn::string('description'),
+    FlatColumn::float('price')
+);
+
+$options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
+    'user_id' => Compressions::UNCOMPRESSED,     // Fast access for frequent queries
+    'status' => Compressions::SNAPPY,            // Balanced compression for enum-like data
+    'description' => Compressions::ZSTD,         // Maximum compression for text data
+    'price' => Compressions::LZ4                 // Fast compression for numeric data
+]);
+
+// Global compression serves as fallback for unspecified columns
+$writer = new Writer(compressions: Compressions::GZIP, options: $options);
+```
+
+#### Nested Column Compression
+
+For nested structures, use the same flat path notation as column encodings:
+
+```php
+use Flow\Parquet\ParquetFile\Schema\{NestedColumn, ListElement, MapKey, MapValue};
+
+$schema = Schema::with(
+    NestedColumn::struct('user', [
+        FlatColumn::int64('id'),
+        FlatColumn::string('name'),
+        NestedColumn::struct('address', [
+            FlatColumn::string('street'),
+            FlatColumn::string('city'),
+            FlatColumn::string('country')
+        ])
+    ]),
+    NestedColumn::list('tags', ListElement::string()),
+    NestedColumn::map('metadata', MapKey::string(), MapValue::string())
+);
+
+$options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
+    // Struct fields - direct access
+    'user.id' => Compressions::UNCOMPRESSED,           // Primary key - fast access
+    'user.name' => Compressions::SNAPPY,               // Balanced for names
+    'user.address.street' => Compressions::ZSTD,       // High compression for addresses
+    'user.address.city' => Compressions::LZ4,          // Fast for frequently queried cities
+    'user.address.country' => Compressions::SNAPPY,    // Balanced for country codes
+    
+    // List elements - note the '.list.element' suffix
+    'tags.list.element' => Compressions::BROTLI,       // High compression for tags
+    
+    // Map key/value pairs - note the '.key_value.key/value' suffix
+    'metadata.key_value.key' => Compressions::LZ4,     // Fast access for metadata keys
+    'metadata.key_value.value' => Compressions::ZSTD   // Max compression for metadata values
+]);
+```
+
+#### Performance-Optimized Strategies
+
+**Query-Optimized Strategy:**
+```php
+$options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
+    // Frequently queried columns - prioritize speed
+    'user_id' => Compressions::UNCOMPRESSED,
+    'created_at' => Compressions::LZ4,
+    'status' => Compressions::SNAPPY,
+    
+    // Analytical columns - prioritize compression
+    'analytics_payload' => Compressions::ZSTD,
+    'raw_data' => Compressions::BROTLI,
+    
+    // Balanced approach for mixed usage
+    'category' => Compressions::SNAPPY,
+    'description' => Compressions::GZIP
+]);
+```
+
+**Storage-Optimized Strategy:**
+```php
+$options = Options::default()->set(Option::COLUMNS_COMPRESSIONS, [
+    // Only critical columns use fast compression
+    'id' => Compressions::LZ4,
+    
+    // Everything else maximizes compression
+    'content' => Compressions::ZSTD,
+    'metadata' => Compressions::BROTLI,
+    'tags' => Compressions::GZIP,
+    'attributes' => Compressions::ZSTD
+]);
+```
+
+#### Combined Compression and Encoding Strategy
+
+You can combine per-column compression with custom encodings for optimal results:
+
+```php
+$options = Options::default()
+    ->set(Option::COLUMNS_COMPRESSIONS, [
+        'user_id' => Compressions::UNCOMPRESSED,          // Fast primary key access
+        'status' => Compressions::SNAPPY,                 // Balanced for enum data
+        'metadata' => Compressions::ZSTD                  // Max compression for JSON
+    ])
+    ->set(Option::COLUMNS_ENCODINGS, [
+        'user_id' => Encodings::DELTA_BINARY_PACKED,      // Efficient encoding for sequential IDs
+        'status' => Encodings::RLE_DICTIONARY,            // Dictionary for repeated values
+        'metadata' => Encodings::PLAIN                    // No encoding overhead for compressed data
+    ]);
+```
+
+#### Compression Selection Guidelines
+
+| Data Type | Characteristics | Recommended Compression | Use Case |
+|-----------|----------------|------------------------|-----------|
+| **Primary Keys** | Sequential integers, frequent queries | `UNCOMPRESSED` or `LZ4` | Fast joins and lookups |
+| **Status/Categories** | Low cardinality, repeated values | `SNAPPY` | Balanced performance |
+| **Timestamps** | Sequential, frequently filtered | `LZ4` | Fast time-based queries |
+| **Text Content** | High variance, large size | `ZSTD` or `BROTLI` | Storage optimization |
+| **JSON/Metadata** | Complex nested data | `ZSTD` | Maximum compression |
+| **Numerical Data** | Calculations, aggregations | `SNAPPY` or `LZ4` | Fast mathematical operations |
+| **Archive Data** | Rarely accessed | `ZSTD` or `BROTLI` | Long-term storage |
+
+#### Performance vs. Compression Trade-offs
+
+**Compression Ratio (Best to Worst):**
+1. `ZSTD` - Best compression, slower decompression
+2. `BROTLI` - Excellent compression, moderate speed  
+3. `GZIP` - Good compression, widely supported
+4. `SNAPPY` - Balanced compression and speed (default)
+5. `LZ4` - Fast compression/decompression, moderate ratio
+6. `UNCOMPRESSED` - No compression overhead, largest size
+
+**Decompression Speed (Fastest to Slowest):**
+1. `UNCOMPRESSED` - No decompression needed
+2. `LZ4` - Very fast decompression
+3. `SNAPPY` - Fast decompression (good balance)
+4. `GZIP` - Moderate decompression speed
+5. `BROTLI` - Slower decompression
+6. `ZSTD` - Configurable, generally slower for high compression
+
 ## Column Encodings
 
 Parquet supports various column encoding algorithms that can significantly impact file size and query performance. 
@@ -325,12 +484,12 @@ The default encoding that stores values as-is without any compression scheme.
 **Supported types:** All column types
 
 ```php
-use Flow\Parquet\Options;
-use Flow\Parquet\Option;
+use Flow\Parquet\{Options, Option};
+use Flow\Parquet\ParquetFile\Encodings;
 
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-    'description' => 'PLAIN',
-    'uuid' => 'PLAIN'
+    'description' => Encodings::PLAIN,
+    'uuid' => Encodings::PLAIN
 ]);
 ```
 
@@ -347,9 +506,9 @@ Run Length Encoding with Dictionary compression. Values are stored in a dictiona
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-    'status' => 'RLE_DICTIONARY',          // 'active', 'inactive', 'pending'  
-    'country_code' => 'RLE_DICTIONARY',    // 'US', 'UK', 'DE', 'FR'
-    'department' => 'RLE_DICTIONARY'       // 'engineering', 'sales', 'marketing'
+    'status' => Encodings::RLE_DICTIONARY,          // 'active', 'inactive', 'pending'  
+    'country_code' => Encodings::RLE_DICTIONARY,    // 'US', 'UK', 'DE', 'FR'
+    'department' => Encodings::RLE_DICTIONARY       // 'engineering', 'sales', 'marketing'
 ]);
 ```
 
@@ -365,9 +524,9 @@ Delta encoding with binary packing for integer columns. Stores differences betwe
 
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-    'user_id' => 'DELTA_BINARY_PACKED',     // 1, 2, 3, 4, 5...
-    'timestamp_ms' => 'DELTA_BINARY_PACKED', // 1634567890123, 1634567890124...
-    'order_number' => 'DELTA_BINARY_PACKED'  // Sequential order IDs
+    'user_id' => Encodings::DELTA_BINARY_PACKED,     // 1, 2, 3, 4, 5...
+    'timestamp_ms' => Encodings::DELTA_BINARY_PACKED, // 1634567890123, 1634567890124...
+    'order_number' => Encodings::DELTA_BINARY_PACKED  // Sequential order IDs
 ]);
 ```
 
@@ -377,7 +536,7 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 
 ```php
 use Flow\Parquet\{Writer, Options, Option};
-use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\{Schema, Compressions, Encodings};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 $schema = Schema::with(
@@ -387,9 +546,9 @@ $schema = Schema::with(
 );
 
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-    'user_id' => 'DELTA_BINARY_PACKED',  // Sequential IDs
-    'status' => 'RLE_DICTIONARY',        // Limited set of values
-    'description' => 'PLAIN'             // High variance text
+    'user_id' => Encodings::DELTA_BINARY_PACKED,  // Sequential IDs
+    'status' => Encodings::RLE_DICTIONARY,        // Limited set of values
+    'description' => Encodings::PLAIN             // High variance text
 ]);
 
 $writer = new Writer(compressions: Compressions::SNAPPY, options: $options);
@@ -447,18 +606,18 @@ $schema = Schema::with(
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
     // Struct fields - direct access
-    'user.id' => 'DELTA_BINARY_PACKED',
-    'user.name' => 'RLE_DICTIONARY', 
-    'user.address.street' => 'PLAIN',
-    'user.address.city' => 'RLE_DICTIONARY',
-    'user.address.country' => 'RLE_DICTIONARY',
+    'user.id' => Encodings::DELTA_BINARY_PACKED,
+    'user.name' => Encodings::RLE_DICTIONARY, 
+    'user.address.street' => Encodings::PLAIN,
+    'user.address.city' => Encodings::RLE_DICTIONARY,
+    'user.address.country' => Encodings::RLE_DICTIONARY,
     
     // List elements - note the '.list.element' suffix
-    'tags.list.element' => 'RLE_DICTIONARY',
+    'tags.list.element' => Encodings::RLE_DICTIONARY,
     
     // Map key/value pairs - note the '.key_value.key/value' suffix
-    'metadata.key_value.key' => 'RLE_DICTIONARY',
-    'metadata.key_value.value' => 'PLAIN'
+    'metadata.key_value.key' => Encodings::RLE_DICTIONARY,
+    'metadata.key_value.value' => Encodings::PLAIN
 ]);
 ```
 
@@ -476,12 +635,12 @@ $schema = Schema::with(
 
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
     // List of structs: list_name.list.element.field_name
-    'orders.list.element.order_id' => 'DELTA_BINARY_PACKED',
-    'orders.list.element.status' => 'RLE_DICTIONARY',
+    'orders.list.element.order_id' => Encodings::DELTA_BINARY_PACKED,
+    'orders.list.element.status' => Encodings::RLE_DICTIONARY,
     
     // Map inside list element: list_name.list.element.map_name.key_value.key/value
-    'orders.list.element.attributes.key_value.key' => 'RLE_DICTIONARY',
-    'orders.list.element.attributes.key_value.value' => 'PLAIN'
+    'orders.list.element.attributes.key_value.key' => Encodings::RLE_DICTIONARY,
+    'orders.list.element.attributes.key_value.value' => Encodings::PLAIN
 ]);
 ```
 
@@ -490,17 +649,17 @@ $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
 ```php
 $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
     // High cardinality sequential data
-    'order_id' => 'DELTA_BINARY_PACKED',
-    'created_timestamp' => 'DELTA_BINARY_PACKED',
+    'order_id' => Encodings::DELTA_BINARY_PACKED,
+    'created_timestamp' => Encodings::DELTA_BINARY_PACKED,
     
     // Low cardinality categorical data  
-    'order_status' => 'RLE_DICTIONARY',
-    'payment_method' => 'RLE_DICTIONARY',
-    'shipping_country' => 'RLE_DICTIONARY',
+    'order_status' => Encodings::RLE_DICTIONARY,
+    'payment_method' => Encodings::RLE_DICTIONARY,
+    'shipping_country' => Encodings::RLE_DICTIONARY,
     
     // High variance descriptive data
-    'customer_notes' => 'PLAIN',
-    'product_description' => 'PLAIN'
+    'customer_notes' => Encodings::PLAIN,
+    'product_description' => Encodings::PLAIN
 ]);
 ```
 

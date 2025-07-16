@@ -6,7 +6,7 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Dremel\{WriteColumnData};
 use Flow\Parquet\{Option, Options};
-use Flow\Parquet\ParquetFile\{Compressions, Schema};
+use Flow\Parquet\ParquetFile\{Compressions, Encodings, Schema};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, LogicalType, MapKey, MapValue, NestedColumn, PhysicalType};
 use Flow\Parquet\Writer\ColumnChunkBuilder\{DeltaBinaryPackedColumnChunkBuilder, PlainFlatColumnChunkBuilder, RLEDictionaryChunkBuilder};
 use Flow\Parquet\Writer\{ColumnChunkBuilder, ColumnChunkBuilders, ColumnChunkContainer};
@@ -81,33 +81,6 @@ final class ColumnChunkBuildersTest extends TestCase
         $builders->add($columnData);
 
         self::assertTrue(true);
-    }
-
-    public function test_case_insensitive_encoding_names_in_options() : void
-    {
-        $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'col1' => 'plain',
-            'col2' => 'RLE_Dictionary',
-            'col3' => 'DELTA_BINARY_PACKED',
-        ]);
-        $compressions = Compressions::UNCOMPRESSED;
-
-        $col1 = new FlatColumn('col1', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
-        $col2 = new FlatColumn('col2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
-        $col3 = new FlatColumn('col3', PhysicalType::INT32);
-        $schema = Schema::with($col1, $col2, $col3);
-
-        $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
-
-        // Extract builders through reflection
-        $reflection = new \ReflectionClass($builders);
-        $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
-        $buildersArray = $buildersProperty->getValue($builders);
-
-        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
-        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['col2']);
-        self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['col3']);
     }
 
     public function test_close_pages_before_flush() : void
@@ -193,9 +166,9 @@ final class ColumnChunkBuildersTest extends TestCase
     public function test_complex_nested_flat_paths_encoding_selection() : void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'struct_nested.struct_flat.list_of_ints.list.element' => 'DELTA_BINARY_PACKED',
-            'struct_nested.struct_flat.map_of_string_int.key_value.key' => 'RLE_DICTIONARY',
-            'struct_nested.struct_flat.map_of_string_int.key_value.value' => 'DELTA_BINARY_PACKED',
+            'struct_nested.struct_flat.list_of_ints.list.element' => Encodings::DELTA_BINARY_PACKED,
+            'struct_nested.struct_flat.map_of_string_int.key_value.key' => Encodings::RLE_DICTIONARY,
+            'struct_nested.struct_flat.map_of_string_int.key_value.value' => Encodings::DELTA_BINARY_PACKED,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -233,8 +206,8 @@ final class ColumnChunkBuildersTest extends TestCase
     public function test_custom_encoding_mixed_with_default_selection() : void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'user_id' => 'DELTA_BINARY_PACKED',
-            'status' => 'RLE_DICTIONARY',
+            'user_id' => Encodings::DELTA_BINARY_PACKED,
+            'status' => Encodings::RLE_DICTIONARY,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -265,7 +238,7 @@ final class ColumnChunkBuildersTest extends TestCase
         $options = Options::default()
             ->set(Option::WRITER_VERSION, 2)
             ->set(Option::COLUMNS_ENCODINGS, [
-                'user_id' => 'PLAIN',  // Override automatic DELTA selection
+                'user_id' => Encodings::PLAIN,  // Override automatic DELTA selection
             ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -283,12 +256,39 @@ final class ColumnChunkBuildersTest extends TestCase
         self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
     }
 
+    public function test_custom_encoding_selection_in_options() : void
+    {
+        $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
+            'col1' => Encodings::PLAIN,
+            'col2' => Encodings::RLE_DICTIONARY,
+            'col3' => Encodings::DELTA_BINARY_PACKED,
+        ]);
+        $compressions = Compressions::UNCOMPRESSED;
+
+        $col1 = new FlatColumn('col1', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
+        $col2 = new FlatColumn('col2', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
+        $col3 = new FlatColumn('col3', PhysicalType::INT32);
+        $schema = Schema::with($col1, $col2, $col3);
+
+        $builders = ColumnChunkBuilders::initialize($schema, $options, $compressions);
+
+        // Extract builders through reflection
+        $reflection = new \ReflectionClass($builders);
+        $buildersProperty = $reflection->getProperty('builders');
+        $buildersProperty->setAccessible(true);
+        $buildersArray = $buildersProperty->getValue($builders);
+
+        self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
+        self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['col2']);
+        self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['col3']);
+    }
+
     // Custom encoding selection tests
 
     public function test_custom_encoding_selection_with_delta_binary_packed() : void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'user_id' => 'DELTA_BINARY_PACKED',
+            'user_id' => Encodings::DELTA_BINARY_PACKED,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -309,8 +309,8 @@ final class ColumnChunkBuildersTest extends TestCase
     public function test_custom_encoding_selection_with_nested_columns() : void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'user.id' => 'DELTA_BINARY_PACKED',
-            'user.name' => 'RLE_DICTIONARY',
+            'user.id' => Encodings::DELTA_BINARY_PACKED,
+            'user.name' => Encodings::RLE_DICTIONARY,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -346,7 +346,7 @@ final class ColumnChunkBuildersTest extends TestCase
     public function test_custom_encoding_selection_with_plain() : void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'description' => 'PLAIN',
+            'description' => Encodings::PLAIN,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 
@@ -367,7 +367,7 @@ final class ColumnChunkBuildersTest extends TestCase
     public function test_custom_encoding_selection_with_rle_dictionary() : void
     {
         $options = Options::default()->set(Option::COLUMNS_ENCODINGS, [
-            'status' => 'RLE_DICTIONARY',
+            'status' => Encodings::RLE_DICTIONARY,
         ]);
         $compressions = Compressions::UNCOMPRESSED;
 

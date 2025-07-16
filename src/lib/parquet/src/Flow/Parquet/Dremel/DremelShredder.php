@@ -178,7 +178,7 @@ final readonly class DremelShredder
             return;
         }
 
-        if (!$listElementColumn->repetition()?->isRequired()) {
+        if (!$column->repetition()?->isRequired()) {
             $definitionLevel++;
         }
 

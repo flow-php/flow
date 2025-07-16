@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-07-13
+## [Unreleased] - 2025-07-16
 
 ### Added
+- [#1769](https://github.com/flow-php/flow/pull/1769) - **Allow to set custom compression algorithm for columns** - [@norberttech](https://github.com/norberttech)
 - [#1765](https://github.com/flow-php/flow/pull/1765) - **Allow to chose encoding for parquet columns** - [@norberttech](https://github.com/norberttech)
 - [#1764](https://github.com/flow-php/flow/pull/1764) - **Support for Delta Binary Packed encoding in Parquet** - [@norberttech](https://github.com/norberttech)
 - [#1760](https://github.com/flow-php/flow/pull/1760) - **OpenAPI Specification Bridge** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +10,7 @@
 - [#1758](https://github.com/flow-php/flow/pull/1758) - **Update Homebrew TAP formula: flow-php to version: 0.20.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1772](https://github.com/flow-php/flow/pull/1772) - **Calculation of definition level in Parquet DremelShredder implementation** - [@norberttech](https://github.com/norberttech)
 - [#1757](https://github.com/flow-php/flow/pull/1757) - **high memory consumption even when reading small chunks** - [@norberttech](https://github.com/norberttech)
 
 ## [0.20.0] - 2025-07-08

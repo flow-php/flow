@@ -22,8 +22,8 @@ enum Option
     case BYTE_ARRAY_TO_STRING;
 
     /**
-     * Per-column encoding configuration using flat path notation.
-     * Accepts array<string, string> where key is column flat path and value is encoding name.
+     * Per-column compression configuration using flat path notation.
+     * Accepts array<string, Compressions> where key is column flat path and value is compression enum.
      *
      * Flat path examples:
      * - Simple columns: 'column_name'
@@ -31,7 +31,23 @@ enum Option
      * - List elements: 'items.list.element'
      * - Map keys/values: 'metadata.key_value.key', 'metadata.key_value.value'
      *
-     * Supported encodings: PLAIN, RLE_DICTIONARY, DELTA_BINARY_PACKED
+     * Values must be Compressions enum instances.
+     *
+     * Default: null (use global compression setting)
+     */
+    case COLUMNS_COMPRESSIONS;
+
+    /**
+     * Per-column encoding configuration using flat path notation.
+     * Accepts array<string, Encodings> where key is column flat path and value is encoding enum.
+     *
+     * Flat path examples:
+     * - Simple columns: 'column_name'
+     * - Nested structs: 'user.address.street'
+     * - List elements: 'items.list.element'
+     * - Map keys/values: 'metadata.key_value.key', 'metadata.key_value.value'
+     *
+     * Values must be Encodings enum instances.
      *
      * Default: null (use automatic encoding selection)
      */
