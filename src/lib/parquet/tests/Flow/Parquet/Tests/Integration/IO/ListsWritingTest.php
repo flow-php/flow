@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{generate_random_int, generate_random_string};
 use Faker\Factory;
 use Flow\Parquet\{Consts, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
 use PHPUnit\Framework\TestCase;
 
 final class ListsWritingTest extends TestCase
@@ -215,6 +215,40 @@ final class ListsWritingTest extends TestCase
                         'name' => $faker->text(10),
                     ], \range(1, generate_random_int(2, 10)))
                     : null,
+            ],
+        ], \range(1, 10)));
+
+        $writer->write($path, $schema, $inputData);
+
+        self::assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
+
+    public function test_writing_nullable_list_of_structures_with_required_fields() : void
+    {
+        $path = __DIR__ . '/var/test-writer-parquet-test-' . generate_random_string() . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(
+            NestedColumn::list(
+                'list_of_structs',
+                ListElement::structure(
+                    [
+                        FlatColumn::int32('id', Repetition::REQUIRED),
+                    ],
+                    true
+                ),
+            )
+        );
+
+        $faker = Factory::create();
+        $inputData = \array_merge(...\array_map(static fn (int $i) : array => [
+            [
+                'list_of_structs' => \array_map(static fn ($i) => [
+                    'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                ], \range(1, generate_random_int(2, 10))),
             ],
         ], \range(1, 10)));
 
