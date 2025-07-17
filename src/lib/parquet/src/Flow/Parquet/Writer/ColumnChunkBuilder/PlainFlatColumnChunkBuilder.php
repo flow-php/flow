@@ -156,7 +156,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function uncompressedSize() : int
     {
-        return $this->pages->uncompressedSize();
+        return $this->pages->uncompressedSize() + $this->currentPageUncompressedSize();
     }
 
     private function buildDataPage(Codec $codec, Compressions $compression) : PageContainer
@@ -252,5 +252,10 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             null,
             $pageHeader
         );
+    }
+
+    private function currentPageUncompressedSize() : int
+    {
+        return $this->valueStorage->size() + (count($this->repetitionLevels) * 4) + (count($this->definitionLevels) * 4);
     }
 }
