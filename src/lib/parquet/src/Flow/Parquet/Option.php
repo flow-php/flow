@@ -113,7 +113,7 @@ enum Option
      * PageBuilder is not going to make it precisely equal to this value, but it will try to make it as close as possible.
      * This should be considered as a threshold rather than a strict value.
      *
-     * Default value is 8Kb
+     * Default value is 128Kb
      *
      * https://parquet.apache.org/docs/file-format/configurations/#data-page--size
      */
@@ -140,7 +140,7 @@ enum Option
      * RowGroupBuilder is going to use this value to determine for how long it should keep adding rows to the buffer
      * before flushing it on disk.
      *
-     * Default value is 8Mb
+     * Default value is 32Mb
      *
      * In order to be more aligned with apache spark and hadoop, this value should be set between 128 and 512Mb.
      * https://parquet.apache.org/docs/file-format/configurations/#row-group-size
