@@ -37,6 +37,39 @@ $bulk->insert(
 
 ```
 
+### Type Optimization with BulkData
+
+`BulkData` can accept optional type information to optimize database operations:
+
+```php
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
+
+$bulk = Bulk::create();
+$bulk->insert(
+    $dbalConnection,
+    'your-table-name',
+    new BulkData(
+        [
+            ['id' => 1, 'name' => 'Name One', 'created_at' => new \DateTime()],
+            ['id' => 2, 'name' => 'Name Two', 'created_at' => new \DateTime()],
+        ],
+        [
+            'id' => Type::getType(Types::INTEGER),
+            'name' => Type::getType(Types::STRING),
+            'created_at' => Type::getType(Types::DATETIME_IMMUTABLE),
+        ]
+    )
+);
+```
+
+**Type Detection Behavior:**
+
+- **With Types**: When column types are provided, `BulkData` uses them directly for optimal performance
+- **Without Types**: When no types are provided, `BulkData` automatically queries the database to understand the table structure and determine appropriate types
+
+This automatic type detection ensures data consistency but comes with a performance cost due to the additional database query. For optimal performance in high-throughput scenarios, explicitly providing column types is recommended.
+
 Update:
 
 ```php

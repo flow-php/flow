@@ -27,8 +27,7 @@ final readonly class PostgreSQLInsertOptions implements InsertOptions
     public static function fromArray(array $options) : InsertOptions
     {
         $options = type_structure(
-            [],
-            [
+            optional_elements: [
                 'skip_conflicts' => type_optional(type_boolean()),
                 'constraint' => type_optional(type_string()),
                 'conflict_columns' => type_list(type_string()),
