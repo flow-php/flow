@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\{Type, Types};
-use Flow\Doctrine\Bulk\{BulkData, Columns, TableDefinition};
+use Flow\Doctrine\Bulk\{BulkData, Columns};
 use PHPUnit\Framework\TestCase;
 
 final class BulkDataTest extends TestCase
@@ -58,53 +56,6 @@ final class BulkDataTest extends TestCase
         $this->expectExceptionMessage('Bulk data cannot be empty');
 
         new BulkData([]);
-    }
-
-    public function test_returns_all_sql_parameters_as_one_dimensional_array_with_placeholders_as_keys() : void
-    {
-        $bulkData = new BulkData([
-            [
-                'date' => 'today',
-                'title' => 'Title One',
-                'description' => 'Description One',
-                'quantity' => 101,
-                'errors' => '[]',
-            ],
-            [
-                'date' => 'today',
-                'title' => 'Title Two',
-                'description' => 'Description Two',
-                'quantity' => 102,
-                'errors' => '[]',
-            ],
-        ]);
-
-        $registry = Type::getTypeRegistry();
-
-        self::assertEquals(
-            [
-                'date_0' => 'today',
-                'title_0' => 'Title One',
-                'description_0' => 'Description One',
-                'quantity_0' => 101,
-                'errors_0' => [],
-                'date_1' => 'today',
-                'title_1' => 'Title Two',
-                'description_1' => 'Description Two',
-                'quantity_1' => 102,
-                'errors_1' => [],
-            ],
-            $bulkData->toSqlParameters(
-                new TableDefinition(
-                    'test',
-                    new Column('date', $registry->get(Types::STRING)),
-                    new Column('title', $registry->get(Types::STRING)),
-                    new Column('description', $registry->get(Types::STRING)),
-                    new Column('quantity', $registry->get(Types::INTEGER)),
-                    new Column('errors', $registry->get(Types::JSON)),
-                )
-            )
-        );
     }
 
     public function test_returns_columns() : void

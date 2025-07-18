@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
-final readonly class TableDefinition
+final class TableDefinition
 {
     /**
-     * @var array<Column>
+     * @var null|array<Column>
      */
-    private array $columns;
+    private ?array $columns = null;
 
-    public function __construct(private string $name, Column ...$columns)
+    public function __construct(private readonly string $name, private readonly Connection $connection)
     {
-        $this->columns = $columns;
     }
 
     /**
@@ -26,7 +26,8 @@ final readonly class TableDefinition
      */
     public function dbalColumn(string $columnName) : Column
     {
-        $dbColumnNames = \array_filter($this->columns, fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
+
+        $dbColumnNames = \array_filter($this->getColumns(), fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
 
         if (\count($dbColumnNames) !== 1) {
             throw new RuntimeException("Column with name {$columnName}, not found in table: {$this->name}");
@@ -65,6 +66,11 @@ final readonly class TableDefinition
         return $this->name;
     }
 
+    public function platform() : AbstractPlatform
+    {
+        return $this->connection->getDatabasePlatform();
+    }
+
     public function toSqlCastedPlaceholders(BulkData $bulkData, AbstractPlatform $abstractPlatform) : string
     {
         return \implode(
@@ -96,5 +102,19 @@ final readonly class TableDefinition
                 $bulkData->rows(),
             )
         );
+    }
+
+    /**
+     * @return array<Column>
+     */
+    private function getColumns() : array
+    {
+        if ($this->columns !== null) {
+            return $this->columns;
+        }
+
+        $this->columns = array_values($this->connection->createSchemaManager()->listTableColumns($this->name));
+
+        return $this->columns;
     }
 }

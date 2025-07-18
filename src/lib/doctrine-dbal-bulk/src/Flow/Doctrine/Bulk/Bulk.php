@@ -10,13 +10,13 @@ use Flow\Doctrine\Bulk\QueryFactory\DbalQueryFactory;
 
 final readonly class Bulk
 {
-    public function __construct(private QueryFactory $queryFactory)
+    public function __construct(private QueryFactory $queryFactory, private TableDefinitions $tableDefinitions)
     {
     }
 
     public static function create() : self
     {
-        return new self(new DbalQueryFactory());
+        return new self(new DbalQueryFactory(), new TableDefinitions());
     }
 
     /**
@@ -26,7 +26,7 @@ final readonly class Bulk
      */
     public function delete(Connection $connection, string $table, BulkData $bulkData) : void
     {
-        $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
+        $tableDefinition = $this->tableDefinitions->get($table, $connection);
 
         $connection->executeStatement(
             $this->queryFactory->delete($connection->getDatabasePlatform(), $tableDefinition, $bulkData),
@@ -45,12 +45,12 @@ final readonly class Bulk
      */
     public function insert(Connection $connection, string $table, BulkData $bulkData, ?InsertOptions $options = null) : void
     {
-        $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
+        $tableDefinition = $this->tableDefinitions->get($table, $connection);
 
         $connection->executeStatement(
             $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
             $bulkData->toSqlParameters($tableDefinition),
-            $tableDefinition->dbalTypes($bulkData)
+            $bulkData->types()
         );
     }
 
@@ -63,12 +63,12 @@ final readonly class Bulk
      */
     public function update(Connection $connection, string $table, BulkData $bulkData, ?UpdateOptions $options = null) : void
     {
-        $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
+        $tableDefinition = $this->tableDefinitions->get($table, $connection);
 
-        $connection->executeQuery(
+        $connection->executeStatement(
             $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $options),
             $bulkData->toSqlParameters($tableDefinition),
-            $tableDefinition->dbalTypes($bulkData)
+            $bulkData->types()
         );
     }
 }

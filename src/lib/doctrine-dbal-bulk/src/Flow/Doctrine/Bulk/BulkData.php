@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
-use function Flow\ETL\DSL\dom_element_to_string;
-use Doctrine\DBAL\Types\{Type, Types};
+use Doctrine\DBAL\{ArrayParameterType, ParameterType};
+use Doctrine\DBAL\Types\{Type};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 final readonly class BulkData
@@ -19,8 +19,9 @@ final readonly class BulkData
 
     /**
      * @param array<int, array<string, mixed>> $rows
+     * @param array<Type> $types
      */
-    public function __construct(array $rows)
+    public function __construct(array $rows, private array $types = [])
     {
         if (0 === \count($rows)) {
             throw new RuntimeException('Bulk data cannot be empty');
@@ -118,46 +119,13 @@ final readonly class BulkData
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {
-                $rows[$index][$column . '_' . $index] = match (\gettype($entry)) {
-                    'string' => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
-                        Types::JSON,
-                        'json_array' => \json_decode($entry, true, 512, JSON_THROW_ON_ERROR),
-                        Types::DATETIME_IMMUTABLE,
-                        Types::DATETIMETZ_IMMUTABLE,
-                        Types::DATE_IMMUTABLE,
-                        Types::TIME_IMMUTABLE => new \DateTimeImmutable($entry),
-                        Types::DATE_MUTABLE,
-                        Types::DATETIME_MUTABLE,
-                        Types::DATETIMETZ_MUTABLE => new \DateTime($entry),
-                        default => $entry,
-                    },
-                    'array' => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
-                        Types::TEXT, Types::STRING => \json_encode($entry, JSON_THROW_ON_ERROR),
-                        default => $entry,
-                    },
-                    'object' => match ($entry::class) {
-                        \DateTimeImmutable::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
-                            Types::DATETIME_MUTABLE => \DateTime::createFromImmutable($entry),
-                            default => $entry,
-                        },
-                        \DateTime::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
-                            Types::DATETIME_IMMUTABLE => \DateTimeImmutable::createFromMutable($entry),
-                            default => $entry,
-                        },
-                        \DOMDocument::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
-                            Types::TEXT,
-                            Types::STRING => $entry->saveXML($entry->documentElement),
-                            default => $entry,
-                        },
-                        \DOMElement::class => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
-                            Types::TEXT,
-                            Types::STRING => (string) dom_element_to_string($entry),
-                            default => $entry,
-                        },
-                        default => $entry,
-                    },
-                    default => $entry,
-                };
+                if (\array_key_exists($column, $this->types)) {
+                    $value = $this->types[$column]->convertToDatabaseValue($entry, $table->platform());
+                } else {
+                    $value = $table->dbalColumn($column)->getType()->convertToDatabaseValue($entry, $table->platform());
+                }
+
+                $rows[$index][$column . '_' . $index] = $value;
             }
         }
 
@@ -180,5 +148,13 @@ final readonly class BulkData
                 $this->sqlRows()
             )
         );
+    }
+
+    /**
+     * @return array<ArrayParameterType|ParameterType>
+     */
+    public function types() : array
+    {
+        return $this->types;
     }
 }

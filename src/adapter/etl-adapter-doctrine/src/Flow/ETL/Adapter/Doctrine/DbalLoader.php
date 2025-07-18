@@ -11,6 +11,8 @@ use Flow\ETL\{FlowContext, Loader, Rows};
 
 final class DbalLoader implements Loader
 {
+    private ?Bulk $bulk = null;
+
     private ?Connection $connection = null;
 
     private string $operation = 'insert';
@@ -55,7 +57,7 @@ final class DbalLoader implements Loader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        Bulk::create()->{$this->operation}(
+        $this->bulk()->{$this->operation}(
             $this->connection(),
             $this->tableName,
             new BulkData($rows->sortEntries()->toArray()),
@@ -82,6 +84,15 @@ final class DbalLoader implements Loader
         $this->operationOptions = $operationOptions;
 
         return $this;
+    }
+
+    private function bulk() : Bulk
+    {
+        if ($this->bulk === null) {
+            $this->bulk = Bulk::create();
+        }
+
+        return $this->bulk;
     }
 
     private function connection() : Connection

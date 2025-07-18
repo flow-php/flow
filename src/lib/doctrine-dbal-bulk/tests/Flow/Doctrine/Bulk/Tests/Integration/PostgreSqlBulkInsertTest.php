@@ -36,7 +36,7 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => $id1 = generate_random_string(10), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format(\DateTimeInterface::ATOM), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id1 = generate_random_string(10), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1, 'tags' => \json_encode(['a', 'b', 'c'])],
                 ['id' => $id2 = generate_random_string(10), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
                 ['id' => $id3 = generate_random_string(10), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
             ])
@@ -47,9 +47,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 
         self::assertSame(
             [
-                ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
-                ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
-                ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
+                ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '"[\"a\",\"b\",\"c\"]"'],
+                ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '"[\"a\",\"b\",\"c\"]"'],
+                ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3->format('Y-m-d H:i:s'), 'tags' => '"[\"a\",\"b\",\"c\"]"'],
             ],
             $this->databaseContext->connection()->executeQuery("SELECT * FROM {$table} ORDER BY age ASC")->fetchAllAssociative()
         );
