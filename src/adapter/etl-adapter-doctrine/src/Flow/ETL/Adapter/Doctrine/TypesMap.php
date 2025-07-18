@@ -84,7 +84,7 @@ final class TypesMap
             }
 
             if (!\is_a($dbalType, DbalType::class, true)) {
-                throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType::class));
+                throw new InvalidArgumentException(\sprintf('"%s" is not a valid Doctrine DBAL type.', $dbalType));
             }
         }
 

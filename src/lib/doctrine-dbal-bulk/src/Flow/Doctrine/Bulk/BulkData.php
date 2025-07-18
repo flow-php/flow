@@ -151,7 +151,7 @@ final readonly class BulkData
     }
 
     /**
-     * @return array<ArrayParameterType|ParameterType>
+     * @return array<Type>
      */
     public function types() : array
     {
