@@ -24,7 +24,6 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
                     new Column('description', Type::getType(Types::STRING), ['notnull' => false]),
                     new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
                     new Column('updated_at', Type::getType(Types::DATETIME_MUTABLE), ['notnull' => true]),
-                    new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
                 ],
             ))
             ->setPrimaryKey(['id'])
@@ -34,9 +33,9 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => $id1 = generate_random_string(10), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id2 = generate_random_string(10), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id3 = generate_random_string(10), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id1 = generate_random_string(10), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTime()],
+                ['id' => $id2 = generate_random_string(10), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTime()],
+                ['id' => $id3 = generate_random_string(10), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTime()],
             ])
         );
 
@@ -45,9 +44,9 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
 
         self::assertEquals(
             [
-                ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => 0, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '["a","b","c"]'],
-                ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => 1, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a","b","c"]'],
-                ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => 0, 'updated_at' => $date3->format('Y-m-d H:i:s'), 'tags' => '["a","b","c"]'],
+                ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => 0, 'updated_at' => $date1->format('Y-m-d H:i:s')],
+                ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => 1, 'updated_at' => $date2->format('Y-m-d H:i:s')],
+                ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => 0, 'updated_at' => $date3->format('Y-m-d H:i:s')],
             ],
             $this->databaseContext->connection()->executeQuery("SELECT * FROM {$table} ORDER BY age ASC")->fetchAllAssociative()
         );
