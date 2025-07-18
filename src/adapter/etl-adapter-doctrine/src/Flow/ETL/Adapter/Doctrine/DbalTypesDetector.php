@@ -77,6 +77,8 @@ final readonly class DbalTypesDetector
 
     /**
      * Checks if a Flow type is a nested type (List, Map, Structure).
+     *
+     * @param FlowType<mixed> $flowType
      */
     private function isNestedType(FlowType $flowType) : bool
     {

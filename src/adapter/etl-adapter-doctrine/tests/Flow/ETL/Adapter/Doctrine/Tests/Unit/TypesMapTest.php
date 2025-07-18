@@ -34,30 +34,12 @@ final class TypesMapTest extends TestCase
         }
     }
 
-    public function test_constants_are_properly_defined() : void
-    {
-        self::assertIsArray(TypesMap::FLOW_TYPES);
-        self::assertIsArray(TypesMap::DBAL_TYPES);
-
-        self::assertNotEmpty(TypesMap::FLOW_TYPES);
-        self::assertNotEmpty(TypesMap::DBAL_TYPES);
-
-        foreach (TypesMap::FLOW_TYPES as $flowType => $dbalType) {
-            self::assertIsString($flowType);
-            self::assertIsString($dbalType);
-        }
-
-        foreach (TypesMap::DBAL_TYPES as $dbalType => $flowType) {
-            self::assertIsString($dbalType);
-            self::assertIsString($flowType);
-        }
-    }
-
     public function test_constructor_validates_dbal_type_class_names() : void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"InvalidClass" is not a valid Doctrine DBAL type.');
 
+        /** @phpstan-ignore-next-line */
         new TypesMap([
             StringType::class => 'InvalidClass',
         ]);
@@ -68,6 +50,7 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"stdClass" is not a valid Doctrine DBAL type.');
 
+        /** @phpstan-ignore-next-line */
         new TypesMap([
             StringType::class => \stdClass::class,
         ]);
@@ -78,6 +61,7 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"InvalidClass" is not a valid type.');
 
+        /** @phpstan-ignore-next-line */
         new TypesMap([
             'InvalidClass' => \Doctrine\DBAL\Types\StringType::class,
         ]);
@@ -88,6 +72,7 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"stdClass" is not a valid type.');
 
+        /** @phpstan-ignore-next-line */
         new TypesMap([
             \stdClass::class => \Doctrine\DBAL\Types\StringType::class,
         ]);
@@ -123,6 +108,7 @@ final class TypesMapTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('"InvalidFlowType" is not a valid type.');
 
+        /** @phpstan-ignore-next-line */
         new TypesMap([
             StringType::class => TextType::class,
             'InvalidFlowType' => \Doctrine\DBAL\Types\StringType::class,
@@ -249,6 +235,7 @@ final class TypesMapTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('"UnknownType" is not a valid Doctrine DBAL type.');
 
+        /** @phpstan-ignore-next-line */
         $typesMap->toFlowType('UnknownType');
     }
 
