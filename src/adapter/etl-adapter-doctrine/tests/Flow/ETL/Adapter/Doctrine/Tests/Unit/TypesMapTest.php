@@ -120,14 +120,12 @@ final class TypesMapTest extends TestCase
         $customMap = [
             StringType::class => TextType::class,
             IntegerType::class => BigIntType::class,
-            FloatType::class => SmallFloatType::class,
         ];
 
         $typesMap = new TypesMap($customMap);
 
         self::assertSame(TextType::class, $typesMap->toDbalType(StringType::class));
         self::assertSame(BigIntType::class, $typesMap->toDbalType(IntegerType::class));
-        self::assertSame(SmallFloatType::class, $typesMap->toDbalType(FloatType::class));
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('"' . BooleanType::class . '" is not a valid type.');
@@ -305,13 +303,11 @@ final class TypesMapTest extends TestCase
         $customMap = [
             StringType::class => TextType::class,
             IntegerType::class => BigIntType::class,
-            FloatType::class => SmallFloatType::class,
         ];
 
         $typesMap = new TypesMap($customMap);
 
         self::assertSame(TextType::class, $typesMap->toDbalType(StringType::class));
         self::assertSame(BigIntType::class, $typesMap->toDbalType(IntegerType::class));
-        self::assertSame(SmallFloatType::class, $typesMap->toDbalType(FloatType::class));
     }
 }
