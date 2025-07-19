@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-07-16
+## [Unreleased] - 2025-07-18
 
 ### Added
 - [#1769](https://github.com/flow-php/flow/pull/1769) - **Allow to set custom compression algorithm for columns** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +10,7 @@
 - [#1758](https://github.com/flow-php/flow/pull/1758) - **Update Homebrew TAP formula: flow-php to version: 0.20.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1774](https://github.com/flow-php/flow/pull/1774) - **Adjusted parquet default values for page/row group size** - [@norberttech](https://github.com/norberttech)
 - [#1772](https://github.com/flow-php/flow/pull/1772) - **Calculation of definition level in Parquet DremelShredder implementation** - [@norberttech](https://github.com/norberttech)
 - [#1757](https://github.com/flow-php/flow/pull/1757) - **high memory consumption even when reading small chunks** - [@norberttech](https://github.com/norberttech)
 

@@ -170,7 +170,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     public function uncompressedSize() : int
     {
-        return $this->pages->uncompressedSize();
+        return $this->pages->uncompressedSize() + $this->currentPageUncompressedSize();
     }
 
     private function buildDataPage(Codec $codec, Compressions $compression) : PageContainer
@@ -310,5 +310,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             $this->dictionary->dictionary,
             $pageHeader
         );
+    }
+
+    private function currentPageUncompressedSize() : int
+    {
+        return (count($this->pageValues) * 4) + (count($this->repetitionLevels) * 4) + (count($this->definitionLevels) * 4);
     }
 }
