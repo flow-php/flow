@@ -188,6 +188,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Contains($this, $needle);
     }
 
+    /**
+     * @param array<string>|ScalarFunction $needles
+     */
+    public function containsAny(ScalarFunction|array $needles) : ContainsAny
+    {
+        return new ContainsAny($this, $needles);
+    }
+
     public function dateFormat(string $format = 'Y-m-d') : DateTimeFormat
     {
         return new DateTimeFormat($this, $format);
