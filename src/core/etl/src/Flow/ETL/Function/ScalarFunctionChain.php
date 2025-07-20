@@ -691,6 +691,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ToUpper($this);
     }
 
+    public function width() : Width
+    {
+        return new Width($this);
+    }
+
     public function xpath(string $string) : XPath
     {
         return new XPath($this, $string);
