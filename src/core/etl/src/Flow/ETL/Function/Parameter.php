@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\lit;
-use function Flow\Types\DSL\get_type;
+use function Flow\Types\DSL\{get_type, type_null};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
 use UnitEnum;
 
@@ -178,6 +179,10 @@ final readonly class Parameter
     public function asType(Row $row) : Type
     {
         if ($this->function instanceof Reference) {
+            if ($row->get($this->function)->definition()->metadata()->has(Metadata::FROM_NULL)) {
+                return type_null();
+            }
+
             return $row->get($this->function)->type();
         }
 
