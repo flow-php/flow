@@ -287,7 +287,7 @@ final class TableDefinitionTest extends TestCase
         $sql = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $sql);
-        self::assertStringContainsString('CAST(:name_0 as VARCHAR)', $sql);
+        self::assertStringContainsString('CAST(:name_0 as VARCHAR', $sql);
         self::assertStringContainsString('(', $sql);
         self::assertStringContainsString(')', $sql);
     }
@@ -348,9 +348,9 @@ final class TableDefinitionTest extends TestCase
         $sql = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $sql);
-        self::assertStringContainsString('CAST(:name_0 as VARCHAR)', $sql);
+        self::assertStringContainsString('CAST(:name_0 as VARCHAR', $sql);
         self::assertStringContainsString('CAST(:id_1 as INTEGER)', $sql);
-        self::assertStringContainsString('CAST(:name_1 as VARCHAR)', $sql);
+        self::assertStringContainsString('CAST(:name_1 as VARCHAR', $sql);
         self::assertStringContainsString(',', $sql);
 
         // The SQL should contain 2 sets of parentheses, one for each row

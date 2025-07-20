@@ -238,12 +238,12 @@ final readonly class BulkData
                     foreach ($row as $columnName => $value) {
                         if (\array_key_exists($columnName, $this->types)) {
                             $type = $this->types[$columnName];
-                            $keys[] = 'CAST(? as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
                         } else {
                             $dbColumn = $table->dbalColumn($columnName);
                             $type = $dbColumn->getType();
-                            $keys[] = 'CAST(? as ' . $type->getSQLDeclaration($dbColumn->toArray(), $table->platform()) . ')';
                         }
+
+                        $keys[] = 'CAST(? as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
                     }
 
                     return \sprintf(
