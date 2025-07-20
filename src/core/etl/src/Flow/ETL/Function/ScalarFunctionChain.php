@@ -236,6 +236,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Equals($this, $ref);
     }
 
+    public function equalsTo(ScalarFunction|string $string) : EqualsTo
+    {
+        return new EqualsTo($this, $string);
+    }
+
     public function exists() : Exists
     {
         return new Exists($this);
