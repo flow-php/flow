@@ -473,6 +473,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new RegexReplace($pattern, $replacement, $this, $limit);
     }
 
+    public function repeat(ScalarFunction|int $times) : Repeat
+    {
+        return new Repeat($this, $times);
+    }
+
     public function reverse() : Reverse
     {
         return new Reverse($this);
