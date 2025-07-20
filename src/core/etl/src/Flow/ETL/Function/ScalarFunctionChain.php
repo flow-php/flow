@@ -498,6 +498,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Size($this);
     }
 
+    public function slice(ScalarFunction|int $start, ScalarFunction|int|null $length = null) : Slice
+    {
+        return new Slice($this, $start, $length);
+    }
+
     /**
      * @param null|array<array-key, mixed> $symbolsMap
      */
@@ -627,6 +632,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function trim(Trim\Type $type = Trim\Type::BOTH, string $characters = " \t\n\r\0\x0B") : Trim
     {
         return new Trim($this, $type, $characters);
+    }
+
+    public function truncate(ScalarFunction|int $length, ScalarFunction|string $ellipsis = '...') : Truncate
+    {
+        return new Truncate($this, $length, $ellipsis);
     }
 
     /**
