@@ -258,7 +258,7 @@ final class BulkDataTest extends TestCase
         $result = $bulkData->toSqlNamedCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:user_id_0 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:first_name_0 as VARCHAR(100))', $result);
+        self::assertStringContainsString('CAST(:first_name_0 as VARCHAR)', $result);
     }
 
     public function test_to_sql_casted_placeholders_maintains_column_order() : void
@@ -325,7 +325,7 @@ final class BulkDataTest extends TestCase
         $result = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:name_0 as VARCHAR(255))', $result);
+        self::assertStringContainsString('CAST(:name_0 as VARCHAR)', $result);
         self::assertStringContainsString('CAST(:age_0 as INTEGER)', $result);
         self::assertStringContainsString('CAST(:active_0 as BOOLEAN)', $result);
     }
@@ -391,9 +391,9 @@ final class BulkDataTest extends TestCase
         $result = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:name_0 as VARCHAR(255))', $result);
+        self::assertStringContainsString('CAST(:name_0 as VARCHAR)', $result);
         self::assertStringContainsString('CAST(:id_1 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:name_1 as VARCHAR(255))', $result);
+        self::assertStringContainsString('CAST(:name_1 as VARCHAR)', $result);
         self::assertStringContainsString(',', $result);
     }
 
@@ -442,7 +442,7 @@ final class BulkDataTest extends TestCase
         $result = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertEquals(
-            '(CAST(:id_0 as INTEGER),CAST(:name_0 as VARCHAR(255)))',
+            '(CAST(:id_0 as INTEGER),CAST(:name_0 as VARCHAR))',
             $result
         );
 
@@ -462,7 +462,7 @@ final class BulkDataTest extends TestCase
         $result = $bulkData->toSqlNamedCastedPlaceholders($tableDefinition);
 
         self::assertEquals(
-            '(CAST(:id_0 as INTEGER),CAST(:name_0 as VARCHAR(255)))',
+            '(CAST(:id_0 as INTEGER),CAST(:name_0 as VARCHAR))',
             $result
         );
     }
@@ -496,13 +496,12 @@ final class BulkDataTest extends TestCase
         $result = $bulkData->toSqlNamedCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:name_0 as VARCHAR(255))', $result);
+        self::assertStringContainsString('CAST(:name_0 as VARCHAR)', $result);
         self::assertStringContainsString('CAST(:id_1 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:name_1 as VARCHAR(255))', $result);
+        self::assertStringContainsString('CAST(:name_1 as VARCHAR)', $result);
         self::assertStringContainsString('CAST(:id_2 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:name_2 as VARCHAR(255))', $result);
+        self::assertStringContainsString('CAST(:name_2 as VARCHAR)', $result);
 
-        // Should have 3 sets of parentheses
         $parenthesesCount = substr_count($result, '(CAST');
         self::assertSame(3, $parenthesesCount);
     }

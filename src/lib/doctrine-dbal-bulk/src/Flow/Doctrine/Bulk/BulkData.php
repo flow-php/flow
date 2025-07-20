@@ -132,11 +132,11 @@ final readonly class BulkData
                     foreach ($row as $columnName => $value) {
                         if (\array_key_exists($columnName, $this->types)) {
                             $type = $this->types[$columnName];
-                            $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
                         } else {
-                            $dbColumn = $table->dbalColumn($columnName);
-                            $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $dbColumn->getType()->getSQLDeclaration($dbColumn->toArray(), $table->platform()) . ')';
+                            $type = $table->dbalColumn($columnName)->getType();
                         }
+
+                        $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
                     }
 
                     return \sprintf(
