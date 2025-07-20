@@ -418,6 +418,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new ToLower($this);
     }
 
+    public function match(ScalarFunction|string $pattern) : StringMatch
+    {
+        return new StringMatch($this, $pattern);
+    }
+
     public function minus(ScalarFunction|int|float $ref) : Minus
     {
         return new Minus($this, $ref);
