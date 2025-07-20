@@ -130,8 +130,13 @@ final readonly class BulkData
                      * @var mixed $value
                      */
                     foreach ($row as $columnName => $value) {
-                        $dbColumn = $table->dbalColumn($columnName);
-                        $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $dbColumn->getType()->getSQLDeclaration($dbColumn->toArray(), $table->platform()) . ')';
+                        if (\array_key_exists($columnName, $this->types)) {
+                            $type = $this->types[$columnName];
+                            $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
+                        } else {
+                            $dbColumn = $table->dbalColumn($columnName);
+                            $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $dbColumn->getType()->getSQLDeclaration($dbColumn->toArray(), $table->platform()) . ')';
+                        }
                     }
 
                     return \sprintf(
@@ -231,8 +236,14 @@ final readonly class BulkData
                      * @var mixed $value
                      */
                     foreach ($row as $columnName => $value) {
-                        $dbColumn = $table->dbalColumn($columnName);
-                        $keys[] = 'CAST(? as ' . $dbColumn->getType()->getSQLDeclaration($dbColumn->toArray(), $table->platform()) . ')';
+                        if (\array_key_exists($columnName, $this->types)) {
+                            $type = $this->types[$columnName];
+                            $keys[] = 'CAST(? as ' . $type->getSQLDeclaration([], $table->platform()) . ')';
+                        } else {
+                            $dbColumn = $table->dbalColumn($columnName);
+                            $type = $dbColumn->getType();
+                            $keys[] = 'CAST(? as ' . $type->getSQLDeclaration($dbColumn->toArray(), $table->platform()) . ')';
+                        }
                     }
 
                     return \sprintf(

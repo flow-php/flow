@@ -214,6 +214,28 @@ final class BulkDataTest extends TestCase
         self::assertStringNotContainsString(':id_', $result);
     }
 
+    public function test_to_sql_casted_placeholders_falls_back_to_database_when_no_custom_type() : void
+    {
+        $connection = $this->createConnectionWithTable('test_table');
+        $tableDefinition = new TableDefinition('test_table', $connection);
+
+        // Provide custom type for only one column
+        $customTypes = [
+            'id' => Type::getType(Types::INTEGER),
+            // 'name' not provided - should fall back to database lookup
+        ];
+
+        $bulkData = new BulkData([
+            ['id' => 1, 'name' => 'Test'],
+        ], $customTypes, SQLParametersStyle::POSITIONAL);
+
+        $result = $bulkData->toSqlPositionalCastedPlaceholders($tableDefinition);
+
+        // id uses custom type, name uses database column type
+        self::assertStringContainsString('CAST(? as INTEGER)', $result); // Custom type
+        self::assertStringContainsString('CAST(? as VARCHAR(255))', $result); // Database column type with length
+    }
+
     public function test_to_sql_casted_placeholders_handles_special_characters_in_column_names() : void
     {
         $connection = $this->createSQLiteConnection();
@@ -253,6 +275,27 @@ final class BulkDataTest extends TestCase
         // Verify the order matches the table column order (id, name, age, active)
         $expectedPattern = '(CAST(? as INTEGER),CAST(? as VARCHAR(255)),CAST(? as INTEGER),CAST(? as BOOLEAN))';
         self::assertEquals($expectedPattern, $result);
+    }
+
+    public function test_to_sql_casted_placeholders_prioritizes_custom_types_over_database_lookup() : void
+    {
+        $connection = $this->createConnectionWithTable('test_table');
+        $tableDefinition = new TableDefinition('test_table', $connection);
+
+        $customTypes = [
+            'id' => Type::getType(Types::INTEGER),
+            'name' => Type::getType(Types::STRING),
+        ];
+
+        $bulkData = new BulkData([
+            ['id' => 1, 'name' => 'Test'],
+        ], $customTypes, SQLParametersStyle::NAMED);
+
+        $result = $bulkData->toSqlNamedCastedPlaceholders($tableDefinition);
+
+        self::assertStringContainsString('CAST(:id_0 as INTEGER)', $result);
+        self::assertStringContainsString('CAST(:name_0 as VARCHAR)', $result);
+        self::assertStringNotContainsString('VARCHAR(255)', $result);
     }
 
     public function test_to_sql_casted_placeholders_throws_exception_for_invalid_column() : void
@@ -304,9 +347,10 @@ final class BulkDataTest extends TestCase
 
         $result = $bulkData->toSqlNamedCastedPlaceholders($tableDefinition);
 
-        // Should still use table definition types for CAST, not custom types
+        // Should use custom types when available (avoids database hits)
+        // Note: Custom types may not include column-specific metadata like length
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $result);
-        self::assertStringContainsString('CAST(:name_0 as VARCHAR(255))', $result);
+        self::assertStringContainsString('CAST(:name_0 as VARCHAR)', $result); // Custom STRING type without length
     }
 
     public function test_to_sql_casted_placeholders_with_large_dataset() : void

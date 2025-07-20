@@ -206,6 +206,68 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
         );
     }
 
+    public function test_update_with_custom_types_using_casted_placeholders_works_with_postgresql() : void
+    {
+        $this->databaseContext->createTable(
+            (new Table(
+                $table = 'flow_doctrine_bulk_test',
+                [
+                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('category', Type::getType(Types::STRING), ['notnull' => true, 'length' => 100]),
+                    new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
+                ],
+            ))
+            ->setPrimaryKey(['id', 'name'])
+        );
+
+        $this->databaseContext->connection()->executeStatement(
+            "INSERT INTO {$table} (id, name, category, active) VALUES
+            (1, 'Product One', 'Electronics', true),
+            (2, 'Product Two', 'Books', false),
+            (3, 'Product Three', 'Electronics', true),
+            (4, 'Product Four', 'Clothing', false)"
+        );
+
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+
+        $customTypes = [
+            'id' => Type::getType(Types::INTEGER),
+            'name' => Type::getType(Types::STRING),
+            'category' => Type::getType(Types::STRING),
+            'active' => Type::getType(Types::BOOLEAN),
+        ];
+
+        $bulkData = new BulkData([
+            ['id' => 1, 'name' => 'Product One', 'category' => 'Home & Garden', 'active' => false],
+            ['id' => 3, 'name' => 'Product Three', 'category' => 'Computers', 'active' => false],
+        ], $customTypes);
+
+        Bulk::create()->update(
+            $this->databaseContext->connection(),
+            $table,
+            $bulkData,
+            PostgreSQLUpdateOptions::fromArray([
+                'primary_key_columns' => ['id', 'name'],
+            ])
+        );
+
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+        self::assertEquals(1, $this->executedQueriesCount());
+
+        $allRows = $this->databaseContext->selectAll($table);
+        self::assertCount(4, $allRows);
+        self::assertEquals(
+            [
+                ['id' => 1, 'name' => 'Product One', 'category' => 'Home & Garden', 'active' => false],
+                ['id' => 2, 'name' => 'Product Two', 'category' => 'Books', 'active' => false],
+                ['id' => 3, 'name' => 'Product Three', 'category' => 'Computers', 'active' => false],
+                ['id' => 4, 'name' => 'Product Four', 'category' => 'Clothing', 'active' => false],
+            ],
+            $allRows
+        );
+    }
+
     public function test_update_with_empty_primary_key_columns() : void
     {
         $this->databaseContext->createTable(

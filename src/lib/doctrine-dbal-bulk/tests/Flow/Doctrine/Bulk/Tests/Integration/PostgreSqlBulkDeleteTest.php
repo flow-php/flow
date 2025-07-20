@@ -157,4 +157,59 @@ final class PostgreSqlBulkDeleteTest extends PostgreSqlIntegrationTestCase
             $remainingRows
         );
     }
+
+    public function test_delete_with_custom_types_using_casted_placeholders_works_with_postgresql() : void
+    {
+        $this->databaseContext->createTable(
+            (new Table(
+                $table = 'flow_doctrine_bulk_test',
+                [
+                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('category', Type::getType(Types::STRING), ['notnull' => true, 'length' => 100]),
+                ],
+            ))
+            ->setPrimaryKey(['id', 'name', 'category'])
+        );
+
+        $this->databaseContext->connection()->executeStatement(
+            "INSERT INTO {$table} (id, name, category) VALUES
+            (1, 'Product One', 'Electronics'),
+            (2, 'Product Two', 'Books'),
+            (3, 'Product Three', 'Electronics'),
+            (4, 'Product Four', 'Clothing')"
+        );
+
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+
+        $customTypes = [
+            'id' => Type::getType(Types::INTEGER),
+            'name' => Type::getType(Types::STRING),
+            'category' => Type::getType(Types::STRING),
+        ];
+
+        $bulkData = new BulkData([
+            ['id' => 1, 'name' => 'Product One', 'category' => 'Electronics'],
+            ['id' => 3, 'name' => 'Product Three', 'category' => 'Electronics'],
+        ], $customTypes);
+
+        Bulk::create()->delete(
+            $this->databaseContext->connection(),
+            $table,
+            $bulkData
+        );
+
+        self::assertEquals(2, $this->databaseContext->tableCount($table));
+        self::assertEquals(1, $this->executedQueriesCount());
+
+        $remainingRows = $this->databaseContext->selectAll($table);
+        self::assertCount(2, $remainingRows);
+        self::assertEquals(
+            [
+                ['id' => 2, 'name' => 'Product Two', 'category' => 'Books'],
+                ['id' => 4, 'name' => 'Product Four', 'category' => 'Clothing'],
+            ],
+            $remainingRows
+        );
+    }
 }
