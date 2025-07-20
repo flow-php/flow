@@ -473,6 +473,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new RegexReplace($pattern, $replacement, $this, $limit);
     }
 
+    public function reverse() : Reverse
+    {
+        return new Reverse($this);
+    }
+
     public function round(ScalarFunction|int $precision = 2, ScalarFunction|int $mode = PHP_ROUND_HALF_UP) : Round
     {
         return new Round($this, $precision, $mode);
