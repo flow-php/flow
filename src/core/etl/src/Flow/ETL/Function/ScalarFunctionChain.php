@@ -163,6 +163,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Cast($this, $type);
     }
 
+    public function chunk(ScalarFunction|int $size) : Chunk
+    {
+        return new Chunk($this, $size);
+    }
+
     public function coalesce(ScalarFunction ...$params) : Coalesce
     {
         return new Coalesce($this, ...$params);
@@ -360,6 +365,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function jsonEncode(ScalarFunction|int $flags = JSON_THROW_ON_ERROR) : JsonEncode
     {
         return new JsonEncode($this, $flags);
+    }
+
+    public function length() : Length
+    {
+        return new Length($this);
     }
 
     public function lessThan(mixed $ref) : LessThan
