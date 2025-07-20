@@ -289,6 +289,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new IndexOf($this, $needle, $ignoreCase, $offset);
     }
 
+    public function isEmpty() : IsEmpty
+    {
+        return new IsEmpty($this);
+    }
+
     public function isEven() : Equals
     {
         return new Equals(new Mod($this, lit(2)), lit(0));
