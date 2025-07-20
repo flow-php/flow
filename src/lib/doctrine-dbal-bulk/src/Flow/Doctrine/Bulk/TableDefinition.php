@@ -41,6 +41,38 @@ final class TableDefinition
      *
      * @throws RuntimeException
      *
+     * @return array<int<0, max>|string, string>
+     */
+    public function dbalParameterTypes(BulkData $bulkData) : array
+    {
+        return match ($bulkData->parametersStyle()) {
+            SQLParametersStyle::NAMED => $this->dbalTypes($bulkData),
+            SQLParametersStyle::POSITIONAL => $this->dbalPositionalTypes($bulkData),
+        };
+    }
+
+    /**
+     * @return array<int<0, max>, string>
+     */
+    public function dbalPositionalTypes(BulkData $bulkData) : array
+    {
+        $types = [];
+
+        for ($i = 0; $i < $bulkData->count(); $i++) {
+            foreach ($bulkData->columns()->all() as $columnName) {
+                $dbColumn = $this->dbalColumn($columnName);
+                $types[] = Type::getTypeRegistry()->lookupName($dbColumn->getType());
+            }
+        }
+
+        return $types;
+    }
+
+    /**
+     * @param BulkData $bulkData
+     *
+     * @throws RuntimeException
+     *
      * @return array<string, string>
      */
     public function dbalTypes(BulkData $bulkData) : array
@@ -69,39 +101,6 @@ final class TableDefinition
     public function platform() : AbstractPlatform
     {
         return $this->connection->getDatabasePlatform();
-    }
-
-    public function toSqlCastedPlaceholders(BulkData $bulkData, AbstractPlatform $abstractPlatform) : string
-    {
-        return \implode(
-            ',',
-            \array_map(
-                /**
-                 * @param int $index
-                 * @param array<string, mixed> $row
-                 *
-                 * @return string
-                 */
-                function (int $index, array $row) use ($abstractPlatform) : string {
-                    $keys = [];
-
-                    /**
-                     * @var mixed $value
-                     */
-                    foreach ($row as $columnName => $value) {
-                        $dbColumn = $this->dbalColumn($columnName);
-                        $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $dbColumn->getType()->getSQLDeclaration($dbColumn->toArray(), $abstractPlatform) . ')';
-                    }
-
-                    return \sprintf(
-                        '(%s)',
-                        \implode(',', $keys)
-                    );
-                },
-                \array_keys($bulkData->rows()),
-                $bulkData->rows(),
-            )
-        );
     }
 
     /**

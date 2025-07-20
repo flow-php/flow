@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
 use Doctrine\DBAL\{Connection, DriverManager};
-use Doctrine\DBAL\Platforms\{AbstractPlatform, MySQLPlatform, SQLitePlatform};
+use Doctrine\DBAL\Platforms\{AbstractPlatform, SQLitePlatform};
 use Doctrine\DBAL\Schema\{Column, Table};
 use Doctrine\DBAL\Types\{Type, Types};
-use Flow\Doctrine\Bulk\{BulkData, TableDefinition};
+use Flow\Doctrine\Bulk\{BulkData, SQLParametersStyle, TableDefinition};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -279,13 +279,12 @@ final class TableDefinitionTest extends TestCase
     {
         $connection = $this->createConnectionWithTable('test_table');
         $tableDefinition = new TableDefinition('test_table', $connection);
-        $platform = $tableDefinition->platform();
 
         $bulkData = new BulkData([
             ['id' => 1, 'name' => 'John'],
-        ]);
+        ], [], SQLParametersStyle::NAMED);
 
-        $sql = $tableDefinition->toSqlCastedPlaceholders($bulkData, $platform);
+        $sql = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $sql);
         self::assertStringContainsString('CAST(:name_0 as VARCHAR(255))', $sql);
@@ -297,29 +296,27 @@ final class TableDefinitionTest extends TestCase
     {
         $connection = $this->createConnectionWithTable('test_table');
         $tableDefinition = new TableDefinition('test_table', $connection);
-        $platform = $tableDefinition->platform();
 
         $bulkData = new BulkData([
             ['id' => 1, 'invalid_column' => 'value'],
-        ]);
+        ], [], SQLParametersStyle::NAMED);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Column with name invalid_column, not found in table: test_table');
 
-        $tableDefinition->toSqlCastedPlaceholders($bulkData, $platform);
+        $bulkData->toSqlCastedPlaceholders($tableDefinition);
     }
 
     public function test_to_sql_casted_placeholders_with_different_platforms() : void
     {
         $connection = $this->createConnectionWithTable('test_table');
         $tableDefinition = new TableDefinition('test_table', $connection);
-        $mysqlPlatform = new MySQLPlatform();
 
         $bulkData = new BulkData([
             ['id' => 1, 'name' => 'John'],
-        ]);
+        ], [], SQLParametersStyle::NAMED);
 
-        $sql = $tableDefinition->toSqlCastedPlaceholders($bulkData, $mysqlPlatform);
+        $sql = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as ', $sql);
         self::assertStringContainsString('CAST(:name_0 as ', $sql);
@@ -346,9 +343,9 @@ final class TableDefinitionTest extends TestCase
         $bulkData = new BulkData([
             ['id' => 1, 'name' => 'John'],
             ['id' => 2, 'name' => 'Jane'],
-        ]);
+        ], [], SQLParametersStyle::NAMED);
 
-        $sql = $tableDefinition->toSqlCastedPlaceholders($bulkData, $platform);
+        $sql = $bulkData->toSqlCastedPlaceholders($tableDefinition);
 
         self::assertStringContainsString('CAST(:id_0 as INTEGER)', $sql);
         self::assertStringContainsString('CAST(:name_0 as VARCHAR(255))', $sql);

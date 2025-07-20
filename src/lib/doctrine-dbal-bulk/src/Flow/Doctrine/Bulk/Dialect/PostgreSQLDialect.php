@@ -39,7 +39,7 @@ final readonly class PostgreSQLDialect implements Dialect
             'DELETE FROM %s WHERE (%s) IN (%s)',
             $table->name(),
             \implode(', ', \array_map(fn ($column) => $this->platform->quoteIdentifier($column), $columns)),
-            $table->toSqlCastedPlaceholders($bulkData, $this->platform)
+            $bulkData->toSqlCastedPlaceholders($table)
         );
     }
 
@@ -134,7 +134,7 @@ final readonly class PostgreSQLDialect implements Dialect
             \count($options->updateColumns)
                 ? $this->updatedSelectedColumns($options->updateColumns, $bulkData->columns()->without(...$options->primaryKeyColumns))
                 : $this->updateAllColumns($bulkData->columns()->without(...$options->primaryKeyColumns)),
-            $table->toSqlCastedPlaceholders($bulkData, $this->platform),
+            $bulkData->toSqlCastedPlaceholders($table),
             \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
             $this->updatedIndexColumns($options->primaryKeyColumns)
         );

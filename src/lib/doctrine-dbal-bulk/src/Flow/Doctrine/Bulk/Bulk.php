@@ -31,7 +31,7 @@ final readonly class Bulk
         $connection->executeStatement(
             $this->queryFactory->delete($connection->getDatabasePlatform(), $tableDefinition, $bulkData),
             $bulkData->toSqlParameters($tableDefinition),
-            $tableDefinition->dbalTypes($bulkData)
+            $tableDefinition->dbalParameterTypes($bulkData)
         );
     }
 
