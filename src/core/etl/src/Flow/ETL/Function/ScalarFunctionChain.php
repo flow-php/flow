@@ -146,6 +146,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Between($this, $lowerBoundRef, $upperBoundRef, $boundary);
     }
 
+    public function binaryLength() : BinaryLength
+    {
+        return new BinaryLength($this);
+    }
+
     /**
      * @param array<array-key, mixed> $arguments
      * @param Type<mixed> $returnType
@@ -176,6 +181,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function coalesce(ScalarFunction ...$params) : Coalesce
     {
         return new Coalesce($this, ...$params);
+    }
+
+    public function codePointLength() : CodePointLength
+    {
+        return new CodePointLength($this);
     }
 
     public function collapseWhitespace() : CollapseWhitespace
@@ -468,6 +478,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Multiply($this, $value);
     }
 
+    public function normalize(ScalarFunction|int $form = \Normalizer::NFC) : Normalize
+    {
+        return new Normalize($this, $form);
+    }
+
     public function notEquals(mixed $value) : NotEquals
     {
         return new NotEquals($this, $value);
@@ -723,6 +738,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function truncate(ScalarFunction|int $length, ScalarFunction|string $ellipsis = '...') : Truncate
     {
         return new Truncate($this, $length, $ellipsis);
+    }
+
+    public function unicodeLength() : UnicodeLength
+    {
+        return new UnicodeLength($this);
     }
 
     /**
