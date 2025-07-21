@@ -28,6 +28,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new All($this, new Not($function));
     }
 
+    public function append(ScalarFunction|string $suffix) : Append
+    {
+        return new Append($this, $suffix);
+    }
+
     /**
      * Filters an array by removing all elements that matches passed value.
      * Applicable to all data structures that can be converted to an array:
@@ -492,6 +497,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function power(ScalarFunction|int $value) : Power
     {
         return new Power($this, $value);
+    }
+
+    public function prepend(ScalarFunction|string $prefix) : Prepend
+    {
+        return new Prepend($this, $prefix);
     }
 
     public function regex(ScalarFunction|string $pattern, ScalarFunction|int $flags = 0, ScalarFunction|int $offset = 0) : Regex
