@@ -178,6 +178,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Coalesce($this, ...$params);
     }
 
+    public function collapseWhitespace() : CollapseWhitespace
+    {
+        return new CollapseWhitespace($this);
+    }
+
     public function concat(ScalarFunction|string ...$params) : Concat
     {
         return new Concat($this, ...$params);
