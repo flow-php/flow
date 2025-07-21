@@ -244,6 +244,16 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new EndsWith($this, $needle);
     }
 
+    public function ensureEnd(ScalarFunction|string $suffix) : EnsureEnd
+    {
+        return new EnsureEnd($this, $suffix);
+    }
+
+    public function ensureStart(ScalarFunction|string $prefix) : EnsureStart
+    {
+        return new EnsureStart($this, $prefix);
+    }
+
     public function equals(mixed $ref) : Equals
     {
         return new Equals($this, $ref);
