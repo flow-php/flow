@@ -710,6 +710,16 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Trim($this, $type, $characters);
     }
 
+    public function trimEnd(ScalarFunction|string|null $chars = null) : TrimEnd
+    {
+        return new TrimEnd($this, $chars);
+    }
+
+    public function trimStart(ScalarFunction|string|null $chars = null) : TrimStart
+    {
+        return new TrimStart($this, $chars);
+    }
+
     public function truncate(ScalarFunction|int $length, ScalarFunction|string $ellipsis = '...') : Truncate
     {
         return new Truncate($this, $length, $ellipsis);

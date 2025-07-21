@@ -26,12 +26,6 @@ final class Trim extends ScalarFunctionChain
             return null;
         }
 
-        foreach (Type::cases() as $case) {
-            if ($type->name === $case->name) {
-                return ($case->value)($value, $characters);
-            }
-        }
-
-        return null;
+        return ($type->value())($value, $characters);
     }
 }
