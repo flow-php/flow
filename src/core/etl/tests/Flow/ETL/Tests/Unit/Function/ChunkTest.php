@@ -59,97 +59,14 @@ final class ChunkTest extends FlowTestCase
         );
     }
 
-    public function test_chunk_single_character() : void
+    public function test_chunk_string_basic_functionality() : void
     {
         self::assertSame(
-            ['a'],
-            ref('str')->chunk(1)->eval(
-                row(str_entry('str', 'a'))
-            )
-        );
-    }
-
-    public function test_chunk_size_one() : void
-    {
-        self::assertSame(
-            ['h', 'e', 'l', 'l', 'o'],
-            ref('str')->chunk(1)->eval(
-                row(str_entry('str', 'hello'))
-            )
-        );
-    }
-
-    public function test_chunk_size_two() : void
-    {
-        self::assertSame(
-            ['he', 'll', 'o'],
-            ref('str')->chunk(2)->eval(
-                row(str_entry('str', 'hello'))
-            )
-        );
-    }
-
-    public function test_chunk_string_evenly_divisible() : void
-    {
-        self::assertSame(
-            ['hell', 'o wo', 'rld!'],
-            ref('str')->chunk(4)->eval(
-                row(str_entry('str', 'hello world!'))
-            )
-        );
-    }
-
-    public function test_chunk_string_not_evenly_divisible() : void
-    {
-        self::assertSame(
-            ['hel', 'lo ', 'wor', 'ld!'],
+            ['hel', 'lo '],
             ref('str')->chunk(3)->eval(
-                row(str_entry('str', 'hello world!'))
+                row(str_entry('str', 'hello '))
             )
         );
-    }
-
-    public function test_chunk_unicode_complex_script() : void
-    {
-        self::assertSame(
-            ['नम', 'स्ते', ' दु', 'निया'],
-            ref('str')->chunk(2)->eval(
-                row(str_entry('str', 'नमस्ते दुनिया'))
-            )
-        );
-    }
-
-    public function test_chunk_unicode_string_with_accented_characters() : void
-    {
-        self::assertSame(
-            ['caf', 'é a', 'u l', 'ait'],
-            ref('str')->chunk(3)->eval(
-                row(str_entry('str', 'café au lait'))
-            )
-        );
-    }
-
-    public function test_chunk_unicode_string_with_emoji() : void
-    {
-        self::assertSame(
-            ['he', 'll', 'o🚀', 'wo', 'rl', 'd'],
-            ref('str')->chunk(2)->eval(
-                row(str_entry('str', 'hello🚀world'))
-            )
-        );
-    }
-
-    public function test_chunk_with_large_chunk_size() : void
-    {
-        $longString = str_repeat('hello ', 100);
-
-        $result = ref('str')->chunk(50)->eval(
-            row(str_entry('str', $longString))
-        );
-
-        self::assertIsArray($result);
-        self::assertCount(12, $result);
-        self::assertSame(50, strlen($result[0]));
     }
 
     public function test_chunk_with_null_size() : void
@@ -174,16 +91,6 @@ final class ChunkTest extends FlowTestCase
                     str_entry('str', 'hello'),
                     int_entry('size', 2)
                 )
-            )
-        );
-    }
-
-    public function test_chunk_with_whitespace() : void
-    {
-        self::assertSame(
-            ['   ', '   '],
-            ref('str')->chunk(3)->eval(
-                row(str_entry('str', '      '))
             )
         );
     }

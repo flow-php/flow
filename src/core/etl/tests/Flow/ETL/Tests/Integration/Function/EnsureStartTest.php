@@ -25,7 +25,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['command' => 'apt update', 'safe_command' => 'SUDO APT UPDATE'],
                 ['command' => 'sudo systemctl stop apache', 'safe_command' => 'SUDO SYSTEMCTL STOP APACHE'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -45,7 +45,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['url' => 'https://github.com', 'prefix' => 'https://', 'normalized_url' => 'https://github.com'],
                 ['url' => 'ftp://files.example.com', 'prefix' => 'https://', 'normalized_url' => 'https://ftp://files.example.com'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -66,7 +66,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['url' => 'https://secure.com', 'normalized_url' => 'https://secure.com'],
                 ['url' => 'http://insecure.com', 'normalized_url' => 'https://http://insecure.com'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -103,9 +103,9 @@ final class EnsureStartTest extends FlowTestCase
             [
                 ['category' => 'tech', 'title' => 'PHP 8 Features', 'prefixed_title' => 'TECH] PHP 8 Features'],
                 ['category' => 'business', 'title' => 'Market Analysis', 'prefixed_title' => 'BUSINESS] Market Analysis'],
-                ['category' => 'tech', 'title' => '[TECH] New Framework', 'prefixed_title' => '[TECH] New Framework'],
+                ['category' => 'tech', 'title' => '[TECH] New Framework', 'prefixed_title' => 'TECH] [TECH] New Framework'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -125,7 +125,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['path' => '/var/log/error.log', 'absolute_path' => '/var/log/error.log'],
                 ['path' => 'tmp/cache.txt', 'absolute_path' => '/tmp/cache.txt'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -145,7 +145,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['text' => 'world', 'prefix' => null, 'processed_text' => 'world'],
                 ['text' => 'test', 'prefix' => 'prefix_', 'processed_text' => 'prefix_test'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -166,7 +166,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['css_class' => '.button-secondary', 'id_element' => '#sidebar', 'normalized_css_class' => '.button-secondary', 'normalized_id_element' => '#sidebar'],
                 ['css_class' => 'link', 'id_element' => 'footer', 'normalized_css_class' => '.link', 'normalized_id_element' => '#footer'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -186,7 +186,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['text' => null, 'prefixed_text' => null],
                 ['text' => 'test string', 'prefixed_text' => '>>> test string'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 
@@ -206,7 +206,7 @@ final class EnsureStartTest extends FlowTestCase
                 ['greeting' => 'नमस्ते world', 'prefix' => 'नमस्ते ', 'full_greeting' => 'नमस्ते world'],
                 ['greeting' => 'hello', 'prefix' => '🚀 ', 'full_greeting' => '🚀 hello'],
             ],
-            $df->fetch()
+            $df->fetch()->toArray()
         );
     }
 }

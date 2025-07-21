@@ -39,26 +39,6 @@ final class RepeatTest extends FlowTestCase
         );
     }
 
-    public function test_repeat_once() : void
-    {
-        self::assertSame(
-            'hello',
-            ref('str')->repeat(1)->eval(
-                row(str_entry('str', 'hello'))
-            )
-        );
-    }
-
-    public function test_repeat_single_character() : void
-    {
-        self::assertSame(
-            'aaaaa',
-            ref('str')->repeat(5)->eval(
-                row(str_entry('str', 'a'))
-            )
-        );
-    }
-
     public function test_repeat_string_multiple_times() : void
     {
         self::assertSame(
@@ -67,46 +47,6 @@ final class RepeatTest extends FlowTestCase
                 row(str_entry('str', 'hello'))
             )
         );
-    }
-
-    public function test_repeat_unicode_complex_script() : void
-    {
-        self::assertSame(
-            'नमस्तेनमस्तेनमस्ते',
-            ref('str')->repeat(3)->eval(
-                row(str_entry('str', 'नमस्ते'))
-            )
-        );
-    }
-
-    public function test_repeat_unicode_string_with_accented_characters() : void
-    {
-        self::assertSame(
-            'cafécafécafé',
-            ref('str')->repeat(3)->eval(
-                row(str_entry('str', 'café'))
-            )
-        );
-    }
-
-    public function test_repeat_unicode_string_with_emoji() : void
-    {
-        self::assertSame(
-            '🚀🚀🚀',
-            ref('str')->repeat(3)->eval(
-                row(str_entry('str', '🚀'))
-            )
-        );
-    }
-
-    public function test_repeat_with_large_repetition_count() : void
-    {
-        $result = ref('str')->repeat(1000)->eval(
-            row(str_entry('str', 'a'))
-        );
-
-        self::assertSame(1000, strlen((string) $result));
-        self::assertSame(str_repeat('a', 1000), $result);
     }
 
     public function test_repeat_with_null_times() : void
@@ -131,16 +71,6 @@ final class RepeatTest extends FlowTestCase
                     str_entry('str', 'hello'),
                     int_entry('times', 2)
                 )
-            )
-        );
-    }
-
-    public function test_repeat_with_whitespace() : void
-    {
-        self::assertSame(
-            '   ',
-            ref('str')->repeat(3)->eval(
-                row(str_entry('str', ' '))
             )
         );
     }

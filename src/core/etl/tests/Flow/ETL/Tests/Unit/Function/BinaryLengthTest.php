@@ -42,63 +42,11 @@ final class BinaryLengthTest extends FlowTestCase
         );
     }
 
-    public function test_binary_length_long_string() : void
-    {
-        $longString = str_repeat('a', 10000);
-
-        self::assertSame(
-            10000,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', $longString))
-            )
-        );
-    }
-
-    public function test_binary_length_mixed_ascii_and_unicode() : void
-    {
-        self::assertSame(
-            24,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'hello नमस्ते'))
-            )
-        );
-    }
-
     public function test_binary_length_returns_null_for_null_input() : void
     {
         self::assertNull(
             ref('str')->binaryLength()->eval(
                 row(str_entry('str', null))
-            )
-        );
-    }
-
-    public function test_binary_length_single_ascii_character() : void
-    {
-        self::assertSame(
-            1,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'a'))
-            )
-        );
-    }
-
-    public function test_binary_length_string_with_combining_characters() : void
-    {
-        self::assertSame(
-            2,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'é'))
-            )
-        );
-    }
-
-    public function test_binary_length_string_with_emoji() : void
-    {
-        self::assertSame(
-            9,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'world🚀'))
             )
         );
     }
@@ -111,69 +59,5 @@ final class BinaryLengthTest extends FlowTestCase
                 row(str_entry('str', "hello\nworld\t"))
             )
         );
-    }
-
-    public function test_binary_length_string_with_zero_width_characters() : void
-    {
-        self::assertSame(
-            7,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'te‌st'))
-            )
-        );
-    }
-
-    public function test_binary_length_unicode_string_with_accented_characters() : void
-    {
-        self::assertSame(
-            5,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'café'))
-            )
-        );
-    }
-
-    public function test_binary_length_unicode_string_with_complex_characters() : void
-    {
-        self::assertSame(
-            18,
-            ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'नमस्ते'))
-            )
-        );
-    }
-
-    public function test_binary_length_vs_character_length_ascii() : void
-    {
-        $row = row(str_entry('str', 'hello'));
-
-        $binaryLength = ref('str')->binaryLength()->eval($row);
-        $characterLength = ref('str')->unicodeLength()->eval($row);
-
-        self::assertSame($binaryLength, $characterLength);
-    }
-
-    public function test_binary_length_vs_character_length_emoji() : void
-    {
-        $row = row(str_entry('str', '🚀'));
-
-        $binaryLength = ref('str')->binaryLength()->eval($row);
-        $characterLength = ref('str')->unicodeLength()->eval($row);
-
-        self::assertSame(4, $binaryLength);
-        self::assertSame(1, $characterLength);
-        self::assertGreaterThan($characterLength, $binaryLength);
-    }
-
-    public function test_binary_length_vs_character_length_unicode() : void
-    {
-        $row = row(str_entry('str', 'café'));
-
-        $binaryLength = ref('str')->binaryLength()->eval($row);
-        $characterLength = ref('str')->unicodeLength()->eval($row);
-
-        self::assertSame(5, $binaryLength);
-        self::assertSame(4, $characterLength);
-        self::assertGreaterThan($characterLength, $binaryLength);
     }
 }

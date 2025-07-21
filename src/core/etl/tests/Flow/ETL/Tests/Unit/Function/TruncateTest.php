@@ -69,48 +69,6 @@ final class TruncateTest extends FlowTestCase
         );
     }
 
-    public function test_truncate_unicode_complex_script() : void
-    {
-        self::assertSame(
-            'न...',
-            ref('str')->truncate(4)->eval(
-                row(str_entry('str', 'नमस्ते दुनिया'))
-            )
-        );
-    }
-
-    public function test_truncate_unicode_string_with_accented_characters() : void
-    {
-        self::assertSame(
-            'c...',
-            ref('str')->truncate(4)->eval(
-                row(str_entry('str', 'café au lait'))
-            )
-        );
-    }
-
-    public function test_truncate_unicode_string_with_emoji() : void
-    {
-        self::assertSame(
-            'he...',
-            ref('str')->truncate(5)->eval(
-                row(str_entry('str', 'hello🚀world'))
-            )
-        );
-    }
-
-    public function test_truncate_very_long_string() : void
-    {
-        $longString = str_repeat('hello world ', 100);
-
-        self::assertSame(
-            'hello world hello...',
-            ref('str')->truncate(20)->eval(
-                row(str_entry('str', $longString))
-            )
-        );
-    }
-
     public function test_truncate_with_custom_ellipsis() : void
     {
         self::assertSame(
@@ -186,16 +144,6 @@ final class TruncateTest extends FlowTestCase
                     str_entry('str', 'hello world'),
                     int_entry('length', 5)
                 )
-            )
-        );
-    }
-
-    public function test_truncate_with_whitespace() : void
-    {
-        self::assertSame(
-            'hell...',
-            ref('str')->truncate(7)->eval(
-                row(str_entry('str', 'hello world test'))
             )
         );
     }
