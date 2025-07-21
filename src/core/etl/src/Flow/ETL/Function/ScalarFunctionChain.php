@@ -747,6 +747,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Width($this);
     }
 
+    public function wordwrap(ScalarFunction|int $width, ScalarFunction|string $break = "\n", ScalarFunction|bool $cut = false) : Wordwrap
+    {
+        return new Wordwrap($this, $width, $break, $cut);
+    }
+
     public function xpath(string $string) : XPath
     {
         return new XPath($this, $string);
