@@ -110,7 +110,7 @@ final class UnicodeLengthTest extends FlowTestCase
                 )
             )
             ->withEntry('unicode_length', ref('text')->unicodeLength())
-            ->withEntry('char_length', ref('text')->length())
+            ->withEntry('char_length', ref('text')->binaryLength())
             ->withEntry('binary_length', ref('text')->binaryLength())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

@@ -8,7 +8,7 @@ use function Flow\Types\DSL\{type_list, type_string};
 use function Symfony\Component\String\s;
 use Flow\ETL\Row;
 
-final class ContainsAny extends ScalarFunctionChain
+final class StringContainsAny extends ScalarFunctionChain
 {
     /**
      * @param ScalarFunction|string $value

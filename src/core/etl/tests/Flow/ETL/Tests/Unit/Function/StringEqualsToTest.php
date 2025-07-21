@@ -8,12 +8,12 @@ use function Flow\ETL\DSL\{ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class EqualsToTest extends FlowTestCase
+final class StringEqualsToTest extends FlowTestCase
 {
     public function test_equals_to_case_sensitive() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('Hello')->eval(
+            ref('str')->stringEqualsTo('Hello')->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -22,7 +22,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_emoji_characters() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo('🚀🌟')->eval(
+            ref('str')->stringEqualsTo('🚀🌟')->eval(
                 row(str_entry('str', '🚀🌟'))
             )
         );
@@ -31,7 +31,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_empty_strings() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo('')->eval(
+            ref('str')->stringEqualsTo('')->eval(
                 row(str_entry('str', ''))
             )
         );
@@ -40,7 +40,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_empty_vs_non_empty() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('')->eval(
+            ref('str')->stringEqualsTo('')->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -49,7 +49,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_exact_match() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo('hello')->eval(
+            ref('str')->stringEqualsTo('hello')->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -58,7 +58,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_longer_string_returns_false() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('hello world')->eval(
+            ref('str')->stringEqualsTo('hello world')->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -67,7 +67,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_newline_and_tab_characters() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo("hello\nworld\t")->eval(
+            ref('str')->stringEqualsTo("hello\nworld\t")->eval(
                 row(str_entry('str', "hello\nworld\t"))
             )
         );
@@ -76,7 +76,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_no_match() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('world')->eval(
+            ref('str')->stringEqualsTo('world')->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -85,7 +85,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_null_comparison_string_returns_null() : void
     {
         self::assertNull(
-            ref('str')->equalsTo(ref('compare'))->eval(
+            ref('str')->stringEqualsTo(ref('compare'))->eval(
                 row(
                     str_entry('str', 'hello'),
                     str_entry('compare', null)
@@ -97,7 +97,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_null_string_returns_null() : void
     {
         self::assertNull(
-            ref('str')->equalsTo('hello')->eval(
+            ref('str')->stringEqualsTo('hello')->eval(
                 row(str_entry('str', null))
             )
         );
@@ -106,7 +106,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_numbers_as_strings() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo('123')->eval(
+            ref('str')->stringEqualsTo('123')->eval(
                 row(str_entry('str', '123'))
             )
         );
@@ -115,7 +115,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_partial_match_returns_false() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('hell')->eval(
+            ref('str')->stringEqualsTo('hell')->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -124,7 +124,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_special_characters() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo('!@#$%^&*()')->eval(
+            ref('str')->stringEqualsTo('!@#$%^&*()')->eval(
                 row(str_entry('str', '!@#$%^&*()'))
             )
         );
@@ -133,7 +133,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_substring_returns_false() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('ell')->eval(
+            ref('str')->stringEqualsTo('ell')->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -142,7 +142,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_unicode_characters() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo('नमस्ते')->eval(
+            ref('str')->stringEqualsTo('नमस्ते')->eval(
                 row(str_entry('str', 'नमस्ते'))
             )
         );
@@ -151,7 +151,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_unicode_no_match() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('नमस्कार')->eval(
+            ref('str')->stringEqualsTo('नमस्कार')->eval(
                 row(str_entry('str', 'नमस्ते'))
             )
         );
@@ -160,7 +160,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_whitespace_sensitive() : void
     {
         self::assertFalse(
-            ref('str')->equalsTo('hello')->eval(
+            ref('str')->stringEqualsTo('hello')->eval(
                 row(str_entry('str', 'hello '))
             )
         );
@@ -169,7 +169,7 @@ final class EqualsToTest extends FlowTestCase
     public function test_equals_to_with_scalar_function_parameter() : void
     {
         self::assertTrue(
-            ref('str')->equalsTo(ref('compare'))->eval(
+            ref('str')->stringEqualsTo(ref('compare'))->eval(
                 row(
                     str_entry('str', 'hello'),
                     str_entry('compare', 'hello')

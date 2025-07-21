@@ -8,13 +8,13 @@ use function Flow\ETL\DSL\{ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class WidthTest extends FlowTestCase
+final class StringWidthTest extends FlowTestCase
 {
     public function test_width_ascii_string() : void
     {
         self::assertSame(
             5,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -24,7 +24,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             4,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', '中文'))
             )
         );
@@ -34,7 +34,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             1,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', 'é'))
             )
         );
@@ -44,7 +44,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             2,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', '🚀'))
             )
         );
@@ -54,7 +54,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             0,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', ''))
             )
         );
@@ -64,7 +64,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             2,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', '！'))
             )
         );
@@ -74,7 +74,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             8,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', 'ひらがな'))
             )
         );
@@ -84,7 +84,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             4,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', '한글'))
             )
         );
@@ -94,7 +94,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             9,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', 'hello中文'))
             )
         );
@@ -103,7 +103,7 @@ final class WidthTest extends FlowTestCase
     public function test_width_returns_null_for_null_input() : void
     {
         self::assertNull(
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', null))
             )
         );
@@ -113,7 +113,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             1,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', 'a'))
             )
         );
@@ -123,7 +123,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             2,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', '中'))
             )
         );
@@ -133,7 +133,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             0,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', "\n"))
             )
         );
@@ -143,7 +143,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             0,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', "\t"))
             )
         );
@@ -153,7 +153,7 @@ final class WidthTest extends FlowTestCase
     {
         self::assertSame(
             0,
-            ref('str')->width()->eval(
+            ref('str')->stringWidth()->eval(
                 row(str_entry('str', "\u{200B}"))
             )
         );

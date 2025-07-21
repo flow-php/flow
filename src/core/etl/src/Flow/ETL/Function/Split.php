@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Symfony\Component\String\s;
 use Flow\ETL\Row;
+use Symfony\Component\String\AbstractString;
 
 final class Split extends ScalarFunctionChain
 {
@@ -28,6 +30,6 @@ final class Split extends ScalarFunctionChain
             return null;
         }
 
-        return \explode($separator, $value, $limit);
+        return \array_map(static fn (AbstractString $s) => $s->toString(), s($value)->split($separator, $limit));
     }
 }

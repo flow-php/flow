@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class NormalizeTest extends FlowTestCase
+final class StringNormalizeTest extends FlowTestCase
 {
     public function test_normalize_internationalization_data_cleanup() : void
     {
@@ -25,7 +25,7 @@ final class NormalizeTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('normalized_name', ref('name')->normalize())
+            ->withEntry('normalized_name', ref('name')->stringNormalize())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -58,7 +58,7 @@ final class NormalizeTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('normalized', ref('text')->normalize())
+            ->withEntry('normalized', ref('text')->stringNormalize())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -90,8 +90,8 @@ final class NormalizeTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('nfc', ref('text')->normalize())
-            ->withEntry('nfd', ref('text')->normalize(\Normalizer::NFD))
+            ->withEntry('nfc', ref('text')->stringNormalize())
+            ->withEntry('nfd', ref('text')->stringNormalize(\Normalizer::NFD))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -118,7 +118,7 @@ final class NormalizeTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('normalized', ref('original')->normalize(\Normalizer::NFC))
+            ->withEntry('normalized', ref('original')->stringNormalize(\Normalizer::NFC))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -144,7 +144,7 @@ final class NormalizeTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('normalized', ref('text')->normalize(ref('form')))
+            ->withEntry('normalized', ref('text')->stringNormalize(ref('form')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

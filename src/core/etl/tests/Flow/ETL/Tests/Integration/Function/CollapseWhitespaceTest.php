@@ -159,7 +159,7 @@ final class CollapseWhitespaceTest extends FlowTestCase
                 ['message' => '  Another   important   message  '],
             ]))
             ->withEntry('cleaned_message', ref('message')->collapseWhitespace())
-            ->filter(ref('cleaned_message')->length()->greaterThan(0));
+            ->filter(ref('cleaned_message')->unicodeLength()->greaterThan(0));
 
         self::assertEquals(
             [

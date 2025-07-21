@@ -190,7 +190,7 @@ final class UnicodeLengthTest extends FlowTestCase
         $row = row(str_entry('str', 'hello'));
 
         $unicodeLength = ref('str')->unicodeLength()->eval($row);
-        $characterLength = ref('str')->length()->eval($row);
+        $characterLength = ref('str')->binaryLength()->eval($row);
 
         self::assertSame($unicodeLength, $characterLength);
     }
@@ -200,7 +200,7 @@ final class UnicodeLengthTest extends FlowTestCase
         $row = row(str_entry('str', 'é'));
 
         $unicodeLength = ref('str')->unicodeLength()->eval($row);
-        $characterLength = ref('str')->length()->eval($row);
+        $characterLength = ref('str')->binaryLength()->eval($row);
 
         self::assertSame(1, $unicodeLength);
         self::assertSame(1, $characterLength);

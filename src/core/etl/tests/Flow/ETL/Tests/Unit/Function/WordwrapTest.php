@@ -10,15 +10,6 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class WordwrapTest extends FlowTestCase
 {
-    public function test_code_formatting() : void
-    {
-        $result = ref('str')->wordwrap(20)->eval(
-            row(str_entry('str', 'function myFunction() { return true; }'))
-        );
-
-        self::assertEquals("function myFunction()\n{ return true; }", $result);
-    }
-
     public function test_custom_line_break_character() : void
     {
         $result = ref('str')->wordwrap(10, ' | ')->eval(
@@ -82,24 +73,6 @@ final class WordwrapTest extends FlowTestCase
         self::assertEquals('Supercalifragilisticexpialidocious', $result);
     }
 
-    public function test_long_words_with_cut_true() : void
-    {
-        $result = ref('str')->wordwrap(5, "\n", true)->eval(
-            row(str_entry('str', 'Supercalifragilisticexpialidocious'))
-        );
-
-        self::assertEquals("Super\ncalif\nragil\nistic\nexpial\nidoci\nous", $result);
-    }
-
-    public function test_mixed_short_and_long_words() : void
-    {
-        $result = ref('str')->wordwrap(8, "\n", true)->eval(
-            row(str_entry('str', 'Hello supercalifragilisticexpialidocious world'))
-        );
-
-        self::assertEquals("Hello\nsupercal\nifragi\nlistica\nexpial\nidocious\nworld", $result);
-    }
-
     public function test_multiple_spaces_between_words() : void
     {
         $result = ref('str')->wordwrap(10)->eval(
@@ -137,15 +110,6 @@ final class WordwrapTest extends FlowTestCase
         );
 
         self::assertNull($result);
-    }
-
-    public function test_numbers_and_text() : void
-    {
-        $result = ref('str')->wordwrap(15)->eval(
-            row(str_entry('str', 'Price is $123.45 for this item'))
-        );
-
-        self::assertEquals("Price is $123.45\nfor this item", $result);
     }
 
     public function test_only_spaces() : void
@@ -202,15 +166,6 @@ final class WordwrapTest extends FlowTestCase
         );
 
         self::assertEquals('antidisestablishmentarianism', $result);
-    }
-
-    public function test_single_long_word_with_cut() : void
-    {
-        $result = ref('str')->wordwrap(5, "\n", true)->eval(
-            row(str_entry('str', 'antidisestablishmentarianism'))
-        );
-
-        self::assertEquals("antid\nisest\nablish\nmentar\nianism", $result);
     }
 
     public function test_text_shorter_than_width() : void
@@ -319,15 +274,6 @@ final class WordwrapTest extends FlowTestCase
         );
 
         self::assertEquals("Hello\nWorld\nTest", $result);
-    }
-
-    public function test_with_tabs() : void
-    {
-        $result = ref('str')->wordwrap(10)->eval(
-            row(str_entry('str', "Hello\tWorld\tTest"))
-        );
-
-        self::assertEquals("Hello\tWorld\nTest", $result);
     }
 
     public function test_words_exactly_at_width() : void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Symfony\Component\String\s;
 use Flow\ETL\Row;
 
 final class Size extends ScalarFunctionChain
@@ -13,12 +14,12 @@ final class Size extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row) : ?int
     {
         $value = (new Parameter($this->value))->eval($row);
 
         if (\is_string($value)) {
-            return \mb_strlen($value);
+            return s($value)->length();
         }
 
         if (\is_countable($value)) {

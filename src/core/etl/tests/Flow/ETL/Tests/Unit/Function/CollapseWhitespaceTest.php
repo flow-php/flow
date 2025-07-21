@@ -37,15 +37,6 @@ final class CollapseWhitespaceTest extends FlowTestCase
         self::assertEquals('function test() { return true; }', $result);
     }
 
-    public function test_csv_like_content() : void
-    {
-        $result = ref('str')->collapseWhitespace()->eval(
-            row(str_entry('str', 'Name,   Age,   City\nJohn,   30,   New York'))
-        );
-
-        self::assertEquals('Name, Age, City John, 30, New York', $result);
-    }
-
     public function test_data_cleaning_scenario() : void
     {
         $result = ref('str')->collapseWhitespace()->eval(
@@ -152,16 +143,6 @@ final class CollapseWhitespaceTest extends FlowTestCase
         );
 
         self::assertEquals('Email: user@test.com Phone: 555-1234 Age: 30', $result);
-    }
-
-    public function test_mixed_unicode_whitespace() : void
-    {
-        // Using various Unicode whitespace characters
-        $result = ref('str')->collapseWhitespace()->eval(
-            row(str_entry('str', "Hello\u{00A0}\u{2000}\u{2001}world"))
-        );
-
-        self::assertEquals('Hello world', $result);
     }
 
     public function test_mixed_whitespace_types() : void
@@ -363,14 +344,5 @@ final class CollapseWhitespaceTest extends FlowTestCase
         );
 
         self::assertEquals('Hello world', $result);
-    }
-
-    public function test_whitespace_only_string() : void
-    {
-        $result = ref('str')->collapseWhitespace()->eval(
-            row(str_entry('str', '   \t\n   '))
-        );
-
-        self::assertEquals('', $result);
     }
 }

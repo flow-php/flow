@@ -8,12 +8,12 @@ use function Flow\ETL\DSL\{json_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class ContainsAnyTest extends FlowTestCase
+final class StringContainsAnyTest extends FlowTestCase
 {
     public function test_contains_any_case_sensitive() : void
     {
         self::assertFalse(
-            ref('str')->containsAny(['Hello', 'WORLD'])->eval(
+            ref('str')->stringContainsAny(['Hello', 'WORLD'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -22,7 +22,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_empty_haystack() : void
     {
         self::assertFalse(
-            ref('str')->containsAny(['hello', 'world'])->eval(
+            ref('str')->stringContainsAny(['hello', 'world'])->eval(
                 row(str_entry('str', ''))
             )
         );
@@ -31,7 +31,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_empty_needles_array() : void
     {
         self::assertFalse(
-            ref('str')->containsAny([])->eval(
+            ref('str')->stringContainsAny([])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -40,7 +40,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_empty_string_needle() : void
     {
         self::assertFalse(
-            ref('str')->containsAny(['', 'foo'])->eval(
+            ref('str')->stringContainsAny(['', 'foo'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -49,7 +49,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_multiple_needles_multiple_found() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['hello', 'world'])->eval(
+            ref('str')->stringContainsAny(['hello', 'world'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -58,7 +58,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_multiple_needles_one_found() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['foo', 'world', 'bar'])->eval(
+            ref('str')->stringContainsAny(['foo', 'world', 'bar'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -67,7 +67,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_no_needles_found() : void
     {
         self::assertFalse(
-            ref('str')->containsAny(['foo', 'bar', 'baz'])->eval(
+            ref('str')->stringContainsAny(['foo', 'bar', 'baz'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -76,7 +76,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_null_needles() : void
     {
         self::assertFalse(
-            ref('str')->containsAny(ref('needles'))->eval(
+            ref('str')->stringContainsAny(ref('needles'))->eval(
                 row(
                     str_entry('str', 'hello world'),
                     json_entry('needles', null)
@@ -88,7 +88,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_null_string() : void
     {
         self::assertFalse(
-            ref('str')->containsAny(['hello', 'world'])->eval(
+            ref('str')->stringContainsAny(['hello', 'world'])->eval(
                 row(str_entry('str', null))
             )
         );
@@ -97,7 +97,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_overlapping_needles() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['hell', 'hello'])->eval(
+            ref('str')->stringContainsAny(['hell', 'hello'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -106,7 +106,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_partial_matches() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['wor', 'xyz'])->eval(
+            ref('str')->stringContainsAny(['wor', 'xyz'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -115,7 +115,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_single_needle_found() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['hello'])->eval(
+            ref('str')->stringContainsAny(['hello'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -124,7 +124,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_unicode_characters() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['स्ते', 'foo'])->eval(
+            ref('str')->stringContainsAny(['स्ते', 'foo'])->eval(
                 row(str_entry('str', 'नमस्ते'))
             )
         );
@@ -133,7 +133,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_unicode_no_match() : void
     {
         self::assertFalse(
-            ref('str')->containsAny(['नमस्कार', 'hello'])->eval(
+            ref('str')->stringContainsAny(['नमस्कार', 'hello'])->eval(
                 row(str_entry('str', 'नमस्ते'))
             )
         );
@@ -142,7 +142,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_whitespace_needles() : void
     {
         self::assertTrue(
-            ref('str')->containsAny([' ', '\t'])->eval(
+            ref('str')->stringContainsAny([' ', '\t'])->eval(
                 row(str_entry('str', 'hello world'))
             )
         );
@@ -151,7 +151,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_with_emoji() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['🚀', 'foo'])->eval(
+            ref('str')->stringContainsAny(['🚀', 'foo'])->eval(
                 row(str_entry('str', 'hello🚀world'))
             )
         );
@@ -160,7 +160,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_with_scalar_function_parameter() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(ref('needles'))->eval(
+            ref('str')->stringContainsAny(ref('needles'))->eval(
                 row(
                     str_entry('str', 'hello world'),
                     json_entry('needles', ['world', 'foo'])
@@ -172,7 +172,7 @@ final class ContainsAnyTest extends FlowTestCase
     public function test_contains_any_with_special_characters() : void
     {
         self::assertTrue(
-            ref('str')->containsAny(['@#$', 'foo'])->eval(
+            ref('str')->stringContainsAny(['@#$', 'foo'])->eval(
                 row(str_entry('str', 'hello@#$world'))
             )
         );

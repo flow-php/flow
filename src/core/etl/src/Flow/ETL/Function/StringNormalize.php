@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use function Symfony\Component\String\u;
 use Flow\ETL\Row;
 
-final class Normalize extends ScalarFunctionChain
+final class StringNormalize extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $value,

@@ -21,7 +21,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('emails', ref('content')->matchAll(lit('/(\w+)@(\w+\.\w+)/')))
+            ->withEntry('emails', ref('content')->stringMatchAll(lit('/(\w+)@(\w+\.\w+)/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -50,7 +50,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('extracted', ref('log')->matchAll(lit('/\[(\d{4}-\d{2}-\d{2})\]\s+(\w+):\s+([^[]+)/')))
+            ->withEntry('extracted', ref('log')->stringMatchAll(lit('/\[(\d{4}-\d{2}-\d{2})\]\s+(\w+):\s+([^[]+)/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -86,7 +86,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('text')->matchAll(lit('/\d+\.\d+/')))
+            ->withEntry('match_results', ref('text')->stringMatchAll(lit('/\d+\.\d+/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -110,7 +110,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('text')->matchAll(lit('/\d+/')))
+            ->withEntry('match_results', ref('text')->stringMatchAll(lit('/\d+/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -132,7 +132,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('text')->matchAll(lit('/\d+/')))
+            ->withEntry('match_results', ref('text')->stringMatchAll(lit('/\d+/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -154,7 +154,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('config')->matchAll(lit('/(\w+)=(\d+)/')))
+            ->withEntry('match_results', ref('config')->stringMatchAll(lit('/(\w+)=(\d+)/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -182,7 +182,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('text')->matchAll(lit('/[/')))
+            ->withEntry('match_results', ref('text')->stringMatchAll(lit('/[/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -204,7 +204,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('text')->matchAll(lit('/\d+/')))
+            ->withEntry('match_results', ref('text')->stringMatchAll(lit('/\d+/')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -226,7 +226,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('text')->matchAll(ref('pattern')))
+            ->withEntry('match_results', ref('text')->stringMatchAll(ref('pattern')))
             ->drop('pattern')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -249,7 +249,7 @@ final class StringMatchAllTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('match_results', ref('text')->matchAll(lit('/\S+/u')))
+            ->withEntry('match_results', ref('text')->stringMatchAll(lit('/\S+/u')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

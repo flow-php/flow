@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use function Symfony\Component\String\s;
 use Flow\ETL\Row;
 
-final class Width extends ScalarFunctionChain
+final class StringWidth extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|string $value,

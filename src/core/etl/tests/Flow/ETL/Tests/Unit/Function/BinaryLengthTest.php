@@ -148,7 +148,7 @@ final class BinaryLengthTest extends FlowTestCase
         $row = row(str_entry('str', 'hello'));
 
         $binaryLength = ref('str')->binaryLength()->eval($row);
-        $characterLength = ref('str')->length()->eval($row);
+        $characterLength = ref('str')->unicodeLength()->eval($row);
 
         self::assertSame($binaryLength, $characterLength);
     }
@@ -158,7 +158,7 @@ final class BinaryLengthTest extends FlowTestCase
         $row = row(str_entry('str', '🚀'));
 
         $binaryLength = ref('str')->binaryLength()->eval($row);
-        $characterLength = ref('str')->length()->eval($row);
+        $characterLength = ref('str')->unicodeLength()->eval($row);
 
         self::assertSame(4, $binaryLength);
         self::assertSame(1, $characterLength);
@@ -170,7 +170,7 @@ final class BinaryLengthTest extends FlowTestCase
         $row = row(str_entry('str', 'café'));
 
         $binaryLength = ref('str')->binaryLength()->eval($row);
-        $characterLength = ref('str')->length()->eval($row);
+        $characterLength = ref('str')->unicodeLength()->eval($row);
 
         self::assertSame(5, $binaryLength);
         self::assertSame(4, $characterLength);

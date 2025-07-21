@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{from_array, greatest, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class WidthTest extends FlowTestCase
+final class StringWidthTest extends FlowTestCase
 {
     public function test_width() : void
     {
@@ -30,7 +30,7 @@ final class WidthTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('width', ref('text')->width())
+            ->withEntry('width', ref('text')->stringWidth())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -63,8 +63,8 @@ final class WidthTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('name_width', ref('name')->width())
-            ->withEntry('name_cjk_width', ref('name_cjk')->width())
+            ->withEntry('name_width', ref('name')->stringWidth())
+            ->withEntry('name_cjk_width', ref('name_cjk')->stringWidth())
             ->withEntry('max_width', greatest(ref('name_width'), ref('name_cjk_width')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

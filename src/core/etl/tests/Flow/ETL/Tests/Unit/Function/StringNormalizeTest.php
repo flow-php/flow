@@ -8,13 +8,13 @@ use function Flow\ETL\DSL\{int_entry, row};
 use function Flow\ETL\DSL\{ref, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 
-final class NormalizeTest extends FlowTestCase
+final class StringNormalizeTest extends FlowTestCase
 {
     public function test_normalize_already_normalized() : void
     {
         self::assertSame(
             'hello',
-            ref('str')->normalize(\Normalizer::NFC)->eval(
+            ref('str')->stringNormalize(\Normalizer::NFC)->eval(
                 row(str_entry('str', 'hello'))
             )
         );
@@ -23,7 +23,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_arabic_text() : void
     {
         $arabic = 'مرحبا';
-        $normalized = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $normalized = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $arabic))
         );
 
@@ -33,7 +33,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_combining_characters_multiple() : void
     {
         $input = "e\u{0301}\u{0323}";
-        $result = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $result = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $input))
         );
 
@@ -45,11 +45,11 @@ final class NormalizeTest extends FlowTestCase
         $composed = 'é';
         $decomposed = "e\u{0301}";
 
-        $normalizedComposed = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $normalizedComposed = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $composed))
         );
 
-        $normalizedDecomposed = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $normalizedDecomposed = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $decomposed))
         );
 
@@ -60,11 +60,11 @@ final class NormalizeTest extends FlowTestCase
     {
         $superscript = '²';
 
-        $nfkc = ref('str')->normalize(\Normalizer::NFKC)->eval(
+        $nfkc = ref('str')->stringNormalize(\Normalizer::NFKC)->eval(
             row(str_entry('str', $superscript))
         );
 
-        $nfkd = ref('str')->normalize(\Normalizer::NFKD)->eval(
+        $nfkd = ref('str')->stringNormalize(\Normalizer::NFKD)->eval(
             row(str_entry('str', $superscript))
         );
 
@@ -75,7 +75,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_emoji_with_modifiers() : void
     {
         $emoji = '👋🏻';
-        $normalized = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $normalized = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $emoji))
         );
 
@@ -86,7 +86,7 @@ final class NormalizeTest extends FlowTestCase
     {
         self::assertSame(
             '',
-            ref('str')->normalize()->eval(
+            ref('str')->stringNormalize()->eval(
                 row(str_entry('str', ''))
             )
         );
@@ -95,7 +95,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_german_umlauts() : void
     {
         $text = 'Müller';
-        $normalized = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $normalized = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $text))
         );
 
@@ -105,7 +105,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_greek_text_with_diacritics() : void
     {
         $decomposed = 'καλημέρα';
-        $composed = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $composed = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $decomposed))
         );
 
@@ -115,7 +115,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_japanese_text() : void
     {
         $japanese = 'こんにちは';
-        $normalized = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $normalized = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $japanese))
         );
 
@@ -126,7 +126,7 @@ final class NormalizeTest extends FlowTestCase
     {
         self::assertSame(
             'é',
-            ref('str')->normalize()->eval(
+            ref('str')->stringNormalize()->eval(
                 row(str_entry('str', "e\u{0301}"))
             )
         );
@@ -136,7 +136,7 @@ final class NormalizeTest extends FlowTestCase
     {
         self::assertSame(
             'é',
-            ref('str')->normalize(\Normalizer::NFC)->eval(
+            ref('str')->stringNormalize(\Normalizer::NFC)->eval(
                 row(str_entry('str', "e\u{0301}"))
             )
         );
@@ -146,7 +146,7 @@ final class NormalizeTest extends FlowTestCase
     {
         self::assertSame(
             "e\u{0301}",
-            ref('str')->normalize(\Normalizer::NFD)->eval(
+            ref('str')->stringNormalize(\Normalizer::NFD)->eval(
                 row(str_entry('str', 'é'))
             )
         );
@@ -156,7 +156,7 @@ final class NormalizeTest extends FlowTestCase
     {
         self::assertSame(
             'ffi',
-            ref('str')->normalize(\Normalizer::NFKC)->eval(
+            ref('str')->stringNormalize(\Normalizer::NFKC)->eval(
                 row(str_entry('str', 'ﬃ'))
             )
         );
@@ -166,7 +166,7 @@ final class NormalizeTest extends FlowTestCase
     {
         self::assertSame(
             'ffi',
-            ref('str')->normalize(\Normalizer::NFKD)->eval(
+            ref('str')->stringNormalize(\Normalizer::NFKD)->eval(
                 row(str_entry('str', 'ﬃ'))
             )
         );
@@ -175,7 +175,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_returns_null_for_null_input() : void
     {
         self::assertNull(
-            ref('str')->normalize()->eval(
+            ref('str')->stringNormalize()->eval(
                 row(str_entry('str', null))
             )
         );
@@ -184,7 +184,7 @@ final class NormalizeTest extends FlowTestCase
     public function test_normalize_vietnamese_text() : void
     {
         $decomposed = 'Việt Nam';
-        $composed = ref('str')->normalize(\Normalizer::NFC)->eval(
+        $composed = ref('str')->stringNormalize(\Normalizer::NFC)->eval(
             row(str_entry('str', $decomposed))
         );
 
@@ -193,7 +193,7 @@ final class NormalizeTest extends FlowTestCase
 
     public function test_normalize_with_scalar_function_form() : void
     {
-        $normalized = ref('str')->normalize(ref('form'))->eval(
+        $normalized = ref('str')->stringNormalize(ref('form'))->eval(
             row(str_entry('str', "e\u{0301}"), int_entry('form', \Normalizer::NFC))
         );
 

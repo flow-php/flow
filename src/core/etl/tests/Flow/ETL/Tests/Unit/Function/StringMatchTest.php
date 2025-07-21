@@ -12,7 +12,7 @@ final class StringMatchTest extends FlowTestCase
 {
     public function test_capturing_groups() : void
     {
-        $result = ref('str')->match('/(\w+)\s+(\w+)/')->eval(
+        $result = ref('str')->stringMatch('/(\w+)\s+(\w+)/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -21,7 +21,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_case_insensitive_match() : void
     {
-        $result = ref('str')->match('/HELLO/i')->eval(
+        $result = ref('str')->stringMatch('/HELLO/i')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -30,7 +30,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_complex_regex_patterns() : void
     {
-        $result = ref('str')->match('/(\w+)@(\w+\.\w+)/')->eval(
+        $result = ref('str')->stringMatch('/(\w+)@(\w+\.\w+)/')->eval(
             row(str_entry('str', 'user@example.com'))
         );
 
@@ -39,7 +39,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_empty_haystack_string() : void
     {
-        $result = ref('str')->match('/hello/')->eval(
+        $result = ref('str')->stringMatch('/hello/')->eval(
             row(str_entry('str', ''))
         );
 
@@ -48,7 +48,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_invalid_regex_pattern() : void
     {
-        $result = ref('str')->match('/[/')->eval(
+        $result = ref('str')->stringMatch('/[/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -57,7 +57,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_multiline_match() : void
     {
-        $result = ref('str')->match('/^hello/m')->eval(
+        $result = ref('str')->stringMatch('/^hello/m')->eval(
             row(str_entry('str', "line1\nhello world"))
         );
 
@@ -66,7 +66,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_named_capturing_groups() : void
     {
-        $result = ref('str')->match('/(?P<first>\w+)\s+(?P<second>\w+)/')->eval(
+        $result = ref('str')->stringMatch('/(?P<first>\w+)\s+(?P<second>\w+)/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -79,7 +79,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_no_matches_found() : void
     {
-        $result = ref('str')->match('/foo/')->eval(
+        $result = ref('str')->stringMatch('/foo/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -88,7 +88,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_null_haystack() : void
     {
-        $result = ref('str')->match('/hello/')->eval(
+        $result = ref('str')->stringMatch('/hello/')->eval(
             row(str_entry('str', null))
         );
 
@@ -97,7 +97,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_null_pattern() : void
     {
-        $result = ref('str')->match(ref('pattern'))->eval(
+        $result = ref('str')->stringMatch(ref('pattern'))->eval(
             row(
                 str_entry('str', 'hello world'),
                 str_entry('pattern', null)
@@ -109,7 +109,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_partial_matches() : void
     {
-        $result = ref('str')->match('/wor/')->eval(
+        $result = ref('str')->stringMatch('/wor/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -118,7 +118,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_pattern_with_anchors() : void
     {
-        $result = ref('str')->match('/^hello/')->eval(
+        $result = ref('str')->stringMatch('/^hello/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -127,7 +127,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_pattern_with_end_anchor_match() : void
     {
-        $result = ref('str')->match('/world$/')->eval(
+        $result = ref('str')->stringMatch('/world$/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -136,7 +136,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_pattern_with_end_anchor_no_match() : void
     {
-        $result = ref('str')->match('/hello$/')->eval(
+        $result = ref('str')->stringMatch('/hello$/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -145,7 +145,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_pattern_with_whitespace() : void
     {
-        $result = ref('str')->match('/\s+/')->eval(
+        $result = ref('str')->stringMatch('/\s+/')->eval(
             row(str_entry('str', 'hello   world'))
         );
 
@@ -154,7 +154,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_successful_pattern_match() : void
     {
-        $result = ref('str')->match('/hello/')->eval(
+        $result = ref('str')->stringMatch('/hello/')->eval(
             row(str_entry('str', 'hello world'))
         );
 
@@ -163,7 +163,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_unicode_no_match() : void
     {
-        $result = ref('str')->match('/नमस्कार/u')->eval(
+        $result = ref('str')->stringMatch('/नमस्कार/u')->eval(
             row(str_entry('str', 'नमस्ते world'))
         );
 
@@ -172,7 +172,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_unicode_strings() : void
     {
-        $result = ref('str')->match('/नमस्ते/u')->eval(
+        $result = ref('str')->stringMatch('/नमस्ते/u')->eval(
             row(str_entry('str', 'नमस्ते world'))
         );
 
@@ -181,7 +181,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_with_emoji() : void
     {
-        $result = ref('str')->match('/🚀/u')->eval(
+        $result = ref('str')->stringMatch('/🚀/u')->eval(
             row(str_entry('str', 'hello🚀world'))
         );
 
@@ -190,7 +190,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_with_scalar_function_parameter() : void
     {
-        $result = ref('str')->match(ref('pattern'))->eval(
+        $result = ref('str')->stringMatch(ref('pattern'))->eval(
             row(
                 str_entry('str', 'hello world'),
                 str_entry('pattern', '/world/')
@@ -202,7 +202,7 @@ final class StringMatchTest extends FlowTestCase
 
     public function test_with_special_characters() : void
     {
-        $result = ref('str')->match('/[@#$]+/')->eval(
+        $result = ref('str')->stringMatch('/[@#$]+/')->eval(
             row(str_entry('str', 'hello@#$world'))
         );
 

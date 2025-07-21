@@ -188,7 +188,7 @@ final class CodePointLengthTest extends FlowTestCase
         $row = row(str_entry('str', 'hello'));
 
         $codePointLength = ref('str')->codePointLength()->eval($row);
-        $characterLength = ref('str')->length()->eval($row);
+        $characterLength = ref('str')->unicodeLength()->eval($row);
 
         self::assertSame($codePointLength, $characterLength);
     }

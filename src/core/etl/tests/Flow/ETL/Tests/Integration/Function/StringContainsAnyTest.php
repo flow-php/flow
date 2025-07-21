@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class ContainsAnyTest extends FlowTestCase
+final class StringContainsAnyTest extends FlowTestCase
 {
     public function test_contains_any() : void
     {
@@ -30,7 +30,7 @@ final class ContainsAnyTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('contains_any', ref('text')->containsAny(ref('needles')))
+            ->withEntry('contains_any', ref('text')->stringContainsAny(ref('needles')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -66,7 +66,7 @@ final class ContainsAnyTest extends FlowTestCase
                     ]
                 )
             )
-            ->filter(ref('message')->containsAny(['error', 'warning', 'critical']))
+            ->filter(ref('message')->stringContainsAny(['error', 'warning', 'critical']))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -95,8 +95,8 @@ final class ContainsAnyTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('is_promotional', ref('content')->containsAny(['#sale', '#discount', '#urgent']))
-            ->withEntry('is_tech_related', ref('content')->containsAny(['#tech', '#development', '#programming']))
+            ->withEntry('is_promotional', ref('content')->stringContainsAny(['#sale', '#discount', '#urgent']))
+            ->withEntry('is_tech_related', ref('content')->stringContainsAny(['#tech', '#development', '#programming']))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -128,7 +128,7 @@ final class ContainsAnyTest extends FlowTestCase
                 )
             )
             ->withEntry('contains_hello', ref('text')->contains('hello'))
-            ->withEntry('contains_any_keywords', ref('text')->containsAny(['hello', 'test', 'foo']))
+            ->withEntry('contains_any_keywords', ref('text')->stringContainsAny(['hello', 'test', 'foo']))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

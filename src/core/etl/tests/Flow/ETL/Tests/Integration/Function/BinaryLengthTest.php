@@ -65,7 +65,7 @@ final class BinaryLengthTest extends FlowTestCase
                 )
             )
             ->withEntry('binary_length', ref('text')->binaryLength())
-            ->withEntry('char_length', ref('text')->length())
+            ->withEntry('char_length', ref('text')->unicodeLength())
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 

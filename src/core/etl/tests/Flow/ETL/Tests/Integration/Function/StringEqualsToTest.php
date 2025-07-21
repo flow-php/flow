@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
-final class EqualsToTest extends FlowTestCase
+final class StringEqualsToTest extends FlowTestCase
 {
     public function test_equals_to() : void
     {
@@ -30,7 +30,7 @@ final class EqualsToTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('equals', ref('text')->equalsTo(ref('compare')))
+            ->withEntry('equals', ref('text')->stringEqualsTo(ref('compare')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -65,7 +65,7 @@ final class EqualsToTest extends FlowTestCase
                     ]
                 )
             )
-            ->filter(ref('status')->equalsTo('active'))
+            ->filter(ref('status')->stringEqualsTo('active'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
@@ -92,7 +92,7 @@ final class EqualsToTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('equals_hello', ref('text')->equalsTo('hello'))
+            ->withEntry('equals_hello', ref('text')->stringEqualsTo('hello'))
             ->withEntry('contains_hello', ref('text')->contains('hello'))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
@@ -123,8 +123,8 @@ final class EqualsToTest extends FlowTestCase
                     ]
                 )
             )
-            ->withEntry('is_exact_match', ref('user_input')->equalsTo(ref('expected')))
-            ->withEntry('is_valid', ref('user_input')->equalsTo('yes')->or(ref('user_input')->equalsTo('no')))
+            ->withEntry('is_exact_match', ref('user_input')->stringEqualsTo(ref('expected')))
+            ->withEntry('is_valid', ref('user_input')->stringEqualsTo('yes')->or(ref('user_input')->stringEqualsTo('no')))
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
