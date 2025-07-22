@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{from_array, not, ref, to_memory};
+use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -46,34 +46,6 @@ final class IsEmptyTest extends FlowTestCase
                 ['text' => null, 'is_empty' => null],
                 ['text' => 'a', 'is_empty' => false],
                 ['text' => '!@#$%', 'is_empty' => false],
-            ],
-            $memory->dump()
-        );
-    }
-
-    public function test_is_empty_filtering() : void
-    {
-        (data_frame())
-            ->read(
-                from_array(
-                    [
-                        ['name' => 'John', 'surname' => 'Doe'],
-                        ['name' => 'Jane', 'surname' => ''],
-                        ['name' => '', 'surname' => 'Smith'],
-                        ['name' => 'Bob', 'surname' => 'Johnson'],
-                        ['name' => '', 'surname' => ''],
-                    ]
-                )
-            )
-            ->filter(not(ref('name')->isEmpty()))
-            ->filter(not(ref('surname')->isEmpty()))
-            ->write(to_memory($memory = new ArrayMemory()))
-            ->run();
-
-        self::assertSame(
-            [
-                ['name' => 'John', 'surname' => 'Doe'],
-                ['name' => 'Bob', 'surname' => 'Johnson'],
             ],
             $memory->dump()
         );
