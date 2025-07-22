@@ -26,6 +26,10 @@ final class Trim extends ScalarFunctionChain
             return null;
         }
 
-        return ($type->value())($value, $characters);
+        return match ($type) {
+            Type::LEFT => \ltrim($value, $characters),
+            Type::RIGHT => \rtrim($value, $characters),
+            Type::BOTH => \trim($value, $characters),
+        };
     }
 }
