@@ -19,8 +19,10 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
     {
         return schema(
             uuid_schema('order_id'),
+            uuid_schema('seller_id'),
             datetime_schema('created_at'),
             datetime_schema('updated_at', true),
+            datetime_schema('cancelled_at', true),
             float_schema('discount', true),
             string_schema('email'),
             string_schema('customer'),
@@ -56,12 +58,32 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
             ['sku' => 'SKU_0005', 'name' => 'Product 5', 'price' => $faker->randomFloat(2, 0, 500)],
         ];
 
+        $sellers = [
+            $faker->uuid,
+            $faker->uuid,
+            $faker->uuid,
+            $faker->uuid,
+            $faker->uuid,
+        ];
+
         for ($i = 0; $i < $this->count; $i++) {
+
+            $createdAt = \DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
+            $cancelledAt = \random_int(1, 10) === 1 ? $createdAt->modify('+' . $faker->randomNumber(1, 5) . ' hours') : null;
+
+            if ($cancelledAt) {
+                $updatedAt = $cancelledAt;
+            } else {
+                $updatedAt = \random_int(1, 3) === 1 ? $createdAt->modify('+' . $faker->randomNumber(1, 3) . ' days') : null;
+            }
+
             yield array_to_rows(
                 [
                     'order_id' => $faker->uuid,
-                    'created_at' => $faker->dateTimeThisYear,
-                    'updated_at' => \random_int(0, 1) === 1 ? $faker->dateTimeThisMonth : null,
+                    'seller_id' => $sellers[\random_int(0, \count($sellers) - 1)],
+                    'created_at' => $createdAt,
+                    'updated_at' => $updatedAt,
+                    'cancelled_at' => $cancelledAt,
                     'discount' => \random_int(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
                     'email' => $faker->email,
                     'customer' => $faker->firstName . ' ' . $faker->lastName,

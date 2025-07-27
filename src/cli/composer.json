@@ -10,6 +10,7 @@
     "require": {
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
         "symfony/console": "^5.4 || ^6.4 || ^7.0",
+        "symfony/uid": "^6.3 || ^7.0",
         "flow-php/etl": "self.version",
         "flow-php/etl-adapter-csv": "self.version",
         "flow-php/etl-adapter-parquet": "self.version",

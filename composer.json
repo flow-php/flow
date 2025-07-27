@@ -402,6 +402,7 @@
         ],
         "test:monorepo": "tools/monorepo/vendor/bin/monorepo-builder validate",
         "static:analyze": [
+            "./tools/monorepo/vendor/bin/monorepo-builder validate",
             "@static:analyze:cs-fixer",
             "@static:analyze:phpstan",
             "@static:analyze:rector"
