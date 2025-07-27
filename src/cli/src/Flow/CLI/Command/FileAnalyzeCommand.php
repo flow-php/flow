@@ -50,7 +50,8 @@ final class FileAnalyzeCommand extends Command
             ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
             ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'File format. When not set file format is guessed from source file path extension', null)
             ->addOption('input-file-batch-size', null, InputOption::VALUE_REQUIRED, 'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once', self::DEFAULT_BATCH_SIZE)
-            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null);
+            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
+            ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
 
         $this->addConfigOptions($this);
         $this->addJSONInputOptions($this);
@@ -78,8 +79,11 @@ final class FileAnalyzeCommand extends Command
             return Command::FAILURE;
         }
 
-        $df->batchSize($batchSize)
-            ->autoCast();
+        $df->batchSize($batchSize);
+
+        if (option_bool('schema-auto-cast', $input)) {
+            $df->autoCast();
+        }
 
         $limit = option_int_nullable('input-file-limit', $input);
 
@@ -97,7 +101,7 @@ final class FileAnalyzeCommand extends Command
         }
 
         if (option_bool('stats-columns', $input)) {
-            $analyze->withColumnStatistics();
+            $analyze->withSchema()->withColumnStatistics();
         }
 
         $report = $df->run(
