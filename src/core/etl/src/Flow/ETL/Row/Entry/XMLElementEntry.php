@@ -104,7 +104,7 @@ final class XMLElementEntry implements Entry
 
     public function duplicate() : self
     {
-        return new self($this->name, $this->value ? $this->value->cloneNode(true) : null, $this->metadata);
+        return new self($this->name, type_optional(type_instance_of(\DOMElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->metadata);
     }
 
     public function is(Reference|string $name) : bool

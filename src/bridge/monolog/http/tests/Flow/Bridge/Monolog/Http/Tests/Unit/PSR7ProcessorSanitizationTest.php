@@ -44,6 +44,7 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
 
         $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Request', 'context' => ['request' => $request]]);
 
+        /** @phpstan-ignore-next-line */
         $requestData = json_decode((string) $record['context']['request']['body'], true);
         \assert(\is_array($requestData));
 
@@ -87,6 +88,7 @@ final class PSR7ProcessorSanitizationTest extends FlowTestCase
 
         $record = $processor(['datetime' => new \DateTimeImmutable, 'channel' => 'http', 'level_name' => 'debug', 'message' => 'HTTP Response', 'context' => ['response' => $response]]);
 
+        /** @phpstan-ignore-next-line */
         $responseData = json_decode((string) $record['context']['response']['body'], true);
         \assert(\is_array($responseData));
 

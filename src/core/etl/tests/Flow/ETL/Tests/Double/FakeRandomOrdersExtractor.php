@@ -69,12 +69,12 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         for ($i = 0; $i < $this->count; $i++) {
 
             $createdAt = \DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
-            $cancelledAt = \random_int(1, 10) === 1 ? $createdAt->modify('+' . $faker->randomNumber(1, 5) . ' hours') : null;
+            $cancelledAt = \random_int(1, 10) === 1 ? $createdAt->modify('+' . $faker->numberBetween(1, 5) . ' hours') : null;
 
             if ($cancelledAt) {
                 $updatedAt = $cancelledAt;
             } else {
-                $updatedAt = \random_int(1, 3) === 1 ? $createdAt->modify('+' . $faker->randomNumber(1, 3) . ' days') : null;
+                $updatedAt = \random_int(1, 3) === 1 ? $createdAt->modify('+' . $faker->numberBetween(1, 3) . ' days') : null;
             }
 
             yield array_to_rows(
