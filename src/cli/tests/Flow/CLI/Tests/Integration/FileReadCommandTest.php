@@ -137,6 +137,109 @@ OUTPUT,
         );
     }
 
+    public function test_read_rows_with_output_columns_empty_maintains_all_columns() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 2,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // Should contain all original columns (order_id, created_at, updated_at, discount, address, notes, items)
+        $output = $tester->getDisplay();
+        self::assertStringContainsString('order_id', $output);
+        self::assertStringContainsString('created_at', $output);
+        self::assertStringContainsString('updated_at', $output);
+        self::assertStringContainsString('discount', $output);
+        self::assertStringContainsString('address', $output);
+        self::assertStringContainsString('notes', $output);
+        self::assertStringContainsString('items', $output);
+        self::assertStringContainsString('2 rows', $output);
+    }
+
+    public function test_read_rows_with_output_columns_multiple_columns() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 3,
+            '--output-columns' => ['order_id', 'discount', 'created_at'],
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
++----------------------+----------+----------------------+
+|             order_id | discount |           created_at |
++----------------------+----------+----------------------+
+| e13d7098-5a78-3389-9 |    12.45 | 2024-06-17T19:24:49+ |
+| 947df050-3abb-3f5a-9 |          | 2024-02-23T19:18:53+ |
+| 6315f9e2-86bf-3321-a |     47.1 | 2024-04-02T11:30:25+ |
++----------------------+----------+----------------------+
+3 rows
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_read_rows_with_output_columns_nonexistent_column() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 2,
+            '--output-columns' => ['nonexistent_column'],
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
++--------------------+
+| nonexistent_column |
++--------------------+
+|                    |
+|                    |
++--------------------+
+2 rows
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_read_rows_with_output_columns_single_column() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 3,
+            '--output-columns' => ['order_id'],
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        self::assertStringContainsString(
+            <<<'OUTPUT'
++----------------------+
+|             order_id |
++----------------------+
+| e13d7098-5a78-3389-9 |
+| 947df050-3abb-3f5a-9 |
+| 6315f9e2-86bf-3321-a |
++----------------------+
+3 rows
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
     public function test_read_rows_xml() : void
     {
         $tester = new CommandTester(new FileReadCommand('read'));
