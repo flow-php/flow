@@ -39,7 +39,8 @@ final class FileRowsCountCommand extends Command
             ->setDescription('Read data schema from a file.')
             ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a file from which schema should be extracted.')
             ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'Source file format. When not set file format is guessed from source file path extension', null)
-            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null);
+            ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
+            ->addOption('input-file-offset', null, InputOption::VALUE_REQUIRED, 'Number of rows to skip before starting to read data', null);
 
         $this->addConfigOptions($this);
         $this->addJSONInputOptions($this);
@@ -59,6 +60,12 @@ final class FileRowsCountCommand extends Command
 
         if ($limit !== null && $limit > 0) {
             $df->limit($limit);
+        }
+
+        $offset = option_int_nullable('input-file-offset', $input);
+
+        if ($offset !== null && $offset > 0) {
+            $df->offset($offset);
         }
 
         $style->write((string) $df->count());

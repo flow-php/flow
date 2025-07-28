@@ -51,6 +51,85 @@ OUTPUT,
         );
     }
 
+    public function test_run_schema_with_large_offset() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 1000,
+            '--output-ascii' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // With large offset, no data is processed, so schema should be minimal
+        self::assertSame("schema\n\n", $tester->getDisplay());
+    }
+
+    public function test_run_schema_with_offset() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 5,
+            '--output-ascii' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // Schema should be the same regardless of offset since schema is inferred from structure
+        self::assertSame(
+            <<<'OUTPUT'
+schema
+|-- order_id: uuid
+|-- created_at: string
+|-- updated_at: string
+|-- discount: ?string
+|-- address: json
+|-- notes: json
+|-- items: json
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_offset_and_limit() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 2,
+            '--input-file-limit' => 3,
+            '--output-table' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // Schema should be the same even with offset and limit
+        self::assertEquals(
+            <<<'OUTPUT'
++------------+--------+----------+----------+
+|       name |   type | nullable | metadata |
++------------+--------+----------+----------+
+|   order_id |   uuid |    false |       [] |
+| created_at | string |    false |       [] |
+| updated_at | string |    false |       [] |
+|   discount | string |    false |       [] |
+|    address |   json |    false |       [] |
+|      notes |   json |    false |       [] |
+|      items |   json |    false |       [] |
++------------+--------+----------+----------+
+7 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
     public function test_run_schema_with_php_output() : void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
@@ -360,6 +439,35 @@ OUTPUT,
 | node |  xml |    false |       [] |
 +------+------+----------+----------+
 1 rows
+
+OUTPUT,
+            $tester->getDisplay()
+        );
+    }
+
+    public function test_run_schema_with_zero_offset() : void
+    {
+        $tester = new CommandTester(new FileSchemaCommand('file:schema'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 0,
+            '--output-ascii' => true,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // Zero offset should behave same as no offset
+        self::assertSame(
+            <<<'OUTPUT'
+schema
+|-- order_id: uuid
+|-- created_at: string
+|-- updated_at: string
+|-- discount: ?string
+|-- address: json
+|-- notes: json
+|-- items: json
 
 OUTPUT,
             $tester->getDisplay()

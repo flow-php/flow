@@ -137,6 +137,93 @@ OUTPUT,
         );
     }
 
+    public function test_read_rows_with_large_offset() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 1000,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        $output = $tester->getDisplay();
+
+        // Should show empty output as offset is larger than file
+        self::assertEmpty(trim($output));
+    }
+
+    public function test_read_rows_with_offset_and_columns() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 4,
+            '--input-file-offset' => 1,
+            '--output-columns' => ['order_id', 'discount'],
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        $output = $tester->getDisplay();
+
+        // Should skip first row and show next 3 rows with only order_id and discount columns
+        self::assertStringNotContainsString('e13d7098-5a78-3389-9', $output); // First row should not be displayed
+        self::assertStringContainsString('947df050-3abb-3f5a-9', $output); // Second row should be first displayed
+        self::assertStringContainsString('6315f9e2-86bf-3321-a', $output); // Third row should be displayed
+        self::assertStringContainsString('4cccb632-fade-34e2-8', $output); // Fourth row should be displayed
+        self::assertStringContainsString('3 rows', $output); // Should show 3 rows
+
+        // Should only show selected columns
+        self::assertStringContainsString('order_id', $output);
+        self::assertStringContainsString('discount', $output);
+        self::assertStringNotContainsString('created_at', $output);
+        self::assertStringNotContainsString('address', $output);
+    }
+
+    public function test_read_rows_with_offset_csv() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 3,
+            '--input-file-offset' => 2,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        $output = $tester->getDisplay();
+
+        // Should display rows starting from offset 2 (third row)
+        self::assertStringContainsString('6315f9e2-86bf-3321-a', $output); // Third row should be first displayed
+        self::assertStringNotContainsString('e13d7098-5a78-3389-9', $output); // First row should not be displayed
+        self::assertStringNotContainsString('947df050-3abb-3f5a-9', $output); // Second row should not be displayed
+        self::assertStringContainsString('1 rows', $output); // Only 1 row should be displayed (limit 3 - offset 2)
+    }
+
+    public function test_read_rows_with_offset_zero() : void
+    {
+        $tester = new CommandTester(new FileReadCommand('read'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-limit' => 2,
+            '--input-file-offset' => 0,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        $output = $tester->getDisplay();
+
+        // Should behave same as no offset - show first 2 rows
+        self::assertStringContainsString('e13d7098-5a78-3389-9', $output); // First row should be displayed
+        self::assertStringContainsString('947df050-3abb-3f5a-9', $output); // Second row should be displayed
+        self::assertStringContainsString('2 rows', $output);
+    }
+
     public function test_read_rows_with_output_columns_empty_maintains_all_columns() : void
     {
         $tester = new CommandTester(new FileReadCommand('read'));

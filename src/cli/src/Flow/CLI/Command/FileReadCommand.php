@@ -44,6 +44,7 @@ final class FileReadCommand extends Command
             ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'File format. When not set file format is guessed from source file path extension', null)
             ->addOption('input-file-batch-size', null, InputOption::VALUE_REQUIRED, 'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once', self::DEFAULT_BATCH_SIZE)
             ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
+            ->addOption('input-file-offset', null, InputOption::VALUE_REQUIRED, 'Number of rows to skip before starting to read data', null)
             ->addOption('output-truncate', null, InputOption::VALUE_REQUIRED, 'Truncate output to given number of characters, when set to -1 output is not truncated at all', 20)
             ->addOption('output-columns', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Columns to include in output, when not set all columns are displayed', [])
             ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false);
@@ -81,6 +82,12 @@ final class FileReadCommand extends Command
 
         if ($limit !== null && $limit > 0) {
             $df->limit($limit);
+        }
+
+        $offset = option_int_nullable('input-file-offset', $input);
+
+        if ($offset !== null && $offset > 0) {
+            $df->offset($offset);
         }
 
         $outputColumns = option_list_of_strings('output-columns', $input);

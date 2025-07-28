@@ -48,6 +48,7 @@ final class FileConvertCommand extends Command
             ->addOption('input-file-format', null, InputArgument::OPTIONAL, 'File format. When not set file format is guessed from input file path extension', null)
             ->addOption('input-file-batch-size', null, InputOption::VALUE_REQUIRED, 'Number of rows that are going to be read and displayed in one batch, when set to -1 whole dataset will be displayed at once', self::DEFAULT_BATCH_SIZE)
             ->addOption('input-file-limit', null, InputOption::VALUE_REQUIRED, 'Limit number of rows that are going to be used to infer file schema, when not set whole file is analyzed', null)
+            ->addOption('input-file-offset', null, InputOption::VALUE_REQUIRED, 'Number of rows to skip before starting to read data', null)
             ->addOption('output-file-format', null, InputArgument::OPTIONAL, 'File format. When not set file format is guessed from output file path extension', null)
             ->addOption('output-overwrite', null, InputOption::VALUE_OPTIONAL, 'When set output file will be overwritten if exists')
             ->addOption('schema-auto-cast', null, InputOption::VALUE_OPTIONAL, 'When set Flow will try to automatically cast values to more precise data types, for example datetime strings will be casted to datetime type', false)
@@ -88,6 +89,12 @@ final class FileConvertCommand extends Command
 
         if ($limit !== null && $limit > 0) {
             $df->limit($limit);
+        }
+
+        $offset = option_int_nullable('input-file-offset', $input);
+
+        if ($offset !== null && $offset > 0) {
+            $df->offset($offset);
         }
 
         $overwrite = option_bool('output-overwrite', $input);

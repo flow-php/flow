@@ -63,9 +63,9 @@ OUTPUT,
             $tester->getDisplay()
         );
 
-        self::assertStringContainsString("Analyzed Rows", $tester->getDisplay());
+        self::assertStringContainsString('Analyzed Rows', $tester->getDisplay());
 
-        self::assertStringContainsString("Execution Time", $tester->getDisplay());
+        self::assertStringContainsString('Execution Time', $tester->getDisplay());
     }
 
     public function test_read_rows_csv_without_schema() : void
@@ -108,8 +108,8 @@ OUTPUT,
             $tester->getDisplay()
         );
 
-        self::assertStringContainsString("Analyzed Rows", $tester->getDisplay());
+        self::assertStringContainsString('Analyzed Rows', $tester->getDisplay());
 
-        self::assertStringContainsString("Execution Time", $tester->getDisplay());
+        self::assertStringContainsString('Execution Time', $tester->getDisplay());
     }
 }

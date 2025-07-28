@@ -65,6 +65,67 @@ final class FileRowsCountCommandTest extends TestCase
         self::assertSame('44', $tester->getDisplay());
     }
 
+    public function test_count_rows_with_large_offset() : void
+    {
+        $tester = new CommandTester(new FileRowsCountCommand('count'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 1000,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // Offset larger than file should result in 0 rows
+        self::assertSame('0', $tester->getDisplay());
+    }
+
+    public function test_count_rows_with_offset_and_limit() : void
+    {
+        $tester = new CommandTester(new FileRowsCountCommand('count'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 2,
+            '--input-file-limit' => 5,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // CSV has 43 total rows, with offset 2 and limit 5 should count 3 rows (limit applies first, then offset)
+        self::assertSame('3', $tester->getDisplay());
+    }
+
+    public function test_count_rows_with_offset_csv() : void
+    {
+        $tester = new CommandTester(new FileRowsCountCommand('count'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 5,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // CSV has 43 total rows, with offset 5 should count 38 rows
+        self::assertSame('38', $tester->getDisplay());
+    }
+
+    public function test_count_rows_with_zero_offset() : void
+    {
+        $tester = new CommandTester(new FileRowsCountCommand('count'));
+
+        $tester->execute([
+            'input-file' => __DIR__ . '/Fixtures/orders.csv',
+            '--input-file-offset' => 0,
+        ]);
+
+        $tester->assertCommandIsSuccessful();
+
+        // Zero offset should behave same as no offset
+        self::assertSame('43', $tester->getDisplay());
+    }
+
     public function test_count_rows_xml() : void
     {
         $tester = new CommandTester(new FileRowsCountCommand('count'));
