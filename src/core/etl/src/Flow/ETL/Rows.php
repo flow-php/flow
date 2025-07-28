@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\{array_to_rows, row};
+use function Flow\Types\DSL\type_integer;
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, RuntimeException};
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\Join\Expression;
@@ -12,6 +13,7 @@ use Flow\ETL\Row\{CartesianProduct, EntryFactory};
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\{Comparator, Entries, Reference, References, SortOrder};
 use Flow\Filesystem\{Partition, Partitions};
+use Flow\Types\Exception\InvalidTypeException;
 
 /**
  * @implements \ArrayAccess<int, Row>
@@ -299,6 +301,26 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return $algorithm->hash($hash);
     }
 
+    /**
+     * @param int $count - Count of rows to return. Must be >= 0.
+     *
+     * @throws InvalidArgumentException When count is negative
+     * @throws InvalidTypeException When count is not an integer     */
+    public function head(int $count) : self
+    {
+        $count = type_integer()->assert($count);
+
+        if ($count < 0) {
+            throw new InvalidArgumentException('Count must be greater than or equal to 0');
+        }
+
+        if ($count === 0) {
+            return self::partitioned([], $this->partitions);
+        }
+
+        return self::partitioned(\array_slice($this->rows, 0, $count), $this->partitions);
+    }
+
     public function isPartitioned() : bool
     {
         return \count($this->partitions) > 0;
@@ -482,6 +504,15 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         }
 
         return new self(...$joined);
+    }
+
+    public function last() : ?Row
+    {
+        if (empty($this->rows)) {
+            return null;
+        }
+
+        return $this->rows[\count($this->rows) - 1];
     }
 
     /**
@@ -737,6 +768,32 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     public function sortEntries() : self
     {
         return $this->map(fn (Row $row) : Row => $row->sortEntries());
+    }
+
+    /**
+     * @param int $count - Count of rows to return. Must be >= 0.
+     *
+     * @throws InvalidArgumentException When count is negative
+     * @throws InvalidTypeException When count is not an integer     */
+    public function tail(int $count) : self
+    {
+        $count = type_integer()->assert($count);
+
+        if ($count < 0) {
+            throw new InvalidArgumentException('Count must be greater than or equal to 0');
+        }
+
+        if ($count === 0) {
+            return self::partitioned([], $this->partitions);
+        }
+
+        $rowsCount = \count($this->rows);
+
+        if ($count >= $rowsCount) {
+            return self::partitioned($this->rows, $this->partitions);
+        }
+
+        return self::partitioned(\array_slice($this->rows, -$count), $this->partitions);
     }
 
     public function take(int $size) : self

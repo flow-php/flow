@@ -486,6 +486,122 @@ final class RowsTest extends FlowTestCase
         );
     }
 
+    public function test_head() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+            row(int_entry('id', 4)),
+            row(int_entry('id', 5)),
+        );
+
+        $head = $rows->head(3);
+
+        self::assertCount(3, $head);
+        self::assertSame(1, $head[0]->valueOf('id'));
+        self::assertSame(2, $head[1]->valueOf('id'));
+        self::assertSame(3, $head[2]->valueOf('id'));
+    }
+
+    public function test_head_on_empty_rows() : void
+    {
+        $head = (rows())->head(5);
+
+        self::assertCount(0, $head);
+    }
+
+    public function test_head_preserves_partitions() : void
+    {
+        $rows = rows_partitioned(
+            [
+                row(int_entry('id', 1), str_entry('group', 'a')),
+                row(int_entry('id', 2), str_entry('group', 'a')),
+                row(int_entry('id', 3), str_entry('group', 'a')),
+            ],
+            [partition('group', 'a')]
+        );
+
+        $head = $rows->head(2);
+
+        self::assertEquals(partitions(partition('group', 'a')), $head->partitions());
+        self::assertCount(2, $head);
+    }
+
+    public function test_head_with_count_larger_than_available() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+
+        $head = $rows->head(10);
+
+        self::assertCount(3, $head);
+        self::assertSame(1, $head[0]->valueOf('id'));
+        self::assertSame(2, $head[1]->valueOf('id'));
+        self::assertSame(3, $head[2]->valueOf('id'));
+    }
+
+    public function test_head_with_negative_count() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Count must be greater than or equal to 0');
+
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+
+        $rows->head(-1);
+    }
+
+    public function test_head_with_zero_count() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+
+        $head = $rows->head(0);
+
+        self::assertCount(0, $head);
+    }
+
+    public function test_last() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+
+        $lastRow = $rows->last();
+
+        self::assertNotNull($lastRow);
+        self::assertSame(3, $lastRow->valueOf('id'));
+    }
+
+    public function test_last_on_empty_rows() : void
+    {
+        $lastRow = (rows())->last();
+
+        self::assertNull($lastRow);
+    }
+
+    public function test_last_on_single_row() : void
+    {
+        $rows = rows(row(int_entry('id', 42)));
+
+        $lastRow = $rows->last();
+
+        self::assertNotNull($lastRow);
+        self::assertSame(42, $lastRow->valueOf('id'));
+    }
+
     public function test_merge_empty_rows_with_partitioned_rows() : void
     {
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
@@ -1004,6 +1120,108 @@ final class RowsTest extends FlowTestCase
             ),
             $sorted
         );
+    }
+
+    public function test_tail() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+            row(int_entry('id', 4)),
+            row(int_entry('id', 5)),
+        );
+
+        $tail = $rows->tail(3);
+
+        self::assertCount(3, $tail);
+        self::assertSame(3, $tail[0]->valueOf('id'));
+        self::assertSame(4, $tail[1]->valueOf('id'));
+        self::assertSame(5, $tail[2]->valueOf('id'));
+    }
+
+    public function test_tail_maintains_correct_order() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+            row(int_entry('id', 4)),
+            row(int_entry('id', 5)),
+        );
+
+        $tail = $rows->tail(2);
+
+        self::assertCount(2, $tail);
+        self::assertSame(4, $tail[0]->valueOf('id'));
+        self::assertSame(5, $tail[1]->valueOf('id'));
+    }
+
+    public function test_tail_on_empty_rows() : void
+    {
+        $tail = (rows())->tail(5);
+
+        self::assertCount(0, $tail);
+    }
+
+    public function test_tail_preserves_partitions() : void
+    {
+        $rows = rows_partitioned(
+            [
+                row(int_entry('id', 1), str_entry('group', 'a')),
+                row(int_entry('id', 2), str_entry('group', 'a')),
+                row(int_entry('id', 3), str_entry('group', 'a')),
+            ],
+            [partition('group', 'a')]
+        );
+
+        $tail = $rows->tail(2);
+
+        self::assertEquals(partitions(partition('group', 'a')), $tail->partitions());
+        self::assertCount(2, $tail);
+    }
+
+    public function test_tail_with_count_larger_than_available() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+
+        $tail = $rows->tail(10);
+
+        self::assertCount(3, $tail);
+        self::assertSame(1, $tail[0]->valueOf('id'));
+        self::assertSame(2, $tail[1]->valueOf('id'));
+        self::assertSame(3, $tail[2]->valueOf('id'));
+    }
+
+    public function test_tail_with_negative_count() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Count must be greater than or equal to 0');
+
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+
+        $rows->tail(-1);
+    }
+
+    public function test_tail_with_zero_count() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+        );
+
+        $tail = $rows->tail(0);
+
+        self::assertCount(0, $tail);
     }
 
     public function test_take() : void
