@@ -18,17 +18,17 @@ examples/
 ├── run.php              # Main execution script
 ├── clean.php            # Cleanup utility
 └── topics/              # Topic-based organization
-    ├── aggregations/    # Data aggregation operations (8 examples)
-    ├── data_frame/      # DataFrame operations (7 examples)
-    ├── data_reading/    # Data input methods (13 examples)
-    ├── data_writing/    # Data output methods (9 examples)
-    ├── filesystem/      # Filesystem operations (4 examples)
-    ├── join/            # Data joining (2 examples)
-    ├── partitioning/    # Data partitioning (4 examples)
-    ├── schema/          # Schema management (4 examples)
-    ├── transformations/ # Data transformations (12 examples)
-    ├── types/           # Type system (2 examples)
-    └── window_functions/ # Window functions (1 example)
+    ├── aggregations/    # Data aggregation operations
+    ├── data_frame/      # DataFrame operations 
+    ├── data_reading/    # Data input methods 
+    ├── data_writing/    # Data output methods 
+    ├── filesystem/      # Filesystem operations
+    ├── join/            # Data joining 
+    ├── partitioning/    # Data partitioning 
+    ├── schema/          # Schema management 
+    ├── transformations/ # Data transformations 
+    ├── types/           # Type system 
+    └── window_functions/ # Window functions 
 ```
 
 ### Standard Example Structure

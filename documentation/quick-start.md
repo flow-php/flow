@@ -47,6 +47,8 @@ The `data_frame()` function is the entry point to the Flow ETL DSL.
 
 It creates a new instance of the `Flow\ETL\Flow` class, which is the main class of the ETL. 
 
+For comprehensive DataFrame documentation, see the [Data Frame Guide](/documentation/components/core/core.md).
+
 [Data Frame Examples](/data_frame/#example)
 
 [Examples Documentation](/documentation/examples)

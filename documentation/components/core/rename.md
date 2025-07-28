@@ -2,51 +2,32 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
-There are multiple ways to rename entries in the data frame.
+DataFrame provides several methods for renaming entries (columns) in your data. These operations are lazy and don't execute until a trigger operation is called.
 
-## Rename
+## Single Column Rename
 
-To quickly rename single entry use Rows `DataFrame::rename`
+To rename a single entry, use `DataFrame::rename()`:
 
 ```php 
 <?php 
 
-data_frame()
-    ->read(from_array(...))
-    ->rename("old_name", "new_name")
-    ->write($loader)
-    ->run();
-```
+use function Flow\ETL\DSL\{data_frame, from_array, to_output};
 
-## Rename All
-
-To quickly rename, all entries use Rows `DataFrame::renameAll`
-
-```php
 data_frame()
     ->read(from_array([
-        ['e_id' => 1, 'e_name' => 2],
-        ['e_id' => 2, 'e_name' => 3],
-        ['e_id' => 3, 'e_name' => 4],
-        ['e_id' => 4, 'e_name' => 5],
+        ['old_name' => 'value1', 'other' => 'data1'],
+        ['old_name' => 'value2', 'other' => 'data2'],
     ]))
-    ->renameAll('e_', 'entry_')
+    ->rename('old_name', 'new_name')
+    ->write(to_output())
     ->run();
-    
-// Output will be:
-// [
-//     ['entry_id' => 1, 'entry_name' => 2],
-//     ['entry_id' => 2, 'entry_name' => 3],
-//     ['entry_id' => 3, 'entry_name' => 4],
-//     ['entry_id' => 4, 'entry_name' => 5],
-// ]    
 ```
 
-## Remaining rename methods
+## Batch Renaming
 
-- `DataFrame::renameAllLowerCase()`
-- `DataFrame::renameAllStyle(StringStyles|string $style)`
-- `DataFrame::renameAllUpperCase()`
-- `DataFrame::renameAllUpperCaseFirst()`
-- `DataFrame::renameAllUpperCaseWord()`
+The `renameEach()` method allows you to rename multiple columns at once using various strategies:
 
+### Available Strategies
+
+- **`rename_style()`** - Changes entry names using string style conventions (camelCase, snake_case, etc.)
+- **`rename_replace()`** - Replaces parts of entry names using search and replace patterns

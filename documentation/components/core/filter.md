@@ -20,4 +20,31 @@ data_frame()
     ->run();
 ```
 
+## Complex Row-level Filtering
+
+For advanced filtering that requires custom business logic, you can use callback functions:
+
+```php
+<?php
+
+use Flow\ETL\Row;
+
+data_frame()
+    ->read($transactionExtractor)
+    ->filter(function(Row $row): bool {
+        $amount = $row->get('amount')->value();
+        $type = $row->get('type')->value();
+        $date = $row->get('date')->value();
+        
+        // Complex business logic
+        return $amount > 1000 
+            && $type === 'purchase' 
+            && $date > new DateTime('-30 days');
+    })
+    ->write($highValueTransactionLoader)
+    ->run();
+```
+
+> **Performance Note**: Callback-based filtering cannot be optimized by the engine and should be used sparingly. When possible, prefer built-in scalar functions for better performance.
+
 - [➡️ Until](until.md)

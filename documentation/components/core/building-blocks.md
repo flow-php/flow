@@ -2,11 +2,12 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
-Entries are the columns of the data frame, they are represented by the [Entry](/src/core/etl/src/Flow/ETL/Row/Entry.php) interface.
+Entries are the columns of the [Data Frame](/documentation/components/core/core.md), they are represented by
+the [Entry](/src/core/etl/src/Flow/ETL/Row/Entry.php) interface.
 Group of Entries is called `Row`, it is represented by the [Row](/src/core/etl/src/Flow/ETL/Row.php) class.
 Group of Rows is called `Rows`, it is represented by the [Rows](/src/core/etl/src/Flow/ETL/Rows.php) class.
 
-Let's look at the following example: 
+Let's look at the following example:
 
 ```php
 <?php
@@ -24,7 +25,7 @@ $rows = rows(
 ```
 
 Rows are the main data structure in Flow ETL, they’re used to represent data in the data frame.
-Extractors are yielding Rows and Loaders are saving Rows. 
+Extractors are yielding Rows and Loaders are saving Rows.
 
 The same can be achieved using the following code:
 
@@ -61,20 +62,7 @@ $rows = array_to_rows([
 - [XML](/src/core/etl/src/Flow/ETL/Row/Entry/XMLEntry.php)
 - [XMLElement](/src/core/etl/src/Flow/ETL/Row/Entry/XMLElementEntry.php)
 
-Internally flow is using [EntryFactory](/src/core/etl/src/Flow/ETL/Row/EntryFactory.php) to create entries. 
+Internally flow is using [EntryFactory](/src/core/etl/src/Flow/ETL/Row/EntryFactory.php) to create entries.
 It will try to detect and create the most appropriate entry type based on the value.
 
-Flow Entries are based on [PHP Types](/src/core/etl/src/Flow/ETL/PHP/Type/Type.php), which are divided into two groups:
-
-- Native
-  - Array
-  - Callable
-  - Enum
-  - Object
-  - Resource
-  - Scalar
-- Logical
-  - List
-  - Map
-  - Structure
-
+Flow Entries are based on [Flow Types Library](/documentation/components/libs/types.md)

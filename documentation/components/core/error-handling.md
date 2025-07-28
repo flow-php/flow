@@ -31,3 +31,35 @@ data_frame()
     ->write(to_json(...))
     ->run();
 ```
+
+## Row-level Error Handling
+
+For fine-grained error handling during row processing operations:
+
+```php
+<?php
+
+use Flow\ETL\Exception\InvalidArgumentException;
+
+$successCount = 0;
+$errorCount = 0;
+
+data_frame()
+    ->read($unreliableDataExtractor)
+    ->forEach(function(Row $row) use (&$successCount, &$errorCount) {
+        try {
+            validateAndProcess($row);
+            $successCount++;
+        } catch (InvalidArgumentException $e) {
+            logInvalidRow($row, $e->getMessage());
+            $errorCount++;
+        } catch (Exception $e) {
+            logGeneralError($row, $e);
+            $errorCount++;
+        }
+    });
+
+echo "Success: {$successCount}, Errors: {$errorCount}";
+```
+
+> **Best Practice**: When processing unreliable data sources, implement row-level error handling to prevent entire pipeline failures and provide detailed error reporting.

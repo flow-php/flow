@@ -2,22 +2,36 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
-Joining two data frames is a common operation in data processing. 
-It is used to combine data from two different sources into one data frame. 
-The join operation is performed on a common column or columns between the two data frames.
+Joining two data frames is a common operation in data processing that combines data from two different sources. Flow PHP
+implements joins using a **hash join algorithm** that creates a hash table from the right DataFrame and probes it with
+rows from the left DataFrame.
 
 ## Join Methods
 
-* `DataFrame::crossJoin` - join each row from the left side with each row on the right side creating `count(left) * count(right)` rows in total.
-* `DataFrame::join` - right side is static for each left Rows set.
-* `DataFrame::joinEach` - right side dynamically generated for each left Rows set.
+### join()
+
+Main join method that loads the right DataFrame into memory as a hash table for efficient lookups.
+
+### crossJoin() - Cartesian Product
+
+Joins each row from the left side with each row on the right side, creating `count(left) * count(right)` rows total.
+
+### joinEach() - Streaming Join
+
+Right side is dynamically generated for each left row, useful for large right-side datasets that don't fit in memory.
 
 ## Join Types
 
-* `left`
-* `left_anti` (keep in left only what does not exist in right)
-* `right`
-* `inner`
+Flow PHP supports four join types with specific behaviors:
+
+| Join Type                              | Description                                                                                |
+|----------------------------------------|--------------------------------------------------------------------------------------------|
+| **Left Join** (`Join::left`)           | Returns all rows from left DataFrame with matching rows from right (or NULL) - **Default** |
+| **Inner Join** (`Join::inner`)         | Returns only rows that exist in both DataFrames                                            |
+| **Right Join** (`Join::right`)         | Returns all rows from right DataFrame with matching rows from left (or NULL)               |
+| **Left Anti Join** (`Join::left_anti`) | Returns rows from left DataFrame that have NO match in right DataFrame                     |
+
+> Flow uses hash join implementation where hashes are stored in sorted buckets to optimize memory usage and performance.
 
 ## Example
 
@@ -35,12 +49,6 @@ $internalProducts = [
     ['id' => 3, 'sku' => 'PRODUCT03'],
 ];
 
-/**
- * DataFrame::join will perform joining having both dataframes in memory.
- * This means that if if the right side dataframe is big (as the left side usually will be a batch)
- * then it might become performance bottleneck.
- * In that case please look at DataFrame::joinEach.
- */
 data_frame()
     ->read(from_array($externalProducts))
     ->join(
@@ -52,9 +60,10 @@ data_frame()
     ->run();
 ```
 
-Output: 
+Output:
 
 ```console
++----+-----------+
 | id |       sku |
 +----+-----------+
 |  1 | PRODUCT01 |
