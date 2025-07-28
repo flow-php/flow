@@ -26,6 +26,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     GroupByPipeline,
     HashJoinPipeline,
     LinkedPipeline,
+    OffsetPipeline,
     PartitioningPipeline,
     SortingPipeline,
     VoidPipeline};
@@ -555,6 +556,31 @@ final class DataFrame
     public function mode(SaveMode $mode) : self
     {
         $this->context->streams()->setSaveMode($mode);
+
+        return $this;
+    }
+
+    /**
+     * Skip given number of rows from the beginning of the dataset.
+     * When $offset is null, nothing happens (no rows are skipped).
+     *
+     * Performance Note: DataFrame must iterate through and process all skipped rows
+     * to reach the offset position. For large offsets, this can impact performance
+     * as the data source still needs to be read and processed up to the offset point.
+     *
+     * @param ?int<0, max> $offset
+     *
+     * @lazy
+     *
+     * @throws InvalidArgumentException
+     */
+    public function offset(?int $offset) : self
+    {
+        if ($offset === null) {
+            return $this;
+        }
+
+        $this->pipeline = new LinkedPipeline(new OffsetPipeline($this->pipeline, $offset));
 
         return $this;
     }
