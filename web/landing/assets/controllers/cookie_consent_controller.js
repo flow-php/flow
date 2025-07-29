@@ -41,13 +41,20 @@ export default class extends Controller {
         });
         this.hideBanner();
         this.showButton();
-        window.location.href = '/cookies';
     }
 
     consentGranted() {
-        gtag("consent", "update", {
-            analytics_storage: 'granted'
-        });
+        if (document.querySelector('script[src="https://www.googletagmanager.com/gtag/js?id=' + this.gaIdValue + '"]')) {
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + this.gaIdValue;
+        document.head.appendChild(script);
+
+        gtag("consent", "update", {analytics_storage: 'granted'});
+        gtag('js', new Date());
     }
 
     showBanner() {
