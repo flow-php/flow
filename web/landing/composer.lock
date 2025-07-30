@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0c84679ebc9d761983b5886a6d4e0b15",
+    "content-hash": "d7e2e589d30b8df2a4462c08c6af1161",
     "packages": [
         {
             "name": "brick/math",
@@ -6466,16 +6466,16 @@
         },
         {
             "name": "symfonycasts/tailwind-bundle",
-            "version": "v0.8.0",
+            "version": "v0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/SymfonyCasts/tailwind-bundle.git",
-                "reference": "43100c1ad793a1574a675aaf8a1f633fd7fe6e4a"
+                "reference": "2d59fa87a72d3a80e2a5d295aa548b34bfe5cd02"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/43100c1ad793a1574a675aaf8a1f633fd7fe6e4a",
-                "reference": "43100c1ad793a1574a675aaf8a1f633fd7fe6e4a",
+                "url": "https://api.github.com/repos/SymfonyCasts/tailwind-bundle/zipball/2d59fa87a72d3a80e2a5d295aa548b34bfe5cd02",
+                "reference": "2d59fa87a72d3a80e2a5d295aa548b34bfe5cd02",
                 "shasum": ""
             },
             "require": {
@@ -6516,9 +6516,9 @@
             ],
             "support": {
                 "issues": "https://github.com/SymfonyCasts/tailwind-bundle/issues",
-                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.8.0"
+                "source": "https://github.com/SymfonyCasts/tailwind-bundle/tree/v0.11.0"
             },
-            "time": "2025-03-04T15:35:32+00:00"
+            "time": "2025-07-29T14:44:39+00:00"
         }
     ],
     "aliases": [],
