@@ -1,7 +1,6 @@
 import { Controller } from "@hotwired/stimulus";
 import Panzoom from '@panzoom/panzoom';
 
-/* stimulusFetch: 'lazy' */
 export default class extends Controller {
     static targets = ['svg', 'zoomIn', 'zoomOut'];
 
