@@ -120,11 +120,51 @@ final class OpenAPIConverter
         $property = $this->convertTypeToOpenAPI($definition->type());
         $property['nullable'] = $definition->isNullable();
 
-        if ($definition->metadata()->has('description')) {
+        if ($definition->metadata()->has(OpenAPIMetadata::DESCRIPTION->value)) {
+            $property['description'] = $definition->metadata()->get(OpenAPIMetadata::DESCRIPTION->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::FORMAT->value)) {
+            $property['format'] = $definition->metadata()->get(OpenAPIMetadata::FORMAT->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::EXAMPLE->value)) {
+            $property['example'] = $definition->metadata()->get(OpenAPIMetadata::EXAMPLE->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::EXAMPLES->value)) {
+            $property['examples'] = $definition->metadata()->get(OpenAPIMetadata::EXAMPLES->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::DEPRECATED->value)) {
+            $property['deprecated'] = $definition->metadata()->get(OpenAPIMetadata::DEPRECATED->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::TITLE->value)) {
+            $property['title'] = $definition->metadata()->get(OpenAPIMetadata::TITLE->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::DEFAULT->value)) {
+            $property['default'] = $definition->metadata()->get(OpenAPIMetadata::DEFAULT->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::READ_ONLY->value)) {
+            $property['readOnly'] = $definition->metadata()->get(OpenAPIMetadata::READ_ONLY->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::WRITE_ONLY->value)) {
+            $property['writeOnly'] = $definition->metadata()->get(OpenAPIMetadata::WRITE_ONLY->value);
+        }
+
+        if ($definition->metadata()->has(OpenAPIMetadata::NULLABLE->value)) {
+            $property['nullable'] = $definition->metadata()->get(OpenAPIMetadata::NULLABLE->value);
+        }
+
+        if (!isset($property['description']) && $definition->metadata()->has('description')) {
             $property['description'] = $definition->metadata()->get('description');
         }
 
-        if ($definition->metadata()->has('example')) {
+        if (!isset($property['example']) && $definition->metadata()->has('example')) {
             $property['example'] = $definition->metadata()->get('example');
         }
 
@@ -238,7 +278,6 @@ final class OpenAPIConverter
             return type_map(type_string(), $valueType);
         }
 
-        // If it has properties, it's a structure
         if (isset($typeSpec['properties']) && \is_array($typeSpec['properties'])) {
             $elements = [];
             $optionalElements = [];
@@ -262,7 +301,6 @@ final class OpenAPIConverter
             return type_structure($elements, $optionalElements);
         }
 
-        // Default to empty map
         return type_map(type_string(), type_string());
     }
 
