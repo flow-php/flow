@@ -44,7 +44,7 @@ final class DbalLimitOffsetExtractor implements Extractor
             ->from($table->name);
 
         foreach ($orderBy as $order) {
-            $queryBuilder = $queryBuilder->orderBy($order->column, $order->order->name);
+            $queryBuilder = $queryBuilder->addOrderBy($order->column, $order->order->name);
         }
 
         return new self(
