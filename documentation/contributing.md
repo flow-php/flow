@@ -10,7 +10,7 @@ flowchart TD
         is-a-bug -->|Yes| can-you-fix-it[Can you fix it?]
         is-a-bug -->|NO| is-a-question[Do you have a question?]
         can-you-fix-it -->|NO| report[Please open a new **Bug Report**]
-        can-you-fix-it -->|YES| bug-fix[Please open a pull request with with a fixh]
+        can-you-fix-it -->|YES| bug-fix[Please open a pull request with with a fix]
 
 
         is-a-question -->|YES| go-to-discord[Ask a **Community Question**]
@@ -71,7 +71,7 @@ to be moved to the next milestone.
 
 Opening a pull request without reaching out first might get rejected and eventually closed.   
 
-**🐛 Bug Fixes** - bug fixes are the only exception from the above rule. Bug Fixes can be opened directly without 
+**🐛 Bug Fixes** - bug fixes are the only exception from the above rule. Bug Fixes can be opened directly without a proposal issue.
 
 ## Before you start coding
 
