@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
@@ -140,7 +140,7 @@ jobs:
           fi
 
       - name: "Checkout to specific ref"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           ref: ${{ env.GIT_REF }}
 
@@ -195,7 +195,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
