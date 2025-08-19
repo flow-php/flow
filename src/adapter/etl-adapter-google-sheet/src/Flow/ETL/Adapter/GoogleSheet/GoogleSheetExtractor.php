@@ -51,6 +51,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $values = $response->getValues() ?? [];
 
         $totalRows = 0;
+
         if ($this->withHeader && [] !== $values) {
             foreach ($values as $index => $row) {
                 if ([] === $row) {
