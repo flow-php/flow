@@ -63,7 +63,7 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $rows = $extractor->extract(flow_context(config()));
 
         foreach ($rows as $row) {
-            self::assertNotNull($row);
+            self::assertNotSame([], $row->toArray());
         }
     }
 }
