@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-08-15
+## [Unreleased] - 2025-08-30
 
 ### Added
 - [d755ea](https://github.com/flow-php/flow/commit/d755ea21af68a7dc564354ff44329bc347b3380d) - **1password logo** - [@norberttech](https://github.com/norberttech)
@@ -10,12 +10,14 @@
 - [6e4922](https://github.com/flow-php/flow/commit/6e492236133bab7a14697c2de69d55ced522764a) - **Moved sponsors images to Cloudinary** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1829](https://github.com/flow-php/flow/pull/1829) - **[GoogleSheet] Skip empty rows at the beginning of a sheet** - [@stloyd](https://github.com/stloyd)
 - [#1826](https://github.com/flow-php/flow/pull/1826) - **Missing documentation links** - [@leith](https://github.com/leith)
 - [#1826](https://github.com/flow-php/flow/pull/1826) - **Some documentation typos** - [@leith](https://github.com/leith)
 - [#1818](https://github.com/flow-php/flow/pull/1818) - **DbalLimitOffsetExtractor only orders by the last given column instead of in order of all the given ordering columns.** - [@codedmonkey](https://github.com/codedmonkey)
 - [f47193](https://github.com/flow-php/flow/commit/f471933db3d842456bafb57dbc355aa96f2a3269) - **broken link to open api specification bridge in the docs** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [dc08f1](https://github.com/flow-php/flow/commit/dc08f103d1875eb7dece7bae942f16c92249af38) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [87ee28](https://github.com/flow-php/flow/commit/87ee281801f5a3287c2a37c1972b13b007eeb061) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [b516e2](https://github.com/flow-php/flow/commit/b516e2ee5db12f9be1673deb3a7fd9e47ef3f16b) - **sponsors page** - [@norberttech](https://github.com/norberttech)
 

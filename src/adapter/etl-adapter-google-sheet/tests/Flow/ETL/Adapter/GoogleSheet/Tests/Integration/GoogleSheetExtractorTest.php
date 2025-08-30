@@ -18,6 +18,21 @@ final class GoogleSheetExtractorTest extends FlowTestCase
         $this->context = new GoogleSheetsContext();
     }
 
+    public function test_extract_skip_extra_empty_rows() : void
+    {
+        $extractor = new GoogleSheetExtractor(
+            $this->context->sheets(__DIR__ . '/../Fixtures/extra-empty-rows.json'),
+            '1234567890',
+            new Columns('Sheet', 'A', 'Z'),
+        );
+
+        $rows = $extractor->extract(flow_context(config()));
+
+        foreach ($rows as $row) {
+            self::assertNotSame([], $row->toArray());
+        }
+    }
+
     public function test_extract_with_cut_extra_columns() : void
     {
         $extractor = new GoogleSheetExtractor(

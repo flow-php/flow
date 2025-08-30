@@ -202,7 +202,6 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
 
         $reflectionClass = new \ReflectionClass($builder);
         $buildDictionaryPageMethod = $reflectionClass->getMethod('buildDictionaryPage');
-        $buildDictionaryPageMethod->setAccessible(true);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Cannot build dictionary page without dictionary');

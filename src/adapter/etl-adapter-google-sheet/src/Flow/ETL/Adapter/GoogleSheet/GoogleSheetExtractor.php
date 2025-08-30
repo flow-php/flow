@@ -50,20 +50,31 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
          */
         $values = $response->getValues() ?? [];
 
+        $totalRows = 0;
+
         if ($this->withHeader && [] !== $values) {
-            /** @var array<string> $headers */
-            $headers = $values[0];
-            unset($values[0]);
-            $totalRows = 1;
-        } else {
-            $totalRows = 0;
+            foreach ($values as $index => $row) {
+                if ([] === $row) {
+                    // Remove empty rows at the beginning of a sheet
+                    unset($values[$index]);
+
+                    continue;
+                }
+
+                /** @var array<string> $headers */
+                $headers = $row;
+                unset($values[$index]);
+                $totalRows = 1;
+
+                break;
+            }
         }
 
         $headersCount = \count($headers);
 
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        while (\count($values)) {
+        while ([] !== $values) {
             $rows = \array_map(
                 function (array $rowData) use ($headers, $headersCount, $shouldPutInputIntoRows) {
                     $rowDataCount = \count($rowData);
