@@ -142,11 +142,11 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
 
         foreach ($request->getHeaders() as $key => $value) {
             if (is_array($value) && count($value) == 1) {
-                $headers[strtolower($key)] = $value[0];
+                $headers[strtolower((string) $key)] = $value[0];
             } elseif (is_array($value)) {
-                $headers[strtolower($key)] = implode(',', $value);
+                $headers[strtolower((string) $key)] = implode(',', $value);
             } else {
-                $headers[strtolower($key)] = (string) $value;
+                $headers[strtolower((string) $key)] = (string) $value;
             }
         }
 

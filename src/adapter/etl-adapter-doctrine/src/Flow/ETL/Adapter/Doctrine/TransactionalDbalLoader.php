@@ -12,7 +12,7 @@ final class TransactionalDbalLoader implements Loader
 {
     private ?Connection $connection = null;
 
-    private ?TransactionIsolationLevel $isolationLevel = null;
+    private TransactionIsolationLevel|int|null $isolationLevel = null;
 
     /**
      * @var array<DbalLoader>
@@ -53,7 +53,7 @@ final class TransactionalDbalLoader implements Loader
         $this->executeInTransaction($this->connection(), $rows, $context);
     }
 
-    public function withIsolationLevel(TransactionIsolationLevel $level) : self
+    public function withIsolationLevel(TransactionIsolationLevel|int $level) : self
     {
         $this->isolationLevel = $level;
 
@@ -76,6 +76,7 @@ final class TransactionalDbalLoader implements Loader
 
         if ($this->isolationLevel !== null) {
             $previousIsolationLevel = $connection->getTransactionIsolation();
+            /** @phpstan-ignore-next-line */
             $connection->setTransactionIsolation($this->isolationLevel);
         }
 

@@ -63,6 +63,7 @@ function dremel_array_combine_recursive(array $keys, array $values) : array
         if (\is_array($keyValue) && \is_array($value)) {
             $result[] = dremel_array_combine_recursive($keyValue, $value);
         } else {
+            /** @phpstan-ignore-next-line */
             $result[$keyValue] = $value;
         }
     }
