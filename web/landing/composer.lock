@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0c84679ebc9d761983b5886a6d4e0b15",
+    "content-hash": "f6c26bb37178fcdabfe66ab80bcd940c",
     "packages": [
         {
             "name": "brick/math",
@@ -427,7 +427,7 @@
         },
         {
             "name": "flow-php/array-dot",
-            "version": "1.x-dev",
+            "version": "0.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
@@ -442,7 +442,6 @@
             "require": {
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "files": [
@@ -470,7 +469,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/0.22.0"
+                "source": "https://github.com/flow-php/array-dot/tree/0.23.0"
             },
             "funding": [
                 {
@@ -486,7 +485,7 @@
         },
         {
             "name": "flow-php/etl",
-            "version": "1.x-dev",
+            "version": "0.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
@@ -518,7 +517,6 @@
             "suggest": {
                 "ext-bcmath": "BCMath extension for PHP for more precise calculations"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "files": [
@@ -543,7 +541,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/0.22.0"
+                "source": "https://github.com/flow-php/etl/tree/0.23.0"
             },
             "funding": [
                 {
@@ -559,7 +557,7 @@
         },
         {
             "name": "flow-php/etl-adapter-http",
-            "version": "1.x-dev",
+            "version": "0.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-http.git",
@@ -581,7 +579,6 @@
                 "nyholm/psr7": "^1.8",
                 "php-http/curl-client": "^2.2"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -604,7 +601,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/etl-adapter-http/issues",
-                "source": "https://github.com/flow-php/etl-adapter-http/tree/0.22.0"
+                "source": "https://github.com/flow-php/etl-adapter-http/tree/0.23.0"
             },
             "funding": [
                 {
@@ -620,7 +617,7 @@
         },
         {
             "name": "flow-php/filesystem",
-            "version": "1.x-dev",
+            "version": "0.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
@@ -636,7 +633,6 @@
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "webmozart/glob": "^3.0 || ^4.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "files": [
@@ -666,7 +662,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.22.0"
+                "source": "https://github.com/flow-php/filesystem/tree/0.23.0"
             },
             "funding": [
                 {
@@ -682,7 +678,7 @@
         },
         {
             "name": "flow-php/types",
-            "version": "1.x-dev",
+            "version": "0.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/types.git",
@@ -697,7 +693,6 @@
             "require": {
                 "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "files": [
@@ -720,7 +715,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/types/issues",
-                "source": "https://github.com/flow-php/types/tree/0.22.0"
+                "source": "https://github.com/flow-php/types/tree/0.23.0"
             },
             "funding": [
                 {
@@ -6170,18 +6165,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/norberttech/static-content-generator-bundle.git",
-                "reference": "aef2aa09ab92dccba6bdac38c94e488edb850c21"
+                "reference": "0f142e597d38351d99b69c8148375f03dc7bd49d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/norberttech/static-content-generator-bundle/zipball/aef2aa09ab92dccba6bdac38c94e488edb850c21",
-                "reference": "aef2aa09ab92dccba6bdac38c94e488edb850c21",
+                "url": "https://api.github.com/repos/norberttech/static-content-generator-bundle/zipball/0f142e597d38351d99b69c8148375f03dc7bd49d",
+                "reference": "0f142e597d38351d99b69c8148375f03dc7bd49d",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
+                "flow-php/types": "^0.23.0",
                 "norberttech/symfony-process-executor": "^2.0.4",
-                "php": "~8.1 || ~8.2 || ~8.3",
+                "php": "~8.2 || ~8.3 || ~8.4",
                 "symfony/browser-kit": "^5.4|^6.4|^7.0",
                 "symfony/dependency-injection": "^5.4|^6.4|^7.0",
                 "symfony/http-kernel": "^5.4|^6.4|^7.0"
@@ -6222,7 +6218,7 @@
                 "issues": "https://github.com/norberttech/static-content-generator-bundle/issues",
                 "source": "https://github.com/norberttech/static-content-generator-bundle/tree/1.x"
             },
-            "time": "2025-01-14T05:42:20+00:00"
+            "time": "2025-09-12T10:18:13+00:00"
         },
         {
             "name": "norberttech/symfony-process-executor",
@@ -6683,11 +6679,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "flow-php/array-dot": 20,
-        "flow-php/etl": 20,
-        "flow-php/etl-adapter-http": 20,
-        "flow-php/filesystem": 20,
-        "flow-php/types": 20,
         "norberttech/static-content-generator-bundle": 20
     },
     "prefer-stable": false,

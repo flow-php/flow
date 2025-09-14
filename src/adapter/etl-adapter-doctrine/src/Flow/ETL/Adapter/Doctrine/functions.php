@@ -337,7 +337,6 @@ function postgresql_update_options(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_writing', example: 'database_transaction')]
 function to_dbal_transaction(
     array|Connection $connection,
     DbalLoader ...$loaders,
