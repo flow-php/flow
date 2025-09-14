@@ -4,11 +4,8 @@
     "type": "project",
     "require": {
         "php": "8.2.*",
-        "flow-php/etl": "1.x-dev",
-        "flow-php/types": "1.x-dev",
-        "flow-php/array-dot": "1.x-dev",
-        "flow-php/filesystem": "1.x-dev",
-        "flow-php/etl-adapter-http": "1.x-dev",
+        "flow-php/etl": ">=0.23.0",
+        "flow-php/etl-adapter-http": ">=0.23.0",
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.3",
         "psr/http-client": "^1.0",

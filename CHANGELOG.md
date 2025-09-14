@@ -1,4 +1,7 @@
-## [Unreleased] - 2025-09-01
+## [Unreleased] - 2025-09-14
+
+### Added
+- [#1843](https://github.com/flow-php/flow/pull/1843) - **Doctrine Dbal Transactional Loader** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [#1834](https://github.com/flow-php/flow/pull/1834) - **Update Homebrew TAP formula: flow-php to version: 0.23.0** - [@norberttech](https://github.com/norberttech)

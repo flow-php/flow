@@ -24,6 +24,7 @@ use Flow\ETL\{Adapter\Doctrine\Pagination\Key,
     Attribute\DocumentationExample,
     Attribute\Module,
     Attribute\Type as DSLType,
+    Loader,
     Schema};
 use Flow\ETL\Exception\InvalidArgumentException;
 
@@ -323,6 +324,26 @@ function postgresql_update_options(
         $primary_key_columns,
         $update_columns,
     );
+}
+
+/**
+ * Execute multiple loaders within a database transaction.
+ * Each batch of rows will be processed in its own transaction.
+ * If any loader fails, the entire batch will be rolled back.
+ *
+ * @param array<string, mixed>|Connection $connection
+ * @param DbalLoader ...$loaders - DBAL loaders to execute within the transaction
+ *
+ * @throws InvalidArgumentException
+ */
+#[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
+function to_dbal_transaction(
+    array|Connection $connection,
+    DbalLoader ...$loaders,
+) : TransactionalDbalLoader {
+    return \is_array($connection)
+        ? new TransactionalDbalLoader($connection, ...$loaders)
+        : TransactionalDbalLoader::fromConnection($connection, ...$loaders);
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]

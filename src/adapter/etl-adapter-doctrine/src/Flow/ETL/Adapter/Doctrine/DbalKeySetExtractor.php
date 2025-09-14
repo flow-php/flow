@@ -97,7 +97,7 @@ final class DbalKeySetExtractor implements Extractor
                     $conditions[] = $qb->expr()->and(...$subConditions);
                 }
 
-                if ($conditions) {
+                if (\count($conditions) > 0) {
                     $qb->andWhere($qb->expr()->or(...$conditions));
 
                     foreach ($parameters as $param => $value) {
