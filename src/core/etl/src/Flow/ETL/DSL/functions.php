@@ -169,6 +169,8 @@ use Flow\ETL\Schema\Formatter\{JsonSchemaFormatter, PHPSchemaFormatter};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\{EvolvingValidator, SelectiveValidator, StrictValidator};
 use Flow\ETL\Time\{Duration, Sleep, SystemSleep};
+use Flow\ETL\Transformation\AddRowIndex\StartFrom;
+use Flow\ETL\Transformation\{AddRowIndex, BatchSize, Drop, Limit, MaskColumns, Select};
 use Flow\ETL\Transformer\OrderEntries\{CombinedComparator, Comparator, NameComparator, Order, TypeComparator, TypePriorities};
 use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameReplaceEntryStrategy};
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
@@ -1063,6 +1065,48 @@ function list_ref(string $entry) : ListFunctions
 function refs(string|Reference ...$entries) : References
 {
     return new References(...$entries);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function select(string|Reference ...$entries) : Select
+{
+    return new Select(...$entries);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function drop(string|Reference ...$entries) : Drop
+{
+    return new Drop(...$entries);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function add_row_index(string $column = 'index', StartFrom $startFrom = StartFrom::ZERO) : AddRowIndex
+{
+    return new AddRowIndex($column, $startFrom);
+}
+
+/**
+ * @param int<1, max> $size
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function batch_size(int $size) : BatchSize
+{
+    return new BatchSize($size);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function limit(?int $limit) : Limit
+{
+    return new Limit($limit);
+}
+
+/**
+ * @param array<int, string> $columns
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::TRANSFORMER)]
+function mask_columns(array $columns = [], string $mask = '******') : MaskColumns
+{
+    return new MaskColumns($columns, $mask);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
