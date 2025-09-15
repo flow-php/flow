@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3fdfee077e85c094195d169e8c3b0e02",
+    "content-hash": "4f28d3d05c5e2a276ddf83d716407aa9",
     "packages": [
         {
             "name": "async-aws/core",
@@ -136,25 +136,25 @@
         },
         {
             "name": "brick/math",
-            "version": "0.13.1",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04"
+                "reference": "113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/fc7ed316430118cc7836bf45faff18d5dfc8de04",
-                "reference": "fc7ed316430118cc7836bf45faff18d5dfc8de04",
+                "url": "https://api.github.com/repos/brick/math/zipball/113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2",
+                "reference": "113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.1"
+                "php": "^8.2"
             },
             "require-dev": {
                 "php-coveralls/php-coveralls": "^2.2",
-                "phpunit/phpunit": "^10.1",
-                "vimeo/psalm": "6.8.8"
+                "phpstan/phpstan": "2.1.22",
+                "phpunit/phpunit": "^11.5"
             },
             "type": "library",
             "autoload": {
@@ -184,7 +184,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.13.1"
+                "source": "https://github.com/brick/math/tree/0.14.0"
             },
             "funding": [
                 {
@@ -192,7 +192,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-29T13:50:30+00:00"
+            "time": "2025-08-29T12:40:03+00:00"
         },
         {
             "name": "coduo/php-humanizer",
