@@ -37,8 +37,7 @@ use function Flow\Types\DSL\{
     types as types_new
 };
 use Flow\Calculator\Rounding;
-use Flow\ETL\{
-    Analyze,
+use Flow\ETL\{Analyze,
     Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
@@ -63,6 +62,8 @@ use Flow\ETL\{
     NativePHPRandomValueGenerator,
     Pipeline,
     RandomValueGenerator,
+    Retry\DelayFactory,
+    Retry\RetryStrategy,
     Row,
     Rows,
     Schema,
@@ -72,8 +73,7 @@ use Flow\ETL\{
     Transformation,
     Transformer,
     Window,
-    WithEntry
-};
+    WithEntry};
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Extractor\{CacheExtractor, ChainExtractor, ChunkExtractor, DataFrameExtractor, FilesExtractor, MemoryExtractor, PathPartitionsExtractor, PipelineExtractor, RowsExtractor, SequenceExtractor};
@@ -153,10 +153,13 @@ use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\MatchCases\MatchCondition;
-use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, StreamLoader, TransformerLoader};
+use Flow\ETL\Loader\{ArrayLoader, CallbackLoader, MemoryLoader, RetryLoader, StreamLoader, TransformerLoader};
 use Flow\ETL\Loader\BranchingLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\Memory;
+use Flow\ETL\Retry\DelayFactory\{Exponential, Jitter, Linear};
+use Flow\ETL\Retry\DelayFactory\{Fixed, Fixed\FixedMilliseconds};
+use Flow\ETL\Retry\RetryStrategy\{AnyThrowable, OnExceptionTypes};
 use Flow\ETL\Row\{Entries, EntryFactory, SortOrder};
 use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
@@ -165,6 +168,7 @@ use Flow\ETL\Schema\{Definition, Formatter\PHPFormatter\TypeFormatter, Formatter
 use Flow\ETL\Schema\Formatter\{JsonSchemaFormatter, PHPSchemaFormatter};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Schema\Validator\{EvolvingValidator, SelectiveValidator, StrictValidator};
+use Flow\ETL\Time\{Duration, Sleep, SystemSleep};
 use Flow\ETL\Transformer\OrderEntries\{CombinedComparator, Comparator, NameComparator, Order, TypeComparator, TypePriorities};
 use Flow\ETL\Transformer\Rename\{RenameCaseEntryStrategy, RenameReplaceEntryStrategy};
 use Flow\Filesystem\{Filesystem, Local\NativeLocalFilesystem, Partition, Partitions, Path};
@@ -2269,4 +2273,80 @@ function match_cases(array $cases, mixed $default = null) : MatchCases
 function match_condition(mixed $condition, mixed $then) : MatchCondition
 {
     return new MatchCondition($condition, $then);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function retry_any_throwable(int $limit) : AnyThrowable
+{
+    return new AnyThrowable($limit);
+}
+
+/**
+ * @param array<class-string<\Throwable>> $exception_types
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function retry_on_exception_types(array $exception_types, int $limit) : OnExceptionTypes
+{
+    return new OnExceptionTypes($exception_types, $limit);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function delay_linear(Duration $delay, Duration $increment) : Linear
+{
+    return new Linear($delay, $increment);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function delay_exponential(Duration $base, int $multiplier = 2, ?Duration $max_delay = null) : Exponential
+{
+    return new Exponential($base, $multiplier, $max_delay);
+}
+
+/**
+ * @param float $jitter_factor a value between 0 and 1 representing the maximum percentage of jitter to apply
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function delay_jitter(DelayFactory $delay, float $jitter_factor) : Jitter
+{
+    return new Jitter($delay, $jitter_factor);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function delay_fixed(Duration $delay) : Fixed
+{
+    return new Fixed($delay);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function duration_seconds(int $seconds) : Duration
+{
+    return Duration::fromSeconds($seconds);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function duration_milliseconds(int $milliseconds) : Duration
+{
+    return Duration::fromMilliseconds($milliseconds);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function duration_microseconds(int $microseconds) : Duration
+{
+    return Duration::fromMicroseconds($microseconds);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function duration_minutes(int $minutes) : Duration
+{
+    return Duration::fromMinutes($minutes);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
+function write_with_retries(
+    Loader $loader,
+    RetryStrategy $retry_strategy = new AnyThrowable(3),
+    DelayFactory $delay_factory = new FixedMilliseconds(200),
+    Sleep $sleep = new SystemSleep(),
+) : RetryLoader {
+    return new RetryLoader($loader, $retry_strategy, $delay_factory, $sleep);
 }

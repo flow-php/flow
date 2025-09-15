@@ -105,5 +105,8 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Constraints](constraints.md)** - Data integrity constraints and business rules
 - **[Error Handling](error-handling.md)** - Error management strategies
 
+### Reliability & Recovery
+- **[Retry Mechanisms](retry.md)** - Automatic retry for transient failures
+
 ### Output & Display
 - **[Display](display.md)** - Data visualization and output
