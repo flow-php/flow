@@ -15,17 +15,17 @@ final class TransactionalDbalLoader implements Loader
     private TransactionIsolationLevel|int|null $isolationLevel = null;
 
     /**
-     * @var array<DbalLoader>
+     * @var array<Loader>
      */
     private readonly array $loaders;
 
     /**
      * @param array<string, mixed> $connectionParams
-     * @param DbalLoader ...$loaders
+     * @param Loader ...$loaders
      */
     public function __construct(
         private readonly array $connectionParams,
-        DbalLoader ...$loaders,
+        Loader ...$loaders,
     ) {
         if (\count($loaders) === 0) {
             throw new InvalidArgumentException('At least one loader must be provided');
@@ -40,7 +40,7 @@ final class TransactionalDbalLoader implements Loader
      */
     public static function fromConnection(
         Connection $connection,
-        DbalLoader ...$loaders,
+        Loader ...$loaders,
     ) : self {
         $loader = new self($connection->getParams(), ...$loaders);
         $loader->connection = $connection;
