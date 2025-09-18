@@ -100,18 +100,12 @@ final readonly class WindowsPath
         $basename = $pathInfo['basename'] ?? '';
         $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
 
-        // V4 FIX: Comprehensive root handling using state machine approach
         return match ($dirname) {
-            // File in current directory -> make absolute
-            '', '.' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
-            // V4 EDGE CASE FIX: Windows pathinfo returns backslash for root
-            // File in root directory - KEY FIX for root path edge case
-            '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
-            // File in subdirectory (Unix or Windows)
+            '', '.', '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
             default => new self(
                 $this->protocol->scheme() . (\preg_match('/^[a-zA-Z]:[\\\\\/]?$/', $dirname)
-                    ? \rtrim($dirname, '\\/') . '/' . $partitionsString . '/' . $basename  // Windows drive root (C: or C:\ or C:/)
-                    : $dirname . '/' . $partitionsString . '/' . $basename), // Normal subdirectory
+                    ? \rtrim($dirname, '\\/') . '/' . $partitionsString . '/' . $basename
+                    : $dirname . '/' . $partitionsString . '/' . $basename),
                 $this->options
             ),
         };
@@ -185,11 +179,8 @@ final readonly class WindowsPath
 
         $dirname = \pathinfo($this->path)['dirname'] ?? '';
 
-        // V4 FIX: Explicit root handling using state machine approach
         return match ($dirname) {
-            // V4 EDGE CASE FIX: Windows pathinfo returns backslash for root
             '', '.', '/', '\\' => new self($this->protocol->scheme() . '/', $this->options),
-            // Windows drive root handling
             default => new self(
                 $this->protocol->scheme() . (\preg_match('/^[a-zA-Z]:[\\\\\/]?$/', $dirname) ? \rtrim($dirname, '\\/') . '/' : $dirname),
                 $this->options
@@ -270,17 +261,14 @@ final readonly class WindowsPath
 
     public function rootDirectoryName() : ?string
     {
-        // Handle Windows drive letters
         if (\preg_match('/^[a-zA-Z]:\/(.+)/', $this->path, $matches)) {
             return ($parts = \explode('/', $matches[1]))[0] !== '' ? $parts[0] : null;
         }
 
-        // Handle UNC paths
         if (\str_starts_with($this->path, '//')) {
             return ($parts = \explode('/', \ltrim($this->path, '/')))[0] !== '' ? $parts[0] : null;
         }
 
-        // Standard logic
         return ($pathParts = \explode('/', \ltrim($this->path, '/')))[0] !== '' && \count($pathParts) > 1 ? $pathParts[0] : null;
     }
 
@@ -302,7 +290,6 @@ final readonly class WindowsPath
             throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
         }
 
-        // V4: Handle Windows drive letter paths specially
         if (\preg_match('/^([a-zA-Z]:)\/(.*)$/', $this->path, $matches)) {
             if ($matches[2] === '') {
                 return null;
@@ -346,7 +333,7 @@ final readonly class WindowsPath
     public function suffix(string $string) : self
     {
         return new self(
-            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : $this->path . '/' . \ltrim($string, '/')),
+            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : \rtrim($this->path, '/') . '/' . \ltrim($string, '/')),
             $this->options
         );
     }
@@ -386,11 +373,10 @@ final readonly class WindowsPath
 
     private function isAbsolutePath(string $path) : bool
     {
-        // V4 FIX: Include single slash as absolute
         return \preg_match('/^[a-zA-Z]:[\\\\\/]/', $path) === 1
             || \str_starts_with($path, '\\\\')
             || \str_starts_with($path, '//')
-            || \str_starts_with($path, '/');  // Single slash is absolute
+            || \str_starts_with($path, '/');
     }
 
     private function isPathPattern(string $path) : bool
@@ -403,15 +389,12 @@ final readonly class WindowsPath
 
     private function normalizePath(string $path) : string
     {
-        // Handle empty path first
         if ($path === '') {
             return '/';
         }
 
-        // Normalize separators
         $path = \str_replace('\\', '/', $path);
 
-        // V4 FIX: Better absolute path handling
         return $this->isAbsolutePath($path) ? $path : '/' . $path;
     }
 

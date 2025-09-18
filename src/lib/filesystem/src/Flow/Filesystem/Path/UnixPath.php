@@ -310,7 +310,7 @@ final readonly class UnixPath
     public function suffix(string $string) : self
     {
         return new self(
-            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : $this->path . '/' . \ltrim($string, '/')),
+            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : \rtrim($this->path, '/') . '/' . \ltrim($string, '/')),
             $this->options
         );
     }
@@ -363,12 +363,10 @@ final readonly class UnixPath
 
     private function normalizePath(string $path) : string
     {
-        // Handle empty path first
         if ($path === '') {
             return '/';
         }
 
-        // V4 FIX: Better absolute path handling
         return $this->isAbsolutePath($path) ? $path : '/' . $path;
     }
 
