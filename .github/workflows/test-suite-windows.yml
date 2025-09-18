@@ -49,7 +49,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1, post_max_size=32M, upload_max_filesize=32M
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl
+          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl, fileinfo, openssl, sodium
 
       - name: "List PHP Extensions"
         run: php -m
