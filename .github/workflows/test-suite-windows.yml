@@ -155,6 +155,12 @@ jobs:
         run: "composer test:adapter:xml"
         continue-on-error: true
 
+<<<<<<< HEAD
+=======
+      # Skip service-dependent tests (Elasticsearch, Meilisearch, Doctrine with DB, etc.)
+      # as setting up these services on Windows is more complex
+
+>>>>>>> ddcf9b98f (Run tests on Windows at GitHub Actions)
       - name: "Windows Test Summary"
         if: always()
         run: |
