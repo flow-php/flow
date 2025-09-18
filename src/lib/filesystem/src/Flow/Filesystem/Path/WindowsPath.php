@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Path;
 
+use function Flow\Types\DSL\type_string;
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Filesystem\{Partition, Partitions, Protocol};
 
-final class WindowsPath
+final readonly class WindowsPath
 {
-    private readonly string $path;
-    private readonly Protocol $protocol;
-    private readonly Options $options;
+    private Options $options;
 
+    private string $path;
+
+    private Protocol $protocol;
+
+    /**
+     * @param array<array-key, mixed>|Options $options
+     */
     public function __construct(string $uri, array|Options $options = [])
     {
         $this->options = \is_array($options) ? new Options($options) : $options;
@@ -28,52 +34,132 @@ final class WindowsPath
         $this->path = $this->normalizePath($this->resolveHomePath($path));
     }
 
-    public function basename(): string
+    /**
+     * @param array<array-key, mixed>|Options $options
+     */
+    public static function realpath(string $path, array|Options $options = []) : self
+    {
+        if ($path === '') {
+            return new self(\str_replace('\\', '/', \getcwd() ?: ''), $options);
+        }
+
+        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
+            return new self($path, $options);
+        }
+
+        $realPath = \str_replace('\\', '/', $path);
+
+        if ($realPath !== '' && $realPath[0] === '~') {
+            if (!($homeDir = \getenv('USERPROFILE') ?: (\getenv('HOMEDRIVE') && \getenv('HOMEPATH') ? \getenv('HOMEDRIVE') . \getenv('HOMEPATH') : null))) {
+                throw new RuntimeException('Cannot resolve home directory on Windows');
+            }
+
+            $realPath = \str_replace('\\', '/', type_string()->assert($homeDir)) . '/' . \substr($realPath, 1);
+        }
+
+        if (!self::isWindowsAbsolute($realPath)) {
+            $realPath = \str_replace('\\', '/', type_string()->assert(\getcwd())) . '/' . $realPath;
+        }
+
+        $drive = '';
+
+        if (\preg_match('/^([a-zA-Z]):(.*)$/', $realPath, $matches)) {
+            $drive = $matches[1] . ':';
+            $realPath = $matches[2];
+        }
+
+        $absoluteParts = [];
+
+        foreach (\explode('/', $realPath) as $part) {
+            if ($part === '.' || $part === '') {
+                continue;
+            }
+
+            if ($part === '..') {
+                if ($absoluteParts !== []) {
+                    \array_pop($absoluteParts);
+                }
+
+                continue;
+            }
+
+            $absoluteParts[] = $part;
+        }
+
+        return new self($drive . '/' . \implode('/', $absoluteParts), $options);
+    }
+
+    public function addPartitions(Partition $partition, Partition ...$partitions) : self
+    {
+        if ($this->isPattern()) {
+            throw new InvalidArgumentException("Can't add partitions to path pattern.");
+        }
+
+        $pathInfo = \pathinfo($this->path);
+        $dirname = $pathInfo['dirname'] ?? '';
+        $basename = $pathInfo['basename'] ?? '';
+        $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
+
+        // V4 FIX: Comprehensive root handling using state machine approach
+        return match ($dirname) {
+            // File in current directory -> make absolute
+            '', '.' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
+            // V4 EDGE CASE FIX: Windows pathinfo returns backslash for root
+            // File in root directory - KEY FIX for root path edge case
+            '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
+            // File in subdirectory (Unix or Windows)
+            default => new self(
+                $this->protocol->scheme() . (\preg_match('/^[a-zA-Z]:[\\\\\/]?$/', $dirname)
+                    ? \rtrim($dirname, '\\/') . '/' . $partitionsString . '/' . $basename  // Windows drive root (C: or C:\ or C:/)
+                    : $dirname . '/' . $partitionsString . '/' . $basename), // Normal subdirectory
+                $this->options
+            ),
+        };
+    }
+
+    public function basename() : string
     {
         return \pathinfo($this->path, PATHINFO_BASENAME);
     }
 
-    public function filename(): string
+    public function basenamePrefix(string $prefix) : self
     {
-        return \pathinfo($this->path, PATHINFO_FILENAME);
+        $pathInfo = \pathinfo($this->path);
+        $dirname = $pathInfo['dirname'] ?? '';
+        $basename = $pathInfo['basename'] ?? '';
+
+        return new self(
+            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $prefix . $basename : $dirname . '/' . $prefix . $basename),
+            $this->options
+        );
     }
 
-    public function extension(): string|false
+    public function endsWith(string $string) : bool
+    {
+        return \str_ends_with($this->path, $string);
+    }
+
+    public function extension() : string|false
     {
         return ($extension = \pathinfo($this->path, PATHINFO_EXTENSION)) === '' ? false : \strtolower($extension);
     }
 
-    public function path(): string
+    public function filename() : string
     {
-        return $this->path;
+        return \pathinfo($this->path, PATHINFO_FILENAME);
     }
 
-    public function uri(): string
-    {
-        return $this->protocol->scheme() . \ltrim($this->path, '/');
-    }
-
-    public function protocol(): Protocol
-    {
-        return $this->protocol;
-    }
-
-    public function options(): Options
-    {
-        return $this->options;
-    }
-
-    public function isEqual(self $path): bool
+    public function isEqual(self $path) : bool
     {
         return $this->path === $path->path;
     }
 
-    public function isPattern(): bool
+    public function isPattern() : bool
     {
         return $this->isPathPattern($this->path);
     }
 
-    public function matches(self $path): bool
+    public function matches(self $path) : bool
     {
         if (!$this->isPattern()) {
             return $this->isEqual($path);
@@ -86,7 +172,12 @@ final class WindowsPath
         return $this->fnmatch($this->path, $path->path);
     }
 
-    public function parentDirectory(): self
+    public function options() : Options
+    {
+        return $this->options;
+    }
+
+    public function parentDirectory() : self
     {
         if ($this->isPathPattern($this->path)) {
             throw new InvalidArgumentException("Can't take directory from path pattern.");
@@ -95,76 +186,73 @@ final class WindowsPath
         $dirname = \pathinfo($this->path)['dirname'] ?? '';
 
         // V4 FIX: Explicit root handling using state machine approach
-        switch ($dirname) {
-            case '':
-            case '.':
-            case '/':
-            case '\\':  // V4 EDGE CASE FIX: Windows pathinfo returns backslash for root
-                return new self($this->protocol->scheme() . '/', $this->options);
-
-            default:
-                // Windows drive root handling
-                return new self(
-                    $this->protocol->scheme() . (\preg_match('/^[a-zA-Z]:[\\\\\/]?$/', $dirname) ? \rtrim($dirname, '\\/') . '/' : $dirname),
-                    $this->options
-                );
-        }
+        return match ($dirname) {
+            // V4 EDGE CASE FIX: Windows pathinfo returns backslash for root
+            '', '.', '/', '\\' => new self($this->protocol->scheme() . '/', $this->options),
+            // Windows drive root handling
+            default => new self(
+                $this->protocol->scheme() . (\preg_match('/^[a-zA-Z]:[\\\\\/]?$/', $dirname) ? \rtrim($dirname, '\\/') . '/' : $dirname),
+                $this->options
+            ),
+        };
     }
 
-    public function endsWith(string $string): bool
+    public function partitions() : Partitions
     {
-        return \str_ends_with($this->path, $string);
-    }
-
-    public function rootDirectoryName(): ?string
-    {
-        // Handle Windows drive letters
-        if (\preg_match('/^[a-zA-Z]:\/(.+)/', $this->path, $matches)) {
-            return ($parts = \explode('/', $matches[1]))[0] !== '' ? $parts[0] : null;
+        if ($this->isPattern()) {
+            return new Partitions();
         }
 
-        // Handle UNC paths
-        if (\str_starts_with($this->path, '//')) {
-            return ($parts = \explode('/', \ltrim($this->path, '/')))[0] !== '' ? $parts[0] : null;
+        $partitionsList = [];
+
+        foreach (\explode('/', $this->path) as $part) {
+            if (\preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
+                $partitionsList[] = new Partition($matches[1], $matches[2]);
+            }
         }
 
-        // Standard logic
-        return ($pathParts = \explode('/', \ltrim($this->path, '/')))[0] !== '' && \count($pathParts) > 1 ? $pathParts[0] : null;
+        return new Partitions(...$partitionsList);
     }
 
-    public function suffix(string $string): self
+    /**
+     * @return array<int, self>
+     */
+    public function partitionsPaths() : array
     {
-        return new self(
-            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : $this->path . '/' . \ltrim($string, '/')),
-            $this->options
-        );
+        if (!($partitions = $this->partitions())->count()) {
+            return [];
+        }
+
+        $paths = [];
+        $currentPartitionsList = [];
+        $dirname = \pathinfo($this->path)['dirname'] ?? '';
+
+        foreach ($partitions as $partition) {
+            $currentPartitionsList[] = $partition;
+            $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, $currentPartitionsList));
+
+            $paths[] = new self(
+                $this->protocol->scheme() . (($dirname === '' || $dirname === '.')
+                    ? $partitionsString
+                    : \preg_replace('#/' . \preg_quote($partitionsString, '#') . '/.*$#', '/' . $partitionsString, $dirname)),
+                $this->options
+            );
+        }
+
+        return $paths;
     }
 
-    public function setExtension(string $extension): self
+    public function path() : string
     {
-        $pathInfo = \pathinfo($this->path);
-        $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
-
-        return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $filename : $dirname . '/' . $filename) . '.' . $extension,
-            $this->options
-        );
+        return $this->path;
     }
 
-    public function basenamePrefix(string $prefix): self
+    public function protocol() : Protocol
     {
-        $pathInfo = \pathinfo($this->path);
-        $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
-
-        return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $prefix . $basename : $dirname . '/' . $prefix . $basename),
-            $this->options
-        );
+        return $this->protocol;
     }
 
-    public function randomize(): self
+    public function randomize() : self
     {
         $pathInfo = \pathinfo($this->path);
         $dirname = $pathInfo['dirname'] ?? '';
@@ -180,7 +268,35 @@ final class WindowsPath
         );
     }
 
-    public function skipDirectories(int $count): ?self
+    public function rootDirectoryName() : ?string
+    {
+        // Handle Windows drive letters
+        if (\preg_match('/^[a-zA-Z]:\/(.+)/', $this->path, $matches)) {
+            return ($parts = \explode('/', $matches[1]))[0] !== '' ? $parts[0] : null;
+        }
+
+        // Handle UNC paths
+        if (\str_starts_with($this->path, '//')) {
+            return ($parts = \explode('/', \ltrim($this->path, '/')))[0] !== '' ? $parts[0] : null;
+        }
+
+        // Standard logic
+        return ($pathParts = \explode('/', \ltrim($this->path, '/')))[0] !== '' && \count($pathParts) > 1 ? $pathParts[0] : null;
+    }
+
+    public function setExtension(string $extension) : self
+    {
+        $pathInfo = \pathinfo($this->path);
+        $dirname = $pathInfo['dirname'] ?? '';
+        $filename = $pathInfo['filename'] ?? '';
+
+        return new self(
+            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $filename : $dirname . '/' . $filename) . '.' . $extension,
+            $this->options
+        );
+    }
+
+    public function skipDirectories(int $count) : ?self
     {
         if ($count < 0) {
             throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
@@ -206,88 +322,14 @@ final class WindowsPath
         return new self($this->protocol->scheme() . \implode('/', $remainingParts), $this->options);
     }
 
-    public function addPartitions(Partition $partition, Partition ...$partitions): self
-    {
-        if ($this->isPattern()) {
-            throw new InvalidArgumentException("Can't add partitions to path pattern.");
-        }
-
-        $pathInfo = \pathinfo($this->path);
-        $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
-        $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
-
-        // V4 FIX: Comprehensive root handling using state machine approach
-        switch ($dirname) {
-            case '':
-            case '.':
-                // File in current directory -> make absolute
-                return new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options);
-
-            case '/':
-            case '\\':  // V4 EDGE CASE FIX: Windows pathinfo returns backslash for root
-                // File in root directory - KEY FIX for root path edge case
-                return new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options);
-
-            default:
-                // File in subdirectory (Unix or Windows)
-                return new self(
-                    $this->protocol->scheme() . (\preg_match('/^[a-zA-Z]:[\\\\\/]?$/', $dirname)
-                        ? \rtrim($dirname, '\\/') . '/' . $partitionsString . '/' . $basename  // Windows drive root (C: or C:\ or C:/)
-                        : $dirname . '/' . $partitionsString . '/' . $basename), // Normal subdirectory
-                    $this->options
-                );
-        }
-    }
-
-    public function partitions(): Partitions
-    {
-        if ($this->isPattern()) {
-            return new Partitions();
-        }
-
-        $partitionsList = [];
-        foreach (\explode('/', $this->path) as $part) {
-            if (\preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
-                $partitionsList[] = new Partition($matches[1], $matches[2]);
-            }
-        }
-
-        return new Partitions(...$partitionsList);
-    }
-
-    public function partitionsPaths(): array
-    {
-        if (!($partitions = $this->partitions())->count()) {
-            return [];
-        }
-
-        $paths = [];
-        $currentPartitionsList = [];
-        $dirname = \pathinfo($this->path)['dirname'] ?? '';
-
-        foreach ($partitions as $partition) {
-            $currentPartitionsList[] = $partition;
-            $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, $currentPartitionsList));
-
-            $paths[] = new self(
-                $this->protocol->scheme() . (($dirname === '' || $dirname === '.')
-                    ? $partitionsString
-                    : \preg_replace('#/' . \preg_quote($partitionsString, '#') . '/.*$#', '/' . $partitionsString, $dirname)),
-                $this->options
-            );
-        }
-
-        return $paths;
-    }
-
-    public function staticPart(): self
+    public function staticPart() : self
     {
         if (!$this->isPattern()) {
             return $this;
         }
 
         $staticParts = [];
+
         foreach (\explode('/', \ltrim($this->path, '/')) as $part) {
             if ($this->isPathPattern($part)) {
                 break;
@@ -301,91 +343,20 @@ final class WindowsPath
         );
     }
 
-    public static function realpath(string $path, array|Options $options = []): self
+    public function suffix(string $string) : self
     {
-        if ($path === '') {
-            return new static(\str_replace('\\', '/', \getcwd() ?: ''), $options);
-        }
-
-        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
-            return new static($path, $options);
-        }
-
-        $realPath = \str_replace('\\', '/', $path);
-
-        if ($realPath !== '' && $realPath[0] === '~') {
-            if (!($homeDir = \getenv('USERPROFILE') ?: (\getenv('HOMEDRIVE') && \getenv('HOMEPATH') ? \getenv('HOMEDRIVE') . \getenv('HOMEPATH') : null))) {
-                throw new RuntimeException('Cannot resolve home directory on Windows');
-            }
-            $realPath = \str_replace('\\', '/', $homeDir) . '/' . \substr($realPath, 1);
-        }
-
-        if (!self::isWindowsAbsolute($realPath)) {
-            $realPath = \str_replace('\\', '/', \getcwd()) . '/' . $realPath;
-        }
-
-        $drive = '';
-        if (\preg_match('/^([a-zA-Z]):(.*)$/', $realPath, $matches)) {
-            $drive = $matches[1] . ':';
-            $realPath = $matches[2];
-        }
-
-        $absoluteParts = [];
-        foreach (\explode('/', $realPath) as $part) {
-            if ($part === '.' || $part === '') {
-                continue;
-            }
-
-            if ($part === '..') {
-                if ($absoluteParts !== []) {
-                    \array_pop($absoluteParts);
-                }
-                continue;
-            }
-
-            $absoluteParts[] = $part;
-        }
-
-        return new static($drive . '/' . \implode('/', $absoluteParts), $options);
+        return new self(
+            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : $this->path . '/' . \ltrim($string, '/')),
+            $this->options
+        );
     }
 
-    private function normalizePath(string $path): string
+    public function uri() : string
     {
-        // Handle empty path first
-        if ($path === '') {
-            return '/';
-        }
-
-        // Normalize separators
-        $path = \str_replace('\\', '/', $path);
-
-        // V4 FIX: Better absolute path handling
-        return $this->isAbsolutePath($path) ? $path : '/' . $path;
+        return $this->protocol->scheme() . \ltrim($this->path, '/');
     }
 
-    private function isAbsolutePath(string $path): bool
-    {
-        // V4 FIX: Include single slash as absolute
-        return \preg_match('/^[a-zA-Z]:[\\\\\/]/', $path) === 1
-            || \str_starts_with($path, '\\\\')
-            || \str_starts_with($path, '//')
-            || \str_starts_with($path, '/');  // Single slash is absolute
-    }
-
-    private function resolveHomePath(string $path): string
-    {
-        if ($path === '' || $path[0] !== '~') {
-            return $path;
-        }
-
-        if (!($homeDir = \getenv('USERPROFILE') ?: (\getenv('HOMEDRIVE') && \getenv('HOMEPATH') ? \getenv('HOMEDRIVE') . \getenv('HOMEPATH') : null))) {
-            throw new RuntimeException('Cannot resolve home directory on Windows');
-        }
-
-        return \str_replace('\\', '/', $homeDir) . '/' . \substr($path, 1);
-    }
-
-    private function fnmatch(string $pattern, string $filename, int $flags = 0): bool
+    private function fnmatch(string $pattern, string $filename, int $flags = 0) : bool
     {
         if ($flags & 4) {
             if (($filename[0] === '.') && ($pattern[0] !== '.')) {
@@ -413,7 +384,16 @@ final class WindowsPath
         return (bool) \preg_match($rx, $filename);
     }
 
-    private function isPathPattern(string $path): bool
+    private function isAbsolutePath(string $path) : bool
+    {
+        // V4 FIX: Include single slash as absolute
+        return \preg_match('/^[a-zA-Z]:[\\\\\/]/', $path) === 1
+            || \str_starts_with($path, '\\\\')
+            || \str_starts_with($path, '//')
+            || \str_starts_with($path, '/');  // Single slash is absolute
+    }
+
+    private function isPathPattern(string $path) : bool
     {
         return \str_contains($path, '*')
             || \str_contains($path, '?')
@@ -421,7 +401,34 @@ final class WindowsPath
             || \str_contains($path, '{');
     }
 
-    private static function isWindowsAbsolute(string $path): bool
+    private function normalizePath(string $path) : string
+    {
+        // Handle empty path first
+        if ($path === '') {
+            return '/';
+        }
+
+        // Normalize separators
+        $path = \str_replace('\\', '/', $path);
+
+        // V4 FIX: Better absolute path handling
+        return $this->isAbsolutePath($path) ? $path : '/' . $path;
+    }
+
+    private function resolveHomePath(string $path) : string
+    {
+        if ($path === '' || $path[0] !== '~') {
+            return $path;
+        }
+
+        if (!($homeDir = \getenv('USERPROFILE') ?: (\getenv('HOMEDRIVE') && \getenv('HOMEPATH') ? \getenv('HOMEDRIVE') . \getenv('HOMEPATH') : null))) {
+            throw new RuntimeException('Cannot resolve home directory on Windows');
+        }
+
+        return \str_replace('\\', '/', $homeDir) . '/' . \substr($path, 1);
+    }
+
+    private static function isWindowsAbsolute(string $path) : bool
     {
         return \preg_match('/^[a-zA-Z]:[\\\\\/]/', $path) === 1
             || \str_starts_with($path, '//')

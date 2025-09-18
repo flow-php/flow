@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Unit;
 
 use function Flow\Filesystem\DSL\{partition, partitions, path};
-use Flow\Filesystem\Partitions;
 use PHPUnit\Framework\TestCase;
 
 abstract class PathTestCase extends TestCase
 {
-    public static function directories(): \Generator
+    public static function directories() : \Generator
     {
         yield '/some_file.txt' => ['/some_file.txt', '/'];
         yield '/some/nested/file.csv' => ['/some/nested/file.csv', '/some/nested'];
@@ -20,7 +19,7 @@ abstract class PathTestCase extends TestCase
     /**
      * @return \Generator<int, array<string>> - string $uri, string $schema, string $parsedUri
      */
-    public static function paths(): \Generator
+    public static function paths() : \Generator
     {
         yield '/file.csv' => ['/file.csv', 'file', 'file://file.csv'];
         yield 'file://file.csv' => ['file://file.csv', 'file', 'file://file.csv'];
@@ -34,7 +33,7 @@ abstract class PathTestCase extends TestCase
         yield 'flow-file://folder/file.csv' => ['flow-file://folder/file.csv', 'flow-file', 'flow-file://folder/file.csv'];
     }
 
-    public static function paths_pattern_matching(): \Generator
+    public static function paths_pattern_matching() : \Generator
     {
         yield ['/file.csv', '/file.csv', true];
         yield ['/nested/folder/any/file.csv', '/nested/folder/*/file.csv', false];
@@ -44,7 +43,7 @@ abstract class PathTestCase extends TestCase
         yield ['/nested/folder/**/fil?.csv', '/nested/folder/any/nested/file.csv', true];
     }
 
-    public static function paths_with_partitions(): \Generator
+    public static function paths_with_partitions() : \Generator
     {
         yield '/' => ['/', partitions()];
         yield 'file://path/without/partitions/file.csv' => ['file://path/without/partitions/file.csv', partitions()];
@@ -53,7 +52,7 @@ abstract class PathTestCase extends TestCase
         yield 'file://path/country=*/file.csv' => ['file://path/country=*/file.csv', partitions()];
     }
 
-    public static function paths_with_static_parts(): \Generator
+    public static function paths_with_static_parts() : \Generator
     {
         yield '/file.csv' => ['/file.csv', '/file.csv'];
         yield '/nested/folder/*/file.csv' => ['/nested/folder', '/nested/folder/*/file.csv'];
@@ -66,22 +65,29 @@ abstract class PathTestCase extends TestCase
         yield '/nested/partition=[one]/*.csv' => ['file://nested', '/nested/partition=[one]/*.csv'];
     }
 
-    protected function setUp(): void
+    protected function setUp() : void
     {
         if (!\file_exists(__DIR__ . '/var')) {
             \mkdir(__DIR__ . '/var');
         }
     }
 
-    protected function assertPathEquals(string $expectedPath, string $actualPath, string $message = ''): void
+    protected function assertPathEquals(string $expectedPath, string $actualPath, string $message = '') : void
     {
-        self::assertEquals(path($expectedPath), path($actualPath), $message);
+        static::assertEquals(path($expectedPath), path($actualPath), $message);
     }
 
-    protected function createTempFile(string $content = ''): string
+    protected function createTempDir() : string
+    {
+        \mkdir($tempDir = __DIR__ . '/var/' . \uniqid('test_dir_'));
+
+        return $tempDir;
+    }
+
+    protected function createTempFile(string $content = '') : string
     {
         if (($tempFile = \tempnam(__DIR__ . '/var', 'test_')) === false) {
-            $this->fail('Could not create temporary file');
+            static::fail('Could not create temporary file');
         }
 
         if ($content !== '') {
@@ -89,11 +95,5 @@ abstract class PathTestCase extends TestCase
         }
 
         return $tempFile;
-    }
-
-    protected function createTempDir(): string
-    {
-        \mkdir($tempDir = __DIR__ . '/var/' . \uniqid('test_dir_'));
-        return $tempDir;
     }
 }

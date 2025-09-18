@@ -7,12 +7,17 @@ namespace Flow\Filesystem\Path;
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Filesystem\{Partition, Partitions, Protocol};
 
-final class UnixPath
+final readonly class UnixPath
 {
-    private readonly string $path;
-    private readonly Protocol $protocol;
-    private readonly Options $options;
+    private Options $options;
 
+    private string $path;
+
+    private Protocol $protocol;
+
+    /**
+     * @param array<array-key, mixed>|Options $options
+     */
     public function __construct(string $uri, array|Options $options = [])
     {
         $this->options = \is_array($options) ? new Options($options) : $options;
@@ -28,52 +33,127 @@ final class UnixPath
         $this->path = $this->normalizePath($this->resolveHomePath($path));
     }
 
-    public function basename(): string
+    /**
+     * @param array<array-key, mixed>|Options $options
+     */
+    public static function realpath(string $path, array|Options $options = []) : self
+    {
+        if ($path === '') {
+            return new self(\getcwd() ?: '', $options);
+        }
+
+        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
+            return new self($path, $options);
+        }
+
+        $realPath = $path;
+
+        if ($realPath[0] === '~') {
+            if (\is_string($homeEnv = \getenv('HOME'))) {
+                $realPath = $homeEnv . '/' . \substr($realPath, 1);
+            } else {
+                if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
+                    throw new RuntimeException('Resolving homedir is not yet supported at OS :' . PHP_OS);
+                }
+
+                if (!\is_string(($userData = (array) \posix_getpwuid(\posix_getuid()))['dir'] ?? null)) {
+                    throw new RuntimeException("Can't resolve homedir for user executing script");
+                }
+
+                if (!\array_key_exists('dir', $userData)) {
+                    throw new RuntimeException("Can't resolve homedir for user executing script");
+                }
+
+                $realPath = $userData['dir'] . '/' . \substr($realPath, 1);
+            }
+        }
+
+        if (!self::isUnixAbsolute($realPath)) {
+            $realPath = \getcwd() . '/' . $realPath;
+        }
+
+        $absoluteParts = [];
+
+        foreach (\explode('/', $realPath) as $part) {
+            if ($part === '.' || $part === '') {
+                continue;
+            }
+
+            if ($part === '..') {
+                if ($absoluteParts !== []) {
+                    \array_pop($absoluteParts);
+                }
+
+                continue;
+            }
+
+            $absoluteParts[] = $part;
+        }
+
+        return new self('/' . \implode('/', $absoluteParts), $options);
+    }
+
+    public function addPartitions(Partition $partition, Partition ...$partitions) : self
+    {
+        if ($this->isPattern()) {
+            throw new InvalidArgumentException("Can't add partitions to path pattern.");
+        }
+
+        $pathInfo = \pathinfo($this->path);
+        $dirname = $pathInfo['dirname'] ?? '';
+        $basename = $pathInfo['basename'] ?? '';
+        $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
+
+        return match ($dirname) {
+            '', '.' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
+            '/', '\\' => new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options),
+            default => new self($this->protocol->scheme() . $dirname . '/' . $partitionsString . '/' . $basename, $this->options),
+        };
+    }
+
+    public function basename() : string
     {
         return \pathinfo($this->path, PATHINFO_BASENAME);
     }
 
-    public function filename(): string
+    public function basenamePrefix(string $prefix) : self
     {
-        return \pathinfo($this->path, PATHINFO_FILENAME);
+        $pathInfo = \pathinfo($this->path);
+        $dirname = $pathInfo['dirname'] ?? '';
+        $basename = $pathInfo['basename'] ?? '';
+
+        return new self(
+            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $prefix . $basename : $dirname . '/' . $prefix . $basename),
+            $this->options
+        );
     }
 
-    public function extension(): string|false
+    public function endsWith(string $string) : bool
+    {
+        return \str_ends_with($this->path, $string);
+    }
+
+    public function extension() : string|false
     {
         return ($extension = \pathinfo($this->path, PATHINFO_EXTENSION)) === '' ? false : \strtolower($extension);
     }
 
-    public function path(): string
+    public function filename() : string
     {
-        return $this->path;
+        return \pathinfo($this->path, PATHINFO_FILENAME);
     }
 
-    public function uri(): string
-    {
-        return $this->protocol->scheme() . \ltrim($this->path, '/');
-    }
-
-    public function protocol(): Protocol
-    {
-        return $this->protocol;
-    }
-
-    public function options(): Options
-    {
-        return $this->options;
-    }
-
-    public function isEqual(self $path): bool
+    public function isEqual(self $path) : bool
     {
         return $this->path === $path->path;
     }
 
-    public function isPattern(): bool
+    public function isPattern() : bool
     {
         return $this->isPathPattern($this->path);
     }
 
-    public function matches(self $path): bool
+    public function matches(self $path) : bool
     {
         if (!$this->isPattern()) {
             return $this->isEqual($path);
@@ -86,7 +166,12 @@ final class UnixPath
         return $this->fnmatch($this->path, $path->path);
     }
 
-    public function parentDirectory(): self
+    public function options() : Options
+    {
+        return $this->options;
+    }
+
+    public function parentDirectory() : self
     {
         if ($this->isPathPattern($this->path)) {
             throw new InvalidArgumentException("Can't take directory from path pattern.");
@@ -94,122 +179,20 @@ final class UnixPath
 
         $dirname = \pathinfo($this->path)['dirname'] ?? '';
 
-        switch ($dirname) {
-            case '':
-            case '.':
-            case '/':
-            case '\\':
-                return new self($this->protocol->scheme() . '/', $this->options);
-
-            default:
-                return new self($this->protocol->scheme() . $dirname, $this->options);
-        }
+        return match ($dirname) {
+            '', '.', '/', '\\' => new self($this->protocol->scheme() . '/', $this->options),
+            default => new self($this->protocol->scheme() . $dirname, $this->options),
+        };
     }
 
-    public function endsWith(string $string): bool
-    {
-        return \str_ends_with($this->path, $string);
-    }
-
-    public function rootDirectoryName(): ?string
-    {
-        return ($pathParts = \explode('/', \ltrim($this->path, '/')))[0] !== '' && \count($pathParts) > 1 ? $pathParts[0] : null;
-    }
-
-    public function suffix(string $string): self
-    {
-        return new self(
-            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : $this->path . '/' . \ltrim($string, '/')),
-            $this->options
-        );
-    }
-
-    public function setExtension(string $extension): self
-    {
-        $pathInfo = \pathinfo($this->path);
-        $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
-
-        return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $filename : $dirname . '/' . $filename) . '.' . $extension,
-            $this->options
-        );
-    }
-
-    public function basenamePrefix(string $prefix): self
-    {
-        $pathInfo = \pathinfo($this->path);
-        $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
-
-        return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $prefix . $basename : $dirname . '/' . $prefix . $basename),
-            $this->options
-        );
-    }
-
-    public function randomize(): self
-    {
-        $pathInfo = \pathinfo($this->path);
-        $dirname = $pathInfo['dirname'] ?? '';
-        $filename = $pathInfo['filename'] ?? '';
-        $extension = $pathInfo['extension'] ?? '';
-
-        $newFilename = $filename . '_' . \substr(\md5((string) \random_int(0, \PHP_INT_MAX)), 0, 10);
-        $newBasename = $extension !== '' ? $newFilename . '.' . $extension : $newFilename;
-
-        return new self(
-            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $newBasename : $dirname . '/' . $newBasename),
-            $this->options
-        );
-    }
-
-    public function skipDirectories(int $count): ?self
-    {
-        if ($count < 0) {
-            throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
-        }
-
-        if (!($remainingParts = \array_slice(\explode('/', \ltrim($this->path, '/')), $count))) {
-            return null;
-        }
-
-        return new self($this->protocol->scheme() . \implode('/', $remainingParts), $this->options);
-    }
-
-    public function addPartitions(Partition $partition, Partition ...$partitions): self
-    {
-        if ($this->isPattern()) {
-            throw new InvalidArgumentException("Can't add partitions to path pattern.");
-        }
-
-        $pathInfo = \pathinfo($this->path);
-        $dirname = $pathInfo['dirname'] ?? '';
-        $basename = $pathInfo['basename'] ?? '';
-        $partitionsString = \implode('/', \array_map(fn (Partition $p) => $p->name . '=' . $p->value, [$partition, ...$partitions]));
-
-
-        switch ($dirname) {
-            case '':
-            case '.':
-                return new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options);
-
-            case '/':
-            case '\\':
-                return new self($this->protocol->scheme() . '/' . $partitionsString . '/' . $basename, $this->options);
-
-            default:
-                return new self($this->protocol->scheme() . $dirname . '/' . $partitionsString . '/' . $basename, $this->options);
-        }
-    }
-
-    public function partitions(): Partitions
+    public function partitions() : Partitions
     {
         if ($this->isPattern()) {
             return new Partitions();
         }
 
         $partitionsList = [];
+
         foreach (\explode('/', $this->path) as $part) {
             if (\preg_match('/^([^=]+)=([^=]+)$/', $part, $matches)) {
                 $partitionsList[] = new Partition($matches[1], $matches[2]);
@@ -219,7 +202,10 @@ final class UnixPath
         return new Partitions(...$partitionsList);
     }
 
-    public function partitionsPaths(): array
+    /**
+     * @return array<int, self>
+     */
+    public function partitionsPaths() : array
     {
         if (!($partitions = $this->partitions())->count()) {
             return [];
@@ -244,13 +230,70 @@ final class UnixPath
         return $paths;
     }
 
-    public function staticPart(): self
+    public function path() : string
+    {
+        return $this->path;
+    }
+
+    public function protocol() : Protocol
+    {
+        return $this->protocol;
+    }
+
+    public function randomize() : self
+    {
+        $pathInfo = \pathinfo($this->path);
+        $dirname = $pathInfo['dirname'] ?? '';
+        $filename = $pathInfo['filename'] ?? '';
+        $extension = $pathInfo['extension'] ?? '';
+
+        $newFilename = $filename . '_' . \substr(\md5((string) \random_int(0, \PHP_INT_MAX)), 0, 10);
+        $newBasename = $extension !== '' ? $newFilename . '.' . $extension : $newFilename;
+
+        return new self(
+            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $newBasename : $dirname . '/' . $newBasename),
+            $this->options
+        );
+    }
+
+    public function rootDirectoryName() : ?string
+    {
+        return ($pathParts = \explode('/', \ltrim($this->path, '/')))[0] !== '' && \count($pathParts) > 1 ? $pathParts[0] : null;
+    }
+
+    public function setExtension(string $extension) : self
+    {
+        $pathInfo = \pathinfo($this->path);
+        $dirname = $pathInfo['dirname'] ?? '';
+        $filename = $pathInfo['filename'] ?? '';
+
+        return new self(
+            $this->protocol->scheme() . (($dirname === '' || $dirname === '.') ? $filename : $dirname . '/' . $filename) . '.' . $extension,
+            $this->options
+        );
+    }
+
+    public function skipDirectories(int $count) : ?self
+    {
+        if ($count < 0) {
+            throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
+        }
+
+        if (!($remainingParts = \array_slice(\explode('/', \ltrim($this->path, '/')), $count))) {
+            return null;
+        }
+
+        return new self($this->protocol->scheme() . \implode('/', $remainingParts), $this->options);
+    }
+
+    public function staticPart() : self
     {
         if (!$this->isPattern()) {
             return $this;
         }
 
         $staticParts = [];
+
         foreach (\explode('/', \ltrim($this->path, '/')) as $part) {
             if ($this->isPathPattern($part)) {
                 break;
@@ -264,95 +307,20 @@ final class UnixPath
         );
     }
 
-    public static function realpath(string $path, array|Options $options = []): self
+    public function suffix(string $string) : self
     {
-        if ($path === '') {
-            return new static(\getcwd() ?: '', $options);
-        }
-
-        if (($urlParts = \parse_url($path)) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
-            return new static($path, $options);
-        }
-
-        $realPath = $path;
-
-        if ($realPath !== '' && $realPath[0] === '~') {
-            if (\is_string($homeEnv = \getenv('HOME'))) {
-                $realPath = $homeEnv . '/' . \substr($realPath, 1);
-            } else {
-                if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
-                    throw new RuntimeException('Resolving homedir is not yet supported at OS :' . PHP_OS);
-                }
-
-                if (!\is_string(($userData = (array) \posix_getpwuid(\posix_getuid()))['dir'] ?? null)) {
-                    throw new RuntimeException("Can't resolve homedir for user executing script");
-                }
-
-                $realPath = $userData['dir'] . '/' . \substr($realPath, 1);
-            }
-        }
-
-        if (!self::isUnixAbsolute($realPath)) {
-            $realPath = \getcwd() . '/' . $realPath;
-        }
-
-        $absoluteParts = [];
-        foreach (\explode('/', $realPath) as $part) {
-            if ($part === '.' || $part === '') {
-                continue;
-            }
-
-            if ($part === '..') {
-                if ($absoluteParts !== []) {
-                    \array_pop($absoluteParts);
-                }
-                continue;
-            }
-
-            $absoluteParts[] = $part;
-        }
-
-        return new static('/' . \implode('/', $absoluteParts), $options);
+        return new self(
+            $this->protocol->scheme() . ($this->path === '/' ? '/' . \ltrim($string, '/') : $this->path . '/' . \ltrim($string, '/')),
+            $this->options
+        );
     }
 
-    private function normalizePath(string $path): string
+    public function uri() : string
     {
-        // Handle empty path first
-        if ($path === '') {
-            return '/';
-        }
-
-        // V4 FIX: Better absolute path handling
-        return $this->isAbsolutePath($path) ? $path : '/' . $path;
+        return $this->protocol->scheme() . \ltrim($this->path, '/');
     }
 
-    private function isAbsolutePath(string $path): bool
-    {
-        return \str_starts_with($path, '/');
-    }
-
-    private function resolveHomePath(string $path): string
-    {
-        if ($path === '' || $path[0] !== '~') {
-            return $path;
-        }
-
-        if (\is_string($homeEnv = \getenv('HOME'))) {
-            return $homeEnv . '/' . \substr($path, 1);
-        }
-
-        if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
-            throw new RuntimeException('Resolving homedir is not yet supported at OS :' . PHP_OS);
-        }
-
-        if (!\is_string(($userData = (array) \posix_getpwuid(\posix_getuid()))['dir'] ?? null)) {
-            throw new RuntimeException("Can't resolve homedir for user executing script");
-        }
-
-        return $userData['dir'] . '/' . \substr($path, 1);
-    }
-
-    private function fnmatch(string $pattern, string $filename, int $flags = 0): bool
+    private function fnmatch(string $pattern, string $filename, int $flags = 0) : bool
     {
         if ($flags & 4) {
             if (($filename[0] === '.') && ($pattern[0] !== '.')) {
@@ -380,7 +348,12 @@ final class UnixPath
         return (bool) \preg_match($rx, $filename);
     }
 
-    private function isPathPattern(string $path): bool
+    private function isAbsolutePath(string $path) : bool
+    {
+        return \str_starts_with($path, '/');
+    }
+
+    private function isPathPattern(string $path) : bool
     {
         return \str_contains($path, '*')
             || \str_contains($path, '?')
@@ -388,7 +361,43 @@ final class UnixPath
             || \str_contains($path, '{');
     }
 
-    private static function isUnixAbsolute(string $path): bool
+    private function normalizePath(string $path) : string
+    {
+        // Handle empty path first
+        if ($path === '') {
+            return '/';
+        }
+
+        // V4 FIX: Better absolute path handling
+        return $this->isAbsolutePath($path) ? $path : '/' . $path;
+    }
+
+    private function resolveHomePath(string $path) : string
+    {
+        if ($path === '' || $path[0] !== '~') {
+            return $path;
+        }
+
+        if (\is_string($homeEnv = \getenv('HOME'))) {
+            return $homeEnv . '/' . \substr($path, 1);
+        }
+
+        if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
+            throw new RuntimeException('Resolving homedir is not yet supported at OS :' . PHP_OS);
+        }
+
+        if (!\is_string(($userData = (array) \posix_getpwuid(\posix_getuid()))['dir'] ?? null)) {
+            throw new RuntimeException("Can't resolve homedir for user executing script");
+        }
+
+        if (!\array_key_exists('dir', $userData)) {
+            throw new RuntimeException("Can't resolve homedir for user executing script");
+        }
+
+        return $userData['dir'] . '/' . \substr($path, 1);
+    }
+
+    private static function isUnixAbsolute(string $path) : bool
     {
         return \str_starts_with($path, '/');
     }
