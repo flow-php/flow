@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Filesystem\Tests\Integration;
+namespace Flow\Filesystem\Tests\Integration\OS\Unix;
 
 use Flow\Filesystem\Path;
 use Flow\Filesystem\Tests\OperatingSystem;

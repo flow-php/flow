@@ -117,19 +117,6 @@ TXT
         self::assertNull($fs->status(new Path(__DIR__ . '/var/some_path')));
     }
 
-    public function test_file_status_on_pattern() : void
-    {
-        $fs = native_local_filesystem();
-
-        $fs->writeTo(new Path(__DIR__ . '/var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
-
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/some_path_to/*.txt'))->isFile());
-        self::assertSame(
-            'file:/' . __DIR__ . '/var/some_path_to/file.txt',
-            $fs->status(new Path(__DIR__ . '/var/some_path_to/*.txt'))->path->uri()
-        );
-    }
-
     public function test_file_status_on_root_folder() : void
     {
         $fs = native_local_filesystem();
@@ -372,13 +359,6 @@ TXT
             ],
             $paths
         );
-    }
-
-    public function test_tmp_dir() : void
-    {
-        $fs = native_local_filesystem();
-
-        self::assertSame('file:/' . sys_get_temp_dir(), $fs->getSystemTmpDir()->uri());
     }
 
     public function test_tmp_dir_status() : void
