@@ -17,17 +17,15 @@ on:
     paths-ignore:
       - 'CHANGELOG.md'
 
-# See https://stackoverflow.com/a/72408109
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   tests-windows:
-    name: "Windows Tests (Experimental)"
+    name: "Windows Tests"
     runs-on: windows-latest
     timeout-minutes: 20
-    continue-on-error: true  # Allow failures for Windows tests
 
     strategy:
       fail-fast: false
@@ -75,89 +73,67 @@ jobs:
 
       - name: "Test - ETL Core"
         run: "composer test:core"
-        continue-on-error: true
 
       - name: "Test - CLI"
         run: "composer test:cli"
-        continue-on-error: true
 
       - name: "Test - Lib - Array Dot"
         run: "composer test:lib:array-dot"
-        continue-on-error: true
 
       - name: "Test - Lib - Azure SDK"
         run: "composer test:lib:azure-sdk"
-        continue-on-error: true
 
       - name: "Test - Lib - Doctrine DBAL Bulk"
         run: "composer test:lib:doctrine-dbal-bulk"
-        continue-on-error: true
 
-      - name: "Test - Lib - Filesystem (Critical for Windows)"
+      - name: "Test - Lib - Filesystem"
         run: "composer test:lib:filesystem"
-        continue-on-error: false  # This should pass on Windows now
 
       - name: "Test - Lib - Types"
         run: "composer test:lib:types"
-        continue-on-error: true
 
       - name: "Test - Lib - Parquet"
         run: "composer test:lib:parquet"
-        continue-on-error: true
         env:
           FLOW_PARQUET_TESTS_DEBUG: "0"
 
       - name: "Test - Lib - Parquet Viewer"
         run: "composer test:lib:parquet-viewer"
-        continue-on-error: true
 
       - name: "Test - Lib - Snappy"
         run: "composer test:lib:snappy"
-        continue-on-error: true
 
       - name: "Test - Adapter - ChartJs"
         run: "composer test:adapter:chartjs"
-        continue-on-error: true
 
       - name: "Test - Adapter - CSV"
         run: "composer test:adapter:csv"
-        continue-on-error: true
 
       - name: "Test - Adapter - Excel"
         run: "composer test:adapter:excel"
-        continue-on-error: true
 
       - name: "Test - Adapter - Google Sheet"
         run: "composer test:adapter:google-sheet"
-        continue-on-error: true
 
       - name: "Test - Adapter - Http"
         run: "composer test:adapter:http"
-        continue-on-error: true
 
       - name: "Test - Adapter - Json"
         run: "composer test:adapter:json"
-        continue-on-error: true
 
       - name: "Test - Adapter - Logger"
         run: "composer test:adapter:logger"
-        continue-on-error: true
 
       - name: "Test - Adapter - Parquet"
         run: "composer test:adapter:parquet"
-        continue-on-error: true
 
       - name: "Test - Adapter - Text"
         run: "composer test:adapter:text"
-        continue-on-error: true
 
       - name: "Test - Adapter - XML"
         run: "composer test:adapter:xml"
-        continue-on-error: true
 
       - name: "Windows Test Summary"
         if: always()
         run: |
           echo "Windows test run completed for PHP ${{ matrix.php-version }}"
-          echo "Note: Some test failures are expected on Windows as this is experimental"
-          echo "Critical filesystem tests should pass with the new Windows support implementation"
