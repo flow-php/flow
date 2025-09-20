@@ -21,6 +21,7 @@ use function Flow\ETL\DSL\{collect,
     str_entry};
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\partition;
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\{Rows};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
@@ -79,7 +80,7 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
         // Normalize file paths to handle Windows vs Unix file URI differences
         foreach ($actualData as &$item) {
-            $item['path'] = \str_replace('\\', '/', $item['path']);
+            $item['path'] = \str_replace('\\', '/', type_string()->assert($item['path']));
             $item['path'] = \preg_replace('#^file://+#', 'file:/', $item['path']);
         }
 

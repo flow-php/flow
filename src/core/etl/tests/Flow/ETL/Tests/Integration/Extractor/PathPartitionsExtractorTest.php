@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Extractor;
 
 use function Flow\ETL\DSL\{flow_context, from_path_partitions, rows};
+use function Flow\Types\DSL\type_string;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
 
@@ -28,7 +29,7 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
 
         // Normalize file paths to handle Windows vs Unix file URI differences
         foreach ($actualData as &$item) {
-            $item['path'] = \str_replace('\\', '/', $item['path']);
+            $item['path'] = \str_replace('\\', '/', type_string()->assert($item['path']));
             $item['path'] = \preg_replace('#^file://+#', 'file:/', $item['path']);
         }
 

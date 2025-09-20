@@ -52,33 +52,6 @@ final class WindowsPathTest extends PathTestCase
         yield 'question mark' => ['/nested/fil?.csv', '/nested/file.csv', true];
     }
 
-    public function test_options_handling() : void
-    {
-        $options = new Options(['key' => 'value']);
-        $path = new WindowsPath('/file.txt', $options);
-
-        self::assertEquals(['key' => 'value'], $path->options()->toArray());
-    }
-
-    public function test_pattern_methods_throw_exception() : void
-    {
-        $patternPath = new WindowsPath('/path/*/file.txt');
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't add partitions to path pattern.");
-
-        $patternPath->addPartitions(partition('group', 'a'));
-    }
-
-    public function test_protocol_operations() : void
-    {
-        $path = new WindowsPath('custom://path/to/file.txt');
-
-        self::assertEquals('custom', $path->protocol()->name);
-        self::assertTrue($path->protocol()->is('custom'));
-        self::assertFalse($path->protocol()->is('file'));
-    }
-
     public function test_basename_operations() : void
     {
         $path = new WindowsPath('/path/to/file.txt');
@@ -90,6 +63,42 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('/path/to/prefix_file.txt', $prefixed->path());
     }
 
+    public function test_drive_partition_handling() : void
+    {
+        $path = new WindowsPath('C:/file.txt');
+        $partitioned = $path->addPartitions(partition('group', 'a'));
+
+        self::assertEquals('C:/group=a/file.txt', $partitioned->path());
+        self::assertEquals('file://C:/group=a/file.txt', $partitioned->uri());
+    }
+
+    public function test_drive_root_handling() : void
+    {
+        $path = new WindowsPath('C:/file.txt');
+
+        self::assertEquals('C:/file.txt', $path->path());
+        self::assertEquals('file://C:/file.txt', $path->uri());
+        self::assertEquals('file.txt', $path->basename());
+        self::assertEquals('file', $path->filename());
+        self::assertEquals('txt', $path->extension());
+    }
+
+    public function test_drive_skip_directories() : void
+    {
+        $path = new WindowsPath('C:/var/www/index.html');
+
+        $skipped1 = $path->skipDirectories(1);
+        self::assertNotNull($skipped1);
+        self::assertEquals('C:/www/index.html', $skipped1->path());
+
+        $skipped2 = $path->skipDirectories(2);
+        self::assertNotNull($skipped2);
+        self::assertEquals('C:/index.html', $skipped2->path());
+
+        $skipped3 = $path->skipDirectories(3);
+        self::assertNull($skipped3);
+    }
+
     public function test_extension_operations() : void
     {
         $path = new WindowsPath('/path/to/file.txt');
@@ -99,6 +108,14 @@ final class WindowsPathTest extends PathTestCase
         $newExt = $path->setExtension('csv');
         self::assertEquals('/path/to/file.csv', $newExt->path());
         self::assertEquals('csv', $newExt->extension());
+    }
+
+    public function test_options_handling() : void
+    {
+        $options = new Options(['key' => 'value']);
+        $path = new WindowsPath('/file.txt', $options);
+
+        self::assertEquals(['key' => 'value'], $path->options()->toArray());
     }
 
     /**
@@ -141,6 +158,15 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('path', $path->rootDirectoryName());
     }
 
+    public function test_pathinfo_backslash_edge_case() : void
+    {
+        $path = new WindowsPath('/file.txt');
+        $parent = $path->parentDirectory();
+
+        self::assertEquals('/', $parent->path());
+        self::assertEquals('file://', $parent->uri());
+    }
+
     /**
      * @dataProvider patternProvider
      */
@@ -150,6 +176,25 @@ final class WindowsPathTest extends PathTestCase
         $filePath = new WindowsPath($filename);
 
         self::assertEquals($expected, $patternPath->matches($filePath));
+    }
+
+    public function test_pattern_methods_throw_exception() : void
+    {
+        $patternPath = new WindowsPath('/path/*/file.txt');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Can't add partitions to path pattern.");
+
+        $patternPath->addPartitions(partition('group', 'a'));
+    }
+
+    public function test_protocol_operations() : void
+    {
+        $path = new WindowsPath('custom://path/to/file.txt');
+
+        self::assertEquals('custom', $path->protocol()->name);
+        self::assertTrue($path->protocol()->is('custom'));
+        self::assertFalse($path->protocol()->is('file'));
     }
 
     public function test_randomization() : void
@@ -162,59 +207,6 @@ final class WindowsPathTest extends PathTestCase
         self::assertNotEquals($path->path(), $randomized->path());
     }
 
-    public function test_windows_backslash_normalization() : void
-    {
-        $path = new WindowsPath('C:\\path\\to\\file.txt');
-
-        self::assertEquals('C:/path/to/file.txt', $path->path());
-        self::assertEquals('file://C:/path/to/file.txt', $path->uri());
-    }
-
-    public function test_drive_partition_handling() : void
-    {
-        $path = new WindowsPath('C:/file.txt');
-        $partitioned = $path->addPartitions(partition('group', 'a'));
-
-        self::assertEquals('C:/group=a/file.txt', $partitioned->path());
-        self::assertEquals('file://C:/group=a/file.txt', $partitioned->uri());
-    }
-
-    public function test_drive_root_handling() : void
-    {
-        $path = new WindowsPath('C:/file.txt');
-
-        self::assertEquals('C:/file.txt', $path->path());
-        self::assertEquals('file://C:/file.txt', $path->uri());
-        self::assertEquals('file.txt', $path->basename());
-        self::assertEquals('file', $path->filename());
-        self::assertEquals('txt', $path->extension());
-    }
-
-    public function test_drive_skip_directories() : void
-    {
-        $path = new WindowsPath('C:/var/www/index.html');
-
-        $skipped1 = $path->skipDirectories(1);
-        self::assertNotNull($skipped1);
-        self::assertEquals('C:/www/index.html', $skipped1->path());
-
-        $skipped2 = $path->skipDirectories(2);
-        self::assertNotNull($skipped2);
-        self::assertEquals('C:/index.html', $skipped2->path());
-
-        $skipped3 = $path->skipDirectories(3);
-        self::assertNull($skipped3);
-    }
-
-    public function test_pathinfo_backslash_edge_case() : void
-    {
-        $path = new WindowsPath('/file.txt');
-        $parent = $path->parentDirectory();
-
-        self::assertEquals('/', $parent->path());
-        self::assertEquals('file://', $parent->uri());
-    }
-
     public function test_root_partition_edge_case() : void
     {
         $path = new WindowsPath('/file.txt');
@@ -222,15 +214,6 @@ final class WindowsPathTest extends PathTestCase
 
         self::assertEquals('/group=a/file.txt', $partitioned->path());
         self::assertEquals('file://group=a/file.txt', $partitioned->uri());
-    }
-
-    public function test_unc_path_handling() : void
-    {
-        $path = new WindowsPath('//server/share/file.txt');
-
-        self::assertEquals('//server/share/file.txt', $path->path());
-        self::assertEquals('file://server/share/file.txt', $path->uri());
-        self::assertEquals('server', $path->rootDirectoryName());
     }
 
     public function test_skip_directories() : void
@@ -247,5 +230,22 @@ final class WindowsPathTest extends PathTestCase
 
         $skipped3 = $path->skipDirectories(3);
         self::assertNull($skipped3);
+    }
+
+    public function test_unc_path_handling() : void
+    {
+        $path = new WindowsPath('//server/share/file.txt');
+
+        self::assertEquals('//server/share/file.txt', $path->path());
+        self::assertEquals('file://server/share/file.txt', $path->uri());
+        self::assertEquals('server', $path->rootDirectoryName());
+    }
+
+    public function test_windows_backslash_normalization() : void
+    {
+        $path = new WindowsPath('C:\\path\\to\\file.txt');
+
+        self::assertEquals('C:/path/to/file.txt', $path->path());
+        self::assertEquals('file://C:/path/to/file.txt', $path->uri());
     }
 }

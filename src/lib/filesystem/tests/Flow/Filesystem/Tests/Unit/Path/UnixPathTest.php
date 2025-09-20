@@ -52,12 +52,66 @@ final class UnixPathTest extends PathTestCase
         yield 'question mark' => ['/nested/fil?.csv', '/nested/file.csv', true];
     }
 
+    public function test_absolute_path_handling() : void
+    {
+        $path = new UnixPath('/path/to/file.txt');
+
+        self::assertEquals('/path/to/file.txt', $path->path());
+        self::assertEquals('file://path/to/file.txt', $path->uri());
+        self::assertEquals('file.txt', $path->basename());
+        self::assertEquals('file', $path->filename());
+        self::assertEquals('txt', $path->extension());
+    }
+
+    public function test_basename_operations() : void
+    {
+        $path = new UnixPath('/path/to/file.txt');
+
+        self::assertEquals('file.txt', $path->basename());
+        self::assertEquals('file', $path->filename());
+
+        $prefixed = $path->basenamePrefix('prefix_');
+        self::assertEquals('/path/to/prefix_file.txt', $prefixed->path());
+    }
+
+    public function test_current_directory_handling() : void
+    {
+        $path = new UnixPath('./file.txt');
+
+        self::assertEquals('/./file.txt', $path->path());
+
+        $parent = $path->parentDirectory();
+        self::assertEquals('/.', $parent->path());
+    }
+
+    public function test_extension_operations() : void
+    {
+        $path = new UnixPath('/path/to/file.txt');
+
+        self::assertEquals('txt', $path->extension());
+
+        $newExt = $path->setExtension('csv');
+        self::assertEquals('/path/to/file.csv', $newExt->path());
+        self::assertEquals('csv', $newExt->extension());
+    }
+
     public function test_options_handling() : void
     {
         $options = new Options(['key' => 'value']);
         $path = new UnixPath('/file.txt', $options);
 
         self::assertEquals(['key' => 'value'], $path->options()->toArray());
+    }
+
+    /**
+     * @dataProvider pathProvider
+     */
+    public function test_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
+    {
+        $path = new UnixPath($input);
+
+        self::assertEquals($expectedPath, $path->path());
+        self::assertEquals($expectedScheme, $path->protocol()->name);
     }
 
     public function test_partitions_extraction() : void
@@ -84,71 +138,6 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/path/country=US/region=west', $partitionPaths[1]->path());
     }
 
-    public function test_pattern_methods_throw_exception() : void
-    {
-        $patternPath = new UnixPath('/path/*/file.txt');
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't add partitions to path pattern.");
-
-        $patternPath->addPartitions(partition('group', 'a'));
-    }
-
-    public function test_protocol_operations() : void
-    {
-        $path = new UnixPath('custom://path/to/file.txt');
-
-        self::assertEquals('custom', $path->protocol()->name);
-        self::assertTrue($path->protocol()->is('custom'));
-        self::assertFalse($path->protocol()->is('file'));
-    }
-
-    public function test_basename_operations() : void
-    {
-        $path = new UnixPath('/path/to/file.txt');
-
-        self::assertEquals('file.txt', $path->basename());
-        self::assertEquals('file', $path->filename());
-
-        $prefixed = $path->basenamePrefix('prefix_');
-        self::assertEquals('/path/to/prefix_file.txt', $prefixed->path());
-    }
-
-    public function test_extension_operations() : void
-    {
-        $path = new UnixPath('/path/to/file.txt');
-
-        self::assertEquals('txt', $path->extension());
-
-        $newExt = $path->setExtension('csv');
-        self::assertEquals('/path/to/file.csv', $newExt->path());
-        self::assertEquals('csv', $newExt->extension());
-    }
-
-    /**
-     * @dataProvider pathProvider
-     */
-    public function test_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
-    {
-        $path = new UnixPath($input);
-
-        self::assertEquals($expectedPath, $path->path());
-        self::assertEquals($expectedScheme, $path->protocol()->name);
-    }
-
-    /**
-     * @dataProvider partitionProvider
-     */
-    public function test_shared_partition_logic(string $input, array $partitionData, string $expected) : void
-    {
-        $path = new UnixPath($input);
-        $partitions = array_map(fn ($p) => partition($p['name'], $p['value']), $partitionData);
-
-        $result = $path->addPartitions(...$partitions);
-
-        self::assertEquals($expected, $result->path());
-    }
-
     public function test_path_manipulation() : void
     {
         $path = new UnixPath('/path/to/file.txt');
@@ -173,6 +162,25 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals($expected, $patternPath->matches($filePath));
     }
 
+    public function test_pattern_methods_throw_exception() : void
+    {
+        $patternPath = new UnixPath('/path/*/file.txt');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Can't add partitions to path pattern.");
+
+        $patternPath->addPartitions(partition('group', 'a'));
+    }
+
+    public function test_protocol_operations() : void
+    {
+        $path = new UnixPath('custom://path/to/file.txt');
+
+        self::assertEquals('custom', $path->protocol()->name);
+        self::assertTrue($path->protocol()->is('custom'));
+        self::assertFalse($path->protocol()->is('file'));
+    }
+
     public function test_randomization() : void
     {
         $path = new UnixPath('/path/to/file.txt');
@@ -181,35 +189,6 @@ final class UnixPathTest extends PathTestCase
         self::assertStringStartsWith('/path/to/file_', $randomized->path());
         self::assertStringEndsWith('.txt', $randomized->path());
         self::assertNotEquals($path->path(), $randomized->path());
-    }
-
-    public function test_static_part_extraction() : void
-    {
-        $pattern = new UnixPath('/static/part/*/dynamic/part');
-        $staticPart = $pattern->staticPart();
-
-        self::assertEquals('/static/part', $staticPart->path());
-    }
-
-    public function test_absolute_path_handling() : void
-    {
-        $path = new UnixPath('/path/to/file.txt');
-
-        self::assertEquals('/path/to/file.txt', $path->path());
-        self::assertEquals('file://path/to/file.txt', $path->uri());
-        self::assertEquals('file.txt', $path->basename());
-        self::assertEquals('file', $path->filename());
-        self::assertEquals('txt', $path->extension());
-    }
-
-    public function test_current_directory_handling() : void
-    {
-        $path = new UnixPath('./file.txt');
-
-        self::assertEquals('/./file.txt', $path->path());
-
-        $parent = $path->parentDirectory();
-        self::assertEquals('/.', $parent->path());
     }
 
     public function test_relative_path_normalization() : void
@@ -241,6 +220,19 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('file://group=a/file.txt', $partitioned->uri());
     }
 
+    /**
+     * @dataProvider partitionProvider
+     */
+    public function test_shared_partition_logic(string $input, array $partitionData, string $expected) : void
+    {
+        $path = new UnixPath($input);
+        $partitions = array_map(fn ($p) => partition($p['name'], $p['value']), $partitionData);
+
+        $result = $path->addPartitions(...$partitions);
+
+        self::assertEquals($expected, $result->path());
+    }
+
     public function test_skip_directories() : void
     {
         $path = new UnixPath('/var/www/index.html');
@@ -255,5 +247,13 @@ final class UnixPathTest extends PathTestCase
 
         $skipped3 = $path->skipDirectories(3);
         self::assertNull($skipped3);
+    }
+
+    public function test_static_part_extraction() : void
+    {
+        $pattern = new UnixPath('/static/part/*/dynamic/part');
+        $staticPart = $pattern->staticPart();
+
+        self::assertEquals('/static/part', $staticPart->path());
     }
 }
