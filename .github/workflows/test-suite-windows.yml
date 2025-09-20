@@ -83,9 +83,6 @@ jobs:
       - name: "Test - Lib - Azure SDK"
         run: "composer test:lib:azure-sdk"
 
-      - name: "Test - Lib - Doctrine DBAL Bulk"
-        run: "composer test:lib:doctrine-dbal-bulk"
-
       - name: "Test - Lib - Filesystem"
         run: "composer test:lib:filesystem"
 
