@@ -91,8 +91,6 @@ jobs:
 
       - name: "Test - Lib - Parquet"
         run: "composer test:lib:parquet"
-        env:
-          FLOW_PARQUET_TESTS_DEBUG: "0"
 
       - name: "Test - Lib - Parquet Viewer"
         run: "composer test:lib:parquet-viewer"
@@ -131,6 +129,5 @@ jobs:
         run: "composer test:adapter:xml"
 
       - name: "Windows Test Summary"
-        if: always()
         run: |
           echo "Windows test run completed for PHP ${{ matrix.php-version }}"
