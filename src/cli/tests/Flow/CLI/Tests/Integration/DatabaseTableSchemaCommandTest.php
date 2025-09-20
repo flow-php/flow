@@ -10,14 +10,21 @@ use Flow\CLI\Command\DatabaseTableSchemaCommand;
 use Flow\CLI\Tests\Context\DatabaseContext;
 use Flow\ETL\Tests\FlowTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Flow\Filesystem\Tests\OperatingSystem;
 
 final class DatabaseTableSchemaCommandTest extends FlowTestCase
 {
     protected ?DatabaseContext $dbContext = null;
 
+    use OperatingSystem;
+
     protected function setUp() : void
     {
         parent::setUp();
+
+        if ($this->isWindows()) {
+            self::markTestSkipped('DatabaseTableListCommand is not supported on Windows.');
+        }
 
         $this->dbContext = new DatabaseContext();
         $this->dbContext->dropAllTables();
