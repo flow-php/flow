@@ -75,26 +75,34 @@ final class PartitioningTest extends FlowIntegrationTestCase
             ->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))
             ->fetch();
 
+        $actualData = $partitions->toArray();
+
+        // Normalize file paths to handle Windows vs Unix file URI differences
+        foreach ($actualData as &$item) {
+            $item['path'] = \str_replace('\\', '/', $item['path']);
+            $item['path'] = \preg_replace('#^file://+#', 'file:/', $item['path']);
+        }
+
         self::assertSame(
             [
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
                     'partitions' => ['date' => '2024-04-01'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
                     'partitions' => ['date' => '2024-04-02'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
                     'partitions' => ['date' => '2024-04-03'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
                     'partitions' => ['date' => '2024-04-04'],
                 ],
             ],
-            $partitions->toArray()
+            $actualData
         );
         self::assertSame(
             [

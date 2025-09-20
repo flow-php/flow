@@ -23,38 +23,47 @@ final class PathPartitionsExtractorTest extends FlowIntegrationTestCase
         }
 
         self::assertSame(7, $rows->count());
+
+        $actualData = $rows->toArray();
+
+        // Normalize file paths to handle Windows vs Unix file URI differences
+        foreach ($actualData as &$item) {
+            $item['path'] = \str_replace('\\', '/', $item['path']);
+            $item['path'] = \preg_replace('#^file://+#', 'file:/', $item['path']);
+        }
+
         self::assertEquals(
             [
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/multi_partitioned/year=2022/month=12/day=30/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/multi_partitioned/year=2022/month=12/day=30/file.txt',
                     'partitions' => ['year' => '2022', 'month' => '12', 'day' => '30'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/multi_partitioned/year=2022/month=12/day=31/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/multi_partitioned/year=2022/month=12/day=31/file.txt',
                     'partitions' => ['year' => '2022', 'month' => '12', 'day' => '31'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/multi_partitioned/year=2023/month=1/day=1/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/multi_partitioned/year=2023/month=1/day=1/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '1'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/multi_partitioned/year=2023/month=1/day=2/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/multi_partitioned/year=2023/month=1/day=2/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '2'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/multi_partitioned/year=2023/month=1/day=3/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/multi_partitioned/year=2023/month=1/day=3/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '3'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/multi_partitioned/year=2023/month=1/day=4/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/multi_partitioned/year=2023/month=1/day=4/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '4'],
                 ],
                 [
-                    'path' => 'file:/' . __DIR__ . '/Fixtures/multi_partitioned/year=2023/month=1/day=5/file.txt',
+                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/multi_partitioned/year=2023/month=1/day=5/file.txt',
                     'partitions' => ['year' => '2023', 'month' => '1', 'day' => '5'],
                 ],
             ],
-            $rows->toArray()
+            $actualData
         );
     }
 }

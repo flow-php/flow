@@ -10,19 +10,18 @@ use PHPUnit\Framework\TestCase;
 
 final class BlocksTest extends TestCase
 {
-    public function test_basic_blocks_operations(): void
+    public function test_basic_blocks_operations() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        // Test basic append operations (OS-agnostic)
-        $testContent = "Basic test content for blocks functionality";
+        $testContent = 'Basic test content for blocks functionality';
         $blocks->append($testContent);
 
         self::assertSame(\strlen($testContent), $blocks->size());
         self::assertGreaterThan(0, \count($blocks->all()));
     }
 
-    public function test_blocks_with_multiple_appends(): void
+    public function test_blocks_with_multiple_appends() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(1));
 

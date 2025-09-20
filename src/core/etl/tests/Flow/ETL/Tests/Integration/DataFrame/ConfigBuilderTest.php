@@ -23,7 +23,10 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         putenv(CacheConfig::CACHE_DIR_ENV . '=' . __DIR__ . '/var/cache');
         $config = config_builder()->build();
 
-        self::assertSame($config->cache->localFilesystemCacheDir->path(), __DIR__ . '/var/cache');
+        self::assertSame(
+            \str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path()),
+            \str_replace('\\', '/', __DIR__ . '/var/cache')
+        );
     }
 
     public function test_default_cache_dir() : void
@@ -32,8 +35,8 @@ final class ConfigBuilderTest extends FlowIntegrationTestCase
         $config = config_builder()->build();
 
         self::assertSame(
-            sys_get_temp_dir() . '/flow_php/cache',
-            $config->cache->localFilesystemCacheDir->path()
+            \str_replace('\\', '/', sys_get_temp_dir() . '/flow_php/cache'),
+            \str_replace('\\', '/', $config->cache->localFilesystemCacheDir->path())
         );
     }
 

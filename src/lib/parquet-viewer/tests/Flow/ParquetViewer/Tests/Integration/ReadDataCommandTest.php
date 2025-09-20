@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
+use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
 final class ReadDataCommandTest extends TestCase
 {
+    use CommandOutputNormalizer;
+
     public function test_read_data_command() : void
     {
         $application = new Parquet();
@@ -26,7 +29,7 @@ final class ReadDataCommandTest extends TestCase
         ]);
 
         self::assertSame(0, $tester->getStatusCode());
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +---------+------------+---------------------+-----------+-----------------+------------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
 | boolean |      int32 |               int64 |     float |          double |          decimal |               string |                 date |             datetime |    list_of_datetimes |          map_of_ints |      list_of_strings |          struct_flat |

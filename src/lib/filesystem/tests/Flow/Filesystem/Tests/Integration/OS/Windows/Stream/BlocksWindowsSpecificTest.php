@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows\Stream;
 
+use Flow\Filesystem\Exception\RuntimeException;
 use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Blocks;
 use Flow\Filesystem\Tests\OperatingSystem;
@@ -17,14 +18,14 @@ final class BlocksWindowsSpecificTest extends TestCase
 {
     use OperatingSystem;
 
-    protected function setUp(): void
+    protected function setUp() : void
     {
         if ($this->isUnix()) {
             self::markTestSkipped('Windows-specific stream tests should only run on Windows');
         }
     }
 
-    public function test_moving_resource_to_blocks_windows(): void
+    public function test_moving_resource_to_blocks_windows() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -40,14 +41,14 @@ final class BlocksWindowsSpecificTest extends TestCase
 
             self::assertSame($fileSize, $blocks->size());
             self::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
-        } catch (\Flow\Filesystem\Exception\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
             self::markTestSkipped('Windows file handling issue: ' . $e->getMessage());
         }
     }
 
-    public function test_moving_resource_to_existing_blocks_windows(): void
+    public function test_moving_resource_to_existing_blocks_windows() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -64,14 +65,14 @@ final class BlocksWindowsSpecificTest extends TestCase
 
             self::assertSame($fileSize + 100, $blocks->size());
             self::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
-        } catch (\Flow\Filesystem\Exception\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             // On Windows, this might fail due to file locking or permissions
             // Mark as skipped rather than failed for now
             self::markTestSkipped('Windows file handling issue: ' . $e->getMessage());
         }
     }
 
-    public function test_windows_specific_stream_handling(): void
+    public function test_windows_specific_stream_handling() : void
     {
         $blocks = new Blocks(SizeUnits::kbToBytes(1));
 
@@ -86,7 +87,7 @@ final class BlocksWindowsSpecificTest extends TestCase
         self::assertGreaterThan(0, \count($blocks->all()));
     }
 
-    public function test_windows_temp_file_streaming(): void
+    public function test_windows_temp_file_streaming() : void
     {
         // Create a temporary file in Windows temp directory
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
@@ -101,7 +102,7 @@ final class BlocksWindowsSpecificTest extends TestCase
 
             $blocks->fromResource($file);
             self::assertSame(\strlen($content), $blocks->size());
-        } catch (\Flow\Filesystem\Exception\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             // If there are Windows-specific issues, skip the test
             self::markTestSkipped('Windows temp file handling issue: ' . $e->getMessage());
         } finally {
@@ -111,7 +112,7 @@ final class BlocksWindowsSpecificTest extends TestCase
         }
     }
 
-    public function test_windows_unicode_filename_streaming(): void
+    public function test_windows_unicode_filename_streaming() : void
     {
         $tempDir = \sys_get_temp_dir();
         $unicodeFileName = $tempDir . '\\flow_test_ñáéíóú.txt';

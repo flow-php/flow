@@ -17,14 +17,14 @@ final class BlocksUnixSpecificTest extends TestCase
 {
     use OperatingSystem;
 
-    protected function setUp(): void
+    protected function setUp() : void
     {
         if ($this->isWindows()) {
             self::markTestSkipped('Unix-specific stream tests should only run on Unix systems');
         }
     }
 
-    public function test_moving_resource_to_blocks_unix(): void
+    public function test_moving_resource_to_blocks_unix() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -37,7 +37,7 @@ final class BlocksUnixSpecificTest extends TestCase
         self::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
     }
 
-    public function test_moving_resource_to_existing_blocks_unix(): void
+    public function test_moving_resource_to_existing_blocks_unix() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -51,41 +51,7 @@ final class BlocksUnixSpecificTest extends TestCase
         self::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
     }
 
-    public function test_unix_specific_stream_handling(): void
-    {
-        $blocks = new Blocks(SizeUnits::kbToBytes(1));
-
-        // Test with Unix line endings
-        $testContent = "Unix test content\nWith LF line endings\n";
-        $blocks->append($testContent);
-
-        self::assertSame(\strlen($testContent), $blocks->size());
-        self::assertGreaterThan(0, \count($blocks->all()));
-
-        // Verify blocks are created correctly
-        self::assertGreaterThan(0, \count($blocks->all()));
-    }
-
-    public function test_unix_large_file_streaming(): void
-    {
-        // Create a temporary large file
-        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
-        $largeContent = \str_repeat("Large file test content\n", 1000);
-        \file_put_contents($tempFile, $largeContent);
-
-        $blocks = new Blocks(SizeUnits::kbToBytes(5));
-        $file = \fopen($tempFile, 'rb');
-
-        $blocks->fromResource($file);
-
-        self::assertSame(\strlen($largeContent), $blocks->size());
-        self::assertGreaterThan(1, \count($blocks->all()));
-
-        // Cleanup
-        \unlink($tempFile);
-    }
-
-    public function test_unix_file_permissions_during_streaming(): void
+    public function test_unix_file_permissions_during_streaming() : void
     {
         if (!\function_exists('chmod')) {
             self::markTestSkipped('chmod functionality not available');
@@ -107,5 +73,39 @@ final class BlocksUnixSpecificTest extends TestCase
         self::assertSame(\strlen($content), $blocks->size());
 
         \unlink($tempFile);
+    }
+
+    public function test_unix_large_file_streaming() : void
+    {
+        // Create a temporary large file
+        $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
+        $largeContent = \str_repeat("Large file test content\n", 1000);
+        \file_put_contents($tempFile, $largeContent);
+
+        $blocks = new Blocks(SizeUnits::kbToBytes(5));
+        $file = \fopen($tempFile, 'rb');
+
+        $blocks->fromResource($file);
+
+        self::assertSame(\strlen($largeContent), $blocks->size());
+        self::assertGreaterThan(1, \count($blocks->all()));
+
+        // Cleanup
+        \unlink($tempFile);
+    }
+
+    public function test_unix_specific_stream_handling() : void
+    {
+        $blocks = new Blocks(SizeUnits::kbToBytes(1));
+
+        // Test with Unix line endings
+        $testContent = "Unix test content\nWith LF line endings\n";
+        $blocks->append($testContent);
+
+        self::assertSame(\strlen($testContent), $blocks->size());
+        self::assertGreaterThan(0, \count($blocks->all()));
+
+        // Verify blocks are created correctly
+        self::assertGreaterThan(0, \count($blocks->all()));
     }
 }

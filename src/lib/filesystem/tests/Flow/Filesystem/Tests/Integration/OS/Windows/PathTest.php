@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\Filesystem\Tests\Integration\OS\Windows;
+
+use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\Filesystem\Tests\OperatingSystem;
+
+final class PathTest extends FlowIntegrationTestCase
+{
+    use OperatingSystem;
+
+    public function setUp(): void
+    {
+        if ($this->isUnix()) {
+            self::markTestSkipped('Windows-specific tests should only run on Windows');
+        }
+
+        parent::setUp();
+    }
+
+    public function test_windows_home_directory_resolution() : void
+    {
+        $homePath = \Flow\Filesystem\Path::realpath('~/test_windows.txt');
+
+        self::assertStringContainsString('test_windows.txt', $homePath->path());
+        self::assertMatchesRegularExpression('/^[a-zA-Z]:\//', $homePath->path());
+    }
+}

@@ -13,14 +13,14 @@ final class BlocksUnixTest extends TestCase
 {
     use OperatingSystem;
 
-    protected function setUp(): void
+    protected function setUp() : void
     {
         if ($this->isWindows()) {
             self::markTestSkipped('Unix-specific stream tests should only run on Unix systems');
         }
     }
 
-    public function test_moving_resource_to_blocks_unix(): void
+    public function test_moving_resource_to_blocks_unix() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -33,7 +33,7 @@ final class BlocksUnixTest extends TestCase
         self::assertSame((int) \ceil($fileSize / $blockSize), \count($blocks->all()));
     }
 
-    public function test_moving_resource_to_existing_blocks_unix(): void
+    public function test_moving_resource_to_existing_blocks_unix() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
@@ -47,22 +47,7 @@ final class BlocksUnixTest extends TestCase
         self::assertCount((int) \ceil($fileSize / $blockSize), $blocks->all());
     }
 
-    public function test_unix_specific_stream_handling(): void
-    {
-        $blocks = new Blocks(SizeUnits::kbToBytes(1));
-
-        // Test with Unix line endings
-        $testContent = "Unix test content\nWith LF line endings\n";
-        $blocks->append($testContent);
-
-        self::assertSame(\strlen($testContent), $blocks->size());
-        self::assertGreaterThan(0, \count($blocks->all()));
-
-        // Verify blocks are created correctly
-        self::assertGreaterThan(0, \count($blocks->all()));
-    }
-
-    public function test_unix_large_file_streaming(): void
+    public function test_unix_large_file_streaming() : void
     {
         // Create a temporary large file
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_blocks_test_');
@@ -79,5 +64,20 @@ final class BlocksUnixTest extends TestCase
 
         // Cleanup
         \unlink($tempFile);
+    }
+
+    public function test_unix_specific_stream_handling() : void
+    {
+        $blocks = new Blocks(SizeUnits::kbToBytes(1));
+
+        // Test with Unix line endings
+        $testContent = "Unix test content\nWith LF line endings\n";
+        $blocks->append($testContent);
+
+        self::assertSame(\strlen($testContent), $blocks->size());
+        self::assertGreaterThan(0, \count($blocks->all()));
+
+        // Verify blocks are created correctly
+        self::assertGreaterThan(0, \count($blocks->all()));
     }
 }

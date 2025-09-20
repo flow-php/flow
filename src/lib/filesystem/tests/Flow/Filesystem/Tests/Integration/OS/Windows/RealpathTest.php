@@ -34,6 +34,21 @@ final class RealpathTest extends TestCase
         self::assertEquals($normalizedPath, $path->path());
     }
 
+    public function test_windows_drive_letter_case_handling() : void
+    {
+        // Test that Windows drive letters are handled consistently
+        $pathLower = Path::realpath('c:/path/file.txt');
+        $pathUpper = Path::realpath('C:/path/file.txt');
+
+        // Drive letters preserve their original case
+        self::assertEquals('C:/path/file.txt', $pathUpper->path());
+        self::assertEquals('c:/path/file.txt', $pathLower->path());
+
+        // But both represent the same logical path on Windows
+        self::assertStringContainsString(':/path/file.txt', $pathLower->path());
+        self::assertStringContainsString(':/path/file.txt', $pathUpper->path());
+    }
+
     public function test_windows_home_directory_expansion() : void
     {
         if (!\getenv('USERPROFILE')) {
@@ -58,20 +73,5 @@ final class RealpathTest extends TestCase
         // Should resolve to current working directory
         self::assertStringStartsWith($cwd, $relativePath->path());
         self::assertStringEndsWith('test_file.txt', $relativePath->path());
-    }
-
-    public function test_windows_drive_letter_case_handling() : void
-    {
-        // Test that Windows drive letters are handled consistently
-        $pathLower = Path::realpath('c:/path/file.txt');
-        $pathUpper = Path::realpath('C:/path/file.txt');
-
-        // Drive letters preserve their original case
-        self::assertEquals('C:/path/file.txt', $pathUpper->path());
-        self::assertEquals('c:/path/file.txt', $pathLower->path());
-
-        // But both represent the same logical path on Windows
-        self::assertStringContainsString(':/path/file.txt', $pathLower->path());
-        self::assertStringContainsString(':/path/file.txt', $pathUpper->path());
     }
 }

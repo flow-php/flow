@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Path;
 
-use function Flow\Filesystem\DSL\{partition, path};
+use function Flow\Filesystem\DSL\{partition};
 use Flow\Filesystem\Exception\InvalidArgumentException;
-use Flow\Filesystem\{Partition};
 use Flow\Filesystem\Path\{Options, WindowsPath};
 use Flow\Filesystem\Tests\Unit\PathTestCase;
 
@@ -80,7 +79,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertFalse($path->protocol()->is('file'));
     }
 
-    public function test_shared_basename_operations() : void
+    public function test_basename_operations() : void
     {
         $path = new WindowsPath('/path/to/file.txt');
 
@@ -91,7 +90,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('/path/to/prefix_file.txt', $prefixed->path());
     }
 
-    public function test_shared_extension_operations() : void
+    public function test_extension_operations() : void
     {
         $path = new WindowsPath('/path/to/file.txt');
 
@@ -105,7 +104,7 @@ final class WindowsPathTest extends PathTestCase
     /**
      * @dataProvider pathProvider
      */
-    public function test_shared_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
+    public function test_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
     {
         $path = new WindowsPath($input);
 
@@ -116,7 +115,7 @@ final class WindowsPathTest extends PathTestCase
     /**
      * @dataProvider partitionProvider
      */
-    public function test_shared_partition_logic(string $input, array $partitionData, string $expected) : void
+    public function test_partition_logic(string $input, array $partitionData, string $expected) : void
     {
         $path = new WindowsPath($input);
         $partitions = array_map(fn ($p) => partition($p['name'], $p['value']), $partitionData);
@@ -126,7 +125,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals($expected, $result->path());
     }
 
-    public function test_shared_path_manipulation() : void
+    public function test_path_manipulation() : void
     {
         $path = new WindowsPath('/path/to/file.txt');
 
@@ -145,7 +144,7 @@ final class WindowsPathTest extends PathTestCase
     /**
      * @dataProvider patternProvider
      */
-    public function test_shared_pattern_logic(string $pattern, string $filename, bool $expected) : void
+    public function test_pattern_logic(string $pattern, string $filename, bool $expected) : void
     {
         $patternPath = new WindowsPath($pattern);
         $filePath = new WindowsPath($filename);
@@ -153,7 +152,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals($expected, $patternPath->matches($filePath));
     }
 
-    public function test_shared_randomization() : void
+    public function test_randomization() : void
     {
         $path = new WindowsPath('/path/to/file.txt');
         $randomized = $path->randomize();
@@ -171,7 +170,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('file://C:/path/to/file.txt', $path->uri());
     }
 
-    public function test_windows_drive_partition_handling() : void
+    public function test_drive_partition_handling() : void
     {
         $path = new WindowsPath('C:/file.txt');
         $partitioned = $path->addPartitions(partition('group', 'a'));
@@ -180,7 +179,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('file://C:/group=a/file.txt', $partitioned->uri());
     }
 
-    public function test_windows_drive_root_handling() : void
+    public function test_drive_root_handling() : void
     {
         $path = new WindowsPath('C:/file.txt');
 
@@ -191,7 +190,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('txt', $path->extension());
     }
 
-    public function test_windows_drive_skip_directories() : void
+    public function test_drive_skip_directories() : void
     {
         $path = new WindowsPath('C:/var/www/index.html');
 
@@ -207,22 +206,8 @@ final class WindowsPathTest extends PathTestCase
         self::assertNull($skipped3);
     }
 
-    public function test_windows_home_directory_resolution() : void
+    public function test_pathinfo_backslash_edge_case() : void
     {
-        if (!getenv('USERPROFILE') && !getenv('HOMEDRIVE')) {
-            self::markTestSkipped('Windows home directory environment variables not available');
-        }
-
-        $path = WindowsPath::realpath('~/test.txt');
-
-        self::assertStringContainsString('test.txt', $path->path());
-        // Windows paths start with drive letter, not /
-        self::assertMatchesRegularExpression('/^[a-zA-Z]:/', $path->path());
-    }
-
-    public function test_windows_pathinfo_backslash_edge_case() : void
-    {
-        // Test the specific edge case where Windows pathinfo returns backslash for root
         $path = new WindowsPath('/file.txt');
         $parent = $path->parentDirectory();
 
@@ -230,9 +215,8 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('file://', $parent->uri());
     }
 
-    public function test_windows_root_partition_edge_case() : void
+    public function test_root_partition_edge_case() : void
     {
-        // Test the specific root path partition issue from V3
         $path = new WindowsPath('/file.txt');
         $partitioned = $path->addPartitions(partition('group', 'a'));
 
@@ -240,12 +224,28 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('file://group=a/file.txt', $partitioned->uri());
     }
 
-    public function test_windows_unc_path_handling() : void
+    public function test_unc_path_handling() : void
     {
         $path = new WindowsPath('//server/share/file.txt');
 
         self::assertEquals('//server/share/file.txt', $path->path());
         self::assertEquals('file://server/share/file.txt', $path->uri());
         self::assertEquals('server', $path->rootDirectoryName());
+    }
+
+    public function test_skip_directories() : void
+    {
+        $path = new WindowsPath('C:/var/www/index.html');
+
+        $skipped1 = $path->skipDirectories(1);
+        self::assertNotNull($skipped1);
+        self::assertEquals('file://C:/www/index.html', $skipped1->uri());
+
+        $skipped2 = $path->skipDirectories(2);
+        self::assertNotNull($skipped2);
+        self::assertEquals('file://C:/index.html', $skipped2->uri());
+
+        $skipped3 = $path->skipDirectories(3);
+        self::assertNull($skipped3);
     }
 }

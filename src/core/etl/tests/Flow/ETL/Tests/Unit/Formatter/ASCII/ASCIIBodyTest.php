@@ -6,10 +6,12 @@ namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
 use function Flow\ETL\DSL\{float_entry, int_entry, ref, row, rows, string_entry};
 use Flow\ETL\Formatter\ASCII\{ASCIIBody, Body, Headers};
-use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\{CommandOutputNormalizer, FlowTestCase};
 
 final class ASCIIBodyTest extends FlowTestCase
 {
+    use CommandOutputNormalizer;
+
     public function test_printing_ascii_body() : void
     {
         $rows = rows(
@@ -22,7 +24,7 @@ final class ASCIIBodyTest extends FlowTestCase
             new Body($rows)
         );
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'TABLE'
 |  1 | 1.400000 |
 |  2 | 3.400000 |
@@ -44,7 +46,7 @@ TABLE,
             new Body($rows[0])
         );
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'TABLE'
 |  1 | 1.400000 |     a |
 |  2 | 3.400000 |     a |

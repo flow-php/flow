@@ -103,7 +103,7 @@ final class UnixPathTest extends PathTestCase
         self::assertFalse($path->protocol()->is('file'));
     }
 
-    public function test_shared_basename_operations() : void
+    public function test_basename_operations() : void
     {
         $path = new UnixPath('/path/to/file.txt');
 
@@ -114,7 +114,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/path/to/prefix_file.txt', $prefixed->path());
     }
 
-    public function test_shared_extension_operations() : void
+    public function test_extension_operations() : void
     {
         $path = new UnixPath('/path/to/file.txt');
 
@@ -128,7 +128,7 @@ final class UnixPathTest extends PathTestCase
     /**
      * @dataProvider pathProvider
      */
-    public function test_shared_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
+    public function test_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
     {
         $path = new UnixPath($input);
 
@@ -149,26 +149,23 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals($expected, $result->path());
     }
 
-    public function test_shared_path_manipulation() : void
+    public function test_path_manipulation() : void
     {
         $path = new UnixPath('/path/to/file.txt');
 
-        // Test suffix
         $suffixed = $path->suffix('subdir/newfile.csv');
         self::assertEquals('/path/to/file.txt/subdir/newfile.csv', $suffixed->path());
 
-        // Test parent directory
         $parent = $path->parentDirectory();
         self::assertEquals('/path/to', $parent->path());
 
-        // Test root directory name
         self::assertEquals('path', $path->rootDirectoryName());
     }
 
     /**
      * @dataProvider patternProvider
      */
-    public function test_shared_pattern_logic(string $pattern, string $filename, bool $expected) : void
+    public function test_pattern_logic(string $pattern, string $filename, bool $expected) : void
     {
         $patternPath = new UnixPath($pattern);
         $filePath = new UnixPath($filename);
@@ -176,7 +173,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals($expected, $patternPath->matches($filePath));
     }
 
-    public function test_shared_randomization() : void
+    public function test_randomization() : void
     {
         $path = new UnixPath('/path/to/file.txt');
         $randomized = $path->randomize();
@@ -194,7 +191,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/static/part', $staticPart->path());
     }
 
-    public function test_unix_absolute_path_handling() : void
+    public function test_absolute_path_handling() : void
     {
         $path = new UnixPath('/path/to/file.txt');
 
@@ -205,7 +202,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('txt', $path->extension());
     }
 
-    public function test_unix_current_directory_handling() : void
+    public function test_current_directory_handling() : void
     {
         $path = new UnixPath('./file.txt');
 
@@ -215,19 +212,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/.', $parent->path());
     }
 
-    public function test_unix_home_directory_resolution() : void
-    {
-        if (!getenv('HOME') && !function_exists('posix_getpwuid')) {
-            self::markTestSkipped('Unix home directory resolution not available');
-        }
-
-        $path = UnixPath::realpath('~/test.txt');
-
-        self::assertStringContainsString('test.txt', $path->path());
-        self::assertStringStartsWith('/', $path->path());
-    }
-
-    public function test_unix_relative_path_normalization() : void
+    public function test_relative_path_normalization() : void
     {
         $path = new UnixPath('relative/path/file.txt');
 
@@ -235,9 +220,8 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('file://relative/path/file.txt', $path->uri());
     }
 
-    public function test_unix_root_directory_cases() : void
+    public function test_root_directory_cases() : void
     {
-        // Test various ways to represent root
         $rootCases = ['/', '/file.txt'];
 
         foreach ($rootCases as $case) {
@@ -248,7 +232,7 @@ final class UnixPathTest extends PathTestCase
         }
     }
 
-    public function test_unix_root_partition_handling() : void
+    public function test_root_partition_handling() : void
     {
         $path = new UnixPath('/file.txt');
         $partitioned = $path->addPartitions(partition('group', 'a'));
@@ -257,7 +241,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('file://group=a/file.txt', $partitioned->uri());
     }
 
-    public function test_unix_skip_directories() : void
+    public function test_skip_directories() : void
     {
         $path = new UnixPath('/var/www/index.html');
 
