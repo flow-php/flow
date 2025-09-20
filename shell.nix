@@ -1,6 +1,6 @@
 let
     nixpkgs = fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/88a5945d774ff733c2ecd65247aba714a1731fe7.tar.gz";
+        url = "https://github.com/NixOS/nixpkgs/archive/41239f03433fe534c51a1526bed9214ab2a3582f.tar.gz";
 
     };
 

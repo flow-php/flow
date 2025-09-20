@@ -15,11 +15,11 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     protected function setUp() : void
     {
+        parent::setUp();
+
         if ($this->isUnix()) {
             self::markTestSkipped('Windows-specific tests should only run on Windows');
         }
-
-        parent::setUp();
     }
 
     public function test_file_status_on_pattern_windows() : void

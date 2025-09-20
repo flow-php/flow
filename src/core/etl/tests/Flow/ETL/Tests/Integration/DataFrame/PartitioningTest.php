@@ -21,7 +21,6 @@ use function Flow\ETL\DSL\{collect,
     str_entry};
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\partition;
-use function Flow\Types\DSL\type_string;
 use Flow\ETL\{Rows};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
@@ -78,28 +77,22 @@ final class PartitioningTest extends FlowIntegrationTestCase
 
         $actualData = $partitions->toArray();
 
-        // Normalize file paths to handle Windows vs Unix file URI differences
-        foreach ($actualData as &$item) {
-            $item['path'] = \str_replace('\\', '/', type_string()->assert($item['path']));
-            $item['path'] = \preg_replace('#^file://+#', 'file:/', $item['path']);
-        }
-
         self::assertSame(
             [
                 [
-                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
+                    'path' => 'file://' . ltrim(\str_replace('\\', '/', __DIR__), '/') . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
                     'partitions' => ['date' => '2024-04-01'],
                 ],
                 [
-                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
+                    'path' => 'file://' . ltrim(\str_replace('\\', '/', __DIR__), '/') . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
                     'partitions' => ['date' => '2024-04-02'],
                 ],
                 [
-                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
+                    'path' => 'file://' . ltrim(\str_replace('\\', '/', __DIR__), '/') . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
                     'partitions' => ['date' => '2024-04-03'],
                 ],
                 [
-                    'path' => 'file:/' . \str_replace('\\', '/', __DIR__) . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
+                    'path' => 'file://' . ltrim(\str_replace('\\', '/', __DIR__), '/') . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
                     'partitions' => ['date' => '2024-04-04'],
                 ],
             ],

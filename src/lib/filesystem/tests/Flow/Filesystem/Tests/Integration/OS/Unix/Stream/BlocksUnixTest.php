@@ -15,6 +15,8 @@ final class BlocksUnixTest extends TestCase
 
     protected function setUp() : void
     {
+        parent::setUp();
+
         if ($this->isWindows()) {
             self::markTestSkipped('Unix-specific stream tests should only run on Unix systems');
         }

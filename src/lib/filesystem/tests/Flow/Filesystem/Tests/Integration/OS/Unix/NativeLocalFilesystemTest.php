@@ -19,24 +19,23 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
     protected function setUp() : void
     {
+        parent::setUp();
+
         if ($this->isWindows()) {
             self::markTestSkipped('Unix-specific filesystem tests should only run on Unix systems');
         }
-
-        parent::setUp();
     }
 
     public function test_file_status_on_pattern_unix_uri_format() : void
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(new Path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb'));
 
         self::assertTrue($fs->status(new Path(__DIR__ . '/../var/some_path_to/*.txt'))->isFile());
 
-        // Unix expects file:/ format (single slash after scheme)
         self::assertSame(
-            'file:/' . __DIR__ . '/../var/some_path_to/file.txt',
+            'file://' . ltrim(__DIR__, '/') . '/../var/some_path_to/file.txt',
             $fs->status(new Path(__DIR__ . '/../var/some_path_to/*.txt'))->path->uri()
         );
 
@@ -47,8 +46,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        // Unix expects file:/ format (single slash after scheme)
-        self::assertSame('file:/' . \sys_get_temp_dir(), $fs->getSystemTmpDir()->uri());
+        self::assertSame('file://' . ltrim(\sys_get_temp_dir(), '/'), $fs->getSystemTmpDir()->uri());
     }
 
     public function test_unix_absolute_path_behavior() : void
@@ -61,8 +59,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $path = new Path($tempFile);
         self::assertTrue($fs->status($path)->isFile());
 
-        // Verify Unix path format
-        self::assertStringStartsWith('file:/', $path->uri());
+        self::assertStringStartsWith('file://', $path->uri());
         self::assertStringStartsWith('/', $path->path());
 
         \unlink($tempFile);

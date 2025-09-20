@@ -14,11 +14,11 @@ final class PathTest extends FlowIntegrationTestCase
 
     protected function setUp() : void
     {
+        parent::setUp();
+
         if ($this->isUnix()) {
             self::markTestSkipped('Windows-specific tests should only run on Windows');
         }
-
-        parent::setUp();
     }
 
     public function test_windows_home_directory_resolution() : void

@@ -23,6 +23,8 @@ final class RealpathTest extends TestCase
 
     protected function setup() : void
     {
+        parent::setUp();
+
         if ($this->isWindows()) {
             self::markTestSkipped('Realpath is not supported on Windows');
         }

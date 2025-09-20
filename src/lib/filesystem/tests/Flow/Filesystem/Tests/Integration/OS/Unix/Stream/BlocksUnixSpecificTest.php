@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Filesystem\Tests\Integration\Unix\OS\Stream;
+namespace Flow\Filesystem\Tests\Integration\OS\Unix\Stream;
 
 use Flow\Filesystem\SizeUnits;
 use Flow\Filesystem\Stream\Blocks;
@@ -19,6 +19,8 @@ final class BlocksUnixSpecificTest extends TestCase
 
     protected function setUp() : void
     {
+        parent::setUp();
+
         if ($this->isWindows()) {
             self::markTestSkipped('Unix-specific stream tests should only run on Unix systems');
         }
@@ -28,8 +30,8 @@ final class BlocksUnixSpecificTest extends TestCase
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        $file = \fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/../../Fixtures/orders.csv');
+        $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         $blocks->fromResource($file);
 
@@ -41,8 +43,8 @@ final class BlocksUnixSpecificTest extends TestCase
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        $file = \fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/../../Fixtures/orders.csv');
+        $file = \fopen(__DIR__ . '/../../../Fixtures/orders.csv', 'rb');
+        $fileSize = \filesize(__DIR__ . '/../../../Fixtures/orders.csv');
 
         $blocks->append(\str_repeat('a', 100));
         $blocks->fromResource($file);
