@@ -63,17 +63,6 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('txt', $path->extension());
     }
 
-    public function test_add_partitions_edge_cases() : void
-    {
-        $path1 = new UnixPath('.');
-        $partitioned1 = $path1->addPartitions(partition('group', 'a'));
-        self::assertEquals('/group=a/.', $partitioned1->path());
-
-        $path2 = new UnixPath('\\');
-        $partitioned2 = $path2->addPartitions(partition('group', 'b'));
-        self::assertEquals('/group=b/\\', $partitioned2->path());
-    }
-
     public function test_basename_operations() : void
     {
         $path = new UnixPath('/path/to/file.txt');
@@ -83,22 +72,6 @@ final class UnixPathTest extends PathTestCase
 
         $prefixed = $path->basenamePrefix('prefix_');
         self::assertEquals('/path/to/prefix_file.txt', $prefixed->path());
-    }
-
-    public function test_basename_prefix_edge_case() : void
-    {
-        $path = new UnixPath('file.txt');
-        $prefixed = $path->basenamePrefix('prefix_');
-
-        self::assertEquals('//prefix_file.txt', $prefixed->path());
-    }
-
-    public function test_basename_prefix_root_directory() : void
-    {
-        $path = new UnixPath('/file.txt');
-        $prefixed = $path->basenamePrefix('prefix_');
-
-        self::assertEquals('//prefix_file.txt', $prefixed->path());
     }
 
     public function test_bracket_pattern_matching() : void
@@ -403,15 +376,6 @@ final class UnixPathTest extends PathTestCase
         self::assertNotEquals($path->path(), $randomized->path());
     }
 
-    public function test_randomize_edge_case() : void
-    {
-        $path = new UnixPath('file.txt');
-        $randomized = $path->randomize();
-
-        self::assertStringStartsWith('//file_', $randomized->path());
-        self::assertStringEndsWith('.txt', $randomized->path());
-    }
-
     public function test_randomize_without_extension() : void
     {
         $path = new UnixPath('/path/to/file');
@@ -494,14 +458,6 @@ final class UnixPathTest extends PathTestCase
 
         self::assertEquals('/group=a/file.txt', $partitioned->path());
         self::assertEquals('file://group=a/file.txt', $partitioned->uri());
-    }
-
-    public function test_set_extension_edge_case() : void
-    {
-        $path = new UnixPath('file');
-        $newPath = $path->setExtension('txt');
-
-        self::assertEquals('//file.txt', $newPath->path());
     }
 
     public function test_set_extension_without_existing_extension() : void

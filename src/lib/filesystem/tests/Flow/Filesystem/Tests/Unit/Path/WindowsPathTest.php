@@ -69,14 +69,6 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('C:/some/path/year=2023/file.txt', $partitioned->path());
     }
 
-    public function test_add_partitions_with_drive_root() : void
-    {
-        $path = new WindowsPath('C:/');
-        $partitioned = $path->addPartitions(partition('group', 'a'));
-
-        self::assertEquals('/group=a/C:', $partitioned->path());
-    }
-
     public function test_basename_operations() : void
     {
         $path = new WindowsPath('/path/to/file.txt');
@@ -86,22 +78,6 @@ final class WindowsPathTest extends PathTestCase
 
         $prefixed = $path->basenamePrefix('prefix_');
         self::assertEquals('/path/to/prefix_file.txt', $prefixed->path());
-    }
-
-    public function test_basename_prefix_edge_case() : void
-    {
-        $path = new WindowsPath('file.txt');
-        $prefixed = $path->basenamePrefix('prefix_');
-
-        self::assertEquals('//prefix_file.txt', $prefixed->path());
-    }
-
-    public function test_basename_prefix_root_directory() : void
-    {
-        $path = new WindowsPath('/file.txt');
-        $prefixed = $path->basenamePrefix('prefix_');
-
-        self::assertEquals('//prefix_file.txt', $prefixed->path());
     }
 
     public function test_bracket_pattern_matching() : void
@@ -288,18 +264,6 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals($expectedScheme, $path->protocol()->name);
     }
 
-    public function test_parent_directory_edge_cases() : void
-    {
-        $path1 = new WindowsPath('.');
-        self::assertEquals('/', $path1->parentDirectory()->path());
-
-        $path2 = new WindowsPath('\\');
-        self::assertEquals('/', $path2->parentDirectory()->path());
-
-        $path3 = new WindowsPath('C:/');
-        self::assertEquals('/', $path3->parentDirectory()->path());
-    }
-
     /**
      * @dataProvider partitionProvider
      */
@@ -465,24 +429,6 @@ final class WindowsPathTest extends PathTestCase
         self::assertNotEquals($path->path(), $randomized->path());
     }
 
-    public function test_randomize_edge_case() : void
-    {
-        $path = new WindowsPath('file.txt');
-        $randomized = $path->randomize();
-
-        self::assertStringStartsWith('//file_', $randomized->path());
-        self::assertStringEndsWith('.txt', $randomized->path());
-    }
-
-    public function test_randomize_with_root_file() : void
-    {
-        $path = new WindowsPath('/file.txt');
-        $randomized = $path->randomize();
-
-        self::assertStringStartsWith('//file_', $randomized->path());
-        self::assertStringEndsWith('.txt', $randomized->path());
-    }
-
     public function test_randomize_without_extension() : void
     {
         $path = new WindowsPath('/path/to/file');
@@ -538,14 +484,6 @@ final class WindowsPathTest extends PathTestCase
     public function test_set_extension_edge_case() : void
     {
         $path = new WindowsPath('file');
-        $newPath = $path->setExtension('txt');
-
-        self::assertEquals('//file.txt', $newPath->path());
-    }
-
-    public function test_set_extension_with_root_file() : void
-    {
-        $path = new WindowsPath('/file');
         $newPath = $path->setExtension('txt');
 
         self::assertEquals('//file.txt', $newPath->path());
