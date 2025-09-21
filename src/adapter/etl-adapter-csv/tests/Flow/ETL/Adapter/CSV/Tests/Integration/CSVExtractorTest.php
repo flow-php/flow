@@ -418,7 +418,7 @@ SCHEMA,
     public function test_extracting_csv_with_multiline_strings() : void
     {
         if ($this->isWindows()) {
-            $this->markTestAsSkipped("This test is failing on windows due to different new line characters.");
+            self::markTestSkipped('This test is failing on windows due to different new line characters.');
         }
 
         $extractor = from_csv(

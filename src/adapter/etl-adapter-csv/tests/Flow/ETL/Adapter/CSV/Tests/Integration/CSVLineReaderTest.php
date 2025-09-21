@@ -7,8 +7,8 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
-use Flow\Filesystem\Tests\OperatingSystem;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
+use Flow\Filesystem\Tests\OperatingSystem;
 
 final class CSVLineReaderTest extends FlowTestCase
 {
@@ -53,7 +53,7 @@ final class CSVLineReaderTest extends FlowTestCase
     public function test_reading_csv_with_different_enclosures() : void
     {
         if ($this->isWindows()) {
-            $this->markTestAsSkipped("This test is failing on windows due to different new line characters.");
+            self::markTestSkipped('This test is failing on windows due to different new line characters.');
         }
 
         $path = __DIR__ . '/../Fixtures/single_quotes_csv.csv';
