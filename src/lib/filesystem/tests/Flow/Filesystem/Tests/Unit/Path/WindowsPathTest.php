@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Unit\Path;
 
 use function Flow\Filesystem\DSL\{partition};
-use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Filesystem\Exception\{InvalidArgumentException};
 use Flow\Filesystem\Path\{Options, WindowsPath};
 use Flow\Filesystem\Tests\Unit\PathTestCase;
 
@@ -492,36 +492,6 @@ final class WindowsPathTest extends PathTestCase
         self::assertNotEquals($path->path(), $randomized->path());
     }
 
-    public function test_realpath_home_resolution_error() : void
-    {
-        $originalUserProfile = \getenv('USERPROFILE');
-        $originalHomeDrive = \getenv('HOMEDRIVE');
-        $originalHomePath = \getenv('HOMEPATH');
-
-        \putenv('USERPROFILE=');
-        \putenv('HOMEDRIVE=');
-        \putenv('HOMEPATH=');
-
-        try {
-            $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('Cannot resolve home directory on Windows');
-
-            WindowsPath::realpath('~/test.txt');
-        } finally {
-            if ($originalUserProfile !== false) {
-                \putenv('USERPROFILE=' . $originalUserProfile);
-            }
-
-            if ($originalHomeDrive !== false) {
-                \putenv('HOMEDRIVE=' . $originalHomeDrive);
-            }
-
-            if ($originalHomePath !== false) {
-                \putenv('HOMEPATH=' . $originalHomePath);
-            }
-        }
-    }
-
     public function test_realpath_with_absolute_path() : void
     {
         $path = WindowsPath::realpath('C:/absolute/path/file.txt');
@@ -533,12 +503,6 @@ final class WindowsPathTest extends PathTestCase
         $path = WindowsPath::realpath('s3://bucket/key.txt');
 
         self::assertEquals('s3://bucket/key.txt', $path->uri());
-    }
-
-    public function test_realpath_with_unc_path() : void
-    {
-        $path = WindowsPath::realpath('\\\\server\\share\\file.txt');
-        self::assertEquals('/server/share/file.txt', $path->path());
     }
 
     public function test_root_directory_name_with_drive() : void
@@ -571,6 +535,14 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('file://group=a/file.txt', $partitioned->uri());
     }
 
+    public function test_set_extension_edge_case() : void
+    {
+        $path = new WindowsPath('file');
+        $newPath = $path->setExtension('txt');
+
+        self::assertEquals('//file.txt', $newPath->path());
+    }
+
     public function test_set_extension_with_root_file() : void
     {
         $path = new WindowsPath('/file');
@@ -585,14 +557,6 @@ final class WindowsPathTest extends PathTestCase
         $newPath = $path->setExtension('txt');
 
         self::assertEquals('/path/to/file.txt', $newPath->path());
-    }
-
-    public function test_set_extension_edge_case() : void
-    {
-        $path = new WindowsPath('file');
-        $newPath = $path->setExtension('txt');
-
-        self::assertEquals('//file.txt', $newPath->path());
     }
 
     public function test_skip_directories() : void

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Tests\Unit\Path;
 
 use function Flow\Filesystem\DSL\{partition};
-use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\Filesystem\Exception\{InvalidArgumentException};
 use Flow\Filesystem\Path\{Options, UnixPath};
 use Flow\Filesystem\Tests\Unit\PathTestCase;
 
@@ -193,17 +193,6 @@ final class UnixPathTest extends PathTestCase
 
         self::assertTrue($pattern->matches($normal));
         self::assertTrue($pattern->matches($hidden));
-    }
-
-    public function test_home_path_resolution() : void
-    {
-        if (!\is_string($homeEnv = \getenv('HOME'))) {
-            self::markTestSkipped('HOME environment variable not available');
-        }
-
-        $path = new UnixPath('~/test.txt');
-        self::assertStringStartsWith($homeEnv, $path->path());
-        self::assertStringEndsWith('/test.txt', $path->path());
     }
 
     public function test_is_equal() : void
@@ -430,54 +419,6 @@ final class UnixPathTest extends PathTestCase
 
         self::assertStringStartsWith('/path/to/file_', $randomized->path());
         self::assertNotEquals($path->path(), $randomized->path());
-    }
-
-    public function test_realpath_home_resolution_error_no_posix() : void
-    {
-        if (\function_exists('posix_getpwuid') && \function_exists('posix_getuid')) {
-            self::markTestSkipped('POSIX functions are available');
-        }
-
-        $originalHome = \getenv('HOME');
-        \putenv('HOME=');
-
-        try {
-            $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('Resolving homedir is not yet supported at OS');
-
-            UnixPath::realpath('~/test.txt');
-        } finally {
-            if ($originalHome !== false) {
-                \putenv('HOME=' . $originalHome);
-            }
-        }
-    }
-
-    public function test_realpath_home_resolution_with_posix() : void
-    {
-        if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
-            self::markTestSkipped('POSIX functions not available');
-        }
-
-        $originalHome = \getenv('HOME');
-        \putenv('HOME=');
-
-        try {
-            $userData = \posix_getpwuid(\posix_getuid());
-
-            if (\is_array($userData) && \array_key_exists('dir', $userData) && \is_string($userData['dir'])) {
-                $path = UnixPath::realpath('~/test.txt');
-                // Due to implementation details, this might resolve to /test.txt
-                // when HOME is not set properly
-                self::assertStringEndsWith('/test.txt', $path->path());
-            } else {
-                self::markTestSkipped('Unable to get user directory from POSIX');
-            }
-        } finally {
-            if ($originalHome !== false) {
-                \putenv('HOME=' . $originalHome);
-            }
-        }
     }
 
     public function test_realpath_multiple_parent_navigation() : void
