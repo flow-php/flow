@@ -93,3 +93,15 @@ function empty_generator() : \Generator
 {
     yield from [];
 }
+
+#[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
+function schema_to_parquet(Schema $schema) : \Flow\Parquet\ParquetFile\Schema
+{
+    return (new SchemaConverter())->toParquet($schema);
+}
+
+#[DocumentationDSL(module: Module::PARQUET, type: DSLType::HELPER)]
+function schema_from_parquet(\Flow\Parquet\ParquetFile\Schema $schema) : Schema
+{
+    return (new SchemaConverter())->toFlow($schema);
+}
