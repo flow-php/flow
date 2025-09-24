@@ -145,12 +145,13 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
      */
     private function extractRows(SourceStream $stream, array $headers, int $offset) : \Generator
     {
+        $reader = $this->reader($stream);
+
         try {
-            $this->reader()->open($stream->path()->path());
+            $reader->open($stream->path()->path());
 
-            $manager = new SheetsManager($this->reader()->getSheetIterator());
+            $manager = new SheetsManager($reader->getSheetIterator());
 
-            $rows = [];
             $previousRowDataCount = 0;
 
             $sheet = $this->sheetName ? $manager->get($this->sheetName) : $manager->first();
@@ -183,20 +184,49 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
                 }
             }
 
-            $this->reader()->close();
+            $reader->close();
         } catch (\Throwable $e) {
             throw new InvalidArgumentException('Failed to open file: ' . $e->getMessage(), previous: $e);
         }
     }
 
-    private function reader() : XlsxReader|OdsReader
+    private function reader(SourceStream $stream) : XlsxReader|OdsReader
     {
         if (null === $this->reader) {
-            $this->reader = match ($this->path->extension()) {
+            $this->reader = match ($stream->path()->extension()) {
                 'xlsx' => new XlsxReader(),
                 'ods' => new OdsReader(),
-                default => throw new InvalidArgumentException('Unsupported file extension: ' . ($this->path->extension() ?: 'n/a')),
+                default => null,
             };
+
+            if (null === $this->reader) {
+                $line = $stream->read(8, 0);
+
+                // XLS signature: D0 CF 11 E0 A1 B1 1A E1
+                if (\str_starts_with($line, "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")) {
+                    return $this->reader = new XlsxReader();
+                }
+
+                // ZIP signature: 50 4B 03 04
+                if (\str_starts_with($line, "\x50\x4B\x03\x04")) {
+                    $zip = new \ZipArchive();
+
+                    if ($zip->open($stream->path()->path())) {
+                        $mimetype = $zip->getFromName('mimetype');
+                        $zip->close();
+
+                        $this->reader = match ($mimetype) {
+                            'application/vnd.oasis.opendocument.spreadsheet' => new OdsReader(),
+                            // Other zip-based file formats
+                            default => new XlsxReader(),
+                        };
+                    }
+                }
+            }
+
+            if (!$this->reader) {
+                throw new InvalidArgumentException('Unsupported file format: ' . ($this->path->extension() ?: 'n/a'));
+            }
         }
 
         return $this->reader;

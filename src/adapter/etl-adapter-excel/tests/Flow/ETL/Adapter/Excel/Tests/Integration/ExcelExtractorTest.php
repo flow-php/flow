@@ -22,6 +22,8 @@ final class ExcelExtractorTest extends FlowTestCase
     {
         yield 'ods' => [__DIR__ . '/../Fixtures/fixture.ods'];
         yield 'xlsx' => [__DIR__ . '/../Fixtures/fixture.xlsx'];
+        yield 'alike ods' => [__DIR__ . '/../Fixtures/fixture_as_ods'];
+        yield 'alike xlsx' => [__DIR__ . '/../Fixtures/fixture_as_xlsx'];
     }
 
     /**
@@ -194,6 +196,16 @@ final class ExcelExtractorTest extends FlowTestCase
         }
 
         self::assertSame(5, $total);
+    }
+
+    public function test_extract_with_unknown_file() : void
+    {
+        $extractor = from_excel(__DIR__ . '/../Fixtures/empty_file');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported file format: n/a');
+
+        iterator_to_array($extractor->extract(flow_context(config())));
     }
 
     public function test_extract_with_wrongly_selected_reader() : void
