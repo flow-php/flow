@@ -9,8 +9,8 @@ use Flow\ETL\{Adapter\Excel\Sheet\SheetNameAssertion,
     Adapter\Excel\Sheet\SheetsManager,
     Exception\InvalidArgumentException,
     Extractor,
-    FlowContext
-};
+    FlowContext,
+    Schema};
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\Filesystem\{Path, SourceStream};
 use OpenSpout\Common\Entity\{Cell, Row};
@@ -27,6 +27,8 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
     private ?int $offset = null;
 
     private XlsxReader|OdsReader|null $reader = null;
+
+    private ?Schema $schema = null;
 
     private ?string $sheetName = null;
 
@@ -57,8 +59,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             foreach ($this->extractRows($stream, $headers, $offset) as $row) {
                 // Ensure $row is an array before passing to array_to_rows
-                $rowArray = \is_array($row) ? $row : [];
-                $signal = yield array_to_rows($rowArray, $context->entryFactory(), $stream->path()->partitions());
+                $signal = yield array_to_rows(\is_array($row) ? $row : [], $context->entryFactory(), $stream->path()->partitions(), schema: $this->schema);
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
@@ -108,6 +109,13 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             ExcelReader::XLSX => new XlsxReader(),
             ExcelReader::ODS => new OdsReader(),
         };
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
 
         return $this;
     }
