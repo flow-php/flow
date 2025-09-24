@@ -267,7 +267,7 @@ class CompactProtocol
     public function readByte(&$byte) : int
     {
         $data = $this->transport->read(1);
-        $readByte = ord($data);
+        $readByte = ord($data[0]);
         $byte = $readByte > 127 ? $readByte - 256 : $readByte;
 
         return 1;
@@ -377,7 +377,7 @@ class CompactProtocol
 
         while (true) {
             $x = $this->transport->read(1);
-            $byte = ord($x);
+            $byte = ord($x[0]);
             $idx++;
 
             // Shift hi and lo together.
@@ -548,7 +548,7 @@ class CompactProtocol
     public function readUByte(&$value) : int
     {
         $data = $this->transport->read(1);
-        $value = ord($data);
+        $value = ord($data[0]);
 
         return 1;
     }
@@ -561,7 +561,7 @@ class CompactProtocol
 
         while (true) {
             $x = $this->transport->read(1);
-            $byte = ord($x);
+            $byte = ord($x[0]);
             $idx++;
             $result |= ($byte & 0x7F) << $shift;
 

@@ -60,11 +60,8 @@ final class ParquetFile
          */
         $metadataLength = \unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8))[1];
 
-        print 'Metadata size in Mb: ' . number_format($metadataLength / 1024 / 1024, 2) . "\n";
-
         $metadata = $this->stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 
-        $start = hrtime(true);
         $thriftMetadata = new FileMetaData();
         $thriftMetadata->read(
             new CompactProtocol(
@@ -72,16 +69,7 @@ final class ParquetFile
             )
         );
 
-        $end = hrtime(true);
-
-        print 'Metadata parsing time: ' . number_format(($end - $start) / 1000000000, 6) . "s\n";
-
-        $start = hrtime(true);
-
         $this->metadata = Metadata::fromThrift($thriftMetadata, $this->options);
-        $end = hrtime(true);
-
-        print 'Metadata creation time: ' . number_format(($end - $start) / 1000000000, 6) . "s\n";
 
         return $this->metadata;
     }

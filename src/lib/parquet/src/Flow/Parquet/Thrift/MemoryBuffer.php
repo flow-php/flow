@@ -16,6 +16,8 @@ class MemoryBuffer implements Transport
 {
     private int $length;
 
+    private int $position = 0;
+
     /**
      * Constructor. Optionally pass an initial value
      * for the buffer.
@@ -27,7 +29,7 @@ class MemoryBuffer implements Transport
 
     public function available() : int
     {
-        return $this->length;
+        return $this->length - $this->position;
     }
 
     public function close() : void
@@ -45,9 +47,9 @@ class MemoryBuffer implements Transport
 
     public function read(int $len) : string
     {
-        $bufLength = $this->length;
+        $availableBytes = $this->length - $this->position;
 
-        if ($bufLength === 0) {
+        if ($availableBytes === 0) {
             throw new TTransportException(
                 'TMemoryBuffer: Could not read ' .
                 $len . ' bytes from buffer.',
@@ -55,17 +57,15 @@ class MemoryBuffer implements Transport
             );
         }
 
-        if ($bufLength <= $len) {
-            $ret = $this->buf_;
-            $this->buf_ = '';
-            $this->length = 0;
+        if ($availableBytes <= $len) {
+            $ret = substr($this->buf_, $this->position);
+            $this->position = $this->length;
 
             return $ret;
         }
 
-        $ret = substr($this->buf_, 0, $len);
-        $this->buf_ = substr($this->buf_, $len);
-        $this->length -= $len;
+        $ret = substr($this->buf_, $this->position, $len);
+        $this->position += $len;
 
         return $ret;
     }
