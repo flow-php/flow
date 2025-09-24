@@ -225,7 +225,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
             }
 
             if (!$this->reader) {
-                throw new InvalidArgumentException('Unsupported file format: ' . ($this->path->extension() ?: 'n/a'));
+                throw new InvalidArgumentException('Unsupported file format: ' . ($stream->path()->extension() ?: 'n/a'));
             }
         }
 
