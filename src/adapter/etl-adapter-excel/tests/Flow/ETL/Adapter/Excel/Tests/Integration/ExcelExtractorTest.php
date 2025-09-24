@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
-use function Flow\ETL\DSL\{config, df, flow_context};
+use function Flow\ETL\DSL\{config, df, flow_context, int_schema, schema, string_schema};
 use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\{Extractor\Signal, Row, Rows};
+use Flow\ETL\{Extractor\Signal, Rows};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\{Partition, Path};
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -76,8 +76,8 @@ final class ExcelExtractorTest extends FlowTestCase
         self::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            $this->assertSame(['id', 'name', 'email'], \array_keys($row));
-            $this->assertCount(3, $row);
+            self::assertSame(['id', 'name', 'email'], \array_keys($row));
+            self::assertCount(3, $row);
         }
     }
 
@@ -95,8 +95,8 @@ final class ExcelExtractorTest extends FlowTestCase
         self::assertCount(7, $rows);
 
         foreach ($rows as $row) {
-            $this->assertSame(['id', 'name', 'email'], \array_keys($row));
-            $this->assertCount(3, $row);
+            self::assertSame(['id', 'name', 'email'], \array_keys($row));
+            self::assertCount(3, $row);
         }
     }
 
@@ -115,8 +115,8 @@ final class ExcelExtractorTest extends FlowTestCase
         self::assertCount(6, $rows);
 
         foreach ($rows as $row) {
-            $this->assertSame(['e00', 'e01', 'e02'], \array_keys($row));
-            $this->assertCount(3, $row);
+            self::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
+            self::assertCount(3, $row);
         }
     }
 
@@ -134,8 +134,8 @@ final class ExcelExtractorTest extends FlowTestCase
         self::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            $this->assertSame(['id', 'name', 'email'], \array_keys($row));
-            $this->assertCount(3, $row);
+            self::assertSame(['id', 'name', 'email'], \array_keys($row));
+            self::assertCount(3, $row);
         }
     }
 
@@ -168,8 +168,8 @@ final class ExcelExtractorTest extends FlowTestCase
         self::assertCount(10, $rows);
 
         foreach ($rows as $row) {
-            $this->assertSame(['e00', 'e01', 'e02'], \array_keys($row));
-            $this->assertCount(3, $row);
+            self::assertSame(['e00', 'e01', 'e02'], \array_keys($row));
+            self::assertCount(3, $row);
         }
     }
 
@@ -184,8 +184,32 @@ final class ExcelExtractorTest extends FlowTestCase
         self::assertCount(5, $rows);
 
         foreach ($rows as $row) {
-            $this->assertSame(['id', 'name', 'email'], \array_keys($row));
-            $this->assertCount(3, $row);
+            self::assertSame(['id', 'name', 'email'], \array_keys($row));
+            self::assertCount(3, $row);
+        }
+    }
+
+    #[DataProvider('provide_fixtures')]
+    public function test_extract_excel_puts_null_in_not_matching_schema_rows(string $fixtureName) : void
+    {
+        $rows = df()
+            ->extract(
+                from_excel($fixtureName)
+                    ->withSchema(
+                        schema(
+                            int_schema('id'),
+                            string_schema('name'),
+                            string_schema('email'),
+                            string_schema('missing'),
+                        )
+                    )
+            )
+            ->fetch()
+            ->toArray();
+
+        foreach ($rows as $row) {
+            self::assertNotSame([], $row);
+            self::assertNull($row['missing']);
         }
     }
 
