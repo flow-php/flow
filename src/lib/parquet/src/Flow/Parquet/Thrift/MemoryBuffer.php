@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\Thrift;
 
 use Thrift\Exception\TTransportException;
-use Thrift\Factory\TStringFuncFactory;
 use Thrift\Transport\TTransport;
 
 /**
@@ -13,43 +12,52 @@ use Thrift\Transport\TTransport;
  * in-memory string buffer. Anytime you call write on it, the data is simply
  * placed into a buffer, and anytime you call read, data is read from that
  * buffer.
- *
- * @package thrift.transport
  */
 class MemoryBuffer extends TTransport
 {
+    private int $length;
+
     /**
      * Constructor. Optionally pass an initial value
      * for the buffer.
      */
-    public function __construct($buf = '')
+    public function __construct(protected string $buf_ = '')
     {
-        $this->buf_ = $buf;
+        $this->length = \strlen($this->buf_);
     }
 
-    protected $buf_ = '';
+    public function available() : int
+    {
+        return $this->length;
+    }
 
-    public function isOpen()
+    public function close() : void
+    {
+    }
+
+    public function getBuffer() : string
+    {
+        return $this->buf_;
+    }
+
+    public function isOpen() : bool
     {
         return true;
     }
 
-    public function open()
+    public function open() : void
     {
     }
 
-    public function close()
+    public function putBack($data) : void
     {
+        $this->buf_ = $data . $this->buf_;
+        $this->length += \strlen((string) $data);
     }
 
-    public function write($buf)
+    public function read($len) : string
     {
-        $this->buf_ .= $buf;
-    }
-
-    public function read($len)
-    {
-        $bufLength = TStringFuncFactory::create()->strlen($this->buf_);
+        $bufLength = $this->length;
 
         if ($bufLength === 0) {
             throw new TTransportException(
@@ -62,28 +70,21 @@ class MemoryBuffer extends TTransport
         if ($bufLength <= $len) {
             $ret = $this->buf_;
             $this->buf_ = '';
+            $this->length = 0;
 
             return $ret;
         }
 
-        $ret = TStringFuncFactory::create()->substr($this->buf_, 0, $len);
-        $this->buf_ = TStringFuncFactory::create()->substr($this->buf_, $len);
+        $ret = substr($this->buf_, 0, $len);
+        $this->buf_ = substr($this->buf_, $len);
+        $this->length -= $len;
 
         return $ret;
     }
 
-    public function getBuffer()
+    public function write($buf) : void
     {
-        return $this->buf_;
-    }
-
-    public function available()
-    {
-        return TStringFuncFactory::create()->strlen($this->buf_);
-    }
-
-    public function putBack($data)
-    {
-        $this->buf_ = $data . $this->buf_;
+        $this->buf_ .= $buf;
+        $this->length += \strlen($buf);
     }
 }
