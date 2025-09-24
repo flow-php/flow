@@ -440,6 +440,40 @@ final class NestedColumnChunkBuilderTest extends TestCase
         self::assertSame($expectedThirdOffset, $thirdOffset);
     }
 
+    public function test_flush_cleans_up_child_builder_state() : void
+    {
+        $compression = Compressions::UNCOMPRESSED;
+        $childColumn = new FlatColumn('child', PhysicalType::INT32);
+        $nestedColumn = NestedColumn::create('nested', [$childColumn]);
+        $options = new Options();
+
+        $childBuilder = new PlainFlatColumnChunkBuilder($childColumn, $options, $compression);
+        $builder = new NestedColumnChunkBuilder($nestedColumn, [$childBuilder]);
+
+        $columnData = WriteColumnData::initialize($nestedColumn);
+        $flatValue1 = new FlatValue($childColumn, 0, 1, 42);
+        $flatValue2 = new FlatValue($childColumn, 0, 1, 84);
+        $columnData->addValue($flatValue1, $flatValue2);
+        $builder->addRow($columnData);
+
+        self::assertFalse($childBuilder->isEmpty());
+        self::assertGreaterThan(0, $childBuilder->uncompressedSize());
+
+        $containers = $builder->flush(0);
+        self::assertCount(1, $containers);
+
+        self::assertTrue($childBuilder->isEmpty());
+        self::assertEquals(0, $childBuilder->uncompressedSize());
+
+        $columnData2 = WriteColumnData::initialize($nestedColumn);
+        $flatValue3 = new FlatValue($childColumn, 0, 1, 126);
+        $columnData2->addValue($flatValue3);
+        $builder->addRow($columnData2);
+
+        self::assertFalse($childBuilder->isEmpty());
+        self::assertGreaterThan(0, $childBuilder->uncompressedSize());
+    }
+
     public function test_flush_with_different_file_offsets() : void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);

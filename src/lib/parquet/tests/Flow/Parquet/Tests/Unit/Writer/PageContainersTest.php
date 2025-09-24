@@ -120,41 +120,51 @@ final class PageContainersTest extends TestCase
     public function test_buffer_with_data_pages_only() : void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, headerBuffer: 'header1', pageBuffer: 'data1');
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, headerBuffer: 'header2', pageBuffer: 'data2');
+        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
+        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, pageBuffer: 'data2');
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
 
         $buffer = $containers->buffer();
 
-        self::assertSame('header1data1header2data2', $buffer);
+        // Check that buffer contains both data pages in correct order
+        self::assertStringContainsString('data1', $buffer);
+        self::assertStringContainsString('data2', $buffer);
+        self::assertGreaterThan(strlen('data1data2'), strlen($buffer)); // Headers add to length
     }
 
     public function test_buffer_with_dictionary_and_data_pages() : void
     {
         $containers = new PageContainers();
-        $dataContainer = $this->createDataPageContainer(valuesCount: 10, headerBuffer: 'dataheader', pageBuffer: 'datadata');
-        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5, headerBuffer: 'dictheader', pageBuffer: 'dictdata');
+        $dataContainer = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'datadata');
+        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5, pageBuffer: 'dictdata');
 
         $containers->add($dataContainer);
         $containers->add($dictionaryContainer);
 
         $buffer = $containers->buffer();
 
-        self::assertSame('dictheaderdictdatadataheaderdatadata', $buffer);
+        // Check that buffer contains dictionary page first, then data page
+        self::assertStringContainsString('dictdata', $buffer);
+        self::assertStringContainsString('datadata', $buffer);
+        $dictPos = strpos($buffer, 'dictdata');
+        $dataPos = strpos($buffer, 'datadata');
+        self::assertLessThan($dataPos, $dictPos); // Dictionary comes before data
     }
 
     public function test_buffer_with_dictionary_page_only() : void
     {
         $containers = new PageContainers();
-        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5, headerBuffer: 'header', pageBuffer: 'data');
+        $dictionaryContainer = $this->createDictionaryPageContainer(valuesCount: 5, pageBuffer: 'data');
 
         $containers->add($dictionaryContainer);
 
         $buffer = $containers->buffer();
 
-        self::assertSame('headerdata', $buffer);
+        // Check that buffer contains the dictionary data
+        self::assertStringContainsString('data', $buffer);
+        self::assertGreaterThan(strlen('data'), strlen($buffer)); // Header adds to length
     }
 
     public function test_buffer_with_empty_containers() : void
@@ -169,8 +179,8 @@ final class PageContainersTest extends TestCase
     public function test_compressed_size_with_data_pages_only() : void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, headerBuffer: 'header1', pageBuffer: 'data1');
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, headerBuffer: 'header2', pageBuffer: 'data2');
+        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
+        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, pageBuffer: 'data2');
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -354,8 +364,8 @@ final class PageContainersTest extends TestCase
     public function test_uncompressed_size_with_data_pages_only() : void
     {
         $containers = new PageContainers();
-        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, headerBuffer: 'header1', pageBuffer: 'data1');
-        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, headerBuffer: 'header2', pageBuffer: 'data2');
+        $pageContainer1 = $this->createDataPageContainer(valuesCount: 10, pageBuffer: 'data1');
+        $pageContainer2 = $this->createDataPageContainer(valuesCount: 20, pageBuffer: 'data2');
 
         $containers->add($pageContainer1);
         $containers->add($pageContainer2);
@@ -484,7 +494,6 @@ final class PageContainersTest extends TestCase
 
     private function createDataPageContainer(
         int $valuesCount = 10,
-        string $headerBuffer = 'header',
         string $pageBuffer = 'pagedata',
         Encodings $encoding = Encodings::PLAIN,
     ) : PageContainer {
@@ -505,17 +514,13 @@ final class PageContainersTest extends TestCase
         );
 
         return new PageContainer(
-            $headerBuffer,
             $pageBuffer,
-            [],
-            null,
             $pageHeader
         );
     }
 
     private function createDataPageV2Container(
         int $valuesCount = 10,
-        string $headerBuffer = 'header',
         string $pageBuffer = 'pagedata',
         Encodings $encoding = Encodings::PLAIN,
     ) : PageContainer {
@@ -540,17 +545,13 @@ final class PageContainersTest extends TestCase
         );
 
         return new PageContainer(
-            $headerBuffer,
             $pageBuffer,
-            [],
-            null,
             $pageHeader
         );
     }
 
     private function createDictionaryPageContainer(
         int $valuesCount = 5,
-        string $headerBuffer = 'dictheader',
         string $pageBuffer = 'dictdata',
         Encodings $encoding = Encodings::RLE_DICTIONARY,
     ) : PageContainer {
@@ -569,10 +570,7 @@ final class PageContainersTest extends TestCase
         );
 
         return new PageContainer(
-            $headerBuffer,
             $pageBuffer,
-            [],
-            ['value1', 'value2', 'value3', 'value4', 'value5'],
             $pageHeader
         );
     }

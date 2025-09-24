@@ -32,7 +32,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
 
         self::assertCount(1, $containers);
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        self::assertEquals(0, $builder->uncompressedSize());
 
         $container = $containers[0];
         self::assertNotEmpty($container->binaryBuffer);
@@ -57,7 +57,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
 
         self::assertCount(1, $containers);
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        self::assertEquals(0, $builder->uncompressedSize());
 
         $container = $containers[0];
         self::assertNotEmpty($container->binaryBuffer);
@@ -83,7 +83,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         $containers = $builder->flush(0);
 
         self::assertCount(1, $containers);
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        self::assertEquals(0, $builder->uncompressedSize());
 
         $container = $containers[0];
         self::assertNotEmpty($container->binaryBuffer);
@@ -111,7 +111,7 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         self::assertCount(1, $containers);
 
         $uncompressedSize = $builder->uncompressedSize();
-        self::assertGreaterThan(0, $uncompressedSize);
+        self::assertEquals(0, $uncompressedSize);
 
         $container = $containers[0];
         self::assertNotEmpty($container->binaryBuffer);

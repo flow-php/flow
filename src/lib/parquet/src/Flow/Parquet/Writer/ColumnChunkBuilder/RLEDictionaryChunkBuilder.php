@@ -28,7 +28,6 @@ use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Dict
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
-use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 use Flow\Parquet\Writer\PageBuilder\{Dictionary, DictionaryBuilder};
 use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
 
@@ -96,6 +95,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     public function closePage() : void
     {
+        if ($this->isEmpty()) {
+            return;
+        }
+
         $codec = new Codec($this->options);
 
         if (\count($this->pageValues) > 0) {
@@ -138,11 +141,9 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        if (\count($this->pageValues) > 0 || \count($this->definitionLevels) > 0) {
-            $this->closePage();
-        }
+        $this->closePage();
 
-        $contaiers = [new ColumnChunkContainer(
+        $containers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
                 type: $this->column->type(),
@@ -161,9 +162,29 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             )
         )];
 
+        // Reset all state after flush
         $this->pages = new PageContainers();
+        $this->chunkStatistics = new StatisticsCounter($this->column);
+        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->definitionLevels = [];
+        $this->repetitionLevels = [];
+        $this->pageValues = [];
+        $this->dictionary = null;
+        $this->rowsCount = 0;
+        $this->nullCount = 0;
 
-        return $contaiers;
+        return $containers;
+    }
+
+    /**
+     * Checks if the builder has any data that needs to be written.
+     * Used to prevent writing empty pages.
+     */
+    public function isEmpty() : bool
+    {
+        return count($this->pageValues) === 0
+               && count($this->definitionLevels) === 0
+               && count($this->repetitionLevels) === 0;
     }
 
     public function isFull() : bool
@@ -211,13 +232,9 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->data(),
             $compressedBuffer,
-            $this->dictionary->indices ?? [],
-            $this->dictionary->dictionary ?? [],
             $pageHeader
         );
     }
@@ -270,13 +287,9 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             ),
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->data(),
             $repetitionsBuffer . $definitionsBuffer . $compressedBuffer,
-            $this->dictionary->indices ?? [],
-            $this->dictionary->dictionary ?? [],
             $pageHeader
         );
     }
@@ -304,13 +317,9 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 \count($this->dictionary->dictionary)
             ),
         );
-        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->data(),
             $compressedBuffer,
-            $this->dictionary->indices,
-            $this->dictionary->dictionary,
             $pageHeader
         );
     }
