@@ -7,7 +7,7 @@ namespace Flow\Parquet\Thrift;
 use Thrift\Exception\TTransportException;
 
 /**
- * A memory buffer is a tranpsort that simply reads from and writes to an
+ * A memory buffer is a transport that simply reads from and writes to an
  * in-memory string buffer. Anytime you call write on it, the data is simply
  * placed into a buffer, and anytime you call read, data is read from that
  * buffer.
@@ -22,9 +22,9 @@ class MemoryBuffer implements Transport
      * Constructor. Optionally pass an initial value
      * for the buffer.
      */
-    public function __construct(protected string $buf_ = '')
+    public function __construct(protected string $data = '')
     {
-        $this->length = \strlen($this->buf_);
+        $this->length = \strlen($this->data);
     }
 
     public function available() : int
@@ -34,6 +34,11 @@ class MemoryBuffer implements Transport
 
     public function close() : void
     {
+    }
+
+    public function data() : string
+    {
+        return $this->data;
     }
 
     public function isOpen() : bool
@@ -50,21 +55,17 @@ class MemoryBuffer implements Transport
         $availableBytes = $this->length - $this->position;
 
         if ($availableBytes === 0) {
-            throw new TTransportException(
-                'TMemoryBuffer: Could not read ' .
-                $len . ' bytes from buffer.',
-                TTransportException::UNKNOWN
-            );
+            throw new TTransportException('TMemoryBuffer: Could not read ' . $len . ' bytes from buffer.');
         }
 
         if ($availableBytes <= $len) {
-            $ret = substr($this->buf_, $this->position);
+            $ret = substr($this->data, $this->position);
             $this->position = $this->length;
 
             return $ret;
         }
 
-        $ret = substr($this->buf_, $this->position, $len);
+        $ret = substr($this->data, $this->position, $len);
         $this->position += $len;
 
         return $ret;
@@ -72,7 +73,7 @@ class MemoryBuffer implements Transport
 
     public function write(string $buf) : void
     {
-        $this->buf_ .= $buf;
+        $this->data .= $buf;
         $this->length += \strlen($buf);
     }
 }

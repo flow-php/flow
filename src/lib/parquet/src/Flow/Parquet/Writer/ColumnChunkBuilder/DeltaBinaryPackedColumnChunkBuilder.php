@@ -27,10 +27,9 @@ use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, PhysicalType};
+use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 use Flow\Parquet\Writer\PageBuilder\{RLEBitPackedPacker};
 use Flow\Parquet\Writer\ValueStorage\{DeltaBinaryPackedValueStorage, ValueStorage};
-use Thrift\Protocol\TCompactProtocol;
-use Thrift\Transport\TMemoryBuffer;
 
 final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 {
@@ -127,9 +126,9 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        if (!$this->valueStorage->isEmpty() || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
-            $this->closePage();
-        }
+        //        if (!$this->valueStorage->isEmpty() || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
+        $this->closePage();
+        //        }
 
         return [new ColumnChunkContainer(
             $this->pages->buffer(),
@@ -194,10 +193,10 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
+        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
+            $pageHeaderBuffer->data(),
             $compressedBuffer,
             [],
             null,
@@ -247,10 +246,10 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
             ),
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
+        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
+            $pageHeaderBuffer->data(),
             $repetitionsBuffer . $definitionsBuffer . $compressedBuffer,
             [],
             null,

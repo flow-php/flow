@@ -41,6 +41,6 @@ final readonly class PageContainer
 
     public function totalUncompressedSize() : int
     {
-        return $this->headerSize() + $this->pageHeader->uncompressedPageSize();
+        return $this->headerSize() + $this->dataSize();
     }
 }

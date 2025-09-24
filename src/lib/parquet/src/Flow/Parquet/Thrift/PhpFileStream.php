@@ -60,7 +60,7 @@ final class PhpFileStream implements Transport
         $data = @\fread($this->stream, $len);
 
         if ($data === false || $data === '') {
-            throw new TTransportException('TPhpStream: Could not read ' . $len . ' bytes');
+            throw new TTransportException('PhpStream: Could not read ' . $len . ' bytes');
         }
 
         return $data;
@@ -72,9 +72,7 @@ final class PhpFileStream implements Transport
             $got = @\fwrite($this->stream, $buf);
 
             if ($got === 0 || $got === false) {
-                throw new TTransportException(
-                    'TPhpStream: Could not write ' . \strlen($buf) . ' bytes'
-                );
+                throw new TTransportException('PhpStream: Could not write ' . \strlen($buf) . ' bytes');
             }
 
             $buf = \substr($buf, $got);

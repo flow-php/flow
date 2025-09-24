@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use function Flow\ETL\DSL\{array_to_rows, datetime_schema, float_schema, list_schema, schema, string_schema, structure_schema, uuid_schema};
+use function Flow\ETL\DSL\{array_to_rows,
+    datetime_schema,
+    float_schema,
+    integer_schema,
+    list_schema,
+    schema,
+    string_schema,
+    structure_schema,
+    uuid_schema};
 use function Flow\Types\DSL\{type_float, type_integer, type_list, type_string, type_structure};
 use Flow\ETL\{Extractor, FlowContext, Schema};
 
@@ -17,6 +25,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
     public static function schema() : Schema
     {
         return schema(
+            integer_schema('index'),
             uuid_schema('order_id'),
             datetime_schema('created_at'),
             datetime_schema('updated_at', true),
@@ -65,6 +74,7 @@ final readonly class FakeStaticOrdersExtractor implements Extractor
 
         for ($i = 0; $i < $this->count; $i++) {
             yield [
+                'index' => $i,
                 'order_id' => '254d61c5-22c8-4407-83a2-76f1cab53af2',
                 'created_at' => new \DateTimeImmutable('2025-01-01 12:00:00'),
                 'updated_at' => \random_int(0, 1) === 1 ? new \DateTimeImmutable('2025-01-01 12:10:00') : null,

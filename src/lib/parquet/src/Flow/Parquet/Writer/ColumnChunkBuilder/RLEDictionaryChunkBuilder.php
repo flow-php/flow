@@ -28,10 +28,9 @@ use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Dict
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
+use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 use Flow\Parquet\Writer\PageBuilder\{Dictionary, DictionaryBuilder};
 use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
-use Thrift\Protocol\TCompactProtocol;
-use Thrift\Transport\TMemoryBuffer;
 
 final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 {
@@ -46,7 +45,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
 
     private int $nullCount = 0;
 
-    private readonly PageContainers $pages;
+    private PageContainers $pages;
 
     private StatisticsCounter $pageStatistics;
 
@@ -143,7 +142,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             $this->closePage();
         }
 
-        return [new ColumnChunkContainer(
+        $contaiers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
                 type: $this->column->type(),
@@ -161,6 +160,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 options: $this->options
             )
         )];
+
+        $this->pages = new PageContainers();
+
+        return $contaiers;
     }
 
     public function isFull() : bool
@@ -208,10 +211,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
+        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
+            $pageHeaderBuffer->data(),
             $compressedBuffer,
             $this->dictionary->indices ?? [],
             $this->dictionary->dictionary ?? [],
@@ -267,10 +270,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
             ),
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
+        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
+            $pageHeaderBuffer->data(),
             $repetitionsBuffer . $definitionsBuffer . $compressedBuffer,
             $this->dictionary->indices ?? [],
             $this->dictionary->dictionary ?? [],
@@ -301,10 +304,10 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                 \count($this->dictionary->dictionary)
             ),
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
+        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
+            $pageHeaderBuffer->data(),
             $compressedBuffer,
             $this->dictionary->indices,
             $this->dictionary->dictionary,

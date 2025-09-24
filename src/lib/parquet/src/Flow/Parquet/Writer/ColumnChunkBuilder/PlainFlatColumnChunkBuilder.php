@@ -25,10 +25,9 @@ use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, PhysicalType};
+use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 use Flow\Parquet\Writer\PageBuilder\{RLEBitPackedPacker};
 use Flow\Parquet\Writer\ValueStorage\{BooleanValueStorage, BufferValueStorage, ValueStorage};
-use Thrift\Protocol\TCompactProtocol;
-use Thrift\Transport\TMemoryBuffer;
 
 final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 {
@@ -43,7 +42,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     private int $nullCount = 0;
 
-    private readonly PageContainers $pages;
+    private PageContainers $pages;
 
     private StatisticsCounter $pageStatistics;
 
@@ -125,11 +124,9 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        if (!$this->valueStorage->isEmpty() || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
-            $this->closePage();
-        }
+        $this->closePage();
 
-        return [new ColumnChunkContainer(
+        $containers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
                 type: $this->column->type(),
@@ -147,6 +144,10 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
                 options: $this->options
             )
         )];
+
+        $this->pages = new PageContainers();
+
+        return $containers;
     }
 
     public function isFull() : bool
@@ -191,10 +192,10 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
+        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
+            $pageHeaderBuffer->data(),
             $compressedBuffer,
             [],
             null,
@@ -243,10 +244,10 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             ),
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
+        $pageHeader->toThrift()->write(new CompactProtocol($pageHeaderBuffer = new MemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
+            $pageHeaderBuffer->data(),
             $repetitionsBuffer . $definitionsBuffer . $compressedBuffer,
             [],
             null,
