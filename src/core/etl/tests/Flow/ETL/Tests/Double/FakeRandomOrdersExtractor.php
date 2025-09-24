@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use function Flow\ETL\DSL\{array_to_rows, datetime_schema, float_schema, list_schema, schema, string_schema, structure_schema, uuid_schema};
+use function Flow\ETL\DSL\{array_to_rows,
+    datetime_schema,
+    float_schema,
+    list_schema,
+    schema,
+    string_schema,
+    structure_schema,
+    uuid_schema};
 use function Flow\Types\DSL\{type_float, type_integer, type_list, type_string, type_structure};
 use Faker\Factory;
 use Flow\ETL\{Extractor, FlowContext, Schema};
@@ -48,6 +55,16 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        foreach ($this->rawData() as $row) {
+            yield array_to_rows($row, schema: self::schema());
+        }
+    }
+
+    /**
+     * @return \Generator<array<string, mixed>>
+     */
+    public function rawData() : \Generator
+    {
         $faker = Factory::create();
 
         $skus = [
@@ -69,45 +86,48 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         for ($i = 0; $i < $this->count; $i++) {
 
             $createdAt = \DateTimeImmutable::createFromMutable($faker->dateTimeThisYear);
-            $cancelledAt = \random_int(1, 10) === 1 ? $createdAt->modify('+' . $faker->numberBetween(1, 5) . ' hours') : null;
+            $cancelledAt = \random_int(1, 10) === 1 ? $createdAt->modify('+' . $faker->numberBetween(
+                1,
+                5
+            ) . ' hours') : null;
 
             if ($cancelledAt) {
                 $updatedAt = $cancelledAt;
             } else {
-                $updatedAt = \random_int(1, 3) === 1 ? $createdAt->modify('+' . $faker->numberBetween(1, 3) . ' days') : null;
+                $updatedAt = \random_int(1, 3) === 1 ? $createdAt->modify('+' . $faker->numberBetween(
+                    1,
+                    3
+                ) . ' days') : null;
             }
 
-            yield array_to_rows(
-                [
-                    'order_id' => $faker->uuid,
-                    'seller_id' => $sellers[\random_int(0, \count($sellers) - 1)],
-                    'created_at' => $createdAt,
-                    'updated_at' => $updatedAt,
-                    'cancelled_at' => $cancelledAt,
-                    'discount' => \random_int(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
-                    'email' => $faker->email,
-                    'customer' => $faker->firstName . ' ' . $faker->lastName,
-                    'address' => [
-                        'street' => $faker->streetAddress,
-                        'city' => $faker->city,
-                        'zip' => $faker->postcode,
-                        'country' => $faker->country,
-                    ],
-                    'notes' => \array_map(
-                        static fn ($i) => $faker->sentence,
-                        \range(1, $faker->numberBetween(1, 5))
-                    ),
-                    'items' => \array_map(
-                        static fn (int $index) => [
-                            'sku' => $skus[$skuIndex = $faker->numberBetween(1, 4)]['sku'],
-                            'quantity' => $faker->numberBetween(1, 10),
-                            'price' => $skus[$skuIndex]['price'],
-                        ],
-                        \range(1, $faker->numberBetween(1, 4))
-                    ),
+            yield [
+                'order_id' => $faker->uuid,
+                'seller_id' => $sellers[\random_int(0, \count($sellers) - 1)],
+                'created_at' => $createdAt,
+                'updated_at' => $updatedAt,
+                'cancelled_at' => $cancelledAt,
+                'discount' => \random_int(0, 1) === 1 ? $faker->randomFloat(2, 0, 50) : null,
+                'email' => $faker->email,
+                'customer' => $faker->firstName . ' ' . $faker->lastName,
+                'address' => [
+                    'street' => $faker->streetAddress,
+                    'city' => $faker->city,
+                    'zip' => $faker->postcode,
+                    'country' => $faker->country,
                 ],
-                schema: self::schema()
-            );
+                'notes' => \array_map(
+                    static fn ($i) => $faker->sentence,
+                    \range(1, $faker->numberBetween(1, 5))
+                ),
+                'items' => \array_map(
+                    static fn (int $index) => [
+                        'sku' => $skus[$skuIndex = $faker->numberBetween(1, 4)]['sku'],
+                        'quantity' => $faker->numberBetween(1, 10),
+                        'price' => $skus[$skuIndex]['price'],
+                    ],
+                    \range(1, $faker->numberBetween(1, 4))
+                ),
+            ];
         }
     }
 }
