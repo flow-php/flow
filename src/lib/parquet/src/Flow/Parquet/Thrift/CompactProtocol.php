@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\Thrift;
 
 use Thrift\Exception\{TProtocolException, TTransportException};
-use Thrift\Protocol\TProtocol;
-use Thrift\Transport\TTransport;
 use Thrift\Type\TType;
 
-class CompactProtocol extends TProtocol
+class CompactProtocol
 {
     public const COMPACT_BINARY = 0x08;
 
@@ -116,9 +114,105 @@ class CompactProtocol extends TProtocol
 
     protected array $structs = [];
 
-    public function __construct(TTransport $trans)
+    public function __construct(private readonly Transport $transport)
     {
-        parent::__construct($trans);
+    }
+
+    public static function skipBinary($itrans, $type)
+    {
+        switch ($type) {
+            case TType::BYTE:
+            case TType::BOOL:
+                return $itrans->read(1);
+            case TType::I16:
+                return $itrans->read(2);
+            case TType::I32:
+                return $itrans->read(4);
+            case TType::DOUBLE:
+            case TType::I64:
+                return $itrans->read(8);
+            case TType::STRING:
+                $len = unpack('N', (string) $itrans->read(4));
+                $len = $len[1];
+
+                if ($len > 0x7FFFFFFF) {
+                    $len = 0 - (($len - 1) ^ 0xFFFFFFFF);
+                }
+
+                return 4 + $itrans->read($len);
+
+            case TType::STRUCT:
+                $result = 0;
+
+                while (true) {
+                    $data = $itrans->read(1);
+                    $arr = unpack('c', (string) $data);
+                    $ftype = $arr[1];
+
+                    if ($ftype === TType::STOP) {
+                        break;
+                    }
+                    // I16 field id
+                    $result .= $itrans->read(2);
+                    $result += self::skipBinary($itrans, $ftype);
+                }
+
+                return $result;
+
+            case TType::MAP:
+                // Ktype
+                $data = $itrans->read(1);
+                $arr = unpack('c', (string) $data);
+                $ktype = $arr[1];
+                // Vtype
+                $data = $itrans->read(1);
+                $arr = unpack('c', (string) $data);
+                $vtype = $arr[1];
+                // Size
+                $data = $itrans->read(4);
+                $arr = unpack('N', (string) $data);
+                $size = $arr[1];
+
+                if ($size > 0x7FFFFFFF) {
+                    $size = 0 - (($size - 1) ^ 0xFFFFFFFF);
+                }
+                $result = 6;
+
+                for ($i = 0; $i < $size; $i++) {
+                    $result += self::skipBinary($itrans, $ktype);
+                    $result += self::skipBinary($itrans, $vtype);
+                }
+
+                return $result;
+
+            case TType::SET:
+            case TType::LST:
+                // Vtype
+                $data = $itrans->read(1);
+                $arr = unpack('c', (string) $data);
+                $vtype = $arr[1];
+                // Size
+                $data = $itrans->read(4);
+                $arr = unpack('N', (string) $data);
+                $size = $arr[1];
+
+                if ($size > 0x7FFFFFFF) {
+                    $size = 0 - (($size - 1) ^ 0xFFFFFFFF);
+                }
+                $result = 5;
+
+                for ($i = 0; $i < $size; $i++) {
+                    $result += self::skipBinary($itrans, $vtype);
+                }
+
+                return $result;
+
+            default:
+                throw new TProtocolException(
+                    'Unknown field type: ' . $type,
+                    TProtocolException::INVALID_DATA
+                );
+        }
     }
 
     public function fromZigZag($n) : int
@@ -126,12 +220,17 @@ class CompactProtocol extends TProtocol
         return ($n >> 1) ^ -($n & 1);
     }
 
-    public function getTType($byte) : int
+    public function getTransport() : Transport
+    {
+        return $this->transport;
+    }
+
+    public function getTType(int $byte) : int
     {
         return self::$ttypes[$byte & 0x0F];
     }
 
-    public function getVarint($data) : string
+    public function getVarint(int $data) : string
     {
         $out = '';
 
@@ -167,7 +266,7 @@ class CompactProtocol extends TProtocol
 
     public function readByte(&$byte) : int
     {
-        $data = $this->trans_->readAll(1);
+        $data = $this->transport->read(1);
         $readByte = ord($data);
         $byte = $readByte > 127 ? $readByte - 256 : $readByte;
 
@@ -199,7 +298,7 @@ class CompactProtocol extends TProtocol
 
     public function readDouble(&$dub) : int
     {
-        $data = $this->trans_->readAll(8);
+        $data = $this->transport->read(8);
         $arr = unpack('d', $data);
         $dub = $arr[1];
 
@@ -277,7 +376,7 @@ class CompactProtocol extends TProtocol
         $shift = 0;
 
         while (true) {
-            $x = $this->trans_->readAll(1);
+            $x = $this->transport->read(1);
             $byte = ord($x);
             $idx++;
 
@@ -419,7 +518,7 @@ class CompactProtocol extends TProtocol
         $result = $this->readVarint($len);
 
         if ($len) {
-            $str = $this->trans_->readAll($len);
+            $str = $this->transport->read($len);
         } else {
             $str = '';
         }
@@ -448,7 +547,7 @@ class CompactProtocol extends TProtocol
 
     public function readUByte(&$value) : int
     {
-        $data = $this->trans_->readAll(1);
+        $data = $this->transport->read(1);
         $value = ord($data);
 
         return 1;
@@ -461,7 +560,7 @@ class CompactProtocol extends TProtocol
         $result = 0;
 
         while (true) {
-            $x = $this->trans_->readAll(1);
+            $x = $this->transport->read(1);
             $byte = ord($x);
             $idx++;
             $result |= ($byte & 0x7F) << $shift;
@@ -479,6 +578,78 @@ class CompactProtocol extends TProtocol
         $value = $this->fromZigZag($value);
 
         return $result;
+    }
+
+    public function skip($type)
+    {
+        switch ($type) {
+            case TType::BOOL:
+                return $this->readBool($bool);
+            case TType::BYTE:
+                return $this->readByte($byte);
+            case TType::I16:
+                return $this->readI16($i16);
+            case TType::I32:
+                return $this->readI32($i32);
+            case TType::I64:
+                return $this->readI64($i64);
+            case TType::DOUBLE:
+                return $this->readDouble($dub);
+            case TType::STRING:
+                return $this->readString($str);
+            case TType::STRUCT:
+                $result = $this->readStructBegin($name);
+
+                while (true) {
+                    $result += $this->readFieldBegin($name, $ftype, $fid);
+
+                    if ($ftype == TType::STOP) {
+                        break;
+                    }
+                    $result += $this->skip($ftype);
+                    $result += $this->readFieldEnd();
+                }
+                $result += $this->readStructEnd();
+
+                return $result;
+
+            case TType::MAP:
+                $result = $this->readMapBegin($keyType, $valType, $size);
+
+                for ($i = 0; $i < $size; $i++) {
+                    $result += $this->skip($keyType);
+                    $result += $this->skip($valType);
+                }
+                $result += $this->readMapEnd();
+
+                return $result;
+
+            case TType::SET:
+                $result = $this->readSetBegin($elemType, $size);
+
+                for ($i = 0; $i < $size; $i++) {
+                    $result += $this->skip($elemType);
+                }
+                $result += $this->readSetEnd();
+
+                return $result;
+
+            case TType::LST:
+                $result = $this->readListBegin($elemType, $size);
+
+                for ($i = 0; $i < $size; $i++) {
+                    $result += $this->skip($elemType);
+                }
+                $result += $this->readListEnd();
+
+                return $result;
+
+            default:
+                throw new TProtocolException(
+                    'Unknown field type: ' . $type,
+                    TProtocolException::INVALID_DATA
+                );
+        }
     }
 
     public function toZigZag($n, $bits) : int
@@ -509,7 +680,7 @@ class CompactProtocol extends TProtocol
     public function writeByte($byte) : int
     {
         $data = pack('c', $byte);
-        $this->trans_->write($data, 1);
+        $this->transport->write($data, 1);
 
         return 1;
     }
@@ -540,7 +711,7 @@ class CompactProtocol extends TProtocol
     public function writeDouble($dub) : int
     {
         $data = pack('d', $dub);
-        $this->trans_->write($data, 8);
+        $this->transport->write($data, 8);
 
         return 8;
     }
@@ -658,7 +829,7 @@ class CompactProtocol extends TProtocol
             }
 
             $ret = \strlen($out);
-            $this->trans_->write($out, $ret);
+            $this->transport->write($out, $ret);
 
             return $ret;
         }
@@ -732,7 +903,7 @@ class CompactProtocol extends TProtocol
         $result = $this->writeVarint($len);
 
         if ($len) {
-            $this->trans_->write($value);
+            $this->transport->write($value);
         }
 
         return $result + $len;
@@ -758,7 +929,7 @@ class CompactProtocol extends TProtocol
 
     public function writeUByte($byte) : int
     {
-        $this->trans_->write(pack('C', $byte), 1);
+        $this->transport->write(pack('C', $byte), 1);
 
         return 1;
     }
@@ -767,7 +938,7 @@ class CompactProtocol extends TProtocol
     {
         $out = $this->getVarint($data);
         $result = \strlen($out);
-        $this->trans_->write($out);
+        $this->transport->write($out);
 
         return $result;
     }

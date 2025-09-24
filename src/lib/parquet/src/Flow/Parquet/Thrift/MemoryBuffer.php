@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\Parquet\Thrift;
 
 use Thrift\Exception\TTransportException;
-use Thrift\Transport\TTransport;
 
 /**
  * A memory buffer is a tranpsort that simply reads from and writes to an
@@ -13,7 +12,7 @@ use Thrift\Transport\TTransport;
  * placed into a buffer, and anytime you call read, data is read from that
  * buffer.
  */
-class MemoryBuffer extends TTransport
+class MemoryBuffer implements Transport
 {
     private int $length;
 
@@ -35,11 +34,6 @@ class MemoryBuffer extends TTransport
     {
     }
 
-    public function getBuffer() : string
-    {
-        return $this->buf_;
-    }
-
     public function isOpen() : bool
     {
         return true;
@@ -49,13 +43,7 @@ class MemoryBuffer extends TTransport
     {
     }
 
-    public function putBack($data) : void
-    {
-        $this->buf_ = $data . $this->buf_;
-        $this->length += \strlen((string) $data);
-    }
-
-    public function read($len) : string
+    public function read(int $len) : string
     {
         $bufLength = $this->length;
 
@@ -82,7 +70,7 @@ class MemoryBuffer extends TTransport
         return $ret;
     }
 
-    public function write($buf) : void
+    public function write(string $buf) : void
     {
         $this->buf_ .= $buf;
         $this->length += \strlen($buf);
