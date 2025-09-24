@@ -11,15 +11,15 @@ use Flow\Parquet\{Dremel\ColumnData\ReadFlatColumnValues,
     ParquetFile\Metadata,
     ParquetFile\Page\ColumnPageHeader,
     ParquetFile\Schema,
-    Reader\PageReader};
+    Reader\PageReader,
+    Thrift\CompactProtocol,
+    Thrift\MemoryBuffer};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader\{ColumnChunkReader, ColumnChunkViewer};
-use Flow\Parquet\Thrift\FileMetaData;
-use Thrift\Protocol\TCompactProtocol;
-use Thrift\Transport\TMemoryBuffer;
+use Flow\Parquet\ThriftModel\FileMetaData;
 
 final class ParquetFile
 {
@@ -60,16 +60,28 @@ final class ParquetFile
          */
         $metadataLength = \unpack($this->byteOrder->value, $this->stream->read(4, $fileTotalSize - 8))[1];
 
+        print 'Metadata size in Mb: ' . number_format($metadataLength / 1024 / 1024, 2) . "\n";
+
         $metadata = $this->stream->read($metadataLength, $fileTotalSize - ($metadataLength + 8));
 
+        $start = time();
         $thriftMetadata = new FileMetaData();
         $thriftMetadata->read(
-            new TCompactProtocol(
-                new TMemoryBuffer($metadata)
+            new CompactProtocol(
+                new MemoryBuffer($metadata)
             )
         );
 
+        $end = time();
+
+        print 'Metadata parsing time: ' . ($end - $start) . "s\n";
+
+        $start = time();
+
         $this->metadata = Metadata::fromThrift($thriftMetadata, $this->options);
+        $end = time();
+
+        print 'Metadata creation time: ' . ($end - $start) . "s\n";
 
         return $this->metadata;
     }

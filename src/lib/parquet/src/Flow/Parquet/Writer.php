@@ -17,7 +17,7 @@ use Flow\Parquet\ParquetFile\{Compressions,
     Schema
 };
 use Flow\Parquet\ParquetFile\Data\DataConverter;
-use Flow\Parquet\ThriftStream\TPhpFileStream;
+use Flow\Parquet\Thrift\PhpFileStream;
 use Flow\Parquet\Writer\RowGroupBuilder;
 use Thrift\Protocol\TCompactProtocol;
 
@@ -78,7 +78,7 @@ final class Writer
             throw new RuntimeException('Cannot open temporary stream');
         }
 
-        $this->metadata()->toThrift()->write(new TCompactProtocol(new TPhpFileStream($metadataHandle)));
+        $this->metadata()->toThrift()->write(new TCompactProtocol(new PhpFileStream($metadataHandle)));
         $metadata = \stream_get_contents($metadataHandle, offset: 0);
 
         if ($metadata === false) {

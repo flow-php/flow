@@ -456,8 +456,8 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml"
         ],
         "build:parquet:thrift": [
-            "grep -q 'namespace php Flow.Parquet.Thrift' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
-            "rm src/lib/parquet/src/Flow/Parquet/Thrift/*.php",
+            "grep -q 'namespace php Flow.Parquet.ThriftModel' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
+            "rm src/lib/parquet/src/Flow/Parquet/ThriftModel/*.php",
             "thrift --gen php --out src/lib/parquet/src src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift",
             "@cs:php:fix"
         ],

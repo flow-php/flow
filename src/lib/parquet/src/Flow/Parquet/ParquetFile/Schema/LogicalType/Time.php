@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema\LogicalType;
 
-use Flow\Parquet\Thrift\TimeType;
+use Flow\Parquet\ThriftModel\TimeType;
 
 final readonly class Time
 {

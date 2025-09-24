@@ -22,7 +22,7 @@ final readonly class DataPageHeaderV2
     ) {
     }
 
-    public static function fromThrift(\Flow\Parquet\Thrift\DataPageHeaderV2 $thrift, Options $options) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeaderV2 $thrift, Options $options) : self
     {
         return new self(
             $thrift->num_values,
@@ -61,9 +61,9 @@ final readonly class DataPageHeaderV2
         return new StatisticsReader($this->statistics, $options);
     }
 
-    public function toThrift() : \Flow\Parquet\Thrift\DataPageHeaderV2
+    public function toThrift() : \Flow\Parquet\ThriftModel\DataPageHeaderV2
     {
-        return new \Flow\Parquet\Thrift\DataPageHeaderV2([
+        return new \Flow\Parquet\ThriftModel\DataPageHeaderV2([
             'num_values' => $this->valuesCount,
             'num_nulls' => $this->nullsCount,
             'num_rows' => $this->rowsCount,

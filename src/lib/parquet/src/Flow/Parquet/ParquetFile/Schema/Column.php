@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
-use Flow\Parquet\Thrift\SchemaElement;
+use Flow\Parquet\ThriftModel\SchemaElement;
 
 interface Column
 {

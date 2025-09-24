@@ -9,7 +9,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
-use Flow\Parquet\ThriftStream\TPhpFileStream;
+use Flow\Parquet\Thrift\PhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TBufferedTransport;
 
@@ -68,8 +68,8 @@ final readonly class ColumnChunkViewer
         $currentOffset = \ftell($stream);
 
         try {
-            $thriftHeader = new \Flow\Parquet\Thrift\PageHeader();
-            @$thriftHeader->read(new TCompactProtocol(new TBufferedTransport(new TPhpFileStream($stream))));
+            $thriftHeader = new \Flow\Parquet\ThriftModel\PageHeader();
+            @$thriftHeader->read(new TCompactProtocol(new TBufferedTransport(new PhpFileStream($stream))));
 
             if ($thriftHeader->type === null) {
                 return null;
