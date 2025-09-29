@@ -36,7 +36,7 @@ jobs:
         uses: "actions/cache@v4"
         with:
           path: "var/infection/cache"
-          key: "php-${{ matrix.php-version }}-cache-infection-${{ github.run_id }}"
+          key: "php-${{ matrix.php-version }}-cache-infection-${{ hashFiles('infection.json', 'composer.lock') }}"
           restore-keys: |
             php-${{ matrix.php-version }}-cache-infection-
 
