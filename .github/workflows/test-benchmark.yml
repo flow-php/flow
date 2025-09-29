@@ -36,32 +36,15 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          coverage: none
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1
-        env:
-          SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-locked-composer-
-
-      - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress"
+          dependencies: "locked"
+          coverage: "none"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
+          php-env: '{"SNAPPY_CONFIGURE_PREFIX_OPTS": "CXXFLAGS=-std=c++11"}'
+          cache-key-suffix: "-locked"
 
       - name: "Download phpbench benchmarks artifact"
         uses: dawidd6/action-download-artifact@v11

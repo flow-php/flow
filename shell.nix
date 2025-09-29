@@ -45,6 +45,7 @@ pkgs.mkShell {
         pkgs.starship
         pkgs.figlet
         pkgs.symfony-cli
+        pkgs.act
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
     ;

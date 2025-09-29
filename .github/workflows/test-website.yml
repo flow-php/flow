@@ -42,31 +42,15 @@ jobs:
         with:
           fallback: 1.x-dev
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          coverage: pcov
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-composer-website-${{ hashFiles('web/landing/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-composer-website-
-
-      - name: "Install dependencies"
-        run: "composer install --no-interaction --no-progress "
-        working-directory: "web/landing"
+          dependencies: "website"
+          coverage: "pcov"
+          working-directory: "web/landing"
+          cache-key-suffix: "-website"
+          composer-file: "web/landing/composer.lock"
 
       - name: "Test"
         run: "composer test"

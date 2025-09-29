@@ -40,27 +40,13 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          coverage: pcov
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-locked-composer-
+          dependencies: "locked"
+          coverage: "pcov"
+          cache-key-suffix: "-locked"
 
       - name: "Create cache directory"
         run: "mkdir -p var/infection/cache"
@@ -72,9 +58,6 @@ jobs:
           key: "php-${{ matrix.php-version }}-cache-infection-${{ github.run_id }}"
           restore-keys: |
             php-${{ matrix.php-version }}-cache-infection-
-
-      - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress "
 
       - name: "Mutation Tests"
         run: "composer test:mutation -- --logger-github=false --log-verbosity=none"

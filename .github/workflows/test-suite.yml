@@ -23,61 +23,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
-    name: "Tests"
+  etl-core-tests:
+    name: "ETL Core - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
     runs-on: ${{ matrix.operating-system }}
-    timeout-minutes: 15
-    services:
-      elasticsearch:
-        image: elasticsearch:7.17.28
-        env:
-          discovery.type: single-node
-        options: >-
-          --health-cmd "curl http://localhost:9200/_cluster/health"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-        ports:
-          - 9200:9200
-      meilisearch:
-        image: getmeili/meilisearch:v1.11.3
-        env:
-          MEILI_MASTER_KEY: masterKey
-          MEILI_NO_ANALYTICS: true
-        ports:
-          - 7700:7700
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432/tcp
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mysql:
-        image: mysql:8.0.31-debian
-        ports:
-          - 3306/tcp
-        env:
-          MYSQL_USER: mysql
-          MYSQL_PASSWORD: mysql
-          MYSQL_DATABASE: mysql
-          MYSQL_ROOT_PASSWORD: root
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-      localstack:
-        image: localstack/localstack:latest
-        env:
-          SERVICES: s3
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-        ports:
-          - 4566:4566
-          - 4571:4571
-
+    timeout-minutes: 10
+    needs:
+      - lib-array-dot-tests
+      - lib-azure-sdk-tests
+      - lib-filesystem-tests
+      - lib-types-tests
+      - lib-parquet-tests
+      - lib-parquet-viewer-tests
+      - lib-snappy-tests
+      - lib-doctrine-dbal-bulk-tests
     strategy:
       fail-fast: false
       matrix:
@@ -96,165 +54,18 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1, post_max_size=32M, upload_max_filesize=32M
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl'
+          ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
+          coverage: 'pcov'
 
-      - name: "List PHP Extensions"
-        run: php -m
-
-      - name: "List PHP configuration"
-        run: php -i
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '14'
-
-      - name: Install Azurite storage emulator
-        run: npm install -g azurite
-
-      - name: Start Azurite blob endpoint
-        shell: bash
-        run: |
-          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 &
-          sleep 5
-        env:
-          AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
-
-      - name: "Install lowest dependencies"
-        if: ${{ matrix.dependencies == 'lowest' }}
-        run: "composer update --prefer-lowest --no-interaction --no-progress "
-
-      - name: "Install highest dependencies"
-        if: ${{ matrix.dependencies == 'highest' }}
-        run: "composer update --no-interaction --no-progress "
-
-      - name: "Install locked dependencies"
-        if: ${{ matrix.dependencies == 'locked' }}
-        run: "composer install --no-interaction --no-progress "
-
-      - name: "Test - ETL "
+      - name: "Test - ETL Core"
         run: "composer test:core"
-
-      - name: "Test - CLI"
-        run: "composer test:cli"
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-
-      - name: "Test - Lib - Array Dot"
-        run: "composer test:lib:array-dot"
-
-      - name: "Test - Lib - Azure SDK"
-        run: "composer test:lib:azure-sdk"
-
-      - name: "Test - Lib - Doctrine DBAL Bulk"
-        run: "composer test:lib:doctrine-dbal-bulk"
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
-
-      - name: "Test - Lib - Filesystem"
-        run: "composer test:lib:filesystem"
-
-      - name: "Test - Lib - Types"
-        run: "composer test:lib:types"
-
-      - name: "Test - Lib - parquet"
-        run: "composer test:lib:parquet"
-        env:
-          FLOW_PARQUET_TESTS_DEBUG: "0"
-
-      - name: "Test - Lib - Parquet Viewer"
-        run: "composer test:lib:parquet-viewer"
-
-      - name: "Test - Lib - Snappy"
-        run: "composer test:lib:snappy"
-
-      - name: "Test - Bridge - Filesystem Azure"
-        run: "composer test:bridge:filesystem-azure"
-        env:
-          AZURITE_HOST: "localhost"
-          AZURITE_BLOB_PORT: "10000"
-          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
-          AZURITE_ACCOUNT_KEY: "flowphpkey01"
-
-      - name: "Test - Bridge - Filesystem Async AWS"
-        run: "composer test:bridge:filesystem-async-aws -vvv"
-        env:
-          S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
-          S3_REGION: "us-east-1"
-          S3_ACCESS_KEY_ID: "test"
-          S3_SECRET_ACCESS_KEY: "test"
-
-      - name: "Test - Bridge - Monolog Http"
-        run: "composer test:bridge:monolog-http"
-
-      - name: "Test - Bridge - OpenAPI Specification"
-        run: "composer test:bridge:openapi-specification"
-
-      - name: "Test - Bridge - Symfony Http Foundation"
-        run: "composer test:bridge:symfony-http-foundation"
-
-      - name: "Test - Adapter - ChartJs"
-        run: "composer test:adapter:chartjs"
-
-      - name: "Test - Adapter - CSV"
-        run: "composer test:adapter:csv"
-
-      - name: "Test - Adapter - Doctrine"
-        run: "composer test:adapter:doctrine"
-        env:
-          PGSQL_DATABASE_URL: "pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8"
-          MYSQL_DATABASE_URL: "mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql"
-          SQLITE_DATABASE_URL: "sqlite:///:memory:"
-
-      - name: "Test - Adapter - Elasticsearch"
-        run: "composer test:adapter:elasticsearch"
-
-      - name: "Test - Adapter - Excel"
-        run: "composer test:adapter:excel"
-
-      - name: "Test - Adapter - Google Sheet"
-        run: "composer test:adapter:google-sheet"
-
-      - name: "Test - Adapter - Http"
-        run: "composer test:adapter:http"
-
-      - name: "Test - Adapter - Json"
-        run: "composer test:adapter:json"
-
-      - name: "Test - Adapter - Logger"
-        run: "composer test:adapter:logger"
-
-      - name: "Test - Adapter - Meilisearch"
-        run: "composer test:adapter:meilisearch"
-
-      - name: "Test - Adapter - Parquet"
-        run: "composer test:adapter:parquet"
-
-      - name: "Test - Adapter - Text"
-        run: "composer test:adapter:text"
-
-      - name: "Test - Adapter - XML"
-        run: "composer test:adapter:xml"
 
       - name: "Test - Examples"
         if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
@@ -328,11 +139,1009 @@ jobs:
         run: |
           echo "Baseline commit SHA for Codecov: ${{ env.codecov_commit_sha }}" >> $GITHUB_STEP_SUMMARY
 
-  extension-tests:
-    name: "Extension Tests"
-
+  lib-array-dot-tests:
+    name: "Lib Array Dot - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
     runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
 
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Array Dot"
+        run: "composer test:lib:array-dot"
+
+  lib-azure-sdk-tests:
+    name: "Lib Azure SDK - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Azure SDK"
+        run: "composer test:lib:azure-sdk"
+
+  lib-filesystem-tests:
+    name: "Lib Filesystem - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Filesystem"
+        run: "composer test:lib:filesystem"
+
+  lib-types-tests:
+    name: "Lib Types - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Types"
+        run: "composer test:lib:types"
+
+  lib-parquet-tests:
+    name: "Lib Parquet - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Parquet"
+        run: "composer test:lib:parquet"
+        env:
+          FLOW_PARQUET_TESTS_DEBUG: "0"
+
+  lib-parquet-viewer-tests:
+    name: "Lib Parquet Viewer - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Parquet Viewer"
+        run: "composer test:lib:parquet-viewer"
+
+  lib-snappy-tests:
+    name: "Lib Snappy - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Snappy"
+        run: "composer test:lib:snappy"
+
+  cli-tests:
+    name: "CLI - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl'
+
+      - name: "Test - CLI"
+        run: "composer test:cli"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+
+  lib-doctrine-dbal-bulk-tests:
+    name: "Lib Doctrine DBAL Bulk - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8.0.31-debian
+        ports:
+          - 3306/tcp
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: root
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Doctrine DBAL Bulk"
+        run: "composer test:lib:doctrine-dbal-bulk"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
+
+  bridge-filesystem-azure-tests:
+    name: "Bridge Filesystem Azure - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '14'
+
+      - name: Install Azurite storage emulator
+        run: npm install -g azurite
+
+      - name: Start Azurite blob endpoint
+        shell: bash
+        run: |
+          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 &
+          sleep 5
+        env:
+          AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
+
+      - name: "Test - Bridge - Filesystem Azure"
+        run: "composer test:bridge:filesystem-azure"
+        env:
+          AZURITE_HOST: "localhost"
+          AZURITE_BLOB_PORT: "10000"
+          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
+          AZURITE_ACCOUNT_KEY: "flowphpkey01"
+
+  bridge-filesystem-async-aws-tests:
+    name: "Bridge Filesystem Async AWS - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        env:
+          SERVICES: s3
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        ports:
+          - 4566:4566
+          - 4571:4571
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Bridge - Filesystem Async AWS"
+        run: "composer test:bridge:filesystem-async-aws -vvv"
+        env:
+          S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
+          S3_REGION: "us-east-1"
+          S3_ACCESS_KEY_ID: "test"
+          S3_SECRET_ACCESS_KEY: "test"
+
+  bridge-monolog-http-tests:
+    name: "Bridge Monolog Http - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Bridge - Monolog Http"
+        run: "composer test:bridge:monolog-http"
+
+  bridge-openapi-specification-tests:
+    name: "Bridge OpenAPI Specification - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Bridge - OpenAPI Specification"
+        run: "composer test:bridge:openapi-specification"
+
+  bridge-symfony-http-foundation-tests:
+    name: "Bridge Symfony Http Foundation - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Bridge - Symfony Http Foundation"
+        run: "composer test:bridge:symfony-http-foundation"
+
+  adapter-chartjs-tests:
+    name: "Adapter ChartJs - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - ChartJs"
+        run: "composer test:adapter:chartjs"
+
+  adapter-csv-tests:
+    name: "Adapter CSV - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - CSV"
+        run: "composer test:adapter:csv"
+
+  adapter-doctrine-tests:
+    name: "Adapter Doctrine - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8.0.31-debian
+        ports:
+          - 3306/tcp
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: root
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Doctrine"
+        run: "composer test:adapter:doctrine"
+        env:
+          PGSQL_DATABASE_URL: "pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8"
+          MYSQL_DATABASE_URL: "mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql"
+          SQLITE_DATABASE_URL: "sqlite:///:memory:"
+
+  adapter-elasticsearch-tests:
+    name: "Adapter Elasticsearch - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    services:
+      elasticsearch:
+        image: elasticsearch:7.17.28
+        env:
+          discovery.type: single-node
+        options: >-
+          --health-cmd "curl http://localhost:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 9200:9200
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Elasticsearch"
+        run: "composer test:adapter:elasticsearch"
+
+  adapter-excel-tests:
+    name: "Adapter Excel - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Excel"
+        run: "composer test:adapter:excel"
+
+  adapter-google-sheet-tests:
+    name: "Adapter Google Sheet - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Google Sheet"
+        run: "composer test:adapter:google-sheet"
+
+  adapter-http-tests:
+    name: "Adapter Http - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Http"
+        run: "composer test:adapter:http"
+
+  adapter-json-tests:
+    name: "Adapter Json - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Json"
+        run: "composer test:adapter:json"
+
+  adapter-logger-tests:
+    name: "Adapter Logger - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Logger"
+        run: "composer test:adapter:logger"
+
+  adapter-meilisearch-tests:
+    name: "Adapter Meilisearch - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:v1.11.3
+        env:
+          MEILI_MASTER_KEY: masterKey
+          MEILI_NO_ANALYTICS: true
+        ports:
+          - 7700:7700
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Meilisearch"
+        run: "composer test:adapter:meilisearch"
+
+  adapter-parquet-tests:
+    name: "Adapter Parquet - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Parquet"
+        run: "composer test:adapter:parquet"
+
+  adapter-text-tests:
+    name: "Adapter Text - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - Text"
+        run: "composer test:adapter:text"
+
+  adapter-xml-tests:
+    name: "Adapter XML - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 5
+    needs: [etl-core-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Adapter - XML"
+        run: "composer test:adapter:xml"
+
+  extension-tests:
+    name: "Extension Tests - PHP ${{ matrix.php-version }}"
+    runs-on: ${{ matrix.operating-system }}
+    needs: [lib-parquet-tests]
     strategy:
       fail-fast: false
       matrix:
@@ -382,17 +1191,8 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
 
-      - name: "Install lowest dependencies"
-        if: ${{ matrix.dependencies == 'lowest' }}
-        run: "composer update --prefer-lowest --no-interaction --no-progress "
-
-      - name: "Install highest dependencies"
-        if: ${{ matrix.dependencies == 'highest' }}
-        run: "composer update --no-interaction --no-progress "
-
       - name: "Install locked dependencies"
-        if: ${{ matrix.dependencies == 'locked' }}
-        run: "composer install --no-interaction --no-progress "
+        run: "composer install --no-interaction --no-progress"
 
       - name: "Test Brotli"
         run: "composer test:lib:parquet -- --group brotli-extension"
