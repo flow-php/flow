@@ -14,8 +14,6 @@ jobs:
         dependencies:
           - "locked"  # Only locked dependencies for Windows
         php-version:
-          - "8.2"
-          - "8.3"
           - "8.4"
 
     steps:

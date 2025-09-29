@@ -36,6 +36,9 @@ jobs:
   mutation-tests:
     uses: ./.github/workflows/job-mutation-tests.yml
 
+  benchmark-tests:
+    uses: ./.github/workflows/job-benchmark-tests.yml
+
   etl-core-tests:
     needs: [libraries-tests]
     uses: ./.github/workflows/job-etl-core-tests.yml
@@ -45,9 +48,6 @@ jobs:
     needs: [libraries-tests]
     uses: ./.github/workflows/job-extension-tests.yml
 
-  benchmark-tests:
-    needs: [libraries-tests]
-    uses: ./.github/workflows/job-benchmark-tests.yml
 
   components-tests:
     needs: [etl-core-tests]
