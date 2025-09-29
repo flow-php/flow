@@ -100,6 +100,50 @@ jobs:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
 
+      - name: Upload test results to Codecov.io for baseline
+        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/logs
+
+      - name: Upload code coverage data to Codecov.io for baseline
+        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/coverage/clover
+
+      - name: "Download artifact"
+        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          workflow: test-suite.yml
+          name: codecov-base-commit-sha-1.x
+          search_artifacts: true
+
+      - name: Read artifact content into variable
+        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        run: |
+          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-1.x.txt)
+          echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
+
+      - name: Upload code coverage data to Codecov.io for pull request
+        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/coverage/clover
+          commit_parent: ${{ env.codecov_base_commit_sha }}
+
+      - name: Upload test results to Codecov.io for pull request
+        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/logs
+          commit_parent: ${{ env.codecov_base_commit_sha }}
+
   etl-core-tests:
     name: "ETL Core - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
     runs-on: ${{ matrix.operating-system }}
@@ -372,6 +416,50 @@ jobs:
 
       - name: "Test - Adapter - XML"
         run: "composer test:adapter:xml"
+
+      - name: Upload test results to Codecov.io for baseline
+        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/logs
+
+      - name: Upload code coverage data to Codecov.io for baseline
+        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/coverage/clover
+
+      - name: "Download artifact"
+        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          workflow: test-suite.yml
+          name: codecov-base-commit-sha-1.x
+          search_artifacts: true
+
+      - name: Read artifact content into variable
+        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        run: |
+          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-1.x.txt)
+          echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
+
+      - name: Upload code coverage data to Codecov.io for pull request
+        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/coverage/clover
+          commit_parent: ${{ env.codecov_base_commit_sha }}
+
+      - name: Upload test results to Codecov.io for pull request
+        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/logs
+          commit_parent: ${{ env.codecov_base_commit_sha }}
 
   extension-tests:
     name: "Extension Tests - PHP ${{ matrix.php-version }}"
