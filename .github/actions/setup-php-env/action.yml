@@ -1,4 +1,4 @@
- name: 'Setup PHP Environment'
+name: 'Setup PHP Environment'
 description: 'Setup PHP with extensions, caching, and install dependencies'
 inputs:
   php-version:
