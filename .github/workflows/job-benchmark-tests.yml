@@ -1,27 +1,12 @@
-name: Test Benchmarks
+name: Benchmark Tests
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/benchmark-baseline.yml'
-      - '.github/workflows/test-benchmark.yml'
-      - 'src/adapter/**'
-      - 'src/core/**'
-      - 'src/lib/**'
-      - 'tools/phpbench/composer.lock'
-      - 'composer.lock'
-
-# See https://stackoverflow.com/a/72408109
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
-  benchmark:
-    name: "Benchmark"
-
+  benchmark-tests:
+    name: "Benchmark Tests - PHP ${{ matrix.php-version }}"
     runs-on: ${{ matrix.operating-system }}
-
     strategy:
       fail-fast: false
       matrix:

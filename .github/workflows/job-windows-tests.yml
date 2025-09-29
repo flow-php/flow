@@ -1,32 +1,13 @@
-name: Test Suite Windows
+name: Windows Tests
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/**'
-      - 'src/adapter/**'
-      - 'src/bridge/**'
-      - 'src/core/**'
-      - 'src/cli/**'
-      - 'src/lib/**'
-      - 'tools/**'
-      - 'examples/**'
-      - 'composer.lock'
-  push:
-    branches: [ 1.x ]
-    paths-ignore:
-      - 'CHANGELOG.md'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
-  tests-windows:
-    name: "Windows Tests"
+  windows-tests:
+    name: "Windows Tests - PHP ${{ matrix.php-version }}"
     runs-on: windows-latest
     timeout-minutes: 20
-
     strategy:
       fail-fast: false
       matrix:

@@ -1,0 +1,72 @@
+name: Extension Tests
+
+on:
+  workflow_call:
+
+jobs:
+  extension-tests:
+    name: "Extension Tests - PHP ${{ matrix.php-version }}"
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Install dependencies"
+        run: |
+          sudo apt-get update && sudo apt-get install libbrotli1 liblz4-1 libzstd1 --assume-yes
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          tools: composer:v2
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
+          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1
+        env:
+            SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
+
+      - name: "List PHP Extensions"
+        run: php -m
+
+      - name: "List PHP configuration"
+        run: php -i
+
+      - name: "Get Composer Cache Directory"
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: "Cache Composer dependencies"
+        uses: "actions/cache@v4"
+        with:
+          path: "${{ steps.composer-cache.outputs.dir }}"
+          key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
+
+      - name: "Install locked dependencies"
+        run: "composer install --no-interaction --no-progress"
+
+      - name: "Test Brotli"
+        run: "composer test:lib:parquet -- --group brotli-extension"
+
+      - name: "Test LZ4"
+        run: "composer test:lib:parquet -- --group lz4-extension"
+
+      - name: "Test ZSTD"
+        run: "composer test:lib:parquet -- --group zstd-extension"
+
+      - name: "Test Snappy"
+        run: "composer test:lib:parquet -- --group snappy-extension"

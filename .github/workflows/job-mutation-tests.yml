@@ -1,31 +1,12 @@
-name: Test Mutations
+name: Mutation Tests
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/test-mutations.yml'
-      - '.github/workflows/test-suite.yml'
-      - 'src/core/**'
-      - 'src/lib/**'
-      - 'tools/infection/composer.*'
-      - 'composer.lock'
-      - 'infection.json'
-  push:
-    branches: [ 1.x ]
-    paths-ignore:
-      - 'CHANGELOG.md'
-
-# See https://stackoverflow.com/a/72408109
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
   mutation-tests:
-    name: "Mutation Tests"
-
+    name: "Mutation Tests - PHP ${{ matrix.php-version }}"
     runs-on: ${{ matrix.operating-system }}
-
     strategy:
       fail-fast: false
       matrix:

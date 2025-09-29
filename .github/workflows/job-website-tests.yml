@@ -1,27 +1,12 @@
-name: Test Website
+name: Website Tests
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/**'
-      - 'web/**'
-
-  push:
-    branches: [ 1.x ]
-    paths-ignore:
-      - 'CHANGELOG.md'
-
-# See https://stackoverflow.com/a/72408109
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
   website-tests:
-    name: "Website Tests"
-
+    name: "Website Tests - PHP ${{ matrix.php-version }}"
     runs-on: ${{ matrix.operating-system }}
-
     strategy:
       fail-fast: false
       matrix:
@@ -63,4 +48,3 @@ jobs:
           SCHEME: https
           DOMAIN: flow-php.com
           FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
-
