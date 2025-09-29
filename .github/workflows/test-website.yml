@@ -46,7 +46,7 @@ jobs:
         uses: "./.github/actions/setup-php-env"
         with:
           php-version: "${{ matrix.php-version }}"
-          dependencies: "website"
+          dependencies: "locked"
           coverage: "pcov"
           working-directory: "web/landing"
           cache-key-suffix: "-website"
