@@ -6,6 +6,19 @@
       "src/lib/doctrine-dbal-bulk/src",
       "src/lib/filesystem/src",
       "src/lib/parquet/src"
+    ],
+    "excludes": [
+      "Flow/ETL/DSL",
+      "Flow/ETL/Attribute",
+      "Flow/Calculator/Exception",
+      "Flow/Serializer/Exception",
+      "Flow/ETL/Exception",
+      "Flow/Types/Exception",
+      "Flow/Doctrine/Bulk/Exception",
+      "Flow/Filesystem/Exception",
+      "Flow/Parquet/Exception",
+      "Flow/Parquet/ThriftModel",
+      "Flow/ArrayDot/Exception"
     ]
   },
   "logs": {
