@@ -41,6 +41,30 @@ jobs:
       - name: "Execute benchmarks"
         id: init_comment
         run: |
+          # Run all benchmarks in parallel
+          composer test:benchmark:extractor -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/extractor.txt 2>&1 &
+          PID_EXTRACTOR=$!
+
+          composer test:benchmark:transformer -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/transformer.txt 2>&1 &
+          PID_TRANSFORMER=$!
+
+          composer test:benchmark:loader -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/loader.txt 2>&1 &
+          PID_LOADER=$!
+
+          composer test:benchmark:building_blocks -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/building_blocks.txt 2>&1 &
+          PID_BUILDING=$!
+
+          composer test:benchmark:parquet-library -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/parquet.txt 2>&1 &
+          PID_PARQUET=$!
+
+          # Wait for all to complete
+          wait $PID_EXTRACTOR
+          wait $PID_TRANSFORMER
+          wait $PID_LOADER
+          wait $PID_BUILDING
+          wait $PID_PARQUET
+
+          # Build the summary file
           {
             echo '# Flow PHP - Benchmarks'
             echo '<sup><sub>Results of the benchmarks from this PR are compared with the results from 1.x branch.</sub></sup>'
@@ -48,7 +72,7 @@ jobs:
             echo '<details><summary>Extractors</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark:extractor -- --ref=1.x --progress=none
+            cat ./var/phpbench/extractor.txt
             echo '```'
             echo '  '
             echo '</details>'
@@ -56,7 +80,7 @@ jobs:
             echo '<details><summary>Transformers</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark:transformer -- --ref=1.x --progress=none
+            cat ./var/phpbench/transformer.txt
             echo '```'
             echo '  '
             echo '</details>'
@@ -64,7 +88,7 @@ jobs:
             echo '<details><summary>Loaders</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark:loader -- --ref=1.x --progress=none
+            cat ./var/phpbench/loader.txt
             echo '```'
             echo '  '
             echo '</details>'
@@ -72,7 +96,7 @@ jobs:
             echo '<details><summary>Building Blocks</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark:building_blocks -- --ref=1.x --progress=none
+            cat ./var/phpbench/building_blocks.txt
             echo '```'
             echo '  '
             echo '</details>'
@@ -80,7 +104,7 @@ jobs:
             echo '<details><summary>Parquet Library</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark:parquet-library -- --ref=1.x --progress=none
+            cat ./var/phpbench/parquet.txt
             echo '```'
             echo '  '
             echo '</details>'
