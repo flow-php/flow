@@ -55,7 +55,7 @@ runs:
         ini-values: ${{ inputs.ini-values }}
         extensions: ${{ inputs.extensions }}
         coverage: ${{ inputs.coverage != '' && inputs.coverage || null }}
-      env: ${{ inputs.php-env && fromJSON(inputs.php-env) || null }}
+      env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
 
     - name: "Get Composer Cache Directory"
       id: composer-cache
