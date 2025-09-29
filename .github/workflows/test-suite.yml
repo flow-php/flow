@@ -33,6 +33,9 @@ jobs:
     uses: ./.github/workflows/job-libraries-tests.yml
     secrets: inherit
 
+  mutation-tests:
+    uses: ./.github/workflows/job-mutation-tests.yml
+
   etl-core-tests:
     needs: [libraries-tests]
     uses: ./.github/workflows/job-etl-core-tests.yml
@@ -45,10 +48,6 @@ jobs:
   benchmark-tests:
     needs: [libraries-tests]
     uses: ./.github/workflows/job-benchmark-tests.yml
-
-  mutation-tests:
-    needs: [libraries-tests]
-    uses: ./.github/workflows/job-mutation-tests.yml
 
   components-tests:
     needs: [etl-core-tests]
