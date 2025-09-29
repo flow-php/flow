@@ -47,7 +47,7 @@ jobs:
         ports:
           - 7700:7700
       postgres:
-        image: postgres:13.6-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
