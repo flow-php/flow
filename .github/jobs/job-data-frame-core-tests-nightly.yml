@@ -1,5 +1,3 @@
-name: ETL Core Tests
-
 on:
   workflow_call:
 

@@ -1,0 +1,123 @@
+on:
+  workflow_call:
+
+jobs:
+  libraries-tests:
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8.0.31-debian
+        ports:
+          - 3306/tcp
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: root
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+
+      - name: "Test - Lib - Array Dot"
+        run: "composer test:lib:array-dot"
+
+      - name: "Test - Lib - Azure SDK"
+        run: "composer test:lib:azure-sdk"
+
+      - name: "Test - Lib - Filesystem"
+        run: "composer test:lib:filesystem"
+
+      - name: "Test - Lib - Types"
+        run: "composer test:lib:types"
+
+      - name: "Test - Lib - Parquet"
+        run: "composer test:lib:parquet"
+        env:
+          FLOW_PARQUET_TESTS_DEBUG: "0"
+
+      - name: "Test - Lib - Parquet Viewer"
+        run: "composer test:lib:parquet-viewer"
+
+      - name: "Test - Lib - Snappy"
+        run: "composer test:lib:snappy"
+
+      - name: "Test - Lib - Doctrine DBAL Bulk"
+        run: "composer test:lib:doctrine-dbal-bulk"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
+
+      - name: Upload test results to Codecov.io for baseline
+        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/logs
+
+      - name: Upload code coverage data to Codecov.io for baseline
+        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/coverage/clover
+
+      - name: "Download artifact"
+        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          workflow: test-suite.yml
+          name: codecov-base-commit-sha-1.x
+          search_artifacts: true
+
+      - name: Read artifact content into variable
+        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        run: |
+          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-1.x.txt)
+          echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
+
+      - name: Upload code coverage data to Codecov.io for pull request
+        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/coverage/clover
+          commit_parent: ${{ env.codecov_base_commit_sha }}
+
+      - name: Upload test results to Codecov.io for pull request
+        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./var/phpunit/logs
+          commit_parent: ${{ env.codecov_base_commit_sha }}

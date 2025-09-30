@@ -14,6 +14,8 @@ on:
     branches: [ 1.x ]
     paths-ignore:
       - 'CHANGELOG.md'
+  schedule:
+    - cron: '0 4 * * *'
 
 jobs:
   build-archives:

@@ -23,28 +23,28 @@ concurrency:
 
 jobs:
   windows-tests:
-    uses: ./.github/workflows/job-windows-tests.yml
+    uses: ./.github/jobs/job-windows-tests.yml
 
   website-tests:
-    uses: ./.github/workflows/job-website-tests.yml
+    uses: ./.github/jobs/job-website-tests.yml
 
   libraries-tests:
-    uses: ./.github/workflows/job-libraries-tests.yml
+    uses: ./.github/jobs/job-libraries-tests.yml
     secrets: inherit
 
   mutation-tests:
-    uses: ./.github/workflows/job-mutation-tests.yml
+    uses: ./.github/jobs/job-mutation-tests.yml
 
   benchmark-tests:
-    uses: ./.github/workflows/job-benchmark-tests.yml
+    uses: ./.github/jobs/job-benchmark-tests.yml
 
   data-frame-core-tests:
-    uses: ./.github/workflows/job-data-frame-core-tests.yml
+    uses: ./.github/jobs/job-data-frame-core-tests.yml
     secrets: inherit
 
   extension-tests:
-    uses: ./.github/workflows/job-extension-tests.yml
+    uses: ./.github/jobs/job-extension-tests.yml
 
   components-tests:
-    uses: ./.github/workflows/job-components-tests.yml
+    uses: ./.github/jobs/job-components-tests.yml
     secrets: inherit

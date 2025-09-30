@@ -1,5 +1,3 @@
-name: Libraries Tests
-
 on:
   workflow_call:
 
@@ -31,8 +29,6 @@ jobs:
       matrix:
         dependencies:
           - "locked"
-          - "lowest"
-          - "highest"
         php-version:
           - "8.2"
           - "8.3"

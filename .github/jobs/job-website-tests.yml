@@ -1,5 +1,3 @@
-name: Website Tests
-
 on:
   workflow_call:
 

@@ -1,0 +1,38 @@
+name: Nightly Test Suite
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-tests:
+    uses: ./.github/jobs/job-windows-tests.yml
+
+  website-tests:
+    uses: ./.github/jobs/job-website-tests.yml
+
+  libraries-tests:
+    uses: ./.github/jobs/job-libraries-tests-nightly.yml
+    secrets: inherit
+
+  mutation-tests:
+    uses: ./.github/jobs/job-mutation-tests.yml
+
+  benchmark-tests:
+    uses: ./.github/jobs/job-benchmark-tests.yml
+
+  data-frame-core-tests:
+    uses: ./.github/jobs/job-data-frame-core-tests-nightly.yml
+    secrets: inherit
+
+  extension-tests:
+    uses: ./.github/jobs/job-extension-tests.yml
+
+  components-tests:
+    uses: ./.github/jobs/job-components-tests-nightly.yml
+    secrets: inherit

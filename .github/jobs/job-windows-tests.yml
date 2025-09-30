@@ -1,5 +1,3 @@
-name: Windows Tests
-
 on:
   workflow_call:
 
@@ -11,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         dependencies:
-          - "locked"  # Only locked dependencies for Windows
+          - "locked"
         php-version:
           - "8.4"
 
