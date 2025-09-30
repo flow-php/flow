@@ -5,7 +5,7 @@ on:
 
 jobs:
   mutation-tests:
-    name: "Mutation Tests - PHP ${{ matrix.php-version }}"
+    name: "Mutation Tests"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false

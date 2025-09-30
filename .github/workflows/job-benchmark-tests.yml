@@ -5,7 +5,7 @@ on:
 
 jobs:
   benchmark-tests:
-    name: "Benchmark Tests - PHP ${{ matrix.php-version }}"
+    name: "Benchmark Tests"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false

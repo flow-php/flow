@@ -5,7 +5,7 @@ on:
 
 jobs:
   extension-tests:
-    name: "Extension Tests - PHP ${{ matrix.php-version }}"
+    name: "Extension Tests"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false

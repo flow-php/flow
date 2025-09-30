@@ -4,8 +4,8 @@ on:
   workflow_call:
 
 jobs:
-  etl-core-tests:
-    name: "ETL Core - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+  data-frame-core-tests:
+    name: "Data Frame Core"
     runs-on: ${{ matrix.operating-system }}
     timeout-minutes: 10
     strategy:

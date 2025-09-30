@@ -5,7 +5,7 @@ on:
 
 jobs:
   libraries-tests:
-    name: "Libraries - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    name: "Libraries"
     runs-on: ${{ matrix.operating-system }}
     timeout-minutes: 15
     services:

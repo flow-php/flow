@@ -39,17 +39,16 @@ jobs:
   benchmark-tests:
     uses: ./.github/workflows/job-benchmark-tests.yml
 
-  etl-core-tests:
+  data-frame-core-tests:
     needs: [libraries-tests]
-    uses: ./.github/workflows/job-etl-core-tests.yml
+    uses: ./.github/workflows/job-data-frame-core-tests.yml
     secrets: inherit
 
   extension-tests:
     needs: [libraries-tests]
     uses: ./.github/workflows/job-extension-tests.yml
 
-
   components-tests:
-    needs: [etl-core-tests]
+    needs: [data-frame-core-tests]
     uses: ./.github/workflows/job-components-tests.yml
     secrets: inherit

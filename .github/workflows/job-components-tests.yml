@@ -5,7 +5,7 @@ on:
 
 jobs:
   components-tests:
-    name: "Components (CLI/Adapters/Bridges) - PHP ${{ matrix.php-version }} - ${{ matrix.dependencies }}"
+    name: "Components (CLI/Adapters/Bridges)"
     runs-on: ${{ matrix.operating-system }}
     timeout-minutes: 20
     services:
