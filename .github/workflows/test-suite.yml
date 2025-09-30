@@ -17,7 +17,6 @@ on:
     paths-ignore:
       - 'CHANGELOG.md'
 
-# See https://stackoverflow.com/a/72408109
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -40,15 +39,12 @@ jobs:
     uses: ./.github/workflows/job-benchmark-tests.yml
 
   data-frame-core-tests:
-    needs: [libraries-tests]
     uses: ./.github/workflows/job-data-frame-core-tests.yml
     secrets: inherit
 
   extension-tests:
-    needs: [libraries-tests]
     uses: ./.github/workflows/job-extension-tests.yml
 
   components-tests:
-    needs: [libraries-tests]
     uses: ./.github/workflows/job-components-tests.yml
     secrets: inherit
