@@ -2,7 +2,7 @@ name: Pull Request Comment
 
 on:
   workflow_run:
-    workflows: ["Benchmark Tests"]
+    workflows: ["Test Suite"]
     types:
       - completed
 
