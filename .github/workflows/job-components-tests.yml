@@ -101,31 +101,6 @@ jobs:
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
 
-      - name: "Test - Bridge - Filesystem Azure"
-        run: "composer test:bridge:filesystem-azure"
-        env:
-          AZURITE_HOST: "localhost"
-          AZURITE_BLOB_PORT: "10000"
-          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
-          AZURITE_ACCOUNT_KEY: "flowphpkey01"
-
-      - name: "Test - Bridge - Filesystem Async AWS"
-        run: "composer test:bridge:filesystem-async-aws -vvv"
-        env:
-          S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
-          S3_REGION: "us-east-1"
-          S3_ACCESS_KEY_ID: "test"
-          S3_SECRET_ACCESS_KEY: "test"
-
-      - name: "Test - Bridge - Monolog Http"
-        run: "composer test:bridge:monolog-http"
-
-      - name: "Test - Bridge - OpenAPI Specification"
-        run: "composer test:bridge:openapi-specification"
-
-      - name: "Test - Bridge - Symfony Http Foundation"
-        run: "composer test:bridge:symfony-http-foundation"
-
       - name: "Test - Adapter - ChartJs"
         run: "composer test:adapter:chartjs"
 
@@ -168,6 +143,31 @@ jobs:
 
       - name: "Test - Adapter - XML"
         run: "composer test:adapter:xml"
+
+      - name: "Test - Bridge - Filesystem Azure"
+        run: "composer test:bridge:filesystem-azure"
+        env:
+          AZURITE_HOST: "localhost"
+          AZURITE_BLOB_PORT: "10000"
+          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
+          AZURITE_ACCOUNT_KEY: "flowphpkey01"
+
+      - name: "Test - Bridge - Filesystem Async AWS"
+        run: "composer test:bridge:filesystem-async-aws"
+        env:
+          S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
+          S3_REGION: "us-east-1"
+          S3_ACCESS_KEY_ID: "test"
+          S3_SECRET_ACCESS_KEY: "test"
+
+      - name: "Test - Bridge - Monolog Http"
+        run: "composer test:bridge:monolog-http"
+
+      - name: "Test - Bridge - OpenAPI Specification"
+        run: "composer test:bridge:openapi-specification"
+
+      - name: "Test - Bridge - Symfony Http Foundation"
+        run: "composer test:bridge:symfony-http-foundation"
 
       - name: Upload test results to Codecov.io for baseline
         if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
