@@ -91,8 +91,16 @@ jobs:
       - name: Start Azurite blob endpoint
         shell: bash
         run: |
-          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 &
-          sleep 5
+          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 > azurite.log 2>&1 &
+          for i in {1..30}; do
+            if curl -f http://localhost:10000/ 2>/dev/null; then
+              echo "Azurite is ready"
+              break
+            fi
+            echo "Waiting for Azurite... ($i/30)"
+            sleep 1
+          done
+          cat azurite.log
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
