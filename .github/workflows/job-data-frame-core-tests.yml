@@ -5,7 +5,6 @@ on:
 
 jobs:
   data-frame-core-tests:
-    name: "Data Frame Core"
     runs-on: ${{ matrix.operating-system }}
     timeout-minutes: 10
     strategy:

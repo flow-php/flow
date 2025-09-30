@@ -5,7 +5,6 @@ on:
 
 jobs:
   libraries-tests:
-    name: "Libraries"
     runs-on: ${{ matrix.operating-system }}
     timeout-minutes: 15
     services:

@@ -49,6 +49,6 @@ jobs:
     uses: ./.github/workflows/job-extension-tests.yml
 
   components-tests:
-    needs: [data-frame-core-tests]
+    needs: [libraries-tests]
     uses: ./.github/workflows/job-components-tests.yml
     secrets: inherit

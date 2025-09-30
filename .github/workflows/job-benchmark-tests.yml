@@ -5,7 +5,6 @@ on:
 
 jobs:
   benchmark-tests:
-    name: "Benchmark Tests"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false

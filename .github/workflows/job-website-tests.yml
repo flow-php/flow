@@ -5,7 +5,6 @@ on:
 
 jobs:
   website-tests:
-    name: "Website Tests"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       fail-fast: false

@@ -5,7 +5,6 @@ on:
 
 jobs:
   windows-tests:
-    name: "Windows Tests"
     runs-on: windows-latest
     timeout-minutes: 20
     strategy:
