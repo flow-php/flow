@@ -1,0 +1,92 @@
+name: Codecov Report
+description: Upload test results and code coverage to Codecov.io
+
+inputs:
+  token:
+    description: Codecov token
+    required: true
+  php-version:
+    description: PHP version being tested
+    required: true
+  dependencies:
+    description: Dependencies version (locked/lowest/highest)
+    required: true
+  base-branch:
+    description: Base branch name for artifacts
+    required: false
+    default: '1.x'
+
+runs:
+  using: composite
+  steps:
+    - name: Download base commit SHA artifact
+      if: ${{ github.event_name == 'pull_request' && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      uses: dawidd6/action-download-artifact@v11
+      with:
+        workflow: test-suite.yml
+        name: codecov-base-commit-sha-${{ inputs.base-branch }}
+        search_artifacts: true
+
+    - name: Read base commit SHA
+      if: ${{ github.event_name == 'pull_request' && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      shell: bash
+      run: |
+        ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-${{ inputs.base-branch }}.txt)
+        echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
+
+    - name: Upload test results (baseline)
+      if: ${{ github.event_name == 'push' && !cancelled() && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ inputs.token }}
+        directory: ./var/phpunit/logs
+
+    - name: Upload code coverage (baseline)
+      if: ${{ github.event_name == 'push' && !cancelled() && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ inputs.token }}
+        directory: ./var/phpunit/coverage/clover
+
+    - name: Upload code coverage (pull request)
+      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ inputs.token }}
+        directory: ./var/phpunit/coverage/clover
+        commit_parent: ${{ env.codecov_base_commit_sha }}
+
+    - name: Upload test results (pull request)
+      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ inputs.token }}
+        directory: ./var/phpunit/logs
+        commit_parent: ${{ env.codecov_base_commit_sha }}
+
+    - name: Get branch name and commit SHA
+      if: ${{ github.event_name == 'push' && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      shell: bash
+      run: |
+        branch_name=${GITHUB_REF#refs/heads/}
+        commit_sha=$(git rev-parse HEAD)
+        echo "codecov_branch_name=$branch_name" >> $GITHUB_ENV
+        echo "codecov_commit_sha=$commit_sha" >> $GITHUB_ENV
+
+    - name: Save commit SHA to file
+      if: ${{ github.event_name == 'push' && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      shell: bash
+      run: echo -n "${{ env.codecov_commit_sha }}" > codecov-base-commit-sha-${{ env.codecov_branch_name }}.txt
+
+    - name: Upload commit SHA as artifact
+      if: ${{ github.event_name == 'push' && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: codecov-base-commit-sha-${{ env.codecov_branch_name }}
+        path: codecov-base-commit-sha-${{ env.codecov_branch_name }}.txt
+
+    - name: Add SHA to step summary
+      if: ${{ github.event_name == 'push' && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      shell: bash
+      run: |
+        echo "Baseline commit SHA for Codecov: ${{ env.codecov_commit_sha }}" >> $GITHUB_STEP_SUMMARY

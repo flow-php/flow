@@ -1,31 +1,8 @@
-name: Static Analyze
-
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/**'
-      - 'src/adapter/**'
-      - 'src/bridge/**'
-      - 'src/core/**'
-      - 'src/lib/**'
-      - 'tools/**'
-      - 'web/**'
-      - 'examples/**'
-      - 'composer.lock'
-  push:
-    branches: [ 1.x ]
-    paths-ignore:
-      - 'CHANGELOG.md'
-
-# See https://stackoverflow.com/a/72408109
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
   static-analyze:
-    name: "Static Analyze"
-
     runs-on: ${{ matrix.operating-system }}
 
     strategy:
@@ -42,35 +19,17 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          coverage: none
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: "none"
 
       - name: "Create cache directories"
         run: |
           mkdir -p var/cs-fixer
           mkdir -p var/phpstan/cache
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-locked-composer-
-
-      - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress"
 
       - name: "Cache cs-fixer results"
         uses: "actions/cache@v4"

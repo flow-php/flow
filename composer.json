@@ -234,6 +234,11 @@
         "test": [
             "@test:core",
             "@test:cli",
+            "@test:libraries",
+            "@test:bridges",
+            "@test:adapters"
+        ],
+        "test:libraries": [
             "@test:lib:array-dot",
             "@test:lib:azure-sdk",
             "@test:lib:doctrine-dbal-bulk",
@@ -241,12 +246,16 @@
             "@test:lib:parquet",
             "@test:lib:parquet-viewer",
             "@test:lib:snappy",
-            "@test:lib:types",
+            "@test:lib:types"
+        ],
+        "test:bridges": [
             "@test:bridge:filesystem-azure",
             "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
             "@test:bridge:openapi-specification",
-            "@test:bridge:symfony-http-foundation",
+            "@test:bridge:symfony-http-foundation"
+        ],
+        "test:adapters": [
             "@test:adapter:chartjs",
             "@test:adapter:csv",
             "@test:adapter:doctrine",
@@ -260,6 +269,11 @@
             "@test:adapter:parquet",
             "@test:adapter:text",
             "@test:adapter:xml"
+        ],
+        "test:components": [
+            "@test:cli",
+            "@test:adapters",
+            "@test:bridges"
         ],
         "test:core": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=etl-unit --log-junit ./var/phpunit/logs/etl-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/etl-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/etl-unit",

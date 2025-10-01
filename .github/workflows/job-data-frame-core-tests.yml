@@ -1,0 +1,49 @@
+on:
+  workflow_call:
+    inputs:
+      dependencies:
+        type: string
+        required: false
+        default: '["locked"]'
+
+jobs:
+  data-frame-core-tests:
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies: ${{ fromJSON(inputs.dependencies) }}
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl'
+          ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
+
+      - name: "Test - ETL Core"
+        run: "composer test:core"
+
+      - name: "Test - Examples"
+        if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
+        run: "composer test:examples"
+
+      - name: Upload to Codecov
+        uses: ./.github/actions/codecov-report
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          php-version: ${{ matrix.php-version }}
+          dependencies: ${{ matrix.dependencies }}
