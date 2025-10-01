@@ -24,37 +24,15 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install libbrotli1 liblz4-1 libzstd1 --assume-yes
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1
-        env:
-            SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
-
-      - name: "List PHP Extensions"
-        run: php -m
-
-      - name: "List PHP configuration"
-        run: php -i
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
-
-      - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: "none"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
+          php-env: '{"SNAPPY_CONFIGURE_PREFIX_OPTS": "CXXFLAGS=-std=c++11"}'
+          cache-key-suffix: "-extensions"
 
       - name: "Test Brotli"
         run: "composer test:lib:parquet -- --group brotli-extension"
