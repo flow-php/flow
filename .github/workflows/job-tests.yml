@@ -7,9 +7,9 @@ on:
         default: '["locked"]'
 
 jobs:
-  components-tests:
+  tests:
     runs-on: ${{ matrix.operating-system }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:18-alpine
@@ -78,6 +78,7 @@ jobs:
           dependencies: "${{ matrix.dependencies }}"
           coverage: 'pcov'
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl'
+          ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
@@ -103,12 +104,31 @@ jobs:
         env:
           AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
-      - name: "Test - Components"
-        run: "composer test:components"
+      - name: "Test - Libraries"
+        run: "composer test:libraries"
+        env:
+          FLOW_PARQUET_TESTS_DEBUG: "0"
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
+
+      - name: "Test - ETL Core"
+        run: "composer test:core"
+
+      - name: "Test - CLI"
+        run: "composer test:cli"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+
+      - name: "Test - Adapters"
+        run: "composer test:adapters"
         env:
           PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
           SQLITE_DATABASE_URL: "sqlite:///:memory:"
+
+      - name: "Test - Bridges"
+        run: "composer test:bridges"
+        env:
           AZURITE_HOST: "localhost"
           AZURITE_BLOB_PORT: "10000"
           AZURITE_ACCOUNT_NAME: "flowphpaccount01"

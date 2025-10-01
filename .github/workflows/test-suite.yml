@@ -29,35 +29,27 @@ jobs:
   static-analyze:
     uses: ./.github/workflows/job-static-analyze.yml
 
+  tests:
+    uses: ./.github/workflows/job-tests.yml
+    with:
+      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked"]' }}
+    secrets: inherit
+
+  examples:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/job-examples.yml
+
+  extension-tests:
+    uses: ./.github/workflows/job-extension-tests.yml
+
   windows-tests:
     uses: ./.github/workflows/job-windows-tests.yml
 
   website-tests:
     uses: ./.github/workflows/job-website-tests.yml
 
-  libraries-tests:
-    uses: ./.github/workflows/job-libraries-tests.yml
-    with:
-      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked"]' }}
-    secrets: inherit
-
   mutation-tests:
     uses: ./.github/workflows/job-mutation-tests.yml
 
   benchmark-tests:
     uses: ./.github/workflows/job-benchmark-tests.yml
-
-  data-frame-core-tests:
-    uses: ./.github/workflows/job-data-frame-core-tests.yml
-    with:
-      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked"]' }}
-    secrets: inherit
-
-  extension-tests:
-    uses: ./.github/workflows/job-extension-tests.yml
-
-  components-tests:
-    uses: ./.github/workflows/job-components-tests.yml
-    with:
-      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked"]' }}
-    secrets: inherit

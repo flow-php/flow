@@ -270,11 +270,6 @@
             "@test:adapter:text",
             "@test:adapter:xml"
         ],
-        "test:components": [
-            "@test:cli",
-            "@test:adapters",
-            "@test:bridges"
-        ],
         "test:core": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=etl-unit --log-junit ./var/phpunit/logs/etl-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/etl-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/etl-unit",
             "tools/phpunit/vendor/bin/phpunit --testsuite=etl-integration --log-junit ./var/phpunit/logs/etl-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/etl-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/etl-integration"
