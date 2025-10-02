@@ -47,13 +47,13 @@ final class PageContainers
         $buffer = '';
 
         if ($this->dictionaryPageContainer) {
-            $buffer .= $this->dictionaryPageContainer->pageHeaderBuffer;
-            $buffer .= $this->dictionaryPageContainer->pageBuffer;
+            $buffer .= $this->dictionaryPageContainer->serializedHeader();
+            $buffer .= $this->dictionaryPageContainer->compressedData;
         }
 
         foreach ($this->dataPageContainers as $pageContainer) {
-            $buffer .= $pageContainer->pageHeaderBuffer;
-            $buffer .= $pageContainer->pageBuffer;
+            $buffer .= $pageContainer->serializedHeader();
+            $buffer .= $pageContainer->compressedData;
         }
 
         return $buffer;

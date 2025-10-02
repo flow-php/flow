@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
-use Flow\Parquet\Thrift\FileMetaData;
+use Flow\Parquet\ThriftModel\FileMetaData;
 
 final readonly class Metadata
 {

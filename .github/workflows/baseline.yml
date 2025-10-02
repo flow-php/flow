@@ -1,5 +1,3 @@
-name: Baseline
-
 on:
   workflow_dispatch:
     inputs:
@@ -14,11 +12,11 @@ on:
     branches: [ 1.x ]
     paths-ignore:
       - 'CHANGELOG.md'
+  schedule:
+    - cron: '0 4 * * *'
 
 jobs:
   build-archives:
-    name: "Build Archives"
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -31,33 +29,17 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          coverage: none
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-locked-composer-
-
-      - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress"
+          dependencies: "locked"
+          coverage: "none"
+          cache-key-suffix: "-locked"
 
       - name: "Build PHAR file"
         run: "composer build:phar"
@@ -106,8 +88,6 @@ jobs:
           overwrite: true
 
   benchmark-baseline:
-    name: "Benchmark Baseline"
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -140,33 +120,17 @@ jobs:
           fi
 
       - name: "Checkout to specific ref"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           ref: ${{ env.GIT_REF }}
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          coverage: none
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-locked-composer-
-
-      - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress"
+          dependencies: "locked"
+          coverage: "none"
+          cache-key-suffix: "-locked"
 
       - name: "Benchmark"
         run: |
@@ -185,7 +149,6 @@ jobs:
           overwrite: true
 
   publish-website:
-    name: "Publish Website"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -195,7 +158,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
@@ -205,35 +168,18 @@ jobs:
         with:
           fallback: 1.x-dev
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-composer-website-${{ hashFiles('web/landing/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-composer-website-
-
-      - name: "Install project dependencies"
-        run: "composer install --no-interaction --no-progress --no-suggest"
+          dependencies: "locked"
+          cache-key-suffix: "-website"
 
       - name: "Generate documentation"
         run: "composer build:docs"
 
       - name: "Install Landing dependencies"
-        run: "composer install --no-interaction --no-progress --no-suggest"
+        run: "composer install --no-interaction --no-progress "
         working-directory: "web/landing"
 
       - name: "Build"

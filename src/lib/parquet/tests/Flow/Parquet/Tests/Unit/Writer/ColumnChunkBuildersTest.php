@@ -221,7 +221,6 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract builders through reflection
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         // Verify custom encodings
@@ -250,7 +249,6 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify PLAIN is used instead of DELTA
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['user_id']);
@@ -275,7 +273,6 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract builders through reflection
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['col1']);
@@ -300,7 +297,6 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify the correct type
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         self::assertInstanceOf(DeltaBinaryPackedColumnChunkBuilder::class, $buildersArray['user_id']);
@@ -324,14 +320,12 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the nested builder through reflection
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         // Get the nested column builder
         $nestedBuilder = $buildersArray['user'];
         $nestedReflection = new \ReflectionClass($nestedBuilder);
         $childBuildersProperty = $nestedReflection->getProperty('childrenColumnChunkBuilders');
-        $childBuildersProperty->setAccessible(true);
         $childBuilders = $childBuildersProperty->getValue($nestedBuilder);
 
         // Get the child builders as values array since they're keyed by flat path
@@ -358,7 +352,6 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify the correct type
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $buildersArray['description']);
@@ -379,7 +372,6 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify the correct type
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         self::assertInstanceOf(RLEDictionaryChunkBuilder::class, $buildersArray['status']);
@@ -483,7 +475,6 @@ final class ColumnChunkBuildersTest extends TestCase
         // Extract the builder through reflection to verify default behavior
         $reflection = new \ReflectionClass($builders);
         $buildersProperty = $reflection->getProperty('builders');
-        $buildersProperty->setAccessible(true);
         $buildersArray = $buildersProperty->getValue($builders);
 
         // Should use default PLAIN encoding since no custom encoding specified

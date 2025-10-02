@@ -226,6 +226,7 @@ final class RowGroupBuilderTest extends TestCase
         self::assertInstanceOf(RowGroup::class, $container->rowGroup);
         self::assertSame(1, $container->rowGroup->rowsCount());
         self::assertGreaterThan(0, strlen($container->binaryBuffer));
+        self::assertTrue($builder->isEmpty());
     }
 
     public function test_flush_resets_rows_count() : void
@@ -253,11 +254,11 @@ final class RowGroupBuilderTest extends TestCase
         $shredder = new DremelShredder(new ColumnDataValidator(), DataConverter::initialize(Options::default()));
         $builder = new RowGroupBuilder($schema, $compression, $options, $shredder);
 
-        $builder->addRow(['id' => 42]);
-
         $offsets = [0, 100, 1000, 50000];
 
         foreach ($offsets as $offset) {
+            // Add fresh data before each flush
+            $builder->addRow(['id' => $offset + 42]);
             $container = $builder->flush($offset);
 
             self::assertInstanceOf(RowGroupContainer::class, $container);

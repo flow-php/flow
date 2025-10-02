@@ -1,27 +1,19 @@
-name: Test Website
-
 on:
   pull_request:
     paths:
-      - '.github/workflows/**'
       - 'web/**'
-
   push:
     branches: [ 1.x ]
-    paths-ignore:
-      - 'CHANGELOG.md'
+    paths:
+      - 'web/**'
 
-# See https://stackoverflow.com/a/72408109
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   website-tests:
-    name: "Website Tests"
-
     runs-on: ${{ matrix.operating-system }}
-
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +24,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
@@ -42,31 +34,15 @@ jobs:
         with:
           fallback: 1.x-dev
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          coverage: pcov
-          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-composer-website-${{ hashFiles('web/landing/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-composer-website-
-
-      - name: "Install dependencies"
-        run: "composer install --no-interaction --no-progress --no-suggest"
-        working-directory: "web/landing"
+          dependencies: "locked"
+          coverage: "pcov"
+          working-directory: "web/landing"
+          cache-key-suffix: "-website"
+          composer-file: "web/landing/composer.lock"
 
       - name: "Test"
         run: "composer test"
@@ -79,4 +55,3 @@ jobs:
           SCHEME: https
           DOMAIN: flow-php.com
           FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
-

@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\XML;
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\{Extractor, FlowContext, Schema};
 use Flow\Filesystem\Path;
 
 final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExtractor
@@ -33,6 +33,8 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     private array $elements = [];
 
     private ?\XMLParser $parser = null;
+
+    private ?Schema $schema = null;
 
     private ?\XMLWriter $writer = null;
 
@@ -105,7 +107,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
                             $rowData = ['node' => $this->createDOMNode($element)];
                         }
 
-                        $signal = yield array_to_rows($rowData, $context->entryFactory(), $stream->path()->partitions());
+                        $signal = yield array_to_rows($rowData, $context->entryFactory(), $stream->path()->partitions(), $this->schema);
 
                         $this->incrementReturnedRows();
 
@@ -186,6 +188,13 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
     public function withBufferSize(int $bufferSize) : self
     {
         $this->bufferSize = $bufferSize;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
 
         return $this;
     }

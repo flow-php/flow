@@ -6,7 +6,7 @@ namespace Flow\Parquet\Tests\Unit\ParquetFile;
 
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn, Repetition};
-use Flow\Parquet\Thrift\SchemaElement;
+use Flow\Parquet\ThriftModel\SchemaElement;
 use PHPUnit\Framework\TestCase;
 
 final class SchemaTest extends TestCase

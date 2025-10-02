@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
+use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
 final class ReadDDLCommandTest extends TestCase
 {
+    use CommandOutputNormalizer;
+
     public function test_read_data_command() : void
     {
         $application = new Parquet();
@@ -25,7 +28,7 @@ final class ReadDDLCommandTest extends TestCase
         ]);
 
         self::assertSame(0, $tester->getStatusCode());
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 Parquet file DDL
 ================

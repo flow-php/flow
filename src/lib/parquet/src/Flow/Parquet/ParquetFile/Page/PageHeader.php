@@ -20,7 +20,7 @@ final readonly class PageHeader
     ) {
     }
 
-    public static function fromThrift(\Flow\Parquet\Thrift\PageHeader $thrift, Options $options) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\PageHeader $thrift, Options $options) : self
     {
         return new self(
             Type::from($thrift->type),
@@ -90,9 +90,9 @@ final readonly class PageHeader
         return $this->dataPageHeader->encoding();
     }
 
-    public function toThrift() : \Flow\Parquet\Thrift\PageHeader
+    public function toThrift() : \Flow\Parquet\ThriftModel\PageHeader
     {
-        return new \Flow\Parquet\Thrift\PageHeader([
+        return new \Flow\Parquet\ThriftModel\PageHeader([
             'type' => $this->type->value,
             'compressed_page_size' => $this->compressedPageSize,
             'uncompressed_page_size' => $this->uncompressedPageSize,

@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\{Limitable, LimitableExtractor, Signal};
-use Flow\ETL\{Extractor, FlowContext};
+use Flow\ETL\{Extractor, FlowContext, Schema};
 use Google\Service\Sheets;
 
 final class GoogleSheetExtractor implements Extractor, LimitableExtractor
@@ -22,6 +22,8 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
     private array $options = [];
 
     private int $rowsPerPage = 1000;
+
+    private ?Schema $schema = null;
 
     private bool $withHeader = true;
 
@@ -38,7 +40,6 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsPerPage);
         $headers = [];
 
-        /** @var Sheets\ValueRange $response */
         $response = $this->service->spreadsheets_values->get(
             $this->spreadsheetId,
             $cellsRange->toString(),
@@ -107,7 +108,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
             $totalRows += \count($rows);
 
             foreach ($rows as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory(), schema: $this->schema);
                 $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
@@ -160,6 +161,13 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         }
 
         $this->rowsPerPage = $rowsPerPage;
+
+        return $this;
+    }
+
+    public function withSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
 
         return $this;
     }

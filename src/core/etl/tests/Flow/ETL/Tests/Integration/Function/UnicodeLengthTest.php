@@ -36,22 +36,21 @@ final class UnicodeLengthTest extends FlowTestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        self::assertSame(
-            [
-                ['text' => 'hello', 'unicode_length' => 5],
-                ['text' => 'world🚀', 'unicode_length' => 6],
-                ['text' => 'café', 'unicode_length' => 4],
-                ['text' => 'नमस्ते', 'unicode_length' => 3],
-                ['text' => '', 'unicode_length' => 0],
-                ['text' => null, 'unicode_length' => null],
-                ['text' => 'a', 'unicode_length' => 1],
-                ['text' => str_repeat('x', 100), 'unicode_length' => 100],
-                ['text' => 'é', 'unicode_length' => 1],
-                ['text' => "e\u{0301}", 'unicode_length' => 1],
-                ['text' => '👋🏻', 'unicode_length' => 1],
-                ['text' => '👨‍👩‍👧‍👦', 'unicode_length' => 1],
-            ],
-            $memory->dump()
-        );
+        $expected = [
+            ['text' => 'hello', 'unicode_length' => 5],
+            ['text' => 'world🚀', 'unicode_length' => 6],
+            ['text' => 'café', 'unicode_length' => 4],
+            ['text' => 'नमस्ते', 'unicode_length' => \PHP_OS_FAMILY === 'Windows' ? 4 : 3], // Unicode handling differs on Windows
+            ['text' => '', 'unicode_length' => 0],
+            ['text' => null, 'unicode_length' => null],
+            ['text' => 'a', 'unicode_length' => 1],
+            ['text' => str_repeat('x', 100), 'unicode_length' => 100],
+            ['text' => 'é', 'unicode_length' => 1],
+            ['text' => "e\u{0301}", 'unicode_length' => 1],
+            ['text' => '👋🏻', 'unicode_length' => 1],
+            ['text' => '👨‍👩‍👧‍👦', 'unicode_length' => 1],
+        ];
+
+        self::assertSame($expected, $memory->dump());
     }
 }

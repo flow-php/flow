@@ -4,50 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
-use function Flow\ETL\DSL\generate_random_string;
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Filesystem\Path\Options;
+use Flow\Filesystem\Path\{Options, UnixPath, WindowsPath};
 use Flow\Filesystem\Stream\ResourceContext;
 
 final class Path
 {
-    private readonly string $basename;
-
-    private readonly string|false $extension;
-
-    private readonly string $filename;
-
-    private ?bool $isPattern = null;
-
-    private readonly Options $options;
-
-    private ?Partitions $partitions = null;
-
-    private readonly string $path;
-
-    private readonly Protocol $protocol;
+    private WindowsPath|UnixPath $implementation;
 
     /**
      * @param array<string, mixed>|Options $options
      */
     public function __construct(string $uri, array|Options $options = [])
     {
-        $scheme = \preg_match('/^([a-zA-Z0-9+-]+):\/\//', $uri, $matches) ? $matches[1] : 'file';
-
-        $path = \str_replace($scheme . '://', '', $uri);
-
-        if (!\str_starts_with($path, DIRECTORY_SEPARATOR)) {
-            $path = DIRECTORY_SEPARATOR . $path;
-        }
-
-        $pathInfo = \pathinfo($path);
-
-        $this->path = $path;
-        $this->protocol = new Protocol($scheme);
-        $this->extension = \array_key_exists('extension', $pathInfo) ? \strtolower($pathInfo['extension']) : false;
-        $this->filename = $pathInfo['filename'];
-        $this->basename = $pathInfo['basename'];
-        $this->options = \is_array($options) ? new Options($options) : $options;
+        $this->implementation = \PHP_OS_FAMILY === 'Windows'
+            ? new WindowsPath($uri, $options)
+            : new UnixPath($uri, $options);
     }
 
     /**
@@ -60,105 +32,27 @@ final class Path
      */
     public static function realpath(string $path, array|Options $options = []) : self
     {
-        // ""  - empty path is current, local directory
-        if ('' === $path) {
-            return new self(\getcwd() ?: '', $options);
-        }
+        $instance = new self('', $options);
+        $instance->implementation = \PHP_OS_FAMILY === 'Windows'
+            ? WindowsPath::realpath($path, $options)
+            : UnixPath::realpath($path, $options);
 
-        // "non_local://path/to/file.txt" - non local paths can't be relative
-        $urlParts = \parse_url($path);
-
-        if (\is_array($urlParts) && \array_key_exists('scheme', $urlParts) && $urlParts['scheme'] !== 'file') {
-            return new self($path, $options);
-        }
-
-        $realPath = $path;
-
-        if ($realPath[0] === '~') {
-            $homeEnv = \getenv('HOME');
-
-            if (\is_string($homeEnv)) {
-                $realPath = $homeEnv . DIRECTORY_SEPARATOR . \substr($realPath, 1);
-            } else {
-                // if HOME env is missing, fallback to posix functions
-
-                if (!\function_exists('posix_getpwuid') || !\function_exists('posix_getuid')) {
-                    throw new RuntimeException('Resolving homedir is not yet supported at OS :' . PHP_OS);
-                }
-
-                $userData = (array) \posix_getpwuid(\posix_getuid());
-
-                if (!\is_string($userData['dir'] ?? null)) {
-                    throw new RuntimeException("Can't resolve homedir for user executing script");
-                }
-
-                $realPath = $userData['dir'] . DIRECTORY_SEPARATOR . \substr($realPath, 1);
-            }
-        }
-
-        // "some/path/to/file.txt" - path not starting from / is relative to current dir
-        $realPath = ($realPath[0] !== DIRECTORY_SEPARATOR)
-            ? (\getcwd() . DIRECTORY_SEPARATOR . $realPath)
-            : $realPath;
-
-        /** @var array<string> $absoluteParts */
-        $absoluteParts = [];
-
-        foreach (\explode(DIRECTORY_SEPARATOR, $realPath) as $part) {
-            if ($part === '.' || $part === '') {
-                continue;
-            }
-
-            if ($part === '..') {
-                if ([] !== $absoluteParts) {
-                    \array_pop($absoluteParts);
-                }
-
-                continue;
-            }
-
-            $absoluteParts[] = $part;
-        }
-
-        /**
-         * Make sure that realpath always start with /.
-         */
-        return new self(DIRECTORY_SEPARATOR . \implode(DIRECTORY_SEPARATOR, $absoluteParts), $options);
+        return $instance;
     }
 
     public function addPartitions(Partition $partition, Partition ...$partitions) : self
     {
-        if ($this->isPattern()) {
-            throw new InvalidArgumentException("Can't add partitions to path pattern.");
-        }
-
-        \array_unshift($partitions, $partition);
-
-        $partitionsPath = '';
-
-        foreach ($partitions as $nextPartition) {
-            $partitionsPath .= DIRECTORY_SEPARATOR . $nextPartition->name . '=' . $nextPartition->value;
-        }
-
-        /**
-         * @phpstan-ignore-next-line
-         */
-        $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
-
-        return new self($this->protocol->scheme() . $base . $partitionsPath . DIRECTORY_SEPARATOR . $this->basename(), $this->options);
+        return $this->createFromImplementation($this->implementation->addPartitions($partition, ...$partitions));
     }
 
     public function basename() : string
     {
-        return $this->basename;
+        return $this->implementation->basename();
     }
 
     public function basenamePrefix(string $prefix) : self
     {
-        return new self(
-            $this->parentDirectory()->uri() . DIRECTORY_SEPARATOR . $prefix . $this->basename(),
-            $this->options()
-        );
+        return $this->createFromImplementation($this->implementation->basenamePrefix($prefix));
     }
 
     public function context() : ResourceContext
@@ -168,87 +62,52 @@ final class Path
 
     public function endsWith(string $string) : bool
     {
-        return \str_ends_with($this->path, $string);
+        return $this->implementation->endsWith($string);
     }
 
     public function extension() : string|false
     {
-        return $this->extension;
+        return $this->implementation->extension();
     }
 
     public function filename() : string
     {
-        return $this->filename;
+        return $this->implementation->filename();
     }
 
     public function isEqual(self $path) : bool
     {
-        return $this->uri() === $path->uri()
-            && $this->options->toArray() === $path->options()->toArray();
+        return $this->implementation->isEqual($path->implementation);
     }
 
     public function isLocal() : bool
     {
-        return $this->protocol->is('file');
+        return $this->implementation->protocol()->is('file');
     }
 
     public function isPattern() : bool
     {
-        if ($this->isPattern !== null) {
-            return $this->isPattern;
-        }
-
-        $this->isPattern = $this->isPathPattern($this->path);
-
-        return $this->isPattern;
+        return $this->implementation->isPattern();
     }
 
     public function matches(self $path) : bool
     {
-        if (!$this->isPathPattern($this->path)) {
-            return $this->isEqual($path);
-        }
-
-        if ($path->isPathPattern($path->path)) {
-            return false;
-        }
-
-        return $this->fnmatch($this->path, $path->path);
+        return $this->implementation->matches($path->implementation);
     }
 
     public function options() : Options
     {
-        return $this->options;
+        return $this->implementation->options();
     }
 
     public function parentDirectory() : self
     {
-        if ($this->isPathPattern($this->path)) {
-            throw new InvalidArgumentException("Can't take directory from path pattern.");
-        }
-
-        $path = \pathinfo($this->path);
-        $dirname = \array_key_exists('dirname', $path) ? \ltrim($path['dirname'], DIRECTORY_SEPARATOR) : '';
-
-        $dirname = $dirname === '' ? '/' : $dirname;
-
-        return new self(
-            $this->protocol->scheme() . $dirname,
-            $this->options
-        );
+        return $this->createFromImplementation($this->implementation->parentDirectory());
     }
 
     public function partitions() : Partitions
     {
-        if ($this->partitions === null) {
-            if ($this->isPathPattern($this->path)) {
-                $this->partitions = new Partitions();
-            } else {
-                $this->partitions = Partition::fromUri($this->path);
-            }
-        }
-
-        return $this->partitions;
+        return $this->implementation->partitions();
     }
 
     /**
@@ -256,16 +115,10 @@ final class Path
      */
     public function partitionsPaths() : array
     {
-        $partitionPaths = [];
-
-        foreach ($this->partitions() as $partition) {
-            $partitionFolder = $partition->name . '=' . $partition->value;
-            $partitionFolderPos = \mb_strpos($this->uri(), $partitionFolder) + \mb_strlen($partitionFolder);
-
-            $partitionPaths[] = new self(\mb_substr($this->uri(), 0, $partitionFolderPos), $this->options);
-        }
-
-        return $partitionPaths;
+        return \array_map(
+            fn ($implPath) => $this->createFromImplementation($implPath),
+            $this->implementation->partitionsPaths()
+        );
     }
 
     /**
@@ -273,96 +126,44 @@ final class Path
      */
     public function path() : string
     {
-        return $this->path;
+        return $this->implementation->path();
     }
 
     public function protocol() : Protocol
     {
-        return $this->protocol;
+        return $this->implementation->protocol();
     }
 
     public function randomize() : self
     {
-        $extension = false !== $this->extension ? '.' . $this->extension : '';
-
-        /** @phpstan-ignore-next-line */
-        $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
-
-        return new self(
-            $this->protocol->scheme() . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . generate_random_string() . $extension,
-            $this->options
-        );
+        return $this->createFromImplementation($this->implementation->randomize());
     }
 
     public function rootDirectoryName() : ?string
     {
-        $pathParts = \explode(DIRECTORY_SEPARATOR, \ltrim($this->path(), DIRECTORY_SEPARATOR));
-
-        if (\count($pathParts) === 1) {
-            return null;
-        }
-
-        return isset($pathParts[0]) && $pathParts[0] !== '' ? $pathParts[0] : null;
+        return $this->implementation->rootDirectoryName();
     }
 
     public function setExtension(string $extension) : self
     {
-        return new self(
-            $this->protocol->scheme() . $this->parentDirectory()->uri() . DIRECTORY_SEPARATOR . $this->filename . '.' . $extension,
-            $this->options
-        );
+        return $this->createFromImplementation($this->implementation->setExtension($extension));
     }
 
     public function skipDirectories(int $count) : ?self
     {
-        if ($count < 0) {
-            throw new \InvalidArgumentException('The number of folders to skip must be non-negative.');
-        }
-
-        $pathParts = \explode(DIRECTORY_SEPARATOR, \ltrim($this->path(), DIRECTORY_SEPARATOR));
-        $remainingParts = \array_slice($pathParts, $count);
-
-        if (!\count($remainingParts)) {
-            return null;
-        }
-
-        $newPath = \implode(DIRECTORY_SEPARATOR, $remainingParts);
-
-        return new self($this->protocol->scheme() . $newPath, $this->options);
+        return ($newImplementation = $this->implementation->skipDirectories($count)) === null
+            ? null
+            : $this->createFromImplementation($newImplementation);
     }
 
     public function staticPart() : self
     {
-        if (!$this->isPathPattern($this->path)) {
-            return $this;
-        }
-
-        $pathInfo = \pathinfo($this->path);
-
-        if (!\array_key_exists('dirname', $pathInfo) || $pathInfo['dirname'] === DIRECTORY_SEPARATOR) {
-            if ($this->isPathPattern($pathInfo['basename'])) {
-                return new self($this->protocol->scheme() . DIRECTORY_SEPARATOR, $this->options);
-            }
-
-            return $this;
-        }
-
-        $staticPath = [];
-
-        foreach (\array_filter(\explode(DIRECTORY_SEPARATOR, $pathInfo['dirname'])) as $folder) {
-            if ($this->isPathPattern($folder)) {
-                break;
-            }
-
-            $staticPath[] = $folder;
-        }
-
-        return new self($this->protocol->scheme() . \implode(DIRECTORY_SEPARATOR, $staticPath), $this->options);
+        return $this->createFromImplementation($this->implementation->staticPart());
     }
 
     public function suffix(string $string) : self
     {
-        return new self(\rtrim($this->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \ltrim($string, DIRECTORY_SEPARATOR), $this->options);
+        return $this->createFromImplementation($this->implementation->suffix($string));
     }
 
     /**
@@ -370,65 +171,14 @@ final class Path
      */
     public function uri() : string
     {
-        return $this->protocol->scheme() . \ltrim($this->path, DIRECTORY_SEPARATOR);
+        return $this->implementation->uri();
     }
 
-    /**
-     * Modified function from: https://github.com/Polycademy/upgradephp/blob/65c5a9be1e039bbc1ac83addaeba5bd875d758ea/upgrade.php#L2802.
-     * This modified version is detecting double ** and single * in the same pattern.
-     */
-    private function fnmatch(string $pattern, string $filename, int $flags = 0) : bool
+    private function createFromImplementation(WindowsPath|UnixPath $implementation) : self
     {
-        if ($flags & 4) {
-            if (($filename[0] === '.') && ($pattern[0] !== '.')) {
-                return false;
-            }
-        }
+        $instance = new self('', []);
+        $instance->implementation = $implementation;
 
-        $rxci = '';
-
-        if ($flags & 16) {
-            $rxci = 'i';
-        }
-
-        static $cmp = [];
-
-        if (isset($cmp["{$pattern}+{$flags}"])) {
-            $rx = $cmp["{$pattern}+{$flags}"];
-        } else {
-            $rx = \preg_quote($pattern, null);
-            // Replace '**' with a regex that matches any number of directories
-            $rx = \str_replace('\\*\\*', '(.*)?', $rx);
-            // Replace '*' with a regex that matches any character except for directory separators
-            $rx = \str_replace('\\*', '[^/]*', $rx);
-
-            // Handle other special characters
-            $rx = \strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
-            $rx = '{^' . $rx . '$}' . $rxci;
-
-            if (\count($cmp) >= 50) {
-                $cmp = [];
-            }
-            $cmp["{$pattern}+{$flags}"] = $rx;
-        }
-
-        return (bool) (\preg_match($rx, $filename));
-    }
-
-    private function isPathPattern(string $path) : bool
-    {
-        if (\str_contains($path, '*') || \str_contains($path, '?')) {
-            return true;
-        }
-
-        if (\str_contains($path, '[') && \str_contains($path, ']')) {
-            return true;
-        }
-
-        if (\str_contains($path, '{') && \str_contains($path, '}')) {
-            return true;
-        }
-
-        return false;
+        return $instance;
     }
 }

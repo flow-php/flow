@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\{SchemaFormatCommand};
+use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class SchemaFormatCommandTest extends TestCase
 {
+    use CommandOutputNormalizer;
     public function test_run_schema_format() : void
     {
         $tester = new CommandTester(new SchemaFormatCommand('schema:format'));
@@ -18,7 +20,7 @@ final class SchemaFormatCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 [
     {
@@ -143,7 +145,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 schema
 |-- order_id: uuid
@@ -173,7 +175,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'PHP'
 \Flow\ETL\DSL\schema(
     \Flow\ETL\DSL\uuid_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
@@ -200,7 +202,7 @@ PHP,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +------------+-----------+----------+----------+
 |       name |      type | nullable | metadata |

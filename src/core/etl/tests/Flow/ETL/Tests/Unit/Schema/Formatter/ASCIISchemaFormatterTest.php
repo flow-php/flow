@@ -18,10 +18,12 @@ use function Flow\ETL\DSL\{bool_schema,
     xml_schema};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_optional, type_string, type_structure};
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Tests\FlowTestCase;
+use Flow\ETL\Tests\{CommandOutputNormalizer, FlowTestCase};
 
 final class ASCIISchemaFormatterTest extends FlowTestCase
 {
+    use CommandOutputNormalizer;
+
     public function test_format_nested_schema() : void
     {
         $schema = schema(
@@ -46,7 +48,7 @@ final class ASCIISchemaFormatterTest extends FlowTestCase
             datetime_schema('datetime')
         );
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'SCHEMA'
 schema
 |-- integer: ?integer
@@ -84,7 +86,7 @@ SCHEMA,
             ]),
         ])), string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), xml_element_schema('xml_element'), json_schema('json'), uuid_schema('uuid'), datetime_schema('datetime'));
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'SCHEMA'
 +-------------+-------------+----------+----------+
 |        name |        type | nullable | metadata |
@@ -120,7 +122,7 @@ SCHEMA,
             ]),
         ])), string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), xml_element_schema('xml_element'), json_schema('json'), uuid_schema('uuid'), datetime_schema('datetime'));
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'SCHEMA'
 +-------------+-------------+----------+
 |        name |        type | nullable |
@@ -148,7 +150,7 @@ SCHEMA,
     {
         $schema = schema(string_schema('name', nullable: true), list_schema('tags', type_list(type_string())), bool_schema('active'), xml_schema('xml'), map_schema('map', type_map(type_string(), type_string())), list_schema('list', type_list(type_map(type_string(), type_integer()))));
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'SCHEMA'
 schema
 |-- name: ?string

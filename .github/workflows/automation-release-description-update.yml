@@ -1,5 +1,3 @@
-name: Automation - Release Description Update
-
 on:
   release:
     types: [ created ]

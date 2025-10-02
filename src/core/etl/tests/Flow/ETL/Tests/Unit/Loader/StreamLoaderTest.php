@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{int_entry, ref, row, rows, str_entry, to_output, to_s
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\{Tests\CommandOutputNormalizer, Tests\FlowTestCase};
 use Flow\Filesystem\Stream\Mode;
 use function ob_end_clean;
 use function ob_get_contents;
@@ -17,6 +17,7 @@ use function ob_start;
 
 final class StreamLoaderTest extends FlowTestCase
 {
+    use CommandOutputNormalizer;
     public function test_columns_count_to_php_output_stream() : void
     {
         $loader = to_output(false, Output::column_count);
@@ -34,7 +35,7 @@ final class StreamLoaderTest extends FlowTestCase
         $output = ob_get_contents() ?: '';
         ob_end_clean();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'ASCII'
 Columns: 2
 
@@ -77,7 +78,7 @@ ASCII,
         $output = ob_get_contents() ?: '';
         ob_end_clean();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'TABLE'
 +----+------+-------+
 | id | name | group |
@@ -111,7 +112,7 @@ TABLE,
         $output = ob_get_contents() ?: '';
         ob_end_clean();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'ASCII'
 +----+------+
 | id | name |
@@ -148,7 +149,7 @@ ASCII,
         $output = ob_get_contents() ?: '';
         ob_end_clean();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'TABLE'
 +----+------+
 | id | name |
@@ -180,7 +181,7 @@ TABLE,
         $output = ob_get_contents() ?: '';
         ob_end_clean();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'ASCII'
 schema
 |-- id: integer
@@ -208,7 +209,7 @@ ASCII,
         $output = ob_get_contents() ?: '';
         ob_end_clean();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'ASCII'
 Rows: 3, Columns: 2
 
@@ -234,7 +235,7 @@ ASCII,
         $output = ob_get_contents() ?: '';
         ob_end_clean();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'ASCII'
 Rows: 3
 

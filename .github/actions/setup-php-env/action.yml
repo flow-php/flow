@@ -1,0 +1,91 @@
+name: 'Setup PHP Environment'
+description: 'Setup PHP with extensions, caching, and install dependencies'
+inputs:
+  php-version:
+    description: 'PHP version to setup'
+    required: true
+  dependencies:
+    description: 'Dependency resolution strategy (locked/lowest/highest) or custom value'
+    required: true
+  extensions:
+    description: 'PHP extensions to install'
+    required: false
+    default: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
+  ini-values:
+    description: 'PHP ini values to set'
+    required: false
+    default: 'memory_limit=-1'
+  tools:
+    description: 'Tools to install'
+    required: false
+    default: 'composer:v2'
+  coverage:
+    description: 'Coverage driver (none/pcov/xdebug)'
+    required: false
+    default: ''
+  working-directory:
+    description: 'Working directory for composer operations'
+    required: false
+    default: '.'
+  cache-key-suffix:
+    description: 'Additional suffix for cache key'
+    required: false
+    default: ''
+  composer-file:
+    description: 'Path to composer.lock file for cache key'
+    required: false
+    default: '**/composer.lock'
+  install-dependencies:
+    description: 'Whether to install dependencies'
+    required: false
+    default: 'true'
+  php-env:
+    description: 'Environment variables for PHP setup'
+    required: false
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Install PHP"
+      uses: "shivammathur/setup-php@v2"
+      with:
+        tools: ${{ inputs.tools }}
+        php-version: ${{ inputs.php-version }}
+        ini-values: ${{ inputs.ini-values }}
+        extensions: ${{ inputs.extensions }}
+        coverage: ${{ inputs.coverage != '' && inputs.coverage || null }}
+      env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
+
+    - name: "Get Composer Cache Directory"
+      id: composer-cache
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: "Cache Composer dependencies"
+      uses: "actions/cache@v4"
+      with:
+        path: "${{ steps.composer-cache.outputs.dir }}"
+        key: "php-${{ inputs.php-version }}-${{ inputs.dependencies }}-composer${{ inputs.cache-key-suffix }}-${{ hashFiles(inputs.composer-file) }}"
+        restore-keys: |
+          php-${{ inputs.php-version }}-${{ inputs.dependencies }}-composer${{ inputs.cache-key-suffix }}-
+
+    - name: "Install lowest dependencies"
+      if: ${{ inputs.dependencies == 'lowest' && inputs.install-dependencies == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: "composer update --prefer-lowest --no-interaction --no-progress"
+
+    - name: "Install highest dependencies"
+      if: ${{ inputs.dependencies == 'highest' && inputs.install-dependencies == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: "composer update --no-interaction --no-progress"
+
+    - name: "Install locked dependencies"
+      if: ${{ inputs.dependencies == 'locked' && inputs.install-dependencies == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: "composer install --no-interaction --no-progress"

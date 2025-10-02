@@ -47,6 +47,14 @@ final class ColumnChunkBuilders
     }
 
     /**
+     * @return array<ColumnChunkBuilder>
+     */
+    public function builders() : array
+    {
+        return $this->builders;
+    }
+
+    /**
      * Close all pages in the column chunk builders.
      */
     public function closePages() : void

@@ -9,11 +9,18 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{generate_random_string, string_entry};
 use function Flow\ETL\DSL\{row, rows};
 use Flow\ETL\{Tests\FlowTestCase};
+use Flow\Filesystem\Tests\OperatingSystem;
 
 final class TextTest extends FlowTestCase
 {
+    use OperatingSystem;
+
     public function test_loading_text_files() : void
     {
+        if ($this->isWindows()) {
+            self::markTestSkipped('This test is failing on windows due to different new line characters.');
+        }
+
         $path = __DIR__ . '/var/flow_php_etl_csv_loader' . generate_random_string() . '.csv';
 
         (data_frame())

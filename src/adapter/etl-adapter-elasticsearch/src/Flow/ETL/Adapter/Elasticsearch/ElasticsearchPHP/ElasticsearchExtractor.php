@@ -100,9 +100,6 @@ final class ElasticsearchExtractor implements Extractor
                     break;
                 }
 
-                /**
-                 * @phpstan-ignore-next-line
-                 */
                 if ($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size'] > $results->total()) {
                     $nextPageParams = $nextPageParams->set('size', $results->total() - $fetched);
                 }

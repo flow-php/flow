@@ -66,6 +66,37 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         self::assertSame(0, $builder->uncompressedSize());
     }
 
+    public function test_flush_cleans_up_builder_state() : void
+    {
+        $column = new FlatColumn('test_col', PhysicalType::INT32);
+        $options = new Options();
+        $compression = Compressions::UNCOMPRESSED;
+        $builder = new DeltaBinaryPackedColumnChunkBuilder($column, $options, $compression);
+
+        $columnData = WriteColumnData::initialize($column);
+        $flatValue1 = new FlatValue($column, 0, 1, 42);
+        $flatValue2 = new FlatValue($column, 0, 1, 84);
+        $columnData->addValue($flatValue1, $flatValue2);
+        $builder->addRow($columnData);
+
+        self::assertFalse($builder->isEmpty());
+        self::assertGreaterThan(0, $builder->uncompressedSize());
+
+        $containers = $builder->flush(0);
+        self::assertCount(1, $containers);
+
+        self::assertTrue($builder->isEmpty());
+        self::assertEquals(0, $builder->uncompressedSize());
+
+        $columnData2 = WriteColumnData::initialize($column);
+        $flatValue3 = new FlatValue($column, 0, 1, 126);
+        $columnData2->addValue($flatValue3);
+        $builder->addRow($columnData2);
+
+        self::assertFalse($builder->isEmpty());
+        self::assertGreaterThan(0, $builder->uncompressedSize());
+    }
+
     public function test_flush_empty_builder() : void
     {
         $options = (new Options())->set(Option::WRITER_VERSION, 2);
@@ -99,7 +130,8 @@ final class DeltaBinaryPackedColumnChunkBuilderTest extends TestCase
         self::assertIsArray($containers);
         self::assertCount(1, $containers);
         self::assertInstanceOf(ColumnChunkContainer::class, $containers[0]);
-        self::assertGreaterThan(0, $builder->uncompressedSize());
+        // After flush, builder should be clean (no leftovers)
+        self::assertEquals(0, $builder->uncompressedSize());
     }
 
     public function test_is_full_calculation_for_int32() : void

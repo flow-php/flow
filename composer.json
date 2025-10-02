@@ -22,7 +22,7 @@
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
         "async-aws/s3": "^2.6",
-        "brick/math": "^0.11 || ^0.12 || ^0.13",
+        "brick/math": "^0.11 || ^0.12 || ^0.13 || ^0.14",
         "coduo/php-humanizer": "^5.0",
         "doctrine/dbal": "^3.6 || ^4.0",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
@@ -41,6 +41,7 @@
         "symfony/console": "^5.4 || ^6.4 || ^7.0",
         "symfony/http-foundation": "~5.4.0 || ~6.4.0 || ~7",
         "symfony/string": "^5.4 || ^6.4 || ^7.0",
+        "symfony/uid": "^6.3 || ^7.0",
         "webmozart/glob": "^3.0 || ^4.0"
     },
     "require-dev": {
@@ -56,8 +57,7 @@
         "symfony/dotenv": "^6.2 || ^7.0",
         "symfony/finder": "^6.3 || ^7.0",
         "symfony/http-client": "^5.4.47 || ^6.4 || ^7.0",
-        "symfony/process": "^7.2",
-        "symfony/uid": "^6.3 || ^7.0"
+        "symfony/process": "^7.2"
     },
     "replace": {
         "flow-php/array-dot": "self.version",
@@ -154,12 +154,8 @@
             "src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php",
             "src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php",
             "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
-            "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
-            "src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php",
             "src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php",
             "src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php",
-            "src/cli/src/Flow/CLI/DSL/functions.php",
-            "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/cli/src/Flow/CLI/DSL/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/functions.php",
@@ -238,6 +234,11 @@
         "test": [
             "@test:core",
             "@test:cli",
+            "@test:libraries",
+            "@test:bridges",
+            "@test:adapters"
+        ],
+        "test:libraries": [
             "@test:lib:array-dot",
             "@test:lib:azure-sdk",
             "@test:lib:doctrine-dbal-bulk",
@@ -245,12 +246,16 @@
             "@test:lib:parquet",
             "@test:lib:parquet-viewer",
             "@test:lib:snappy",
-            "@test:lib:types",
+            "@test:lib:types"
+        ],
+        "test:bridges": [
             "@test:bridge:filesystem-azure",
             "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
             "@test:bridge:openapi-specification",
-            "@test:bridge:symfony-http-foundation",
+            "@test:bridge:symfony-http-foundation"
+        ],
+        "test:adapters": [
             "@test:adapter:chartjs",
             "@test:adapter:csv",
             "@test:adapter:doctrine",
@@ -460,8 +465,8 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml"
         ],
         "build:parquet:thrift": [
-            "grep -q 'namespace php Flow.Parquet.Thrift' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
-            "rm src/lib/parquet/src/Flow/Parquet/Thrift/*.php",
+            "grep -q 'namespace php Flow.Parquet.ThriftModel' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
+            "rm src/lib/parquet/src/Flow/Parquet/ThriftModel/*.php",
             "thrift --gen php --out src/lib/parquet/src src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift",
             "@cs:php:fix"
         ],
