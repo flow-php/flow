@@ -24,11 +24,12 @@ use function Flow\ETL\DSL\{bool_entry,
     xml_entry};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\{Extractor, FlowContext, Rows};
-use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
-use Flow\ETL\Tests\FlowIntegrationTestCase;
+use Flow\ETL\Tests\{CommandOutputNormalizer, Fixtures\Enum\BackedStringEnum, FlowIntegrationTestCase};
 
 final class DisplayTest extends FlowIntegrationTestCase
 {
+    use CommandOutputNormalizer;
+
     public function test_display() : void
     {
         $etl = df()
@@ -81,7 +82,7 @@ final class DisplayTest extends FlowIntegrationTestCase
             })
             ->collect();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'ASCIITABLE'
 +------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
 |   id |      price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |  enum |                  xml |
@@ -138,7 +139,7 @@ ASCIITABLE,
             ->collect()
             ->partitionBy(ref('group'));
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'ASCIITABLE'
 +------+------------+-----+---------+----------------------+-------+
 |   id |      price | 100 | deleted |           created-at | group |
@@ -213,7 +214,7 @@ ASCIITABLE,
             ]))
             ->collect();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'ASCIITABLE'
 +----------------------+
 | this is very long en |
@@ -248,7 +249,7 @@ ASCIITABLE,
             ->printRows();
         $output = \ob_get_clean() ?: '';
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'ASCII'
 +----+---------+-----+
 | id | country | age |
@@ -288,7 +289,7 @@ ASCII,
             ->printSchema();
         $output = \ob_get_clean() ?: '';
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'ASCII'
 schema
 |-- id: integer

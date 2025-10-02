@@ -1,10 +1,53 @@
-## [Unreleased] - 2025-09-14
+## [Unreleased] - 2025-10-02
 
 ### Added
+- [#1882](https://github.com/flow-php/flow/pull/1882) - **Reusable action to setup php version in github workflows** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [ebfa79](https://github.com/flow-php/flow/commit/ebfa793890f8c087ea4b7c7c6f07e6371294f767) - **Keep website tests in standalone workflow to trigger those tests only when website code is changed** - [@norberttech](https://github.com/norberttech)
+- [#1882](https://github.com/flow-php/flow/pull/1882) - **Split test-suite.yml workflow steps into standalone jobs** - [@norberttech](https://github.com/norberttech)
+- [#1881](https://github.com/flow-php/flow/pull/1881) - **Update Homebrew TAP formula: flow-php to version: 0.25.0** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [8144c0](https://github.com/flow-php/flow/commit/8144c0390d39e1004a735dc7ff0981b9a4ba72f0) - **test-suite workflow by using only paths instead of paths and ignore-paths** - [@norberttech](https://github.com/norberttech)
+- [68d144](https://github.com/flow-php/flow/commit/68d14430f0a3a24a24be113b3808693dd0e059a4) - **baseline workflow** - [@norberttech](https://github.com/norberttech)
+
+## [0.25.0] - 2025-09-29
+
+### Added
+- [#1866](https://github.com/flow-php/flow/pull/1866) - **[XMLParserExtractor] Add support for Schema** - [@stloyd](https://github.com/stloyd)
+- [#1864](https://github.com/flow-php/flow/pull/1864) - **[ExcelExtractor] Add support for `Schema`** - [@stloyd](https://github.com/stloyd)
+- [#1862](https://github.com/flow-php/flow/pull/1862) - **[GoogleSheetExtractor] Add support for `Schema`** - [@stloyd](https://github.com/stloyd)
+- [#1860](https://github.com/flow-php/flow/pull/1860) - **Allow detecting Excel files by reading first bytes** - [@stloyd](https://github.com/stloyd)
+- [#1858](https://github.com/flow-php/flow/pull/1858) - **raw data generator methods to fake extractors** - [@norberttech](https://github.com/norberttech)
+- [#1855](https://github.com/flow-php/flow/pull/1855) - **Windows support in filesystem component** - [@norberttech](https://github.com/norberttech)
+- [c8079d](https://github.com/flow-php/flow/commit/c8079d1657a9b284dd12ffb9b15a0f72b23f30be) - **experimental workflow to run flow tests on windows** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#1880](https://github.com/flow-php/flow/pull/1880) - **Updated dependencies before next release** - [@norberttech](https://github.com/norberttech)
+- [#1880](https://github.com/flow-php/flow/pull/1880) - **Updated postgresql version in docker to 18** - [@norberttech](https://github.com/norberttech)
+- [#1867](https://github.com/flow-php/flow/pull/1867) - **Moved thrift generated models to new namespace in parquet library** - [@norberttech](https://github.com/norberttech)
+- [#1852](https://github.com/flow-php/flow/pull/1852) - **Update Homebrew TAP formula: flow-php to version: 0.24.0** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1867](https://github.com/flow-php/flow/pull/1867) - **Performance bottlenecks in thrift by overwriting implementations with more modern code** - [@norberttech](https://github.com/norberttech)
+- [#1867](https://github.com/flow-php/flow/pull/1867) - **Cleanup Chunk builders after flushing content to stream** - [@norberttech](https://github.com/norberttech)
+
+## [0.24.0] - 2025-09-16
+
+### Added
+- [#1850](https://github.com/flow-php/flow/pull/1850) - **Drop / Select Transformations** - [@norberttech](https://github.com/norberttech)
+- [#1850](https://github.com/flow-php/flow/pull/1850) - **Missing DSL functions for BatchSize, Limit, MaskColumns, AddRowIndex transformations** - [@norberttech](https://github.com/norberttech)
+- [#1845](https://github.com/flow-php/flow/pull/1845) - **RetryLoader** - [@norberttech](https://github.com/norberttech)
+- [#1845](https://github.com/flow-php/flow/pull/1845) - **Retry mechanism building blocks** - [@norberttech](https://github.com/norberttech)
 - [#1843](https://github.com/flow-php/flow/pull/1843) - **Doctrine Dbal Transactional Loader** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1849](https://github.com/flow-php/flow/pull/1849) - **Accept all loaders in dbal transactional loader** - [@norberttech](https://github.com/norberttech)
 - [#1834](https://github.com/flow-php/flow/pull/1834) - **Update Homebrew TAP formula: flow-php to version: 0.23.0** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1851](https://github.com/flow-php/flow/pull/1851) - **Missing parquet dependency from Flow Filesystem** - [@norberttech](https://github.com/norberttech)
 
 ## [0.23.0] - 2025-09-01
 

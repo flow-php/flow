@@ -16,7 +16,7 @@ final class RowGroups
     }
 
     /**
-     * @param array<\Flow\Parquet\Thrift\RowGroup> $rowGroups
+     * @param array<\Flow\Parquet\ThriftModel\RowGroup> $rowGroups
      */
     public static function fromThrift(array $rowGroups, Options $options) : self
     {
@@ -54,7 +54,7 @@ final class RowGroups
     }
 
     /**
-     * @return array<\Flow\Parquet\Thrift\RowGroup>
+     * @return array<\Flow\Parquet\ThriftModel\RowGroup>
      */
     public function toThrift() : array
     {

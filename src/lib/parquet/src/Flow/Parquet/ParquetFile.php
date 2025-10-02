@@ -11,15 +11,15 @@ use Flow\Parquet\{Dremel\ColumnData\ReadFlatColumnValues,
     ParquetFile\Metadata,
     ParquetFile\Page\ColumnPageHeader,
     ParquetFile\Schema,
-    Reader\PageReader};
+    Reader\PageReader,
+    Thrift\CompactProtocol,
+    Thrift\MemoryBuffer};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn};
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader\{ColumnChunkReader, ColumnChunkViewer};
-use Flow\Parquet\Thrift\FileMetaData;
-use Thrift\Protocol\TCompactProtocol;
-use Thrift\Transport\TMemoryBuffer;
+use Flow\Parquet\ThriftModel\FileMetaData;
 
 final class ParquetFile
 {
@@ -64,8 +64,8 @@ final class ParquetFile
 
         $thriftMetadata = new FileMetaData();
         $thriftMetadata->read(
-            new TCompactProtocol(
-                new TMemoryBuffer($metadata)
+            new CompactProtocol(
+                new MemoryBuffer($metadata)
             )
         );
 

@@ -79,6 +79,7 @@ For detailed information about specific DataFrame operations, see the following 
 
 ### Core Operations
 - **[Building Blocks](building-blocks.md)** - Understanding Rows, Entries, and basic data structures
+- **[Transformations](transformations.md)** - Reusable DataFrame transformations and the Transformation interface
 - **[Select/Drop](select-drop.md)** - Column selection and removal
 - **[Rename](rename.md)** - Column renaming strategies
 - **[Map](map.md)** - Row transformations and data mapping
@@ -104,6 +105,9 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Schema](schema.md)** - Schema management and validation
 - **[Constraints](constraints.md)** - Data integrity constraints and business rules
 - **[Error Handling](error-handling.md)** - Error management strategies
+
+### Reliability & Recovery
+- **[Retry Mechanisms](retry.md)** - Automatic retry for transient failures
 
 ### Output & Display
 - **[Display](display.md)** - Data visualization and output

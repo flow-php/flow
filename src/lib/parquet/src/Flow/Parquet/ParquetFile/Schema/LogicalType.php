@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\{Decimal, Time, Timestamp};
-use Flow\Parquet\Thrift\{BsonType, DateType, DecimalType, EnumType, IntType, JsonType, ListType, MapType, MicroSeconds, MilliSeconds, NanoSeconds, NullType, StringType, TimeType, TimeUnit, TimestampType, UUIDType};
+use Flow\Parquet\ThriftModel\{BsonType, DateType, DecimalType, EnumType, IntType, JsonType, ListType, MapType, MicroSeconds, MilliSeconds, NanoSeconds, NullType, StringType, TimeType, TimeUnit, TimestampType, UUIDType};
 
 final readonly class LogicalType
 {
@@ -64,7 +64,7 @@ final readonly class LogicalType
         return new self(self::ENUM);
     }
 
-    public static function fromThrift(\Flow\Parquet\Thrift\LogicalType $logicalType) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\LogicalType $logicalType) : self
     {
         $name = null;
 
@@ -202,9 +202,9 @@ final readonly class LogicalType
         return $this->timestamp;
     }
 
-    public function toThrift() : \Flow\Parquet\Thrift\LogicalType
+    public function toThrift() : \Flow\Parquet\ThriftModel\LogicalType
     {
-        return new \Flow\Parquet\Thrift\LogicalType([
+        return new \Flow\Parquet\ThriftModel\LogicalType([
             self::BSON => $this->is(self::BSON) ? new BsonType() : null,
             self::DATE => $this->is(self::DATE) ? new DateType() : null,
             self::DECIMAL => $this->is(self::DECIMAL) ? new DecimalType([

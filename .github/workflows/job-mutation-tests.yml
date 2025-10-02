@@ -1,0 +1,48 @@
+on:
+  workflow_call:
+
+jobs:
+  mutation-tests:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.2"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+        with:
+          fetch-depth: 0  # Need full history for git-diff-filter
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          coverage: "pcov"
+          cache-key-suffix: "-locked"
+
+      - name: "Create cache directory"
+        run: "mkdir -p var/infection/cache"
+
+      - name: "Cache infection results"
+        uses: "actions/cache@v4"
+        with:
+          path: "var/infection/cache"
+          key: "php-${{ matrix.php-version }}-cache-infection-${{ hashFiles('infection.json', 'composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-infection-
+
+      - name: "Mutation Tests"
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            composer test:mutation -- --git-diff-filter=AM --git-diff-base=origin/${{ github.base_ref }} --logger-github=false --log-verbosity=none
+          else
+            composer test:mutation -- --logger-github=false --log-verbosity=none
+          fi

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Thrift\SchemaElement;
+use Flow\Parquet\ThriftModel\SchemaElement;
 
 final class NestedColumn implements Column
 {

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use function Flow\ETL\Adapter\XML\from_xml;
-use function Flow\ETL\DSL\{config, data_frame};
-use function Flow\ETL\DSL\{flow_context};
+use function Flow\ETL\DSL\{config};
+use function Flow\ETL\DSL\{df, flow_context, schema, xml_schema};
 use function Flow\Types\DSL\type_string;
 use Flow\ETL\{Adapter\XML\XMLParserExtractor, Tests\FlowIntegrationTestCase};
 use Flow\ETL\Extractor\Signal;
@@ -16,20 +16,23 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 {
     public function test_limit() : void
     {
-        $extractor = (new XMLParserExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
+        $extractor = from_xml(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml'))
+            ->withXMLNodePath('root/row');
         $extractor->changeLimit(2);
 
-        self::assertCount(
-            2,
-            \iterator_to_array($extractor->extract(flow_context(config())))
-        );
+        $rows = df()
+            ->extract($extractor)
+            ->fetch()
+            ->toArray();
+
+        self::assertCount(2, $rows);
     }
 
     public function test_reading_deep_xml() : void
     {
-        self::assertEquals(
+        self::assertSame(
             5,
-            (data_frame())
+            df()
                 ->read(from_xml(__DIR__ . '/../Fixtures/deepest_items_flat.xml', 'root/items/item/deep'))
                 ->fetch()
                 ->count()
@@ -38,12 +41,9 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 
     public function test_reading_xml() : void
     {
-        $xml = new \DOMDocument();
-        $xml->load(__DIR__ . '/../Fixtures/simple_items.xml');
-
-        self::assertEquals(
+        self::assertSame(
             1,
-            (data_frame())
+            df()
                 ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml'))
                 ->fetch()
                 ->count()
@@ -59,7 +59,7 @@ final class XMLParserExtractorTest extends FlowIntegrationTestCase
 </item>
 XML,
             type_string()->cast(
-                (data_frame())
+                df()
                     ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
                     ->fetch()[0]
                     ->valueOf('node')
@@ -73,7 +73,7 @@ XML,
 </item>
 XML,
             type_string()->cast(
-                (data_frame())
+                df()
                     ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
                     ->fetch()[4]
                     ->valueOf('node')
@@ -104,11 +104,33 @@ XML,
 </items>
 XML,
             type_string()->cast(
-                (data_frame())
+                df()
                     ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
                     ->fetch()[0]->valueOf('node')
             )
         );
+    }
+
+    public function test_reading_xml_with_schema() : void
+    {
+        $rows = df()
+            ->extract(
+                from_xml(__DIR__ . '/../Fixtures/simple_items.xml')
+                    ->withSchema(
+                        schema(
+                            xml_schema('node'),
+                            xml_schema('missing'),
+                        )
+                    )
+            )
+            ->fetch()
+            ->toArray();
+
+        foreach ($rows as $row) {
+            self::assertNotSame([], $row);
+            self::assertNotNull($row['node']);
+            self::assertNull($row['missing']);
+        }
     }
 
     public function test_signal_stop() : void

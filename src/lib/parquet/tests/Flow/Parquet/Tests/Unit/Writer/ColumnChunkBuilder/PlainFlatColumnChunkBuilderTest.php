@@ -494,6 +494,37 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         self::assertGreaterThan(0, $containers[0]->columnChunk->valuesCount());
     }
 
+    public function test_flush_cleans_up_builder_state() : void
+    {
+        $column = new FlatColumn('test_col', PhysicalType::INT32);
+        $options = new Options();
+        $compression = Compressions::UNCOMPRESSED;
+        $builder = new PlainFlatColumnChunkBuilder($column, $options, $compression);
+
+        $columnData = WriteColumnData::initialize($column);
+        $flatValue1 = new FlatValue($column, 0, 1, 42);
+        $flatValue2 = new FlatValue($column, 0, 1, 84);
+        $columnData->addValue($flatValue1, $flatValue2);
+        $builder->addRow($columnData);
+
+        self::assertFalse($builder->isEmpty());
+        self::assertGreaterThan(0, $builder->uncompressedSize());
+
+        $containers = $builder->flush(0);
+        self::assertCount(1, $containers);
+
+        self::assertTrue($builder->isEmpty());
+        self::assertEquals(0, $builder->uncompressedSize());
+
+        $columnData2 = WriteColumnData::initialize($column);
+        $flatValue3 = new FlatValue($column, 0, 1, 126);
+        $columnData2->addValue($flatValue3);
+        $builder->addRow($columnData2);
+
+        self::assertFalse($builder->isEmpty());
+        self::assertGreaterThan(0, $builder->uncompressedSize());
+    }
+
     public function test_flush_preserves_column_chunk_metadata() : void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);

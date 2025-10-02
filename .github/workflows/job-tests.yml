@@ -1,0 +1,146 @@
+on:
+  workflow_call:
+    inputs:
+      dependencies:
+        type: string
+        required: false
+        default: '["locked"]'
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.operating-system }}
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8.0.31-debian
+        ports:
+          - 3306/tcp
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: root
+      elasticsearch:
+        image: elasticsearch:7.17.28
+        env:
+          discovery.type: single-node
+        options: >-
+          --health-cmd "curl http://localhost:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 9200:9200
+      meilisearch:
+        image: getmeili/meilisearch:v1.11.3
+        env:
+          MEILI_MASTER_KEY: masterKey
+          MEILI_NO_ANALYTICS: true
+        ports:
+          - 7700:7700
+      localstack:
+        image: localstack/localstack:latest
+        env:
+          SERVICES: s3
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        ports:
+          - 4566:4566
+          - 4571:4571
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies: ${{ fromJSON(inputs.dependencies) }}
+        php-version:
+          - "8.2"
+          - "8.3"
+          - "8.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "${{ matrix.dependencies }}"
+          coverage: 'pcov'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl'
+          ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install Azurite storage emulator
+        run: npm install -g azurite
+
+      - name: Start Azurite blob endpoint
+        shell: bash
+        run: |
+          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 > azurite.log 2>&1 &
+          for i in {1..30}; do
+            if curl -f http://localhost:10000/ 2>/dev/null; then
+              echo "Azurite is ready"
+              break
+            fi
+            echo "Waiting for Azurite... ($i/30)"
+            sleep 1
+          done
+          cat azurite.log
+        env:
+          AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
+
+      - name: "Test - Libraries"
+        run: "composer test:libraries"
+        env:
+          FLOW_PARQUET_TESTS_DEBUG: "0"
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
+
+      - name: "Test - ETL Core"
+        run: "composer test:core"
+
+      - name: "Test - CLI"
+        run: "composer test:cli"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+
+      - name: "Test - Adapters"
+        run: "composer test:adapters"
+        env:
+          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
+          SQLITE_DATABASE_URL: "sqlite:///:memory:"
+
+      - name: "Test - Bridges"
+        run: "composer test:bridges"
+        env:
+          AZURITE_HOST: "localhost"
+          AZURITE_BLOB_PORT: "10000"
+          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
+          AZURITE_ACCOUNT_KEY: "flowphpkey01"
+          S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
+          S3_REGION: "us-east-1"
+          S3_ACCESS_KEY_ID: "test"
+          S3_SECRET_ACCESS_KEY: "test"
+
+      - name: Upload to Codecov
+        uses: ./.github/actions/codecov-report
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          php-version: ${{ matrix.php-version }}
+          dependencies: ${{ matrix.dependencies }}

@@ -1,407 +1,53 @@
-name: Test Suite
-
 on:
   pull_request:
     paths:
       - '.github/workflows/**'
-      - 'src/adapter/**'
-      - 'src/bridge/**'
-      - 'src/core/**'
-      - 'src/cli/**'
-      - 'src/lib/**'
+      - '.github/actions/**'
+      - 'src/**'
       - 'tools/**'
       - 'examples/**'
       - 'composer.lock'
+      - 'composer.json'
   push:
     branches: [ 1.x ]
-    paths-ignore:
-      - 'CHANGELOG.md'
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+      - 'src/**'
+      - 'tools/**'
+      - 'examples/**'
+      - 'composer.lock'
+      - 'composer.json'
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
 
-# See https://stackoverflow.com/a/72408109
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  static-analyze:
+    uses: ./.github/workflows/job-static-analyze.yml
+
   tests:
-    name: "Tests"
-    runs-on: ${{ matrix.operating-system }}
-    timeout-minutes: 15
-    services:
-      elasticsearch:
-        image: elasticsearch:7.17.28
-        env:
-          discovery.type: single-node
-        options: >-
-          --health-cmd "curl http://localhost:9200/_cluster/health"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-        ports:
-          - 9200:9200
-      meilisearch:
-        image: getmeili/meilisearch:v1.11.3
-        env:
-          MEILI_MASTER_KEY: masterKey
-          MEILI_NO_ANALYTICS: true
-        ports:
-          - 7700:7700
-      postgres:
-        image: postgres:13.6-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432/tcp
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mysql:
-        image: mysql:8.0.31-debian
-        ports:
-          - 3306/tcp
-        env:
-          MYSQL_USER: mysql
-          MYSQL_PASSWORD: mysql
-          MYSQL_DATABASE: mysql
-          MYSQL_ROOT_PASSWORD: root
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-      localstack:
-        image: localstack/localstack:latest
-        env:
-          SERVICES: s3
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-        ports:
-          - 4566:4566
-          - 4571:4571
+    uses: ./.github/workflows/job-tests.yml
+    with:
+      dependencies: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["locked","lowest","highest"]' || '["locked"]' }}
+    secrets: inherit
 
-    strategy:
-      fail-fast: false
-      matrix:
-        dependencies:
-          - "locked"
-          - "lowest"
-          - "highest"
-        php-version:
-          - "8.2"
-          - "8.3"
-          - "8.4"
-        operating-system:
-          - "ubuntu-latest"
-
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
-        with:
-          tools: composer:v2
-          php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1, post_max_size=32M, upload_max_filesize=32M
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl
-
-      - name: "List PHP Extensions"
-        run: php -m
-
-      - name: "List PHP configuration"
-        run: php -i
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '14'
-
-      - name: Install Azurite storage emulator
-        run: npm install -g azurite
-
-      - name: Start Azurite blob endpoint
-        shell: bash
-        run: |
-          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 &
-          sleep 5
-        env:
-          AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
-
-      - name: "Install lowest dependencies"
-        if: ${{ matrix.dependencies == 'lowest' }}
-        run: "composer update --prefer-lowest --no-interaction --no-progress "
-
-      - name: "Install highest dependencies"
-        if: ${{ matrix.dependencies == 'highest' }}
-        run: "composer update --no-interaction --no-progress "
-
-      - name: "Install locked dependencies"
-        if: ${{ matrix.dependencies == 'locked' }}
-        run: "composer install --no-interaction --no-progress "
-
-      - name: "Test - ETL "
-        run: "composer test:core"
-
-      - name: "Test - CLI"
-        run: "composer test:cli"
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-
-      - name: "Test - Lib - Array Dot"
-        run: "composer test:lib:array-dot"
-
-      - name: "Test - Lib - Azure SDK"
-        run: "composer test:lib:azure-sdk"
-
-      - name: "Test - Lib - Doctrine DBAL Bulk"
-        run: "composer test:lib:doctrine-dbal-bulk"
-        env:
-          PGSQL_DATABASE_URL: pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
-          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
-
-      - name: "Test - Lib - Filesystem"
-        run: "composer test:lib:filesystem"
-
-      - name: "Test - Lib - Types"
-        run: "composer test:lib:types"
-
-      - name: "Test - Lib - parquet"
-        run: "composer test:lib:parquet"
-        env:
-          FLOW_PARQUET_TESTS_DEBUG: "0"
-
-      - name: "Test - Lib - Parquet Viewer"
-        run: "composer test:lib:parquet-viewer"
-
-      - name: "Test - Lib - Snappy"
-        run: "composer test:lib:snappy"
-
-      - name: "Test - Bridge - Filesystem Azure"
-        run: "composer test:bridge:filesystem-azure"
-        env:
-          AZURITE_HOST: "localhost"
-          AZURITE_BLOB_PORT: "10000"
-          AZURITE_ACCOUNT_NAME: "flowphpaccount01"
-          AZURITE_ACCOUNT_KEY: "flowphpkey01"
-
-      - name: "Test - Bridge - Filesystem Async AWS"
-        run: "composer test:bridge:filesystem-async-aws -vvv"
-        env:
-          S3_ENDPOINT: "http://localhost:${{ job.services.localstack.ports[4566] }}"
-          S3_REGION: "us-east-1"
-          S3_ACCESS_KEY_ID: "test"
-          S3_SECRET_ACCESS_KEY: "test"
-
-      - name: "Test - Bridge - Monolog Http"
-        run: "composer test:bridge:monolog-http"
-
-      - name: "Test - Bridge - OpenAPI Specification"
-        run: "composer test:bridge:openapi-specification"
-
-      - name: "Test - Bridge - Symfony Http Foundation"
-        run: "composer test:bridge:symfony-http-foundation"
-
-      - name: "Test - Adapter - ChartJs"
-        run: "composer test:adapter:chartjs"
-
-      - name: "Test - Adapter - CSV"
-        run: "composer test:adapter:csv"
-
-      - name: "Test - Adapter - Doctrine"
-        run: "composer test:adapter:doctrine"
-        env:
-          PGSQL_DATABASE_URL: "pgsql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8"
-          MYSQL_DATABASE_URL: "mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql"
-          SQLITE_DATABASE_URL: "sqlite:///:memory:"
-
-      - name: "Test - Adapter - Elasticsearch"
-        run: "composer test:adapter:elasticsearch"
-
-      - name: "Test - Adapter - Excel"
-        run: "composer test:adapter:excel"
-
-      - name: "Test - Adapter - Google Sheet"
-        run: "composer test:adapter:google-sheet"
-
-      - name: "Test - Adapter - Http"
-        run: "composer test:adapter:http"
-
-      - name: "Test - Adapter - Json"
-        run: "composer test:adapter:json"
-
-      - name: "Test - Adapter - Logger"
-        run: "composer test:adapter:logger"
-
-      - name: "Test - Adapter - Meilisearch"
-        run: "composer test:adapter:meilisearch"
-
-      - name: "Test - Adapter - Parquet"
-        run: "composer test:adapter:parquet"
-
-      - name: "Test - Adapter - Text"
-        run: "composer test:adapter:text"
-
-      - name: "Test - Adapter - XML"
-        run: "composer test:adapter:xml"
-
-      - name: "Test - Examples"
-        if: ${{ matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        run: "composer test:examples"
-
-      - name: "Download artifact"
-        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: dawidd6/action-download-artifact@v11
-        with:
-          workflow: test-suite.yml
-          name: codecov-base-commit-sha-1.x
-          search_artifacts: true
-
-      - name: Read artifact content into variable
-        if: ${{ github.event_name == 'pull_request' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        run: |
-          ARTIFACT_CONTENT=$(cat codecov-base-commit-sha-1.x.txt)
-          echo "codecov_base_commit_sha=$ARTIFACT_CONTENT" >> $GITHUB_ENV
-
-      - name: Upload test results to Codecov.io for baseline
-        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./var/phpunit/logs
-
-      - name: Upload code coverage data to Codecov.io for baseline
-        if: ${{ github.event_name == 'push' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./var/phpunit/coverage/clover
-
-      - name: Upload code coverage data to Codecov.io for pull request
-        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./var/phpunit/coverage/clover
-          commit_parent: ${{ env.codecov_base_commit_sha }}
-
-      - name: Upload test results to Codecov.io for pull request
-        if: ${{ github.event_name == 'pull_request' && !cancelled() && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./var/phpunit/logs
-          commit_parent: ${{ env.codecov_base_commit_sha }}
-
-      - name: Get the branch name and SHA
-        if: ${{ github.event_name == 'push' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        run: |
-          branch_name=${GITHUB_REF#refs/heads/}
-          commit_sha=$(git rev-parse HEAD)
-          echo "codecov_branch_name=$branch_name" >> $GITHUB_ENV
-          echo "codecov_commit_sha=$commit_sha" >> $GITHUB_ENV
-
-      - name: Save commit SHA to file
-        if: ${{ github.event_name == 'push' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        run: echo -n "${{ env.codecov_commit_sha }}" > codecov-base-commit-sha-${{ env.codecov_branch_name }}.txt
-
-      - name: Upload commit SHA as artifact
-        if: ${{ github.event_name == 'push' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: codecov-base-commit-sha-${{ env.codecov_branch_name }}
-          path: codecov-base-commit-sha-${{ env.codecov_branch_name }}.txt
-
-      - name: "Put SHA to step summary"
-        if: ${{ github.event_name == 'push' && matrix.php-version == '8.2' && matrix.dependencies == 'locked' }}
-        run: |
-          echo "Baseline commit SHA for Codecov: ${{ env.codecov_commit_sha }}" >> $GITHUB_STEP_SUMMARY
+  examples:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/job-examples.yml
 
   extension-tests:
-    name: "Extension Tests"
+    uses: ./.github/workflows/job-extension-tests.yml
 
-    runs-on: ${{ matrix.operating-system }}
+  windows-tests:
+    uses: ./.github/workflows/job-windows-tests.yml
 
-    strategy:
-      fail-fast: false
-      matrix:
-        dependencies:
-          - "locked"
-        php-version:
-          - "8.2"
-          - "8.3"
-          - "8.4"
-        operating-system:
-          - "ubuntu-latest"
+  mutation-tests:
+    uses: ./.github/workflows/job-mutation-tests.yml
 
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Install dependencies"
-        run: |
-          sudo apt-get update && sudo apt-get install libbrotli1 liblz4-1 libzstd1 --assume-yes
-
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
-        with:
-          tools: composer:v2
-          php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, brotli, lz4, zstd, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1
-        env:
-            SNAPPY_CONFIGURE_PREFIX_OPTS: "CXXFLAGS=-std=c++11"
-
-      - name: "List PHP Extensions"
-        run: php -m
-
-      - name: "List PHP configuration"
-        run: php -i
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
-
-      - name: "Install lowest dependencies"
-        if: ${{ matrix.dependencies == 'lowest' }}
-        run: "composer update --prefer-lowest --no-interaction --no-progress "
-
-      - name: "Install highest dependencies"
-        if: ${{ matrix.dependencies == 'highest' }}
-        run: "composer update --no-interaction --no-progress "
-
-      - name: "Install locked dependencies"
-        if: ${{ matrix.dependencies == 'locked' }}
-        run: "composer install --no-interaction --no-progress "
-
-      - name: "Test Brotli"
-        run: "composer test:lib:parquet -- --group brotli-extension"
-
-      - name: "Test LZ4"
-        run: "composer test:lib:parquet -- --group lz4-extension"
-
-      - name: "Test ZSTD"
-        run: "composer test:lib:parquet -- --group zstd-extension"
-
-      - name: "Test Snappy"
-        run: "composer test:lib:parquet -- --group snappy-extension"
+  benchmark-tests:
+    uses: ./.github/workflows/job-benchmark-tests.yml

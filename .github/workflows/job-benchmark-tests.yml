@@ -1,0 +1,135 @@
+on:
+  workflow_call:
+
+jobs:
+  benchmark-tests:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.2"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          coverage: "none"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, snappy-https://github.com/kjdev/php-ext-snappy@0.2.1'
+          php-env: '{"SNAPPY_CONFIGURE_PREFIX_OPTS": "CXXFLAGS=-std=c++11"}'
+          cache-key-suffix: "-locked"
+
+      - name: "Download phpbench benchmarks artifact"
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          workflow: baseline.yml
+          name: phpbench-baseline
+          path: ./var/phpbench/
+
+      - name: "Execute benchmarks"
+        id: init_comment
+        run: |
+          # Run all benchmarks in parallel
+          composer test:benchmark:extractor -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/extractor.txt 2>&1 &
+          PID_EXTRACTOR=$!
+
+          composer test:benchmark:transformer -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/transformer.txt 2>&1 &
+          PID_TRANSFORMER=$!
+
+          composer test:benchmark:loader -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/loader.txt 2>&1 &
+          PID_LOADER=$!
+
+          composer test:benchmark:building_blocks -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/building_blocks.txt 2>&1 &
+          PID_BUILDING=$!
+
+          composer test:benchmark:parquet-library -- --ref=1.x --progress=none --iterations=1 > ./var/phpbench/parquet.txt 2>&1 &
+          PID_PARQUET=$!
+
+          # Wait for all to complete and capture exit codes
+          EXIT_CODE=0
+          wait $PID_EXTRACTOR || EXIT_CODE=$?
+          wait $PID_TRANSFORMER || EXIT_CODE=$?
+          wait $PID_LOADER || EXIT_CODE=$?
+          wait $PID_BUILDING || EXIT_CODE=$?
+          wait $PID_PARQUET || EXIT_CODE=$?
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "One or more benchmarks failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+
+          # Build the summary file
+          {
+            echo '# Flow PHP - Benchmarks'
+            echo '<sup><sub>Results of the benchmarks from this PR are compared with the results from 1.x branch.</sub></sup>'
+            echo '  '
+            echo '<details><summary>Extractors</summary>'
+            echo '  '
+            echo '```shell'
+            cat ./var/phpbench/extractor.txt
+            echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
+            echo '<details><summary>Transformers</summary>'
+            echo '  '
+            echo '```shell'
+            cat ./var/phpbench/transformer.txt
+            echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
+            echo '<details><summary>Loaders</summary>'
+            echo '  '
+            echo '```shell'
+            cat ./var/phpbench/loader.txt
+            echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
+            echo '<details><summary>Building Blocks</summary>'
+            echo '  '
+            echo '```shell'
+            cat ./var/phpbench/building_blocks.txt
+            echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
+            echo '<details><summary>Parquet Library</summary>'
+            echo '  '
+            echo '```shell'
+            cat ./var/phpbench/parquet.txt
+            echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
+          } >> "./var/phpbench/summary.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phpbench
+          path: ./var/phpbench/summary.txt
+          overwrite: true
+
+      - name: Save PR number
+        run: echo ${{ github.event.pull_request.number }} > ./pr-id.txt
+
+      - name: Upload PR number
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr
+          path: ./pr-id.txt
+          overwrite: true
+
+      - name: "Set job summary"
+        run: |
+          cat ./var/phpbench/summary.txt >> $GITHUB_STEP_SUMMARY

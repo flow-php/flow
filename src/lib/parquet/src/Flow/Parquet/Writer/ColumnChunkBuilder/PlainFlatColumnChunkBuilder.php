@@ -27,8 +27,6 @@ use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, PhysicalType};
 use Flow\Parquet\Writer\PageBuilder\{RLEBitPackedPacker};
 use Flow\Parquet\Writer\ValueStorage\{BooleanValueStorage, BufferValueStorage, ValueStorage};
-use Thrift\Protocol\TCompactProtocol;
-use Thrift\Transport\TMemoryBuffer;
 
 final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 {
@@ -43,7 +41,7 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     private int $nullCount = 0;
 
-    private readonly PageContainers $pages;
+    private PageContainers $pages;
 
     private StatisticsCounter $pageStatistics;
 
@@ -98,6 +96,10 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function closePage() : void
     {
+        if ($this->isEmpty()) {
+            return;
+        }
+
         $codec = new Codec($this->options);
 
         $pageContainer = match ($writerVersion = $this->options->getInt(Option::WRITER_VERSION)) {
@@ -125,11 +127,9 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
 
     public function flush(int $fileOffset) : array
     {
-        if (!$this->valueStorage->isEmpty() || \count($this->repetitionLevels) > 0 || \count($this->definitionLevels) > 0) {
-            $this->closePage();
-        }
+        $this->closePage();
 
-        return [new ColumnChunkContainer(
+        $containers = [new ColumnChunkContainer(
             $this->pages->buffer(),
             new ColumnChunk(
                 type: $this->column->type(),
@@ -147,6 +147,29 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
                 options: $this->options
             )
         )];
+
+        $this->pages = new PageContainers();
+        $this->chunkStatistics = new StatisticsCounter($this->column);
+        $this->pageStatistics = new StatisticsCounter($this->column);
+        $this->repetitionLevels = [];
+        $this->definitionLevels = [];
+        $this->valueStorage->reset();
+        $this->rowsCount = 0;
+        $this->nullCount = 0;
+        $this->nonNullValuesCount = 0;
+
+        return $containers;
+    }
+
+    /**
+     * Checks if the builder has any data that needs to be written.
+     * Used to prevent writing empty pages.
+     */
+    public function isEmpty() : bool
+    {
+        return $this->valueStorage->size() === 0
+               && count($this->definitionLevels) === 0
+               && count($this->repetitionLevels) === 0;
     }
 
     public function isFull() : bool
@@ -191,13 +214,9 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
             $compressedBuffer,
-            [],
-            null,
             $pageHeader
         );
     }
@@ -243,13 +262,9 @@ final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder
             ),
             dictionaryPageHeader: null,
         );
-        $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
 
         return new PageContainer(
-            $pageHeaderBuffer->getBuffer(),
             $repetitionsBuffer . $definitionsBuffer . $compressedBuffer,
-            [],
-            null,
             $pageHeader
         );
     }

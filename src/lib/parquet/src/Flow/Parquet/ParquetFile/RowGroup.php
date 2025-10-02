@@ -21,10 +21,10 @@ final class RowGroup
     ) {
     }
 
-    public static function fromThrift(\Flow\Parquet\Thrift\RowGroup $thrift, Options $options) : self
+    public static function fromThrift(\Flow\Parquet\ThriftModel\RowGroup $thrift, Options $options) : self
     {
         return new self(
-            \array_map(static fn (\Flow\Parquet\Thrift\ColumnChunk $columnChunk) => ColumnChunk::fromThrift($columnChunk, $options), $thrift->columns),
+            \array_map(static fn (\Flow\Parquet\ThriftModel\ColumnChunk $columnChunk) => ColumnChunk::fromThrift($columnChunk, $options), $thrift->columns),
             $thrift->num_rows
         );
     }
@@ -72,13 +72,13 @@ final class RowGroup
         return \array_sum(\array_map(static fn (ColumnChunk $chunk) => $chunk->totalUncompressedSize(), $this->columnChunks));
     }
 
-    public function toThrift() : \Flow\Parquet\Thrift\RowGroup
+    public function toThrift() : \Flow\Parquet\ThriftModel\RowGroup
     {
         $fileOffset = \count($this->columnChunks) ? \current($this->columnChunks)->fileOffset() : 0;
         $chunksUncompressedSize = \array_map(static fn (ColumnChunk $chunk) => $chunk->totalUncompressedSize(), $this->columnChunks);
         $chunksCompressedSize = \array_map(static fn (ColumnChunk $chunk) => $chunk->totalCompressedSize(), $this->columnChunks);
 
-        return new \Flow\Parquet\Thrift\RowGroup([
+        return new \Flow\Parquet\ThriftModel\RowGroup([
             'columns' => \array_map(static fn (ColumnChunk $columnChunk) => $columnChunk->toThrift(), $this->columnChunks),
             'num_rows' => $this->rowsCount,
             'file_offset' => $fileOffset,

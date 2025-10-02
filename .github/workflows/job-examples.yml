@@ -1,0 +1,28 @@
+on:
+  workflow_call:
+
+jobs:
+  examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.2"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          dependencies: "locked"
+          coverage: "none"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl'
+          ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
+
+      - name: "Test - Examples"
+        run: "composer test:examples"

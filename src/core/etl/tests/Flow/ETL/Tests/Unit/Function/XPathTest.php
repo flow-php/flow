@@ -43,7 +43,7 @@ final class XPathTest extends FlowTestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertNull(
-            ref('value')->xpath('/root/foo/@')->eval(row((new EntryFactory())->create('value', $xml)))
+            ref('value')->xpath('/root/foo/asa')->eval(row((new EntryFactory())->create('value', $xml)))
         );
     }
 

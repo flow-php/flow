@@ -1,5 +1,3 @@
-name: "Pull Request Check"
-
 on:
   pull_request_target:
     types: ["opened", "edited", "reopened", "ready_for_review", "synchronize"]
@@ -11,7 +9,6 @@ jobs:
       automation_github_token: "${{ secrets.GITHUB_TOKEN }}"
 
   pull-request-size:
-    name: "Label PR Size"
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:

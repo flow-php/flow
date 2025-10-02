@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
-use Flow\Parquet\Thrift\SchemaElement;
+use Flow\Parquet\ThriftModel\SchemaElement;
 
 final class Schema
 {

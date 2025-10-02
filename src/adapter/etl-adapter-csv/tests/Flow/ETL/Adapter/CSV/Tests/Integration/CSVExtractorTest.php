@@ -11,9 +11,12 @@ use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\ETL\Extractor\Signal;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Tests\OperatingSystem;
 
 final class CSVExtractorTest extends FlowTestCase
 {
+    use OperatingSystem;
+
     public function test_bom_removal_utf16_be() : void
     {
         $extractor = from_csv(
@@ -414,6 +417,10 @@ SCHEMA,
 
     public function test_extracting_csv_with_multiline_strings() : void
     {
+        if ($this->isWindows()) {
+            self::markTestSkipped('This test is failing on windows due to different new line characters.');
+        }
+
         $extractor = from_csv(
             __DIR__ . '/../Fixtures/multiline_strings.csv'
         );

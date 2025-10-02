@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\PipelineRunCommand;
+use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class PipelineRunCommandTest extends TestCase
 {
+    use CommandOutputNormalizer;
     public function test_run_and_analyze_command() : void
     {
         $tester = new CommandTester(new PipelineRunCommand('run'));
@@ -19,7 +21,7 @@ final class PipelineRunCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----+---------+--------+
 | id |    name | active |
@@ -66,7 +68,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----+---------+--------+
 | id |    name | active |

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\{FileReadCommand};
+use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileReadCommandTest extends TestCase
 {
+    use CommandOutputNormalizer;
     public function test_read_rows_csv() : void
     {
         $tester = new CommandTester(new FileReadCommand('read'));
@@ -18,7 +20,7 @@ final class FileReadCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
 |             order_id |           created_at |           updated_at | discount |              address |                notes |                items |
@@ -43,7 +45,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----------------------+----------------------+----------------------+----------+----------------------+----------------------+----------------------+
 |             order_id |           created_at |           updated_at | discount |              address |                notes |                items |
@@ -68,7 +70,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +----------------------+----------------------+----------------------+--------------+-------------+-----------+----------------------+----------------------+----------------------+
 |             order_id |           created_at |           updated_at | cancelled_at | total_price |  discount |             customer |              address |                notes |
@@ -94,7 +96,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +----------------------+----------------------+----------------------+-----------+----------------------+-------------------+----------------------+----------------------+----------------------+
 |             order_id |           created_at |           updated_at |  discount |                email |          customer |              address |                notes |                items |
@@ -120,7 +122,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----------------------+
 |                 text |
@@ -171,14 +173,14 @@ OUTPUT,
 
         // Should skip first row and show next 3 rows with only order_id and discount columns
         self::assertStringNotContainsString('e13d7098-5a78-3389-9', $output); // First row should not be displayed
-        self::assertStringContainsString('947df050-3abb-3f5a-9', $output); // Second row should be first displayed
-        self::assertStringContainsString('6315f9e2-86bf-3321-a', $output); // Third row should be displayed
-        self::assertStringContainsString('4cccb632-fade-34e2-8', $output); // Fourth row should be displayed
-        self::assertStringContainsString('3 rows', $output); // Should show 3 rows
+        self::assertCommandOutputContains('947df050-3abb-3f5a-9', $output); // Second row should be first displayed
+        self::assertCommandOutputContains('6315f9e2-86bf-3321-a', $output); // Third row should be displayed
+        self::assertCommandOutputContains('4cccb632-fade-34e2-8', $output); // Fourth row should be displayed
+        self::assertCommandOutputContains('3 rows', $output); // Should show 3 rows
 
         // Should only show selected columns
-        self::assertStringContainsString('order_id', $output);
-        self::assertStringContainsString('discount', $output);
+        self::assertCommandOutputContains('order_id', $output);
+        self::assertCommandOutputContains('discount', $output);
         self::assertStringNotContainsString('created_at', $output);
         self::assertStringNotContainsString('address', $output);
     }
@@ -198,10 +200,10 @@ OUTPUT,
         $output = $tester->getDisplay();
 
         // Should display rows starting from offset 2 (third row)
-        self::assertStringContainsString('6315f9e2-86bf-3321-a', $output); // Third row should be first displayed
+        self::assertCommandOutputContains('6315f9e2-86bf-3321-a', $output); // Third row should be first displayed
         self::assertStringNotContainsString('e13d7098-5a78-3389-9', $output); // First row should not be displayed
         self::assertStringNotContainsString('947df050-3abb-3f5a-9', $output); // Second row should not be displayed
-        self::assertStringContainsString('1 rows', $output); // Only 1 row should be displayed (limit 3 - offset 2)
+        self::assertCommandOutputContains('1 rows', $output); // Only 1 row should be displayed (limit 3 - offset 2)
     }
 
     public function test_read_rows_with_offset_zero() : void
@@ -219,9 +221,9 @@ OUTPUT,
         $output = $tester->getDisplay();
 
         // Should behave same as no offset - show first 2 rows
-        self::assertStringContainsString('e13d7098-5a78-3389-9', $output); // First row should be displayed
-        self::assertStringContainsString('947df050-3abb-3f5a-9', $output); // Second row should be displayed
-        self::assertStringContainsString('2 rows', $output);
+        self::assertCommandOutputContains('e13d7098-5a78-3389-9', $output); // First row should be displayed
+        self::assertCommandOutputContains('947df050-3abb-3f5a-9', $output); // Second row should be displayed
+        self::assertCommandOutputContains('2 rows', $output);
     }
 
     public function test_read_rows_with_output_columns_empty_maintains_all_columns() : void
@@ -237,14 +239,14 @@ OUTPUT,
 
         // Should contain all original columns (order_id, created_at, updated_at, discount, address, notes, items)
         $output = $tester->getDisplay();
-        self::assertStringContainsString('order_id', $output);
-        self::assertStringContainsString('created_at', $output);
-        self::assertStringContainsString('updated_at', $output);
-        self::assertStringContainsString('discount', $output);
-        self::assertStringContainsString('address', $output);
-        self::assertStringContainsString('notes', $output);
-        self::assertStringContainsString('items', $output);
-        self::assertStringContainsString('2 rows', $output);
+        self::assertCommandOutputContains('order_id', $output);
+        self::assertCommandOutputContains('created_at', $output);
+        self::assertCommandOutputContains('updated_at', $output);
+        self::assertCommandOutputContains('discount', $output);
+        self::assertCommandOutputContains('address', $output);
+        self::assertCommandOutputContains('notes', $output);
+        self::assertCommandOutputContains('items', $output);
+        self::assertCommandOutputContains('2 rows', $output);
     }
 
     public function test_read_rows_with_output_columns_multiple_columns() : void
@@ -259,7 +261,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----------------------+----------+----------------------+
 |             order_id | discount |           created_at |
@@ -286,7 +288,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +--------------------+
 | nonexistent_column |
@@ -312,7 +314,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----------------------+
 |             order_id |
@@ -335,7 +337,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertStringContainsString(
+        self::assertCommandOutputContains(
             <<<'OUTPUT'
 +----------------------+
 |                 node |

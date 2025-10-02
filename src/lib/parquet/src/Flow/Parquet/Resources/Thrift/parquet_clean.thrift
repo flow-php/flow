@@ -1,6 +1,6 @@
 namespace cpp parquet
 namespace java org.apache.parquet.format
-namespace php Flow.Parquet.Thrift
+namespace php Flow.Parquet.ThriftModel
 
 enum Type {
   BOOLEAN = 0;

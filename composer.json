@@ -22,7 +22,7 @@
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
         "async-aws/s3": "^2.6",
-        "brick/math": "^0.11 || ^0.12 || ^0.13",
+        "brick/math": "^0.11 || ^0.12 || ^0.13 || ^0.14",
         "coduo/php-humanizer": "^5.0",
         "doctrine/dbal": "^3.6 || ^4.0",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
@@ -234,6 +234,11 @@
         "test": [
             "@test:core",
             "@test:cli",
+            "@test:libraries",
+            "@test:bridges",
+            "@test:adapters"
+        ],
+        "test:libraries": [
             "@test:lib:array-dot",
             "@test:lib:azure-sdk",
             "@test:lib:doctrine-dbal-bulk",
@@ -241,12 +246,16 @@
             "@test:lib:parquet",
             "@test:lib:parquet-viewer",
             "@test:lib:snappy",
-            "@test:lib:types",
+            "@test:lib:types"
+        ],
+        "test:bridges": [
             "@test:bridge:filesystem-azure",
             "@test:bridge:filesystem-async-aws",
             "@test:bridge:monolog-http",
             "@test:bridge:openapi-specification",
-            "@test:bridge:symfony-http-foundation",
+            "@test:bridge:symfony-http-foundation"
+        ],
+        "test:adapters": [
             "@test:adapter:chartjs",
             "@test:adapter:csv",
             "@test:adapter:doctrine",
@@ -456,8 +465,8 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/bridge.symfony.http-foundation.xml"
         ],
         "build:parquet:thrift": [
-            "grep -q 'namespace php Flow.Parquet.Thrift' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
-            "rm src/lib/parquet/src/Flow/Parquet/Thrift/*.php",
+            "grep -q 'namespace php Flow.Parquet.ThriftModel' src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift || { echo \"Flow php namespace not found in thrift definition!\"; exit 1; }\n",
+            "rm src/lib/parquet/src/Flow/Parquet/ThriftModel/*.php",
             "thrift --gen php --out src/lib/parquet/src src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift",
             "@cs:php:fix"
         ],

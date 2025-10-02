@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\CLI\Tests\Integration;
 
 use Flow\CLI\Command\FileSchemaCommand;
+use Flow\ETL\Tests\CommandOutputNormalizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileSchemaCommandTest extends TestCase
 {
+    use CommandOutputNormalizer;
     public function test_run_schema() : void
     {
         $tester = new CommandTester(new FileSchemaCommand('file:schema'));
@@ -18,7 +20,7 @@ final class FileSchemaCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 [{"ref":"order_id","type":{"type":"uuid"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":false,"metadata":[]}]
 
@@ -35,7 +37,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 schema
 |-- order_id: uuid
@@ -64,7 +66,7 @@ OUTPUT,
         $tester->assertCommandIsSuccessful();
 
         // With large offset, no data is processed, so schema should be minimal
-        self::assertSame("schema\n\n", $tester->getDisplay());
+        self::assertCommandOutputIdentical("schema\n\n", $tester->getDisplay());
     }
 
     public function test_run_schema_with_offset() : void
@@ -80,7 +82,7 @@ OUTPUT,
         $tester->assertCommandIsSuccessful();
 
         // Schema should be the same regardless of offset since schema is inferred from structure
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 schema
 |-- order_id: uuid
@@ -110,7 +112,7 @@ OUTPUT,
         $tester->assertCommandIsSuccessful();
 
         // Schema should be the same even with offset and limit
-        self::assertEquals(
+        self::assertCommandOutputEquals(
             <<<'OUTPUT'
 +------------+--------+----------+----------+
 |       name |   type | nullable | metadata |
@@ -138,7 +140,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 \Flow\ETL\DSL\schema(
     \Flow\ETL\DSL\uuid_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
@@ -163,7 +165,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 [
     {
@@ -237,7 +239,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertEquals(
+        self::assertCommandOutputEquals(
             <<<'OUTPUT'
 +------------+--------+----------+----------+
 |       name |   type | nullable | metadata |
@@ -265,7 +267,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +------------+----------+----------+----------+
 |       name |     type | nullable | metadata |
@@ -293,7 +295,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +------------+----------+----------+----------+
 |       name |     type | nullable | metadata |
@@ -321,7 +323,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertEquals(
+        self::assertCommandOutputEquals(
             <<<'OUTPUT'
 +------------+--------+----------+----------+
 |       name |   type | nullable | metadata |
@@ -349,7 +351,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +--------------+-----------+----------+--------------------+
 |         name |      type | nullable |           metadata |
@@ -379,7 +381,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +------------+----------+----------+----------+
 |       name |     type | nullable | metadata |
@@ -409,7 +411,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +------+--------+----------+----------+
 | name |   type | nullable | metadata |
@@ -431,7 +433,7 @@ OUTPUT,
 
         $tester->assertCommandIsSuccessful();
 
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 +------+------+----------+----------+
 | name | type | nullable | metadata |
@@ -458,7 +460,7 @@ OUTPUT,
         $tester->assertCommandIsSuccessful();
 
         // Zero offset should behave same as no offset
-        self::assertSame(
+        self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 schema
 |-- order_id: uuid

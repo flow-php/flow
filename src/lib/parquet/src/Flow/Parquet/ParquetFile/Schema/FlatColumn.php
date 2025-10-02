@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Thrift\SchemaElement;
+use Flow\Parquet\ThriftModel\SchemaElement;
 
 final class FlatColumn implements Column
 {

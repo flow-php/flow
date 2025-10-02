@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
+use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -13,6 +14,8 @@ use Symfony\Component\Console\Tester\ApplicationTester;
 
 final class ReadMetadataTest extends TestCase
 {
+    use CommandOutputNormalizer;
+
     public function test_reading_metadata_from_non_json_file() : void
     {
         $application = new Parquet();
@@ -31,7 +34,7 @@ final class ReadMetadataTest extends TestCase
             fn (OutputStyle $io) => $io->error("File \"{$path}\" is not a valid parquet file")
         );
 
-        self::assertStringContainsString($expected, $tester->getDisplay());
+        self::assertCommandOutputContains(self::normalizeCommandOutput($expected), $tester->getDisplay());
         self::assertSame(1, $tester->getStatusCode());
     }
 
@@ -53,11 +56,11 @@ final class ReadMetadataTest extends TestCase
             '--statistics' => 1,
         ]);
 
-        self::assertStringContainsString('Metadata', $tester->getDisplay());
-        self::assertStringContainsString('Row Groups', $tester->getDisplay());
-        self::assertStringContainsString('Column Chunks', $tester->getDisplay());
-        self::assertStringContainsString('Column Chunks Statistics', $tester->getDisplay());
-        self::assertStringContainsString('Page Headers', $tester->getDisplay());
+        self::assertCommandOutputContains('Metadata', $tester->getDisplay());
+        self::assertCommandOutputContains('Row Groups', $tester->getDisplay());
+        self::assertCommandOutputContains('Column Chunks', $tester->getDisplay());
+        self::assertCommandOutputContains('Column Chunks Statistics', $tester->getDisplay());
+        self::assertCommandOutputContains('Page Headers', $tester->getDisplay());
         self::assertSame(0, $tester->getStatusCode());
     }
 

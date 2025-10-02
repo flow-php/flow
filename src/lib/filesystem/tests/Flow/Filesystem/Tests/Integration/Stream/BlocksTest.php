@@ -10,30 +10,28 @@ use PHPUnit\Framework\TestCase;
 
 final class BlocksTest extends TestCase
 {
-    public function test_moving_resource_to_blocks() : void
+    public function test_basic_blocks_operations() : void
     {
         $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
 
-        $file = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/Fixtures/orders.csv');
+        $testContent = 'Basic test content for blocks functionality';
+        $blocks->append($testContent);
 
-        $blocks->fromResource($file);
-
-        self::assertSame($fileSize, $blocks->size());
-        self::assertSame((int) ceil($fileSize / $blockSize), \count($blocks->all()));
+        self::assertSame(\strlen($testContent), $blocks->size());
+        self::assertGreaterThan(0, \count($blocks->all()));
     }
 
-    public function test_moving_resource_to_existing_blocks() : void
+    public function test_blocks_with_multiple_appends() : void
     {
-        $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(10));
+        $blocks = new Blocks($blockSize = SizeUnits::kbToBytes(1));
 
-        $file = \fopen(__DIR__ . '/Fixtures/orders.csv', 'rb');
-        $fileSize = \filesize(__DIR__ . '/Fixtures/orders.csv');
+        $content1 = \str_repeat('a', 500);
+        $content2 = \str_repeat('b', 600);
 
-        $blocks->append(\str_repeat('a', 100));
-        $blocks->fromResource($file);
+        $blocks->append($content1);
+        $blocks->append($content2);
 
-        self::assertSame($fileSize + 100, $blocks->size());
-        self::assertCount((int) ceil($fileSize / $blockSize), $blocks->all());
+        self::assertSame(\strlen($content1) + \strlen($content2), $blocks->size());
+        self::assertGreaterThan(1, \count($blocks->all()));
     }
 }

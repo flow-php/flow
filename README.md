@@ -18,6 +18,12 @@ Flow is a PHP-based, strongly typed data processing framework with a low memory 
 Supported PHP
 versions: [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/) [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/) [![PHP 8.4](https://img.shields.io/badge/php-~8.4-8892BF.svg)](https://php.net/)
 
+Supported Operating Systems
+- Linux
+- macOS
+- Windows (experimental)
+
+
 ---
 
 ## Usage Example

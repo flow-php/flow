@@ -5,33 +5,43 @@ declare(strict_types=1);
 namespace Flow\Parquet\Writer;
 
 use Flow\Parquet\ParquetFile\Page\PageHeader;
+use Flow\Parquet\Thrift\{CompactProtocol, MemoryBuffer};
 
-final readonly class PageContainer
+final class PageContainer
 {
+    private ?string $serializedHeader = null;
+
     /**
-     * @param string $pageHeaderBuffer
-     * @param string $pageBuffer
-     * @param array<array-key, mixed> $values - when dictionary is present values are indices
-     * @param null|array<array-key, mixed> $dictionary
+     * @param string $compressedData - Compressed page data (repetition levels, definition levels, and values)
      * @param PageHeader $pageHeader
      */
     public function __construct(
-        public string $pageHeaderBuffer,
-        public string $pageBuffer,
-        public array $values,
-        public ?array $dictionary,
+        public string $compressedData,
         public PageHeader $pageHeader,
     ) {
     }
 
     public function dataSize() : int
     {
-        return \strlen($this->pageBuffer);
+        return \strlen($this->compressedData);
     }
 
     public function headerSize() : int
     {
-        return \strlen($this->pageHeaderBuffer);
+        return \strlen($this->serializedHeader());
+    }
+
+    public function serializedHeader() : string
+    {
+        if ($this->serializedHeader !== null) {
+            return $this->serializedHeader;
+        }
+
+        $this->pageHeader->toThrift()->write(new CompactProtocol($buffer = new MemoryBuffer()));
+
+        $this->serializedHeader = $buffer->data();
+
+        return $this->serializedHeader;
     }
 
     public function totalCompressedSize() : int

@@ -17,7 +17,7 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         StringClassNameToClassConstantRector::class,
-        __DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift/*',
+        __DIR__ . '/src/lib/parquet/src/Flow/Parquet/ThriftModel/*',
     ])
     ->withCache(__DIR__ . '/var/rector/src')
     ->withImportNames(importShortClasses: false, removeUnusedImports: true)

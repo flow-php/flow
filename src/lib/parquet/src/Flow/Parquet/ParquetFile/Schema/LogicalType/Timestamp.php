@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Schema\LogicalType;
 
-use Flow\Parquet\Thrift\TimestampType;
+use Flow\Parquet\ThriftModel\TimestampType;
 
 final readonly class Timestamp
 {

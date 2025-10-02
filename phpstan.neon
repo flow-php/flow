@@ -65,8 +65,8 @@ parameters:
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php
         - src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/Sheet/SheetsManager.php
-        - src/lib/parquet/src/Flow/Parquet/ThriftStream/*
         - src/lib/parquet/src/Flow/Parquet/Thrift/*
+        - src/lib/parquet/src/Flow/Parquet/ThriftModel/*
         - src/lib/parquet/src/Flow/Parquet/BinaryReader/*
         - src/lib/parquet/src/Flow/Parquet/Dremel/ColumnData/DefinitionConverter.php
 
