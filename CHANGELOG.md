@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-10-05
+## [Unreleased] - 2025-10-06
 
 ### Added
 - [#1882](https://github.com/flow-php/flow/pull/1882) - **Reusable action to setup php version in github workflows** - [@norberttech](https://github.com/norberttech)
