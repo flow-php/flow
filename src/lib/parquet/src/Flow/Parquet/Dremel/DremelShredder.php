@@ -414,14 +414,12 @@ final readonly class DremelShredder
              * @var NestedColumn $child
              */
             if ($child->isList()) {
-                /** @phpstan-ignore-next-line */
                 $this->shredList($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data, $depth);
 
                 continue;
             }
 
             if ($child->isMap()) {
-                /** @phpstan-ignore-next-line */
                 $this->shredMap($child, $structureData[$child->name()] ?? null, $definitionLevel, $repetitionLevel, $data, $depth);
 
                 continue;

@@ -1,0 +1,16 @@
+name: "⚙️ Task"
+description: "Use only to create tasks for approved Proposal."
+title: "[Bug]: "
+projects: ["flow-php/projects/1"]
+assignees: ["norberttech"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Don't use unless you are creating a task for approved Proposal!**
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to be done?
+    validations:
+      required: true

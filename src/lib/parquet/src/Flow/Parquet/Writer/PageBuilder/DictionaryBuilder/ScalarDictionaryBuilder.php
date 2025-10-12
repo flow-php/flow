@@ -21,12 +21,15 @@ final class ScalarDictionaryBuilder
                 continue;
             }
 
+            /** @phpstan-ignore-next-line */
             if (!isset($valueToIndex[$value])) {
                 $dictionary[] = $value;
+                /** @phpstan-ignore-next-line */
                 $valueToIndex[$value] = $dictionarySize;
                 $dictionarySize++;
             }
 
+            /** @phpstan-ignore-next-line */
             $indices[] = $valueToIndex[$value];
         }
 

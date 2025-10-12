@@ -6,9 +6,8 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\{ArrayParameterType as DbalArrayType,
     Connection,
-    ParameterType,
-    ParameterType as DbalParameterType,
-    Types\Type};
+    ParameterType as DbalParameterType
+    };
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\Doctrine\Bulk\{Dialect\MySQLInsertOptions,
@@ -347,13 +346,13 @@ function to_dbal_transaction(
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function pagination_key_asc(string $column, string|int|ParameterType|Type $type = ParameterType::STRING) : Key
+function pagination_key_asc(string $column, string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING) : Key
 {
     return new Key($column, Order::ASC, $type);
 }
 
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-function pagination_key_desc(string $column, string|int|ParameterType|Type $type = ParameterType::STRING) : Key
+function pagination_key_desc(string $column, string|int|DbalParameterType|DbalType $type = DbalParameterType::STRING) : Key
 {
     return new Key($column, Order::DESC, $type);
 }

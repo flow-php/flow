@@ -15,7 +15,7 @@ final class XPath extends ScalarFunctionChain
     }
 
     /**
-     * @return null|array<int, \DOMNode>
+     * @return null|array<\DOMNode>
      */
     public function eval(Row $row) : ?array
     {
@@ -51,6 +51,10 @@ final class XPath extends ScalarFunctionChain
         $nodes = [];
 
         foreach ($result as $node) {
+            if ($node instanceof \DOMNameSpaceNode) {
+                continue;
+            }
+
             $nodes[] = $node;
         }
 
