@@ -1,6 +1,6 @@
 name: "⚙️ Task"
 description: "Use only to create tasks for approved Proposal."
-title: "[Bug]: "
+title: "[Task]: "
 projects: ["flow-php/projects/1"]
 assignees: ["norberttech"]
 body:
