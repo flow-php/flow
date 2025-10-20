@@ -81,7 +81,7 @@ jobs:
           ini-values: 'memory_limit=-1, post_max_size=32M, upload_max_filesize=32M'
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
