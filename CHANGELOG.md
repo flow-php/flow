@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-10-12
+## [Unreleased] - 2025-10-21
 
 ### Added
 - [#1882](https://github.com/flow-php/flow/pull/1882) - **Reusable action to setup php version in github workflows** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +15,7 @@
 - [68d144](https://github.com/flow-php/flow/commit/68d14430f0a3a24a24be113b3808693dd0e059a4) - **baseline workflow** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [92506b](https://github.com/flow-php/flow/commit/92506b5190e6468804b198b4e1bf2e8754341797) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [79f5d4](https://github.com/flow-php/flow/commit/79f5d4de2156f1621c429d747320e6cb46921123) - **DSL definitions** - [@norberttech](https://github.com/norberttech)
 - [b1e15a](https://github.com/flow-php/flow/commit/b1e15adc7f57b6fc7955601b7ef5d80e27f48461) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
