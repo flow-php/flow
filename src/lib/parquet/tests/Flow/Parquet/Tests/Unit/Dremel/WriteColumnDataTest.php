@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Dremel;
 
 use Flow\Parquet\Dremel\ColumnData\{FlatValue, WriteFlatColumnValues};
-use Flow\Parquet\Dremel\{ReadColumnData};
-use Flow\Parquet\Dremel\WriteColumnData;
+use Flow\Parquet\Dremel\{ReadColumnData, WriteColumnData};
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};

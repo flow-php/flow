@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit\Path;
 
-use function Flow\Filesystem\DSL\{partition};
-use Flow\Filesystem\Exception\{InvalidArgumentException};
+use function Flow\Filesystem\DSL\partition;
+use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path\{Options, WindowsPath};
 use Flow\Filesystem\Tests\Unit\PathTestCase;
 

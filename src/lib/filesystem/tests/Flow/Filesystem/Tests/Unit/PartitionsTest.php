@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
-use Flow\Filesystem\Partition;
-use Flow\Filesystem\{Partitions};
+use Flow\Filesystem\{Partition, Partitions};
 use PHPUnit\Framework\TestCase;
 
 final class PartitionsTest extends TestCase

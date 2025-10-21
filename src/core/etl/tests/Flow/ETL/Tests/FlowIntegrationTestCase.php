@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
-use Flow\ETL\{Config\Cache\CacheConfig};
+use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem, Local\StdOutFilesystem};
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{float_entry, lit, row};
-use function Flow\ETL\DSL\{ref};
-use Flow\ETL\{Tests\FlowTestCase};
+use function Flow\ETL\DSL\ref;
+use Flow\ETL\Tests\FlowTestCase;
 
 final class RoundTest extends FlowTestCase
 {

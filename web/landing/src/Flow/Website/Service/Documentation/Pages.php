@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Service\Documentation;
 
 use function Flow\Filesystem\DSL\{fstab, path, protocol};
-use Flow\Website\Model\Documentation\{Page};
+use Flow\Website\Model\Documentation\Page;
 
 final class Pages
 {

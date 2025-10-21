@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\type_json;
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 use Flow\Types\Type\Native\String\StringTypeChecker;
 

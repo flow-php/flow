@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;

@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
-use Flow\Parquet\{Reader};
+use Flow\Parquet\Reader;
 
 final class ParquetExtractorTest extends FlowTestCase
 {

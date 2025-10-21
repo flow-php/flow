@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Symfony\Component\String\{b};
+use function Symfony\Component\String\b;
 use Flow\ETL\Row;
 
 final class IsUtf8 extends ScalarFunctionChain

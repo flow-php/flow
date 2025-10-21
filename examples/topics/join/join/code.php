@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_array, join_on, to_stream};
-use Flow\ETL\Join\{Join};
+use Flow\ETL\Join\Join;
 
 require __DIR__ . '/vendor/autoload.php';
 

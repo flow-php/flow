@@ -11,7 +11,7 @@ use function Flow\ETL\DSL\{config, flow_context, rows};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 
 final class JsonTest extends FlowTestCase
 {

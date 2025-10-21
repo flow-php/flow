@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Integration;
 
 use function Flow\ETL\Adapter\GoogleSheet\from_google_sheet;
 use function Flow\ETL\DSL\{df, int_schema, schema, string_schema};
-use Flow\ETL\Adapter\GoogleSheet\{Tests\GoogleSheetsContext};
+use Flow\ETL\Adapter\GoogleSheet\Tests\GoogleSheetsContext;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
 

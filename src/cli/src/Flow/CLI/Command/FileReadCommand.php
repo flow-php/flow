@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\CLI\Command;
 
 use function Flow\CLI\{option_bool, option_int, option_int_nullable, option_list_of_strings};
-use function Flow\ETL\DSL\{df};
-use Flow\CLI\Arguments\{FilePathArgument};
+use function Flow\ETL\DSL\df;
+use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\{CSVOptions, ConfigOptions, ExcelOptions, JSONOptions, ParquetOptions, XMLOptions};
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};

@@ -10,7 +10,7 @@ use Flow\Parquet\{Option, Options};
 use Flow\Parquet\ParquetFile\{Compressions, RowGroup, Schema};
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
-use Flow\Parquet\Writer\{RowGroupBuilder};
+use Flow\Parquet\Writer\RowGroupBuilder;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

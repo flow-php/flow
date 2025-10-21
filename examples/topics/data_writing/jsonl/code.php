@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\JSON\{to_json_lines};
+use function Flow\ETL\Adapter\JSON\to_json_lines;
 use function Flow\ETL\DSL\{data_frame, from_array, overwrite};
 
 require __DIR__ . '/vendor/autoload.php';

@@ -13,9 +13,9 @@ use Flow\Parquet\{ByteOrder,
     Dremel\ColumnData\ReadFlatColumnValues,
     Options,
     ParquetFile\Encodings};
-use Flow\Parquet\Data\{RLEBitPackedHybrid};
+use Flow\Parquet\Data\RLEBitPackedHybrid;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Page\{Dictionary};
+use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
 

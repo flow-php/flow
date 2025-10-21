@@ -6,8 +6,8 @@ namespace Flow\ETL\Join;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Comparison\{All, Equal};
+use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\{Row};
 
 final readonly class Expression
 {

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema;
 
-use function Flow\Types\DSL\{type_array};
+use function Flow\Types\DSL\type_array;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Types\{Type};
+use Flow\Types\Type;
 
 final class Metadata
 {

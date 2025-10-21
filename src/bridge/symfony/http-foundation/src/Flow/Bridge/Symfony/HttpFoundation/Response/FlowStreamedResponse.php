@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\df;
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Config\ConfigBuilder;
 use Flow\ETL\{Config, Extractor, Transformation};
-use Flow\ETL\{Transformations};
+use Flow\ETL\Transformations;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FlowStreamedResponse extends StreamedResponse

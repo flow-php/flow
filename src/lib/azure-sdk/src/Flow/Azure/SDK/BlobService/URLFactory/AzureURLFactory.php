@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Azure\SDK\BlobService\URLFactory;
 
-use Flow\Azure\SDK\BlobService\{Configuration};
+use Flow\Azure\SDK\BlobService\Configuration;
 use Flow\Azure\SDK\URLFactory;
 
 final readonly class AzureURLFactory implements URLFactory

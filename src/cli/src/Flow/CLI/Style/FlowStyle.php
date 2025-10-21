@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\CLI\Style;
 
 use Symfony\Component\Console\Cursor;
-use Symfony\Component\Console\Formatter\{OutputFormatterStyle};
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\{SymfonyStyle};
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class FlowStyle extends SymfonyStyle
 {

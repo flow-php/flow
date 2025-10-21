@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Meilisearch\Tests\Context;
 
 use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_index;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{Rows};
+use Flow\ETL\Rows;
 use Meilisearch\Client;
 use Psr\Http\Client\ClientInterface;
 

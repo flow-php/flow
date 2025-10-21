@@ -7,7 +7,7 @@ namespace Flow\Parquet\Writer;
 use Flow\Parquet\{Dremel\WriteColumnData, Options};
 use Flow\Parquet\ParquetFile\{Compressions, Schema};
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
-use Flow\Parquet\Writer\{ColumnChunkBuilder\NestedColumnChunkBuilder};
+use Flow\Parquet\Writer\ColumnChunkBuilder\NestedColumnChunkBuilder;
 
 final class ColumnChunkBuilders
 {

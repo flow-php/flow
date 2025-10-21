@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Native;
 
 use function Flow\Types\DSL\dom_element_to_string;
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
 /**

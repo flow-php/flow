@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Tools\Rector;
 
 use PhpParser\Node;
-use PhpParser\Node\{FunctionLike};
+use PhpParser\Node\FunctionLike;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
 use Rector\Rector\AbstractRector;

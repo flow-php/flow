@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\CLI\Options;
 
 use function Flow\CLI\option_string;
-use function Flow\Filesystem\DSL\{path_real};
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
 use Symfony\Component\Console\Input\InputInterface;

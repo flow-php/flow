@@ -21,7 +21,7 @@ use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, typ
 use Flow\ETL\Exception\{InvalidArgumentException,
     SchemaDefinitionNotFoundException,
     SchemaDefinitionNotUniqueException};
-use Flow\ETL\Row\{EntryReference};
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\FlowTestCase;

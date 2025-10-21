@@ -8,7 +8,7 @@ use function Flow\ETL\Adapter\Elasticsearch\{es_hits_to_rows, from_es, to_es_bul
 use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry};
 use function Flow\ETL\DSL\{data_frame, rows};
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
-use Flow\ETL\{Row};
+use Flow\ETL\Row;
 
 final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
 {

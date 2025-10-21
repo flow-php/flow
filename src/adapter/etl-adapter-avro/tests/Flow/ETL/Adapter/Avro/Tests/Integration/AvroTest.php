@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
-use function Flow\ETL\DSL\Adapter\Avro\{to_avro};
+use function Flow\ETL\DSL\Adapter\Avro\to_avro;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
 
 final class AvroTest extends FlowTestCase

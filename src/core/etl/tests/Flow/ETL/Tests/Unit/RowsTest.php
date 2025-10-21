@@ -19,9 +19,9 @@ use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\{partition, partitions};
 use function Flow\Types\DSL\{type_integer, type_list, type_string};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\ETL\Row\Comparator\{NativeComparator};
-use Flow\ETL\Row\{Comparator};
-use Flow\ETL\Row\Entry\{DateTimeEntry};
+use Flow\ETL\Row\Comparator;
+use Flow\ETL\Row\Comparator\NativeComparator;
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\{Row, Rows, Tests\FlowTestCase};
 use PHPUnit\Framework\Attributes\DataProvider;
 

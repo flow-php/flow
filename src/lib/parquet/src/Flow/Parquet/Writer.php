@@ -7,8 +7,8 @@ namespace Flow\Parquet;
 use function Flow\Types\DSL\type_integer;
 use Composer\InstalledVersions;
 use Flow\Filesystem\{DestinationStream, Path};
-use Flow\Filesystem\Stream\{NativeLocalDestinationStream};
-use Flow\Parquet\Dremel\{DremelShredder};
+use Flow\Filesystem\Stream\NativeLocalDestinationStream;
+use Flow\Parquet\Dremel\DremelShredder;
 use Flow\Parquet\Dremel\Validator\{ColumnDataValidator, DisabledValidator};
 use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\ParquetFile\{Compressions,

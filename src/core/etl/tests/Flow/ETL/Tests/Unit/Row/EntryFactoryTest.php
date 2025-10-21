@@ -33,8 +33,8 @@ use function Flow\ETL\DSL\{bool_schema,
     xml_schema};
 use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
-use Flow\ETL\Row\Entry\{TimeEntry};
-use Flow\ETL\Row\{EntryFactory};
+use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\FlowTestCase;

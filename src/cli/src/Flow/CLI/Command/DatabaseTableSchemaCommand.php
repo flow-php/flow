@@ -10,14 +10,14 @@ use function Flow\ETL\DSL\schema_to_json;
 use Doctrine\DBAL\{Connection, DriverManager};
 use Doctrine\DBAL\Tools\DsnParser;
 use Flow\CLI\Command\Traits\{ConfigOptions, DBOptions};
-use Flow\CLI\Options\{ConfigOption};
+use Flow\CLI\Options\ConfigOption;
 use Flow\ETL\Config;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Schema\Formatter\{PHPSchemaFormatter};
+use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\{ChoiceQuestion};
+use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class DatabaseTableSchemaCommand extends Command

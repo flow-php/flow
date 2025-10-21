@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Writer\PageBuilder;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\Data\BitWidth;
-use Flow\Parquet\Data\{RLEBitPackedHybrid};
+use Flow\Parquet\Data\{BitWidth, RLEBitPackedHybrid};
 
 final readonly class RLEBitPackedPacker
 {

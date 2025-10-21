@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
-use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_filesystem};
+use function Flow\Filesystem\Bridge\AsyncAWS\DSL\aws_s3_filesystem;
 use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\FileStatus;
 

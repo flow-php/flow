@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\float_entry;
 use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Tests\FlowTestCase;
-use PHPUnit\Framework\Attributes\{DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class FloatEntryTest extends FlowTestCase
 {

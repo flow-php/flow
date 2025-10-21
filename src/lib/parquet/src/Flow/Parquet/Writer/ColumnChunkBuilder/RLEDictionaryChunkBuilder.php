@@ -19,7 +19,7 @@ use Flow\Parquet\{
     Writer\StatisticsCounter
 };
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\Data\{RLEBitPackedHybrid};
+use Flow\Parquet\Data\RLEBitPackedHybrid;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
 use Flow\Parquet\ParquetFile\{Compressions,
     Encodings

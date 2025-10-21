@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Pipeline\{Pipes};
+use Flow\ETL\Pipeline\Pipes;
 
 /**
  * @internal

@@ -6,7 +6,7 @@ namespace Flow\CLI\Command;
 
 use function Flow\CLI\{option_bool, option_int, option_int_nullable};
 use function Flow\ETL\DSL\{analyze, df};
-use Flow\CLI\Arguments\{FilePathArgument};
+use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\{CSVOptions,
     ConfigOptions,
     ExcelOptions,
@@ -15,7 +15,7 @@ use Flow\CLI\Command\Traits\{CSVOptions,
     StatisticsOptions,
     XMLOptions};
 use Flow\CLI\Factory\ExtractorFactory;
-use Flow\CLI\Formatter\{PipelineReportFormatter};
+use Flow\CLI\Formatter\PipelineReportFormatter;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\CLI\Style\FlowStyle;
 use Flow\ETL\{Config, Rows};

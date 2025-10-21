@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure\Tests\Integration;
 
 use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
-use Flow\Filesystem\Bridge\Azure\{Options};
+use Flow\Filesystem\Bridge\Azure\Options;
 use Flow\Filesystem\Path;
 
 final class AzureBlobDestinationStreamTest extends AzureBlobServiceTestCase

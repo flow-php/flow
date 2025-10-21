@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 
 use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, json_entry, row, rows, str_entry, string_entry};
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\SelectEntriesTransformer;
 
 final class SelectEntriesTransformerTest extends FlowTestCase

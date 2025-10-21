@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use function Flow\ETL\DSL\{array_to_rows, flow_context};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\AutoCastTransformer;
-use Flow\Types\Type\{AutoCaster};
+use Flow\Types\Type\AutoCaster;
 
 final class AutoCastTransformerTest extends FlowTestCase
 {

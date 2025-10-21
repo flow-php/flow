@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use function Flow\ETL\Adapter\XML\from_xml;
-use function Flow\ETL\DSL\{config};
+use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\{df, flow_context, schema, xml_schema};
 use function Flow\Types\DSL\type_string;
 use Flow\ETL\{Adapter\XML\XMLParserExtractor, Tests\FlowIntegrationTestCase};

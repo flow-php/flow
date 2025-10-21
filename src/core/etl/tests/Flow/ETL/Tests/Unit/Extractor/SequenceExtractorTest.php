@@ -10,7 +10,7 @@ use function Flow\ETL\DSL\{date_entry,
     from_sequence_date_period_recurrences,
     from_sequence_number};
 use function Flow\ETL\DSL\{row, rows};
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 
 final class SequenceExtractorTest extends FlowTestCase
 {

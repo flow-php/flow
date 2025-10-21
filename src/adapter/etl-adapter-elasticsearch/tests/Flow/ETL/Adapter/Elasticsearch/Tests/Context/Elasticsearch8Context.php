@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, flow_context};
 use Elastic\Elasticsearch\{Client, ClientBuilder};
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
-use Flow\ETL\{Rows};
+use Flow\ETL\Rows;
 
 final class Elasticsearch8Context implements ElasticsearchContext
 {

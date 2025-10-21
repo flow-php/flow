@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Response;
 
-use function Flow\ETL\DSL\{df};
+use function Flow\ETL\DSL\df;
 use function Flow\Filesystem\DSL\{path_memory, protocol};
 use Flow\Bridge\Symfony\HttpFoundation\Output;
 use Flow\ETL\Config\ConfigBuilder;

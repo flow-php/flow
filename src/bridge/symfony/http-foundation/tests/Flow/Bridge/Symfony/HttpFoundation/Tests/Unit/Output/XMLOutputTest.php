@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Bridge\Symfony\HttpFoundation\Tests\Unit\Output;
 
-use function Flow\Bridge\Symfony\HttpFoundation\{http_xml_output};
+use function Flow\Bridge\Symfony\HttpFoundation\http_xml_output;
 use Flow\Bridge\Symfony\HttpFoundation\Output\Type;
 use Flow\ETL\Tests\FlowTestCase;
 

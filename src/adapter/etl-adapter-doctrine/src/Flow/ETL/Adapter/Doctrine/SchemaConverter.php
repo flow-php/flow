@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use function Flow\Types\DSL\type_string;
 use Doctrine\DBAL\Schema\{Column, Index, Table};
 use Doctrine\DBAL\Types\{DateImmutableType, DateTimeImmutableType, GuidType, TimeImmutableType};
-use Doctrine\DBAL\Types\{Type as DbalType};
+use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};

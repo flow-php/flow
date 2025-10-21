@@ -10,7 +10,7 @@ use function Flow\ETL\DSL\{df, from_array, overwrite, ref};
 use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Adapter\JSON\JsonLinesLoader;
 use Flow\ETL\Tests\Double\FakeExtractor;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 
 final class JsonLinesTest extends FlowTestCase
 {

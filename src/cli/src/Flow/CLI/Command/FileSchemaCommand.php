@@ -6,13 +6,13 @@ namespace Flow\CLI\Command;
 
 use function Flow\CLI\{option_bool, option_int_nullable};
 use function Flow\ETL\DSL\{df, schema_to_json};
-use Flow\CLI\Arguments\{FilePathArgument};
+use Flow\CLI\Arguments\FilePathArgument;
 use Flow\CLI\Command\Traits\{CSVOptions, ConfigOptions, ExcelOptions, JSONOptions, ParquetOptions, XMLOptions};
 use Flow\CLI\Factory\ExtractorFactory;
 use Flow\CLI\Options\{ConfigOption, FileFormat, FileFormatOption};
 use Flow\ETL\Config;
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Schema\Formatter\{PHPSchemaFormatter};
+use Flow\ETL\Schema\Formatter\PHPSchemaFormatter;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface, InputOption};

@@ -17,7 +17,7 @@ use function Flow\Types\DSL\{
     type_union,
     types
 };
-use Flow\Types\Type\Logical\{InstanceOfType};
+use Flow\Types\Type\Logical\InstanceOfType;
 use PHPUnit\Framework\TestCase;
 
 final class TypesTest extends TestCase

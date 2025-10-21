@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 use Flow\Types\Type;
-use Flow\Types\Type\{TypeFactory};
+use Flow\Types\Type\TypeFactory;
 
 final class IsType extends ScalarFunctionChain
 {

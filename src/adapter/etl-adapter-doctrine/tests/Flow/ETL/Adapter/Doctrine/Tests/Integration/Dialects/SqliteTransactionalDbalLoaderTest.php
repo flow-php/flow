@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine\Tests\Integration\Dialects;
 use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_delete, to_dbal_table_insert, to_dbal_transaction};
 use function Flow\ETL\DSL\{config, flow_context, integer_entry, row, rows, string_entry};
 use Doctrine\DBAL\Schema\{Column, Table};
-use Doctrine\DBAL\{TransactionIsolationLevel};
+use Doctrine\DBAL\TransactionIsolationLevel;
 use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 

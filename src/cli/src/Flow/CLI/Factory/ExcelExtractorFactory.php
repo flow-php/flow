@@ -6,7 +6,7 @@ namespace Flow\CLI\Factory;
 
 use function Flow\CLI\{option_bool_nullable, option_int_nullable, option_string_nullable};
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
-use Flow\ETL\Adapter\Excel\{ExcelExtractor};
+use Flow\ETL\Adapter\Excel\ExcelExtractor;
 use Flow\Filesystem\Path;
 use Symfony\Component\Console\Input\InputInterface;
 

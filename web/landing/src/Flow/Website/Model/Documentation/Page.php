@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Model\Documentation;
 
-use League\CommonMark\Extension\FrontMatter\Data\{SymfonyYamlFrontMatterParser};
+use League\CommonMark\Extension\FrontMatter\Data\SymfonyYamlFrontMatterParser;
 use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
 
 final class Page

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{is_type};
+use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\{type_equals, type_float, type_optional};
 use Brick\Math\BigDecimal;
 use Flow\ETL\Exception\InvalidArgumentException;

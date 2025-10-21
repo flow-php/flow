@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, flow_context};
 use Elasticsearch\{Client, ClientBuilder};
 use Elasticsearch\Common\Exceptions\{BadRequest400Exception, Missing404Exception};
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
-use Flow\ETL\{Rows};
+use Flow\ETL\Rows;
 
 final class Elasticsearch7Context implements ElasticsearchContext
 {

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
-use function Flow\ETL\Adapter\Text\{from_text};
+use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\data_frame;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
 
 final class TextExtractorTest extends FlowTestCase

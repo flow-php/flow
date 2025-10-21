@@ -6,8 +6,8 @@ namespace Flow\ETL\Config\Cache;
 
 use function Flow\Filesystem\DSL\protocol;
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\{Implementation\FilesystemCache};
-use Flow\ETL\Exception\{InvalidArgumentException};
+use Flow\ETL\Cache\Implementation\FilesystemCache;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Filesystem\{FilesystemTable, Path};
 use Flow\Serializer\Serializer;
 

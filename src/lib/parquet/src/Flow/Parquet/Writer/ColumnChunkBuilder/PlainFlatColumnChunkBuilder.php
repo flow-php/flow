@@ -17,7 +17,7 @@ use Flow\Parquet\{
     Writer\StatisticsCounter
 };
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\Data\{RLEBitPackedHybrid};
+use Flow\Parquet\Data\RLEBitPackedHybrid;
 use Flow\Parquet\ParquetFile\{Compressions,
     Encodings
 };
@@ -25,7 +25,7 @@ use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, Type
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, PhysicalType};
-use Flow\Parquet\Writer\PageBuilder\{RLEBitPackedPacker};
+use Flow\Parquet\Writer\PageBuilder\RLEBitPackedPacker;
 use Flow\Parquet\Writer\ValueStorage\{BooleanValueStorage, BufferValueStorage, ValueStorage};
 
 final class PlainFlatColumnChunkBuilder implements ColumnChunkBuilder

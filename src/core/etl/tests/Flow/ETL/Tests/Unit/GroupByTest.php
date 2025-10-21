@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{int_entry, null_entry, ref, row, rows, str_entry, sum};
-use Flow\ETL\Exception\{InvalidArgumentException};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{GroupBy, Tests\FlowTestCase};
 
 final class GroupByTest extends FlowTestCase

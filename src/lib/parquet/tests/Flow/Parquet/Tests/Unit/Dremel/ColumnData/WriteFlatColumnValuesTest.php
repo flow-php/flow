@@ -6,9 +6,8 @@ namespace Flow\Parquet\Tests\Unit\Dremel\ColumnData;
 
 use Faker\Factory;
 use Flow\Parquet\Dremel\ColumnData\WriteFlatColumnValues;
-use Flow\Parquet\Dremel\{DremelShredder};
+use Flow\Parquet\Dremel\{DremelShredder, WriteColumnData};
 use Flow\Parquet\Dremel\Validator\ColumnDataValidator;
-use Flow\Parquet\Dremel\WriteColumnData;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema;

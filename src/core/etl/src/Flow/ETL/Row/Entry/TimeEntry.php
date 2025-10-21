@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\{date_interval_to_microseconds};
+use function Flow\ETL\DSL\date_interval_to_microseconds;
 use function Flow\Types\DSL\{type_equals, type_instance_of, type_optional, type_time};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
-use function Flow\ETL\DSL\{array_to_rows};
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PathFiltering, Signal};
 use Flow\ETL\{Extractor, FlowContext};
 use Flow\ETL\Schema;
-use Flow\Filesystem\{Path};
+use Flow\Filesystem\Path;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 

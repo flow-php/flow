@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Schema\Formatter;
 
-use function Flow\Types\DSL\{type_instance_of};
+use function Flow\Types\DSL\type_instance_of;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata, SchemaFormatter};
-use Flow\ETL\Schema\Formatter\PHPFormatter\{TypeFormatter};
-use Flow\ETL\Schema\Formatter\PHPFormatter\ValueFormatter;
+use Flow\ETL\Schema\Formatter\PHPFormatter\{TypeFormatter, ValueFormatter};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,

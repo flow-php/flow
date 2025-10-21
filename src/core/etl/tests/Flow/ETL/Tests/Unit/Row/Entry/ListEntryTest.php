@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\{list_entry};
-use function Flow\ETL\DSL\{list_schema};
+use function Flow\ETL\DSL\{list_entry, list_schema};
 use function Flow\Types\DSL\{
     type_boolean,
     type_datetime,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\{struct_entry};
+use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\{structure_entry, structure_schema};
 use function Flow\Types\DSL\{type_array, type_integer, type_map, type_string, type_structure};
 use Flow\ETL\Exception\InvalidArgumentException;

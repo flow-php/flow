@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use function Flow\ETL\DSL\{df, ref};
 use Flow\ETL\Config;
 use Flow\ETL\Dataset\Memory\Unit;
-use Flow\ETL\Tests\Double\{FakeExtractor};
+use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class SortTest extends FlowIntegrationTestCase

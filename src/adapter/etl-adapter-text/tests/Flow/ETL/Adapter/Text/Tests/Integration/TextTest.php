@@ -8,7 +8,7 @@ use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\{generate_random_string, string_entry};
 use function Flow\ETL\DSL\{row, rows};
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
 final class TextTest extends FlowTestCase

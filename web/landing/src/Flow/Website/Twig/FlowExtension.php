@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\Twig;
 
 use Twig\Extension\AbstractExtension;
-use Twig\{TwigFilter};
+use Twig\TwigFilter;
 
 final class FlowExtension extends AbstractExtension
 {

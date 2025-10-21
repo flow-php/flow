@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
-use Flow\Parquet\{Reader};
+use Flow\Parquet\Reader;
 
 final class PaginationTest extends FlowTestCase
 {

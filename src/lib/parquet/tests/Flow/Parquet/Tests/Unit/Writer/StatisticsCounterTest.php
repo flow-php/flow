@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Writer;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn};
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Writer\StatisticsCounter;
 use PHPUnit\Framework\TestCase;
 

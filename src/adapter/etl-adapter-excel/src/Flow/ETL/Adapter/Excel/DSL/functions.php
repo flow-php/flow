@@ -11,7 +11,7 @@ use Flow\ETL\{Adapter\Excel\ExcelExtractor,
     Attribute\Module,
     Attribute\Type as DSLType,
     Function\ScalarFunction};
-use Flow\Filesystem\{Path};
+use Flow\Filesystem\Path;
 
 #[DocumentationDSL(module: Module::EXCEL, type: DSLType::EXTRACTOR)]
 #[DocumentationExample(topic: 'data_reading', example: 'excel')]

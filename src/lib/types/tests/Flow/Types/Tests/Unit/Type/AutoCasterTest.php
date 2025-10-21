@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use Flow\Types\Type\{AutoCaster};
+use Flow\Types\Type\AutoCaster;
 use PHPUnit\Framework\TestCase;
 
 final class AutoCasterTest extends TestCase

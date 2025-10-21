@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\Cache;
 
 use function Flow\ETL\DSL\{row, rows, str_entry};
 use Flow\ETL\Cache;
-use Flow\ETL\Cache\{CacheIndex};
+use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Exception\KeyNotInCacheException;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 

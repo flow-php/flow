@@ -9,7 +9,7 @@ use function Flow\ETL\DSL\{config, row, rows};
 use function Flow\ETL\DSL\{flow_context, generate_random_string, integer_entry, string_entry};
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Row\Entry\{DateTimeEntry, JsonEntry};
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 
 final class MeilisearchLoaderTest extends FlowTestCase
 {

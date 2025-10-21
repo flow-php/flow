@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Writer\ColumnChunkBuilder;
 
-use Flow\Parquet\Dremel\ColumnData\{FlatValue};
+use Flow\Parquet\Dremel\ColumnData\FlatValue;
 use Flow\Parquet\Dremel\WriteColumnData;
 use Flow\Parquet\{Option, Options};
-use Flow\Parquet\ParquetFile\{Compressions};
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
-use Flow\Parquet\Writer\{ColumnChunkContainer};
+use Flow\Parquet\Writer\ColumnChunkContainer;
 use PHPUnit\Framework\TestCase;
 
 final class PlainFlatColumnChunkBuilderTest extends TestCase

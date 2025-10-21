@@ -8,7 +8,7 @@ use function Flow\ETL\Adapter\Elasticsearch\{entry_id_factory, hash_id_factory, 
 use function Flow\ETL\DSL\{config, row, rows};
 use function Flow\ETL\DSL\{flow_context, integer_entry};
 use function Flow\ETL\DSL\{generate_random_string, string_entry};
-use Flow\ETL\{Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase};
+use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchTestCase;
 use Flow\ETL\Row\Entry\{DateTimeEntry, JsonEntry};
 
 final class ElasticsearchLoaderTest extends ElasticsearchTestCase

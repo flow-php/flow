@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\XML\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext};
+use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
 #[Groups(['extractor'])]

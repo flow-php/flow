@@ -28,7 +28,7 @@ use Flow\Azure\SDK\BlobService\ListBlobs\{Blob, ListBlobOptions};
 use Flow\Azure\SDK\Exception\{AzureException, InvalidArgumentException};
 use Flow\Azure\SDK\Normalizer\SimpleXMLNormalizer;
 use Psr\Http\Client\{ClientExceptionInterface, ClientInterface};
-use Psr\Log\{LoggerInterface};
+use Psr\Log\LoggerInterface;
 
 final readonly class BlobService implements BlobServiceInterface
 {

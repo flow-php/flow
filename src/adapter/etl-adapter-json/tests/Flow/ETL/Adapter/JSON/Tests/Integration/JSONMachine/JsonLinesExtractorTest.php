@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
-use function Flow\ETL\Adapter\JSON\{from_json_lines};
+use function Flow\ETL\Adapter\JSON\from_json_lines;
 use function Flow\ETL\DSL\{data_frame, flow_context};
 use function Flow\ETL\DSL\{df, print_schema};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;

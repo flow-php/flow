@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Native;
 
 use function Flow\Types\DSL\{type_literal, type_map, type_mixed, type_string, type_structure};
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 use Flow\Types\Type\{Logical\OptionalType, TypeFactory, Types};
 

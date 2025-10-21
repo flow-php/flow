@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_float, type_instance_of, type_integer, type_json, type_string, type_xml};
-use Flow\ETL\Exception\{InvalidArgumentException};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
 use Flow\Types\Exception\CastingException;
-use Flow\Types\{Type};
+use Flow\Types\Type;
 
 final class Cast extends ScalarFunctionChain
 {

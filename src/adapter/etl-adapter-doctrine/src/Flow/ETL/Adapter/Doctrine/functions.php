@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\{ArrayParameterType as DbalArrayType,
     Connection,
     ParameterType as DbalParameterType
-    };
+};
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\Doctrine\Bulk\{Dialect\MySQLInsertOptions,

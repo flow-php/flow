@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
-use Doctrine\DBAL\Types\{Type};
+use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 final readonly class BulkData

@@ -9,7 +9,7 @@ use Flow\Calculator\Rounding;
 use Flow\ETL\Row\Entry\{FloatEntry, IntegerEntry};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
-use PHPUnit\Framework\Attributes\{DataProvider};
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class MathTest extends FlowTestCase
 {

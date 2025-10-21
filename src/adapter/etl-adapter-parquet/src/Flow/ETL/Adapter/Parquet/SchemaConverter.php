@@ -18,8 +18,8 @@ use function Flow\ETL\DSL\{bool_schema,
     uuid_schema};
 use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_list, type_map, type_optional, type_string, type_structure, type_time, type_uuid};
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
-use Flow\ETL\{Schema};
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
 use Flow\Types\Type;

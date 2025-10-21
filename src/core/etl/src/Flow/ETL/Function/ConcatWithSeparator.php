@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{is_type};
+use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\{type_list, type_optional, type_string};
 use Flow\ETL\Row;
 

@@ -57,7 +57,7 @@ use Flow\ETL\Transformer\{AutoCastTransformer,
     UntilTransformer,
     WindowFunctionTransformer};
 use Flow\Filesystem\Path\Filter;
-use Flow\Types\Type\{AutoCaster};
+use Flow\Types\Type\AutoCaster;
 
 final class DataFrame
 {

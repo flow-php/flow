@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Logger\Tests\Unit;
 use function Flow\ETL\DSL\{config, flow_context, row, rows};
 use function Flow\ETL\DSL\{int_entry, string_entry};
 use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 use Psr\Log\LogLevel;
 use Psr\Log\Test\TestLogger;
 

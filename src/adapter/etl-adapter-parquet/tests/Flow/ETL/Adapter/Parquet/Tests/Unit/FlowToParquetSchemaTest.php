@@ -13,7 +13,7 @@ use function Flow\ETL\DSL\{bool_schema,
     map_schema,
     string_schema,
     structure_schema};
-use function Flow\ETL\DSL\{schema};
+use function Flow\ETL\DSL\schema;
 use function Flow\Types\DSL\{type_boolean, type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Tests\FlowTestCase;

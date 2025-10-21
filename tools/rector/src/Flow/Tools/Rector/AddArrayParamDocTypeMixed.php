@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Tools\Rector;
 
+use PhpParser\Node;
 use PhpParser\Node\{FunctionLike, Param};
-use PhpParser\{Node};
-use Rector\BetterPhpDocParser\PhpDocInfo\{PhpDocInfoFactory};
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;

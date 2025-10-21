@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{integer_entry, json_entry};
 use function Flow\Types\DSL\type_array;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\{JsonEntry};
+use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 

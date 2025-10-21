@@ -6,12 +6,12 @@ namespace Flow\Filesystem\Tests\Integration\Local;
 
 use function Flow\ETL\DSL\{all, lit, ref};
 use function Flow\Filesystem\DSL\{memory_filesystem, path_memory};
-use Flow\ETL\Filesystem\{ScalarFunctionFilter};
+use Flow\ETL\Filesystem\ScalarFunctionFilter;
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FileStatus,
     Tests\Integration\NativeLocalFilesystemTestCase};
 use Flow\Filesystem\Path\Filter\KeepAll;
-use Flow\Types\Type\{AutoCaster};
+use Flow\Types\Type\AutoCaster;
 
 final class MemoryFilesystemTest extends NativeLocalFilesystemTestCase
 {

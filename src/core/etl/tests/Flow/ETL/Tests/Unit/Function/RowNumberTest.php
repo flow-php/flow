@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{int_entry, ref, row_number, window};
 use function Flow\ETL\DSL\{row, rows};
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 
 final class RowNumberTest extends FlowTestCase
 {

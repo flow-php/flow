@@ -6,7 +6,7 @@ namespace Flow\Filesystem\Bridge\Azure;
 
 use Flow\Azure\SDK\BlobService\GetBlob\{GetBlobOptions, Range};
 use Flow\Azure\SDK\BlobService\GetBlobProperties\BlobProperties;
-use Flow\Azure\SDK\{BlobServiceInterface};
+use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\Filesystem\{Path, SourceStream};
 
 final class AzureBlobSourceStream implements SourceStream

@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{average, int_entry, ref, str_entry, window};
 use function Flow\ETL\DSL\{row, rows};
-use Flow\ETL\{Tests\FlowTestCase};
+use Flow\ETL\Tests\FlowTestCase;
 
 final class AverageTest extends FlowTestCase
 {

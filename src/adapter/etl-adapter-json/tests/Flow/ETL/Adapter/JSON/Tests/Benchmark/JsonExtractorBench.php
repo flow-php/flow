@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext};
+use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
 #[Groups(['extractor'])]

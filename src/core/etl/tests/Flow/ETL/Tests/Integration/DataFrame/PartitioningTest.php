@@ -21,7 +21,7 @@ use function Flow\ETL\DSL\{collect,
     str_entry};
 use function Flow\ETL\DSL\generate_random_string;
 use function Flow\Filesystem\DSL\partition;
-use Flow\ETL\{Rows};
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Partition;
 

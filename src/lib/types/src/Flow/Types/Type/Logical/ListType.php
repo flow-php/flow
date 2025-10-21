@@ -11,8 +11,7 @@ use function Flow\Types\DSL\{
     type_mixed,
     type_string,
     type_structure};
-use Flow\Types\Exception\{CastingException};
-use Flow\Types\Exception\InvalidTypeException;
+use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
 /**

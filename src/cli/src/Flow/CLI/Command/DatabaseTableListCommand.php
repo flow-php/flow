@@ -8,7 +8,7 @@ use function Flow\CLI\{option_include_file, option_list_of_strings_nullable};
 use Doctrine\DBAL\{Connection, DriverManager};
 use Doctrine\DBAL\Tools\DsnParser;
 use Flow\CLI\Command\Traits\{ConfigOptions, DBOptions};
-use Flow\CLI\Options\{ConfigOption};
+use Flow\CLI\Options\ConfigOption;
 use Flow\ETL\Config;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\TableSeparator;

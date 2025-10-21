@@ -19,7 +19,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     XMLElementType,
     XMLType};
 use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, StringType};
-use Flow\Types\Type\{TypeDetector};
+use Flow\Types\Type\TypeDetector;
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

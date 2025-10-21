@@ -31,7 +31,7 @@ use function Flow\ETL\DSL\{bool_schema,
     structure_schema};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\{DateTimeEntry};
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 

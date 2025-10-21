@@ -25,10 +25,10 @@ use function Flow\ETL\DSL\data_frame;
 use function Flow\Types\DSL\type_integer;
 use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Row, Rows, Tests\FlowTestCase, Transformation, Transformer};
 use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\Row\Entry\{DateTimeEntry};
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Schema\Validator\SelectiveValidator;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
-use PHPUnit\Framework\{Assert};
+use PHPUnit\Framework\Assert;
 
 final class DataFrameTest extends FlowTestCase
 {

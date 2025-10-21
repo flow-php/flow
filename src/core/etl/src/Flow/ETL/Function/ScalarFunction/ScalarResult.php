@@ -6,7 +6,7 @@ namespace Flow\ETL\Function\ScalarFunction;
 
 use function Flow\Types\DSL\type_optional;
 use Flow\Types\Type;
-use Flow\Types\Type\{TypeDetector};
+use Flow\Types\Type\TypeDetector;
 
 final readonly class ScalarResult
 {

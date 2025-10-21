@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\{FlowContext};
+use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
 #[Groups(['extractor'])]

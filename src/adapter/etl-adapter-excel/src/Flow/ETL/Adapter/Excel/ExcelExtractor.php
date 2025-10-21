@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel;
 
-use function Flow\ETL\DSL\{array_to_rows};
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\{Adapter\Excel\Sheet\SheetNameAssertion,
     Adapter\Excel\Sheet\SheetsManager,
     Exception\InvalidArgumentException,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
 use function Flow\ETL\DSL\{flow_context, from_array, ref, refs};
-use Flow\ETL\Pipeline\{SynchronousPipeline};
+use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;

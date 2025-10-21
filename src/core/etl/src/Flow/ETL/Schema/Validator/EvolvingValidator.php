@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema\Validator;
 
 use function Flow\Types\DSL\type_equals;
-use Flow\ETL\Schema;
-use Flow\ETL\{SchemaValidator};
+use Flow\ETL\{Schema, SchemaValidator};
 
 /**
  * Rules of evolving schema matching:
