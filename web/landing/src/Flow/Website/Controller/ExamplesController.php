@@ -25,15 +25,55 @@ final class ExamplesController extends AbstractController
         $examples = $this->examples->examples($currentTopic);
         $currentExample = $example;
 
+        $options = $this->examples->options($currentTopic, $currentExample);
+
+        if (\count($options) > 0) {
+            $firstOption = \current($options);
+
+            return $this->redirectToRoute('example_option', [
+                'topic' => $topic,
+                'example' => $example,
+                'option' => $firstOption,
+            ]);
+        }
+
         return $this->render('example/index.html.twig', [
             'topics' => $topics,
             'examples' => $examples,
+            'options' => [],
             'currentTopic' => $topic,
             'currentExample' => $example,
+            'currentOption' => null,
             'description' => $this->examples->description($currentTopic, $currentExample),
             'composer' => $this->examples->composer($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),
             'output' => $this->examples->output($currentTopic, $currentExample),
+        ]);
+    }
+
+    #[Route('/{topic}/{example}/{option}/', name: 'example_option', priority: -150)]
+    public function exampleOption(string $topic, string $example, string $option) : Response
+    {
+        $topics = $this->examples->topics();
+        $currentTopic = $topic;
+
+        $examples = $this->examples->examples($currentTopic);
+        $currentExample = $example;
+
+        $options = $this->examples->options($currentTopic, $currentExample);
+        $currentOption = $option;
+
+        return $this->render('example/index.html.twig', [
+            'topics' => $topics,
+            'examples' => $examples,
+            'options' => $options,
+            'currentTopic' => $topic,
+            'currentExample' => $example,
+            'currentOption' => $currentOption,
+            'description' => $this->examples->description($currentTopic, $currentExample, $currentOption),
+            'composer' => $this->examples->composer($currentTopic, $currentExample, $currentOption),
+            'code' => $this->examples->code($currentTopic, $currentExample, $currentOption),
+            'output' => $this->examples->output($currentTopic, $currentExample, $currentOption),
         ]);
     }
 
@@ -53,11 +93,25 @@ final class ExamplesController extends AbstractController
         $examples = $this->examples->examples($currentTopic);
         $currentExample = \current($examples);
 
+        $options = $this->examples->options($currentTopic, $currentExample);
+
+        if (\count($options) > 0) {
+            $firstOption = \current($options);
+
+            return $this->redirectToRoute('example_option', [
+                'topic' => $currentTopic,
+                'example' => $currentExample,
+                'option' => $firstOption,
+            ]);
+        }
+
         return $this->render('example/index.html.twig', [
             'topics' => $topics,
             'examples' => $examples,
+            'options' => [],
             'currentTopic' => $currentTopic,
             'currentExample' => $currentExample,
+            'currentOption' => null,
             'description' => $this->examples->description($currentTopic, $currentExample),
             'composer' => $this->examples->composer($currentTopic, $currentExample),
             'code' => $this->examples->code($currentTopic, $currentExample),

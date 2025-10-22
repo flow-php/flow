@@ -8,6 +8,7 @@
     "flow-php/etl-adapter-csv": "1.x-dev",
     "flow-php/etl-adapter-json": "1.x-dev"
   },
+  "minimum-stability": "dev",
   "archive": {
     "exclude": [
       ".env",
