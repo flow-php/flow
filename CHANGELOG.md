@@ -1,9 +1,13 @@
 ## [Unreleased] - 2025-10-22
 
 ### Added
+- [#1898](https://github.com/flow-php/flow/pull/1898) - **3rd level of nesting to examples - Topic / Example / Option** - [@norberttech](https://github.com/norberttech)
+- [#1898](https://github.com/flow-php/flow/pull/1898) - **Examples of reusable Transformations** - [@norberttech](https://github.com/norberttech)
 - [#1882](https://github.com/flow-php/flow/pull/1882) - **Reusable action to setup php version in github workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1898](https://github.com/flow-php/flow/pull/1898) - **Updated archives of all examples** - [@norberttech](https://github.com/norberttech)
+- [#1898](https://github.com/flow-php/flow/pull/1898) - **composer.json section in examples is now by default collapsed** - [@norberttech](https://github.com/norberttech)
 - [549d4b](https://github.com/flow-php/flow/commit/549d4bc7f9b8d30a2ed651e00c94a8b345266fa8) - **Install only required dependencies on windows test-suite** - [@norberttech](https://github.com/norberttech)
 - [ebfa79](https://github.com/flow-php/flow/commit/ebfa793890f8c087ea4b7c7c6f07e6371294f767) - **Keep website tests in standalone workflow to trigger those tests only when website code is changed** - [@norberttech](https://github.com/norberttech)
 - [#1882](https://github.com/flow-php/flow/pull/1882) - **Split test-suite.yml workflow steps into standalone jobs** - [@norberttech](https://github.com/norberttech)
