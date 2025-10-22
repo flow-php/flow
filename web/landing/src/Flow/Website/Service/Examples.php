@@ -12,9 +12,21 @@ final class Examples
     {
     }
 
-    public function code(string $topic, string $example) : string
+    public function code(string $topic, string $example, ?string $option = null) : string
     {
-        $path = \sprintf('%s/topics/%s/%s/code.php', \realpath($this->examplesPath), $topic, $example);
+        if ($option !== null) {
+            $path = \sprintf('%s/topics/%s/%s/%s/code.php', \realpath($this->examplesPath), $topic, $example, $option);
+        } elseif ($this->hasOptions($topic, $example)) {
+            $options = $this->options($topic, $example);
+
+            if (0 === \count($options)) {
+                throw new \RuntimeException(\sprintf('Example "%s" in topic "%s" has no valid options.', $example, $topic));
+            }
+            $firstOption = \current($options);
+            $path = \sprintf('%s/topics/%s/%s/%s/code.php', \realpath($this->examplesPath), $topic, $example, $firstOption);
+        } else {
+            $path = \sprintf('%s/topics/%s/%s/code.php', \realpath($this->examplesPath), $topic, $example);
+        }
 
         if (false === \file_exists($path)) {
             throw new \RuntimeException(\sprintf('Code example doesn\'t exists, it should be located in path: "%s".', $path));
@@ -26,9 +38,21 @@ final class Examples
     /**
      * @throws \JsonException
      */
-    public function composer(string $topic, string $example) : string
+    public function composer(string $topic, string $example, ?string $option = null) : string
     {
-        $path = \sprintf('%s/topics/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example);
+        if ($option !== null) {
+            $path = \sprintf('%s/topics/%s/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example, $option);
+        } elseif ($this->hasOptions($topic, $example)) {
+            $options = $this->options($topic, $example);
+
+            if (0 === \count($options)) {
+                throw new \RuntimeException(\sprintf('Example "%s" in topic "%s" has no valid options.', $example, $topic));
+            }
+            $firstOption = \current($options);
+            $path = \sprintf('%s/topics/%s/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example, $firstOption);
+        } else {
+            $path = \sprintf('%s/topics/%s/%s/composer.json', \realpath($this->examplesPath), $topic, $example);
+        }
 
         if (false === \file_exists($path)) {
             throw new \RuntimeException(\sprintf('Composer file doesn\'t exists, it should be located in path: "%s".', $path));
@@ -43,9 +67,21 @@ final class Examples
         return \json_encode($composer, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES);
     }
 
-    public function description(string $topic, string $example) : ?string
+    public function description(string $topic, string $example, ?string $option = null) : ?string
     {
-        $path = \sprintf('%s/topics/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example);
+        if ($option !== null) {
+            $path = \sprintf('%s/topics/%s/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example, $option);
+        } elseif ($this->hasOptions($topic, $example)) {
+            $options = $this->options($topic, $example);
+
+            if (0 === \count($options)) {
+                return null;
+            }
+            $firstOption = \current($options);
+            $path = \sprintf('%s/topics/%s/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example, $firstOption);
+        } else {
+            $path = \sprintf('%s/topics/%s/%s/description.md', \realpath($this->examplesPath), $topic, $example);
+        }
 
         if (false === \file_exists($path)) {
             return null;
@@ -96,9 +132,74 @@ final class Examples
         return \array_keys($priorities);
     }
 
-    public function output(string $topic, string $example) : ?Output
+    /**
+     * Returns all visible options for a given example, sorted by priority.
+     * Returns empty array if example is standalone (2-level structure).
+     *
+     * @return array<string>
+     */
+    public function options(string $topic, string $example) : array
     {
-        $folder = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+        $path = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+
+        if (false === \file_exists($path)) {
+            throw new \RuntimeException(\sprintf('Example "%s" in topic "%s" doesn\'t exist, it should be located in path: "%s".', $example, $topic, $path));
+        }
+
+        if (\file_exists(\sprintf('%s/code.php', $path))) {
+            return [];
+        }
+
+        $items = \array_values(\array_diff(\scandir($path), ['..', '.', '.gitignore', 'priority.txt', 'hidden.txt']));
+        $options = [];
+
+        foreach ($items as $item) {
+            $itemPath = \sprintf('%s/%s', $path, $item);
+
+            if (\is_dir($itemPath) && \file_exists(\sprintf('%s/code.php', $itemPath))) {
+                $options[] = $item;
+            }
+        }
+
+        if (0 === \count($options)) {
+            return [];
+        }
+
+        $priorities = [];
+
+        foreach ($options as $option) {
+            $priorityPath = \sprintf('%s/%s/priority.txt', $path, $option);
+            $priorities[$option] = \file_exists($priorityPath) ? (int) \file_get_contents($priorityPath) : 99;
+        }
+
+        \asort($priorities);
+
+        foreach (\array_keys($priorities) as $option) {
+            $isHidden = \file_exists(\sprintf('%s/%s/hidden.txt', $path, $option));
+
+            if ($isHidden) {
+                unset($priorities[$option]);
+            }
+        }
+
+        return \array_keys($priorities);
+    }
+
+    public function output(string $topic, string $example, ?string $option = null) : ?Output
+    {
+        if ($option !== null) {
+            $folder = \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $option);
+        } elseif ($this->hasOptions($topic, $example)) {
+            $options = $this->options($topic, $example);
+
+            if (0 === \count($options)) {
+                return null;
+            }
+            $firstOption = \current($options);
+            $folder = \sprintf('%s/topics/%s/%s/%s', \realpath($this->examplesPath), $topic, $example, $firstOption);
+        } else {
+            $folder = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+        }
 
         $paths = \glob(
             \sprintf(
@@ -176,5 +277,30 @@ final class Examples
         }
 
         return \array_keys($priorities);
+    }
+
+    private function hasOptions(string $topic, string $example) : bool
+    {
+        $path = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
+
+        if (\file_exists(\sprintf('%s/code.php', $path))) {
+            return false;
+        }
+
+        $items = \scandir($path);
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $itemPath = \sprintf('%s/%s', $path, $item);
+
+            if (\is_dir($itemPath) && \file_exists(\sprintf('%s/code.php', $itemPath))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

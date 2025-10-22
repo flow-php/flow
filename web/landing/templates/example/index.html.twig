@@ -25,7 +25,7 @@
 
         <div class="-mt-20 pt-20">
             <nav>
-                <ul class="flex whitespace-nowrap overflow-auto py-4">
+                <ul class="flex whitespace-nowrap overflow-auto py-2">
                     {% for example in examples %}
                         <li>
                             <a href="{{ path('example', {topic: currentTopic, example: example}) }}#example" class="{% if currentExample == example %}active {% elseif currentExample is null and loop.first %}active {% endif %}w-max tracking-wide flex items-center leading-8 px-2 [&.active]:bg-orange-300 rounded">
@@ -36,6 +36,21 @@
                     {% endfor %}
                 </ul>
             </nav>
+
+            {% if options|length > 0 %}
+            <nav class="bg-gray-50 rounded px-3 pb-2 mb-4 border border-gray-200">
+                <ul class="flex whitespace-nowrap overflow-auto gap-1">
+                    {% for option in options %}
+                        <li>
+                            <a href="{{ path('example_option', {topic: currentTopic, example: currentExample, option: option}) }}#example"
+                               class="{% if currentOption == option %}active {% elseif currentOption is null and loop.first %}active {% endif %}inline-block text-sm px-3 py-1 rounded hover:bg-orange-200 transition-colors [&.active]:bg-orange-300 [&.active]:font-medium [&.active]:rounded">
+                                {{ option|humanize }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% endif %}
 
             <div id="example" class="-mt-36 pt-36">
                 {% if description %}
@@ -49,26 +64,44 @@
                 {% endif %}
 
                 <div class="mb-5">
-                    <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
-                        Download
-                    </a>
+                    {% if currentOption %}
+                        <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/{{ currentOption }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
+                            Download
+                        </a>
+                    {% else %}
+                        <a href="https://raw.githubusercontent.com/flow-php/flow/refs/heads/1.x/examples/topics/{{ currentTopic }}/{{ currentExample }}/flow_php_example.zip" target="_blank" class="btn btn-primary mb-5">
+                            Download
+                        </a>
+                    {% endif %}
                 </div>
 
                 <hr class="hidden lg:block"/>
                 {% if composer %}
-                    <code>composer.json</code>
-                    {% apply spaceless %}
-                        <div id="composer" class="relative">
-                            <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
-                                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
-                            </button>
-                            <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
-                                <code id="composer-json" class="language-json" data-controller="syntax-highlight" >
-                                    {{- composer -}}
-                                </code>
-                            </pre>
-                        </div>
-                    {% endapply %}
+                    <style>
+                        details summary .arrow-closed { display: inline-block; }
+                        details summary .arrow-open { display: none; }
+                        details[open] summary .arrow-closed { display: none; }
+                        details[open] summary .arrow-open { display: inline-block; }
+                    </style>
+                    <details class="mb-5">
+                        <summary class="text-sm font-medium py-2 hover:text-orange-600 transition-colors" style="list-style: none; display: flex; align-items: center; cursor: pointer;">
+                            <span class="arrow-closed mr-2">▶</span>
+                            <span class="arrow-open mr-2">▼</span>
+                            <code>composer.json</code>
+                        </summary>
+                        {% apply spaceless %}
+                            <div id="composer" class="relative mt-2">
+                                <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
+                                    <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
+                                </button>
+                                <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
+                                    <code id="composer-json" class="language-json" data-controller="syntax-highlight" >
+                                        {{- composer -}}
+                                    </code>
+                                </pre>
+                            </div>
+                        {% endapply %}
+                    </details>
                 {% endif %}
 
                 {% apply spaceless %}

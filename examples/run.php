@@ -32,11 +32,13 @@ $intput = new ArgvInput(definition: new InputDefinition(
         new InputOption(name: 'composer-archive', shortcut: 'a', mode: InputOption::VALUE_NONE),
         new InputOption(name: 'topic', shortcut: 't', mode: InputOption::VALUE_REQUIRED),
         new InputOption(name: 'example', shortcut: 'e', mode: InputOption::VALUE_REQUIRED),
+        new InputOption(name: 'option', shortcut: 'o', mode: InputOption::VALUE_REQUIRED),
     ]
 ));
 
 $topic = $intput->getOption('topic');
 $example = $intput->getOption('example');
+$option = $intput->getOption('option');
 
 $path = __DIR__ . '/topics';
 
@@ -46,6 +48,10 @@ if ($topic) {
 
 if ($example) {
     $path .= '/' . $example;
+}
+
+if ($option) {
+    $path .= '/' . $option;
 }
 
 $finder = new Finder();

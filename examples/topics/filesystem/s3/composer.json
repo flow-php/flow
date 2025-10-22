@@ -12,6 +12,7 @@
     "flow-php/snappy": "1.x-dev",
     "flow-php/parquet": "1.x-dev"
   },
+  "minimum-stability": "dev",
   "archive": {
     "exclude": [
       ".env",

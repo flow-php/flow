@@ -9,6 +9,7 @@
     "php-http/curl-client": "^2.3",
     "nyholm/psr7": "^1.8"
   },
+  "minimum-stability": "dev",
   "config": {
     "allow-plugins": {
       "php-http/discovery": false
