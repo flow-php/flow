@@ -77,19 +77,31 @@
 
                 <hr class="hidden lg:block"/>
                 {% if composer %}
-                    <code>composer.json</code>
-                    {% apply spaceless %}
-                        <div id="composer" class="relative">
-                            <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
-                                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
-                            </button>
-                            <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
-                                <code id="composer-json" class="language-json" data-controller="syntax-highlight" >
-                                    {{- composer -}}
-                                </code>
-                            </pre>
-                        </div>
-                    {% endapply %}
+                    <style>
+                        details summary .arrow-closed { display: inline-block; }
+                        details summary .arrow-open { display: none; }
+                        details[open] summary .arrow-closed { display: none; }
+                        details[open] summary .arrow-open { display: inline-block; }
+                    </style>
+                    <details class="mb-5">
+                        <summary class="text-sm font-medium py-2 hover:text-orange-600 transition-colors" style="list-style: none; display: flex; align-items: center; cursor: pointer;">
+                            <span class="arrow-closed mr-2">▶</span>
+                            <span class="arrow-open mr-2">▼</span>
+                            <code>composer.json</code>
+                        </summary>
+                        {% apply spaceless %}
+                            <div id="composer" class="relative mt-2">
+                                <button class="absolute top-[12px] right-[12px] bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-20" data-clipboard-target="#composer-json" {{ stimulus_controller('clipboard') }}>
+                                    <img src="{{ asset('images/icons/copy.svg') }}" alt="copy composer-json" width="20" height="20" class="inline">
+                                </button>
+                                <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
+                                    <code id="composer-json" class="language-json" data-controller="syntax-highlight" >
+                                        {{- composer -}}
+                                    </code>
+                                </pre>
+                            </div>
+                        {% endapply %}
+                    </details>
                 {% endif %}
 
                 {% apply spaceless %}
