@@ -6,6 +6,7 @@
 - [#1882](https://github.com/flow-php/flow/pull/1882) - **Reusable action to setup php version in github workflows** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [276f0a](https://github.com/flow-php/flow/commit/276f0a068a21c387d2ccb8b7da369bc93ac808be) - **Simplified website navigation, reduce nubmer of redundant static pages** - [@norberttech](https://github.com/norberttech)
 - [#1898](https://github.com/flow-php/flow/pull/1898) - **Updated archives of all examples** - [@norberttech](https://github.com/norberttech)
 - [#1898](https://github.com/flow-php/flow/pull/1898) - **composer.json section in examples is now by default collapsed** - [@norberttech](https://github.com/norberttech)
 - [549d4b](https://github.com/flow-php/flow/commit/549d4bc7f9b8d30a2ed651e00c94a8b345266fa8) - **Install only required dependencies on windows test-suite** - [@norberttech](https://github.com/norberttech)
