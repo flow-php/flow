@@ -15,7 +15,7 @@ use Flow\Filesystem\Path;
  * @param null|Schema $schema - enforce schema on the extracted data - @deprecate use withSchema method instead
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_reading', example: 'json')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'json')]
 function from_json(
     string|Path $path,
     ?string $pointer = null,
@@ -40,7 +40,7 @@ function from_json(
  * @param Path|string $path - string is internally turned into stream
  */
 #[DocumentationDSL(module: Module::JSON, type: Type::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_reading', example: 'jsonl')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'jsonl')]
 function from_json_lines(
     string|Path $path,
 ) : JsonLinesExtractor {

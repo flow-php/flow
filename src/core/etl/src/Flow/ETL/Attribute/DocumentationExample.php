@@ -10,6 +10,7 @@ final readonly class DocumentationExample
     public function __construct(
         public string $topic,
         public string $example,
+        public ?string $option = null,
     ) {
     }
 }

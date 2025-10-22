@@ -45,6 +45,7 @@ final class DSLDefinition
                 $examples[] = new Example(
                     $attribute['arguments']['topic'],
                     $attribute['arguments']['example'],
+                    $attribute['arguments']['option'] ?? null,
                 );
             }
         }

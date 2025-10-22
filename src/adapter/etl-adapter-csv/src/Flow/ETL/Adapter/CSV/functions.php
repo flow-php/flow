@@ -20,7 +20,7 @@ use Flow\Filesystem\{Path, SourceStream};
  * @param null|Schema $schema - @deprecated use $loader->withSchema() instead
  */
 #[DocumentationDSL(module: Module::CSV, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_reading', example: 'csv')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'csv')]
 function from_csv(
     string|Path $path,
     bool $with_header = true,

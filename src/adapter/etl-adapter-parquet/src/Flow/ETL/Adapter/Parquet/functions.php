@@ -22,7 +22,7 @@ use Flow\Parquet\ParquetFile\Compressions;
  * @param null|int $offset - @deprecated use `withOffset` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_reading', example: 'parquet')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'parquet')]
 function from_parquet(
     string|Path $path,
     array $columns = [],
@@ -52,7 +52,7 @@ function from_parquet(
  * @param null|Schema $schema - @deprecated use `withSchema` method instead
  */
 #[DocumentationDSL(module: Module::PARQUET, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_writing', example: 'parquet')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'parquet')]
 function to_parquet(
     string|Path $path,
     ?Options $options = null,

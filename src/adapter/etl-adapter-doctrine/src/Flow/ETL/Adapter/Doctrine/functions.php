@@ -204,7 +204,7 @@ function dbal_from_query(
  * @throws InvalidArgumentException
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_writing', example: 'database_upsert')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
 function to_dbal_table_insert(
     array|Connection $connection,
     string $table,
@@ -285,7 +285,7 @@ function table_schema_to_flow_schema(\Doctrine\DBAL\Schema\Table $table, array $
  * @param array<string> $update_columns
  */
 #[DocumentationDSL(module: Module::DOCTRINE, type: DSLType::HELPER)]
-#[DocumentationExample(topic: 'data_writing', example: 'database_upsert')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'database_upsert')]
 function postgresql_insert_options(?bool $skip_conflicts = null, ?string $constraint = null, array $conflict_columns = [], array $update_columns = []) : PostgreSQLInsertOptions
 {
     return new PostgreSQLInsertOptions($skip_conflicts, $constraint, $conflict_columns, $update_columns);

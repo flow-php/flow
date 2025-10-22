@@ -207,24 +207,24 @@ use UnitEnum;
  * Alias for data_frame() : Flow.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'overwrite')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
 function df(Config|ConfigBuilder|null $config = null) : Flow
 {
     return data_frame($config);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'overwrite')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
 function data_frame(Config|ConfigBuilder|null $config = null) : Flow
 {
     return new Flow($config);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
-#[DocumentationExample(topic: 'data_frame', example: 'overwrite')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'overwrite')]
 function from_rows(Rows ...$rows) : RowsExtractor
 {
     return new RowsExtractor(...$rows);
@@ -242,8 +242,8 @@ function from_path_partitions(Path|string $path) : PathPartitionsExtractor
  * @param null|Schema $schema - @deprecated use withSchema() method instead
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_reading', example: 'array')]
-#[DocumentationExample(topic: 'data_frame', example: 'data_frame')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'array')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'data_frame')]
 function from_array(iterable $array, ?Schema $schema = null) : ArrayExtractor
 {
     $extractor = new ArrayExtractor($array);
@@ -368,7 +368,7 @@ function to_memory(Memory $memory) : MemoryLoader
  * @param-out array<array<mixed>> $array
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::LOADER)]
-#[DocumentationExample(topic: 'data_writing', example: 'array')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_writing', option: 'array')]
 function to_array(array &$array) : ArrayLoader
 {
     /** @phpstan-var array<array<mixed>> $array */
@@ -1036,14 +1036,14 @@ function col(string $entry) : EntryReference
  * An alias for `ref`.
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'create_columns')]
+#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
 function entry(string $entry) : EntryReference
 {
     return new EntryReference($entry);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'create_columns')]
+#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
 function ref(string $entry) : EntryReference
 {
     return new EntryReference($entry);
@@ -1116,7 +1116,7 @@ function optional(ScalarFunction $function) : Optional
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
-#[DocumentationExample(topic: 'data_frame', example: 'create_columns')]
+#[DocumentationExample(topic: 'data_frame', example: 'columns', option: 'create')]
 function lit(mixed $value) : Literal
 {
     return new Literal($value);

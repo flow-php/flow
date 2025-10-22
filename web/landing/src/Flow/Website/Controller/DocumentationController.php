@@ -59,9 +59,10 @@ final class DocumentationController extends AbstractController
 
         foreach ($definition->examples() as $example) {
             $examples[] = [
-                'code' => $this->examples->code($example->topic, $example->name),
+                'code' => $this->examples->code($example->topic, $example->name, $example->option),
                 'topic' => $example->topic,
                 'name' => $example->name,
+                'option' => $example->option,
             ];
         }
 

@@ -9,6 +9,7 @@ final class Example
     public function __construct(
         public readonly string $topic,
         public readonly string $name,
+        public readonly ?string $option = null,
     ) {
     }
 }

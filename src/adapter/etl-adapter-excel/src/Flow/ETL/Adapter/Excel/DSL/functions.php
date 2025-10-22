@@ -14,7 +14,7 @@ use Flow\ETL\{Adapter\Excel\ExcelExtractor,
 use Flow\Filesystem\Path;
 
 #[DocumentationDSL(module: Module::EXCEL, type: DSLType::EXTRACTOR)]
-#[DocumentationExample(topic: 'data_reading', example: 'excel')]
+#[DocumentationExample(topic: 'data_frame', example: 'data_reading', option: 'excel')]
 function from_excel(
     string|Path $path,
 ) : ExcelExtractor {
