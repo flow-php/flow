@@ -15,9 +15,9 @@
         <h2 class="mb-4 text-2xl font-semibold tracking-wide">Examples:</h2>
         <nav class="font-medium text-center bg-orange-100 rounded">
             <ul class="flex whitespace-nowrap overflow-auto justify-between">
-                {% for topic in topics %}
+                {% for topic, route in navigation %}
                     <li class="grow">
-                        <a href="{{ path('topic', {topic: topic}) }}#example" class="inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
+                        <a href="{{ path(route.name, route.arguments) }}#example" class="inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
                             {{ topic|humanize }}
                         </a>
                     </li>

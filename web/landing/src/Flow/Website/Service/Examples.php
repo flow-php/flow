@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
+use function Flow\Types\DSL\type_string;
 use Flow\Website\Service\Example\Output;
 
 final class Examples
@@ -133,6 +134,57 @@ final class Examples
     }
 
     /**
+     * @return array<string, array{name: string, arguments: array<string, bool|int|string>}>
+     */
+    public function examplesNavigation(string $topic) : array
+    {
+        $navigation = [];
+
+        foreach ($this->topics() as $nextTopic) {
+
+            if ($nextTopic !== $topic) {
+                continue;
+            }
+
+            $examples = $this->examples($nextTopic);
+
+            foreach ($examples as $nextExample) {
+
+                $options = $this->options($nextTopic, $nextExample);
+
+                if (\count($options) > 0) {
+                    $firstOption = type_string()->assert(\reset($options));
+                    $navigation[$nextExample] = [
+                        'name' => 'example_option',
+                        'arguments' => ['topic' => $nextTopic, 'example' => $nextExample, 'option' => $firstOption],
+                    ];
+                } else {
+                    $navigation[$nextExample] = [
+                        'name' => 'example',
+                        'arguments' => ['topic' => $nextTopic, 'example' => $nextExample],
+                    ];
+                }
+            }
+        }
+
+        return $navigation;
+    }
+
+    public function firstExample(string $topic) : string
+    {
+        $examples = $this->examples($topic);
+
+        return type_string()->assert(\reset($examples));
+    }
+
+    public function firstOption(string $topic, string $example) : ?string
+    {
+        $options = $this->options($topic, $example);
+
+        return \count($options) > 0 ? type_string()->assert(\reset($options)) : null;
+    }
+
+    /**
      * Returns all visible options for a given example, sorted by priority.
      * Returns empty array if example is standalone (2-level structure).
      *
@@ -183,6 +235,41 @@ final class Examples
         }
 
         return \array_keys($priorities);
+    }
+
+    /**
+     * @return array<string, array{name: string, arguments: array<string, bool|int|string>}>
+     */
+    public function optionsNavigation(string $topic, string $example) : array
+    {
+        $navigation = [];
+
+        foreach ($this->topics() as $nextTopic) {
+
+            if ($nextTopic !== $topic) {
+                continue;
+            }
+
+            $examples = $this->examples($nextTopic);
+
+            foreach ($examples as $nextExample) {
+
+                if ($nextExample !== $example) {
+                    continue;
+                }
+
+                $options = $this->options($nextTopic, $nextExample);
+
+                foreach ($options as $nextOption) {
+                    $navigation[$nextOption] = [
+                        'name' => 'example_option',
+                        'arguments' => ['topic' => $nextTopic, 'example' => $example, 'option' => $nextOption],
+                    ];
+                }
+            }
+        }
+
+        return $navigation;
     }
 
     public function output(string $topic, string $example, ?string $option = null) : ?Output
@@ -279,6 +366,30 @@ final class Examples
         return \array_keys($priorities);
     }
 
+    /**
+     * @return array<string, array{name: string, arguments: array<string, bool|int|string>}>
+     */
+    public function topicsNavigation() : array
+    {
+        $navigation = [];
+
+        foreach ($this->topics() as $topic) {
+            $examples = $this->examples($topic);
+            $firstExample = type_string()->assert(\reset($examples));
+
+            $options = $this->options($topic, $firstExample);
+
+            if (\count($options) > 0) {
+                $firstOption = type_string()->assert(\reset($options));
+                $navigation[$topic] = ['name' => 'example_option', 'arguments' => ['topic' => $topic, 'example' => $firstExample, 'option' => $firstOption]];
+            } else {
+                $navigation[$topic] = ['name' => 'example', 'arguments' => ['topic' => $topic, 'example' => $firstExample]];
+            }
+        }
+
+        return $navigation;
+    }
+
     private function hasOptions(string $topic, string $example) : bool
     {
         $path = \sprintf('%s/topics/%s/%s', \realpath($this->examplesPath), $topic, $example);
@@ -287,17 +398,23 @@ final class Examples
             return false;
         }
 
+        if (!\file_exists($path)) {
+            return false;
+        }
+
         $items = \scandir($path);
 
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
+        if (\count($items)) {
+            foreach ($items as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
 
-            $itemPath = \sprintf('%s/%s', $path, $item);
+                $itemPath = \sprintf('%s/%s', $path, $item);
 
-            if (\is_dir($itemPath) && \file_exists(\sprintf('%s/code.php', $itemPath))) {
-                return true;
+                if (\is_dir($itemPath) && \file_exists(\sprintf('%s/code.php', $itemPath))) {
+                    return true;
+                }
             }
         }
 

@@ -19,103 +19,54 @@ final class ExamplesController extends AbstractController
     #[Route('/{topic}/{example}/', name: 'example', priority: -140)]
     public function example(string $topic, string $example) : Response
     {
-        $topics = $this->examples->topics();
-        $currentTopic = $topic;
-
-        $examples = $this->examples->examples($currentTopic);
-        $currentExample = $example;
-
-        $options = $this->examples->options($currentTopic, $currentExample);
-
-        if (\count($options) > 0) {
-            $firstOption = \current($options);
-
-            return $this->redirectToRoute('example_option', [
-                'topic' => $topic,
-                'example' => $example,
-                'option' => $firstOption,
-            ]);
-        }
+        $firstOption = $this->examples->firstOption($topic, $example);
 
         return $this->render('example/index.html.twig', [
-            'topics' => $topics,
-            'examples' => $examples,
-            'options' => [],
+            'topicsNavigation' => $this->examples->topicsNavigation(),
+            'examplesNavigation' => $this->examples->examplesNavigation($topic),
+            'optionsNavigation' => $this->examples->optionsNavigation($topic, $example),
             'currentTopic' => $topic,
             'currentExample' => $example,
             'currentOption' => null,
-            'description' => $this->examples->description($currentTopic, $currentExample),
-            'composer' => $this->examples->composer($currentTopic, $currentExample),
-            'code' => $this->examples->code($currentTopic, $currentExample),
-            'output' => $this->examples->output($currentTopic, $currentExample),
+            'description' => $this->examples->description($topic, $example, $firstOption),
+            'composer' => $this->examples->composer($topic, $example, $firstOption),
+            'code' => $this->examples->code($topic, $example, $firstOption),
+            'output' => $this->examples->output($topic, $example, $firstOption),
         ]);
     }
 
     #[Route('/{topic}/{example}/{option}/', name: 'example_option', priority: -150)]
-    public function exampleOption(string $topic, string $example, string $option) : Response
+    public function option(string $topic, string $example, string $option) : Response
     {
-        $topics = $this->examples->topics();
-        $currentTopic = $topic;
-
-        $examples = $this->examples->examples($currentTopic);
-        $currentExample = $example;
-
-        $options = $this->examples->options($currentTopic, $currentExample);
-        $currentOption = $option;
-
         return $this->render('example/index.html.twig', [
-            'topics' => $topics,
-            'examples' => $examples,
-            'options' => $options,
+            'topicsNavigation' => $this->examples->topicsNavigation(),
+            'examplesNavigation' => $this->examples->examplesNavigation($topic),
+            'optionsNavigation' => $this->examples->optionsNavigation($topic, $example),
             'currentTopic' => $topic,
             'currentExample' => $example,
-            'currentOption' => $currentOption,
-            'description' => $this->examples->description($currentTopic, $currentExample, $currentOption),
-            'composer' => $this->examples->composer($currentTopic, $currentExample, $currentOption),
-            'code' => $this->examples->code($currentTopic, $currentExample, $currentOption),
-            'output' => $this->examples->output($currentTopic, $currentExample, $currentOption),
+            'currentOption' => $option,
+            'description' => $this->examples->description($topic, $example, $option),
+            'composer' => $this->examples->composer($topic, $example, $option),
+            'code' => $this->examples->code($topic, $example, $option),
+            'output' => $this->examples->output($topic, $example, $option),
         ]);
     }
 
     #[Route('/{topic}/', name: 'topic', priority: -120)]
     public function topic(string $topic) : Response
     {
-        switch (\mb_strtolower($topic)) {
-            case 'data_sink':
-                return $this->redirectToRoute('topic', ['topic' => 'data_writing'], 301);
-            case 'data_source':
-                return $this->redirectToRoute('topic', ['topic' => 'data_reading'], 301);
-        }
-
         $topics = $this->examples->topics();
-        $currentTopic = $topic;
-
-        $examples = $this->examples->examples($currentTopic);
-        $currentExample = \current($examples);
-
-        $options = $this->examples->options($currentTopic, $currentExample);
-
-        if (\count($options) > 0) {
-            $firstOption = \current($options);
-
-            return $this->redirectToRoute('example_option', [
-                'topic' => $currentTopic,
-                'example' => $currentExample,
-                'option' => $firstOption,
-            ]);
-        }
+        $firstExample = $this->examples->firstExample($topic);
+        $firstOption = $this->examples->firstOption($topic, $firstExample);
 
         return $this->render('example/index.html.twig', [
-            'topics' => $topics,
-            'examples' => $examples,
-            'options' => [],
-            'currentTopic' => $currentTopic,
-            'currentExample' => $currentExample,
+            'topicsNavigation' => $topics,
+            'currentTopic' => $topic,
             'currentOption' => null,
-            'description' => $this->examples->description($currentTopic, $currentExample),
-            'composer' => $this->examples->composer($currentTopic, $currentExample),
-            'code' => $this->examples->code($currentTopic, $currentExample),
-            'output' => $this->examples->output($currentTopic, $currentExample),
+            'description' => $this->examples->description($topic, $firstExample, $firstOption),
+            'composer' => $this->examples->composer($topic, $firstExample, $firstOption),
+            'code' => $this->examples->code($topic, $firstExample, $firstOption),
+            'output' => $this->examples->output($topic, $firstExample, $firstOption),
         ]);
     }
 }

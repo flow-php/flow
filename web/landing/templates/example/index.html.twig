@@ -13,9 +13,9 @@
         <h2 class="mb-4 text-2xl font-semibold tracking-wide">Examples:</h2>
         <nav class="font-medium text-center bg-orange-100 rounded">
             <ul class="flex whitespace-nowrap overflow-auto justify-between">
-                {% for topic in topics %}
+                {% for topic, route in topicsNavigation %}
                     <li class="grow">
-                        <a href="{{ path('topic', {topic: topic}) }}#example" class="{% if currentTopic == topic %}active {% elseif currentTopic is null and loop.first %}active {% endif %}inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
+                        <a href="{{ path(route.name, route.arguments) }}#example" class="{% if currentTopic == topic %}active {% elseif currentTopic is null and loop.first %}active {% endif %}inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
                             {{ topic|humanize }}
                         </a>
                     </li>
@@ -26,9 +26,9 @@
         <div class="-mt-20 pt-20">
             <nav>
                 <ul class="flex whitespace-nowrap overflow-auto py-2">
-                    {% for example in examples %}
+                    {% for example, route in examplesNavigation %}
                         <li>
-                            <a href="{{ path('example', {topic: currentTopic, example: example}) }}#example" class="{% if currentExample == example %}active {% elseif currentExample is null and loop.first %}active {% endif %}w-max tracking-wide flex items-center leading-8 px-2 [&.active]:bg-orange-300 rounded">
+                            <a href="{{ path(route.name, route.arguments) }}#example" class="{% if currentExample == example %}active {% elseif currentExample is null and loop.first %}active {% endif %}w-max tracking-wide flex items-center leading-8 px-2 [&.active]:bg-orange-300 rounded">
                                 <img src="{{ asset('images/icons/flow.svg') }}" alt="flow php icon" width="16" height="16" class="mr-2">
                                 {{ example|humanize }}
                             </a>
@@ -37,12 +37,12 @@
                 </ul>
             </nav>
 
-            {% if options|length > 0 %}
-            <nav class="bg-gray-50 rounded px-3 pb-2 mb-4 border border-gray-200">
+            {% if optionsNavigation|length > 0 %}
+            <nav class="bg-gray-50 rounded px-3 pb-2 mb-4">
                 <ul class="flex whitespace-nowrap overflow-auto gap-1">
-                    {% for option in options %}
+                    {% for option, route in optionsNavigation %}
                         <li>
-                            <a href="{{ path('example_option', {topic: currentTopic, example: currentExample, option: option}) }}#example"
+                            <a href="{{ path(route.name, route.arguments) }}#example"
                                class="{% if currentOption == option %}active {% elseif currentOption is null and loop.first %}active {% endif %}inline-block text-sm px-3 py-1 rounded hover:bg-orange-200 transition-colors [&.active]:bg-orange-300 [&.active]:font-medium [&.active]:rounded">
                                 {{ option|humanize }}
                             </a>

@@ -20,13 +20,6 @@ final class ExamplesSourceProvider implements SourceProvider
 
         foreach ($this->examples->topics() as $topic) {
             $examples = $this->examples->examples($topic);
-            $firstExample = \current($examples);
-            $firstExampleOptions = $this->examples->options($topic, $firstExample);
-
-            // Only add topic source if the first example doesn't have options (no redirect)
-            if (\count($firstExampleOptions) === 0) {
-                $sources[] = new Source('topic', ['topic' => $topic]);
-            }
 
             foreach ($examples as $example) {
                 $options = $this->examples->options($topic, $example);
