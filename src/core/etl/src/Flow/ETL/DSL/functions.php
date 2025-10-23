@@ -45,6 +45,7 @@ use Flow\ETL\{Analyze,
     Cache\Implementation\FilesystemCache,
     Config,
     Config\ConfigBuilder,
+    Constraint\SortedByConstraint,
     Constraint\UniqueConstraint,
     DataFrame,
     Extractor,
@@ -2321,6 +2322,17 @@ function with_entry(string $name, ScalarFunction $function) : WithEntry
 function constraint_unique(string $reference, string ...$references) : UniqueConstraint
 {
     return new UniqueConstraint($reference, ...$references);
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]
+function constraint_sorted_by(string|Reference $column, string|Reference ...$columns) : SortedByConstraint
+{
+    $references = \array_map(
+        static fn (string|Reference $ref) => EntryReference::init($ref),
+        [$column, ...$columns]
+    );
+
+    return new SortedByConstraint(...$references);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::HELPER)]

@@ -11,3 +11,6 @@ Key features:
 - Groups are NEVER split across batches
 - Batches may exceed minSize to preserve logical grouping
 - Multiple small groups can be combined into one batch (when minSize is set)
+
+Requirements:
+- Data must be sorted by the grouping column
