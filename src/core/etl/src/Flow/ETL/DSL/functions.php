@@ -76,7 +76,8 @@ use Flow\ETL\{Analyze,
     WithEntry};
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
-use Flow\ETL\Extractor\{CacheExtractor, ChainExtractor, ChunkExtractor, DataFrameExtractor, FilesExtractor, MemoryExtractor, PathPartitionsExtractor, PipelineExtractor, RowsExtractor, SequenceExtractor};
+use Flow\ETL\Extractor\BatchByExtractor;
+use Flow\ETL\Extractor\{BatchExtractor, CacheExtractor, ChainExtractor, DataFrameExtractor, FilesExtractor, MemoryExtractor, PathPartitionsExtractor, PipelineExtractor, RowsExtractor, SequenceExtractor};
 use Flow\ETL\Extractor\SequenceGenerator\{DatePeriodSequenceGenerator, NumberSequenceGenerator};
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -301,12 +302,36 @@ function filesystem_cache(Path|string|null $cache_dir = null, Filesystem $filesy
 }
 
 /**
- * @param int<1, max> $chunk_size
+ * @param null|int<1, max> $min_size
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
-function chunks_from(Extractor $extractor, int $chunk_size) : ChunkExtractor
+function batched_by(Extractor $extractor, string|Reference $column, ?int $min_size = null) : BatchByExtractor
 {
-    return new ChunkExtractor($extractor, $chunk_size);
+    if ($min_size !== null && $min_size <= 0) {
+        throw new InvalidArgumentException('Minimum batch size must be greater than 0, given: ' . $min_size);
+    }
+
+    return new BatchByExtractor($extractor, EntryReference::init($column), $min_size);
+}
+
+/**
+ * @param int<1, max> $size
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
+function batches(Extractor $extractor, int $size) : BatchExtractor
+{
+    return new BatchExtractor($extractor, $size);
+}
+
+/**
+ * @param int<1, max> $chunk_size
+ *
+ * @deprecated use batches() instead
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
+function chunks_from(Extractor $extractor, int $chunk_size) : BatchExtractor
+{
+    return new BatchExtractor($extractor, $chunk_size);
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::EXTRACTOR)]
