@@ -131,12 +131,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "9f19757e1f32420c84bfb14ed64de3fadd40dc92"
+                "reference": "dedb4f777adcce73bfec004f5c3ce29b579f7994"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/9f19757e1f32420c84bfb14ed64de3fadd40dc92",
-                "reference": "9f19757e1f32420c84bfb14ed64de3fadd40dc92",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/dedb4f777adcce73bfec004f5c3ce29b579f7994",
+                "reference": "dedb4f777adcce73bfec004f5c3ce29b579f7994",
                 "shasum": ""
             },
             "require": {
@@ -196,7 +196,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-22T17:06:43+00:00"
+            "time": "2025-10-24T09:15:00+00:00"
         },
         {
             "name": "flow-php/filesystem",

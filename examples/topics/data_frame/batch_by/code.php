@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_stream};
+use function Flow\ETL\DSL\{constraint_sorted_by, data_frame, from_array, ref, to_stream};
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -14,6 +14,7 @@ data_frame()
         ['order_id' => 2, 'item' => 'Gizmo', 'qty' => 3],
         ['order_id' => 3, 'item' => 'Widget', 'qty' => 1],
     ]))
+    ->constrain(constraint_sorted_by(ref('order_id')))
     ->batchBy('order_id')
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

@@ -1,1 +1,0 @@
-Remove this after code is merged and example can pull the latest version of data frame from packagist.
