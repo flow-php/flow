@@ -19,7 +19,8 @@ use Flow\ETL\Function\{AggregatingFunction,
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
-use Flow\ETL\Pipeline\{BatchingPipeline,
+use Flow\ETL\Pipeline\{BatchingByPipeline,
+    BatchingPipeline,
     CachingPipeline,
     CollectingPipeline,
     ConstrainedPipeline,
@@ -30,7 +31,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     PartitioningPipeline,
     SortingPipeline,
     VoidPipeline};
-use Flow\ETL\Row\{Formatter\ASCIISchemaFormatter, Reference, References};
+use Flow\ETL\Row\{EntryReference, Formatter\ASCIISchemaFormatter, Reference, References};
 use Flow\ETL\Schema\{Definition, SchemaFormatter};
 use Flow\ETL\Schema\Validator\StrictValidator;
 use Flow\ETL\String\StringStyles;
@@ -84,6 +85,28 @@ final class DataFrame
     public function autoCast() : self
     {
         $this->pipeline->add(new AutoCastTransformer(new AutoCaster()));
+
+        return $this;
+    }
+
+    /**
+     * Merge/Split Rows yielded by Extractor into batches but keep those with common value in given column together.
+     * This works properly only on sorted datasets.
+     *
+     * When minSize is not provided, batches will be created only when there is a change in value of the column.
+     * When minSize is provided, batches will be created only when there is a change in value of the column or
+     * when there are at least minSize rows in the batch.
+     *
+     * @param Reference|string $column - column to group by (all rows with same value stay together)
+     * @param null|int<1, max> $minSize - optional minimum rows per batch for efficiency
+     *
+     * @lazy
+     *
+     * @throws InvalidArgumentException
+     */
+    public function batchBy(string|Reference $column, ?int $minSize = null) : self
+    {
+        $this->pipeline = new LinkedPipeline(new BatchingByPipeline($this->pipeline, EntryReference::init($column), $minSize));
 
         return $this;
     }

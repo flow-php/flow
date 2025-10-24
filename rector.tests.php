@@ -4,7 +4,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Extractor\ChainExtractor;
-use Flow\ETL\Extractor\ChunkExtractor;
+use Flow\ETL\Extractor\BatchExtractor;
 use Flow\ETL\Extractor\DataFrameExtractor;
 use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Extractor\PipelineExtractor;
@@ -155,7 +155,7 @@ return RectorConfig::configure()
             new NewObjectToFunction(ArrayExtractor::class, 'from_array'),
             new NewObjectToFunction(ChainExtractor::class, 'from_all'),
             new NewObjectToFunction(MemoryExtractor::class, 'from_memory'),
-            new NewObjectToFunction(ChunkExtractor::class, 'chunks_from'),
+            new NewObjectToFunction(BatchExtractor::class, 'batches'),
             new NewObjectToFunction(PipelineExtractor::class, 'from_pipeline'),
             new NewObjectToFunction(DataFrameExtractor::class, 'from_data_frame'),
 

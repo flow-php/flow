@@ -70,6 +70,12 @@ foreach ($finder as $file) {
         continue;
     }
 
+    if (\file_exists($skipPath = $file->getPath() . '/skip.txt')) {
+        $style->warning("Skipping example, skip.txt detected: {$skipPath}");
+
+        continue;
+    }
+
     $start = HighResolutionTime::now();
 
     $style->info("Running example: {$file->getRelativePathname()}");

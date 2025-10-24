@@ -11,18 +11,16 @@ use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\{Tests\CommandOutputNormalizer, Tests\FlowTestCase};
 use Flow\Filesystem\Stream\Mode;
-use function ob_end_clean;
-use function ob_get_contents;
-use function ob_start;
 
 final class StreamLoaderTest extends FlowTestCase
 {
     use CommandOutputNormalizer;
+
     public function test_columns_count_to_php_output_stream() : void
     {
         $loader = to_output(false, Output::column_count);
 
-        ob_start();
+        \ob_start();
 
         $loader->load(
             rows(
@@ -32,8 +30,8 @@ final class StreamLoaderTest extends FlowTestCase
             ),
             flow_context(config())
         );
-        $output = ob_get_contents() ?: '';
-        ob_end_clean();
+        $output = \ob_get_contents() ?: '';
+        \ob_end_clean();
 
         self::assertCommandOutputIdentical(
             <<<'ASCII'
@@ -65,7 +63,7 @@ ASCII,
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0);
 
-        ob_start();
+        \ob_start();
 
         $loader->load(
             rows(
@@ -75,8 +73,8 @@ ASCII,
             )->partitionBy(ref('group'))[0],
             flow_context(config())
         );
-        $output = ob_get_contents() ?: '';
-        ob_end_clean();
+        $output = \ob_get_contents() ?: '';
+        \ob_end_clean();
 
         self::assertCommandOutputContains(
             <<<'TABLE'
@@ -99,7 +97,7 @@ TABLE,
     {
         $loader = to_output(false, Output::rows_and_schema);
 
-        ob_start();
+        \ob_start();
 
         $loader->load(
             rows(
@@ -109,8 +107,8 @@ TABLE,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents() ?: '';
-        ob_end_clean();
+        $output = \ob_get_contents() ?: '';
+        \ob_end_clean();
 
         self::assertCommandOutputIdentical(
             <<<'ASCII'
@@ -136,7 +134,7 @@ ASCII,
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0);
 
-        ob_start();
+        \ob_start();
 
         $loader->load(
             rows(
@@ -146,8 +144,8 @@ ASCII,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents() ?: '';
-        ob_end_clean();
+        $output = \ob_get_contents() ?: '';
+        \ob_end_clean();
 
         self::assertCommandOutputContains(
             <<<'TABLE'
@@ -168,7 +166,7 @@ TABLE,
     {
         $loader = new StreamLoader('php://output', Mode::WRITE, 0, Output::schema);
 
-        ob_start();
+        \ob_start();
 
         $loader->load(
             rows(
@@ -178,8 +176,8 @@ TABLE,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents() ?: '';
-        ob_end_clean();
+        $output = \ob_get_contents() ?: '';
+        \ob_end_clean();
 
         self::assertCommandOutputIdentical(
             <<<'ASCII'
@@ -196,7 +194,7 @@ ASCII,
     {
         $loader = to_output(false, Output::rows_and_column_count);
 
-        ob_start();
+        \ob_start();
 
         $loader->load(
             rows(
@@ -206,8 +204,8 @@ ASCII,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents() ?: '';
-        ob_end_clean();
+        $output = \ob_get_contents() ?: '';
+        \ob_end_clean();
 
         self::assertCommandOutputIdentical(
             <<<'ASCII'
@@ -222,7 +220,7 @@ ASCII,
     {
         $loader = to_output(false, Output::rows_count);
 
-        ob_start();
+        \ob_start();
 
         $loader->load(
             rows(
@@ -232,8 +230,8 @@ ASCII,
             ),
             flow_context(config())
         );
-        $output = ob_get_contents() ?: '';
-        ob_end_clean();
+        $output = \ob_get_contents() ?: '';
+        \ob_end_clean();
 
         self::assertCommandOutputIdentical(
             <<<'ASCII'

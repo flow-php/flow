@@ -24,6 +24,33 @@ $dataFrame = data_frame()
 > **Performance Tip**: Optimal batch size depends on your data and available memory. Larger batches reduce I/O
 > operations but increase memory usage. Start with 1000-5000 rows and adjust based on your specific use case.
 
+### batchBy() - Group related records together
+
+```php
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_array, to_database};
+
+$dataFrame = data_frame()
+    ->read(from_array($orders_with_line_items))
+    ->batchBy('order_id', minSize: 1000) // Keep order line items together
+    ->write(to_database($connection, 'orders_table'))
+    ->run();
+```
+
+The `batchBy()` method ensures that all rows with the same column value stay in the same batch. This is critical when:
+- Processing hierarchical data (orders with line items, parent-child relationships)
+- Performing DELETE+INSERT operations (upsert patterns)
+- Maintaining referential integrity during batch processing
+
+**Key behaviors:**
+- Groups are **never** split across batches (preserves data integrity)
+- When `minSize` is specified: batches accumulate until reaching minimum size, then yield on group boundary
+- When `minSize` is omitted: each unique group value gets its own batch
+- Batches may exceed `minSize` to keep large groups intact
+
+> **Use Case**: If you're loading orders with line items and using a DELETE+INSERT pattern, `batchBy('order_id')` ensures all line items for an order are in the same batch, preventing foreign key violations.
+
 ## Data Collection
 
 ### collect() - Load all data into memory

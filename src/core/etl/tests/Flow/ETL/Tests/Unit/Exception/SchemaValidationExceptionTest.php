@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Exception;
 
+use function Flow\ETL\DSL\{integer_schema, schema, string_schema};
 use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\Tests\FlowTestCase;
-use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\integer_schema;
-use function Flow\ETL\DSL\string_schema;
 
 final class SchemaValidationExceptionTest extends FlowTestCase
 {
@@ -30,7 +28,7 @@ final class SchemaValidationExceptionTest extends FlowTestCase
         $exception = new SchemaValidationException($expected, $given);
 
         self::assertStringContainsString(
-<<<EXCEPTION
+            <<<'EXCEPTION'
 Schema validation failed: 
   Mismatched Definitions: 
     |-- expected: email<string>, given: email<?string>

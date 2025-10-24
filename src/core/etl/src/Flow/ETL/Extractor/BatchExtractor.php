@@ -6,7 +6,7 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\{Extractor, FlowContext, Rows};
 
-final readonly class ChunkExtractor implements Extractor, OverridingExtractor
+final readonly class BatchExtractor implements Extractor, OverridingExtractor
 {
     /**
      * @param int<1, max> $chunkSize
