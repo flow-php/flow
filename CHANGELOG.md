@@ -17,6 +17,7 @@
 - [#1881](https://github.com/flow-php/flow/pull/1881) - **Update Homebrew TAP formula: flow-php to version: 0.25.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [a7d83f](https://github.com/flow-php/flow/commit/a7d83fca5bf168865e6eee2eeb6766cb4eb2a070) - **invalid reference to old non existing example in website navigation** - [@norberttech](https://github.com/norberttech)
 - [63eae3](https://github.com/flow-php/flow/commit/63eae3354a733e633de22bcfbd11f2c68d9274aa) - **building landing page** - [@norberttech](https://github.com/norberttech)
 - [d495ac](https://github.com/flow-php/flow/commit/d495ac6ec90091347dfdafcab362585ac6166c68) - **setting variables in baseline.yml github action** - [@norberttech](https://github.com/norberttech)
 - [14e7e7](https://github.com/flow-php/flow/commit/14e7e70ad7af32ad6c282b85283245ec387467db) - **task issue title prefix** - [@norberttech](https://github.com/norberttech)
