@@ -1,6 +1,8 @@
-## [Unreleased] - 2025-10-22
+## [Unreleased] - 2025-10-24
 
 ### Added
+- [#1901](https://github.com/flow-php/flow/pull/1901) - **DataFrame::batchBy()** - [@norberttech](https://github.com/norberttech)
+- [#1901](https://github.com/flow-php/flow/pull/1901) - **SortedByConstraint** - [@norberttech](https://github.com/norberttech)
 - [#1898](https://github.com/flow-php/flow/pull/1898) - **3rd level of nesting to examples - Topic / Example / Option** - [@norberttech](https://github.com/norberttech)
 - [#1898](https://github.com/flow-php/flow/pull/1898) - **Examples of reusable Transformations** - [@norberttech](https://github.com/norberttech)
 - [#1882](https://github.com/flow-php/flow/pull/1882) - **Reusable action to setup php version in github workflows** - [@norberttech](https://github.com/norberttech)
