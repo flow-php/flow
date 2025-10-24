@@ -28,6 +28,9 @@
 - [79f5d4](https://github.com/flow-php/flow/commit/79f5d4de2156f1621c429d747320e6cb46921123) - **DSL definitions** - [@norberttech](https://github.com/norberttech)
 - [b1e15a](https://github.com/flow-php/flow/commit/b1e15adc7f57b6fc7955601b7ef5d80e27f48461) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
+### Removed
+- [b90597](https://github.com/flow-php/flow/commit/b9059735c14cc3c05f7cb6478afea5fcd3871bc3) - **redundant transformer, enabled batch_by example** - [@norberttech](https://github.com/norberttech)
+
 ## [0.25.0] - 2025-09-29
 
 ### Added
