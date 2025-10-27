@@ -44,6 +44,7 @@ XML;
             'xml_to_array' => [$xml, 'array', ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]]],
             'string_to_xml' => [$xmlString, 'xml', $xml],
             'xml_to_string' => [$xml, 'string', '<root><foo baz="buz">bar</foo></root>'],
+            'full_xml_to_string' => [$fullXMLString, 'string', '<root><foo baz="buz">bar</foo></root>'],
             'datetime' => [new \DateTimeImmutable('2023-01-01 00:00:00 UTC'), 'string', '2023-01-01T00:00:00+00:00'],
             'datetime_to_date' => [new \DateTimeImmutable('2023-01-01 00:01:00 UTC'), 'date', new \DateTimeImmutable('2023-01-01T00:00:00+00:00')],
             'string_to_timezone' => ['UTC', 'timezone', new \DateTimeZone('UTC')],

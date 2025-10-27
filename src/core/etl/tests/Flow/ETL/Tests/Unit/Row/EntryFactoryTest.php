@@ -36,7 +36,7 @@ use function Flow\ETL\DSL\{bool_schema,
 use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure, type_time_zone};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\TimeEntry;
-use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\{Entry, EntryFactory};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -46,6 +46,24 @@ use Ramsey\Uuid\Uuid;
 final class EntryFactoryTest extends TestCase
 {
     private EntryFactory $entryFactory;
+
+    public static function provide_recognized_data() : \Generator
+    {
+        yield 'json' => [
+            $json = '{"id":1}',
+            json_entry('e', $json),
+        ];
+
+        yield 'xml' => [
+            $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>',
+            xml_entry('e', $xml),
+        ];
+
+        yield 'uuid' => [
+            $uuid = '00000000-0000-0000-0000-000000000000',
+            uuid_entry('e', $uuid),
+        ];
+    }
 
     public static function provide_unrecognized_data() : \Generator
     {
@@ -367,6 +385,18 @@ final class EntryFactoryTest extends TestCase
         $this->expectExceptionMessage("e: object<ArrayIterator> can't be converted to any known Entry, please normalize that object first");
 
         $this->entryFactory->create('e', new \ArrayIterator([1, 2]));
+    }
+
+    /**
+     * @param Entry<mixed> $entry
+     */
+    #[DataProvider('provide_recognized_data')]
+    public function test_recognized_data_set_same_as_provided(string $input, Entry $entry) : void
+    {
+        self::assertEquals(
+            $entry,
+            $this->entryFactory->create('e', $input)
+        );
     }
 
     public function test_string() : void

@@ -203,6 +203,7 @@ use Flow\Types\Type\Native\{
     UnionType
 };
 use Flow\Types\Type\Types;
+use Flow\Types\Value\HTMLDocument;
 use UnitEnum;
 
 /**
@@ -1955,6 +1956,15 @@ function date_schema(string $name, bool $nullable = false, ?Metadata $metadata =
 function json_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::json($name, $nullable, $metadata);
+}
+
+/**
+ * @return Definition<HTMLDocument>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+{
+    return Definition::html($name, $nullable, $metadata);
 }
 
 /**

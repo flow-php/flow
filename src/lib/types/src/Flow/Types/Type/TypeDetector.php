@@ -4,7 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_float, type_instance_of, type_integer, type_json, type_map, type_null, type_string, type_time, type_time_zone, type_uuid, type_xml, type_xml_element, types};
+use function Flow\Types\DSL\{type_array,
+    type_boolean,
+    type_date,
+    type_datetime,
+    type_enum,
+    type_float,
+    type_html,
+    type_instance_of,
+    type_integer,
+    type_json,
+    type_map,
+    type_null,
+    type_string,
+    type_time,
+    type_time_zone,
+    type_uuid,
+    type_xml,
+    type_xml_element,
+    types};
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, StructureType};
@@ -46,8 +64,8 @@ final class TypeDetector
             }
 
             $detector = new ArrayContentDetector(
-                $keyTypes = types(...\array_map($this->detectType(...), \array_keys($value)))->deduplicate(),
-                $valueTypes = types(...\array_map($this->detectType(...), \array_values($value)))->deduplicate(),
+                types(...\array_map($this->detectType(...), \array_keys($value)))->deduplicate(),
+                types(...\array_map($this->detectType(...), \array_values($value)))->deduplicate(),
                 \array_is_list($value)
             );
 
@@ -96,6 +114,10 @@ final class TypeDetector
 
             if (type_datetime()->isValid($value)) {
                 return type_datetime();
+            }
+
+            if (type_html()->isValid($value)) {
+                return type_html();
             }
 
             if (type_xml()->isValid($value)) {

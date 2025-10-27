@@ -26,6 +26,7 @@ use Flow\Types\Type\Logical\{ClassStringType,
     UuidType,
     XMLElementType,
     XMLType};
+use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Native\{ArrayType,
     BooleanType,
     CallableType,
@@ -39,7 +40,7 @@ use Flow\Types\Type\Native\{ArrayType,
     ResourceType,
     StringType,
     UnionType};
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{HTMLDocument, Uuid};
 use UnitEnum;
 
 /**
@@ -433,6 +434,15 @@ function type_enum(string $class) : Type
 function type_literal(bool|float|int|string $value) : LiteralType
 {
     return new LiteralType($value);
+}
+
+/**
+ * @return Type<HTMLDocument>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_html() : Type
+{
+    return new HTMLType();
 }
 
 /**

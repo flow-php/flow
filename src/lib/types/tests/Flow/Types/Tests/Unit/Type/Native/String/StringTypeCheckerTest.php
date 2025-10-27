@@ -53,6 +53,12 @@ final class StringTypeCheckerTest extends TestCase
         self::assertFalse((new StringTypeChecker('1.0.0'))->isFloat());
     }
 
+    public function test_detecting_html() : void
+    {
+        self::assertTrue((new StringTypeChecker('<html lang="en"><body><div><span>1</span></div></body></html>'))->isHTML());
+        self::assertFalse((new StringTypeChecker('not html'))->isHTML());
+    }
+
     public function test_detecting_integer() : void
     {
         self::assertTrue((new StringTypeChecker('1'))->isInteger());

@@ -19,9 +19,10 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
+use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, StringType};
 use Flow\Types\Type\TypeDetector;
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{HTMLDocument, Uuid};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -83,18 +84,24 @@ final class TypeDetectorTest extends TestCase
             'uuid',
         ];
 
-        $dom = new \DOMDocument();
-        $dom->loadXML('<xml><items><item>1</item></items></xml>');
+        $xml = new \DOMDocument();
+        $xml->loadXML('<xml><items><item>1</item></items></xml>');
         yield 'xml' => [
-            $dom,
+            $xml,
             XMLType::class,
             'xml',
         ];
 
         yield 'xml_element' => [
-            $dom->documentElement,
+            $xml->documentElement,
             XMLElementType::class,
             'xml_element',
+        ];
+
+        yield 'html' => [
+            HTMLDocument::fromString('<html><div><span>1</span></div></html>'),
+            HTMLType::class,
+            'html',
         ];
 
         yield 'simple list' => [

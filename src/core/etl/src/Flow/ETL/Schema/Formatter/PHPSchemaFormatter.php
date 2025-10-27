@@ -20,6 +20,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
+use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
 
 final readonly class PHPSchemaFormatter implements SchemaFormatter
@@ -114,6 +115,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
                 TimeType::class,
                 JsonType::class,
                 UuidType::class,
+                HTMLType::class,
                 XMLType::class,
                 XMLElementType::class,
                 DateTimeType::class => $this->simpleType($definition),
@@ -174,16 +176,17 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
     private function simpleType(Definition $definition) : string
     {
         $reflection = match ($definition->type()::class) {
-            StringType::class => new \ReflectionFunction("\Flow\ETL\DSL\string_schema"),
-            IntegerType::class => new \ReflectionFunction("\Flow\ETL\DSL\integer_schema"),
-            BooleanType::class => new \ReflectionFunction("\Flow\ETL\DSL\bool_schema"),
-            DateType::class => new \ReflectionFunction("\Flow\ETL\DSL\date_schema"),
-            DateTimeType::class => new \ReflectionFunction("\Flow\ETL\DSL\datetime_schema"),
-            TimeType::class => new \ReflectionFunction("\Flow\ETL\DSL\\time_schema"),
-            JsonType::class => new \ReflectionFunction("\Flow\ETL\DSL\\json_schema"),
-            UuidType::class => new \ReflectionFunction("\Flow\ETL\DSL\\uuid_schema"),
-            XMLType::class => new \ReflectionFunction("\Flow\ETL\DSL\\xml_schema"),
-            XMLElementType::class => new \ReflectionFunction("\Flow\ETL\DSL\\xml_element_schema"),
+            StringType::class => new \ReflectionFunction('\Flow\ETL\DSL\string_schema'),
+            IntegerType::class => new \ReflectionFunction('\Flow\ETL\DSL\integer_schema'),
+            BooleanType::class => new \ReflectionFunction('\Flow\ETL\DSL\bool_schema'),
+            DateType::class => new \ReflectionFunction('\Flow\ETL\DSL\date_schema'),
+            DateTimeType::class => new \ReflectionFunction('\Flow\ETL\DSL\datetime_schema'),
+            TimeType::class => new \ReflectionFunction('\Flow\ETL\DSL\time_schema'),
+            JsonType::class => new \ReflectionFunction('\Flow\ETL\DSL\json_schema'),
+            UuidType::class => new \ReflectionFunction('\Flow\ETL\DSL\uuid_schema'),
+            XMLType::class => new \ReflectionFunction('\Flow\ETL\DSL\xml_schema'),
+            XMLElementType::class => new \ReflectionFunction('\Flow\ETL\DSL\xml_element_schema'),
+            HTMLType::class => new \ReflectionFunction('\Flow\ETL\DSL\html_schema'),
             default => throw new RuntimeException('Type ' . $definition->type()->toString() . ' is not a simple definition'),
         };
 

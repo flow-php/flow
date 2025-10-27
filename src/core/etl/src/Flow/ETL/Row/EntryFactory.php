@@ -20,7 +20,16 @@ use function Flow\ETL\DSL\{bool_entry,
     uuid_entry,
     xml_element_entry,
     xml_entry};
-use function Flow\Types\DSL\{type_date, type_datetime, type_json, type_optional, type_string, type_time, type_uuid, type_xml, type_xml_element};
+use function Flow\Types\DSL\{type_date,
+    type_datetime,
+    type_html,
+    type_json,
+    type_optional,
+    type_string,
+    type_time,
+    type_uuid,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\Exception\{InvalidArgumentException,
     RuntimeException,
     SchemaDefinitionNotFoundException};
@@ -91,13 +100,11 @@ final readonly class EntryFactory
 
             if ($stringChecker->isJson()) {
                 $valueType = type_json();
-            }
-
-            if ($stringChecker->isUuid()) {
+            } elseif ($stringChecker->isUuid()) {
                 $valueType = type_uuid();
-            }
-
-            if ($stringChecker->isXML()) {
+            } elseif ($stringChecker->isHTML()) {
+                $valueType = type_html();
+            } elseif ($stringChecker->isXML()) {
                 $valueType = type_xml();
             }
         }

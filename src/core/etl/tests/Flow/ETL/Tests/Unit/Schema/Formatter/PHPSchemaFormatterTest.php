@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\{bool_schema,
     datetime_schema,
     enum_schema,
     float_schema,
+    html_schema,
     int_schema,
     json_schema,
     list_schema,
@@ -107,6 +108,7 @@ PHP,
     \\Flow\\ETL\\DSL\\uuid_schema("uuid", nullable: true, metadata: \\Flow\\ETL\\DSL\\schema_metadata()),
     \\Flow\\ETL\\DSL\\xml_schema("xml", nullable: true, metadata: \\Flow\\ETL\\DSL\\schema_metadata()),
     \\Flow\\ETL\\DSL\\xml_element_schema("xml_element", nullable: true, metadata: \\Flow\\ETL\\DSL\\schema_metadata()),
+    \\Flow\\ETL\\DSL\\html_schema("html", nullable: true, metadata: \\Flow\\ETL\\DSL\\schema_metadata()),
 );
 PHP,
             (new PHPSchemaFormatter())->format(schema(
@@ -120,6 +122,7 @@ PHP,
                 uuid_schema('uuid', nullable: true),
                 xml_schema('xml', nullable: true),
                 xml_element_schema('xml_element', nullable: true),
+                html_schema('html', nullable: true),
             ))
         );
     }
