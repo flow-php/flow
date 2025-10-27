@@ -55,7 +55,8 @@ final class StringTypeCheckerTest extends TestCase
 
     public function test_detecting_html() : void
     {
-        self::assertTrue((new StringTypeChecker('<html lang="en"><body><div><span>1</span></div></body></html>'))->isHTML());
+        self::assertTrue((new StringTypeChecker('<!DOCTYPE html><html><head></head><body><div>baz</div></body></html>'))->isHTML());
+        self::assertFalse((new StringTypeChecker('<html lang="en"><body><div><span>1</span></div></body></html>'))->isHTML());
         self::assertFalse((new StringTypeChecker('not html'))->isHTML());
     }
 

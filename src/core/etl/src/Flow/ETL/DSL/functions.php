@@ -165,6 +165,7 @@ use Flow\ETL\Retry\DelayFactory\{Fixed, Fixed\FixedMilliseconds};
 use Flow\ETL\Retry\RetryStrategy\{AnyThrowable, OnExceptionTypes};
 use Flow\ETL\Row\{Entries, EntryFactory, SortOrder};
 use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\HTMLEntry;
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\{Definition, Formatter\PHPFormatter\TypeFormatter, Formatter\PHPFormatter\ValueFormatter};
@@ -625,6 +626,15 @@ function xml_entry(string $name, \DOMDocument|string|null $value, ?Metadata $met
 function xml_element_entry(string $name, \DOMElement|string|null $value, ?Metadata $metadata = null) : Entry
 {
     return new XMLElementEntry($name, $value, $metadata);
+}
+
+/**
+ * @return Entry<?HTMLDocument>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
+function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null) : Entry
+{
+    return new HTMLEntry($name, $value, $metadata);
 }
 
 /**
