@@ -1,3 +1,8 @@
+## [Unreleased] - 2025-10-27
+
+### Changed
+- [#1909](https://github.com/flow-php/flow/pull/1909) - **Update Homebrew TAP formula: flow-php to version: 0.26.0** - [@norberttech](https://github.com/norberttech)
+
 ## [0.26.0] - 2025-10-27
 
 ### Added
