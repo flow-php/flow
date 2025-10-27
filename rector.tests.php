@@ -58,6 +58,9 @@ use Rector\Set\ValueObject\LevelSetList;
 use Rector\Transform\Rector\StaticCall\StaticCallToFuncCallRector;
 use \Rector\Transform\ValueObject\StaticCallToFuncCall;
 use Rector\PHPUnit\AnnotationsToAttributes\Rector\ClassMethod\DataProviderAnnotationToAttributeRector;
+use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
+use Rector\CodingStyle\Rector\FuncCall\FunctionFirstClassCallableRector;
+use Rector\CodingStyle\Rector\FunctionLike\FunctionLikeToFirstClassCallableRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -162,7 +165,10 @@ return RectorConfig::configure()
         ]
     )
     ->withSkip([
-        RemoveParentCallWithoutParentRector::class
+        RemoveParentCallWithoutParentRector::class,
+        RemoveExtraParametersRector::class,
+        FunctionFirstClassCallableRector::class,
+        FunctionLikeToFirstClassCallableRector::class,
     ])
     ->withCache(__DIR__ . '/var/rector/tests')
     ->withSkipPath(__DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift')
