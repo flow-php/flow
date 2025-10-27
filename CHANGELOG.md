@@ -7,6 +7,7 @@
 - [#1909](https://github.com/flow-php/flow/pull/1909) - **Update Homebrew TAP formula: flow-php to version: 0.26.0** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [5e2b9b](https://github.com/flow-php/flow/commit/5e2b9b61c8ad6d923efe183a2b90099e17f3edd2) - **contributing guidelines for issue types** - [@norberttech](https://github.com/norberttech)
 - [c1a4ff](https://github.com/flow-php/flow/commit/c1a4ffc730bca621614e1fe364493f081a35585b) - **bug report template description** - [@norberttech](https://github.com/norberttech)
 
 ## [0.26.0] - 2025-10-27
