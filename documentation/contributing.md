@@ -72,8 +72,32 @@ to be moved to the next milestone.
 Opening a pull request without reaching out first might get rejected and eventually closed.   
 
 **🐛 Bug Fixes** - bug fixes are the only exception from the above rule. Bug Fixes can be opened directly without a proposal issue.
+Bug fix can should only carry fixes of existing code, additions (especially to our DSL) require a `Proposal` first. 
 
-## Before you start coding
+## Issue Types 
+
+Wondering which issue type to use? Please check below guideliness 
+
+### Proposal 
+
+- New feature request
+- Idea of changing/extending existing behavior 
+- Something is missing and should be added
+- UX/DX improvements
+
+### Bug 
+
+**Important** - please don't use `Bug` issue type for reporting missing features. `Bug` should be reported only against existing code that
+doesn't work as expected. When something is missing it requires a `Proposal` first. 
+
+- Incorrect behavior of an existing code 
+- Performance degradation 
+
+### Task 
+
+- Those issues are meant to be used only by roadmap manager to split bigger items into smaller tasks 
+
+## Before coding
 
 Please make sure that you are aware of our [Architecture Decision Records](/documentation/adrs.md).
 It's mandatory to follow all of them without any exceptions unless explicitly overridden by a new ADR.
