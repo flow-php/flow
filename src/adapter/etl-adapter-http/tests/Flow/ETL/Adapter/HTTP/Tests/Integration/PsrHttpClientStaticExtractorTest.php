@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
+use function Flow\ETL\Adapter\Http\from_static_http_requests;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
 use Flow\ETL\{Rows, Tests\FlowTestCase};
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -48,7 +48,7 @@ final class PsrHttpClientStaticExtractorTest extends FlowTestCase
                 ->withHeader('User-Agent', 'flow-php/etl');
         };
 
-        $extractor = new PsrHttpClientStaticExtractor($psr18Client, $requests());
+        $extractor = from_static_http_requests($psr18Client, $requests());
 
         $rowsGenerator = $extractor->extract(flow_context(config()));
 

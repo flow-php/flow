@@ -6,7 +6,7 @@ namespace Flow\Documentation\Models;
 
 use function Flow\Types\DSL\{type_array, type_boolean, type_string, type_structure};
 
-final class ParameterModel
+final readonly class ParameterModel
 {
     /**
      * @param string $name
@@ -15,11 +15,11 @@ final class ParameterModel
      * @param bool $isVariadic
      */
     public function __construct(
-        public readonly string $name,
-        public readonly TypesModel $type,
-        public readonly bool $hasDefaultValue,
-        public readonly bool $isNullable,
-        public readonly bool $isVariadic,
+        public string $name,
+        public TypesModel $type,
+        public bool $hasDefaultValue,
+        public bool $isNullable,
+        public bool $isVariadic,
     ) {
     }
 
@@ -53,7 +53,7 @@ final class ParameterModel
         try {
             $reflectionParameter->getDefaultValue();
             $hasDefaultValue = true;
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             $hasDefaultValue = false;
         }
 

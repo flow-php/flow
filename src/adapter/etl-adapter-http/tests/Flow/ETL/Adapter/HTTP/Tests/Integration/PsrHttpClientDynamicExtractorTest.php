@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
+use function Flow\ETL\Adapter\Http\from_dynamic_http_requests;
 use function Flow\ETL\DSL\{config, flow_context};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
-use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -32,7 +32,7 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
             ], $fixtureContent),
         );
 
-        $extractor = new PsrHttpClientDynamicExtractor($psr18Client, new class implements NextRequestFactory {
+        $extractor = from_dynamic_http_requests($psr18Client, new class implements NextRequestFactory {
             public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
             {
                 $psr17Factory = new Psr17Factory();

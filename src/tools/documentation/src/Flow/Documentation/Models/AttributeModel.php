@@ -6,15 +6,15 @@ namespace Flow\Documentation\Models;
 
 use function Flow\Types\DSL\{type_map, type_mixed, type_string, type_structure};
 
-final class AttributeModel
+final readonly class AttributeModel
 {
     /**
      * @param array<string, mixed> $arguments
      */
     public function __construct(
-        public readonly string $name,
-        public readonly string $namespace,
-        public readonly array $arguments,
+        public string $name,
+        public string $namespace,
+        public array $arguments,
     ) {
     }
 

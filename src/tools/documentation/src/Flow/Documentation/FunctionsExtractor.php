@@ -7,11 +7,11 @@ namespace Flow\Documentation;
 use Flow\Documentation\Models\FunctionModel;
 use PhpParser\{NodeTraverser, ParserFactory, PhpVersion};
 
-final class FunctionsExtractor
+final readonly class FunctionsExtractor
 {
     public function __construct(
-        private readonly string $repositoryRootPath,
-        private readonly FunctionCollector $functionCollector,
+        private string $repositoryRootPath,
+        private FunctionCollector $functionCollector,
     ) {
     }
 

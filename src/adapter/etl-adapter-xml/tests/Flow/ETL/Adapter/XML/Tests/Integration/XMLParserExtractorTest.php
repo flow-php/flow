@@ -8,8 +8,8 @@ use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\{df, flow_context, schema, xml_schema};
 use function Flow\Types\DSL\type_string;
-use Flow\ETL\{Adapter\XML\XMLParserExtractor, Tests\FlowIntegrationTestCase};
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\Filesystem\Path;
 
 final class XMLParserExtractorTest extends FlowIntegrationTestCase
@@ -135,7 +135,7 @@ XML,
 
     public function test_signal_stop() : void
     {
-        $extractor = (new XMLParserExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
+        $extractor = (from_xml(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
 
         $generator = $extractor->extract(flow_context(config()));
 
