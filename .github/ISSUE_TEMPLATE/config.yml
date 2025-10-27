@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Which issue type should I use?
+    url: https://flow-php.com/documentation/contributing/
+    about: Find out which issue type is best for your case 
   - name: Discord Community Support
     url: https://discord.gg/5dNXfQyACW
     about: The fastest way to get answer to your questions
