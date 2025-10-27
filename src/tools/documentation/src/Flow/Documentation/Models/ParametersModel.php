@@ -6,13 +6,13 @@ namespace Flow\Documentation\Models;
 
 use function Flow\Types\DSL\{type_array, type_list};
 
-final class ParametersModel
+final readonly class ParametersModel
 {
     /**
      * @param array<ParameterModel> $arguments
      */
     public function __construct(
-        public readonly array $arguments,
+        public array $arguments,
     ) {
     }
 

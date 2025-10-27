@@ -146,6 +146,7 @@
             "src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php",
             "src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/DSL/functions.php",
             "src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php",
+            "src/adapter/etl-adapter-http/src/Flow/ETL/Adapter/Http/DSL/functions.php",
             "src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php",
             "src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php",
             "src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php",

@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
-use function Flow\ETL\DSL\Adapter\Avro\to_avro;
+use function Flow\ETL\DSL\Adapter\Avro\{from_avro, to_avro};
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
@@ -20,7 +19,7 @@ final class AvroTest extends FlowTestCase
 
     public function test_limit() : void
     {
-        $extractor = new AvroExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.avro'));
+        $extractor = from_avro(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.avro'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -31,7 +30,7 @@ final class AvroTest extends FlowTestCase
 
     public function test_signal_stop() : void
     {
-        $extractor = new AvroExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.avro'));
+        $extractor = from_avro(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.avro'));
 
         $generator = $extractor->extract(flow_context(config()));
 

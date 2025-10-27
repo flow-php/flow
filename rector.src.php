@@ -14,9 +14,9 @@ return RectorConfig::configure()
         __DIR__ . '/src/core/etl/src',
         __DIR__ . '/src/cli/src',
         __DIR__ . '/src/lib/*/src',
-        __DIR__ . '/src/adapter/*/src',
-        __DIR__ . '/src/bridge/*/*/src',
-        __DIR__ . '/src/tools/*/*/src',
+        __DIR__ . '/src/adapter/**/src',
+        __DIR__ . '/src/bridge/**/src',
+        __DIR__ . '/src/tools/**/src',
     ])
     ->withSkip([
         RemoveExtraParametersRector::class,
@@ -28,5 +28,5 @@ return RectorConfig::configure()
     ->withCache(__DIR__ . '/var/rector/src')
     ->withImportNames(importShortClasses: false, removeUnusedImports: true)
     ->withSets([
-        LevelSetList::UP_TO_PHP_82
+        LevelSetList::UP_TO_PHP_82,
     ]);

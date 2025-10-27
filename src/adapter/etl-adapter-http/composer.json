@@ -29,7 +29,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+          "src/Flow/ETL/Adapter/Http/DSL/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

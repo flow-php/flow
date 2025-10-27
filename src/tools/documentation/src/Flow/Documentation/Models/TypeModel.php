@@ -6,13 +6,13 @@ namespace Flow\Documentation\Models;
 
 use function Flow\Types\DSL\{type_boolean, type_optional, type_string, type_structure};
 
-final class TypeModel
+final readonly class TypeModel
 {
     public function __construct(
-        public readonly string $name,
-        public readonly ?string $namespace,
-        public readonly bool $isNullable,
-        public readonly bool $isVariadic,
+        public string $name,
+        public ?string $namespace,
+        public bool $isNullable,
+        public bool $isVariadic,
     ) {
     }
 

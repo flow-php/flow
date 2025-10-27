@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\{config, flow_context};
-use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Path;
 use Flow\Parquet\Reader;
@@ -14,9 +14,7 @@ final class PaginationTest extends FlowTestCase
 {
     public function test_multifile_pagination_from_beginning() : void
     {
-        $extractor = (new ParquetExtractor(
-            Path::realpath(__DIR__ . '/Fixtures/Pagination/*.parquet'),
-        ))->withOffset(0);
+        $extractor = (from_parquet(Path::realpath(__DIR__ . '/Fixtures/Pagination/*.parquet')))->withOffset(0);
 
         $extractedRows = 0;
 
@@ -32,9 +30,7 @@ final class PaginationTest extends FlowTestCase
 
     public function test_multifile_pagination_from_middle() : void
     {
-        $extractor = (new ParquetExtractor(
-            Path::realpath(__DIR__ . '/Fixtures/Pagination/*.parquet'),
-        ))->withOffset(2500);
+        $extractor = (from_parquet(Path::realpath(__DIR__ . '/Fixtures/Pagination/*.parquet')))->withOffset(2500);
 
         $extractedRows = 0;
 
@@ -50,9 +46,7 @@ final class PaginationTest extends FlowTestCase
 
     public function test_multifile_pagination_from_middle_partitioned() : void
     {
-        $extractor = (new ParquetExtractor(
-            Path::realpath(__DIR__ . '/Fixtures/Pagination/partitioned/date=*/*.parquet'),
-        ))->withOffset(2500);
+        $extractor = (from_parquet(Path::realpath(__DIR__ . '/Fixtures/Pagination/partitioned/date=*/*.parquet')))->withOffset(2500);
 
         $extractedRows = 0;
 
@@ -68,9 +62,7 @@ final class PaginationTest extends FlowTestCase
 
     public function test_multifile_pagination_from_offset_bigger_than_total_rows() : void
     {
-        $extractor = (new ParquetExtractor(
-            Path::realpath(__DIR__ . '/Fixtures/Pagination/*.parquet'),
-        ))->withOffset(10_000);
+        $extractor = (from_parquet(Path::realpath(__DIR__ . '/Fixtures/Pagination/*.parquet')))->withOffset(10_000);
 
         $extractedRows = 0;
 
@@ -88,9 +80,7 @@ final class PaginationTest extends FlowTestCase
     {
         $totalRows = (new Reader())->read(__DIR__ . '/Fixtures/orders_1k.parquet')->metadata()->rowsNumber();
 
-        $extractor = (new ParquetExtractor(
-            Path::realpath(__DIR__ . '/Fixtures/orders_1k.parquet'),
-        ))->withOffset($totalRows - 100);
+        $extractor = (from_parquet(Path::realpath(__DIR__ . '/Fixtures/orders_1k.parquet')))->withOffset($totalRows - 100);
 
         self::assertCount(
             100,

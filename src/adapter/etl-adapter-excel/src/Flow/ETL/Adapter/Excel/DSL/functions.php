@@ -21,6 +21,7 @@ function from_excel(
     return new ExcelExtractor(\is_string($path) ? Path::realpath($path) : $path);
 }
 
+#[DocumentationDSL(module: Module::EXCEL, type: DSLType::HELPER)]
 function is_valid_excel_sheet_name(string|ScalarFunction $sheet_name) : IsValidExcelSheetName
 {
     return new IsValidExcelSheetName($sheet_name);

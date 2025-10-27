@@ -7,18 +7,18 @@ namespace Flow\Documentation\Models;
 use function Flow\Types\DSL\{type_array, type_integer, type_optional, type_string, type_structure};
 use Cocur\Slugify\Slugify;
 
-final class FunctionModel
+final readonly class FunctionModel
 {
     public function __construct(
-        public readonly string $repositoryPath,
-        public readonly int|false $startLineInFile,
-        public readonly string $slug,
-        public readonly string $name,
-        public readonly string $namespace,
-        public readonly ParametersModel $parameters,
-        public readonly TypesModel $returnType,
-        public readonly AttributesModel $attributes,
-        public readonly ?string $docComment = null,
+        public string $repositoryPath,
+        public int|false $startLineInFile,
+        public string $slug,
+        public string $name,
+        public string $namespace,
+        public ParametersModel $parameters,
+        public TypesModel $returnType,
+        public AttributesModel $attributes,
+        public ?string $docComment = null,
     ) {
 
     }

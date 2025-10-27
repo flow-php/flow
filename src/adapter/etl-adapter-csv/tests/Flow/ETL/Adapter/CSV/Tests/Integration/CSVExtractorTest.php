@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\{df, print_schema, ref};
 use function Flow\ETL\DSL\flow_context;
-use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\ETL\Extractor\Signal;
 use Flow\Filesystem\Path;
@@ -444,7 +443,7 @@ SCHEMA,
     public function test_limit() : void
     {
 
-        $extractor = new CSVExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
+        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -477,7 +476,7 @@ SCHEMA,
 
     public function test_signal_stop() : void
     {
-        $extractor = new CSVExtractor(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
+        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
         $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 

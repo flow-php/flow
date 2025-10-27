@@ -6,6 +6,7 @@ namespace Flow\Website\Model\Documentation;
 
 enum Module : string
 {
+    case AVRO = 'Avro';
     case AZURE_FILESYSTEM = 'Azure Filesystem';
     case AZURE_SDK = 'Azure SDK';
     case CHART_JS = 'Chart.js';
@@ -13,8 +14,10 @@ enum Module : string
     case CSV = 'CSV';
     case DOCTRINE = 'Doctrine';
     case ELASTIC_SEARCH = 'Elastic Search';
+    case EXCEL = 'Excel';
     case FILESYSTEM = 'Filesystem';
     case GOOGLE_SHEET = 'Google Sheet';
+    case HTTP = 'HTTP';
     case JSON = 'JSON';
     case MEILI_SEARCH = 'Meili Search';
     case PARQUET = 'Parquet';
@@ -48,6 +51,8 @@ enum Module : string
             self::TYPES => 13,
             self::AZURE_FILESYSTEM => 14,
             self::AZURE_SDK => 15,
+            self::HTTP => 16,
+            self::EXCEL => 17,
             default => 99,
         };
     }

@@ -1,5 +1,19 @@
 <?php
 
+use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
+use Flow\ETL\Adapter\CSV\CSVExtractor;
+use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchExtractor;
+use Flow\ETL\Adapter\Excel\ExcelExtractor;
+use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
+use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
+use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonLinesExtractor;
+use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchExtractor;
+use Flow\ETL\Adapter\Parquet\ParquetExtractor;
+use Flow\ETL\Adapter\Text\TextExtractor;
+use Flow\ETL\Adapter\XML\XMLParserExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\ArrayExtractor;
 use Flow\ETL\Extractor\CacheExtractor;
@@ -67,12 +81,12 @@ return RectorConfig::configure()
         __DIR__ . '/src/core/etl/tests',
         __DIR__ . '/src/cli/tests',
         __DIR__ . '/src/lib/*/tests',
-        __DIR__ . '/src/adapter/*/tests',
-        __DIR__ . '/src/bridge/*/*/tests',
-        __DIR__ . '/src/tools/*/*/tests',
+        __DIR__ . '/src/adapter/**/tests',
+        __DIR__ . '/src/bridge/**/tests',
+        __DIR__ . '/src/tools/**/tests',
     ])
     ->withSets([
-        LevelSetList::UP_TO_PHP_82
+        LevelSetList::UP_TO_PHP_82,
     ])
     ->withRules([
         DataProviderAnnotationToAttributeRector::class,
@@ -162,6 +176,21 @@ return RectorConfig::configure()
             new NewObjectToFunction(PipelineExtractor::class, 'from_pipeline'),
             new NewObjectToFunction(DataFrameExtractor::class, 'from_data_frame'),
 
+            // Adapters
+            new NewObjectToFunction(AvroExtractor::class, 'Flow\ETL\DSL\Adapter\Avro\from_avro'),
+            new NewObjectToFunction(CSVExtractor::class, 'Flow\ETL\Adapter\CSV\from_csv'),
+            new NewObjectToFunction(DbalQueryExtractor::class, 'Flow\ETL\Adapter\Doctrine\from_dbal_query'),
+            new NewObjectToFunction(ElasticsearchExtractor::class, 'Flow\ETL\Adapter\Elasticsearch\from_es'),
+            new NewObjectToFunction(ExcelExtractor::class, 'Flow\ETL\Adapter\Excel\from_excel'),
+            new NewObjectToFunction(GoogleSheetExtractor::class, 'Flow\ETL\Adapter\GoogleSheet\from_google_sheet'),
+            new NewObjectToFunction(PsrHttpClientDynamicExtractor::class, 'Flow\ETL\Adapter\Http\from_dynamic_http_requests'),
+            new NewObjectToFunction(PsrHttpClientStaticExtractor::class, 'Flow\ETL\Adapter\Http\from_static_http_requests'),
+            new NewObjectToFunction(JsonExtractor::class, 'Flow\ETL\Adapter\JSON\from_json'),
+            new NewObjectToFunction(JsonLinesExtractor::class, 'Flow\ETL\Adapter\JSON\from_json_lines'),
+            new NewObjectToFunction(MeilisearchExtractor::class, 'Flow\ETL\Adapter\Meilisearch\from_meilisearch'),
+            new NewObjectToFunction(ParquetExtractor::class, 'Flow\ETL\Adapter\Parquet\from_parquet'),
+            new NewObjectToFunction(TextExtractor::class, 'Flow\ETL\Adapter\Text\from_text'),
+            new NewObjectToFunction(XMLParserExtractor::class, 'Flow\ETL\Adapter\XML\from_xml'),
         ]
     )
     ->withSkip([
