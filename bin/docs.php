@@ -37,11 +37,14 @@ $application->add(new class extends Command {
 
         $paths = [
             __DIR__ . '/../src/core/etl/src/Flow/ETL/DSL/functions.php',
+            __DIR__ . '/../src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-chartjs/src/Flow/ETL/Adapter/ChartJS/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php',
+            __DIR__ . '/../src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/DSL/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php',
+            __DIR__ . '/../src/adapter/etl-adapter-http/src/Flow/ETL/Adapter/Http/DSL/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php',
             __DIR__ . '/../src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php',

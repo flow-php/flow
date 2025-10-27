@@ -6,9 +6,10 @@ namespace Flow\ETL\DSL\Adapter\Avro;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Adapter\Avro\FlixTech\{AvroExtractor, AvroLoader};
-use Flow\ETL\{Extractor, Schema};
+use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type, Extractor, Schema};
 use Flow\Filesystem\Path;
 
+#[DocumentationDSL(module: Module::AVRO, type: Type::EXTRACTOR)]
 function from_avro(Path|string|array $path) : Extractor
 {
     if (\is_array($path)) {
@@ -29,6 +30,7 @@ function from_avro(Path|string|array $path) : Extractor
     );
 }
 
+#[DocumentationDSL(module: Module::AVRO, type: Type::LOADER)]
 function to_avro(Path|string $path, ?Schema $schema = null) : AvroLoader
 {
     return new AvroLoader(
