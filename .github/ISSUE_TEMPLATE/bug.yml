@@ -1,5 +1,5 @@
 name: "🐛 Bug Report"
-description: "File a bug report for poor UX, incorrect behavior, or performance issues."
+description: "File a bug report for incorrect behavior, or performance issues."
 title: "[Bug]: "
 labels: ["triage"]
 projects: ["flow-php/projects/1"]
