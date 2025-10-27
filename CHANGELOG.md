@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-10-27
+## [0.26.0] - 2025-10-27
 
 ### Added
 - [#1901](https://github.com/flow-php/flow/pull/1901) - **DataFrame::batchBy()** - [@norberttech](https://github.com/norberttech)
