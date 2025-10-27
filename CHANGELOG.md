@@ -1,10 +1,14 @@
 ## [Unreleased] - 2025-10-27
 
 ### Added
+- [#1911](https://github.com/flow-php/flow/pull/1911) - **Added missing Http adapter functions** - [@stloyd](https://github.com/stloyd)
 - [960090](https://github.com/flow-php/flow/commit/960090aa988a304b67ccf4b165c1416c56760518) - **contact link for issue type guidance** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [#1909](https://github.com/flow-php/flow/pull/1909) - **Update Homebrew TAP formula: flow-php to version: 0.26.0** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1911](https://github.com/flow-php/flow/pull/1911) - **Avro & Excel added to DSL documentation** - [@stloyd](https://github.com/stloyd)
 
 ### Updated
 - [5e2b9b](https://github.com/flow-php/flow/commit/5e2b9b61c8ad6d923efe183a2b90099e17f3edd2) - **contributing guidelines for issue types** - [@norberttech](https://github.com/norberttech)
