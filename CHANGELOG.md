@@ -1,5 +1,8 @@
 ## [Unreleased] - 2025-10-27
 
+### Added
+- [960090](https://github.com/flow-php/flow/commit/960090aa988a304b67ccf4b165c1416c56760518) - **contact link for issue type guidance** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
 - [#1909](https://github.com/flow-php/flow/pull/1909) - **Update Homebrew TAP formula: flow-php to version: 0.26.0** - [@norberttech](https://github.com/norberttech)
 
