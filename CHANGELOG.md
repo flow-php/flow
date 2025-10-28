@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-10-28
+## [0.26.1] - 2025-10-28
 
 ### Added
 - [#1924](https://github.com/flow-php/flow/pull/1924) - **TimeZioneType** - [@norberttech](https://github.com/norberttech)
