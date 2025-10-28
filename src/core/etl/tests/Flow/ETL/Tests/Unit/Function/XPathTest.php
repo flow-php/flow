@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, row};
-use Flow\ETL\Row\EntryFactory;
+use function Flow\ETL\DSL\{config, flow_context, ref, row};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class XPathTest extends FlowTestCase
@@ -18,7 +17,7 @@ final class XPathTest extends FlowTestCase
         self::assertInstanceOf(\DOMElement::class, $xml->documentElement);
         self::assertEquals(
             [$xml->documentElement->firstChild],
-            ref('value')->xpath('/root/foo')->eval(row((new EntryFactory())->create('value', $xml)))
+            ref('value')->xpath('/root/foo')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
         );
     }
 
@@ -33,7 +32,7 @@ final class XPathTest extends FlowTestCase
                 $xml->documentElement->firstChild,
                 $xml->documentElement->lastChild,
             ],
-            ref('value')->xpath('/root/foo')->eval(row((new EntryFactory())->create('value', $xml)))
+            ref('value')->xpath('/root/foo')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
         );
     }
 
@@ -43,7 +42,7 @@ final class XPathTest extends FlowTestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertNull(
-            ref('value')->xpath('/root/foo/asa')->eval(row((new EntryFactory())->create('value', $xml)))
+            ref('value')->xpath('/root/foo/asa')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
         );
     }
 
@@ -53,7 +52,7 @@ final class XPathTest extends FlowTestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertNull(
-            ref('value')->xpath('/root/bar')->eval(row((new EntryFactory())->create('value', $xml)))
+            ref('value')->xpath('/root/bar')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
         );
     }
 }

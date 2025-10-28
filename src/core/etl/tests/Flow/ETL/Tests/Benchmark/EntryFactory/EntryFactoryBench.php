@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark\EntryFactory;
 
-use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Row\EntryFactory;
+use function Flow\ETL\DSL\{array_to_rows, config, flow_context};
 use PhpBench\Attributes\{Groups, ParamProviders};
 
 #[Groups(['building_blocks'])]
@@ -18,7 +17,7 @@ final class EntryFactoryBench
     public function bench_entry_factory(array $params) : void
     {
         /** @phpstan-ignore-next-line */
-        array_to_rows($params['rows'], new EntryFactory());
+        array_to_rows($params['rows'], flow_context(config())->entryFactory());
     }
 
     public function provideRows() : \Generator

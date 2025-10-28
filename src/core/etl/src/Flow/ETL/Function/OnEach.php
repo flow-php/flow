@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\array_to_row;
+use function Flow\ETL\DSL\{array_to_row, config, flow_context};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 
@@ -36,13 +36,13 @@ final class OnEach extends ScalarFunctionChain
         foreach ($value as $key => $item) {
             if ($preserveKeys) {
                 try {
-                    $output[$key] = (new Parameter($this->function))->eval(array_to_row(['element' => $item]));
+                    $output[$key] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], flow_context(config())->entryFactory()));
                 } catch (InvalidArgumentException) {
                     $output[$key] = null;
                 }
             } else {
                 try {
-                    $output[] = (new Parameter($this->function))->eval(array_to_row(['element' => $item]));
+                    $output[] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], flow_context(config())->entryFactory()));
                 } catch (InvalidArgumentException) {
                     $output[] = null;
                 }

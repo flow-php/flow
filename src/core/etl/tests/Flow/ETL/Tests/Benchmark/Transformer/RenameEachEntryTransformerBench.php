@@ -26,6 +26,7 @@ final class RenameEachEntryTransformerBench
                 ['id' => 4, 'random text' => null, 'from' => 666],
                 ['id' => 5, 'random text' => null, 'from' => 666],
             ], \range(0, 1_000))),
+            flow_context(config())->entryFactory(),
         );
         $this->context = flow_context(config());
     }

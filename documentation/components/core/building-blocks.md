@@ -41,7 +41,7 @@ $rows = array_to_rows([
     ['id' => 2, 'name' => 'user_02', 'active' => false],
     ['id' => 3, 'name' => 'user_03', 'active' => true],
     ['id' => 4, 'name' => 'user_04', 'active' => false],
-]);
+], flow_context(config())->entryFactory());
 ```
 
 ## Entry Types

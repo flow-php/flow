@@ -51,10 +51,9 @@ final class ConfigBuilder
         $this->randomValueGenerator = new NativePHPRandomValueGenerator();
     }
 
-    public function build() : Config
+    public function build(EntryFactory $entryFactory = new EntryFactory()) : Config
     {
         $this->id ??= 'flow_php' . $this->randomValueGenerator->string(32);
-        $entryFactory = new EntryFactory();
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
         $this->clock ??= SystemClock::utc();
         $this->optimizer ??= new Optimizer(

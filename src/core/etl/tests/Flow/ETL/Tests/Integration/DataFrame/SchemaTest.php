@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 use function Flow\ETL\DSL\{array_to_rows,
     bool_entry,
     bool_schema,
+    config,
     df,
     float_entry,
     float_schema,
@@ -100,7 +101,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 'active' => $i % 2 === 0,
             ],
             \range(1, 100)
-        ));
+        ), flow_context(config())->entryFactory());
 
         self::assertEquals(
             schema(
@@ -125,7 +126,7 @@ final class SchemaTest extends FlowIntegrationTestCase
                 'union' => $i > 50 ? 'string' : 1,
             ],
             \range(1, 100)
-        ));
+        ), flow_context(config())->entryFactory());
 
         self::assertEquals(
             schema(

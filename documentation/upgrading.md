@@ -5,6 +5,25 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.26.x to 0.27.x
+
+### 1) Force `EntryFactory $entryFactory` to be required on `array_to_row` & `array_to_row(s)`
+
+Before:
+```php
+to_entry('name', 'data');
+array_to_row([]);
+array_to_rows([]);
+```
+
+After:
+
+```php
+to_entry('name', 'data', flow_context(config())->entryFactory());
+array_to_row([], flow_context(config())->entryFactory());
+array_to_rows([], flow_context(config())->entryFactory());
+```
+
 ## Upgrading from 0.16.x to 0.17.x
 
 ### 1) Removed $nullable property from all types

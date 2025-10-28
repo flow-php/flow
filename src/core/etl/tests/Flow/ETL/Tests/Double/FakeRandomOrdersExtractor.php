@@ -56,7 +56,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->rawData() as $row) {
-            yield array_to_rows($row, schema: self::schema());
+            yield array_to_rows($row, $context->entryFactory(), schema: self::schema());
         }
     }
 
