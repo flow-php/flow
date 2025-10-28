@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration;
 
-use function Flow\ETL\DSL\{all, lit, ref};
+use function Flow\ETL\DSL\{all, config, flow_context, lit, ref};
 use function Flow\Filesystem\DSL\native_local_filesystem;
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
-use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FileStatus, Path, Stream\NativeLocalDestinationStream};
 use Flow\Filesystem\Path\Filter\KeepAll;
 use Flow\Types\Type\AutoCaster;
@@ -184,7 +183,7 @@ TXT
                                 ref('date')->cast('date')->lessThan(lit(new \DateTimeImmutable('2022-01-04')))
                             )
                         ),
-                        new EntryFactory(),
+                        flow_context(config())->entryFactory(),
                         new AutoCaster()
                     )
                 )
@@ -232,7 +231,7 @@ TXT
                 (native_local_filesystem())
                     ->list(
                         new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new EntryFactory(), new AutoCaster())
+                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), flow_context(config())->entryFactory(), new AutoCaster())
                     )
             )
         );

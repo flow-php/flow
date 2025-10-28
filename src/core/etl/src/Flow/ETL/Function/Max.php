@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{datetime_entry, float_entry, int_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\EntryFactory;
 
 final class Max implements AggregatingFunction
 {
@@ -45,7 +46,7 @@ final class Max implements AggregatingFunction
     /**
      * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
      */
-    public function result() : Entry
+    public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_max');

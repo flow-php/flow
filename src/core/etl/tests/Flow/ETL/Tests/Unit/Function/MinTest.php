@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{datetime_entry, float_entry, int_entry, min, ref, row, str_entry};
+use function Flow\ETL\DSL\{config, datetime_entry, float_entry, flow_context, int_entry, min, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class MinTest extends FlowTestCase
@@ -21,7 +21,7 @@ final class MinTest extends FlowTestCase
 
         self::assertSame(
             10,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -36,7 +36,7 @@ final class MinTest extends FlowTestCase
 
         self::assertSame(
             10,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -51,7 +51,7 @@ final class MinTest extends FlowTestCase
 
         self::assertEquals(
             new \DateTimeImmutable('2021-01-01 00:00:00'),
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -66,7 +66,7 @@ final class MinTest extends FlowTestCase
 
         self::assertSame(
             10.25,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -81,7 +81,7 @@ final class MinTest extends FlowTestCase
 
         self::assertSame(
             10,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 }

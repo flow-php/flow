@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{average, int_entry, ref, str_entry, window};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{config, flow_context, row, rows};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class AverageTest extends FlowTestCase
@@ -22,7 +22,7 @@ final class AverageTest extends FlowTestCase
 
         self::assertSame(
             21.25,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -37,7 +37,7 @@ final class AverageTest extends FlowTestCase
 
         self::assertSame(
             20,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -52,7 +52,7 @@ final class AverageTest extends FlowTestCase
 
         self::assertSame(
             21.25,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -67,7 +67,7 @@ final class AverageTest extends FlowTestCase
 
         self::assertSame(
             25,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -77,7 +77,7 @@ final class AverageTest extends FlowTestCase
 
         self::assertSame(
             0,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 

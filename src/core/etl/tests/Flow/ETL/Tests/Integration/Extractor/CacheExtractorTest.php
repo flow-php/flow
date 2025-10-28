@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Extractor;
 
-use function Flow\ETL\DSL\{array_to_rows, config_builder, flow_context, from_array, from_cache};
+use function Flow\ETL\DSL\{array_to_rows, config, config_builder, flow_context, from_array, from_cache};
 use Flow\ETL\Cache\CacheIndex;
 use Flow\ETL\Cache\Implementation\InMemoryCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
@@ -20,9 +20,9 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]]));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]]));
-        $cache->set('rows_03', array_to_rows([['id' => 5]]));
+        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->entryFactory()));
+        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->entryFactory()));
+        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->entryFactory()));
 
         $cache->set('key', $index);
 
@@ -46,9 +46,9 @@ final class CacheExtractorTest extends FlowIntegrationTestCase
         $index->add('rows_02');
         $index->add('rows_03');
 
-        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]]));
-        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]]));
-        $cache->set('rows_03', array_to_rows([['id' => 5]]));
+        $cache->set('rows_01', array_to_rows([['id' => 1], ['id' => 2]], flow_context(config())->entryFactory()));
+        $cache->set('rows_02', array_to_rows([['id' => 3], ['id' => 4]], flow_context(config())->entryFactory()));
+        $cache->set('rows_03', array_to_rows([['id' => 5]], flow_context(config())->entryFactory()));
 
         $cache->set('key', $index);
 

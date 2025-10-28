@@ -7,6 +7,7 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\{Row, Rows, Window};
 
 final class Count implements AggregatingFunction, WindowFunction
@@ -62,7 +63,7 @@ final class Count implements AggregatingFunction, WindowFunction
     /**
      * @return Entry<?int>
      */
-    public function result() : Entry
+    public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref) {
             return int_entry('_count', $this->count);

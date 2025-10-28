@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{cast, ref};
+use function Flow\ETL\DSL\{cast, config, flow_context, ref};
 use function Flow\ETL\DSL\row;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -58,8 +57,10 @@ XML;
     #[DataProvider('cast_provider')]
     public function test_cast(mixed $from, string $to, mixed $expected) : void
     {
-        $resultRefCast = ref('value')->cast($to)->eval(row((new EntryFactory())->create('value', $from)))?->value;
-        $resultCastRef = cast(ref('value'), $to)->eval(row((new EntryFactory())->create('value', $from)))?->value;
+        $entryFactory = flow_context(config())->entryFactory();
+
+        $resultRefCast = ref('value')->cast($to)->eval(row($entryFactory->create('value', $from)))?->value;
+        $resultCastRef = cast(ref('value'), $to)->eval(row($entryFactory->create('value', $from)))?->value;
 
         if (\is_object($expected) || \is_object($from)) {
             self::assertEquals($expected, $resultRefCast);
@@ -73,28 +74,28 @@ XML;
     public function test_casting_integer_to_timezone() : void
     {
         self::assertNull(
-            ref('value')->cast('timezone')->eval(row((new EntryFactory())->create('value', 123)))
+            ref('value')->cast('timezone')->eval(row(flow_context(config())->entryFactory()->create('value', 123)))
         );
     }
 
     public function test_casting_integer_to_xml() : void
     {
         self::assertNull(
-            ref('value')->cast('xml')->eval(row((new EntryFactory())->create('value', 1)))
+            ref('value')->cast('xml')->eval(row(flow_context(config())->entryFactory()->create('value', 1)))
         );
     }
 
     public function test_casting_invalid_string_to_timezone() : void
     {
         self::assertNull(
-            ref('value')->cast('timezone')->eval(row((new EntryFactory())->create('value', 'invalid-timezone')))
+            ref('value')->cast('timezone')->eval(row(flow_context(config())->entryFactory()->create('value', 'invalid-timezone')))
         );
     }
 
     public function test_casting_non_xml_string_to_xml() : void
     {
         self::assertNull(
-            ref('value')->cast('xml')->eval(row((new EntryFactory())->create('value', 'foo')))
+            ref('value')->cast('xml')->eval(row(flow_context(config())->entryFactory()->create('value', 'foo')))
         );
     }
 }

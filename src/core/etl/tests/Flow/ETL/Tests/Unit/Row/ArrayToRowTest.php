@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Unit\Row;
 use function Flow\ETL\DSL\{array_to_row,
     bool_entry,
     bool_schema,
+    config,
+    flow_context,
     int_entry,
     int_schema,
     list_entry,
@@ -23,7 +25,7 @@ final class ArrayToRowTest extends FlowTestCase
 {
     public function test_building_array_to_row_with_entry_that_is_list_of_strings() : void
     {
-        $row = array_to_row(['data' => ['a', 'b', 'c', 'd']]);
+        $row = array_to_row(['data' => ['a', 'b', 'c', 'd']], flow_context(config())->entryFactory());
 
         self::assertEquals(
             row(list_entry('data', ['a', 'b', 'c', 'd'], type_list(type_string()))),
@@ -37,7 +39,8 @@ final class ArrayToRowTest extends FlowTestCase
             [
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
-            ]
+            ],
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -69,6 +72,7 @@ final class ArrayToRowTest extends FlowTestCase
     {
         $row = array_to_row(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
+            flow_context(config())->entryFactory(),
             schema: schema(int_schema('id'), bool_schema('deleted'))
         );
 
@@ -85,6 +89,7 @@ final class ArrayToRowTest extends FlowTestCase
     {
         $row = array_to_row(
             ['id' => 1234, 'deleted' => false],
+            flow_context(config())->entryFactory(),
             schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true))
         );
 
@@ -102,6 +107,7 @@ final class ArrayToRowTest extends FlowTestCase
     {
         $row = array_to_row(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(

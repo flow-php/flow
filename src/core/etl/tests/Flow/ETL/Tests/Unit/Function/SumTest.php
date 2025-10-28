@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\{config, flow_context, row, rows};
 use function Flow\ETL\DSL\{float_entry, int_entry, ref, str_entry, sum, window};
-use function Flow\ETL\DSL\{row, rows};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SumTest extends FlowTestCase
@@ -22,7 +22,7 @@ final class SumTest extends FlowTestCase
 
         self::assertSame(
             110,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -37,7 +37,7 @@ final class SumTest extends FlowTestCase
 
         self::assertSame(
             60,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -52,7 +52,7 @@ final class SumTest extends FlowTestCase
 
         self::assertSame(
             360.25,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 

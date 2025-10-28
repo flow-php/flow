@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{array_to_rows, flow_context, ref};
+use function Flow\ETL\DSL\{array_to_rows, config, flow_context, ref};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DropPartitionsTransformer;
 
@@ -23,7 +23,7 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             ['id' => 8, 'name' => 'eight', 'category' => 'b'],
             ['id' => 9, 'name' => 'nine', 'category' => 'b'],
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
-        ])->partitionBy(ref('category'));
+        ], flow_context(config())->entryFactory())->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
             self::assertTrue($rows->isPartitioned());
@@ -47,7 +47,7 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             ['id' => 8, 'name' => 'eight', 'category' => 'b'],
             ['id' => 9, 'name' => 'nine', 'category' => 'b'],
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
-        ])->partitionBy(ref('category'));
+        ], flow_context(config())->entryFactory())->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
             self::assertTrue($rows->isPartitioned());
@@ -72,7 +72,7 @@ final class DropPartitionsTransformerTest extends FlowTestCase
             ['id' => 8, 'name' => 'eight', 'category' => 'b'],
             ['id' => 9, 'name' => 'nine', 'category' => 'b'],
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
-        ]);
+        ], flow_context(config())->entryFactory());
 
         self::assertSame(
             $rows,

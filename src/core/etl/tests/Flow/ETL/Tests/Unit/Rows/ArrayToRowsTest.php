@@ -7,6 +7,8 @@ namespace Flow\ETL\Tests\Unit\Rows;
 use function Flow\ETL\DSL\{array_to_rows,
     bool_entry,
     bool_schema,
+    config,
+    flow_context,
     int_entry,
     int_schema,
     list_entry,
@@ -27,7 +29,8 @@ final class ArrayToRowsTest extends FlowTestCase
             [
                 ['data' => ['a', 'b', 'c', 'd']],
                 ['data' => ['e', 'f', 'g', 'd']],
-            ]
+            ],
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -48,7 +51,8 @@ final class ArrayToRowsTest extends FlowTestCase
         $rows = array_to_rows(
             [
                 ['data' => ['e', 'f', 'g', 'd']],
-            ]
+            ],
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -65,6 +69,7 @@ final class ArrayToRowsTest extends FlowTestCase
     {
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false, 'phase' => null],
+            flow_context(config())->entryFactory(),
             schema: schema(int_schema('id'), bool_schema('deleted'))
         );
 
@@ -83,6 +88,7 @@ final class ArrayToRowsTest extends FlowTestCase
     {
         $rows = array_to_rows(
             ['id' => 1234, 'deleted' => false],
+            flow_context(config())->entryFactory(),
             schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true))
         );
 
@@ -104,7 +110,8 @@ final class ArrayToRowsTest extends FlowTestCase
             [
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
-            ]
+            ],
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -131,6 +138,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
+            flow_context(config())->entryFactory(),
             schema: schema(int_schema('id'), bool_schema('deleted'))
         );
 
@@ -156,6 +164,7 @@ final class ArrayToRowsTest extends FlowTestCase
                 ['id' => 1234, 'deleted' => false],
                 ['id' => 4321, 'deleted' => true],
             ],
+            flow_context(config())->entryFactory(),
             schema: schema(int_schema('id'), bool_schema('deleted'), str_schema('phase', true))
         );
 

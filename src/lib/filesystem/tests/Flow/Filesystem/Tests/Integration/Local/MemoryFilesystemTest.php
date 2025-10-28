@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\Local;
 
-use function Flow\ETL\DSL\{all, lit, ref};
+use function Flow\ETL\DSL\{all, config, flow_context, lit, ref};
 use function Flow\Filesystem\DSL\{memory_filesystem, path_memory};
 use Flow\ETL\Filesystem\ScalarFunctionFilter;
-use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FileStatus,
     Tests\Integration\NativeLocalFilesystemTestCase};
 use Flow\Filesystem\Path\Filter\KeepAll;
@@ -132,7 +131,7 @@ TXT
                                 ref('date')->cast('date')->lessThan(lit(new \DateTimeImmutable('2022-01-04')))
                             )
                         ),
-                        new EntryFactory(),
+                        flow_context(config())->entryFactory(),
                         new AutoCaster()
                     )
                 )

@@ -18,10 +18,12 @@ use function Flow\ETL\DSL\{bool_entry,
     uuid_entry,
     xml_entry};
 use function Flow\ETL\DSL\{bool_schema,
+    config,
     date_schema,
     datetime_schema,
     enum_schema,
     float_schema,
+    flow_context,
     integer_schema,
     json_schema,
     list_schema,
@@ -37,12 +39,14 @@ use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
-use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
-final class EntryFactoryTest extends FlowTestCase
+final class EntryFactoryTest extends TestCase
 {
+    private EntryFactory $entryFactory;
+
     public static function provide_unrecognized_data() : \Generator
     {
         yield 'json alike' => [
@@ -70,11 +74,16 @@ final class EntryFactoryTest extends FlowTestCase
         ];
     }
 
+    protected function setUp() : void
+    {
+        $this->entryFactory = flow_context(config())->entryFactory();
+    }
+
     public function test_array_structure() : void
     {
         self::assertEquals(
             structure_entry('e', ['a' => 1, 'b' => '2'], type_structure(['a' => type_integer(), 'b' => type_string()])),
-            (new EntryFactory())->create('e', ['a' => 1, 'b' => '2'])
+            $this->entryFactory->create('e', ['a' => 1, 'b' => '2'])
         );
     }
 
@@ -82,7 +91,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             bool_entry('e', false),
-            (new EntryFactory())->create('e', false)
+            $this->entryFactory->create('e', false)
         );
     }
 
@@ -90,7 +99,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             bool_entry('e', false),
-            (new EntryFactory())->create('e', false, schema(bool_schema('e')))
+            $this->entryFactory->create('e', false, schema(bool_schema('e')))
         );
     }
 
@@ -98,7 +107,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             date_entry('e', '2022-01-01'),
-            (new EntryFactory())->create('e', new \DateTimeImmutable('2022-01-01'))
+            $this->entryFactory->create('e', new \DateTimeImmutable('2022-01-01'))
         );
     }
 
@@ -106,7 +115,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             date_entry('e', '1970-01-01'),
-            (new EntryFactory())->create('e', 1, schema(date_schema('e')))
+            $this->entryFactory->create('e', 1, schema(date_schema('e')))
         );
     }
 
@@ -114,7 +123,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             date_entry('e', null),
-            (new EntryFactory())->create('e', null, schema(date_schema('e', true)))
+            $this->entryFactory->create('e', null, schema(date_schema('e', true)))
         );
     }
 
@@ -122,7 +131,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             date_entry('e', '2022-01-01'),
-            (new EntryFactory())->create('e', '2022-01-01', schema(date_schema('e')))
+            $this->entryFactory->create('e', '2022-01-01', schema(date_schema('e')))
         );
     }
 
@@ -130,7 +139,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             datetime_entry('e', $now = new \DateTimeImmutable()),
-            (new EntryFactory())->create('e', $now)
+            $this->entryFactory->create('e', $now)
         );
     }
 
@@ -138,7 +147,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             datetime_entry('e', '2022-01-01 00:00:00 UTC'),
-            (new EntryFactory())
+            $this->entryFactory
                 ->create('e', '2022-01-01 00:00:00 UTC', schema(datetime_schema('e')))
         );
     }
@@ -147,7 +156,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             datetime_entry('e', $datetime = new \DateTimeImmutable('now')),
-            (new EntryFactory())
+            $this->entryFactory
                 ->create('e', $datetime, schema(datetime_schema('e')))
         );
     }
@@ -156,7 +165,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             enum_entry('e', $enum = BackedIntEnum::one),
-            (new EntryFactory())
+            $this->entryFactory
                 ->create('e', $enum)
         );
     }
@@ -165,7 +174,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             enum_entry('e', BackedIntEnum::one),
-            (new EntryFactory())
+            $this->entryFactory
                 ->create('e', 1, schema(enum_schema('e', BackedIntEnum::class)))
         );
     }
@@ -175,7 +184,7 @@ final class EntryFactoryTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "e" conversion exception. Can\'t cast "string" into "enum<Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum>" type');
 
-        (new EntryFactory())
+        $this->entryFactory
             ->create('e', 'invalid', schema(enum_schema('e', BackedIntEnum::class)));
     }
 
@@ -183,7 +192,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             float_entry('e', 1.1),
-            (new EntryFactory())->create('e', 1.1)
+            $this->entryFactory->create('e', 1.1)
         );
     }
 
@@ -191,7 +200,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             float_entry('e', 1.1),
-            (new EntryFactory())->create('e', 1.1, schema(float_schema('e')))
+            $this->entryFactory->create('e', 1.1, schema(float_schema('e')))
         );
     }
 
@@ -199,7 +208,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             float_entry('e', 1.1, metadata: Metadata::with('test', 1)),
-            (new EntryFactory())->create('e', 1.1, schema(float_schema('e', metadata: Metadata::with('test', 1))))
+            $this->entryFactory->create('e', 1.1, schema(float_schema('e', metadata: Metadata::with('test', 1))))
         );
     }
 
@@ -207,7 +216,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             str_entry('e', ''),
-            (new EntryFactory())->create('e', '')
+            $this->entryFactory->create('e', '')
         );
     }
 
@@ -215,7 +224,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             int_entry('e', 1),
-            (new EntryFactory())->create('e', 1)
+            $this->entryFactory->create('e', 1)
         );
     }
 
@@ -223,7 +232,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             int_entry('e', 1),
-            (new EntryFactory())->create('e', 1, schema(integer_schema('e')))
+            $this->entryFactory->create('e', 1, schema(integer_schema('e')))
         );
     }
 
@@ -231,7 +240,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             int_entry('e', 1, metadata: Metadata::with('test', 1)),
-            (new EntryFactory())->create('e', 1, schema(integer_schema('e', metadata: Metadata::with('test', 1))))
+            $this->entryFactory->create('e', 1, schema(integer_schema('e', metadata: Metadata::with('test', 1))))
         );
     }
 
@@ -239,7 +248,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             json_entry('e', '{}'),
-            (new EntryFactory())->create('e', '{}')
+            $this->entryFactory->create('e', '{}')
         );
     }
 
@@ -247,7 +256,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             json_object_entry('e', ['id' => 1]),
-            (new EntryFactory())->create('e', '{"id":1}')
+            $this->entryFactory->create('e', '{"id":1}')
         );
     }
 
@@ -255,7 +264,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             json_object_entry('e', ['id' => 1]),
-            (new EntryFactory())->create('e', ['id' => 1], schema(json_schema('e')))
+            $this->entryFactory->create('e', ['id' => 1], schema(json_schema('e')))
         );
     }
 
@@ -263,7 +272,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             json_entry('e', '{"id": 1}'),
-            (new EntryFactory())->create('e', '{"id": 1}')
+            $this->entryFactory->create('e', '{"id": 1}')
         );
     }
 
@@ -271,7 +280,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             json_entry('e', '{"id": 1}'),
-            (new EntryFactory())->create('e', '{"id": 1}', schema(json_schema('e')))
+            $this->entryFactory->create('e', '{"id": 1}', schema(json_schema('e')))
         );
     }
 
@@ -279,7 +288,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             json_entry('e', [['id' => 1]]),
-            (new EntryFactory())->create('e', [['id' => 1]], schema(json_schema('e')))
+            $this->entryFactory->create('e', [['id' => 1]], schema(json_schema('e')))
         );
     }
 
@@ -287,7 +296,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             list_entry('e', [1, 2, 3], type_list(type_integer())),
-            (new EntryFactory())->create('e', [1, 2, 3], schema(list_schema('e', type_list(type_integer()))))
+            $this->entryFactory->create('e', [1, 2, 3], schema(list_schema('e', type_list(type_integer()))))
         );
     }
 
@@ -295,7 +304,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             list_entry('e', ['false', 'true', 'true'], type_list(type_string())),
-            (new EntryFactory())->create('e', [false, true, true], schema(list_schema('e', type_list(type_string()))))
+            $this->entryFactory->create('e', [false, true, true], schema(list_schema('e', type_list(type_string()))))
         );
     }
 
@@ -303,7 +312,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             list_entry('e', $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')], type_list(type_datetime())),
-            (new EntryFactory())
+            $this->entryFactory
                 ->create('e', $list, schema(list_schema('e', type_list(type_datetime()))))
         );
     }
@@ -312,7 +321,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             list_entry('e', $list = [new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime())),
-            (new EntryFactory())->create('e', $list)
+            $this->entryFactory->create('e', $list)
         );
     }
 
@@ -320,7 +329,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             list_entry('e', [1, 2], type_list(type_integer())),
-            (new EntryFactory())->create('e', [1, 2])
+            $this->entryFactory->create('e', [1, 2])
         );
     }
 
@@ -341,7 +350,7 @@ final class EntryFactoryTest extends FlowTestCase
                 'street' => type_string(),
                 'zip' => type_string(),
             ])),
-            (new EntryFactory())->create('address', [
+            $this->entryFactory->create('address', [
                 'city' => 'Krakow',
                 'geo' => [
                     'lat' => 50.06143,
@@ -357,14 +366,14 @@ final class EntryFactoryTest extends FlowTestCase
     {
         $this->expectExceptionMessage("e: object<ArrayIterator> can't be converted to any known Entry, please normalize that object first");
 
-        (new EntryFactory())->create('e', new \ArrayIterator([1, 2]));
+        $this->entryFactory->create('e', new \ArrayIterator([1, 2]));
     }
 
     public function test_string() : void
     {
         self::assertEquals(
             str_entry('e', 'test'),
-            (new EntryFactory())->create('e', 'test')
+            $this->entryFactory->create('e', 'test')
         );
     }
 
@@ -372,7 +381,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             str_entry('e', 'string'),
-            (new EntryFactory())->create('e', 'string', schema(string_schema('e')))
+            $this->entryFactory->create('e', 'string', schema(string_schema('e')))
         );
     }
 
@@ -385,7 +394,7 @@ final class EntryFactoryTest extends FlowTestCase
                 'street' => type_string(),
                 'zip' => type_string(),
             ])),
-            (new EntryFactory())->create('address', ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
+            $this->entryFactory->create('address', ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
         );
     }
 
@@ -393,7 +402,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             TimeEntry::fromDays('e', 1),
-            (new EntryFactory())->create('e', new \DateInterval('P1D'))
+            $this->entryFactory->create('e', new \DateInterval('P1D'))
         );
     }
 
@@ -401,7 +410,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             time_entry('e', null),
-            (new EntryFactory())->create('e', null, schema(time_schema('e', true)))
+            $this->entryFactory->create('e', null, schema(time_schema('e', true)))
         );
     }
 
@@ -409,7 +418,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             time_entry('e', new \DateInterval('P10D')),
-            (new EntryFactory())->create('e', 'P10D', schema(time_schema('e')))
+            $this->entryFactory->create('e', 'P10D', schema(time_schema('e')))
         );
     }
 
@@ -417,7 +426,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             str_entry('e', 'UTC'),
-            (new EntryFactory())->createAs('e', new \DateTimeZone('UTC'), type_time_zone())
+            $this->entryFactory->createAs('e', new \DateTimeZone('UTC'), type_time_zone())
         );
     }
 
@@ -425,7 +434,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             str_entry('e', 'America/New_York'),
-            (new EntryFactory())->createAs('e', 'America/New_York', type_time_zone())
+            $this->entryFactory->createAs('e', 'America/New_York', type_time_zone())
         );
     }
 
@@ -434,7 +443,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             str_entry('e', $input),
-            (new EntryFactory())->create('e', $input)
+            $this->entryFactory->create('e', $input)
         );
     }
 
@@ -446,7 +455,7 @@ final class EntryFactoryTest extends FlowTestCase
 
         self::assertEquals(
             uuid_entry('e', $uuid = Uuid::uuid4()->toString()),
-            (new EntryFactory())->create('e', $uuid)
+            $this->entryFactory->create('e', $uuid)
         );
     }
 
@@ -454,7 +463,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             uuid_entry('e', $uuid = '00000000-0000-0000-0000-000000000000'),
-            (new EntryFactory())->create('e', $uuid)
+            $this->entryFactory->create('e', $uuid)
         );
     }
 
@@ -462,7 +471,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             uuid_entry('e', $uuid = '00000000-0000-0000-0000-000000000000'),
-            (new EntryFactory())->create('e', $uuid, schema(uuid_schema('e')))
+            $this->entryFactory->create('e', $uuid, schema(uuid_schema('e')))
         );
     }
 
@@ -470,7 +479,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             uuid_entry('e', '00000000-0000-0000-0000-000000000000'),
-            (new EntryFactory())->create('e', '00000000-0000-0000-0000-000000000000')
+            $this->entryFactory->create('e', '00000000-0000-0000-0000-000000000000')
         );
     }
 
@@ -478,7 +487,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
 
-        (new EntryFactory())
+        $this->entryFactory
             ->create('e', '1', schema());
     }
 
@@ -486,7 +495,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         $this->expectException(SchemaDefinitionNotFoundException::class);
 
-        (new EntryFactory())
+        $this->entryFactory
             ->create('diff', '1', schema(string_schema('e')));
     }
 
@@ -496,7 +505,7 @@ final class EntryFactoryTest extends FlowTestCase
         $doc->loadXML($xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
         self::assertEquals(
             xml_entry('e', $xml),
-            (new EntryFactory())->create('e', $doc)
+            $this->entryFactory->create('e', $doc)
         );
     }
 
@@ -504,7 +513,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             xml_entry('e', $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>'),
-            (new EntryFactory())->create('e', $xml)
+            $this->entryFactory->create('e', $xml)
         );
     }
 
@@ -512,7 +521,7 @@ final class EntryFactoryTest extends FlowTestCase
     {
         self::assertEquals(
             xml_entry('e', $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>'),
-            (new EntryFactory())->create('e', $xml, schema(xml_schema('e')))
+            $this->entryFactory->create('e', $xml, schema(xml_schema('e')))
         );
     }
 }

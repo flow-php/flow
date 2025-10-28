@@ -1547,7 +1547,7 @@ function number_format(ScalarFunction|int|float $value, ScalarFunction|int $deci
  * @return Entry<mixed>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function to_entry(string $name, mixed $data, EntryFactory $entryFactory = new EntryFactory()) : Entry
+function to_entry(string $name, mixed $data, EntryFactory $entryFactory) : Entry
 {
     return $entryFactory->create($name, $data);
 }
@@ -1558,7 +1558,7 @@ function to_entry(string $name, mixed $data, EntryFactory $entryFactory = new En
  * @param null|Schema $schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_row(array $data, EntryFactory $entryFactory = new EntryFactory(), array|Partitions $partitions = [], ?Schema $schema = null) : Row
+function array_to_row(array $data, EntryFactory $entryFactory, array|Partitions $partitions = [], ?Schema $schema = null) : Row
 {
     $entries = [];
 
@@ -1603,7 +1603,7 @@ function array_to_row(array $data, EntryFactory $entryFactory = new EntryFactory
  * @param null|Schema $schema
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
-function array_to_rows(array $data, EntryFactory $entryFactory = new EntryFactory(), array|Partitions $partitions = [], ?Schema $schema = null) : Rows
+function array_to_rows(array $data, EntryFactory $entryFactory, array|Partitions $partitions = [], ?Schema $schema = null) : Rows
 {
     $partitions = \is_array($partitions) ? new Partitions(...$partitions) : $partitions;
 

@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{float_entry, int_entry};
 use Flow\Calculator\Calculator;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\{Row, Rows, Window};
 
 final class Sum implements AggregatingFunction, WindowFunction
@@ -63,7 +64,7 @@ final class Sum implements AggregatingFunction, WindowFunction
     /**
      * @return Entry<?float>|Entry<?int>
      */
-    public function result() : Entry
+    public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_sum');

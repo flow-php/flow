@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark;
 
-use function Flow\ETL\DSL\{array_to_rows, ref, string_entry};
+use function Flow\ETL\DSL\{array_to_rows, config, flow_context, ref, string_entry};
 use Flow\ETL\{Row, Rows};
 use PhpBench\Attributes\{BeforeMethods, Groups, Revs};
 
@@ -26,7 +26,8 @@ final class RowsBench
                 ['id' => 3, 'random' => false, 'text' => null, 'from' => 666],
                 ['id' => 4, 'random' => true, 'text' => null, 'from' => 666],
                 ['id' => 5, 'random' => false, 'text' => null, 'from' => 666],
-            ], \range(0, 10_000)))
+            ], \range(0, 10_000))),
+            flow_context(config())->entryFactory(),
         );
 
         $this->reducedRows = array_to_rows(
@@ -36,7 +37,8 @@ final class RowsBench
                 ['id' => 3, 'random' => false, 'text' => null, 'from' => 666],
                 ['id' => 4, 'random' => true, 'text' => null, 'from' => 666],
                 ['id' => 5, 'random' => false, 'text' => null, 'from' => 666],
-            ], \range(0, 1000)))
+            ], \range(0, 1000))),
+            flow_context(config())->entryFactory(),
         );
     }
 

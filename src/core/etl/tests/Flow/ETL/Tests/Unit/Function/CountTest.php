@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\{config, flow_context, row, rows};
 use function Flow\ETL\DSL\{count, float_entry, int_entry, ref, str_entry, window};
-use function Flow\ETL\DSL\{row, rows};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class CountTest extends FlowTestCase
@@ -22,7 +22,7 @@ final class CountTest extends FlowTestCase
 
         self::assertSame(
             4,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -37,7 +37,7 @@ final class CountTest extends FlowTestCase
 
         self::assertSame(
             4,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -53,7 +53,7 @@ final class CountTest extends FlowTestCase
 
         self::assertSame(
             5,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -69,7 +69,7 @@ final class CountTest extends FlowTestCase
 
         self::assertSame(
             4,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
