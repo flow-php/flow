@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-10-27
+## [Unreleased] - 2025-10-28
 
 ### Added
 - [#1911](https://github.com/flow-php/flow/pull/1911) - **Added missing Http adapter functions** - [@stloyd](https://github.com/stloyd)
