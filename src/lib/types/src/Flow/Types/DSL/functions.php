@@ -22,6 +22,7 @@ use Flow\Types\Type\Logical\{ClassStringType,
     ScalarType,
     StructureType,
     TimeType,
+    TimeZoneType,
     UuidType,
     XMLElementType,
     XMLType};
@@ -240,6 +241,15 @@ function type_date() : Type
 function type_time() : Type
 {
     return new TimeType();
+}
+
+/**
+ * @return Type<\DateTimeZone>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_time_zone() : Type
+{
+    return new TimeZoneType();
 }
 
 /**

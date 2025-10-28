@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_float, type_instance_of, type_integer, type_json, type_map, type_null, type_string, type_time, type_uuid, type_xml, type_xml_element, types};
+use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_float, type_instance_of, type_integer, type_json, type_map, type_null, type_string, type_time, type_time_zone, type_uuid, type_xml, type_xml_element, types};
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, StructureType};
@@ -84,6 +84,10 @@ final class TypeDetector
 
             if (type_time()->isValid($value)) {
                 return type_time();
+            }
+
+            if (type_time_zone()->isValid($value)) {
+                return type_time_zone();
             }
 
             if (type_date()->isValid($value)) {

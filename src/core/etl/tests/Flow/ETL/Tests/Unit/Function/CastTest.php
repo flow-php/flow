@@ -47,6 +47,9 @@ XML;
             'xml_to_string' => [$xml, 'string', '<root><foo baz="buz">bar</foo></root>'],
             'datetime' => [new \DateTimeImmutable('2023-01-01 00:00:00 UTC'), 'string', '2023-01-01T00:00:00+00:00'],
             'datetime_to_date' => [new \DateTimeImmutable('2023-01-01 00:01:00 UTC'), 'date', new \DateTimeImmutable('2023-01-01T00:00:00+00:00')],
+            'string_to_timezone' => ['UTC', 'timezone', new \DateTimeZone('UTC')],
+            'string_to_timezone_america' => ['America/New_York', 'timezone', new \DateTimeZone('America/New_York')],
+            'datetime_to_timezone' => [new \DateTimeImmutable('2023-01-01 00:00:00', new \DateTimeZone('Europe/London')), 'timezone', new \DateTimeZone('Europe/London')],
             'uuid' => [Uuid::fromString('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'), 'string', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'],
             'bool_to_string' => [true, 'string', 'true'],
         ];
@@ -67,10 +70,24 @@ XML;
         }
     }
 
+    public function test_casting_integer_to_timezone() : void
+    {
+        self::assertNull(
+            ref('value')->cast('timezone')->eval(row((new EntryFactory())->create('value', 123)))
+        );
+    }
+
     public function test_casting_integer_to_xml() : void
     {
         self::assertNull(
             ref('value')->cast('xml')->eval(row((new EntryFactory())->create('value', 1)))
+        );
+    }
+
+    public function test_casting_invalid_string_to_timezone() : void
+    {
+        self::assertNull(
+            ref('value')->cast('timezone')->eval(row((new EntryFactory())->create('value', 'invalid-timezone')))
         );
     }
 
