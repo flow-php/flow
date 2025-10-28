@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-10-28
 
 ### Added
+- [#1924](https://github.com/flow-php/flow/pull/1924) - **TimeZioneType** - [@norberttech](https://github.com/norberttech)
 - [#1922](https://github.com/flow-php/flow/pull/1922) - **php versions constraints to each tool composer.json file** - [@norberttech](https://github.com/norberttech)
 - [#1911](https://github.com/flow-php/flow/pull/1911) - **Added missing Http adapter functions** - [@stloyd](https://github.com/stloyd)
 - [960090](https://github.com/flow-php/flow/commit/960090aa988a304b67ccf4b165c1416c56760518) - **contact link for issue type guidance** - [@norberttech](https://github.com/norberttech)
