@@ -9,9 +9,7 @@ use function Flow\Types\DSL\{get_type,
     type_date,
     type_datetime,
     type_float,
-    type_integer,
-    type_json,
-    type_uuid};
+    type_integer};
 use Flow\Types\Type\Native\String\StringTypeChecker;
 
 final readonly class AutoCaster
@@ -36,24 +34,15 @@ final readonly class AutoCaster
      */
     private function castArray(array $value) : array
     {
-        $keyTypes = [];
         $valueTypes = [];
 
-        foreach ($value as $key => $item) {
-            $keyType = get_type($key);
+        foreach ($value as $item) {
             $valueType = get_type($item);
-            $keyTypes[$keyType->toString()] = $keyType;
             $valueTypes[$valueType->toString()] = $valueType;
         }
 
         if (isset($valueTypes['integer'], $valueTypes['float']) && \count($valueTypes) === 2) {
-            $castedArray = [];
-
-            foreach ($value as $key => $item) {
-                $castedArray[$key] = type_float()->cast($item);
-            }
-
-            return $castedArray;
+            return \array_map(fn ($item) => type_float()->cast($item), $value);
         }
 
         return $value;
@@ -77,14 +66,6 @@ final readonly class AutoCaster
 
         if ($typeChecker->isBoolean()) {
             return type_boolean()->cast($value);
-        }
-
-        if ($typeChecker->isJson()) {
-            return type_json()->cast($value);
-        }
-
-        if ($typeChecker->isUuid()) {
-            return type_uuid()->cast($value);
         }
 
         if ($typeChecker->isDate()) {
