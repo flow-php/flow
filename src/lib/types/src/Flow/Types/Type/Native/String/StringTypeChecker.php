@@ -154,6 +154,29 @@ final readonly class StringTypeChecker
         return \in_array(\mb_strtolower($this->string), ['null', 'nil'], true);
     }
 
+    public function isTimeZone() : bool
+    {
+        if ($this->string === '') {
+            return false;
+        }
+
+        if (\in_array($this->string, \DateTimeZone::listIdentifiers(), true)) {
+            return true;
+        }
+
+        if (\preg_match('/^[+-]\d{2}:\d{2}$/', $this->string) === 1) {
+            try {
+                new \DateTimeZone($this->string);
+
+                return true;
+            } catch (\Exception) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     public function isUuid() : bool
     {
         if ($this->string === '') {

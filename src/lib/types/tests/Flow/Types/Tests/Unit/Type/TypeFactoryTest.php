@@ -22,6 +22,7 @@ use function Flow\Types\DSL\{
     type_string,
     type_structure,
     type_time,
+    type_time_zone,
     type_xml,
     type_xml_element
 };
@@ -152,5 +153,11 @@ final class TypeFactoryTest extends TestCase
     {
         $time = type_time();
         self::assertEquals($time, type_from_array($time->normalize()));
+    }
+
+    public function test_normalizing_time_zone() : void
+    {
+        $timeZone = type_time_zone();
+        self::assertEquals($timeZone, type_from_array($timeZone->normalize()));
     }
 }

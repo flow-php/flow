@@ -14,7 +14,7 @@ use function Flow\ETL\DSL\{bool_entry,
     json_object_entry,
     list_entry,
     map_entry,
-    str_entry,
+    string_entry,
     struct_entry,
     time_entry,
     uuid_entry,
@@ -38,6 +38,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     OptionalType,
     StructureType,
     TimeType,
+    TimeZoneType,
     UuidType,
     XMLElementType,
     XMLType};
@@ -147,7 +148,7 @@ final readonly class EntryFactory
 
         if (null === $value && $type instanceof OptionalType) {
             return match ($type->base()::class) {
-                StringType::class => str_entry($entryName, null, $metadata),
+                StringType::class => string_entry($entryName, null, $metadata),
                 IntegerType::class => int_entry($entryName, null, $metadata),
                 FloatType::class => float_entry($entryName, null, $metadata),
                 BooleanType::class => bool_entry($entryName, null, $metadata),
@@ -177,7 +178,7 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof StringType) {
-                return str_entry($entryName, type_optional($type)->cast($value), $metadata);
+                return string_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof IntegerType) {
@@ -206,6 +207,10 @@ final readonly class EntryFactory
 
             if ($type instanceof DateTimeType) {
                 return datetime_entry($entryName, type_optional($type)->cast($value), $metadata);
+            }
+
+            if ($type instanceof TimeZoneType) {
+                return string_entry($entryName, type_optional(type_string())->cast($value), $metadata);
             }
 
             if ($type instanceof EnumType) {

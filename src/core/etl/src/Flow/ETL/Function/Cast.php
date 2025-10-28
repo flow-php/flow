@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_float, type_instance_of, type_integer, type_json, type_string, type_xml};
+use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_float, type_instance_of, type_integer, type_json, type_string, type_time_zone, type_xml};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Row;
@@ -57,6 +57,7 @@ final class Cast extends ScalarFunctionChain
                     },
                     type_date()
                 ),
+                'timezone' => new ScalarResult(type_time_zone()->cast($value), type_time_zone()),
                 'int', 'integer' => new ScalarResult(type_integer()->cast($value), type_integer()),
                 'float', 'double', 'real' => new ScalarResult(type_float()->cast($value), type_float()),
                 'string' => new ScalarResult(type_string()->cast($value), type_string()),

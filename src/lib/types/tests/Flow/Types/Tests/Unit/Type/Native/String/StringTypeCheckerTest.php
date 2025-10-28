@@ -80,6 +80,35 @@ final class StringTypeCheckerTest extends TestCase
         self::assertFalse((new StringTypeChecker(''))->isNull());
     }
 
+    public function test_detecting_timezone() : void
+    {
+        self::assertTrue((new StringTypeChecker('UTC'))->isTimeZone());
+        self::assertTrue((new StringTypeChecker('America/New_York'))->isTimeZone());
+        self::assertTrue((new StringTypeChecker('Europe/London'))->isTimeZone());
+        self::assertTrue((new StringTypeChecker('Europe/Warsaw'))->isTimeZone());
+        self::assertTrue((new StringTypeChecker('Asia/Tokyo'))->isTimeZone());
+        self::assertTrue((new StringTypeChecker('Australia/Sydney'))->isTimeZone());
+
+        self::assertTrue((new StringTypeChecker('+00:00'))->isTimeZone());
+        self::assertTrue((new StringTypeChecker('+05:30'))->isTimeZone());
+        self::assertTrue((new StringTypeChecker('-08:00'))->isTimeZone());
+
+        // (military time zones not in official list - might cause a lot of false positives)
+        self::assertFalse((new StringTypeChecker('A'))->isTimeZone());
+        self::assertFalse((new StringTypeChecker('B'))->isTimeZone());
+        self::assertFalse((new StringTypeChecker('Z'))->isTimeZone());
+
+        self::assertFalse((new StringTypeChecker('PST'))->isTimeZone());
+        self::assertFalse((new StringTypeChecker('EST'))->isTimeZone());
+        self::assertFalse((new StringTypeChecker('CET'))->isTimeZone());
+
+        self::assertFalse((new StringTypeChecker('not a timezone'))->isTimeZone());
+        self::assertFalse((new StringTypeChecker('Invalid/Timezone'))->isTimeZone());
+        self::assertFalse((new StringTypeChecker('2023-01-01'))->isTimeZone());
+        self::assertFalse((new StringTypeChecker(''))->isTimeZone());
+        self::assertFalse((new StringTypeChecker('123'))->isTimeZone());
+    }
+
     public function test_detecting_uuid() : void
     {
         self::assertTrue((new StringTypeChecker('f47ac10b-58cc-4372-a567-0e02b2c3d479'))->isUuid());

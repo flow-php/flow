@@ -11,6 +11,7 @@ use function Flow\Types\DSL\{get_type,
     type_float,
     type_integer,
     type_json,
+    type_time_zone,
     type_uuid};
 use Flow\Types\Type\Native\String\StringTypeChecker;
 
@@ -85,6 +86,10 @@ final readonly class AutoCaster
 
         if ($typeChecker->isUuid()) {
             return type_uuid()->cast($value);
+        }
+
+        if ($typeChecker->isTimeZone()) {
+            return type_time_zone()->cast($value);
         }
 
         if ($typeChecker->isDate()) {

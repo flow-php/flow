@@ -31,7 +31,7 @@ use function Flow\ETL\DSL\{bool_schema,
     time_schema,
     uuid_schema,
     xml_schema};
-use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure};
+use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure, type_time_zone};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Row\EntryFactory;
@@ -410,6 +410,22 @@ final class EntryFactoryTest extends FlowTestCase
         self::assertEquals(
             time_entry('e', new \DateInterval('P10D')),
             (new EntryFactory())->create('e', 'P10D', schema(time_schema('e')))
+        );
+    }
+
+    public function test_timezone_creates_string_entry() : void
+    {
+        self::assertEquals(
+            str_entry('e', 'UTC'),
+            (new EntryFactory())->createAs('e', new \DateTimeZone('UTC'), type_time_zone())
+        );
+    }
+
+    public function test_timezone_from_string_creates_string_entry() : void
+    {
+        self::assertEquals(
+            str_entry('e', 'America/New_York'),
+            (new EntryFactory())->createAs('e', 'America/New_York', type_time_zone())
         );
     }
 

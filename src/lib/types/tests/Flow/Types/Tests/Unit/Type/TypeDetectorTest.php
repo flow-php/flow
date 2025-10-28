@@ -15,6 +15,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     MapType,
     StructureType,
     TimeType,
+    TimeZoneType,
     UuidType,
     XMLElementType,
     XMLType};
@@ -44,6 +45,18 @@ final class TypeDetectorTest extends TestCase
             new \DateInterval('PT1H'),
             TimeType::class,
             'time',
+        ];
+
+        yield 'timezone' => [
+            new \DateTimeZone('UTC'),
+            TimeZoneType::class,
+            'timezone',
+        ];
+
+        yield 'timezone_america' => [
+            new \DateTimeZone('America/New_York'),
+            TimeZoneType::class,
+            'timezone',
         ];
 
         yield 'date' => [
