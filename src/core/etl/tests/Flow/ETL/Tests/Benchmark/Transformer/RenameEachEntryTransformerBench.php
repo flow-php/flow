@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark\Transformer;
 
-use function Flow\ETL\DSL\{config, flow_context, rename_style};
+use function Flow\ETL\DSL\{array_to_rows, config, flow_context, rename_style};
 use Flow\ETL\{FlowContext, Rows, String\StringStyles, Transformer\RenameEachEntryTransformer};
 use PhpBench\Attributes\{BeforeMethods, Groups};
 
@@ -18,14 +18,14 @@ final class RenameEachEntryTransformerBench
 
     public function setUp() : void
     {
-        $this->rows = Rows::fromArray(
+        $this->rows = array_to_rows(
             \array_merge(...\array_map(static fn () : array => [
                 ['id' => 1, 'random text' => null, 'from' => 666],
                 ['id' => 2, 'random text' => null, 'from' => 666],
                 ['id' => 3, 'random text' => null, 'from' => 666],
                 ['id' => 4, 'random text' => null, 'from' => 666],
                 ['id' => 5, 'random text' => null, 'from' => 666],
-            ], \range(0, 1_000)))
+            ], \range(0, 1_000))),
         );
         $this->context = flow_context(config());
     }

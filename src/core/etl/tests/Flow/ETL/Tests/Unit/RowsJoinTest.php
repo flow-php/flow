@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry, int_entry, join_on, row, rows, str_entry};
+use function Flow\ETL\DSL\{bool_entry, config, flow_context, int_entry, join_on, row, rows, str_entry};
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Tests\FlowTestCase;
@@ -335,7 +335,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(str_entry('code', 'US'), str_entry('name', 'United States')),
                 row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'], 'joined_')
+            Expression::on(['country' => 'code'], 'joined_'),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -358,7 +359,8 @@ final class RowsJoinTest extends FlowTestCase
 
         $joined = $left->joinLeft(
             rows(),
-            Expression::on(['country' => 'code'])
+            Expression::on(['country' => 'code']),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -381,7 +383,8 @@ final class RowsJoinTest extends FlowTestCase
 
         $joined = $left->joinLeft(
             rows(),
-            Expression::on(['country_code' => 'country_code'])
+            Expression::on(['country_code' => 'country_code']),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -404,7 +407,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(str_entry('code', 'US'), str_entry('name', 'United States')),
                 row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'])
+            Expression::on(['country' => 'code']),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -430,7 +434,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(int_entry('id', 101), str_entry('code', 'US'), str_entry('name', 'United States')),
                 row(int_entry('id', 102), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'], '')
+            Expression::on(['country' => 'code'], ''),
+            flow_context(config())->entryFactory(),
         );
     }
 
@@ -448,7 +453,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
                 row(str_entry('country_code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country_code' => 'country_code'])
+            Expression::on(['country_code' => 'country_code']),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -476,7 +482,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(str_entry('code', 'US'), str_entry('name', 'United States')),
                 row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'], 'joined_')
+            Expression::on(['country' => 'code'], 'joined_'),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -501,7 +508,8 @@ final class RowsJoinTest extends FlowTestCase
 
         $joined = $left->joinRight(
             rows(),
-            Expression::on(['country' => 'code'])
+            Expression::on(['country' => 'code']),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -520,7 +528,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(str_entry('code', 'US'), str_entry('name', 'United States')),
                 row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'], 'joined_')
+            Expression::on(['country' => 'code'], 'joined_'),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(
@@ -551,7 +560,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(int_entry('id', 102), str_entry('code', 'US'), str_entry('name', 'United States')),
                 row(int_entry('id', 103), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'], '')
+            Expression::on(['country' => 'code'], ''),
+            flow_context(config())->entryFactory(),
         );
     }
 
@@ -570,7 +580,8 @@ final class RowsJoinTest extends FlowTestCase
                 row(str_entry('country_code', 'US'), str_entry('name', 'United States')),
                 row(str_entry('country_code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country_code' => 'country_code'])
+            Expression::on(['country_code' => 'country_code']),
+            flow_context(config())->entryFactory(),
         );
 
         self::assertEquals(

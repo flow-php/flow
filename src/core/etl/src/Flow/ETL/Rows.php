@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{array_to_rows, row};
+use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_integer;
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, RuntimeException};
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
@@ -32,14 +32,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     {
         $this->rows = \array_values($rows);
         $this->partitions = new Partitions();
-    }
-
-    /**
-     * @param array<array-key, mixed> $data
-     */
-    public static function fromArray(array $data, EntryFactory $entryFactory = new EntryFactory()) : self
-    {
-        return array_to_rows($data, $entryFactory);
     }
 
     /**
@@ -391,7 +383,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
-    public function joinLeft(self $right, Expression $expression) : self
+    public function joinLeft(self $right, Expression $expression, EntryFactory $entryFactory) : self
     {
         /**
          * @var array<Row> $joined
@@ -417,8 +409,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             }
 
             if ($joinedRow === null) {
-                $entryFactory = new EntryFactory();
-
                 $entries = [];
 
                 foreach ($rightSchema->definitions() as $definition) {
@@ -465,7 +455,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
-    public function joinRight(self $right, Expression $expression) : self
+    public function joinRight(self $right, Expression $expression, EntryFactory $entryFactory) : self
     {
         /**
          * @var array<Row> $joined
@@ -491,8 +481,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             }
 
             if ($joinedRow === null) {
-                $entryFactory = new EntryFactory();
-
                 $entries = [];
 
                 foreach ($leftSchema->definitions() as $definition) {
