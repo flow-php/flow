@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-10-28
 
 ### Changed
+- [#1932](https://github.com/flow-php/flow/pull/1932) - **Enforce passing `EntryFactory` to `array_to_row(s)` & `to_entry` functions** - [@stloyd](https://github.com/stloyd)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Pass `EntryFactory` to the `Rows::join*()` methods** - [@stloyd](https://github.com/stloyd)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Enforce instance of EntryFactory in the join methods** - [@stloyd](https://github.com/stloyd)
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
