@@ -37,8 +37,6 @@ final readonly class JoinEachRowsTransformer implements Transformer
     }
 
     /**
-     * @param FlowContext $context
-     *
      * @throws InvalidArgumentException
      */
     public function transform(Rows $rows, FlowContext $context) : Rows
@@ -46,9 +44,9 @@ final readonly class JoinEachRowsTransformer implements Transformer
         $rightRows = $this->factory->from($rows)->fetch();
 
         return match ($this->type) {
-            Join::left => $rows->joinLeft($rightRows, $this->expression),
+            Join::left => $rows->joinLeft($rightRows, $this->expression, $context->entryFactory()),
             Join::left_anti => $rows->joinLeftAnti($rightRows, $this->expression),
-            Join::right => $rows->joinRight($rightRows, $this->expression),
+            Join::right => $rows->joinRight($rightRows, $this->expression, $context->entryFactory()),
             default => $rows->joinInner($rightRows, $this->expression),
         };
     }
