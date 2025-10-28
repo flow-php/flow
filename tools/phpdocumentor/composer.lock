@@ -4,8 +4,9 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1dcae6320f1202331fa54df173d99a1c",
-    "packages": [
+    "content-hash": "c895a7be588968d86b4148b9d47721f6",
+    "packages": [],
+    "packages-dev": [
         {
             "name": "phar-io/composer-distributor",
             "version": "1.0.2",
@@ -257,13 +258,14 @@
             "time": "2025-07-21T19:34:24+00:00"
         }
     ],
-    "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {},
-    "platform-dev": {},
+    "platform-dev": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+    },
     "plugin-api-version": "2.6.0"
 }

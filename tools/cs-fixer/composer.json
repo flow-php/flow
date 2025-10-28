@@ -2,6 +2,7 @@
   "name": "flow-php/flow-tools",
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
+    "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
     "friendsofphp/php-cs-fixer": "~3.68"
   },
   "config": {
