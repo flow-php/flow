@@ -383,7 +383,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
-    public function joinLeft(self $right, Expression $expression, EntryFactory $entryFactory = new EntryFactory()) : self
+    public function joinLeft(self $right, Expression $expression, EntryFactory $entryFactory) : self
     {
         /**
          * @var array<Row> $joined
@@ -455,7 +455,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @throws InvalidArgumentException
      */
-    public function joinRight(self $right, Expression $expression, EntryFactory $entryFactory = new EntryFactory()) : self
+    public function joinRight(self $right, Expression $expression, EntryFactory $entryFactory) : self
     {
         /**
          * @var array<Row> $joined
