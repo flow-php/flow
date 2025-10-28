@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\EntryFactory;
 
 final class First implements AggregatingFunction
 {
@@ -35,7 +36,7 @@ final class First implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
-    public function result() : Entry
+    public function result(EntryFactory $entryFactory) : Entry
     {
         $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_first';
 

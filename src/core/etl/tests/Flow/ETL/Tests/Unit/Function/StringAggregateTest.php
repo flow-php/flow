@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, ref, str_entry, string_agg};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, ref, str_entry, string_agg};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Row\SortOrder;
 use Flow\ETL\Tests\FlowTestCase;
@@ -22,9 +22,12 @@ final class StringAggregateTest extends FlowTestCase
 
         self::assertSame(
             'a, b, b, c',
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
-        self::assertSame('data_str_agg', $aggregator->result()->name());
+        self::assertSame(
+            'data_str_agg',
+            $aggregator->result(flow_context(config())->entryFactory())->name()
+        );
     }
 
     public function test_string_agg_on_empty_rows() : void
@@ -33,7 +36,7 @@ final class StringAggregateTest extends FlowTestCase
 
         self::assertSame(
             '',
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -48,7 +51,7 @@ final class StringAggregateTest extends FlowTestCase
 
         self::assertSame(
             'c, b, a',
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -63,9 +66,12 @@ final class StringAggregateTest extends FlowTestCase
 
         self::assertSame(
             'a, b, b, c',
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
-        self::assertSame('string', $aggregator->result()->name());
+        self::assertSame(
+            'string',
+            $aggregator->result(flow_context(config())->entryFactory())->name()
+        );
     }
 
     public function test_string_agg_with_order() : void
@@ -79,7 +85,7 @@ final class StringAggregateTest extends FlowTestCase
 
         self::assertSame(
             'c, b, b, a',
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 }

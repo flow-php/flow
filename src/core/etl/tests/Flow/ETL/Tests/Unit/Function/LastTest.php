@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{last, ref, str_entry, string_entry};
+use function Flow\ETL\DSL\{config, flow_context, last, ref, str_entry, string_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -22,7 +22,7 @@ final class LastTest extends FlowTestCase
 
         self::assertSame(
             '25',
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -32,7 +32,7 @@ final class LastTest extends FlowTestCase
 
         self::assertEquals(
             string_entry('int_last', null),
-            $aggregator->result()
+            $aggregator->result(flow_context(config())->entryFactory())
         );
     }
 }

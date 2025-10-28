@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{collect, ref, str_entry};
+use function Flow\ETL\DSL\{collect, config, flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -23,7 +23,7 @@ final class CollectTest extends FlowTestCase
             [
                 'a', 'b', 'b', 'c',
             ],
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 }

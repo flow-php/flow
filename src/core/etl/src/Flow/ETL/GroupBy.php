@@ -159,7 +159,7 @@ final class GroupBy
 
                 foreach ($columns as $rowIndex => $values) {
                     $row[$rowIndex] = $values instanceof AggregatingFunction
-                        ? $values->result()->value()
+                        ? $values->result($context->entryFactory())->value()
                         : $values;
                 }
 
@@ -175,7 +175,6 @@ final class GroupBy
             }
 
             return array_to_rows($rows, $context->entryFactory());
-
         }
 
         foreach ($this->groupedTable as $group) {
@@ -187,7 +186,7 @@ final class GroupBy
             }
 
             foreach ($group['aggregators'] as $aggregator) {
-                $entries[] = $aggregator->result();
+                $entries[] = $aggregator->result($context->entryFactory());
             }
 
             if (\count($entries)) {

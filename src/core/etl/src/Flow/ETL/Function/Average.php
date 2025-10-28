@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{float_entry, integer_entry};
 use Flow\Calculator\{Calculator, Rounding};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\{Row, Rows, Window};
 
 final class Average implements AggregatingFunction, WindowFunction
@@ -65,7 +66,7 @@ final class Average implements AggregatingFunction, WindowFunction
         return $this;
     }
 
-    public function result() : Entry
+    public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->to() . '_avg');

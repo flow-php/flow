@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{flow_context, to_entry};
+use function Flow\ETL\DSL\to_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\Row\EntryFactory;
 
 final class CollectUnique implements AggregatingFunction
 {
@@ -43,12 +44,12 @@ final class CollectUnique implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
-    public function result() : Entry
+    public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {
             $this->ref->as($this->ref->name() . '_collection_unique');
         }
 
-        return to_entry($this->ref->name(), $this->collection, flow_context()->entryFactory());
+        return to_entry($this->ref->name(), $this->collection, $entryFactory);
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{datetime_entry, float_entry, int_entry, ref, row, str_entry};
+use function Flow\ETL\DSL\{config, datetime_entry, float_entry, flow_context, int_entry, ref, row, str_entry};
 use function Flow\ETL\DSL\max;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -22,7 +22,7 @@ final class MaxTest extends FlowTestCase
 
         self::assertSame(
             55,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -37,7 +37,7 @@ final class MaxTest extends FlowTestCase
 
         self::assertSame(
             30,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -52,7 +52,7 @@ final class MaxTest extends FlowTestCase
 
         self::assertEquals(
             new \DateTimeImmutable('2021-01-04 00:00:00'),
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -67,7 +67,7 @@ final class MaxTest extends FlowTestCase
 
         self::assertSame(
             30.5,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 
@@ -82,7 +82,7 @@ final class MaxTest extends FlowTestCase
 
         self::assertSame(
             40,
-            $aggregator->result()->value()
+            $aggregator->result(flow_context(config())->entryFactory())->value()
         );
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\{Entry, EntryFactory};
 
 interface AggregatingFunction
 {
@@ -14,5 +14,5 @@ interface AggregatingFunction
     /**
      * @return Entry<mixed>
      */
-    public function result() : Entry;
+    public function result(EntryFactory $entryFactory) : Entry;
 }

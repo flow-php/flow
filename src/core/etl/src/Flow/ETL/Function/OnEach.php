@@ -33,16 +33,18 @@ final class OnEach extends ScalarFunctionChain
 
         $output = [];
 
+        $entryFactory = flow_context(config())->entryFactory();
+
         foreach ($value as $key => $item) {
             if ($preserveKeys) {
                 try {
-                    $output[$key] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], flow_context(config())->entryFactory()));
+                    $output[$key] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], $entryFactory));
                 } catch (InvalidArgumentException) {
                     $output[$key] = null;
                 }
             } else {
                 try {
-                    $output[] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], flow_context(config())->entryFactory()));
+                    $output[] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], $entryFactory));
                 } catch (InvalidArgumentException) {
                     $output[] = null;
                 }
