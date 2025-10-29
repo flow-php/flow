@@ -1,4 +1,7 @@
-## [Unreleased] - 2025-10-28
+## [Unreleased] - 2025-10-29
+
+### Added
+- [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
 - [#1932](https://github.com/flow-php/flow/pull/1932) - **Enforce passing `EntryFactory` to `array_to_row(s)` & `to_entry` functions** - [@stloyd](https://github.com/stloyd)
