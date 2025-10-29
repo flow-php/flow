@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use function Flow\ETL\DSL\{array_to_rows, config, flow_context};
-use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\AutoCastTransformer;
 use Flow\Types\Type\AutoCaster;
+use PHPUnit\Framework\TestCase;
 
-final class AutoCastTransformerTest extends FlowTestCase
+final class AutoCastTransformerTest extends TestCase
 {
     public function test_transforming_row() : void
     {

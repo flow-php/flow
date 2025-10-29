@@ -10,6 +10,7 @@ use function Flow\Types\DSL\{type_array,
     type_date,
     type_datetime,
     type_float,
+    type_html,
     type_integer,
     type_json,
     type_mixed,
@@ -81,6 +82,7 @@ final class TypeFactory
             'scalar' => type_scalar(),
             'mixed' => type_mixed(),
             'numeric-string' => type_numeric_string(),
+            'html' => type_html(),
             default => throw new InvalidArgumentException("Unknown type '" . (\is_string($data['type']) ? $data['type'] : \gettype($data['type'])) . "'"),
         };
     }

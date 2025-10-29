@@ -5,13 +5,35 @@ declare(strict_types=1);
 namespace Flow\ETL\Schema;
 
 use function Flow\ETL\DSL\is_nullable;
-use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_enum, type_equals, type_float, type_integer, type_is, type_is_any, type_json, type_list, type_map, type_mixed, type_optional, type_string, type_structure, type_time, type_uuid, type_xml, type_xml_element, types};
+use function Flow\Types\DSL\{type_array,
+    type_boolean,
+    type_date,
+    type_datetime,
+    type_enum,
+    type_equals,
+    type_float,
+    type_html,
+    type_integer,
+    type_is,
+    type_is_any,
+    type_json,
+    type_list,
+    type_map,
+    type_mixed,
+    type_optional,
+    type_string,
+    type_structure,
+    type_time,
+    type_uuid,
+    type_xml,
+    type_xml_element,
+    types};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
 use Flow\Types\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, TypeFactory};
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{HTMLDocument, Uuid};
 
 /**
  * @template-covariant T
@@ -115,6 +137,14 @@ final class Definition
             /** @phpstan-ignore-next-line */
             Metadata::fromArray($validatedData['metadata'] ?? [])
         );
+    }
+
+    /**
+     * @return Definition<HTMLDocument>
+     */
+    public static function html(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
+    {
+        return new self($entry, type_html(), $nullable, $metadata);
     }
 
     /**
