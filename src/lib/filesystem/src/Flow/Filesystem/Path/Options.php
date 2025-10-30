@@ -10,7 +10,7 @@ use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 final class Options
 {
     /**
-     * @var array<string, string>
+     * @var array<string, mixed>
      */
     private array $options;
 
@@ -22,7 +22,7 @@ final class Options
         $normalizedOptions = [];
 
         foreach ($options as $option => $value) {
-            $normalizedOptions[\mb_strtolower(type_string()->cast($option))] = type_string()->cast($value);
+            $normalizedOptions[\mb_strtolower(type_string()->cast($option))] = $value;
         }
 
         $this->options = $normalizedOptions;
@@ -35,10 +35,19 @@ final class Options
         }
     }
 
+    public function get(string $option, ?string $default = null) : mixed
+    {
+        if ($this->has($option)) {
+            return $this->options[$option];
+        }
+
+        return $default;
+    }
+
     public function getAsString(string $option, ?string $default = null) : ?string
     {
         if ($this->has($option)) {
-            return (string) $this->options[$option];
+            return type_string()->cast($this->options[$option]);
         }
 
         return $default;
@@ -49,8 +58,20 @@ final class Options
         return isset($this->options[\mb_strtolower($option)]);
     }
 
+    public function set(string $option, mixed $value) : void
+    {
+        $this->options[$option] = $value;
+    }
+
+    public function setWhenEmpty(string $option, mixed $value) : void
+    {
+        if (!$this->has($option)) {
+            $this->options[$option] = $value;
+        }
+    }
+
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     public function toArray() : array
     {

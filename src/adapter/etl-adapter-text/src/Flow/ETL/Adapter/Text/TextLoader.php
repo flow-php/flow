@@ -8,6 +8,8 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Option\ContentType;
 
 final class TextLoader implements Closure, FileLoader, Loader
 {
@@ -15,6 +17,7 @@ final class TextLoader implements Closure, FileLoader, Loader
 
     public function __construct(private readonly Path $path)
     {
+        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::TEXT);
     }
 
     public function closure(FlowContext $context) : void

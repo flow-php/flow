@@ -48,6 +48,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
             $response = $s3Client->createMultipartUpload(new CreateMultipartUploadRequest([
                 'Bucket' => $bucket,
                 'Key' => \ltrim($appendPath->path(), '/'),
+                'ContentType' => (new ContentTypeDetector())->from($path),
             ]));
 
             /**
@@ -122,6 +123,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         $response = $s3Client->createMultipartUpload(new CreateMultipartUploadRequest([
             'Bucket' => $bucket,
             'Key' => \ltrim($path->path(), '/'),
+            'ContentType' => (new ContentTypeDetector())->from($path),
         ]));
 
         /** @var string $uploadId */

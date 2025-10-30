@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\JSON;
 use Flow\ETL\{Adapter\JSON\RowsNormalizer\EntryNormalizer, FlowContext, Loader, Rows};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\{Closure, FileLoader};
-use Flow\Filesystem\{DestinationStream, Partition, Path};
+use Flow\Filesystem\{DestinationStream, Partition, Path, Path\Option, Path\Option\ContentType};
 
 final class JsonLinesLoader implements Closure, FileLoader, Loader
 {
@@ -17,6 +17,7 @@ final class JsonLinesLoader implements Closure, FileLoader, Loader
 
     public function __construct(private readonly Path $path)
     {
+        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::JSON);
     }
 
     public function closure(FlowContext $context) : void

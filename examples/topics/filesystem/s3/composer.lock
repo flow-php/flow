@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d828997a059ec454d0eb1e0b586d621d",
+    "content-hash": "9d08820b55af90084eeedc184c1e0f83",
     "packages": [
         {
             "name": "async-aws/core",
@@ -12,19 +12,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/async-aws/core.git",
-                "reference": "432a9c956baa208c235eae6d440dfef66954cab1"
+                "reference": "fbab1ff21be283c1e9d02618ad53c38153da15a5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/async-aws/core/zipball/432a9c956baa208c235eae6d440dfef66954cab1",
-                "reference": "432a9c956baa208c235eae6d440dfef66954cab1",
+                "url": "https://api.github.com/repos/async-aws/core/zipball/fbab1ff21be283c1e9d02618ad53c38153da15a5",
+                "reference": "fbab1ff21be283c1e9d02618ad53c38153da15a5",
                 "shasum": ""
             },
             "require": {
                 "ext-hash": "*",
                 "ext-json": "*",
                 "ext-simplexml": "*",
-                "php": "^7.2.5 || ^8.0",
+                "php": "^8.2",
                 "psr/cache": "^1.0 || ^2.0 || ^3.0",
                 "psr/log": "^1.0 || ^2.0 || ^3.0",
                 "symfony/deprecation-contracts": "^2.1 || ^3.0",
@@ -36,11 +36,16 @@
                 "async-aws/s3": "<1.1",
                 "symfony/http-client": "5.2.0"
             },
+            "require-dev": {
+                "phpunit/phpunit": "^11.5.42",
+                "symfony/error-handler": "^7.3.2 || ^8.0",
+                "symfony/phpunit-bridge": "^7.3.2 || ^8.0"
+            },
             "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.27-dev"
+                    "dev-master": "1.28-dev"
                 }
             },
             "autoload": {
@@ -73,7 +78,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-17T09:55:57+00:00"
+            "time": "2025-10-30T02:31:11+00:00"
         },
         {
             "name": "async-aws/s3",
@@ -260,12 +265,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "663ec1b6a3abe169497cca919418211dc4aa0037"
+                "reference": "4eb3ff9c54262cae33f5d7f17bfbb094233ce442"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/663ec1b6a3abe169497cca919418211dc4aa0037",
-                "reference": "663ec1b6a3abe169497cca919418211dc4aa0037",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/4eb3ff9c54262cae33f5d7f17bfbb094233ce442",
+                "reference": "4eb3ff9c54262cae33f5d7f17bfbb094233ce442",
                 "shasum": ""
             },
             "require": {
@@ -325,7 +330,127 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-21T12:20:59+00:00"
+            "time": "2025-10-29T12:40:29+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-csv",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-csv.git",
+                "reference": "935f8fb543249c6bda3edfbbfad33f670e63af24"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-csv/zipball/935f8fb543249c6bda3edfbbfad33f670e63af24",
+                "reference": "935f8fb543249c6bda3edfbbfad33f670e63af24",
+                "shasum": ""
+            },
+            "require": {
+                "flow-php/etl": "self.version",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ETL/Adapter/CSV/functions.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - CSV",
+            "keywords": [
+                "adapter",
+                "csv",
+                "etl",
+                "extract",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-csv/issues",
+                "source": "https://github.com/flow-php/etl-adapter-csv/tree/1.x"
+            },
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-10-27T17:41:39+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-json",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-json.git",
+                "reference": "52feff240341ac4bb2554622abd41da092efeb2b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/52feff240341ac4bb2554622abd41da092efeb2b",
+                "reference": "52feff240341ac4bb2554622abd41da092efeb2b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "flow-php/etl": "self.version",
+                "halaxa/json-machine": "^1.1",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ETL/Adapter/JSON/functions.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - JSON",
+            "keywords": [
+                "adapter",
+                "etl",
+                "extract",
+                "json",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-json/issues",
+                "source": "https://github.com/flow-php/etl-adapter-json/tree/1.x"
+            },
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-10-27T17:41:43+00:00"
         },
         {
             "name": "flow-php/etl-adapter-parquet",
@@ -333,12 +458,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-parquet.git",
-                "reference": "30cd4f89fa5c28584924b0fa24b7868946da7f9f"
+                "reference": "b812a7154bddb94ce12bfcc8eef53f447a257918"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-parquet/zipball/30cd4f89fa5c28584924b0fa24b7868946da7f9f",
-                "reference": "30cd4f89fa5c28584924b0fa24b7868946da7f9f",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-parquet/zipball/b812a7154bddb94ce12bfcc8eef53f447a257918",
+                "reference": "b812a7154bddb94ce12bfcc8eef53f447a257918",
                 "shasum": ""
             },
             "require": {
@@ -386,7 +511,129 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-21T12:21:32+00:00"
+            "time": "2025-10-27T17:41:25+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-text",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-text.git",
+                "reference": "74d0b2e029407f6229ce819626814d1d3889d5b6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-text/zipball/74d0b2e029407f6229ce819626814d1d3889d5b6",
+                "reference": "74d0b2e029407f6229ce819626814d1d3889d5b6",
+                "shasum": ""
+            },
+            "require": {
+                "flow-php/etl": "self.version",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ETL/Adapter/Text/functions.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - Text",
+            "keywords": [
+                "adapter",
+                "etl",
+                "extract",
+                "load",
+                "text",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-text/issues",
+                "source": "https://github.com/flow-php/etl-adapter-text/tree/1.x"
+            },
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-10-27T17:41:23+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-xml",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-xml.git",
+                "reference": "aa85c080a0428924ec0aa225bcca890caa0bc940"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-xml/zipball/aa85c080a0428924ec0aa225bcca890caa0bc940",
+                "reference": "aa85c080a0428924ec0aa225bcca890caa0bc940",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-xml": "*",
+                "ext-xmlreader": "*",
+                "ext-xmlwriter": "*",
+                "flow-php/etl": "self.version",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ETL/Adapter/XML/functions.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - XML",
+            "keywords": [
+                "adapter",
+                "etl",
+                "extract",
+                "load",
+                "transform",
+                "xml"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-xml/issues",
+                "source": "https://github.com/flow-php/etl-adapter-xml/tree/1.x"
+            },
+            "funding": [
+                {
+                    "url": "https://flow-php.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/norberttech",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-10-27T17:42:16+00:00"
         },
         {
             "name": "flow-php/filesystem",
@@ -394,12 +641,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
-                "reference": "6fca263e996e4a06544c40bc958b72657d6b6821"
+                "reference": "2a1ddd915fe091692b90f6b469f8a158869723ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/6fca263e996e4a06544c40bc958b72657d6b6821",
-                "reference": "6fca263e996e4a06544c40bc958b72657d6b6821",
+                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/2a1ddd915fe091692b90f6b469f8a158869723ba",
+                "reference": "2a1ddd915fe091692b90f6b469f8a158869723ba",
                 "shasum": ""
             },
             "require": {
@@ -448,7 +695,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-21T12:21:54+00:00"
+            "time": "2025-10-28T18:55:28+00:00"
         },
         {
             "name": "flow-php/filesystem-async-aws-bridge",
@@ -456,12 +703,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem-async-aws-bridge.git",
-                "reference": "7d04950f1530ca24f25562304f22414a19794cf6"
+                "reference": "0a92af87a73ef922b850d3b6e19883323f6794a5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/filesystem-async-aws-bridge/zipball/7d04950f1530ca24f25562304f22414a19794cf6",
-                "reference": "7d04950f1530ca24f25562304f22414a19794cf6",
+                "url": "https://api.github.com/repos/flow-php/filesystem-async-aws-bridge/zipball/0a92af87a73ef922b850d3b6e19883323f6794a5",
+                "reference": "0a92af87a73ef922b850d3b6e19883323f6794a5",
                 "shasum": ""
             },
             "require": {
@@ -499,7 +746,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem-async-aws-bridge/issues",
-                "source": "https://github.com/flow-php/filesystem-async-aws-bridge/tree/0.22.0"
+                "source": "https://github.com/flow-php/filesystem-async-aws-bridge/tree/0.26.1"
             },
             "funding": [
                 {
@@ -511,7 +758,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-07-20T12:36:52+00:00"
+            "time": "2025-10-21T12:21:40+00:00"
         },
         {
             "name": "flow-php/parquet",
@@ -644,12 +891,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/types.git",
-                "reference": "17cfa6fe119aab0c8b6f1fe311f65e1a576ae4ea"
+                "reference": "0710e5728d977fd7399d7c129df1955e3f9901a3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/types/zipball/17cfa6fe119aab0c8b6f1fe311f65e1a576ae4ea",
-                "reference": "17cfa6fe119aab0c8b6f1fe311f65e1a576ae4ea",
+                "url": "https://api.github.com/repos/flow-php/types/zipball/0710e5728d977fd7399d7c129df1955e3f9901a3",
+                "reference": "0710e5728d977fd7399d7c129df1955e3f9901a3",
                 "shasum": ""
             },
             "require": {
@@ -690,7 +937,69 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-21T12:20:33+00:00"
+            "time": "2025-10-29T12:40:43+00:00"
+        },
+        {
+            "name": "halaxa/json-machine",
+            "version": "1.2.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/halaxa/json-machine.git",
+                "reference": "d0f84abf79ac98145d478b66d2bcf363d706477c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/d0f84abf79ac98145d478b66d2bcf363d706477c",
+                "reference": "d0f84abf79ac98145d478b66d2bcf363d706477c",
+                "shasum": ""
+            },
+            "require": {
+                "php": "7.2 - 8.4"
+            },
+            "require-dev": {
+                "ext-json": "*",
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^8.0"
+            },
+            "suggest": {
+                "ext-json": "To run JSON Machine out of the box without custom decoders.",
+                "guzzlehttp/guzzle": "To run example with GuzzleHttp"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "JsonMachine\\": "src/"
+                },
+                "exclude-from-classmap": [
+                    "src/autoloader.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Filip Halaxa",
+                    "email": "filip@halaxa.cz"
+                }
+            ],
+            "description": "Efficient, easy-to-use and fast JSON pull parser",
+            "support": {
+                "issues": "https://github.com/halaxa/json-machine/issues",
+                "source": "https://github.com/halaxa/json-machine/tree/1.2.5"
+            },
+            "funding": [
+                {
+                    "url": "https://ko-fi.com/G2G57KTE4",
+                    "type": "other"
+                }
+            ],
+            "time": "2025-07-07T13:38:34+00:00"
         },
         {
             "name": "packaged/thrift",
@@ -1145,12 +1454,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "47ed7b551cadc882df160d8bc70fa15dc02d379a"
+                "reference": "3fccf1d31b5db97f9a07d00ca3f1feb07b366f25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/47ed7b551cadc882df160d8bc70fa15dc02d379a",
-                "reference": "47ed7b551cadc882df160d8bc70fa15dc02d379a",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/3fccf1d31b5db97f9a07d00ca3f1feb07b366f25",
+                "reference": "3fccf1d31b5db97f9a07d00ca3f1feb07b366f25",
                 "shasum": ""
             },
             "require": {
@@ -1238,7 +1547,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-10-15T06:55:53+00:00"
+            "time": "2025-10-28T16:29:27+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -1978,7 +2287,11 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "flow-php/etl": 20,
+        "flow-php/etl-adapter-csv": 20,
+        "flow-php/etl-adapter-json": 20,
         "flow-php/etl-adapter-parquet": 20,
+        "flow-php/etl-adapter-text": 20,
+        "flow-php/etl-adapter-xml": 20,
         "flow-php/filesystem": 20,
         "flow-php/filesystem-async-aws-bridge": 20,
         "flow-php/parquet": 20,
@@ -1986,7 +2299,9 @@
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": {},
+    "platform": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+    },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

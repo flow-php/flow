@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
-use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite, to_stream};
+use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\Adapter\XML\to_xml;
+use function Flow\ETL\DSL\{config_builder, data_frame, from_array, lit, overwrite, ref, to_stream};
 use function Flow\Filesystem\Bridge\AsyncAWS\DSL\{aws_s3_client, aws_s3_filesystem};
 use function Flow\Filesystem\DSL\path;
 use Symfony\Component\Dotenv\Dotenv;
@@ -40,6 +44,12 @@ data_frame($config)
     ]))
     ->saveMode(overwrite())
     ->write(to_parquet(path('aws-s3://test.parquet')))
+    ->write(to_csv(path('aws-s3://test.csv')))
+    ->write(to_xml(path('aws-s3://test.xml')))
+    ->write(to_json(path('aws-s3://test.json')))
+    ->withEntry('line', ref('id')->concat(lit('_'), ref('name')))
+    ->drop('id', 'name')
+    ->write(to_text(path('aws-s3://test.txt')))
     ->run();
 
 data_frame($config)

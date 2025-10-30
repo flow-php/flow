@@ -9,7 +9,7 @@ use Flow\ETL\Adapter\XML\RowsNormalizer\EntryNormalizer\PHPValueNormalizer;
 use Flow\ETL\Adapter\XML\{RowsNormalizer, XMLWriter};
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
-use Flow\Filesystem\{DestinationStream, Partition, Path};
+use Flow\Filesystem\{DestinationStream, Partition, Path, Path\Option, Path\Option\ContentType};
 
 final class XMLLoader implements Closure, FileLoader, Loader
 {
@@ -43,6 +43,7 @@ final class XMLLoader implements Closure, FileLoader, Loader
         private readonly Path $path,
         private readonly XMLWriter $xmlWriter,
     ) {
+        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::XML);
     }
 
     public function closure(FlowContext $context) : void

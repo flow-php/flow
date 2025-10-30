@@ -8,7 +8,7 @@ use Flow\ETL\{Adapter\CSV\RowsNormalizer\EntryNormalizer, FlowContext, Loader, R
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\ETL\Row\Entry;
-use Flow\Filesystem\{DestinationStream, Partition, Path};
+use Flow\Filesystem\{DestinationStream, Partition, Path, Path\Option, Path\Option\ContentType};
 
 final class CSVLoader implements Closure, FileLoader, Loader
 {
@@ -27,6 +27,7 @@ final class CSVLoader implements Closure, FileLoader, Loader
     public function __construct(
         private readonly Path $path,
     ) {
+        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::CSV);
     }
 
     public function closure(FlowContext $context) : void
