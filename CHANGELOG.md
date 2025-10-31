@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-10-29
+## [Unreleased] - 2025-10-31
 
 ### Added
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
@@ -8,6 +8,9 @@
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Pass `EntryFactory` to the `Rows::join*()` methods** - [@stloyd](https://github.com/stloyd)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Enforce instance of EntryFactory in the join methods** - [@stloyd](https://github.com/stloyd)
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1945](https://github.com/flow-php/flow/pull/1945) - **Fixed broken `HTMLTypeTest`** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Remove `Rows::fromArray()`** - [@stloyd](https://github.com/stloyd)
