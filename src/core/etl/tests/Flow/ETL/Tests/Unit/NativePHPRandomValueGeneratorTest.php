@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\NativePHPRandomValueGenerator;
 use Flow\ETL\Tests\FlowTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class NativePHPRandomValueGeneratorTest extends FlowTestCase
 {
@@ -51,7 +52,7 @@ final class NativePHPRandomValueGeneratorTest extends FlowTestCase
         );
     }
 
-    /** @dataProvider integers_provider */
+    #[DataProvider('integers_provider')]
     public function test_can_create_random_string_with_given_length(int $expectedLength) : void
     {
         self::assertSame($expectedLength, mb_strlen((new NativePHPRandomValueGenerator())->string($expectedLength)));
@@ -69,14 +70,14 @@ final class NativePHPRandomValueGeneratorTest extends FlowTestCase
         );
     }
 
-    /** @dataProvider invalid_range_provider */
+    #[DataProvider('invalid_range_provider')]
     public function test_fail_on_invalid_range(int $min, int $max) : void
     {
         self::expectException(\ValueError::class);
         (new NativePHPRandomValueGenerator())->int($min, $max);
     }
 
-    /** @dataProvider valid_range_provider */
+    #[DataProvider('valid_range_provider')]
     public function test_return_random_int_on_valid_range(int $min, int $max) : void
     {
         self::assertThat(

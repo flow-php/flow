@@ -11,6 +11,7 @@ use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, NestedColumn, PhysicalType};
 use Flow\Parquet\Writer\ColumnChunkBuilder\{NestedColumnChunkBuilder, PlainFlatColumnChunkBuilder};
 use Flow\Parquet\Writer\{ColumnChunkBuilder, ColumnChunkContainer};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NestedColumnChunkBuilderTest extends TestCase
@@ -286,10 +287,9 @@ final class NestedColumnChunkBuilderTest extends TestCase
     }
 
     /**
-     * @dataProvider nested_column_structures_provider
-     *
      * @param array<FlatColumn> $children
      */
+    #[DataProvider('nested_column_structures_provider')]
     public function test_constructor_with_different_nested_structures(array $children, string $description) : void
     {
         $nestedColumn = NestedColumn::create('nested', $children);
@@ -759,9 +759,7 @@ final class NestedColumnChunkBuilderTest extends TestCase
         self::assertSame(3, $containers[0]->columnChunk->valuesCount());
     }
 
-    /**
-     * @dataProvider compression_types_provider
-     */
+    #[DataProvider('compression_types_provider')]
     public function test_workflow_with_different_compressions(Compressions $compression) : void
     {
         $childColumn = new FlatColumn('child', PhysicalType::INT32);

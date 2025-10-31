@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Thrift;
 
 use Flow\Parquet\Thrift\MemoryBuffer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Thrift\Exception\TTransportException;
 
@@ -258,9 +259,7 @@ final class MemoryBufferTest extends TestCase
         self::assertSame(0, $buffer->available());
     }
 
-    /**
-     * @dataProvider read_length_provider
-     */
+    #[DataProvider('read_length_provider')]
     public function test_read_various_lengths(int $dataLength, int $readLength, int $expectedReadLength) : void
     {
         $data = \str_repeat('A', $dataLength);
@@ -351,9 +350,7 @@ final class MemoryBufferTest extends TestCase
         self::assertSame(11, $buffer->available());
     }
 
-    /**
-     * @dataProvider write_data_provider
-     */
+    #[DataProvider('write_data_provider')]
     public function test_write_various_data_types(string $data) : void
     {
         $buffer = new MemoryBuffer();

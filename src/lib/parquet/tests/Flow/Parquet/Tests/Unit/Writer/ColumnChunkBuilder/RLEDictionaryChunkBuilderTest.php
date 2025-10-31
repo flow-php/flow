@@ -94,10 +94,9 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
     }
 
     /**
-     * @dataProvider dictionary_data_provider
-     *
      * @param array<mixed> $values
      */
+    #[DataProvider('dictionary_data_provider')]
     public function test_add_row_with_dictionary_data(array $values, string $description) : void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -250,9 +249,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         self::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    /**
-     * @dataProvider writer_version_provider
-     */
+    #[DataProvider('writer_version_provider')]
     public function test_close_page_with_different_writer_versions(int $writerVersion) : void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -329,9 +326,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         self::assertSame(0, $builder->uncompressedSize());
     }
 
-    /**
-     * @dataProvider compression_types_provider
-     */
+    #[DataProvider('compression_types_provider')]
     public function test_constructor_with_different_compressions(Compressions $compression) : void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());
@@ -343,10 +338,9 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
     }
 
     /**
-     * @dataProvider physical_types_provider
-     *
      * @param array<mixed> $sampleValues
      */
+    #[DataProvider('physical_types_provider')]
     public function test_constructor_with_different_physical_types(PhysicalType $physicalType, array $sampleValues) : void
     {
         $column = new FlatColumn('test_col', $physicalType);
@@ -645,9 +639,7 @@ final class RLEDictionaryChunkBuilderTest extends TestCase
         self::assertFalse($builder->isFull());
     }
 
-    /**
-     * @dataProvider page_size_provider
-     */
+    #[DataProvider('page_size_provider')]
     public function test_is_full_respects_page_size_option(int $pageSize) : void
     {
         $column = new FlatColumn('test_col', PhysicalType::BYTE_ARRAY, logicalType: LogicalType::string());

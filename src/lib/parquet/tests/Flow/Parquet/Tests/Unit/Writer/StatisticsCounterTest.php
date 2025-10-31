@@ -7,6 +7,7 @@ namespace Flow\Parquet\Tests\Unit\Writer;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Writer\StatisticsCounter;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class StatisticsCounterTest extends TestCase
@@ -48,10 +49,9 @@ final class StatisticsCounterTest extends TestCase
     }
 
     /**
-     * @dataProvider array_values_provider
-     *
      * @param array<int|string> $value
      */
+    #[DataProvider('array_values_provider')]
     public function test_add_array_values(array $value, int $expectedValuesCount, int $expectedStringLength) : void
     {
         $column = FlatColumn::string('test_column');
@@ -146,9 +146,7 @@ final class StatisticsCounterTest extends TestCase
         self::assertSame($object, $statistics->max());
     }
 
-    /**
-     * @dataProvider simple_values_provider
-     */
+    #[DataProvider('simple_values_provider')]
     public function test_add_simple_values(string|int|float|bool $value, int $expectedStringLength) : void
     {
         $column = FlatColumn::string('test_column');
@@ -202,10 +200,9 @@ final class StatisticsCounterTest extends TestCase
     }
 
     /**
-     * @dataProvider edge_case_values_provider
-     *
      * @param null|array<null|bool|float|int|object|string>|bool|float|int|string $value
      */
+    #[DataProvider('edge_case_values_provider')]
     public function test_edge_cases(array|string|int|float|bool|null $value, int $expectedValuesCount, int $expectedNullCount) : void
     {
         $column = FlatColumn::string('test_column');
@@ -412,10 +409,9 @@ final class StatisticsCounterTest extends TestCase
     }
 
     /**
-     * @dataProvider comparison_values_provider
-     *
      * @param array<bool|float|int|string> $values
      */
+    #[DataProvider('comparison_values_provider')]
     public function test_min_max_with_different_types(array $values, mixed $expectedMin, mixed $expectedMax) : void
     {
         $column = FlatColumn::string('test_column');

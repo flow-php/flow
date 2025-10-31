@@ -21,16 +21,15 @@ final class ScalarDictionaryBuilder
                 continue;
             }
 
-            /** @phpstan-ignore-next-line */
-            if (!isset($valueToIndex[$value])) {
+            $key = \is_float($value) ? \serialize($value) : $value;
+
+            if (!isset($valueToIndex[$key])) {
                 $dictionary[] = $value;
-                /** @phpstan-ignore-next-line */
-                $valueToIndex[$value] = $dictionarySize;
+                $valueToIndex[$key] = $dictionarySize;
                 $dictionarySize++;
             }
 
-            /** @phpstan-ignore-next-line */
-            $indices[] = $valueToIndex[$value];
+            $indices[] = $valueToIndex[$key];
         }
 
         foreach ($dictionary as $index => $value) {
