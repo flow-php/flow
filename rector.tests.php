@@ -76,15 +76,16 @@ use Rector\PHPUnit\AnnotationsToAttributes\Rector\ClassMethod\DataProviderAnnota
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\CodingStyle\Rector\FuncCall\FunctionFirstClassCallableRector;
 use Rector\CodingStyle\Rector\FunctionLike\FunctionLikeToFirstClassCallableRector;
+use Flow\Filesystem\Path;
 
 return RectorConfig::configure()
     ->withPaths([
         __DIR__ . '/src/core/etl/tests',
         __DIR__ . '/src/cli/tests',
-        __DIR__ . '/src/lib/*/tests',
-        __DIR__ . '/src/adapter/**/tests',
-        __DIR__ . '/src/bridge/**/tests',
-        __DIR__ . '/src/tools/**/tests',
+        __DIR__ . '/src/lib/*/*/tests',
+        __DIR__ . '/src/adapter/*/*/tests',
+        __DIR__ . '/src/bridge/*/*/tests',
+        __DIR__ . '/src/tools/*/*/tests',
     ])
     ->withSets([
         LevelSetList::UP_TO_PHP_82,
@@ -97,6 +98,8 @@ return RectorConfig::configure()
         [
             // Building Blocks
             new StaticCallToFuncCall(Row::class, 'create', 'Flow\ETL\DSL\row'),
+            new StaticCallToFuncCall(Path::class, 'from', 'Flow\Filesystem\DSL\path'),
+            new StaticCallToFuncCall(Path::class, 'realpath', 'Flow\Filesystem\DSL\path_real'),
             new StaticCallToFuncCall(Config::class, 'default', 'Flow\ETL\DSL\config'),
             // Schema
             new StaticCallToFuncCall(Definition::class, 'boolean', 'Flow\ETL\DSL\bool_schema'),

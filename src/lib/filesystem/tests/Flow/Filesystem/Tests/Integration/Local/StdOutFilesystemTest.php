@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\Local;
 
-use function Flow\Filesystem\DSL\path_stdout;
+use function Flow\Filesystem\DSL\{path, path_stdout};
 use Flow\Filesystem\Local\StdOutFilesystem;
 use Flow\Filesystem\Local\StreamFilter\Intercept;
-use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class StdOutFilesystemTest extends TestCase
@@ -26,7 +25,7 @@ final class StdOutFilesystemTest extends TestCase
         $filesystem = new StdOutFilesystem($filter = new Intercept());
         $filter::$buffer = '';
 
-        $destination = $filesystem->appendTo(Path::from('stdout://'));
+        $destination = $filesystem->appendTo(path('stdout://'));
 
         $destination->append('Hello');
         $destination->append(' ');
@@ -40,7 +39,7 @@ final class StdOutFilesystemTest extends TestCase
     {
         $filesystem = new StdOutFilesystem();
 
-        $destination = $filesystem->writeTo(Path::from('stdout://', ['stream' => 'output']));
+        $destination = $filesystem->writeTo(path('stdout://', ['stream' => 'output']));
 
         ob_start();
         $destination->append('Hello');
@@ -57,7 +56,7 @@ final class StdOutFilesystemTest extends TestCase
         $filesystem = new StdOutFilesystem($filter = new Intercept());
         $filter::$buffer = '';
 
-        $destination = $filesystem->writeTo(Path::from('stdout://'));
+        $destination = $filesystem->writeTo(path('stdout://'));
 
         $destination->append('Hello');
         $destination->append(' ');
@@ -73,7 +72,7 @@ final class StdOutFilesystemTest extends TestCase
 
         $this->expectExceptionMessage('Invalid output stream, allowed values are "stdout", "stderr" and "output", given: memory');
 
-        $destination = $filesystem->writeTo(Path::from('stdout://', ['stream' => 'memory']));
+        $destination = $filesystem->writeTo(path('stdout://', ['stream' => 'memory']));
     }
 
     public function test_list() : void

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Bridge\AsyncAWS\Tests\Integration;
 
+use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Bridge\AsyncAWS\ContentTypeDetector;
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Path\Option\ContentType;
 use Flow\Filesystem\Path\{Option, Options};
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -58,7 +58,7 @@ final class ContentTypeDetectorTest extends TestCase
 
         foreach ($enumCases as $contentType) {
             $options = new Options([Option::CONTENT_TYPE->value => $contentType]);
-            $path = Path::from('aws-s3://bucket/file.dat', $options);
+            $path = path('aws-s3://bucket/file.dat', $options);
 
             $result = $detector->from($path);
 
@@ -83,7 +83,7 @@ final class ContentTypeDetectorTest extends TestCase
         ];
 
         foreach ($extensions as $ext => $expectedMimeType) {
-            $path = Path::from("aws-s3://bucket/file.{$ext}");
+            $path = path("aws-s3://bucket/file.{$ext}");
             $result = $detector->from($path);
 
             self::assertSame($expectedMimeType, $result, "Extension '{$ext}' should map to '{$expectedMimeType}'");
@@ -94,7 +94,7 @@ final class ContentTypeDetectorTest extends TestCase
     {
         $detector = new ContentTypeDetector();
         $options = new Options(['Content-Type' => 'application/json']);
-        $path = Path::from('aws-s3://bucket/file.dat', $options);
+        $path = path('aws-s3://bucket/file.dat', $options);
 
         $result = $detector->from($path);
 
@@ -104,7 +104,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_binary_content_type_for_unknown_extension() : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('aws-s3://bucket/file.xyz');
+        $path = path('aws-s3://bucket/file.xyz');
 
         $result = $detector->from($path);
 
@@ -114,7 +114,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_content_type_for_local_path() : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('file:///tmp/data.json');
+        $path = path('file:///tmp/data.json');
 
         $result = $detector->from($path);
 
@@ -124,7 +124,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_content_type_for_nested_path() : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('aws-s3://bucket/dir1/dir2/dir3/file.parquet');
+        $path = path('aws-s3://bucket/dir1/dir2/dir3/file.parquet');
 
         $result = $detector->from($path);
 
@@ -134,7 +134,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_content_type_for_path_with_multiple_dots() : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('aws-s3://bucket/file.backup.csv');
+        $path = path('aws-s3://bucket/file.backup.csv');
 
         $result = $detector->from($path);
 
@@ -144,7 +144,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_content_type_for_path_without_trailing_slash() : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('aws-s3://bucket/file.xml');
+        $path = path('aws-s3://bucket/file.xml');
 
         $result = $detector->from($path);
 
@@ -156,7 +156,7 @@ final class ContentTypeDetectorTest extends TestCase
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => $contentType]);
-        $path = Path::from('aws-s3://bucket/file.dat', $options);
+        $path = path('aws-s3://bucket/file.dat', $options);
 
         $result = $detector->from($path);
 
@@ -167,7 +167,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_content_type_from_file_extension(string $fileName, string $expectedMimeType) : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('aws-s3://bucket/' . $fileName);
+        $path = path('aws-s3://bucket/' . $fileName);
 
         $result = $detector->from($path);
 
@@ -179,7 +179,7 @@ final class ContentTypeDetectorTest extends TestCase
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => $contentType]);
-        $path = Path::from('aws-s3://bucket/file.dat', $options);
+        $path = path('aws-s3://bucket/file.dat', $options);
 
         $result = $detector->from($path);
 
@@ -189,7 +189,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_content_type_with_empty_options() : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('aws-s3://bucket/file.json', new Options([]));
+        $path = path('aws-s3://bucket/file.json', new Options([]));
 
         $result = $detector->from($path);
 
@@ -199,7 +199,7 @@ final class ContentTypeDetectorTest extends TestCase
     public function test_detects_content_type_with_uppercase_extension() : void
     {
         $detector = new ContentTypeDetector();
-        $path = Path::from('aws-s3://bucket/file.CSV');
+        $path = path('aws-s3://bucket/file.CSV');
 
         $result = $detector->from($path);
 
@@ -210,7 +210,7 @@ final class ContentTypeDetectorTest extends TestCase
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => ContentType::JSON]);
-        $path = Path::from('aws-s3://bucket/file.csv', $options);
+        $path = path('aws-s3://bucket/file.csv', $options);
 
         $result = $detector->from($path);
 
@@ -221,7 +221,7 @@ final class ContentTypeDetectorTest extends TestCase
     {
         $detector = new ContentTypeDetector();
         $options = new Options([Option::CONTENT_TYPE->value => 'application/pdf']);
-        $path = Path::from('aws-s3://bucket/file.csv', $options);
+        $path = path('aws-s3://bucket/file.csv', $options);
 
         $result = $detector->from($path);
 

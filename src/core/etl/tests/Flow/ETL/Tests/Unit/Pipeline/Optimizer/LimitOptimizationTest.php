@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\ref;
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Pipeline\{GroupByPipeline, Optimizer, PartitioningPipeline, SynchronousPipeline};
@@ -16,7 +17,6 @@ use Flow\ETL\Transformer\{DropDuplicatesTransformer,
     RenameEntryTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer};
-use Flow\Filesystem\Path;
 
 final class LimitOptimizationTest extends FlowTestCase
 {
@@ -36,7 +36,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
     public function test_optimization_for_a_pipeline_with_expanding_expression_transformations() : void
     {
-        $pipeline = new SynchronousPipeline(from_csv(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(from_csv(path_real('file.csv')));
         $pipeline->add(new ScalarFunctionTransformer('expanded', ref('data')->expand()));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
@@ -48,7 +48,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
     public function test_optimization_for_a_pipeline_with_expanding_transformations() : void
     {
-        $pipeline = new SynchronousPipeline(from_csv(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(from_csv(path_real('file.csv')));
         $pipeline->add(new DropDuplicatesTransformer(ref('id')));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
@@ -60,7 +60,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
     public function test_optimization_for_a_pipeline_with_limited_extractor() : void
     {
-        $extractor = from_csv(Path::realpath('file.csv'));
+        $extractor = from_csv(path_real('file.csv'));
         $extractor->changeLimit(10);
         $pipeline = new SynchronousPipeline($extractor);
         $pipeline->add(new RenameEntryTransformer('id', 'new_id'));
@@ -75,7 +75,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
     public function test_optimization_for_a_pipeline_without_expanding_transformations() : void
     {
-        $pipeline = new SynchronousPipeline(from_csv(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(from_csv(path_real('file.csv')));
         $pipeline->add(new SelectEntriesTransformer(ref('id'), ref('name')));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
@@ -87,7 +87,7 @@ final class LimitOptimizationTest extends FlowTestCase
 
     public function test_optimization_of_limit_on_empty_pipeline() : void
     {
-        $pipeline = new SynchronousPipeline(from_csv(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(from_csv(path_real('file.csv')));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 

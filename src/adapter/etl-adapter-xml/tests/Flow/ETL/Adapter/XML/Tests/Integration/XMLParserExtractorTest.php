@@ -7,16 +7,16 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\config;
 use function Flow\ETL\DSL\{df, flow_context, schema, xml_schema};
+use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\type_string;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Path;
 
 final class XMLParserExtractorTest extends FlowIntegrationTestCase
 {
     public function test_limit() : void
     {
-        $extractor = from_xml(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml'))
+        $extractor = from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'))
             ->withXMLNodePath('root/row');
         $extractor->changeLimit(2);
 
@@ -135,7 +135,7 @@ XML,
 
     public function test_signal_stop() : void
     {
-        $extractor = (from_xml(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
+        $extractor = (from_xml(path_real(__DIR__ . '/../Fixtures/flow_orders.xml')))->withXMLNodePath('root/row');
 
         $generator = $extractor->extract(flow_context(config()));
 

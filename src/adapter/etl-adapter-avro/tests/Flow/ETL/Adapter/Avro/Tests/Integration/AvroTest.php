@@ -6,9 +6,9 @@ namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
 use function Flow\ETL\DSL\Adapter\Avro\{from_avro, to_avro};
 use function Flow\ETL\DSL\{config, flow_context};
+use function Flow\Filesystem\DSL\{path, path_real};
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Path;
 
 final class AvroTest extends FlowTestCase
 {
@@ -19,7 +19,7 @@ final class AvroTest extends FlowTestCase
 
     public function test_limit() : void
     {
-        $extractor = from_avro(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.avro'));
+        $extractor = from_avro(path_real(__DIR__ . '/../Fixtures/orders_flow.avro'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -30,7 +30,7 @@ final class AvroTest extends FlowTestCase
 
     public function test_signal_stop() : void
     {
-        $extractor = from_avro(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.avro'));
+        $extractor = from_avro(path_real(__DIR__ . '/../Fixtures/orders_flow.avro'));
 
         $generator = $extractor->extract(flow_context(config()));
 
@@ -47,6 +47,6 @@ final class AvroTest extends FlowTestCase
     {
         $this->expectExceptionMessage("AvroLoader path can't be pattern, given: /path/*/pattern.avro");
 
-        to_avro(Path::from('/path/*/pattern.avro'));
+        to_avro(path('/path/*/pattern.avro'));
     }
 }

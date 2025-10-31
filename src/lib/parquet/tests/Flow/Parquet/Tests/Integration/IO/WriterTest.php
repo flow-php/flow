@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use function Flow\ETL\DSL\{generate_random_int, generate_random_string};
+use function Flow\Filesystem\DSL\path;
 use Composer\InstalledVersions;
 use Faker\Factory;
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Parquet\{Consts, Option, Options, Reader, Writer};
 use Flow\Parquet\ParquetFile\Schema;
@@ -197,7 +197,7 @@ final class WriterTest extends TestCase
         $row = $this->createRow();
 
         $stream = \fopen($path, 'wb+');
-        $writer->openForStream(new NativeLocalDestinationStream(Path::from($path), $stream), $schema);
+        $writer->openForStream(new NativeLocalDestinationStream(path($path), $stream), $schema);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
@@ -311,7 +311,7 @@ final class WriterTest extends TestCase
 
         $stream = \fopen($path, 'wb+');
 
-        $writer->writeStream(new NativeLocalDestinationStream(Path::from($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+        $writer->writeStream(new NativeLocalDestinationStream(path($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
         self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],

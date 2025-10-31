@@ -29,7 +29,7 @@ final class Options
     public function __construct()
     {
         $this->blockFactory = new NativeLocalFileBlocksFactory();
-        $this->tmpDir = Path::from('azure-blob://_$azure_flow_tmp$/');
+        $this->tmpDir = \Flow\Filesystem\DSL\path('azure-blob://_$azure_flow_tmp$/');
     }
 
     public function blockFactory() : BlockFactory

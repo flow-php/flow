@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Benchmark;
 
-use Flow\Filesystem\{Path, Stream\NativeLocalSourceStream};
+use function Flow\Filesystem\DSL\path;
+use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Flow\Parquet\{ByteOrder, Options, ParquetFile, ParquetFile\Data\DataConverter};
 use PhpBench\Attributes\Groups;
 
@@ -15,7 +16,7 @@ final readonly class ParquetReaderBench
 
     public function __construct()
     {
-        $stream = NativeLocalSourceStream::open(Path::from(__DIR__ . '/Fixtures/orders_1k.parquet'));
+        $stream = NativeLocalSourceStream::open(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
 
         $this->parquetFile = new ParquetFile(
             $stream,

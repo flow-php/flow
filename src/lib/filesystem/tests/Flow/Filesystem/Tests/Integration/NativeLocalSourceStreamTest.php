@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration;
 
+use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\Path;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class NativeLocalSourceStreamTest extends NativeLocalFilesystemTestCase
@@ -30,7 +30,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists(__DIR__ . '/var/file.txt', $content);
 
-        $stream = (new NativeLocalFilesystem())->readFrom(Path::from(__DIR__ . '/var/file.txt'));
+        $stream = (new NativeLocalFilesystem())->readFrom(path(__DIR__ . '/var/file.txt'));
 
         self::assertSame($content, \implode('', \iterator_to_array($stream->iterate())));
 
@@ -46,7 +46,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists(__DIR__ . '/var/file.txt', $content);
 
-        $stream = (new NativeLocalFilesystem())->readFrom(Path::from(__DIR__ . '/var/file.txt'));
+        $stream = (new NativeLocalFilesystem())->readFrom(path(__DIR__ . '/var/file.txt'));
 
         self::assertSame($content, $stream->content());
 
@@ -70,7 +70,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists(__DIR__ . '/var/file.txt', $content);
 
-        $stream = (new NativeLocalFilesystem())->readFrom(Path::from(__DIR__ . '/var/file.txt'));
+        $stream = (new NativeLocalFilesystem())->readFrom(path(__DIR__ . '/var/file.txt'));
 
         self::assertSame($content, $stream->content());
 

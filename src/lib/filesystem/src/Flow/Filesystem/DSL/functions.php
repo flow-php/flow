@@ -14,6 +14,7 @@ use Flow\Filesystem\{Filesystem,
     Path,
     Protocol};
 use Flow\Filesystem\Local\NativeLocalFilesystem;
+use Flow\Filesystem\Path\Options;
 
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function protocol(string $protocol) : Protocol
@@ -44,10 +45,10 @@ function partitions(Partition ...$partition) : Partitions
  *
  *  - path('azure-blob://directory/*.csv') - any csv file in given directory
  *
- * @param array<string, null|bool|float|int|string|\UnitEnum> $options
+ * @param array<string, null|bool|float|int|string|\UnitEnum>|Path\Options $options
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
-function path(string $path, array $options = []) : Path
+function path(string $path, array|Options $options = []) : Path
 {
     return Path::from($path, $options);
 }

@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\{df, print_schema, ref};
 use function Flow\ETL\DSL\flow_context;
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\ETL\Extractor\Signal;
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Tests\OperatingSystem;
 
 final class CSVExtractorTest extends FlowTestCase
@@ -19,7 +19,7 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_bom_removal_utf16_be() : void
     {
         $extractor = from_csv(
-            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf16be_bom.csv'),
+            $path = path_real(__DIR__ . '/../Fixtures/with_utf16be_bom.csv'),
         );
         self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16be_bom.csv', "\xFE\xFF"));
 
@@ -44,7 +44,7 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_bom_removal_utf16_le() : void
     {
         $extractor = from_csv(
-            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf16le_bom.csv'),
+            $path = path_real(__DIR__ . '/../Fixtures/with_utf16le_bom.csv'),
         );
         self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf16le_bom.csv', "\xFF\xFE"));
 
@@ -69,7 +69,7 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_bom_removal_utf32_be() : void
     {
         $extractor = from_csv(
-            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf32be_bom.csv'),
+            $path = path_real(__DIR__ . '/../Fixtures/with_utf32be_bom.csv'),
         );
 
         self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32be_bom.csv', "\x00\x00\xFE\xFF"));
@@ -95,7 +95,7 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_bom_removal_utf32_le() : void
     {
         $extractor = from_csv(
-            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf32le_bom.csv'),
+            $path = path_real(__DIR__ . '/../Fixtures/with_utf32le_bom.csv'),
         );
 
         self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf32le_bom.csv', "\xFF\xFE\x00\x00"));
@@ -121,7 +121,7 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_bom_removal_utf8() : void
     {
         $extractor = from_csv(
-            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf8_bom.csv'),
+            $path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'),
         );
 
         self::assertTrue($this->ensureBOMExists(__DIR__ . '/../Fixtures/with_utf8_bom.csv', "\xEF\xBB\xBF"));
@@ -147,7 +147,7 @@ final class CSVExtractorTest extends FlowTestCase
     public function test_extracting_csv_empty_columns_as_empty_strings() : void
     {
         $extractor = from_csv(
-            $path = Path::realpath(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'),
+            $path = path_real(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'),
             empty_to_null: false,
         );
 
@@ -371,7 +371,7 @@ SCHEMA,
     public function test_extracting_csv_with_more_headers_than_columns() : void
     {
         $extractor = from_csv(
-            Path::realpath(__DIR__ . '/../Fixtures/more_headers_than_columns.csv')
+            path_real(__DIR__ . '/../Fixtures/more_headers_than_columns.csv')
         );
 
         $total = 0;
@@ -443,7 +443,7 @@ SCHEMA,
     public function test_limit() : void
     {
 
-        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
+        $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -476,7 +476,7 @@ SCHEMA,
 
     public function test_signal_stop() : void
     {
-        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
+        $extractor = from_csv(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
         $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 
@@ -492,7 +492,7 @@ SCHEMA,
     public function test_without_bom_removal_utf8() : void
     {
         $extractor = from_csv(
-            $path = Path::realpath(__DIR__ . '/../Fixtures/with_utf8_bom.csv'),
+            $path = path_real(__DIR__ . '/../Fixtures/with_utf8_bom.csv'),
         );
 
         $extractor = $extractor->withBOMRemoval(false);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Bridge\Azure\Tests\Unit;
 
 use function Flow\ETL\DSL\generate_random_string;
+use function Flow\Filesystem\DSL\path;
 use Flow\Azure\SDK\BlobService\BlockBlob\BlockList;
 use Flow\Azure\SDK\BlobService\PutBlockBlob\PutBlockBlobOptions;
 use Flow\Azure\SDK\BlobService\PutBlockBlobBlock\PutBlockBlobBlockOptions;
@@ -12,7 +13,6 @@ use Flow\Azure\SDK\BlobService\PutBlockBlobBlockList\PutBlockBlobBlockListOption
 use Flow\Azure\SDK\BlobServiceInterface;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Filesystem\Bridge\Azure\AzureBlobDestinationStream;
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\{Block, BlockFactory};
 
 final class AzureBlobDestinationStreamTest extends FlowTestCase
@@ -24,12 +24,12 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
         $blockFactory = $this->createMock(BlockFactory::class);
         $blockFactory->method('create')
             ->willReturnCallback(
-                fn () => new Block($id = generate_random_string(), $blockSize, Path::from(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
+                fn () => new Block($id = generate_random_string(), $blockSize, path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
             );
 
         $stream = AzureBlobDestinationStream::openBlank(
             $blobService = $this->createMock(BlobServiceInterface::class),
-            Path::from('azure-blob://file.txt'),
+            path('azure-blob://file.txt'),
             $blockFactory,
             $blockSize
         );
@@ -72,11 +72,11 @@ final class AzureBlobDestinationStreamTest extends FlowTestCase
         $blockFactory = $this->createMock(BlockFactory::class);
         $blockFactory->method('create')
             ->willReturnCallback(
-                fn () => new Block($id = generate_random_string(), $blockSize, Path::from(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
+                fn () => new Block($id = generate_random_string(), $blockSize, path(sys_get_temp_dir() . '/' . $id . '_block_01.txt'))
             );
         $stream = AzureBlobDestinationStream::openBlank(
             $blobService = $this->createMock(BlobServiceInterface::class),
-            Path::from('azure-blob://file.txt'),
+            path('azure-blob://file.txt'),
             $blockFactory,
             $blockSize
         );

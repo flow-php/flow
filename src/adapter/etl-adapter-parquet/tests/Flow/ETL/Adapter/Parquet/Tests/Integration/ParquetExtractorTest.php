@@ -6,16 +6,16 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\{config, flow_context};
+use function Flow\Filesystem\DSL\{path, path_real};
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Path;
 use Flow\Parquet\Reader;
 
 final class ParquetExtractorTest extends FlowTestCase
 {
     public function test_limit() : void
     {
-        $extractor = from_parquet(\Flow\Filesystem\DSL\path(__DIR__ . '/Fixtures/orders_1k.parquet'));
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -28,7 +28,7 @@ final class ParquetExtractorTest extends FlowTestCase
     {
         $totalRows = (new Reader())->read(__DIR__ . '/Fixtures/orders_1k.parquet')->metadata()->rowsNumber();
 
-        $extractor = (from_parquet(Path::realpath(__DIR__ . '/Fixtures/orders_1k.parquet')))->withOffset($totalRows - 100);
+        $extractor = (from_parquet(path_real(__DIR__ . '/Fixtures/orders_1k.parquet')))->withOffset($totalRows - 100);
 
         self::assertCount(
             100,
@@ -38,7 +38,7 @@ final class ParquetExtractorTest extends FlowTestCase
 
     public function test_signal_stop() : void
     {
-        $extractor = from_parquet(\Flow\Filesystem\DSL\path(__DIR__ . '/Fixtures/orders_1k.parquet'));
+        $extractor = from_parquet(path(__DIR__ . '/Fixtures/orders_1k.parquet'));
 
         $generator = $extractor->extract(flow_context(config()));
 

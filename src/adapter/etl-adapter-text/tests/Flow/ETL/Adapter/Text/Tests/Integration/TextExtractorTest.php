@@ -7,10 +7,10 @@ namespace Flow\ETL\Adapter\Text\Tests\Integration;
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\data_frame;
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Path;
 
 final class TextExtractorTest extends FlowTestCase
 {
@@ -31,7 +31,7 @@ final class TextExtractorTest extends FlowTestCase
 
     public function test_limit() : void
     {
-        $extractor = from_text(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
+        $extractor = from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -42,7 +42,7 @@ final class TextExtractorTest extends FlowTestCase
 
     public function test_signal_stop() : void
     {
-        $extractor = from_text(Path::realpath(__DIR__ . '/../Fixtures/orders_flow.csv'));
+        $extractor = from_text(path_real(__DIR__ . '/../Fixtures/orders_flow.csv'));
 
         $generator = $extractor->extract(flow_context(config()));
 

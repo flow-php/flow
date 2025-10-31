@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use function Flow\Filesystem\DSL\path;
 use function Flow\Types\DSL\type_integer;
 use Composer\InstalledVersions;
-use Flow\Filesystem\{DestinationStream, Path};
+use Flow\Filesystem\DestinationStream;
 use Flow\Filesystem\Stream\NativeLocalDestinationStream;
 use Flow\Parquet\Dremel\DremelShredder;
 use Flow\Parquet\Dremel\Validator\{ColumnDataValidator, DisabledValidator};
@@ -114,7 +115,7 @@ final class Writer
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
-        $stream = NativeLocalDestinationStream::openBlank(Path::from($path));
+        $stream = NativeLocalDestinationStream::openBlank(path($path));
 
         $this->stream = $stream;
         $this->stream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);

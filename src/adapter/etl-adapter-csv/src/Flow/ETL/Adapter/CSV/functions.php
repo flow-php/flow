@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type as DSLType};
 use Flow\ETL\Schema;
@@ -32,7 +33,7 @@ function from_csv(
     ?Schema $schema = null,
 ) : CSVExtractor {
 
-    $loader = (new CSVExtractor(\is_string($path) ? Path::realpath($path) : $path))
+    $loader = (new CSVExtractor(\is_string($path) ? path_real($path) : $path))
         ->withHeader($with_header)
         ->withEmptyToNull($empty_to_null)
         ->withCharactersReadInLine($characters_read_in_line);
@@ -75,7 +76,7 @@ function to_csv(
     string $new_line_separator = PHP_EOL,
     string $datetime_format = \DateTimeInterface::ATOM,
 ) : CSVLoader {
-    return (new CSVLoader(\is_string($uri) ? Path::realpath($uri) : $uri))
+    return (new CSVLoader(\is_string($uri) ? path_real($uri) : $uri))
         ->withHeader($with_header)
         ->withSeparator($separator)
         ->withEnclosure($enclosure)

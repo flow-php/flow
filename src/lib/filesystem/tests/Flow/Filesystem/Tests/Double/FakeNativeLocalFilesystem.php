@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Double;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Protocol, SourceStream};
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Filesystem\Path\Filter;
@@ -36,7 +37,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
     public function getSystemTmpDir() : Path
     {
-        return Path::from(\sys_get_temp_dir());
+        return \Flow\Filesystem\DSL\path(\sys_get_temp_dir());
     }
 
     public function list(Path $path, Filter $pathFilter = new OnlyFiles()) : \Generator
@@ -53,7 +54,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         }
 
         foreach (Glob::glob($path->path()) as $filePath) {
-            $status = new FileStatus(Path::realpath($filePath, $path->options()), \is_file($filePath));
+            $status = new FileStatus(path_real($filePath, $path->options()), \is_file($filePath));
 
             if ($pathFilter->accept($status)) {
                 yield $status;
@@ -145,7 +146,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
 
         foreach (Glob::glob($path->path()) as $filePath) {
             if (\file_exists($filePath)) {
-                return new FileStatus(Path::from($filePath, $path->options()), true);
+                return new FileStatus(\Flow\Filesystem\DSL\path($filePath, $path->options()), true);
             }
         }
 
