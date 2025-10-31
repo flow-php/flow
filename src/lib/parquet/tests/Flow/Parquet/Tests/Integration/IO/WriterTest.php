@@ -197,7 +197,7 @@ final class WriterTest extends TestCase
         $row = $this->createRow();
 
         $stream = \fopen($path, 'wb+');
-        $writer->openForStream(new NativeLocalDestinationStream(new Path($path), $stream), $schema);
+        $writer->openForStream(new NativeLocalDestinationStream(Path::from($path), $stream), $schema);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
@@ -311,7 +311,7 @@ final class WriterTest extends TestCase
 
         $stream = \fopen($path, 'wb+');
 
-        $writer->writeStream(new NativeLocalDestinationStream(new Path($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+        $writer->writeStream(new NativeLocalDestinationStream(Path::from($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
         self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],

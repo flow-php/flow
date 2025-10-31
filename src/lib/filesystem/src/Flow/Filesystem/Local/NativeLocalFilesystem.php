@@ -39,7 +39,7 @@ final class NativeLocalFilesystem implements Filesystem
 
     public function getSystemTmpDir() : Path
     {
-        return new Path(\sys_get_temp_dir());
+        return Path::from(\sys_get_temp_dir());
     }
 
     public function list(Path $path, Filter $pathFilter = new OnlyFiles()) : \Generator
@@ -148,7 +148,7 @@ final class NativeLocalFilesystem implements Filesystem
 
         foreach (Glob::glob($path->path()) as $filePath) {
             if (\file_exists($filePath)) {
-                return new FileStatus(new Path($filePath, $path->options()), true);
+                return new FileStatus(Path::from($filePath, $path->options()), true);
             }
         }
 

@@ -30,7 +30,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists(__DIR__ . '/var/file.txt', $content);
 
-        $stream = (new NativeLocalFilesystem())->readFrom(new Path(__DIR__ . '/var/file.txt'));
+        $stream = (new NativeLocalFilesystem())->readFrom(Path::from(__DIR__ . '/var/file.txt'));
 
         self::assertSame($content, \implode('', \iterator_to_array($stream->iterate())));
 
@@ -46,7 +46,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists(__DIR__ . '/var/file.txt', $content);
 
-        $stream = (new NativeLocalFilesystem())->readFrom(new Path(__DIR__ . '/var/file.txt'));
+        $stream = (new NativeLocalFilesystem())->readFrom(Path::from(__DIR__ . '/var/file.txt'));
 
         self::assertSame($content, $stream->content());
 
@@ -70,7 +70,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists(__DIR__ . '/var/file.txt', $content);
 
-        $stream = (new NativeLocalFilesystem())->readFrom(new Path(__DIR__ . '/var/file.txt'));
+        $stream = (new NativeLocalFilesystem())->readFrom(Path::from(__DIR__ . '/var/file.txt'));
 
         self::assertSame($content, $stream->content());
 

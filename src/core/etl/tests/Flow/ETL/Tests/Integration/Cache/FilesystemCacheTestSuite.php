@@ -15,7 +15,7 @@ final class FilesystemCacheTestSuite extends CacheBaseTestSuite
         return new FilesystemCache(
             $this->fs(),
             $this->serializer(),
-            new Path(__DIR__ . '/var/filesystem-cache')
+            Path::from(__DIR__ . '/var/filesystem-cache')
         );
     }
 }

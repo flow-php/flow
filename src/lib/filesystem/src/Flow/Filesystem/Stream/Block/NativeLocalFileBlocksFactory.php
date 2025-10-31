@@ -35,6 +35,6 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
     {
         $id = generate_random_string();
 
-        return new Block($id, $size, new Path($this->blockLocation . DIRECTORY_SEPARATOR . $id));
+        return new Block($id, $size, Path::from($this->blockLocation . DIRECTORY_SEPARATOR . $id));
     }
 }

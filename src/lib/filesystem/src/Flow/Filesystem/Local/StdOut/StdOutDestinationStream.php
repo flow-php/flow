@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\StdOut;
 
+use function Flow\Types\DSL\type_string;
 use Flow\Filesystem\{DestinationStream, Exception\InvalidArgumentException, Path};
 
 final class StdOutDestinationStream implements DestinationStream
@@ -15,7 +16,7 @@ final class StdOutDestinationStream implements DestinationStream
 
     public function __construct(private readonly Path $path, ?\php_user_filter $filter = null)
     {
-        $outputStream = \mb_strtolower((string) $this->path->options()->getAsString('stream', 'stdout'));
+        $outputStream = \mb_strtolower(type_string()->cast($this->path->getOption('stream', 'stdout')));
 
         if (!\in_array($outputStream, ['stdout', 'stderr', 'output'], true)) {
             throw new InvalidArgumentException('Invalid output stream, allowed values are "stdout", "stderr" and "output", given: ' . $outputStream);

@@ -34,7 +34,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(Path::from($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -57,7 +57,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $fileStream->append('appended content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(Path::from($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -77,7 +77,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('appended content');
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(Path::from($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 

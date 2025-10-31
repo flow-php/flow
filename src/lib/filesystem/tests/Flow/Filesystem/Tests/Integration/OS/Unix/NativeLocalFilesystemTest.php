@@ -30,16 +30,16 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/../var/some_path_to/*.txt'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/../var/some_path_to/*.txt'))->isFile());
 
         self::assertSame(
             'file://' . ltrim(__DIR__, '/') . '/../var/some_path_to/file.txt',
-            $fs->status(new Path(__DIR__ . '/../var/some_path_to/*.txt'))->path->uri()
+            $fs->status(Path::from(__DIR__ . '/../var/some_path_to/*.txt'))->path->uri()
         );
 
-        $fs->rm(new Path(__DIR__ . '/../var/some_path_to'));
+        $fs->rm(Path::from(__DIR__ . '/../var/some_path_to'));
     }
 
     public function test_tmp_dir_unix_uri_format() : void
@@ -56,7 +56,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
         \file_put_contents($tempFile, 'test content');
 
-        $path = new Path($tempFile);
+        $path = Path::from($tempFile);
         self::assertTrue($fs->status($path)->isFile());
 
         self::assertStringStartsWith('file://', $path->uri());
@@ -83,7 +83,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         // Test path normalization on Unix (forward slashes should remain)
         $unixPath = \sys_get_temp_dir() . '/flow_test_dir/test_file.txt';
-        $normalizedPath = new Path($unixPath);
+        $normalizedPath = Path::from($unixPath);
 
         // Path should maintain forward slashes on Unix
         self::assertStringContainsString('/', $normalizedPath->path());
@@ -101,7 +101,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         // Test file permissions on Unix
         \chmod($tempFile, 0644);
-        $path = new Path($tempFile);
+        $path = Path::from($tempFile);
 
         self::assertTrue(\is_readable($tempFile));
         self::assertTrue(\is_writable($tempFile));
@@ -123,7 +123,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         \file_put_contents($tempFile, 'test content');
 
         if (\symlink($tempFile, $symlinkPath)) {
-            $path = new Path($symlinkPath);
+            $path = Path::from($symlinkPath);
             self::assertTrue($fs->status($path)->isFile());
 
             \unlink($symlinkPath);

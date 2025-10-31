@@ -43,7 +43,7 @@ final readonly class MemorySourceStream implements SourceStream
 
     public function path() : Path
     {
-        return new Path('memory://');
+        return Path::from('memory://');
     }
 
     public function read(int $length, int $offset) : string

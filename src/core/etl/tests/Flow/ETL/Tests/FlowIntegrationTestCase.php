@@ -82,7 +82,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     protected function getPath(string $relativePath) : Path
     {
-        return new Path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
+        return Path::from($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
     }
 
     protected function serializer() : Serializer

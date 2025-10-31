@@ -26,7 +26,7 @@ final class StdOutFilesystemTest extends TestCase
         $filesystem = new StdOutFilesystem($filter = new Intercept());
         $filter::$buffer = '';
 
-        $destination = $filesystem->appendTo(new Path('stdout://'));
+        $destination = $filesystem->appendTo(Path::from('stdout://'));
 
         $destination->append('Hello');
         $destination->append(' ');
@@ -40,7 +40,7 @@ final class StdOutFilesystemTest extends TestCase
     {
         $filesystem = new StdOutFilesystem();
 
-        $destination = $filesystem->writeTo(new Path('stdout://', ['stream' => 'output']));
+        $destination = $filesystem->writeTo(Path::from('stdout://', ['stream' => 'output']));
 
         ob_start();
         $destination->append('Hello');
@@ -57,7 +57,7 @@ final class StdOutFilesystemTest extends TestCase
         $filesystem = new StdOutFilesystem($filter = new Intercept());
         $filter::$buffer = '';
 
-        $destination = $filesystem->writeTo(new Path('stdout://'));
+        $destination = $filesystem->writeTo(Path::from('stdout://'));
 
         $destination->append('Hello');
         $destination->append(' ');
@@ -73,7 +73,7 @@ final class StdOutFilesystemTest extends TestCase
 
         $this->expectExceptionMessage('Invalid output stream, allowed values are "stdout", "stderr" and "output", given: memory');
 
-        $destination = $filesystem->writeTo(new Path('stdout://', ['stream' => 'memory']));
+        $destination = $filesystem->writeTo(Path::from('stdout://', ['stream' => 'memory']));
     }
 
     public function test_list() : void

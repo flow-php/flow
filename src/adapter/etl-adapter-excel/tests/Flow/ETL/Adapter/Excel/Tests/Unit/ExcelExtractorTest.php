@@ -25,6 +25,6 @@ final class ExcelExtractorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Only local filesystem paths are supported by ExcelExtractor due to the limitation of underlying library.');
 
-        from_excel(new Path('remote://unknown_file.xlsx'));
+        from_excel(Path::from('remote://unknown_file.xlsx'));
     }
 }

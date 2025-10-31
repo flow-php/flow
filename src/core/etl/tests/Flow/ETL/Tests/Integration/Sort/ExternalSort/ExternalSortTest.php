@@ -15,7 +15,7 @@ final class ExternalSortTest extends FlowIntegrationTestCase
 {
     public function test_memory_implementation_of_external_sort_algorithm() : void
     {
-        $cacheDir = new Path(__DIR__ . '/var/test_memory_implementation_of_external_sort_algorithm');
+        $cacheDir = Path::from(__DIR__ . '/var/test_memory_implementation_of_external_sort_algorithm');
 
         $this->fs()->rm($cacheDir);
 

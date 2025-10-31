@@ -30,7 +30,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists('flow-php', 'file.txt', $content);
 
-        $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(new Path('azure-blob://file.txt'));
+        $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(Path::from('azure-blob://file.txt'));
 
         self::assertSame($content, \implode('', \iterator_to_array($stream->iterate())));
 
@@ -46,7 +46,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists('flow-php', 'file.txt', $content);
 
-        $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(new Path('azure-blob://file.txt'));
+        $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(Path::from('azure-blob://file.txt'));
 
         self::assertSame($content, $stream->content());
 
@@ -70,7 +70,7 @@ that we are storing on azure blob
 TEXT;
         $this->givenFileExists('flow-php', 'file.txt', $content);
 
-        $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(new Path('azure-blob://file.txt'));
+        $stream = azure_filesystem($this->blobService('flow-php'))->readFrom(Path::from('azure-blob://file.txt'));
 
         self::assertSame($content, $stream->content());
 

@@ -24,16 +24,16 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $stream = $fs->writeTo(new Path(__DIR__ . '/var/file.txt'));
+        $stream = $fs->writeTo(Path::from(__DIR__ . '/var/file.txt'));
         $stream->append("This is first line\n");
         $stream->close();
 
-        $stream = $fs->appendTo(new Path(__DIR__ . '/var/file.txt'));
+        $stream = $fs->appendTo(Path::from(__DIR__ . '/var/file.txt'));
         $stream->append("This is second line\n");
         $stream->close();
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/file.txt'))->isFile());
-        self::assertFalse($fs->status(new Path(__DIR__ . '/var/file.txt'))->isDirectory());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/file.txt'))->isFile());
+        self::assertFalse($fs->status(Path::from(__DIR__ . '/var/file.txt'))->isDirectory());
         self::assertSame(
             <<<'TXT'
 This is first line
@@ -41,117 +41,117 @@ This is second line
 
 TXT
             ,
-            $fs->readFrom(new Path(__DIR__ . '/var/file.txt'))->content()
+            $fs->readFrom(Path::from(__DIR__ . '/var/file.txt'))->content()
         );
 
-        $fs->rm(new Path(__DIR__ . '/var/file.txt'));
+        $fs->rm(Path::from(__DIR__ . '/var/file.txt'));
     }
 
     public function test_dir_exists() : void
     {
-        self::assertFalse((native_local_filesystem())->status(new Path(__DIR__))->isFile());
-        self::assertTrue((native_local_filesystem())->status(new Path(__DIR__))->isDirectory());
-        self::assertNull((native_local_filesystem())->status(new Path(__DIR__ . '/not_existing_directory')));
+        self::assertFalse((native_local_filesystem())->status(Path::from(__DIR__))->isFile());
+        self::assertTrue((native_local_filesystem())->status(Path::from(__DIR__))->isDirectory());
+        self::assertNull((native_local_filesystem())->status(Path::from(__DIR__ . '/not_existing_directory')));
     }
 
     public function test_fie_exists() : void
     {
-        self::assertTrue((native_local_filesystem())->status(new Path(__FILE__))->isFile());
-        self::assertFalse((native_local_filesystem())->status(new Path(__FILE__))->isDirectory());
-        self::assertNull((native_local_filesystem())->status(new Path(__DIR__ . '/not_existing_file.php')));
+        self::assertTrue((native_local_filesystem())->status(Path::from(__FILE__))->isFile());
+        self::assertFalse((native_local_filesystem())->status(Path::from(__FILE__))->isDirectory());
+        self::assertNull((native_local_filesystem())->status(Path::from(__DIR__ . '/not_existing_file.php')));
     }
 
     public function test_file_pattern_exists() : void
     {
-        self::assertTrue((native_local_filesystem())->status(new Path(__DIR__ . '/**/*.txt'))->isFile());
-        self::assertNull((native_local_filesystem())->status(new Path(__DIR__ . '/**/*.pdf')));
+        self::assertTrue((native_local_filesystem())->status(Path::from(__DIR__ . '/**/*.txt'))->isFile());
+        self::assertNull((native_local_filesystem())->status(Path::from(__DIR__ . '/**/*.pdf')));
     }
 
     public function test_file_status_on_existing_file() : void
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/var/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/file.txt'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/file.txt'))->isFile());
     }
 
     public function test_file_status_on_existing_folder() : void
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders'))->isDirectory());
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/'))->isDirectory());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders'))->isDirectory());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/'))->isDirectory());
     }
 
     public function test_file_status_on_non_existing_file() : void
     {
         $fs = native_local_filesystem();
 
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/non-existing-file.txt')));
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/non-existing-file.txt')));
     }
 
     public function test_file_status_on_non_existing_folder() : void
     {
         $fs = native_local_filesystem();
 
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/non-existing-folder/')));
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/non-existing-folder/')));
     }
 
     public function test_file_status_on_non_existing_pattern() : void
     {
         $fs = native_local_filesystem();
 
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/non-existing-folder/*')));
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/non-existing-folder/*')));
     }
 
     public function test_file_status_on_partial_path() : void
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/some_path')));
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/some_path')));
     }
 
     public function test_file_status_on_root_folder() : void
     {
         $fs = native_local_filesystem();
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/'))->isDirectory());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/'))->isDirectory());
     }
 
     public function test_move_blob() : void
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/var/file.txt'))->append('Hello, World!');
+        $fs->writeTo(Path::from(__DIR__ . '/var/file.txt'))->append('Hello, World!');
 
-        $fs->mv(new Path(__DIR__ . '/var/file.txt'), new Path(__DIR__ . '/var/file_mv.txt'));
+        $fs->mv(Path::from(__DIR__ . '/var/file.txt'), Path::from(__DIR__ . '/var/file_mv.txt'));
 
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/file.txt')));
-        self::assertSame('Hello, World!', $fs->readFrom(new Path(__DIR__ . '/var/file_mv.txt'))->content());
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/file.txt')));
+        self::assertSame('Hello, World!', $fs->readFrom(Path::from(__DIR__ . '/var/file_mv.txt'))->content());
     }
 
     public function test_not_removing_a_content_when_its_not_a_full_folder_path_pattern() : void
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->isFile());
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/orders_01.csv'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders.csv'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv'))->isFile());
 
-        self::assertFalse($fs->rm(new Path(__DIR__ . '/var/nested/orders/ord')));
+        self::assertFalse($fs->rm(Path::from(__DIR__ . '/var/nested/orders/ord')));
     }
 
     public function test_open_file_stream_for_existing_file() : void
     {
-        $stream = (native_local_filesystem())->readFrom(new Path(__FILE__));
+        $stream = (native_local_filesystem())->readFrom(Path::from(__FILE__));
 
         self::assertIsString($stream->read(100, 0));
         self::assertSame(
@@ -164,7 +164,7 @@ TXT
     {
         $path = __DIR__ . '/var/file.txt';
 
-        $stream = (native_local_filesystem())->writeTo(new Path($path));
+        $stream = (native_local_filesystem())->writeTo(Path::from($path));
 
         self::assertInstanceOf(NativeLocalDestinationStream::class, $stream);
     }
@@ -174,7 +174,7 @@ TXT
         $paths = \iterator_to_array(
             (native_local_filesystem())
                 ->list(
-                    new Path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
+                    Path::from(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
                     new ScalarFunctionFilter(
                         all(
                             ref('country')->equals(lit('pl')),
@@ -190,9 +190,9 @@ TXT
         );
         \sort($paths);
 
-        $path1 = new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt');
+        $path1 = Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt');
         $path1->partitions();
-        $path2 = new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt');
+        $path2 = Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt');
         $path2->partitions();
 
         self::assertEquals(
@@ -206,13 +206,13 @@ TXT
 
     public function test_reading_partitioned_folder() : void
     {
-        $paths = \iterator_to_array((native_local_filesystem())->list(new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'), new KeepAll()));
+        $paths = \iterator_to_array((native_local_filesystem())->list(Path::from(__DIR__ . '/Fixtures/partitioned/**/*.txt'), new KeepAll()));
         \sort($paths);
 
         self::assertEquals(
             [
-                new FileStatus(new Path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt'), true),
             ],
             $paths
         );
@@ -220,7 +220,7 @@ TXT
 
     public function test_reading_partitioned_folder_with_partitions_filtering() : void
     {
-        $path = new Path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt');
+        $path = Path::from(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt');
         $path->partitions();
 
         self::assertEquals(
@@ -230,7 +230,7 @@ TXT
             \iterator_to_array(
                 (native_local_filesystem())
                     ->list(
-                        new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
+                        Path::from(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
                         new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), flow_context(config())->entryFactory(), new AutoCaster())
                     )
             )
@@ -239,13 +239,13 @@ TXT
 
     public function test_reading_partitioned_folder_with_pattern() : void
     {
-        $paths = \iterator_to_array((native_local_filesystem())->list(new Path(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'), new KeepAll()));
+        $paths = \iterator_to_array((native_local_filesystem())->list(Path::from(__DIR__ . '/Fixtures/partitioned/partition_01=*/*.txt'), new KeepAll()));
         \sort($paths);
 
         self::assertEquals(
             [
-                new FileStatus(new Path(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/partitioned/partition_01=a/file_01.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/partitioned/partition_01=b/file_02.txt'), true),
             ],
             $paths
         );
@@ -302,36 +302,36 @@ TXT
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/var/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->isFile());
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/orders_01.csv'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders.csv'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv'))->isFile());
 
-        $fs->rm(new Path(__DIR__ . '/var/nested/orders'));
+        $fs->rm(Path::from(__DIR__ . '/var/nested/orders'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/orders.csv'))->isFile());
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/nested/orders/orders.csv')));
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/nested/orders/orders_01.csv')));
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/orders.csv'))->isFile());
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders.csv')));
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv')));
     }
 
     public function test_removing_folder_pattern() : void
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
-        $fs->writeTo(new Path(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders.txt'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv'))->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/orders.csv'))->isFile());
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/orders_01.csv'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders.csv'))->isFile());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv'))->isFile());
 
-        $fs->rm(new Path(__DIR__ . '/var/nested/orders/*.csv'));
+        $fs->rm(Path::from(__DIR__ . '/var/nested/orders/*.csv'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/nested/orders/orders.txt'))->isFile());
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/nested/orders/orders.csv')));
-        self::assertNull($fs->status(new Path(__DIR__ . '/var/nested/orders/orders_01.csv')));
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders.txt'))->isFile());
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders.csv')));
+        self::assertNull($fs->status(Path::from(__DIR__ . '/var/nested/orders/orders_01.csv')));
     }
 
     public function test_that_scan_sort_files_by_path_names() : void
@@ -339,22 +339,22 @@ TXT
         $paths = \iterator_to_array(
             (native_local_filesystem())
                 ->list(
-                    new Path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
+                    Path::from(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
                 )
         );
 
         self::assertEquals(
             [
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=de/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=pl/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=de/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=de/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=de/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=pl/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=de/file.txt'), true),
-                new FileStatus(new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=pl/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=de/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=pl/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=de/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=de/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=de/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=pl/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=de/file.txt'), true),
+                new FileStatus(Path::from(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=pl/file.txt'), true),
             ],
             $paths
         );
@@ -394,29 +394,29 @@ TXT
     {
         $fs = native_local_filesystem();
 
-        $stream = $fs->writeTo(new Path(__DIR__ . '/var/file.txt'));
+        $stream = $fs->writeTo(Path::from(__DIR__ . '/var/file.txt'));
         $stream->append('Hello, World!');
         $stream->close();
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/file.txt'))->isFile());
-        self::assertFalse($fs->status(new Path(__DIR__ . '/var/file.txt'))->isDirectory());
-        self::assertSame('Hello, World!', $fs->readFrom(new Path(__DIR__ . '/var/file.txt'))->content());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/file.txt'))->isFile());
+        self::assertFalse($fs->status(Path::from(__DIR__ . '/var/file.txt'))->isDirectory());
+        self::assertSame('Hello, World!', $fs->readFrom(Path::from(__DIR__ . '/var/file.txt'))->content());
 
-        $fs->rm(new Path(__DIR__ . '/var/file.txt'));
+        $fs->rm(Path::from(__DIR__ . '/var/file.txt'));
     }
 
     public function test_writing_to_file_from_resources() : void
     {
         $fs = native_local_filesystem();
 
-        $stream = $fs->writeTo(new Path(__DIR__ . '/var/orders.csv'));
+        $stream = $fs->writeTo(Path::from(__DIR__ . '/var/orders.csv'));
         $stream->fromResource(\fopen(__DIR__ . '/Fixtures/orders.csv', 'rb'));
         $stream->close();
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/var/orders.csv'))->isFile());
-        self::assertFalse($fs->status(new Path(__DIR__ . '/var/orders.csv'))->isDirectory());
-        self::assertSame(\file_get_contents(__DIR__ . '/Fixtures/orders.csv'), $fs->readFrom(new Path(__DIR__ . '/var/orders.csv'))->content());
+        self::assertTrue($fs->status(Path::from(__DIR__ . '/var/orders.csv'))->isFile());
+        self::assertFalse($fs->status(Path::from(__DIR__ . '/var/orders.csv'))->isDirectory());
+        self::assertSame(\file_get_contents(__DIR__ . '/Fixtures/orders.csv'), $fs->readFrom(Path::from(__DIR__ . '/var/orders.csv'))->content());
 
-        $fs->rm(new Path(__DIR__ . '/var/orders.csv'));
+        $fs->rm(Path::from(__DIR__ . '/var/orders.csv'));
     }
 }

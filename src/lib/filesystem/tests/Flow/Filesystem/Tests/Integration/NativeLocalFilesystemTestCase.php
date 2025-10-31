@@ -14,14 +14,14 @@ abstract class NativeLocalFilesystemTestCase extends TestCase
     {
         $fs = new NativeLocalFilesystem();
 
-        $fs->rm(new Path(__DIR__ . '/var/*'));
+        $fs->rm(Path::from(__DIR__ . '/var/*'));
     }
 
     protected function givenFileExists(string $path, string $content) : void
     {
         $fs = new NativeLocalFilesystem();
 
-        $stream = $fs->writeTo(new Path($path));
+        $stream = $fs->writeTo(Path::from($path));
         $stream->append($content);
         $stream->close();
     }

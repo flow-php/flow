@@ -35,7 +35,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(Path::from($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -58,7 +58,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(Path::from($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -78,7 +78,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('new content');
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(Path::from($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 
@@ -92,7 +92,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
 
         $fs = new FakeNativeLocalFilesystem();
 
-        $file = new Path($fs->protocol()->scheme() . $this->filesDirectory() . DIRECTORY_SEPARATOR . __FUNCTION__ . '/file.txt');
+        $file = Path::from($fs->protocol()->scheme() . $this->filesDirectory() . DIRECTORY_SEPARATOR . __FUNCTION__ . '/file.txt');
 
         $streams = new FilesystemStreams(new FilesystemTable($fs));
         $streams->setSaveMode(overwrite());
@@ -101,7 +101,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $appendedFile->append('new content');
 
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(Path::from($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 

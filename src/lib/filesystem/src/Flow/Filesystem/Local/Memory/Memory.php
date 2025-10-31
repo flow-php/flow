@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local\Memory;
 
+use function Flow\Types\DSL\type_string;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path;
 
@@ -44,7 +45,7 @@ final class Memory
             return $this->streams[$path->uri()];
         }
 
-        $outputStream = \mb_strtolower((string) $path->options()->getAsString('stream', 'temp'));
+        $outputStream = \mb_strtolower(type_string()->cast($path->getOption('stream', 'temp')));
 
         if (!\in_array($outputStream, ['temp', 'memory'], true)) {
             throw new InvalidArgumentException('Invalid memory stream, allowed values are "temp" and "memory", given: ' . $outputStream);

@@ -15,9 +15,11 @@ final class JsonLinesLoader implements Closure, FileLoader, Loader
 
     private int $flags = JSON_THROW_ON_ERROR;
 
-    public function __construct(private readonly Path $path)
+    private readonly Path $path;
+
+    public function __construct(Path $path)
     {
-        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::JSON);
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::JSON);
     }
 
     public function closure(FlowContext $context) : void

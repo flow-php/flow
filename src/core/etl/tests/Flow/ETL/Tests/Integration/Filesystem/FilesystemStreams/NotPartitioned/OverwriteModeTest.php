@@ -35,7 +35,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
 
         self::assertSame('some other content', \file_get_contents($path->path()));
 
-        self::assertCount(1, $files = \iterator_to_array($this->fs()->list(new Path($path->parentDirectory()->path() . '/*'))));
+        self::assertCount(1, $files = \iterator_to_array($this->fs()->list(Path::from($path->parentDirectory()->path() . '/*'))));
         self::assertSame('existing-file.txt', $files[0]->path->basename());
     }
 

@@ -15,9 +15,11 @@ final class TextLoader implements Closure, FileLoader, Loader
 {
     private string $newLineSeparator = PHP_EOL;
 
-    public function __construct(private readonly Path $path)
+    private readonly Path $path;
+
+    public function __construct(Path $path)
     {
-        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::TEXT);
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::TEXT);
     }
 
     public function closure(FlowContext $context) : void

@@ -30,7 +30,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         self::assertEquals(
             5,
             (data_frame())
-                ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/deepest_items_flat.xml'), 'root/items/item/deep'))
+                ->read(new XMLReaderExtractor(Path::from(__DIR__ . '/../Fixtures/deepest_items_flat.xml'), 'root/items/item/deep'))
                 ->fetch()
                 ->count()
         );
@@ -44,7 +44,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         self::assertEquals(
             1,
             (data_frame())
-                ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items.xml')))
+                ->read(new XMLReaderExtractor(Path::from(__DIR__ . '/../Fixtures/simple_items.xml')))
                 ->fetch()
                 ->count()
         );
@@ -60,7 +60,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 XML,
             type_string()->cast(
                 (data_frame())
-                    ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
+                    ->read(new XMLReaderExtractor(Path::from(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
                     ->fetch()[0]
                     ->valueOf('node')
             )
@@ -74,7 +74,7 @@ XML,
 XML,
             type_string()->cast(
                 (data_frame())
-                    ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
+                    ->read(new XMLReaderExtractor(Path::from(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
                     ->fetch()[4]
                     ->valueOf('node')
             )
@@ -105,7 +105,7 @@ XML,
 XML,
             type_string()->cast(
                 (data_frame())
-                    ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
+                    ->read(new XMLReaderExtractor(Path::from(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
                     ->fetch()[0]->valueOf('node')
             )
         );

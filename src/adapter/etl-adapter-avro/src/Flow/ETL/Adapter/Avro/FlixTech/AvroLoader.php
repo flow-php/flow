@@ -13,12 +13,14 @@ use Flow\Filesystem\Path\Option\ContentType;
 
 final readonly class AvroLoader implements Closure, FileLoader, Loader
 {
+    private Path $path;
+
     public function __construct(
-        private Path $path,
+        Path $path,
         private ?Schema $schema = null,
     ) {
         throw new RuntimeException('Avro integration was abandoned due to lack of availability of good Avro libraries.');
-        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::AVRO);
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::AVRO);
     }
 
     public function closure(FlowContext $context) : void

@@ -15,7 +15,7 @@ final readonly class ParquetReaderBench
 
     public function __construct()
     {
-        $stream = NativeLocalSourceStream::open(new Path(__DIR__ . '/Fixtures/orders_1k.parquet'));
+        $stream = NativeLocalSourceStream::open(Path::from(__DIR__ . '/Fixtures/orders_1k.parquet'));
 
         $this->parquetFile = new ParquetFile(
             $stream,

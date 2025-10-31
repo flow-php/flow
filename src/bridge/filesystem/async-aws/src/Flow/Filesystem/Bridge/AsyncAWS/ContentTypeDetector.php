@@ -13,8 +13,8 @@ final class ContentTypeDetector
 {
     public function from(Path $path) : string
     {
-        if ($path->options()->has(Option::CONTENT_TYPE->value)) {
-            $contentTypeOption = $path->options()->get(Option::CONTENT_TYPE->value);
+        if ($path->hasOption(Option::CONTENT_TYPE->value)) {
+            $contentTypeOption = $path->getOption(Option::CONTENT_TYPE->value);
 
             if (\is_string($contentTypeOption)) {
                 $contentType = $contentTypeOption;

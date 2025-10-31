@@ -25,6 +25,8 @@ final class ParquetLoader implements Closure, FileLoader, Loader
 
     private Options $options;
 
+    private readonly Path $path;
+
     private ?Schema $schema = null;
 
     /**
@@ -32,12 +34,12 @@ final class ParquetLoader implements Closure, FileLoader, Loader
      */
     private array $writers = [];
 
-    public function __construct(private readonly Path $path)
+    public function __construct(Path $path)
     {
         $this->converter = new SchemaConverter();
         $this->normalizer = new RowsNormalizer();
         $this->options = Options::default();
-        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::PARQUET);
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
     }
 
     public function closure(FlowContext $context) : void

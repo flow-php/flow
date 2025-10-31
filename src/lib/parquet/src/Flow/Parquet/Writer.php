@@ -114,7 +114,7 @@ final class Writer
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
-        $stream = NativeLocalDestinationStream::openBlank(new Path($path));
+        $stream = NativeLocalDestinationStream::openBlank(Path::from($path));
 
         $this->stream = $stream;
         $this->stream()->append(ParquetFile::PARQUET_MAGIC_NUMBER);

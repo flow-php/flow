@@ -22,12 +22,13 @@ final class CSVLoader implements Closure, FileLoader, Loader
 
     private string $newLineSeparator = PHP_EOL;
 
+    private readonly Path $path;
+
     private string $separator = ',';
 
-    public function __construct(
-        private readonly Path $path,
-    ) {
-        $this->path->options()->setWhenEmpty(Option::CONTENT_TYPE->value, ContentType::CSV);
+    public function __construct(Path $path)
+    {
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::CSV);
     }
 
     public function closure(FlowContext $context) : void

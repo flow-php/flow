@@ -44,12 +44,12 @@ function partitions(Partition ...$partition) : Partitions
  *
  *  - path('azure-blob://directory/*.csv') - any csv file in given directory
  *
- * @param array<string, mixed> $options
+ * @param array<string, null|bool|float|int|string|\UnitEnum> $options
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function path(string $path, array $options = []) : Path
 {
-    return new Path($path, $options);
+    return Path::from($path, $options);
 }
 
 /**
@@ -62,7 +62,7 @@ function path(string $path, array $options = []) : Path
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function path_stdout(?array $options = null) : Path
 {
-    return new Path('stdout://' . \bin2hex(\random_bytes(16)) . '.stdout', $options ?? []);
+    return Path::from('stdout://' . \bin2hex(\random_bytes(16)) . '.stdout', $options ?? []);
 }
 
 /**
@@ -76,13 +76,13 @@ function path_stdout(?array $options = null) : Path
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function path_memory(string $path = '', ?array $options = null) : Path
 {
-    return new Path('memory://' . (strlen($path) ? $path : \bin2hex(\random_bytes(16)) . '.memory'), $options ?? []);
+    return Path::from('memory://' . (strlen($path) ? $path : \bin2hex(\random_bytes(16)) . '.memory'), $options ?? []);
 }
 
 /**
  * Resolve real path from given path.
  *
- * @param array<string, mixed> $options
+ * @param array<string, null|bool|float|int|string|\UnitEnum> $options
  */
 #[DocumentationDSL(module: Module::FILESYSTEM, type: Type::HELPER)]
 function path_real(string $path, array $options = []) : Path

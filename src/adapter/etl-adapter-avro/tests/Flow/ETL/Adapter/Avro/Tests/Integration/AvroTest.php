@@ -47,6 +47,6 @@ final class AvroTest extends FlowTestCase
     {
         $this->expectExceptionMessage("AvroLoader path can't be pattern, given: /path/*/pattern.avro");
 
-        to_avro(new Path('/path/*/pattern.avro'));
+        to_avro(Path::from('/path/*/pattern.avro'));
     }
 }
