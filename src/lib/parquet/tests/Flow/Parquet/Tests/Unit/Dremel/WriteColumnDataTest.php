@@ -9,6 +9,7 @@ use Flow\Parquet\Dremel\{ReadColumnData, WriteColumnData};
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class WriteColumnDataTest extends TestCase
@@ -102,9 +103,7 @@ final class WriteColumnDataTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider valueTypesDataProvider
-     */
+    #[DataProvider('valueTypesDataProvider')]
     public function test_add_value_with_different_value_types(int|float|string|bool|null $value, string $expectedType) : void
     {
         /** @var FlatColumn $column */
@@ -222,10 +221,9 @@ final class WriteColumnDataTest extends TestCase
     }
 
     /**
-     * @dataProvider initializeDataProvider
-     *
      * @param array<string> $expectedFlatPaths
      */
+    #[DataProvider('initializeDataProvider')]
     public function test_initialize_with_different_column_types(Schema $schema, string $columnPath, array $expectedFlatPaths) : void
     {
         $column = $schema->get($columnPath);
@@ -240,9 +238,7 @@ final class WriteColumnDataTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider isEmptyDataProvider
-     */
+    #[DataProvider('isEmptyDataProvider')]
     public function test_is_empty(bool $isEmpty, \Closure $setupCallback) : void
     {
         /** @var FlatColumn $column */

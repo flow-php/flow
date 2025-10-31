@@ -8,6 +8,7 @@ use function Flow\Filesystem\DSL\partition;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path\{Options, WindowsPath};
 use Flow\Filesystem\Tests\Unit\PathTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class WindowsPathTest extends PathTestCase
 {
@@ -253,9 +254,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals(['key' => 'value'], $path->options()->toArray());
     }
 
-    /**
-     * @dataProvider pathProvider
-     */
+    #[DataProvider('pathProvider')]
     public function test_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
     {
         $path = new WindowsPath($input);
@@ -264,9 +263,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals($expectedScheme, $path->protocol()->name);
     }
 
-    /**
-     * @dataProvider partitionProvider
-     */
+    #[DataProvider('partitionProvider')]
     public function test_partition_logic(string $input, array $partitionData, string $expected) : void
     {
         $path = new WindowsPath($input);
@@ -364,9 +361,7 @@ final class WindowsPathTest extends PathTestCase
         self::assertEquals('file://', $parent->uri());
     }
 
-    /**
-     * @dataProvider patternProvider
-     */
+    #[DataProvider('patternProvider')]
     public function test_pattern_logic(string $pattern, string $filename, bool $expected) : void
     {
         $patternPath = new WindowsPath($pattern);

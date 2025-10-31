@@ -11,6 +11,7 @@ use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 use Flow\Parquet\Writer\ColumnChunkBuilder\PlainFlatColumnChunkBuilder;
 use Flow\Parquet\Writer\ColumnChunkContainer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PlainFlatColumnChunkBuilderTest extends TestCase
@@ -266,9 +267,7 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         self::assertGreaterThan(0, $builder->uncompressedSize());
     }
 
-    /**
-     * @dataProvider writer_version_provider
-     */
+    #[DataProvider('writer_version_provider')]
     public function test_close_page_with_different_writer_versions(int $writerVersion) : void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
@@ -369,9 +368,7 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         self::assertSame($column, $builder->column());
     }
 
-    /**
-     * @dataProvider compression_types_provider
-     */
+    #[DataProvider('compression_types_provider')]
     public function test_constructor_with_different_compressions(Compressions $compression) : void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);
@@ -382,9 +379,7 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         self::assertInstanceOf(PlainFlatColumnChunkBuilder::class, $builder);
     }
 
-    /**
-     * @dataProvider physical_types_provider
-     */
+    #[DataProvider('physical_types_provider')]
     public function test_constructor_with_different_physical_types(PhysicalType $physicalType, mixed $sampleValue) : void
     {
         $column = new FlatColumn('test_col', $physicalType);
@@ -624,9 +619,7 @@ final class PlainFlatColumnChunkBuilderTest extends TestCase
         self::assertFalse($builder->isFull());
     }
 
-    /**
-     * @dataProvider page_size_provider
-     */
+    #[DataProvider('page_size_provider')]
     public function test_is_full_respects_page_size_option(int $pageSize) : void
     {
         $column = new FlatColumn('test_col', PhysicalType::INT32);

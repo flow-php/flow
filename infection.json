@@ -74,10 +74,10 @@
   },
   "bootstrap": "vendor/autoload.php",
   "phpUnit": {
-    "customPath": "tools/phpunit/vendor/bin/phpunit"
+    "customPath": "tools/phpunit/vendor/bin/phpunit",
+    "configDir": "tools/infection"
   },
   "tmpDir": "var/infection/cache",
-  "testFrameworkOptions": "--testsuite=infection",
   "minMsi": 30,
   "minCoveredMsi": 75
 }
