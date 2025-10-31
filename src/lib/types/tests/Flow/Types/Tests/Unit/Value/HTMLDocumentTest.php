@@ -14,14 +14,14 @@ final class HTMLDocumentTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_create_with_dom_document_html_on_newer() : void
     {
-        $doc = \Dom\HTMLDocument::createFromString('<html><body><div><span>bar</span></div></body></html>');
+        $doc = \Dom\HTMLDocument::createFromString('<html><body><div><span>bar</span></div></body></html>', \LIBXML_HTML_NOIMPLIED);
 
         $document = new HTMLDocument($doc);
 
-        self::assertSame('<html><head></head><body><div><span>bar</span></div></body></html>', (string) $document);
+        self::assertSame('<html><body><div><span>bar</span></div></body></html>', (string) $document);
     }
 
-    #[RequiresPhp('<= 8.4')]
+    #[RequiresPhp('< 8.4')]
     public function test_create_with_dom_document_html_on_old() : void
     {
         $doc = new \DOMDocument();
@@ -40,7 +40,7 @@ final class HTMLDocumentTest extends TestCase
         self::assertSame('invalid', (string) $document);
     }
 
-    #[RequiresPhp('<= 8.4')]
+    #[RequiresPhp('< 8.4')]
     public function test_create_with_invalid_html_on_old() : void
     {
         $document = new HTMLDocument('invalid');
@@ -57,7 +57,7 @@ final class HTMLDocumentTest extends TestCase
         self::assertSame($html, (string) $document);
     }
 
-    #[RequiresPhp('<= 8.4')]
+    #[RequiresPhp('< 8.4')]
     public function test_create_with_proper_html_on_old() : void
     {
         $html = '<html><body><div><span>bar</span></div></body></html>';
