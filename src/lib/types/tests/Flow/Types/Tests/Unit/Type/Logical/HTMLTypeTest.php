@@ -62,14 +62,22 @@ final class HTMLTypeTest extends TestCase
 
     public static function cast_data_provider() : \Generator
     {
-        yield 'string to HTML' => [
-            'value' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
-            'expected' => <<<'HTML'
+        if (PHP_VERSION_ID >= 80400) {
+            yield 'string to HTML' => [
+                'value' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
+                'expected' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
+                'exceptionClass' => null,
+            ];
+        } else {
+            yield 'string to HTML' => [
+                'value' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
+                'expected' => <<<'HTML'
 <!DOCTYPE html>
 <html lang="en"><body><div><span>1</span></div></body></html>
 HTML,
-            'exceptionClass' => null,
-        ];
+                'exceptionClass' => null,
+            ];
+        }
 
         yield 'incomplete string to HTML' => [
             'value' => '<div><span>1</span></div>',
