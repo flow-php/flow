@@ -75,7 +75,7 @@
   "bootstrap": "vendor/autoload.php",
   "phpUnit": {
     "customPath": "tools/phpunit/vendor/bin/phpunit",
-    "configDir": "phpunit.infection.xml"
+    "configDir": "tools/infection"
   },
   "tmpDir": "var/infection/cache",
   "minMsi": 30,
