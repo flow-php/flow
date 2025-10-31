@@ -8,7 +8,7 @@ use function Flow\Filesystem\DSL\{path_real, protocol};
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Filesystem\{FilesystemTable};
+use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
 
 final class CacheConfigBuilder

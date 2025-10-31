@@ -11,7 +11,7 @@ use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor\Signal, Rows};
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\{Partition};
+use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ExcelExtractorTest extends FlowTestCase
