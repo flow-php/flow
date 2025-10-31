@@ -10,6 +10,7 @@
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1944](https://github.com/flow-php/flow/pull/1944) - **Incorrect library test group names** - [@stloyd](https://github.com/stloyd)
 - [#1945](https://github.com/flow-php/flow/pull/1945) - **Fixed broken `HTMLTypeTest`** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
