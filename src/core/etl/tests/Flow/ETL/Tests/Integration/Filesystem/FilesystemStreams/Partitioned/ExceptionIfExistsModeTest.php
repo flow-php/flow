@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 
 use function Flow\ETL\DSL\exception_if_exists;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
-use Flow\Filesystem\{Partition, Path};
+use Flow\Filesystem\Partition;
 
 final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 {
@@ -49,7 +50,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $fileStream->append('file content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -69,7 +70,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('file content');
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 

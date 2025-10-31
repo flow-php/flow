@@ -6,11 +6,12 @@ namespace Flow\ETL\Adapter\Excel\Tests\Integration;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
 use function Flow\ETL\DSL\{config, df, flow_context, int_schema, schema, string_schema};
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\Excel\ExcelReader;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor\Signal, Rows};
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\{Partition, Path};
+use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class ExcelExtractorTest extends FlowTestCase
@@ -255,7 +256,7 @@ final class ExcelExtractorTest extends FlowTestCase
 
     public function test_signal_stop() : void
     {
-        $generator = from_excel(Path::realpath(__DIR__ . '/../Fixtures/fixture.xlsx'))
+        $generator = from_excel(path_real(__DIR__ . '/../Fixtures/fixture.xlsx'))
             ->extract(flow_context(config()));
 
         self::assertTrue($generator->valid());

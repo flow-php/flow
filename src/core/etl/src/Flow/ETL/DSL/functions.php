@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\{
     dom_element_to_string as dom_element_to_string_new,
     get_type as get_type_new,
@@ -300,7 +301,7 @@ function files(string|Path $directory) : FilesExtractor
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function filesystem_cache(Path|string|null $cache_dir = null, Filesystem $filesystem = new NativeLocalFilesystem(), Serializer $serializer = new NativePHPSerializer()) : FilesystemCache
 {
-    return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? Path::realpath($cache_dir) : $cache_dir);
+    return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
 }
 
 /**

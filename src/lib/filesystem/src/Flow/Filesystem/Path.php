@@ -4,45 +4,47 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem;
 
-use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
-use Flow\Filesystem\Path\{Options, UnixPath, WindowsPath};
+use Flow\Filesystem\Exception\RuntimeException;
+use Flow\Filesystem\Path\{Option, Options, UnixPath, WindowsPath};
 use Flow\Filesystem\Stream\ResourceContext;
 
-final class Path
+final readonly class Path
 {
-    private WindowsPath|UnixPath $implementation;
+    public function __construct(private WindowsPath|UnixPath $implementation)
+    {
+    }
 
     /**
-     * @param array<string, mixed>|Options $options
+     * @param array<array-key, null|bool|float|int|string|\UnitEnum>|Options $options
      */
-    public function __construct(string $uri, array|Options $options = [])
+    public static function from(string $uri, array|Options $options = []) : self
     {
-        $this->implementation = \PHP_OS_FAMILY === 'Windows'
+        return new self(
+            \PHP_OS_FAMILY === 'Windows'
             ? new WindowsPath($uri, $options)
-            : new UnixPath($uri, $options);
+            : new UnixPath($uri, $options)
+        );
     }
 
     /**
      * Turn relative path into absolute paths even when path does not exists or it's glob pattern.
      *
-     * @param array<string, mixed>|Options $options
+     * @param array<string, null|bool|float|int|string|\UnitEnum>|Options $options
      *
-     * @throws InvalidArgumentException
      * @throws RuntimeException
      */
     public static function realpath(string $path, array|Options $options = []) : self
     {
-        $instance = new self('', $options);
-        $instance->implementation = \PHP_OS_FAMILY === 'Windows'
-            ? WindowsPath::realpath($path, $options)
-            : UnixPath::realpath($path, $options);
-
-        return $instance;
+        return new self(
+            \PHP_OS_FAMILY === 'Windows'
+                ? WindowsPath::realpath($path, $options)
+                : UnixPath::realpath($path, $options)
+        );
     }
 
     public function addPartitions(Partition $partition, Partition ...$partitions) : self
     {
-        return $this->createFromImplementation($this->implementation->addPartitions($partition, ...$partitions));
+        return new self($this->implementation->addPartitions($partition, ...$partitions));
     }
 
     public function basename() : string
@@ -52,7 +54,7 @@ final class Path
 
     public function basenamePrefix(string $prefix) : self
     {
-        return $this->createFromImplementation($this->implementation->basenamePrefix($prefix));
+        return new self($this->implementation->basenamePrefix($prefix));
     }
 
     public function context() : ResourceContext
@@ -75,6 +77,16 @@ final class Path
         return $this->implementation->filename();
     }
 
+    public function getOption(string|Option $option, string|int|bool|float|\UnitEnum|null $default = null) : string|int|bool|float|\UnitEnum|null
+    {
+        return $this->implementation->options()->get($option, $default);
+    }
+
+    public function hasOption(string|Option $option) : bool
+    {
+        return $this->implementation->options()->has($option);
+    }
+
     public function isEqual(self $path) : bool
     {
         return $this->implementation->isEqual($path->implementation);
@@ -95,14 +107,17 @@ final class Path
         return $this->implementation->matches($path->implementation);
     }
 
-    public function options() : Options
+    /**
+     * @return array<string, null|bool|float|int|string|\UnitEnum>
+     */
+    public function options() : array
     {
-        return $this->implementation->options();
+        return $this->implementation->options()->toArray();
     }
 
     public function parentDirectory() : self
     {
-        return $this->createFromImplementation($this->implementation->parentDirectory());
+        return new self($this->implementation->parentDirectory());
     }
 
     public function partitions() : Partitions
@@ -116,7 +131,7 @@ final class Path
     public function partitionsPaths() : array
     {
         return \array_map(
-            fn ($implPath) => $this->createFromImplementation($implPath),
+            fn ($implPath) => new self($implPath),
             $this->implementation->partitionsPaths()
         );
     }
@@ -136,7 +151,7 @@ final class Path
 
     public function randomize() : self
     {
-        return $this->createFromImplementation($this->implementation->randomize());
+        return new self($this->implementation->randomize());
     }
 
     public function rootDirectoryName() : ?string
@@ -146,24 +161,48 @@ final class Path
 
     public function setExtension(string $extension) : self
     {
-        return $this->createFromImplementation($this->implementation->setExtension($extension));
+        return new self($this->implementation->setExtension($extension));
+    }
+
+    public function setOption(string|Option $option, string|int|bool|float|\UnitEnum|null $value) : self
+    {
+        return new self(
+            $this->implementation->withOptions(
+                $this->implementation->options()->set(
+                    $option instanceof Option ? $option->value : $option,
+                    $value
+                )
+            )
+        );
+    }
+
+    public function setOptionWhenEmpty(string|Option $option, string|int|bool|float|\UnitEnum|null $value) : self
+    {
+        return new self(
+            $this->implementation->withOptions(
+                $this->implementation->options()->setWhenEmpty(
+                    $option,
+                    $value
+                )
+            )
+        );
     }
 
     public function skipDirectories(int $count) : ?self
     {
         return ($newImplementation = $this->implementation->skipDirectories($count)) === null
             ? null
-            : $this->createFromImplementation($newImplementation);
+            : new self($newImplementation);
     }
 
     public function staticPart() : self
     {
-        return $this->createFromImplementation($this->implementation->staticPart());
+        return new self($this->implementation->staticPart());
     }
 
     public function suffix(string $string) : self
     {
-        return $this->createFromImplementation($this->implementation->suffix($string));
+        return new self($this->implementation->suffix($string));
     }
 
     /**
@@ -172,13 +211,5 @@ final class Path
     public function uri() : string
     {
         return $this->implementation->uri();
-    }
-
-    private function createFromImplementation(WindowsPath|UnixPath $implementation) : self
-    {
-        $instance = new self('', []);
-        $instance->implementation = $implementation;
-
-        return $instance;
     }
 }

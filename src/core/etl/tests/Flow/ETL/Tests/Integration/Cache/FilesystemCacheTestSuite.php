@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Cache;
 
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
-use Flow\Filesystem\Path;
 
 final class FilesystemCacheTestSuite extends CacheBaseTestSuite
 {
@@ -15,7 +15,7 @@ final class FilesystemCacheTestSuite extends CacheBaseTestSuite
         return new FilesystemCache(
             $this->fs(),
             $this->serializer(),
-            new Path(__DIR__ . '/var/filesystem-cache')
+            path(__DIR__ . '/var/filesystem-cache')
         );
     }
 }

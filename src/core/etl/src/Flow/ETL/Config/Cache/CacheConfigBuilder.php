@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Config\Cache;
 
-use function Flow\Filesystem\DSL\protocol;
+use function Flow\Filesystem\DSL\{path_real, protocol};
 use Flow\ETL\Cache;
 use Flow\ETL\Cache\Implementation\FilesystemCache;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Filesystem\{FilesystemTable, Path};
+use Flow\Filesystem\FilesystemTable;
 use Flow\Serializer\Serializer;
 
 final class CacheConfigBuilder
@@ -23,7 +23,7 @@ final class CacheConfigBuilder
     public function build(FilesystemTable $fstab, Serializer $serializer) : CacheConfig
     {
         $cachePath = \getenv(CacheConfig::CACHE_DIR_ENV) ?: '';
-        $cachePath = Path::realpath($cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache');
+        $cachePath = path_real($cachePath !== '' ? $cachePath : \sys_get_temp_dir() . '/flow_php/cache');
 
         return new CacheConfig(
             cache: $this->cache ?? new FilesystemCache(

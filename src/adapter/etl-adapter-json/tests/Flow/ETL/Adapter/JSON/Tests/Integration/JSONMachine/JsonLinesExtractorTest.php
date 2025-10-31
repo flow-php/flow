@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 use function Flow\ETL\Adapter\JSON\from_json_lines;
 use function Flow\ETL\DSL\{data_frame, flow_context};
 use function Flow\ETL\DSL\{df, print_schema};
+use function Flow\Filesystem\DSL\{path, path_real};
 use Flow\ETL\{Config, Row, Rows, Tests\FlowTestCase};
 use Flow\ETL\Extractor\Signal;
-use Flow\Filesystem\Path;
 
 final class JsonLinesExtractorTest extends FlowTestCase
 {
@@ -104,7 +104,7 @@ SCHEMA
 
     public function test_extracting_jsonl_from_local_file_string_uri() : void
     {
-        $extractor = (from_json_lines(Path::realpath(__DIR__ . '/../../Fixtures/timezones.jsonl')));
+        $extractor = (from_json_lines(path_real(__DIR__ . '/../../Fixtures/timezones.jsonl')));
 
         $total = 0;
 
@@ -131,7 +131,7 @@ SCHEMA
 
     public function test_limit() : void
     {
-        $extractor = (from_json_lines(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.jsonl')));
+        $extractor = (from_json_lines(path(__DIR__ . '/../../Fixtures/timezones.jsonl')));
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -142,7 +142,7 @@ SCHEMA
 
     public function test_signal_stop() : void
     {
-        $extractor = (from_json_lines(\Flow\Filesystem\DSL\path(__DIR__ . '/../../Fixtures/timezones.jsonl')));
+        $extractor = (from_json_lines(path(__DIR__ . '/../../Fixtures/timezones.jsonl')));
 
         $generator = $extractor->extract(flow_context(\Flow\ETL\DSL\config()));
 

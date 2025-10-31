@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Filesystem\Stream\Block;
 
 use function Flow\ETL\DSL\generate_random_string;
+use function Flow\Filesystem\DSL\path;
 use Flow\Filesystem\Exception\InvalidArgumentException;
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\{Block, BlockFactory};
 
 final readonly class NativeLocalFileBlocksFactory implements BlockFactory
@@ -35,6 +35,6 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
     {
         $id = generate_random_string();
 
-        return new Block($id, $size, new Path($this->blockLocation . DIRECTORY_SEPARATOR . $id));
+        return new Block($id, $size, path($this->blockLocation . DIRECTORY_SEPARATOR . $id));
     }
 }

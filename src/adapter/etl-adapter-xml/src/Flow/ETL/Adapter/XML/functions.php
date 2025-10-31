@@ -56,7 +56,7 @@ function to_xml(
     XMLWriter $xml_writer = new DOMDocumentWriter(),
 ) : XMLLoader {
     return (new XMLLoader(
-        \is_string($path) ? Path::realpath($path) : $path,
+        \is_string($path) ? path_real($path) : $path,
         $xml_writer
     ))
         ->withRootElementName($root_element_name)

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\CSV\CSVLineReader;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Stream\NativeLocalSourceStream;
 use Flow\Filesystem\Tests\OperatingSystem;
 
@@ -19,7 +19,7 @@ final class CSVLineReaderTest extends FlowTestCase
         $path = __DIR__ . '/../Fixtures/large_multiline_csv.csv';
         $memoryBefore = memory_get_usage(true);
 
-        $stream = NativeLocalSourceStream::open(Path::realpath($path));
+        $stream = NativeLocalSourceStream::open(path_real($path));
         $reader = new CSVLineReader('"');
         $lines = iterator_to_array($reader->readLines($stream));
 
@@ -39,7 +39,7 @@ final class CSVLineReaderTest extends FlowTestCase
     public function test_reading_csv_with_custom_character_limit() : void
     {
         $path = __DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv';
-        $stream = NativeLocalSourceStream::open(Path::realpath($path));
+        $stream = NativeLocalSourceStream::open(path_real($path));
 
         $reader = new CSVLineReader('"', 2000);
         $lines = iterator_to_array($reader->readLines($stream));
@@ -57,7 +57,7 @@ final class CSVLineReaderTest extends FlowTestCase
         }
 
         $path = __DIR__ . '/../Fixtures/single_quotes_csv.csv';
-        $stream = NativeLocalSourceStream::open(Path::realpath($path));
+        $stream = NativeLocalSourceStream::open(path_real($path));
 
         $reader = new CSVLineReader("'"); // Use single quote as enclosure
         $lines = iterator_to_array($reader->readLines($stream));
@@ -73,7 +73,7 @@ final class CSVLineReaderTest extends FlowTestCase
     public function test_reading_csv_with_escaped_quotes_file() : void
     {
         $path = __DIR__ . '/../Fixtures/escaped_quotes_csv.csv';
-        $stream = NativeLocalSourceStream::open(Path::realpath($path));
+        $stream = NativeLocalSourceStream::open(path_real($path));
 
         $reader = new CSVLineReader('"');
         $lines = iterator_to_array($reader->readLines($stream));
@@ -91,7 +91,7 @@ final class CSVLineReaderTest extends FlowTestCase
         $path = __DIR__ . '/../Fixtures/large_performance_csv.csv';
         $startTime = microtime(true);
 
-        $stream = NativeLocalSourceStream::open(Path::realpath($path));
+        $stream = NativeLocalSourceStream::open(path_real($path));
         $reader = new CSVLineReader('"');
         $lines = iterator_to_array($reader->readLines($stream));
 
@@ -111,7 +111,7 @@ final class CSVLineReaderTest extends FlowTestCase
     public function test_reading_multiline_csv_file() : void
     {
         $path = __DIR__ . '/../Fixtures/multiline_strings.csv';
-        $stream = NativeLocalSourceStream::open(Path::realpath($path));
+        $stream = NativeLocalSourceStream::open(path_real($path));
 
         $reader = new CSVLineReader('"');
         $lines = iterator_to_array($reader->readLines($stream));
@@ -132,7 +132,7 @@ final class CSVLineReaderTest extends FlowTestCase
     public function test_reading_real_csv_file_with_quotes() : void
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
-        $stream = NativeLocalSourceStream::open(Path::realpath($path));
+        $stream = NativeLocalSourceStream::open(path_real($path));
 
         $reader = new CSVLineReader('"');
         $lines = iterator_to_array($reader->readLines($stream));

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Unit;
 
 use function Flow\ETL\Adapter\Excel\DSL\from_excel;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
-use Flow\Filesystem\Path;
 
 final class ExcelExtractorTest extends FlowTestCase
 {
@@ -25,6 +25,6 @@ final class ExcelExtractorTest extends FlowTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Only local filesystem paths are supported by ExcelExtractor due to the limitation of underlying library.');
 
-        from_excel(new Path('remote://unknown_file.xlsx'));
+        from_excel(path('remote://unknown_file.xlsx'));
     }
 }

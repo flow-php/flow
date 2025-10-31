@@ -62,7 +62,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
             ]);
 
             foreach ($result->getContents() as $object) {
-                $objectPath = new Path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim((string) $object->getKey(), DIRECTORY_SEPARATOR), $path->options());
+                $objectPath = \Flow\Filesystem\DSL\path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim((string) $object->getKey(), DIRECTORY_SEPARATOR), $path->options());
                 $objectFileStatus = new FileStatus($objectPath, (bool) $objectPath->extension());
 
                 if ($path->isPattern() && !$path->matches($objectPath)) {
@@ -140,7 +140,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
              * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally
              * not delete files that would also match the prefix, like: aws-s3://nested/folder_but_file.txt.
              */
-            $folderPath = new Path(\trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+            $folderPath = \Flow\Filesystem\DSL\path(\trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
             $deletedCount = 0;
 
@@ -191,7 +191,7 @@ final readonly class AsyncAWSS3Filesystem implements Filesystem
                  * entire path, like for example aws-s3://nested/folder we need to first add / at the end, to accidentally
                  * not match files that would also match the prefix, like: aws-s3://nested/folder_but_file.txt.
                  */
-                $folderPath = new Path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+                $folderPath = \Flow\Filesystem\DSL\path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
                 foreach ($this->list($folderPath) as $fileStatus) {
                     return new FileStatus($folderPath, false);

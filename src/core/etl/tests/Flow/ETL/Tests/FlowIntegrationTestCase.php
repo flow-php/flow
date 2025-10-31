@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Config\Cache\CacheConfig;
 use Flow\Filesystem\{Filesystem, Path};
 use Flow\Filesystem\{FilesystemTable, Local\NativeLocalFilesystem, Local\StdOutFilesystem};
@@ -29,7 +30,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
         $this->baseMemoryLimit = (\ini_get('memory_limit')) ?: '-1';
 
         $cacheDirEnv = \getenv(CacheConfig::CACHE_DIR_ENV);
-        $this->cacheDir = Path::realpath($cacheDirEnv ?: '');
+        $this->cacheDir = path_real($cacheDirEnv ?: '');
         $this->fs = new NativeLocalFilesystem();
         $this->fstab = new FilesystemTable($this->fs, new StdOutFilesystem());
         $this->serializer = new Base64Serializer(new NativePHPSerializer());
@@ -61,7 +62,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
                 continue;
             }
 
-            $this->fs()->rm(Path::realpath($this->filesDirectory() . DIRECTORY_SEPARATOR . $file));
+            $this->fs()->rm(path_real($this->filesDirectory() . DIRECTORY_SEPARATOR . $file));
         }
     }
 
@@ -82,7 +83,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     protected function getPath(string $relativePath) : Path
     {
-        return new Path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
+        return \Flow\Filesystem\DSL\path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
     }
 
     protected function serializer() : Serializer

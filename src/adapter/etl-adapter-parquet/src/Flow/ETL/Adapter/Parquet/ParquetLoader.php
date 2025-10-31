@@ -8,6 +8,8 @@ use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Option\ContentType;
 use Flow\Parquet\{Options, Writer};
 use Flow\Parquet\ParquetFile\Compressions;
 
@@ -23,6 +25,8 @@ final class ParquetLoader implements Closure, FileLoader, Loader
 
     private Options $options;
 
+    private readonly Path $path;
+
     private ?Schema $schema = null;
 
     /**
@@ -30,11 +34,12 @@ final class ParquetLoader implements Closure, FileLoader, Loader
      */
     private array $writers = [];
 
-    public function __construct(private readonly Path $path)
+    public function __construct(Path $path)
     {
         $this->converter = new SchemaConverter();
         $this->normalizer = new RowsNormalizer();
         $this->options = Options::default();
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
     }
 
     public function closure(FlowContext $context) : void

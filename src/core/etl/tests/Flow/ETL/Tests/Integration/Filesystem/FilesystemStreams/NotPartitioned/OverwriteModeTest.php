@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned;
 
 use function Flow\ETL\DSL\overwrite;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
-use Flow\Filesystem\Path;
 
 final class OverwriteModeTest extends FilesystemStreamsTestCase
 {
@@ -35,7 +35,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
 
         self::assertSame('some other content', \file_get_contents($path->path()));
 
-        self::assertCount(1, $files = \iterator_to_array($this->fs()->list(new Path($path->parentDirectory()->path() . '/*'))));
+        self::assertCount(1, $files = \iterator_to_array($this->fs()->list(path($path->parentDirectory()->path() . '/*'))));
         self::assertSame('existing-file.txt', $files[0]->path->basename());
     }
 

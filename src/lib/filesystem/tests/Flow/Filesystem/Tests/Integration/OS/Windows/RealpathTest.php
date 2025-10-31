@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
-use Flow\Filesystem\Path;
+use function Flow\Filesystem\DSL\path_real;
 use Flow\Filesystem\Tests\OperatingSystem;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -32,15 +32,15 @@ final class RealpathTest extends TestCase
     #[DataProvider('windows_backslash_normalization')]
     public function test_windows_backslash_to_forward_slash(string $windowsPath, string $normalizedPath) : void
     {
-        $path = Path::realpath($windowsPath);
+        $path = path_real($windowsPath);
         self::assertEquals($normalizedPath, $path->path());
     }
 
     public function test_windows_drive_letter_case_handling() : void
     {
         // Test that Windows drive letters are handled consistently
-        $pathLower = Path::realpath('c:/path/file.txt');
-        $pathUpper = Path::realpath('C:/path/file.txt');
+        $pathLower = path_real('c:/path/file.txt');
+        $pathUpper = path_real('C:/path/file.txt');
 
         // Drive letters preserve their original case
         self::assertEquals('C:/path/file.txt', $pathUpper->path());
@@ -57,7 +57,7 @@ final class RealpathTest extends TestCase
             self::markTestSkipped('USERPROFILE environment variable not available');
         }
 
-        $homePath = Path::realpath('~/test_file.txt');
+        $homePath = path_real('~/test_file.txt');
 
         // Should expand to user profile directory with forward slashes
         self::assertStringContainsString('test_file.txt', $homePath->path());
@@ -70,7 +70,7 @@ final class RealpathTest extends TestCase
         // Get current working directory
         $cwd = \str_replace('\\', '/', \getcwd());
 
-        $relativePath = Path::realpath('./test_file.txt');
+        $relativePath = path_real('./test_file.txt');
 
         // Should resolve to current working directory
         self::assertStringStartsWith($cwd, $relativePath->path());
