@@ -8,6 +8,7 @@ on:
       - 'examples/**'
       - 'composer.lock'
       - 'composer.json'
+      - 'phpunit.xml.dist'
   push:
     branches: [ 1.x ]
     paths:
@@ -18,6 +19,7 @@ on:
       - 'examples/**'
       - 'composer.lock'
       - 'composer.json'
+      - 'phpunit.xml.dist'
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
