@@ -7,7 +7,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 use function Flow\Types\DSL\{type_from_array, type_html};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Value\HTMLDocument;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 
 final class HTMLTypeTest extends TestCase
@@ -60,7 +60,7 @@ final class HTMLTypeTest extends TestCase
         ];
     }
 
-    public static function cast_data_provider() : \Generator
+    public static function cast_data_provider_php82() : \Generator
     {
         yield 'string to HTML' => [
             'value' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
@@ -68,6 +68,29 @@ final class HTMLTypeTest extends TestCase
 <!DOCTYPE html>
 <html lang="en"><body><div><span>1</span></div></body></html>
 HTML,
+            'exceptionClass' => null,
+        ];
+
+        yield 'incomplete string to HTML' => [
+            'value' => '<div><span>1</span></div>',
+            'expected' => <<<'HTML'
+<div><span>1</span></div>
+HTML,
+            'exceptionClass' => null,
+        ];
+
+        yield 'object to HTML' => [
+            'value' => new \stdClass(),
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+    }
+
+    public static function cast_data_provider_php84() : \Generator
+    {
+        yield 'string to HTML' => [
+            'value' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
+            'expected' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
             'exceptionClass' => null,
         ];
 
@@ -120,8 +143,22 @@ HTML,
         }
     }
 
-    #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    #[RequiresPhp('< 8.4')]
+    #[DataProvider('cast_data_provider_php82')]
+    public function test_cast_php82(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    {
+        if ($exceptionClass !== null) {
+            $this->expectException($exceptionClass);
+            type_html()->cast($value);
+        } else {
+            $result = type_html()->cast($value);
+            self::assertSame($expected, $result->toString());
+        }
+    }
+
+    #[RequiresPhp('>= 8.4')]
+    #[DataProvider('cast_data_provider_php84')]
+    public function test_cast_php84(mixed $value, mixed $expected, ?string $exceptionClass) : void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);

@@ -119,15 +119,19 @@ final readonly class StringTypeChecker
             return false;
         }
 
-        if (\class_exists('\Dom\HTMLDocument', false)) {
-            $options = \LIBXML_HTML_NOIMPLIED;
+        if (\preg_match('/(<!doctype(.+?)>)?<html(.+?)>(.+?)<\/html>/im', $this->string) === 1) {
+            if (\class_exists('\Dom\HTMLDocument', false)) {
+                $options = \LIBXML_HTML_NOIMPLIED;
 
-            if (defined('Dom\HTML_NO_DEFAULT_NS')) {
-                $options |= constant('\Dom\HTML_NO_DEFAULT_NS');
+                if (defined('Dom\HTML_NO_DEFAULT_NS')) {
+                    $options |= constant('\Dom\HTML_NO_DEFAULT_NS');
+                }
+
+                $doc = @HTMLDocument::createFromString($this->string, $options);
+
+                return $doc->saveHtml() === $this->string;
             }
 
-            HTMLDocument::createFromString($this->string, $options);
-        } elseif (\preg_match('/(<!doctype(.+?)>)?<html(.+?)>(.+?)<\/html>/im', $this->string) === 1) {
             try {
                 \libxml_use_internal_errors(true);
 
