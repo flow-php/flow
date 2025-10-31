@@ -1,15 +1,19 @@
 ## [Unreleased] - 2025-10-31
 
 ### Added
+- [#1942](https://github.com/flow-php/flow/pull/1942) - **Filesystem Path Option - ContentType** - [@norberttech](https://github.com/norberttech)
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1942](https://github.com/flow-php/flow/pull/1942) - **Make Filesystem Path / Options immutable** - [@norberttech](https://github.com/norberttech)
+- [#1942](https://github.com/flow-php/flow/pull/1942) - **Make Filesystem Path Options accept scalar types and enums only** - [@norberttech](https://github.com/norberttech)
 - [#1932](https://github.com/flow-php/flow/pull/1932) - **Enforce passing `EntryFactory` to `array_to_row(s)` & `to_entry` functions** - [@stloyd](https://github.com/stloyd)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Pass `EntryFactory` to the `Rows::join*()` methods** - [@stloyd](https://github.com/stloyd)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Enforce instance of EntryFactory in the join methods** - [@stloyd](https://github.com/stloyd)
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1942](https://github.com/flow-php/flow/pull/1942) - **AsyncAWSS3DestinationStream - set correct content type** - [@norberttech](https://github.com/norberttech)
 - [#1944](https://github.com/flow-php/flow/pull/1944) - **Incorrect library test group names** - [@stloyd](https://github.com/stloyd)
 - [#1945](https://github.com/flow-php/flow/pull/1945) - **Fixed broken `HTMLTypeTest`** - [@stloyd](https://github.com/stloyd)
 
