@@ -12,7 +12,9 @@ final class HTMLDocument implements \Stringable
 
     public function __construct(string|object $value)
     {
-        if (\is_string($value)) {
+        if ('' === $value) {
+            $this->value = $value;
+        } elseif (\is_string($value)) {
             if (\class_exists('\Dom\HTMLDocument', false)) {
                 $options = \LIBXML_HTML_NOIMPLIED;
 
