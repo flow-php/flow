@@ -5,6 +5,8 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1947](https://github.com/flow-php/flow/pull/1947) - **Updated nix repository commit** - [@norberttech](https://github.com/norberttech)
+- [#1947](https://github.com/flow-php/flow/pull/1947) - **Extracted phpunit configuration for infection** - [@norberttech](https://github.com/norberttech)
 - [#1942](https://github.com/flow-php/flow/pull/1942) - **Make Filesystem Path / Options immutable** - [@norberttech](https://github.com/norberttech)
 - [#1942](https://github.com/flow-php/flow/pull/1942) - **Make Filesystem Path Options accept scalar types and enums only** - [@norberttech](https://github.com/norberttech)
 - [#1932](https://github.com/flow-php/flow/pull/1932) - **Enforce passing `EntryFactory` to `array_to_row(s)` & `to_entry` functions** - [@stloyd](https://github.com/stloyd)
