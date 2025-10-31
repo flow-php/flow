@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_from_array, type_html};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Value\HTMLDocument;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -13,8 +14,8 @@ final class HTMLTypeTest extends TestCase
 {
     public static function assert_data_provider() : \Generator
     {
-        yield 'valid \DOMDocument' => [
-            'value' => new \DOMDocument,
+        yield 'valid HTMLDocument' => [
+            'value' => new HTMLDocument(''),
             'exceptionClass' => null,
         ];
 
@@ -66,7 +67,6 @@ final class HTMLTypeTest extends TestCase
             'expected' => <<<'HTML'
 <!DOCTYPE html>
 <html lang="en"><body><div><span>1</span></div></body></html>
-
 HTML,
             'exceptionClass' => null,
         ];
@@ -75,7 +75,6 @@ HTML,
             'value' => '<div><span>1</span></div>',
             'expected' => <<<'HTML'
 <div><span>1</span></div>
-
 HTML,
             'exceptionClass' => null,
         ];
@@ -89,8 +88,8 @@ HTML,
 
     public static function is_valid_data_provider() : \Generator
     {
-        yield 'valid \DOMDocument' => [
-            'value' => new \DOMDocument(),
+        yield 'valid HTMLDocument' => [
+            'value' => new HTMLDocument(''),
             'expected' => true,
         ];
 
@@ -117,7 +116,7 @@ HTML,
             $this->expectException($exceptionClass);
             type_html()->assert($value);
         } else {
-            self::assertInstanceOf(\DOMDocument::class, type_html()->assert($value));
+            self::assertInstanceOf(HTMLDocument::class, type_html()->assert($value));
         }
     }
 
@@ -129,7 +128,7 @@ HTML,
             type_html()->cast($value);
         } else {
             $result = type_html()->cast($value);
-            self::assertSame($expected, $result->saveHtml());
+            self::assertSame($expected, $result->toString());
         }
     }
 
