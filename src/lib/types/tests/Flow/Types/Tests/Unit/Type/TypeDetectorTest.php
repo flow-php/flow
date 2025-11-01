@@ -99,7 +99,7 @@ final class TypeDetectorTest extends TestCase
         ];
 
         yield 'html' => [
-            HTMLDocument::fromString('<html><div><span>1</span></div></html>'),
+            HTMLDocument::fromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
             HTMLType::class,
             'html',
         ];

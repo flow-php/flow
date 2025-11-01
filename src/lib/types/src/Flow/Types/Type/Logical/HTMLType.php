@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type;
 use Flow\Types\Value\HTMLDocument;
 
@@ -28,19 +28,15 @@ final readonly class HTMLType implements Type
             return $value;
         }
 
-        if (\is_string($value)) {
-            return new HTMLDocument($value);
+        if (!is_string($value) && !is_object($value)) {
+            throw new CastingException($value, $this);
         }
 
-        if ($value instanceof \DOMDocument) {
+        try {
             return new HTMLDocument($value);
+        } catch (InvalidArgumentException $e) {
+            throw new CastingException($value, $this, $e);
         }
-
-        if (\is_object($value) && \is_a($value, 'Dom\HTMLDocument')) {
-            return new HTMLDocument($value);
-        }
-
-        throw new CastingException($value, $this);
     }
 
     public function isValid(mixed $value) : bool
