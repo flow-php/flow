@@ -102,6 +102,29 @@ final class HTMLDocumentTest extends TestCase
         new HTMLDocument($value);
     }
 
+    #[DataProvider('provide_valid')]
+    public function test_create_with_string(string $value) : void
+    {
+        $document = new HTMLDocument($value);
+
+        self::assertSame(
+            $value,
+            $document->toString(),
+        );
+    }
+
+    public function test_create_with_string_with_multiple_spaces() : void
+    {
+        $html = '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>';
+
+        $document = new HTMLDocument($html);
+
+        self::assertSame(
+            $html,
+            $document->toString(),
+        );
+    }
+
     public function test_with_random_object() : void
     {
         $this->expectException(InvalidArgumentException::class);
