@@ -28,6 +28,7 @@
 - [#1945](https://github.com/flow-php/flow/pull/1945) - **Fixed broken `HTMLTypeTest`** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [26078b](https://github.com/flow-php/flow/commit/26078bf7f1abe3d4f87a634b0419db130014f6d8) - **wasm development lefotvers** - [@norberttech](https://github.com/norberttech)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Remove `Rows::fromArray()`** - [@stloyd](https://github.com/stloyd)
 
 ## [0.26.1] - 2025-10-28
