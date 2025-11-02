@@ -42,4 +42,9 @@ export default class extends Controller {
     get modeValue() {
         return 'ace/mode/php';
     }
+
+    // Public API for getting code (used by outlets)
+    getCode() {
+        return this.#editor ? this.#editor.getValue() : ''
+    }
 }

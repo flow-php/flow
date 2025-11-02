@@ -276,7 +276,7 @@ code {
         display: none; /* Hidden by default, shown by Stimulus */
 
         pre {
-            @apply w-full h-full bg-transparent resize-none outline-none;
+            @apply w-full h-full resize-none outline-none p-4;
         }
     }
 
