@@ -4,29 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\type_uuid;
+use function Flow\Types\DSL\{get_type, type_uuid};
 use Flow\Types\Type;
 use Flow\Types\Type\TypeNarrower;
 
 final readonly class InstanceOfTypeNarrower implements TypeNarrower
 {
     /**
-     * @param Type<mixed> $type
-     *
      * @return Type<mixed>
      */
-    public static function narrow(Type $type, mixed $value) : Type
+    public static function narrow(mixed $value) : Type
     {
-        if (!$type instanceof InstanceOfType) {
-            return $type;
+        if (!\is_object($value)) {
+            return get_type($value);
         }
 
+        $valueClass = $value::class;
+
         foreach (['Ramsey\Uuid\UuidInterface', 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
-            if (\is_a($type->class, $uuidClass, true)) {
+            if (\is_a($valueClass, $uuidClass, true)) {
                 return type_uuid();
             }
         }
 
-        return $type;
+        return get_type($value);
     }
 }

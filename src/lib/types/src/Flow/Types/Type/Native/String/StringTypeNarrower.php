@@ -18,7 +18,6 @@ use function Flow\Types\DSL\{type_boolean,
     type_xml};
 use Dom\HTMLDocument;
 use Flow\Types\Type;
-use Flow\Types\Type\Native\StringType;
 use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Value\Uuid;
 
@@ -31,13 +30,17 @@ final readonly class StringTypeNarrower implements TypeNarrower
         $this->string = \trim($string);
     }
 
-    public static function narrow(Type $type, mixed $value) : Type
+    public static function narrow(mixed $value) : Type
     {
-        if (!$type instanceof StringType || !\is_string($value)) {
-            return $type;
+        if (!\is_string($value)) {
+            return type_string();
         }
 
         $checker = new self($value);
+
+        if ($checker->isNull()) {
+            return type_null();
+        }
 
         if ($checker->isJson()) {
             return type_json();
@@ -77,10 +80,6 @@ final readonly class StringTypeNarrower implements TypeNarrower
 
         if ($checker->isTimeZone()) {
             return type_time_zone();
-        }
-
-        if ($checker->isNull()) {
-            return type_null();
         }
 
         return type_string();

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{get_type,
-    type_float,
-    type_string
-    };
+use function Flow\Types\DSL\{get_type, type_float};
+use Flow\Types\Type\Native\NullType;
 use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 final readonly class AutoCaster
@@ -57,7 +55,11 @@ final readonly class AutoCaster
 
     private function castToString(string $value) : mixed
     {
-        $narrowedType = StringTypeNarrower::narrow(type_string(), $value);
+        $narrowedType = StringTypeNarrower::narrow($value);
+
+        if ($narrowedType instanceof NullType) {
+            return null;
+        }
 
         return $narrowedType->cast($value);
     }

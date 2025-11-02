@@ -84,11 +84,11 @@ final readonly class EntryFactory
         $valueType = (new TypeDetector())->detectType($value);
 
         if ($valueType instanceof StringType) {
-            $valueType = StringTypeNarrower::narrow($valueType, $value);
+            $valueType = StringTypeNarrower::narrow($value);
         }
 
         if ($valueType instanceof InstanceOfType) {
-            $valueType = InstanceOfTypeNarrower::narrow($valueType, $value);
+            $valueType = InstanceOfTypeNarrower::narrow($value);
         }
 
         return $this->createAs($entryName, $value, $valueType);
@@ -181,6 +181,10 @@ final readonly class EntryFactory
 
             if ($type instanceof HTMLType) {
                 return string_entry($entryName, type_optional(type_string())->cast($value), $metadata);
+            }
+
+            if ($type instanceof NullType) {
+                return StringEntry::fromNull($entryName, $metadata);
             }
 
             if ($type instanceof EnumType) {

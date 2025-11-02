@@ -8,5 +8,5 @@ use Flow\Types\Type;
 
 interface TypeNarrower
 {
-    public static function narrow(Type $type, mixed $value) : Type;
+    public static function narrow(mixed $value) : Type;
 }
