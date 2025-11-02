@@ -1,7 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import ace from "ace-builds"
 import "../ace-themes/theme-flow.js"
-import { flowCompleter } from "../completers/flow_completer.js"
 
 export default class extends Controller {
     #editor
@@ -9,8 +8,10 @@ export default class extends Controller {
     #initialValueSet = false
     #fullyInitialized = false
     #pendingValue = null
+    #debug = false
 
     connect() {
+        this.#debug = this.application.debug
         ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.36.5/src-noconflict/')
 
         const textarea = this.element;
@@ -35,26 +36,6 @@ export default class extends Controller {
         this.#editor.setFontSize(16);
 
         ace.config.loadModule("ace/ext/language_tools", (langTools) => {
-            const phpKeywordCompleter = langTools.keyWordCompleter;
-
-            const contextAwareKeywordCompleter = {
-                getCompletions: function(editor, session, pos, prefix, callback) {
-                    const line = session.getLine(pos.row);
-                    const lineUpToCursor = line.substring(0, pos.column);
-
-                    if (lineUpToCursor.match(/ref\s*\(\s*['"][^'"]*['"]\s*\)\s*->\s*\w*$/)) {
-                        callback(null, []);
-                        return;
-                    }
-
-                    phpKeywordCompleter.getCompletions(editor, session, pos, prefix, callback);
-                }
-            };
-
-            langTools.setCompleters([flowCompleter]);
-            langTools.addCompleter(contextAwareKeywordCompleter);
-            langTools.addCompleter(langTools.snippetCompleter);
-
             this.#editor.setOptions({
                 enableBasicAutocompletion: true,
                 enableLiveAutocompletion: true,
@@ -64,7 +45,7 @@ export default class extends Controller {
             this.#fullyInitialized = true
 
             if (this.#pendingValue !== null) {
-                console.log('[CodeEditor] Applying pending value:', this.#pendingValue)
+                this.#log('Applying pending value:', this.#pendingValue)
                 this.#editor.setValue(this.#pendingValue, -1)
                 this.#pendingValue = null
             }
@@ -93,24 +74,24 @@ export default class extends Controller {
 
     // Public API for setting code (used by outlets)
     setValue(code) {
-        console.log('[CodeEditor] setValue called with code:', code)
-        console.log('[CodeEditor] Fully initialized:', this.#fullyInitialized)
+        this.#log('setValue called with code:', code)
+        this.#log('Fully initialized:', this.#fullyInitialized)
 
         if (this.#fullyInitialized && this.#editor) {
-            console.log('[CodeEditor] Setting value immediately')
+            this.#log('Setting value immediately')
             this.#editor.setValue(code, -1)
         } else {
-            console.log('[CodeEditor] Queuing value for later')
+            this.#log('Queuing value for later')
             this.#pendingValue = code
         }
     }
 
     // Public API for highlighting error lines
     highlightError(errorInfo) {
-        console.log('[CodeEditor] highlightError called with:', errorInfo)
+        this.#log('highlightError called with:', errorInfo)
 
         if (!this.#editor || !errorInfo) {
-            console.log('[CodeEditor] No editor or errorInfo:', { hasEditor: !!this.#editor, errorInfo })
+            this.#log('No editor or errorInfo:', { hasEditor: !!this.#editor, errorInfo })
             return
         }
 
@@ -118,11 +99,11 @@ export default class extends Controller {
 
         const { line, type, message } = errorInfo
         if (!line) {
-            console.log('[CodeEditor] No line number in errorInfo')
+            this.#log('No line number in errorInfo')
             return
         }
 
-        console.log('[CodeEditor] Highlighting line:', line, 'with message:', message)
+        this.#log('Highlighting line:', line, 'with message:', message)
 
         // Convert 1-based line number to 0-based
         const editorLine = line - 1
@@ -136,9 +117,8 @@ export default class extends Controller {
             type: 'error'
         })
         this.#editor.session.setAnnotations(annotations)
-        console.log('[CodeEditor] Annotations set:', annotations)
+        this.#log('Annotations set:', annotations)
 
-        // Add marker to highlight the line with red background
         const Range = ace.require('ace/range').Range
         const range = new Range(editorLine, 0, editorLine, 1)
         const markerId = this.#editor.session.addMarker(
@@ -148,7 +128,7 @@ export default class extends Controller {
             false
         )
         this.#errorMarkers.push(markerId)
-        console.log('[CodeEditor] Marker added with ID:', markerId)
+        this.#log('Marker added with ID:', markerId)
 
         // Scroll to the error line
         this.#editor.scrollToLine(editorLine, true, true, () => {})
@@ -168,5 +148,11 @@ export default class extends Controller {
 
         // Clear annotations
         this.#editor.session.clearAnnotations()
+    }
+
+    #log(...args) {
+        if (this.#debug) {
+            console.log('[CodeEditor]', ...args)
+        }
     }
 }
