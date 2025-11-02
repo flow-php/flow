@@ -180,10 +180,6 @@ final readonly class EntryFactory
                 return string_entry($entryName, type_optional(type_string())->cast($value), $metadata);
             }
 
-            if ($type instanceof HTMLType) {
-                return html_entry($entryName, type_optional($type)->cast($value), $metadata);
-            }
-
             if ($type instanceof NullType) {
                 return StringEntry::fromNull($entryName, $metadata);
             }
@@ -200,6 +196,10 @@ final readonly class EntryFactory
                 } catch (InvalidArgumentException) {
                     return json_entry($entryName, type_optional($type)->cast($value), $metadata);
                 }
+            }
+
+            if ($type instanceof HTMLType) {
+                return html_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof XMLType) {
