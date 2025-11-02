@@ -1,0 +1,168 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Row\Entry;
+
+use function Flow\ETL\DSL\{html_entry, html_schema, str_entry};
+use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Entry\HTMLEntry;
+use Flow\ETL\Tests\FlowTestCase;
+use Flow\Types\Value\HTMLDocument;
+use PHPUnit\Framework\Attributes\DataProvider;
+
+final class HTMLEntryTest extends FlowTestCase
+{
+    public static function is_equal_data_provider() : \Generator
+    {
+        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+
+        yield 'equal names and equal simple html documents' => [
+            true,
+            html_entry('name', $doc1),
+            html_entry('name', $doc2),
+        ];
+
+        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>');
+        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p id="id">3</p></body></html>');
+
+        yield 'equal names and equal simple html documents with different order of attributes' => [
+            false,
+            html_entry('name', $doc1),
+            html_entry('name', $doc2),
+        ];
+
+        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="foo">2</div><p>3</p></body></html>');
+        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="bar">2</div><p>3</p></body></html>');
+
+        yield 'equal nodes but different attributes' => [
+            false,
+            html_entry('name', $doc1),
+            html_entry('name', $doc2),
+        ];
+
+        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>');
+        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><p>3</p></body></html>');
+
+        yield 'equal attributes but different nodes' => [
+            false,
+            html_entry('name', $doc1),
+            html_entry('name', $doc2),
+        ];
+
+        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+
+        yield 'different names and equal simple html documents' => [
+            false,
+            html_entry('name', $doc1),
+            html_entry('other-name', $doc2),
+        ];
+
+        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+
+        yield 'different types' => [
+            false,
+            html_entry('name', $doc1),
+            str_entry('other-name', '<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>'),
+        ];
+    }
+
+    public function test_canonicalization() : void
+    {
+        $doc = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="foo">2</div><p>3</p></body></html>');
+        $doc2 = HTMLDocument::fromString(<<<'HTML'
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+    <div id="foo">2</div>
+    <p>3</p>
+</body>
+</html>
+HTML);
+
+        self::assertNotEquals(
+            html_entry('row', $doc),
+            html_entry('row', $doc2),
+        );
+    }
+
+    public function test_creating_entry_from_valid_html_string() : void
+    {
+        $html = '<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>';
+
+        $entry = html_entry('name', $html);
+
+        self::assertSame('name', $entry->name());
+        self::assertSame($html, $entry->__toString());
+    }
+
+    public function test_definition() : void
+    {
+        self::assertEquals(
+            html_schema('html'),
+            (html_entry('html', '<!DOCTYPE html><html lang="en"><head></head><body><div>baz</div></body></html>'))->definition()
+        );
+    }
+
+    public function test_duplicating_entry() : void
+    {
+        $entry = html_entry('html', <<<'HTML'
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+    <div id="foo">2</div>
+    <p>3</p>
+</body>
+</html>
+HTML);
+        $duplicated = $entry->duplicate();
+
+        self::assertNotSame($entry, $duplicated);
+        self::assertEquals($entry, $duplicated);
+    }
+
+    /**
+     * @param Entry<mixed> $nextEntry
+     */
+    #[DataProvider('is_equal_data_provider')]
+    public function test_is_equal(bool $equals, HTMLEntry $entry, Entry $nextEntry) : void
+    {
+        self::assertSame($equals, $entry->isEqual($nextEntry));
+    }
+
+    public function test_map() : void
+    {
+        $entry = html_entry('entry-name', '<!DOCTYPE html><html><head></head><body><div>baz</div></body></html>');
+
+        self::assertEquals(
+            $entry,
+            $entry->map(fn ($value) => $value)
+        );
+    }
+
+    public function test_renames_entry() : void
+    {
+        $entry = html_entry('entry-name', '<!DOCTYPE html><html><head></head><body><div>bar</div></body></html>');
+        $newEntry = $entry->rename('new-entry-name');
+
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals($entry->value(), $newEntry->value());
+        self::assertEquals($entry->type(), $newEntry->type());
+    }
+
+    public function test_with_value() : void
+    {
+        $entry = html_entry('html', '<!DOCTYPE html><html lang="en"><head></head><body><div>foobar</div></body></html>');
+
+        $html = HTMLDocument::fromString('<!DOCTYPE html><html lang="en"><head></head><body><div>different</div></body></html>');
+
+        $newEntry = $entry->withValue($html);
+
+        self::assertNotEquals($entry->toString(), $newEntry->toString());
+        self::assertEquals($html, $newEntry->toString());
+    }
+}

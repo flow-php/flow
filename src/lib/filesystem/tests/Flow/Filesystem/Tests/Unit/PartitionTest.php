@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Unit;
 
-use function Flow\ETL\DSL\{datetime_entry, ref, row, xml_entry};
+use function Flow\ETL\DSL\{datetime_entry, html_entry, ref, row, xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entry\XMLEntry;
+use Flow\ETL\Row\Entry\{HTMLEntry, XMLEntry};
 use Flow\Filesystem\Partition;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -47,14 +47,18 @@ final class PartitionTest extends TestCase
         );
     }
 
+    public function test_creating_partition_value_from_html_entry() : void
+    {
+        $this->expectExceptionMessage(HTMLEntry::class . ' can\'t be used as a partition');
+
+        Partition::valueFromRow(ref('html'), row(html_entry('html', '<!DOCTYPE html><html><head></head><body></body></html>')));
+    }
+
     public function test_creating_partition_value_from_xml_entry() : void
     {
         $this->expectExceptionMessage(XMLEntry::class . ' can\'t be used as a partition');
 
-        self::assertEquals(
-            'value',
-            Partition::valueFromRow(ref('xml'), row(xml_entry('xml', '<xml></xml>')))
-        );
+        Partition::valueFromRow(ref('xml'), row(xml_entry('xml', '<xml></xml>')));
     }
 
     public function test_creating_partitions_from_uri_with_partition_with_forbidden_character() : void

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native\String;
 
-use Dom\HTMLDocument;
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{HTMLDocument, Uuid};
 
 final readonly class StringTypeChecker
 {
@@ -101,53 +100,12 @@ final readonly class StringTypeChecker
             return false;
         }
 
-        // scientific notation
-        if (\is_numeric($this->string) && (\str_contains($this->string, 'e') || \str_contains($this->string, 'E'))) {
-
-        }
-
         return \is_numeric($this->string) && \str_contains($this->string, '.');
     }
 
     public function isHTML() : bool
     {
-        if ($this->string === '') {
-            return false;
-        }
-
-        if ('<' !== $this->string[0]) {
-            return false;
-        }
-
-        if (\preg_match('/(<!doctype(.+?)>)?<html(.+?)>(.+?)<\/html>/im', $this->string) === 1) {
-            if (\class_exists('\Dom\HTMLDocument', false)) {
-                $options = \LIBXML_HTML_NOIMPLIED;
-
-                if (defined('Dom\HTML_NO_DEFAULT_NS')) {
-                    $options |= constant('\Dom\HTML_NO_DEFAULT_NS');
-                }
-
-                $doc = @HTMLDocument::createFromString($this->string, $options);
-
-                return $doc->saveHtml() === $this->string;
-            }
-
-            try {
-                \libxml_use_internal_errors(true);
-
-                $doc = new \DOMDocument();
-                $result = @$doc->loadHTML($this->string);
-
-                return (bool) $result;
-            } catch (\Exception) {
-                return false;
-            } finally {
-                \libxml_clear_errors(); // Clear any errors if needed
-                \libxml_use_internal_errors(false); // Restore standard error handling
-            }
-        }
-
-        return false;
+        return HTMLDocument::isValid($this->string);
     }
 
     public function isInteger() : bool

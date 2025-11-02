@@ -12,6 +12,8 @@ use function Flow\ETL\DSL\{bool_entry,
     enum_schema,
     float_entry,
     float_schema,
+    html_entry,
+    html_schema,
     int_entry,
     int_schema,
     json_entry,
@@ -72,6 +74,7 @@ final class RowsNormalizerTest extends FlowTestCase
                 ),
                 enum_entry('enum', null),
                 xml_entry('xml', null),
+                html_entry('html', null),
             )
         );
         $schema = schema(
@@ -101,6 +104,7 @@ final class RowsNormalizerTest extends FlowTestCase
             ),
             enum_schema('enum', BackedStringEnum::class, true),
             xml_schema('xml', true),
+            html_schema('html', true),
         );
 
         self::assertEquals(
@@ -119,6 +123,7 @@ final class RowsNormalizerTest extends FlowTestCase
                     'struct' => null,
                     'enum' => null,
                     'xml' => null,
+                    'html' => null,
                 ],
             ],
             (new RowsNormalizer())->normalize($rows, $schema)

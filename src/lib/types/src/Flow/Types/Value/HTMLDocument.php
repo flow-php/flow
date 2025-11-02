@@ -34,7 +34,7 @@ REGXP;
         // Cut all new lines and tabs
         $value = trim(str_replace(["\n", "\t"], '', $value));
 
-        if (!$this->isValid($value)) {
+        if (!self::isValid($value)) {
             throw new InvalidArgumentException('Invalid HTML document given: ' . var_export($value, true));
         }
 
@@ -44,6 +44,19 @@ REGXP;
     public static function fromString(string $value) : self
     {
         return new self($value);
+    }
+
+    public static function isValid(string $value) : bool
+    {
+        if ('' === $value) {
+            return false;
+        }
+
+        if ('<' !== $value[0]) {
+            return false;
+        }
+
+        return \preg_match(self::HTML_ALIKE_REGEX, $value) === 1;
     }
 
     public function __toString() : string
@@ -59,14 +72,5 @@ REGXP;
     public function toString() : string
     {
         return $this->value;
-    }
-
-    private function isValid(string $value) : bool
-    {
-        if ('' === $value) {
-            return false;
-        }
-
-        return \preg_match(self::HTML_ALIKE_REGEX, $value) === 1;
     }
 }
