@@ -5,15 +5,10 @@ declare(strict_types=1);
 namespace Flow\Types\Type;
 
 use function Flow\Types\DSL\{get_type,
-    type_boolean,
-    type_date,
-    type_datetime,
     type_float,
-    type_integer,
-    type_json,
-    type_time_zone,
-    type_uuid};
-use Flow\Types\Type\Native\String\StringTypeChecker;
+    type_string
+    };
+use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 final readonly class AutoCaster
 {
@@ -62,44 +57,8 @@ final readonly class AutoCaster
 
     private function castToString(string $value) : mixed
     {
-        $typeChecker = new StringTypeChecker($value);
+        $narrowedType = StringTypeNarrower::narrow(type_string(), $value);
 
-        if ($typeChecker->isNull()) {
-            return null;
-        }
-
-        if ($typeChecker->isInteger()) {
-            return type_integer()->cast($value);
-        }
-
-        if ($typeChecker->isFloat()) {
-            return type_float()->cast($value);
-        }
-
-        if ($typeChecker->isBoolean()) {
-            return type_boolean()->cast($value);
-        }
-
-        if ($typeChecker->isJson()) {
-            return type_json()->cast($value);
-        }
-
-        if ($typeChecker->isUuid()) {
-            return type_uuid()->cast($value);
-        }
-
-        if ($typeChecker->isTimeZone()) {
-            return type_time_zone()->cast($value);
-        }
-
-        if ($typeChecker->isDate()) {
-            return type_date()->cast($value);
-        }
-
-        if ($typeChecker->isDateTime()) {
-            return type_datetime()->cast($value);
-        }
-
-        return $value;
+        return $narrowedType->cast($value);
     }
 }

@@ -15,7 +15,7 @@ final readonly class InstanceOfTypeNarrower implements TypeNarrower
      *
      * @return Type<mixed>
      */
-    public function narrow(Type $type, mixed $value) : Type
+    public static function narrow(Type $type, mixed $value) : Type
     {
         if (!$type instanceof InstanceOfType) {
             return $type;

@@ -52,7 +52,7 @@ use Flow\Types\Type\Native\{
     StringType,
     UnionType
 };
-use Flow\Types\Type\Native\String\{StringTypeNarrower};
+use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Flow\Types\Type\TypeDetector;
 
 final readonly class EntryFactory
@@ -83,11 +83,13 @@ final readonly class EntryFactory
 
         $valueType = (new TypeDetector())->detectType($value);
 
-        $stringNarrower = new StringTypeNarrower();
-        $valueType = $stringNarrower->narrow($valueType, $value);
+        if ($valueType instanceof StringType) {
+            $valueType = StringTypeNarrower::narrow($valueType, $value);
+        }
 
-        $instanceOfNarrower = new InstanceOfTypeNarrower();
-        $valueType = $instanceOfNarrower->narrow($valueType, $value);
+        if ($valueType instanceof InstanceOfType) {
+            $valueType = InstanceOfTypeNarrower::narrow($valueType, $value);
+        }
 
         return $this->createAs($entryName, $value, $valueType);
     }
