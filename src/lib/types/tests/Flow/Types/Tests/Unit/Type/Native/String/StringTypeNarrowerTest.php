@@ -56,7 +56,7 @@ final class StringTypeNarrowerTest extends TestCase
 
     public function test_detecting_html() : void
     {
-        self::assertEquals(type_html(), StringTypeNarrower::narrow('<html lang="en"><body><div><span>1</span></div></body></html>'));
+        self::assertEquals(type_html(), StringTypeNarrower::narrow('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'));
         self::assertEquals(type_string(), StringTypeNarrower::narrow('not html'));
     }
 

@@ -60,6 +60,14 @@ final readonly class StringTypeNarrower implements TypeNarrower
             return type_xml();
         }
 
+        if ($checker->isDateTime()) {
+            return type_datetime();
+        }
+
+        if ($checker->isDate()) {
+            return type_date();
+        }
+
         if ($checker->isBoolean()) {
             return type_boolean();
         }
@@ -70,14 +78,6 @@ final readonly class StringTypeNarrower implements TypeNarrower
 
         if ($checker->isInteger()) {
             return type_integer();
-        }
-
-        if ($checker->isDate()) {
-            return type_date();
-        }
-
-        if ($checker->isDateTime()) {
-            return type_datetime();
         }
 
         if ($checker->isTimeZone()) {
@@ -163,7 +163,16 @@ final readonly class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
-        return true;
+        $hasDirectTime = $dateParts['hour'] !== false || $dateParts['minute'] !== false || $dateParts['second'] !== false || $dateParts['fraction'] !== false;
+
+        $hasRelativeTime = false;
+
+        if (isset($dateParts['relative'])) {
+            $relative = $dateParts['relative'];
+            $hasRelativeTime = ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;
+        }
+
+        return $hasDirectTime || $hasRelativeTime;
     }
 
     private function isFloat() : bool
