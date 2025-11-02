@@ -1,10 +1,11 @@
-## [Unreleased] - 2025-11-01
+## [Unreleased] - 2025-11-02
 
 ### Added
 - [#1942](https://github.com/flow-php/flow/pull/1942) - **Filesystem Path Option - ContentType** - [@norberttech](https://github.com/norberttech)
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1948](https://github.com/flow-php/flow/pull/1948) - **Make `HTMLDocument` reliable** - [@stloyd](https://github.com/stloyd)
 - [2342f9](https://github.com/flow-php/flow/commit/2342f961173c05c955f4bd96e9b1b66be7d44f4f) - **Mark HTMLDocument tests as skipped** - [@norberttech](https://github.com/norberttech)
 - [#1947](https://github.com/flow-php/flow/pull/1947) - **Updated nix repository commit** - [@norberttech](https://github.com/norberttech)
 - [#1947](https://github.com/flow-php/flow/pull/1947) - **Extracted phpunit configuration for infection** - [@norberttech](https://github.com/norberttech)
