@@ -37,13 +37,13 @@ use function Flow\ETL\DSL\{bool_schema,
     uuid_schema,
     xml_schema};
 use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_null, type_string, type_structure, type_time_zone};
+use Dom\HTMLDocument;
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\{StringEntry, TimeEntry};
 use Flow\ETL\Row\{Entry, EntryFactory};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
-use Flow\Types\Value\HTMLDocument;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
@@ -64,7 +64,7 @@ final class EntryFactoryTest extends TestCase
         ];
 
         yield 'html' => [
-            $html = '<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>',
+            $html = '<!DOCTYPE html><html lang="en"><head></head><body><div id="id">2</div><p>3</p></body></html>',
             string_entry('e', $html),
         ];
 
@@ -251,9 +251,11 @@ final class EntryFactoryTest extends TestCase
         );
     }
 
+    #[RequiresPhp('>= 8.4')]
     public function test_html_from_dom_document() : void
     {
-        $doc = HTMLDocument::fromString($html = '<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc = HTMLDocument::createFromString($html = '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>');
 
         self::assertEquals(
             html_entry('e', $html),
@@ -264,16 +266,22 @@ final class EntryFactoryTest extends TestCase
     public function test_html_from_string() : void
     {
         self::assertEquals(
-            string_entry('e', $html = '<!DOCTYPE html><html><head></head><body><div>foo</div><p>3</p></body></html>'),
+            string_entry('e', $html = '<!DOCTYPE html><html lang="en"><head></head><body><div>foo</div><p>3</p></body></html>'),
             $this->entryFactory->create('e', $html)
         );
     }
 
-    public function test_html_string_with_xml_definition_provided() : void
+    #[RequiresPhp('>= 8.4')]
+    public function test_html_string_with_html_definition_provided() : void
     {
+        /* @phpstan-ignore-next-line */
+        $document = HTMLDocument::createFromString(
+            $html = '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>bar</p></body></html>'
+        );
+
         self::assertEquals(
-            html_entry('e', $html = '<!DOCTYPE html><html><head></head><body><div>2</div><p>bar</p></body></html>'),
-            $this->entryFactory->create('e', $html, schema(html_schema('e')))
+            html_entry('e', $html),
+            $this->entryFactory->create('e', $document, schema(html_schema('e')))
         );
     }
 

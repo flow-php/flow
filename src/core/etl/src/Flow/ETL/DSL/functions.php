@@ -37,6 +37,7 @@ use function Flow\Types\DSL\{
     type_xml_element as type_xml_element_new,
     types as types_new
 };
+use Dom\HTMLDocument;
 use Flow\Calculator\Rounding;
 use Flow\ETL\{Analyze,
     Attribute\DocumentationDSL,
@@ -205,7 +206,6 @@ use Flow\Types\Type\Native\{
     UnionType
 };
 use Flow\Types\Type\Types;
-use Flow\Types\Value\HTMLDocument;
 use UnitEnum;
 
 /**
@@ -632,7 +632,7 @@ function xml_element_entry(string $name, \DOMElement|string|null $value, ?Metada
  * @return Entry<?HTMLDocument>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null) : Entry
+function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null) : Entry // @phpstan-ignore class.notFound,class.notFound
 {
     return new HTMLEntry($name, $value, $metadata);
 }
@@ -1973,7 +1973,7 @@ function json_schema(string $name, bool $nullable = false, ?Metadata $metadata =
  * @return Definition<HTMLDocument>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition // @phpstan-ignore class.notFound
 {
     return Definition::html($name, $nullable, $metadata);
 }

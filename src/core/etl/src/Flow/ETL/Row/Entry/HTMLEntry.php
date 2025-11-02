@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\Types\DSL\{type_equals, type_html, type_optional};
+use Dom\HTMLDocument;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Value\HTMLDocument;
 
 /**
  * @implements Entry<?HTMLDocument>
@@ -32,7 +32,7 @@ final class HTMLEntry implements Entry
         ?Metadata $metadata = null,
     ) {
         if (\is_string($value)) {
-            $this->value = HTMLDocument::fromString($value);
+            $this->value = HTMLDocument::createFromString($value);
         } else {
             $this->value = $value;
         }
@@ -75,7 +75,7 @@ final class HTMLEntry implements Entry
             return false;
         }
 
-        return $entry->value()?->toString() === $this->value?->toString();
+        return $entry->value()?->saveHtml() === $this->value?->saveHtml();
     }
 
     public function map(callable $mapper) : self
@@ -99,7 +99,7 @@ final class HTMLEntry implements Entry
             return '';
         }
 
-        return $this->value->toString();
+        return $this->value->saveHtml();
     }
 
     public function type() : Type

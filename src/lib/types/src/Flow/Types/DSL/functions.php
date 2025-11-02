@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\DSL;
 
+use Dom\HTMLDocument;
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Types\Type;
 use Flow\Types\Type\{Comparator, TypeDetector, TypeFactory, Types};
@@ -40,7 +41,7 @@ use Flow\Types\Type\Native\{ArrayType,
     ResourceType,
     StringType,
     UnionType};
-use Flow\Types\Value\{HTMLDocument, Uuid};
+use Flow\Types\Value\Uuid;
 use UnitEnum;
 
 /**
@@ -440,7 +441,7 @@ function type_literal(bool|float|int|string $value) : LiteralType
  * @return Type<HTMLDocument>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_html() : Type
+function type_html() : Type // @phpstan-ignore class.notFound
 {
     return new HTMLType();
 }

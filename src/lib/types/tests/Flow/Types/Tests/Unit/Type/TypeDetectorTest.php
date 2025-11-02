@@ -22,8 +22,8 @@ use Flow\Types\Type\Logical\{DateTimeType,
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Native\{ArrayType, EnumType, NullType, StringType};
 use Flow\Types\Type\TypeDetector;
-use Flow\Types\Value\{HTMLDocument, Uuid};
-use PHPUnit\Framework\Attributes\DataProvider;
+use Flow\Types\Value\Uuid;
+use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 
 final class TypeDetectorTest extends TestCase
@@ -98,10 +98,10 @@ final class TypeDetectorTest extends TestCase
             'xml_element',
         ];
 
-        yield 'html' => [
-            HTMLDocument::fromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
-            HTMLType::class,
-            'html',
+        yield 'html string' => [
+            '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            StringType::class,
+            'string',
         ];
 
         yield 'simple list' => [
@@ -418,6 +418,17 @@ final class TypeDetectorTest extends TestCase
     public function test_enum_type() : void
     {
         self::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
+    }
+
+    #[RequiresPhp('>= 8.4')]
+    public function test_logical_html_type() : void
+    {
+        $type = (new TypeDetector())->detectType(
+            \Dom\HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>')
+        );
+
+        self::assertInstanceOf(HTMLType::class, $type);
+        self::assertSame('html', $type->toString());
     }
 
     #[DataProvider('provide_logical_types_data')]

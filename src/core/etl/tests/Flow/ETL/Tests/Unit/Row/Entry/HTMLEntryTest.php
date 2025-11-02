@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\{html_entry, html_schema, str_entry};
+use Dom\HTMLDocument;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\HTMLEntry;
-use Flow\ETL\Tests\FlowTestCase;
-use Flow\Types\Value\HTMLDocument;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
+use PHPUnit\Framework\TestCase;
 
-final class HTMLEntryTest extends FlowTestCase
+#[RequiresPhp('>= 8.4')]
+final class HTMLEntryTest extends TestCase
 {
     public static function is_equal_data_provider() : \Generator
     {
-        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
-        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc1 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc2 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>');
 
         yield 'equal names and equal simple html documents' => [
             true,
@@ -24,8 +27,10 @@ final class HTMLEntryTest extends FlowTestCase
             html_entry('name', $doc2),
         ];
 
-        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>');
-        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p id="id">3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc1 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div id="id">2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc2 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p id="id">3</p></body></html>');
 
         yield 'equal names and equal simple html documents with different order of attributes' => [
             false,
@@ -33,8 +38,10 @@ final class HTMLEntryTest extends FlowTestCase
             html_entry('name', $doc2),
         ];
 
-        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="foo">2</div><p>3</p></body></html>');
-        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="bar">2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc1 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div id="foo">2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc2 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div id="bar">2</div><p>3</p></body></html>');
 
         yield 'equal nodes but different attributes' => [
             false,
@@ -42,8 +49,10 @@ final class HTMLEntryTest extends FlowTestCase
             html_entry('name', $doc2),
         ];
 
-        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>');
-        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc1 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div id="id">2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc2 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><p>3</p></body></html>');
 
         yield 'equal attributes but different nodes' => [
             false,
@@ -51,8 +60,10 @@ final class HTMLEntryTest extends FlowTestCase
             html_entry('name', $doc2),
         ];
 
-        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
-        $doc2 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc1 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc2 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>');
 
         yield 'different names and equal simple html documents' => [
             false,
@@ -60,38 +71,39 @@ final class HTMLEntryTest extends FlowTestCase
             html_entry('other-name', $doc2),
         ];
 
-        $doc1 = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+        /* @phpstan-ignore-next-line */
+        $doc1 = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>');
 
         yield 'different types' => [
             false,
             html_entry('name', $doc1),
-            str_entry('other-name', '<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>'),
+            str_entry('other-name', '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>'),
         ];
     }
 
     public function test_canonicalization() : void
     {
-        $doc = HTMLDocument::fromString('<!DOCTYPE html><html><head></head><body><div id="foo">2</div><p>3</p></body></html>');
-        $doc2 = HTMLDocument::fromString(<<<'HTML'
+        $doc = '<!DOCTYPE html><html lang="en"><head></head><body><div id="foo">2</div><p>3</p></body></html>';
+        $doc2 = <<<'HTML'
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head></head>
 <body>
     <div id="foo">2</div>
     <p>3</p>
 </body>
 </html>
-HTML);
+HTML;
 
         self::assertNotEquals(
-            html_entry('row', $doc),
-            html_entry('row', $doc2),
+            html_entry('row', $doc)->toString(),
+            html_entry('row', $doc2)->toString(),
         );
     }
 
     public function test_creating_entry_from_valid_html_string() : void
     {
-        $html = '<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>';
+        $html = '<!DOCTYPE html><html lang="en"><head></head><body><div id="id">2</div><p>3</p></body></html>';
 
         $entry = html_entry('name', $html);
 
@@ -111,7 +123,7 @@ HTML);
     {
         $entry = html_entry('html', <<<'HTML'
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head></head>
 <body>
     <div id="foo">2</div>
@@ -136,7 +148,7 @@ HTML);
 
     public function test_map() : void
     {
-        $entry = html_entry('entry-name', '<!DOCTYPE html><html><head></head><body><div>baz</div></body></html>');
+        $entry = html_entry('entry-name', '<!DOCTYPE html><html lang="en"><head></head><body><div>baz</div></body></html>');
 
         self::assertEquals(
             $entry,
@@ -146,7 +158,7 @@ HTML);
 
     public function test_renames_entry() : void
     {
-        $entry = html_entry('entry-name', '<!DOCTYPE html><html><head></head><body><div>bar</div></body></html>');
+        $entry = html_entry('entry-name', '<!DOCTYPE html><html lang="en"><head></head><body><div>bar</div></body></html>');
         $newEntry = $entry->rename('new-entry-name');
 
         self::assertEquals('new-entry-name', $newEntry->name());
@@ -158,11 +170,12 @@ HTML);
     {
         $entry = html_entry('html', '<!DOCTYPE html><html lang="en"><head></head><body><div>foobar</div></body></html>');
 
-        $html = HTMLDocument::fromString('<!DOCTYPE html><html lang="en"><head></head><body><div>different</div></body></html>');
+        /* @phpstan-ignore-next-line */
+        $html = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div>different</div></body></html>');
 
         $newEntry = $entry->withValue($html);
 
         self::assertNotEquals($entry->toString(), $newEntry->toString());
-        self::assertEquals($html, $newEntry->toString());
+        self::assertEquals($html, $newEntry->value());
     }
 }

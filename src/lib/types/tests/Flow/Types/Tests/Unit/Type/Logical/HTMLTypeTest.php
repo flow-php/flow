@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_from_array, type_html};
+use Dom\HTMLDocument;
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
-use Flow\Types\Value\HTMLDocument;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 
+#[RequiresPhp('>= 8.4')]
 final class HTMLTypeTest extends TestCase
 {
     public static function assert_data_provider() : \Generator
     {
         yield 'valid HTMLDocument' => [
-            'value' => new HTMLDocument('<!DOCTYPE html><html><head></head><body></body></html>'),
+            'value' => HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body></body></html>'),
             'exceptionClass' => null,
         ];
 
@@ -73,21 +74,21 @@ final class HTMLTypeTest extends TestCase
     public static function cast_data_provider() : \Generator
     {
         yield 'valid HTMLDocument' => [
-            'value' => new HTMLDocument($html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
+            'value' => HTMLDocument::createFromString($html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
             'expected' => $html,
             'exceptionClass' => null,
         ];
 
         yield 'valid HTML string' => [
-            'value' => $html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
-            'expected' => $html,
-            'exceptionClass' => null,
+            'value' => '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'valid HTML with spaces' => [
             'value' => '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
-            'expected' => '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'valid HTML with new lines' => [
@@ -100,8 +101,8 @@ final class HTMLTypeTest extends TestCase
     </body>
 </html>
 HTML,
-            'expected' => '<!DOCTYPE html><html>    <head><title></title></head>    <body>        <p> invalid</p>    </body></html>',
-            'exceptionClass' => null,
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
         yield 'missing doctype' => [
@@ -127,12 +128,17 @@ HTML,
     public static function is_valid_data_provider() : \Generator
     {
         yield 'valid HTMLDocument' => [
-            'value' => new HTMLDocument('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
+            'value' => HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
             'expected' => true,
         ];
 
         yield 'valid HTML string' => [
             'value' => '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            'expected' => false,
+        ];
+
+        yield 'invalid HTML string' => [
+            'value' => '<html lang="en"><head></head><body><div><span>1</span></div></body></html>',
             'expected' => false,
         ];
     }
@@ -156,7 +162,7 @@ HTML,
         }
 
         $result = type_html()->cast($value);
-        self::assertSame($expected, $result->toString());
+        self::assertHtmlEquals($expected, $result->saveHtml());
     }
 
     #[DataProvider('is_valid_data_provider')]
@@ -178,6 +184,14 @@ HTML,
         self::assertSame(
             'html',
             type_html()->toString()
+        );
+    }
+
+    private function assertHtmlEquals(string $expected, string $html) : void
+    {
+        self::assertEquals(
+            \preg_replace('/\s*/', '', $expected),
+            \preg_replace('/\s*/', '', $html),
         );
     }
 }

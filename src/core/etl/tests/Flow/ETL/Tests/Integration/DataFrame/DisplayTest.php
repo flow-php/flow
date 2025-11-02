@@ -11,7 +11,6 @@ use function Flow\ETL\DSL\{bool_entry,
     float_entry,
     from_array,
     from_rows,
-    html_entry,
     int_entry,
     json_entry,
     list_entry,
@@ -76,7 +75,6 @@ final class DisplayTest extends FlowIntegrationTestCase
                                 ),
                                 enum_entry('enum', BackedStringEnum::three),
                                 xml_entry('xml', '<xml><node id="123">test<foo>bar</foo></node></xml>'),
-                                html_entry('html', '<!DOCTYPE html><html lang="en"><head></head><body></body></html>'),
                             ),
                         );
                     }
@@ -86,15 +84,15 @@ final class DisplayTest extends FlowIntegrationTestCase
 
         self::assertCommandOutputIdentical(
             <<<'ASCIITABLE'
-+------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+----------------------+
-|   id |      price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |  enum |                  xml |                 html |
-+------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+----------------------+
-| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> | <!DOCTYPE html><html |
-| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> | <!DOCTYPE html><html |
-| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> | <!DOCTYPE html><html |
-| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> | <!DOCTYPE html><html |
-| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> | <!DOCTYPE html><html |
-+------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+----------------------+
++------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
+|   id |      price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |  enum |                  xml |
++------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
+| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
+| 1234 | 123.450000 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | three | <xml><node id="123"> |
++------+------------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+-------+----------------------+
 5 rows
 
 ASCIITABLE,

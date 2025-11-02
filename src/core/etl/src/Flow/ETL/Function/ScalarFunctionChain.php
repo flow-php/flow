@@ -311,6 +311,16 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Hash($this, $algorithm);
     }
 
+    public function htmlQuerySelector(ScalarFunction|string $path) : HTMLQuerySelector
+    {
+        return new HTMLQuerySelector($this, $path);
+    }
+
+    public function htmlQuerySelectorAll(ScalarFunction|string $path) : HTMLQuerySelectorAll
+    {
+        return new HTMLQuerySelectorAll($this, $path);
+    }
+
     /**
      * Returns the index of given $needle in string.
      */

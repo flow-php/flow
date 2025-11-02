@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Native\String;
 
 use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_html, type_integer, type_json, type_null, type_string, type_time_zone, type_uuid, type_xml};
 use Flow\Types\Type\Native\String\StringTypeNarrower;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
 final class StringTypeNarrowerTest extends TestCase
@@ -57,6 +58,7 @@ final class StringTypeNarrowerTest extends TestCase
         self::assertEquals(type_string(), $narrower->narrow('1.0.0'));
     }
 
+    #[RequiresPhp('>= 8.4')]
     public function test_detecting_html() : void
     {
         $narrower = new StringTypeNarrower();
