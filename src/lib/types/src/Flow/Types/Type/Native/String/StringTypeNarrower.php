@@ -29,6 +29,9 @@ final readonly class StringTypeNarrower implements TypeNarrower
         $this->string = \trim($string);
     }
 
+    /**
+     * @return Type<mixed>
+     */
     public static function narrow(mixed $value) : Type
     {
         if (!\is_string($value)) {
