@@ -55,7 +55,7 @@
         {{ importmap() }}
     {% endblock %}
 </head>
-<body class="scroll-smooth bg-black text-white">
+<body class="scroll-smooth bg-black text-white" data-environment="{{ app.environment }}">
     <header class="py-2 text-white bg-blue-200">
         <div class="mx-auto max-w-screen-xl px-4 flex items-center justify-between">
             <a href="{{ path('home') }}">

@@ -1,6 +1,15 @@
 import { startStimulusApp } from '@symfony/stimulus-bundle';
 
-const app = startStimulusApp();
+addEventListener("DOMContentLoaded", (event) => {
+    const app = startStimulusApp()
 
-// register any custom, 3rd party controllers here
-// app.register('some_controller_name', SomeImportedController);
+    let env = window.document.body.dataset.environment;
+
+    if (window.location.search.includes('__env=')) {
+        env = window.location.search.split('__env=')[1];
+    }
+
+    if (env === 'prod') {
+        app.debug = false;
+    }
+})

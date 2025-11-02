@@ -10,7 +10,7 @@ pre[class*="language-"] {
     background: transparent;
     text-shadow: 0 1px rgba(0, 0, 0, 0.3);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-    font-size: 0.9em;
+    font-size: 16px;
     text-align: left;
     white-space: pre;
     word-spacing: normal;

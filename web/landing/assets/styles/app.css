@@ -236,3 +236,64 @@ code {
 .mermaid-wrapper .mermaid {
     @apply z-0 !p-0;
 }
+
+#playground {
+    @apply py-10 px-2 sm:px-4 mx-auto max-w-screen-2xl;
+
+    h1 {
+        @apply text-5xl mb-10;
+    }
+
+    div.navigation {
+        @apply grid grid-cols-12 mb-4;
+        display: none; /* Hidden by default, shown by Stimulus */
+
+        div.actions {
+            @apply col-start-10 col-span-3 text-right;
+
+            button {
+                @apply mr-4;
+            }
+
+            a {
+                @apply mr-4 no-underline text-white;
+            }
+
+            a:hover {
+                @apply no-underline;
+            }
+        }
+    }
+
+    div.editor {
+        @apply grid gap-6 grid-cols-12 mb-6;
+        display: none; /* Hidden by default, shown by Stimulus */
+
+        /*div.files-container {*/
+        /*    @apply rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2*/
+        /*        col-span-2;*/
+        /*}*/
+
+        div.code-container {
+            @apply
+                rounded overflow-auto shadow-2xl shadow-gray rounded border-gray border-2
+                col-span-12;
+        }
+    }
+
+    div.output-container {
+        @apply rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2
+            min-h-[100px]
+        ;
+        display: none; /* Hidden by default, shown by Stimulus */
+
+        pre {
+            @apply w-full h-full resize-none outline-none p-4;
+        }
+    }
+
+    .loading-bar {
+        @apply h-1 bg-blue-600 transition-all duration-300 ease-out;
+        width: 0;
+    }
+}

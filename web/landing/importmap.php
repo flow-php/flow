@@ -80,4 +80,10 @@ return [
     '@panzoom/panzoom' => [
         'version' => '4.6.0',
     ],
+    'ace-builds' => [
+        'version' => '1.36.5',
+    ],
+    'lz-string' => [
+        'version' => '1.5.0',
+    ],
 ];

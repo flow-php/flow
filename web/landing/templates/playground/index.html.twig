@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Flow PHP - Playground
+{%- endblock -%}
+
+{%- block description -%}
+    Flow PHP in Browser - An interactive playground to experiment with Flow PHP, a PHP-based, strongly typed data processing framework with low memory footprint.
+{%- endblock -%}
+
+{% block hero %}
+{% endblock %}
+
+{% block main %}
+<div id="playground"
+     data-controller="playground-editor wasm share-code"
+     data-playground-editor-code-editor-outlet="#code-editor"
+     data-share-code-code-editor-outlet="#code-editor"
+     data-playground-editor-flow-phar-value="{{ asset('wasm/flow.phar') }}"
+     data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
+     data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
+     data-action="wasm:ready->playground-editor#onWasmReady
+                  wasm:progress->playground-editor#onWasmProgress
+                  wasm:output->playground-editor#onWasmOutput
+                  wasm:error->playground-editor#onWasmError">
+    <h1>Playground</h1>
+
+    <div id="loader">
+        <div data-playground-editor-target="loadingMessage"></div>
+        <div class="loading-progress">
+            <div data-playground-editor-target="loadingBar" class="loading-bar"></div>
+        </div>
+        <div data-playground-editor-target="loadingPercent"></div>
+    </div>
+
+    <div class="navigation" data-playground-editor-target="navigation">
+        <div class="actions">
+            <button
+                    data-controller="image-swap"
+                    data-playground-editor-target="runButton"
+                    data-action="click->playground-editor#run mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                Run <img src="{{ asset('images/icons/play.svg') }}"
+                         alt="Run"
+                         class="ml-1 inline-block"
+                         data-image-swap-target="image"
+                         data-hover-src="{{ asset('images/icons/play-active.svg') }}">
+            </button>
+            <button
+                    data-controller="image-swap"
+                    data-action="click->share-code#share mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                Share <img src="{{ asset('images/icons/share.svg') }}"
+                     alt="Share"
+                     class="ml-1 inline-block"
+                     data-image-swap-target="image"
+                     data-hover-src="{{ asset('images/icons/share-active.svg') }}">
+            </button>
+            <a href="{{ path('playground') }}"
+               data-controller="image-swap reset-confirm"
+               data-action="click->reset-confirm#confirmReset mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                Reset <img src="{{ asset('images/icons/refresh.svg') }}"
+                           alt="Reset"
+                           class="ml-1 inline-block"
+                           data-image-swap-target="image"
+                           data-hover-src="{{ asset('images/icons/refresh-active.svg') }}">
+            </a>
+        </div>
+    </div>
+    <div class="editor" data-playground-editor-target="editor">
+        <div class="code-container">
+                <textarea id="code-editor" data-controller="code-editor" data-theme="ace/theme/github_dark">
+<?php
+
+declare(strict_types=1);
+
+use function Flow\ETL\DSL\{data_frame, from_array, to_output, ref, lit};
+
+require_once 'phar://flow.phar/vendor/autoload.php';
+
+data_frame()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'John', 'age' => 30, 'city' => 'New York'],
+        ['id' => 2, 'name' => 'Jane', 'age' => 25, 'city' => 'London'],
+        ['id' => 3, 'name' => 'Bob', 'age' => 35, 'city' => 'Paris'],
+        ['id' => 4, 'name' => 'Alice', 'age' => 28, 'city' => 'Tokyo'],
+        ['id' => 5, 'name' => 'Charlie', 'age' => 32, 'city' => 'Berlin'],
+    ]))
+    ->filter(ref('age')->greaterThan(lit(28)))
+    ->sortBy(ref('age')->desc())
+    ->select('name', 'age', 'city')
+    ->collect()
+    ->write(to_output(truncate: false))
+    ->run();</textarea>
+        </div>
+    </div>
+    <div class="output-container" data-playground-editor-target="outputContainer">
+        <h2>Output</h2>
+        <pre id="output" data-playground-editor-target="output"></pre>
+    </div>
+</div>
+{% endblock %}

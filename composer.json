@@ -430,7 +430,13 @@
         ],
         "build:phar": [
             "composer update --working-dir=./src/cli",
-            "tools/box/vendor/bin/box compile --config ./src/cli/box.json"
+            "tools/box/vendor/bin/box compile --config ./src/cli/box.json",
+            "cp ./build/flow.phar ./web/landing/assets/wasm/flow.phar"
+        ],
+        "build:wasm": [
+            "Composer\\Config::disableProcessTimeout",
+            "cd wasm && ./build.sh",
+            "@build:phar"
         ],
         "build:docs": [
             "bin/docs.php dsl:dump web/landing/resources/dsl.json"
