@@ -84,6 +84,26 @@ final class HTMLTypeTest extends TestCase
             'exceptionClass' => null,
         ];
 
+        yield 'valid HTML with spaces' => [
+            'value' => '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
+            'expected' => '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid HTML with new lines' => [
+            'value' => <<<'HTML'
+<!DOCTYPE html>
+<html>
+    <head><title></title></head>
+    <body>
+        <p> invalid</p>
+    </body>
+</html>
+HTML,
+            'expected' => '<!DOCTYPE html><html>    <head><title></title></head>    <body>        <p> invalid</p>    </body></html>',
+            'exceptionClass' => null,
+        ];
+
         yield 'missing doctype' => [
             'value' => '<html><body><div><span>bar</span></div></body></html>',
             'expected' => null,
