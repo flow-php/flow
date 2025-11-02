@@ -66,10 +66,22 @@ export default class extends Controller {
 
     // Called when WASM has an error
     onWasmError(event) {
-        const { error } = event.detail
+        const { error, errorInfo } = event.detail
+        this.#log('Error event received:', { error, errorInfo })
         this.#hideLoading()
         this.#showContentAfterLoading()
         this.#showOutput(error)
+
+        // Highlight error in code editor if we have errorInfo
+        if (errorInfo && this.hasCodeEditorOutlet) {
+            this.#log('Highlighting error:', errorInfo)
+            this.codeEditorOutlet.highlightError(errorInfo)
+        } else {
+            this.#log('No errorInfo or code editor outlet not available', {
+                hasErrorInfo: !!errorInfo,
+                hasOutlet: this.hasCodeEditorOutlet
+            })
+        }
     }
 
     // Run button click handler
@@ -95,6 +107,9 @@ export default class extends Controller {
             this.#showOutput('Code editor not found')
             return
         }
+
+        // Clear previous errors before running
+        this.codeEditorOutlet.clearErrors()
 
         const code = this.codeEditorOutlet.getCode()
         this.#showOutput('Running...')

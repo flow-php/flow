@@ -25,7 +25,7 @@ export default class extends Controller {
     // Public API for execution
     evaluate(code) {
         if (!this.#phpModuleLoaded) {
-            this.#dispatchError('PHP module not loaded yet')
+            this.#dispatchError('PHP module not loaded yet', null)
             return false
         }
 
@@ -42,12 +42,23 @@ export default class extends Controller {
                 [code]
             )
 
+            // Check if output contains PHP errors (even if execution didn't throw)
+            const errorInfo = this.#parseErrorMessage(this.#combinedOutput)
+            if (errorInfo) {
+                // Output contains an error, dispatch as error
+                this.#log('Parsed error info:', errorInfo)
+                this.#dispatchError(this.#combinedOutput, errorInfo)
+                return false
+            }
+
             const output = this.#combinedOutput || 'Code executed successfully (no output)'
             this.#dispatchOutput(output)
             return true
         } catch (e) {
             this.#logError('Execution error:', e)
-            this.#dispatchError('Execution error: ' + e.message + '\n' + this.#combinedOutput)
+            const errorInfo = this.#parseErrorMessage(this.#combinedOutput)
+            this.#log('Parsed error info:', errorInfo)
+            this.#dispatchError('Execution error: ' + e.message + '\n' + this.#combinedOutput, errorInfo)
             return false
         }
     }
@@ -141,8 +152,45 @@ export default class extends Controller {
         this.dispatch('output', { detail: { output } })
     }
 
-    #dispatchError(error) {
-        this.dispatch('error', { detail: { error } })
+    #dispatchError(error, errorInfo) {
+        this.dispatch('error', { detail: { error, errorInfo } })
+    }
+
+    #parseErrorMessage(output) {
+        if (!output) {
+            return null
+        }
+
+        // Parse error messages from PHP WASM output
+        // Example formats:
+        // - "At PIB:17" (ParseError, simple)
+        // - "called in PIB on line 18" (TypeError, more complex)
+        // - "stderr: At PIB:24" (with stderr prefix)
+
+        const patterns = [
+            /At PIB:(\d+)/,                    // Matches "At PIB:17"
+            /in PIB on line (\d+)/,            // Matches "called in PIB on line 18"
+            /stderr: At PIB:(\d+)/             // Matches "stderr: At PIB:24"
+        ]
+
+        for (const pattern of patterns) {
+            const match = output.match(pattern)
+            if (match) {
+                const lineNumber = parseInt(match[1], 10)
+                // Extract error message - get the first line that contains "throwable" or "Error"
+                const errorMessageMatch = output.match(/Uncaught throwable '(\w+)': (.+?)(?:\n|$)/)
+                const errorType = errorMessageMatch ? errorMessageMatch[1] : 'Error'
+                const errorMessage = errorMessageMatch ? errorMessageMatch[2] : 'Syntax error'
+
+                return {
+                    line: lineNumber,
+                    type: errorType,
+                    message: errorMessage
+                }
+            }
+        }
+
+        return null
     }
 
     #log(...args) {

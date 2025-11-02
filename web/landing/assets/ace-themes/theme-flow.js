@@ -142,6 +142,13 @@ ace.define("ace/theme/flow", ["require", "exports", "module", "ace/lib/dom"], fu
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQIW2NgYGBgYHjy5Ml/ACIKAsyJx1gMAAAAAElFTkSuQmCC) right repeat-y;
 }
 
+/* === ERROR LINE HIGHLIGHTING === */
+.ace-flow .ace_error-line {
+    position: absolute;
+    background-color: rgba(255, 123, 114, 0.15) !important;
+    border-left: 3px solid #ff7b72 !important;
+}
+
 /* === AUTOCOMPLETE STYLING === */
 .ace_autocomplete {
     background: #21212b !important;

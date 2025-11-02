@@ -5,6 +5,7 @@ import { flowCompleter } from "../completers/flow_completer.js"
 
 export default class extends Controller {
     #editor
+    #errorMarkers = []
 
     connect() {
         ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.36.5/src-noconflict/')
@@ -72,5 +73,70 @@ export default class extends Controller {
     // Public API for getting code (used by outlets)
     getCode() {
         return this.#editor ? this.#editor.getValue() : ''
+    }
+
+    // Public API for highlighting error lines
+    highlightError(errorInfo) {
+        console.log('[CodeEditor] highlightError called with:', errorInfo)
+
+        if (!this.#editor || !errorInfo) {
+            console.log('[CodeEditor] No editor or errorInfo:', { hasEditor: !!this.#editor, errorInfo })
+            return
+        }
+
+        this.clearErrors()
+
+        const { line, type, message } = errorInfo
+        if (!line) {
+            console.log('[CodeEditor] No line number in errorInfo')
+            return
+        }
+
+        console.log('[CodeEditor] Highlighting line:', line, 'with message:', message)
+
+        // Convert 1-based line number to 0-based
+        const editorLine = line - 1
+
+        // Add error annotation (displays in gutter and shows tooltip on hover)
+        const annotations = this.#editor.session.getAnnotations()
+        annotations.push({
+            row: editorLine,
+            column: 0,
+            text: `${type}: ${message}`,
+            type: 'error'
+        })
+        this.#editor.session.setAnnotations(annotations)
+        console.log('[CodeEditor] Annotations set:', annotations)
+
+        // Add marker to highlight the line with red background
+        const Range = ace.require('ace/range').Range
+        const range = new Range(editorLine, 0, editorLine, 1)
+        const markerId = this.#editor.session.addMarker(
+            range,
+            'ace_error-line',
+            'fullLine',
+            false
+        )
+        this.#errorMarkers.push(markerId)
+        console.log('[CodeEditor] Marker added with ID:', markerId)
+
+        // Scroll to the error line
+        this.#editor.scrollToLine(editorLine, true, true, () => {})
+    }
+
+    // Public API for clearing error highlights
+    clearErrors() {
+        if (!this.#editor) {
+            return
+        }
+
+        // Remove all error markers
+        this.#errorMarkers.forEach(markerId => {
+            this.#editor.session.removeMarker(markerId)
+        })
+        this.#errorMarkers = []
+
+        // Clear annotations
+        this.#editor.session.clearAnnotations()
     }
 }
