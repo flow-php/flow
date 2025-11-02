@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import ace from "ace-builds"
+import "../ace-themes/theme-flow.js"
 
 export default class extends Controller {
     #editor
@@ -16,7 +17,7 @@ export default class extends Controller {
         textarea.parentNode.insertBefore(editorDiv, textarea);
 
         this.#editor = ace.edit(editorDiv);
-        this.#editor.setTheme(this.themeValue);
+        this.#editor.setTheme('ace/theme/flow');
         this.#editor.session.setMode(this.modeValue);
         this.#editor.setValue(textarea.value, -1);
         this.#editor.session.setUseWorker(false);
@@ -33,10 +34,6 @@ export default class extends Controller {
             this.#editor.destroy();
             this.#editor = null;
         }
-    }
-
-    get themeValue() {
-        return this.element.dataset.theme || 'ace/theme/github_dark';
     }
 
     get modeValue() {

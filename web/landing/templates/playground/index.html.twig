@@ -51,9 +51,11 @@
                 <textarea id="code-editor" data-controller="code-editor" data-theme="ace/theme/github_dark">
 <?php
 
-require_once 'phar://flow.phar/vendor/autoload.php';
+declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_array, to_output, ref, lit};
+
+require_once 'phar://flow.phar/vendor/autoload.php';
 
 data_frame()
     ->read(from_array([
