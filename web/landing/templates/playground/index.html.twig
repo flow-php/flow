@@ -35,13 +35,13 @@
     <div class="navigation" data-playground-editor-target="navigation">
         <div class="actions">
             <button class="hover:text-green-600"
+                    data-controller="image-swap"
                     data-playground-editor-target="runButton"
-                    data-action="click->playground-editor#run">
+                    data-action="click->playground-editor#run mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Run <img src="{{ asset('images/icons/play.svg') }}"
                      alt="Run"
                      class="ml-1 inline-block"
-                     data-controller="image-swap"
-                     data-action="mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave"
+                     data-image-swap-target="image"
                      data-hover-src="{{ asset('images/icons/play-active.svg') }}">
             </button>
         </div>

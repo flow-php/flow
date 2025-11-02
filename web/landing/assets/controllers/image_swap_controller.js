@@ -1,20 +1,25 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
+    static targets = ["image"]
+
     #originalSrc
 
     connect() {
-        this.#originalSrc = this.element.src
+        const imageElement = this.hasImageTarget ? this.imageTarget : this.element
+        this.#originalSrc = imageElement.src
     }
 
     mouseEnter() {
-        const hoverSrc = this.element.dataset.hoverSrc
+        const imageElement = this.hasImageTarget ? this.imageTarget : this.element
+        const hoverSrc = imageElement.dataset.hoverSrc
         if (hoverSrc) {
-            this.element.src = hoverSrc
+            imageElement.src = hoverSrc
         }
     }
 
     mouseLeave() {
-        this.element.src = this.#originalSrc
+        const imageElement = this.hasImageTarget ? this.imageTarget : this.element
+        imageElement.src = this.#originalSrc
     }
 }
