@@ -94,18 +94,8 @@ final class HTMLDocumentTest extends TestCase
         );
     }
 
-    #[RequiresPhp('>= 8.4')]
     #[DataProvider('provide_invalid')]
-    public function test_create_with_invalid_html_on_newer(string $value) : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        new HTMLDocument($value);
-    }
-
-    #[RequiresPhp('< 8.4')]
-    #[DataProvider('provide_invalid')]
-    public function test_create_with_invalid_html_on_old(string $value) : void
+    public function test_create_with_invalid_html(string $value) : void
     {
         $this->expectException(InvalidArgumentException::class);
 
