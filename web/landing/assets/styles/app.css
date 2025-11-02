@@ -249,7 +249,19 @@ code {
         display: none; /* Hidden by default, shown by Stimulus */
 
         div.actions {
-            @apply col-start-10 col-span-3;
+            @apply col-start-10 col-span-3 text-right;
+
+            button {
+                @apply mr-4;
+            }
+
+            a {
+                @apply mr-4 no-underline text-white;
+            }
+
+            a:hover {
+                @apply no-underline;
+            }
         }
     }
 
@@ -282,6 +294,6 @@ code {
 
     .loading-bar {
         @apply h-1 bg-blue-600 transition-all duration-300 ease-out;
-        width: 0%;
+        width: 0;
     }
 }

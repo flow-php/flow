@@ -6,6 +6,9 @@ import { flowCompleter } from "../completers/flow_completer.js"
 export default class extends Controller {
     #editor
     #errorMarkers = []
+    #initialValueSet = false
+    #fullyInitialized = false
+    #pendingValue = null
 
     connect() {
         ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.36.5/src-noconflict/')
@@ -21,7 +24,12 @@ export default class extends Controller {
         this.#editor = ace.edit(editorDiv);
         this.#editor.setTheme('ace/theme/flow');
         this.#editor.session.setMode(this.modeValue);
-        this.#editor.setValue(textarea.value, -1);
+
+        const query = new URLSearchParams(window.location.search);
+        if (!query.has('c')) {
+            this.#editor.setValue(textarea.value, -1);
+            this.#initialValueSet = true;
+        }
         this.#editor.session.setUseWorker(false);
         this.#editor.setShowPrintMargin(false);
         this.#editor.setFontSize(16);
@@ -52,6 +60,14 @@ export default class extends Controller {
                 enableLiveAutocompletion: true,
                 enableSnippets: true
             });
+
+            this.#fullyInitialized = true
+
+            if (this.#pendingValue !== null) {
+                console.log('[CodeEditor] Applying pending value:', this.#pendingValue)
+                this.#editor.setValue(this.#pendingValue, -1)
+                this.#pendingValue = null
+            }
         });
 
         this.#editor.session.on('change', () => {
@@ -73,6 +89,20 @@ export default class extends Controller {
     // Public API for getting code (used by outlets)
     getCode() {
         return this.#editor ? this.#editor.getValue() : ''
+    }
+
+    // Public API for setting code (used by outlets)
+    setValue(code) {
+        console.log('[CodeEditor] setValue called with code:', code)
+        console.log('[CodeEditor] Fully initialized:', this.#fullyInitialized)
+
+        if (this.#fullyInitialized && this.#editor) {
+            console.log('[CodeEditor] Setting value immediately')
+            this.#editor.setValue(code, -1)
+        } else {
+            console.log('[CodeEditor] Queuing value for later')
+            this.#pendingValue = code
+        }
     }
 
     // Public API for highlighting error lines

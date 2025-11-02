@@ -13,8 +13,9 @@
 
 {% block main %}
 <div id="playground"
-     data-controller="playground-editor wasm"
+     data-controller="playground-editor wasm share-code"
      data-playground-editor-code-editor-outlet="#code-editor"
+     data-share-code-code-editor-outlet="#code-editor"
      data-playground-editor-flow-phar-value="{{ asset('wasm/flow.phar') }}"
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
@@ -34,16 +35,34 @@
 
     <div class="navigation" data-playground-editor-target="navigation">
         <div class="actions">
-            <button class="hover:text-green-600"
+            <button
                     data-controller="image-swap"
                     data-playground-editor-target="runButton"
                     data-action="click->playground-editor#run mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Run <img src="{{ asset('images/icons/play.svg') }}"
-                     alt="Run"
+                         alt="Run"
+                         class="ml-1 inline-block"
+                         data-image-swap-target="image"
+                         data-hover-src="{{ asset('images/icons/play-active.svg') }}">
+            </button>
+            <button
+                    data-controller="image-swap"
+                    data-action="click->share-code#share mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                Share <img src="{{ asset('images/icons/share.svg') }}"
+                     alt="Share"
                      class="ml-1 inline-block"
                      data-image-swap-target="image"
-                     data-hover-src="{{ asset('images/icons/play-active.svg') }}">
+                     data-hover-src="{{ asset('images/icons/share-active.svg') }}">
             </button>
+            <a href="{{ path('playground') }}"
+               data-controller="image-swap reset-confirm"
+               data-action="click->reset-confirm#confirmReset mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                Reset <img src="{{ asset('images/icons/refresh.svg') }}"
+                           alt="Reset"
+                           class="ml-1 inline-block"
+                           data-image-swap-target="image"
+                           data-hover-src="{{ asset('images/icons/refresh-active.svg') }}">
+            </a>
         </div>
     </div>
     <div class="editor" data-playground-editor-target="editor">
