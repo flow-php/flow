@@ -35,9 +35,9 @@ use function Flow\ETL\DSL\{bool_schema,
     time_schema,
     uuid_schema,
     xml_schema};
-use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_string, type_structure, type_time_zone};
+use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_null, type_string, type_structure, type_time_zone};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
-use Flow\ETL\Row\Entry\TimeEntry;
+use Flow\ETL\Row\Entry\{StringEntry, TimeEntry};
 use Flow\ETL\Row\{Entry, EntryFactory};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
@@ -415,6 +415,14 @@ final class EntryFactoryTest extends TestCase
                 'street' => 'Floriańska',
                 'zip' => '31-021',
             ])
+        );
+    }
+
+    public function test_null_type_handled() : void
+    {
+        self::assertEquals(
+            StringEntry::fromNull('e'),
+            $this->entryFactory->createAs('e', null, type_null())
         );
     }
 

@@ -128,9 +128,9 @@ final readonly class EntryFactory
                 EnumType::class => enum_entry($entryName, null, $metadata),
                 ArrayType::class, JsonType::class => json_entry($entryName, null, $metadata),
                 NullType::class => StringEntry::fromNull($entryName, $metadata),
-                HTMLType::class => html_entry($entryName, null, $metadata),
                 XMLType::class => xml_entry($entryName, null, $metadata),
                 XMLElementType::class => xml_element_entry($entryName, null, $metadata),
+                HTMLType::class => html_entry($entryName, null, $metadata),
                 default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
             };
         }
