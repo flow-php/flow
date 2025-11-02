@@ -46,6 +46,15 @@ pkgs.mkShell {
         pkgs.figlet
         pkgs.symfony-cli
         pkgs.act
+
+        # WASM
+        pkgs.emscripten
+        pkgs.autoconf
+        pkgs.wget
+        pkgs.gnutar
+        pkgs.xz
+        pkgs.libxml2
+        pkgs.pkg-config
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
     ;

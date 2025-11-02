@@ -1,0 +1,72 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Flow PHP - Playground
+{%- endblock -%}
+
+{%- block description -%}
+    Flow PHP in Browser - An interactive playground to experiment with Flow PHP, a PHP-based, strongly typed data processing framework with low memory footprint.
+{%- endblock -%}
+
+{% block hero %}
+{% endblock %}
+
+{% block main %}
+<div id="playground"
+     data-controller="playground"
+     data-playground-php-js-value="{{ asset('wasm/php.js') }}"
+     data-playground-php-wasm-value="{{ asset('wasm/php.wasm') }}"
+     data-playground-flow-phar-value="{{ asset('wasm/flow.phar') }}">
+    <h1>Playground</h1>
+
+    <div id="loader">
+        <div data-playground-target="loadingMessage"></div>
+        <div class="loading-progress">
+            <div data-playground-target="loadingBar" class="loading-bar"></div>
+        </div>
+        <div data-playground-target="loadingPercent"></div>
+    </div>
+
+    <div class="navigation" data-playground-target="navigation">
+        <div class="actions">
+            <button class="hover:text-green-600"
+                    data-playground-target="runButton"
+                    data-action="click->playground#run">
+                Run <img src="{{ asset('images/icons/play.svg') }}"
+                     alt="Run"
+                     class="ml-1 inline-block"
+                     data-controller="image-swap"
+                     data-action="mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave"
+                     data-hover-src="{{ asset('images/icons/play-active.svg') }}">
+            </button>
+        </div>
+    </div>
+    <div class="editor" data-playground-target="editor">
+        <div class="code-container">
+                <textarea id="features_example" data-controller="code-editor" data-theme="ace/theme/github_dark">
+<?php
+
+use function Flow\ETL\DSL\{data_frame, from_array, to_output, ref, lit};
+
+data_frame()
+    ->read(from_array([
+        ['id' => 1, 'name' => 'John', 'age' => 30, 'city' => 'New York'],
+        ['id' => 2, 'name' => 'Jane', 'age' => 25, 'city' => 'London'],
+        ['id' => 3, 'name' => 'Bob', 'age' => 35, 'city' => 'Paris'],
+        ['id' => 4, 'name' => 'Alice', 'age' => 28, 'city' => 'Tokyo'],
+        ['id' => 5, 'name' => 'Charlie', 'age' => 32, 'city' => 'Berlin'],
+    ]))
+    ->filter(ref('age')->greaterThan(lit(28)))
+    ->sortBy(ref('age')->desc())
+    ->select('name', 'age', 'city')
+    ->collect()
+    ->write(to_output(truncate: false))
+    ->run();</textarea>
+        </div>
+    </div>
+    <div class="output-container" data-playground-target="outputContainer">
+        <h2>Output</h2>
+        <pre id="output" data-playground-target="output"></pre>
+    </div>
+</div>
+{% endblock %}

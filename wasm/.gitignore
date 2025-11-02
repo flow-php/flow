@@ -1,0 +1,29 @@
+/php.wasm
+/php.js
+/php.data
+gh-pages
+
+# Build artifacts
+/php-8.*
+/php-7.*
+*.phar
+*.phar.br
+manifest.json
+/libxml2-*
+
+# Build logs
+*.log
+
+# Nix
+.nix/shell/result
+.direnv/
+result
+
+# Tailwind CSS
+/tailwindcss
+/input.css
+/tailwind.config.js
+
+# Editor files
+.*.swp
+.*.swo

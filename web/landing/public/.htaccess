@@ -1,0 +1,20 @@
+# Set correct MIME type for WebAssembly files
+<IfModule mod_mime.c>
+    AddType application/wasm .wasm
+</IfModule>
+
+# Enable Symfony routing
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect to URI without front controller to prevent duplicate content
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^index\.php(?:/(.*)|$) %{ENV:BASE}/$1 [R=301,L]
+
+    # If the requested filename exists, simply serve it.
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Rewrite all other queries to the front controller.
+    RewriteRule ^ %{ENV:BASE}/index.php [L]
+</IfModule>

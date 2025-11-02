@@ -19,7 +19,6 @@ final class HomeController extends AbstractController
     #[Route('/', name: 'home', options: ['sitemap' => true])]
     public function home() : Response
     {
-
         return $this->render('main/index.html.twig', [
             'navigation' => $this->examples->topicsNavigation(),
         ]);
