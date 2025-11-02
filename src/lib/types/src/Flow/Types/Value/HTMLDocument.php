@@ -6,48 +6,39 @@ namespace Flow\Types\Value;
 
 use Flow\Types\Exception\InvalidArgumentException;
 
-final class HTMLDocument implements \Stringable
+final readonly class HTMLDocument implements \Stringable
 {
+    private const HTML_ALIKE_REGEX = <<<'REGXP'
+@^
+    <!DOCTYPE\s+html[^>]*>\s*      # must start with <!DOCTYPE html ...>
+    <html[^>]*>\s*                 # opening <html>
+    <head[^>]*>.*?<\/head>\s*      # exactly one <head> ... </head>
+    <body[^>]*>.*?<\/body>\s*      # exactly one <body> ... </body>
+    <\/html>\s*                    # closing </html>
+$@mix
+REGXP;
+
     private string $value;
 
     public function __construct(string|object $value)
     {
-        if ('' === $value) {
-            $this->value = $value;
-        } elseif (\is_string($value)) {
-            if (\class_exists('\Dom\HTMLDocument', false)) {
-                $options = \LIBXML_HTML_NOIMPLIED;
-
-                if (defined('Dom\HTML_NO_DEFAULT_NS')) {
-                    $options |= constant('\Dom\HTML_NO_DEFAULT_NS');
-                }
-
-                $document = \Dom\HTMLDocument::createFromString($value, $options);
-
-                $this->value = $document->saveHTML();
-            } else {
-                $document = new \DOMDocument();
-
-                $result = @$document->loadHTML($value, \LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD);
-
-                if ($result === false) {
-                    throw new InvalidArgumentException("Invalid value '{$value}'");
-                }
-
-                $value = $document->saveHTML() ?: throw new InvalidArgumentException("Invalid value '{$value}'");
-
-                $this->value = trim($value);
-            }
-        } elseif ($value instanceof \DOMDocument) {
-            $value = $value->saveHTML($value->documentElement) ?: throw new InvalidArgumentException('Invalid value ' . var_export($value, true));
-
-            $this->value = trim($value);
+        if ($value instanceof \DOMDocument) {
+            $value = $value->saveHTML($value) ?: '';
         } elseif (is_a($value, '\Dom\HTMLDocument', true)) {
             /* @phpstan-ignore-next-line */
-            $this->value = $value->saveHtml();
-        } else {
-            throw new InvalidArgumentException('Invalid value ' . var_export($value, true));
+            $value = $value->saveHtml();
+        } elseif (!is_string($value)) {
+            throw new InvalidArgumentException('Invalid HTML document type: ' . $value::class);
         }
+
+        // Cut all new lines and tabs
+        $value = trim(str_replace(["\n", "\t"], '', $value));
+
+        if (!$this->isValid($value)) {
+            throw new InvalidArgumentException('Invalid HTML document given: ' . var_export($value, true));
+        }
+
+        $this->value = $value;
     }
 
     public static function fromString(string $value) : self
@@ -68,5 +59,14 @@ final class HTMLDocument implements \Stringable
     public function toString() : string
     {
         return $this->value;
+    }
+
+    private function isValid(string $value) : bool
+    {
+        if ('' === $value) {
+            return false;
+        }
+
+        return \preg_match(self::HTML_ALIKE_REGEX, $value) === 1;
     }
 }
