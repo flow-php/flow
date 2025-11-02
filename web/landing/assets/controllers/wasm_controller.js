@@ -3,8 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
     static values = {
         phpJs: String,
-        phpWasm: String,
-        flowPhar: String
+        phpWasm: String
     }
 
     #phpModule = null
@@ -30,38 +29,9 @@ export default class extends Controller {
             return false
         }
 
-        // Strip PHP opening tag if present (eval doesn't need it)
-        const userCode = code.replace(/^<\?php\s*/i, '')
-
-        // Create the runner code
-        const flowPharFilename = this.flowPharValue.split('/').pop()
-        const runnerCode = `
-error_reporting(E_ALL);
-ini_set('display_errors', 'stdout');
-
-// Check if phar file exists
-if (!file_exists('/${flowPharFilename}')) {
-    echo "Error: Flow phar file not found at: /${flowPharFilename}\\n";
-    echo "Current directory: " . getcwd() . "\\n";
-    echo "Files in root: " . print_r(scandir('/'), true) . "\\n";
-    exit(1);
-}
-
-// Load the Flow phar
-require_once 'phar:///${flowPharFilename}/vendor/autoload.php';
-
-try {
-    // Execute the user's code
-    eval(${JSON.stringify(userCode)});
-} catch (\\Throwable $e) {
-    echo "Error: " . $e->getMessage() . "\\n";
-    echo "File: " . $e->getFile() . "\\n";
-    echo "Line: " . $e->getLine() . "\\n";
-    echo "\\nStack trace:\\n" . $e->getTraceAsString() . "\\n";
-}
-`
-
         // Clear output and execute
+        // Error reporting is configured in C code (pib_eval.c)
+        // Code is passed as-is, including <?php tag
         this.#combinedOutput = ''
 
         try {
@@ -69,7 +39,7 @@ try {
                 'pib_eval',
                 'number',
                 ['string'],
-                [runnerCode]
+                [code]
             )
 
             const output = this.#combinedOutput || 'Code executed successfully (no output)'
@@ -85,6 +55,11 @@ try {
     // Public API for checking ready state
     isReady() {
         return this.#phpModuleLoaded
+    }
+
+    // Public API for accessing PHP module (for filesystem operations)
+    getModule() {
+        return this.#phpModule
     }
 
     #loadPHPModule() {
@@ -131,16 +106,11 @@ try {
                     this.#phpModule = module
                     this.#phpModuleLoaded = true
                     this.#log('PHP module initialized successfully')
-                    this.#dispatchProgress('Loading Flow PHP library...', 60)
+                    this.#dispatchProgress('Ready!', 100)
 
-                    // Load Flow phar
-                    this.#loadFlowPhar(() => {
-                        this.#log('Flow phar loaded successfully')
-                        this.#dispatchProgress('Ready!', 100)
-                        setTimeout(() => {
-                            this.#dispatchReady()
-                        }, 500)
-                    })
+                    setTimeout(() => {
+                        this.#dispatchReady()
+                    }, 500)
                 }).catch((err) => {
                     this.#logError('Failed to initialize PHP module:', err)
                     this.#dispatchError('Failed to initialize PHP: ' + err.message)
@@ -157,41 +127,6 @@ try {
         }
 
         document.head.appendChild(script)
-    }
-
-    #loadFlowPhar(callback) {
-        const flowPharFilename = this.flowPharValue.split('/').pop()
-        this.#log('Loading Flow phar:', flowPharFilename, 'from', this.flowPharValue)
-
-        // Check if already loaded
-        try {
-            const stats = this.#phpModule.FS.stat('/' + flowPharFilename)
-            if (stats) {
-                this.#log('Flow phar already loaded')
-                if (callback) callback()
-                return
-            }
-        } catch (e) {
-            // File doesn't exist, need to load it
-        }
-
-        // Fetch and load the phar
-        fetch(this.flowPharValue)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch Flow phar: ' + response.status)
-                }
-                return response.arrayBuffer()
-            })
-            .then((buffer) => {
-                const uint8Array = new Uint8Array(buffer)
-                this.#phpModule.FS.writeFile('/' + flowPharFilename, uint8Array)
-                if (callback) callback()
-            })
-            .catch((err) => {
-                this.#logError('Error loading Flow phar:', err)
-                this.#dispatchError('Failed to load Flow: ' + err.message)
-            })
     }
 
     #dispatchReady() {

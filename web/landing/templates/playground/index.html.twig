@@ -15,9 +15,9 @@
 <div id="playground"
      data-controller="playground-editor wasm"
      data-playground-editor-code-editor-outlet="#code-editor"
+     data-playground-editor-flow-phar-value="{{ asset('wasm/flow.phar') }}"
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
-     data-wasm-flow-phar-value="{{ asset('wasm/flow.phar') }}"
      data-action="wasm:ready->playground-editor#onWasmReady
                   wasm:progress->playground-editor#onWasmProgress
                   wasm:output->playground-editor#onWasmOutput
@@ -50,6 +50,8 @@
         <div class="code-container">
                 <textarea id="code-editor" data-controller="code-editor" data-theme="ace/theme/github_dark">
 <?php
+
+require_once 'phar://flow.phar/vendor/autoload.php';
 
 use function Flow\ETL\DSL\{data_frame, from_array, to_output, ref, lit};
 

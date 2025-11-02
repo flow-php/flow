@@ -1,8 +1,10 @@
 #include "sapi/embed/php_embed.h"
 #include "Zend/zend_exceptions.h"
 #include "Zend/zend_interfaces.h"
+#include "Zend/zend_compile.h"
 #include <emscripten.h>
 #include <stdlib.h>
+#include <string.h>
 
 // From Zend/zend_exceptions.c for php 7.3
 #if PHP_MAJOR_VERSION >= 8
@@ -107,8 +109,30 @@ int EMSCRIPTEN_KEEPALIVE pib_eval(char *code) {
     PG(display_startup_errors)=1;
     PG(during_request_startup)=0;
 
+    // Enable error display to stdout
+    PG(display_errors) = 1;
+
     zend_first_try {
-        ret = zend_eval_string(code, NULL, "PIB");
+        // Set error_reporting to E_ALL
+        EG(error_reporting) = E_ALL;
+
+        // Compile and execute the code
+        // Use ZEND_COMPILE_POSITION_AT_OPEN_TAG to allow <?php tags
+        zend_string *code_str = zend_string_init(code, strlen(code), 0);
+        zend_op_array *op_array = zend_compile_string(code_str, "PIB", ZEND_COMPILE_POSITION_AT_OPEN_TAG);
+        zend_string_release(code_str);
+
+        if (op_array) {
+            zval result;
+            ZVAL_UNDEF(&result);
+            zend_execute(op_array, &result);
+            zval_ptr_dtor(&result);
+            destroy_op_array(op_array);
+            efree(op_array);
+            ret = SUCCESS;
+        } else {
+            ret = FAILURE;
+        }
 
         // If there was an uncaught error/exception, then report it.
         zend_object *ex = EG(exception);

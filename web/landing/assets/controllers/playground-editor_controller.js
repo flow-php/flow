@@ -3,6 +3,11 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
     static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer"]
     static outlets = ["code-editor"]
+    static values = {
+        flowPhar: String
+    }
+
+    #flowPharLoaded = false
 
     connect() {
         // Content is hidden by CSS initially
@@ -11,9 +16,40 @@ export default class extends Controller {
 
     // Called when WASM is ready via event
     onWasmReady(event) {
-        this.#log('WASM ready, hiding loading and showing content')
-        this.#hideLoading()
-        this.#showOutput('Click "Run" to execute your code.')
+        this.#log('WASM ready, loading Flow PHAR')
+        this.#loadFlowPhar()
+    }
+
+    #loadFlowPhar() {
+        const wasmController = this.#getWasmController()
+        if (!wasmController) {
+            this.#log('WASM controller not found')
+            return
+        }
+
+        this.#showOutput('Loading Flow PHP library...')
+
+        // Fetch and load flow.phar into WASM filesystem
+        fetch(this.flowPharValue)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch Flow PHAR: ' + response.status)
+                }
+                return response.arrayBuffer()
+            })
+            .then(buffer => {
+                const uint8Array = new Uint8Array(buffer)
+                // Write to WASM filesystem as 'flow.phar'
+                wasmController.getModule().FS.writeFile('/flow.phar', uint8Array)
+                this.#flowPharLoaded = true
+                this.#log('Flow PHAR loaded successfully')
+                this.#hideLoading()
+                this.#showOutput('Click "Run" to execute your code.')
+            })
+            .catch(err => {
+                this.#log('Error loading Flow PHAR:', err)
+                this.#showOutput('Error: Failed to load Flow PHP library: ' + err.message)
+            })
     }
 
     // Called when WASM reports progress
