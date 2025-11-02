@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-11-02
 
 ### Added
+- [#1940](https://github.com/flow-php/flow/pull/1940) - **Add a new `HTMLEntry`** - [@stloyd](https://github.com/stloyd)
 - [#1942](https://github.com/flow-php/flow/pull/1942) - **Filesystem Path Option - ContentType** - [@norberttech](https://github.com/norberttech)
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
