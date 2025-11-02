@@ -187,7 +187,7 @@ final readonly class StringTypeNarrower implements TypeNarrower
 
     private function isInteger() : bool
     {
-        if ($this->string === '') {
+        if ($this->string === '' || $this->string === '0') {
             return false;
         }
 
