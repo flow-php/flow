@@ -14,7 +14,6 @@ data_frame()
         ['id' => 4],
         ['id' => 5],
     ]))
-    ->withEntry('test')
     ->collect()
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
