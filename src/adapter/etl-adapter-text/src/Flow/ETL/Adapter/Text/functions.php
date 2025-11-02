@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type, Loader};
 use Flow\Filesystem\Path;
 
@@ -15,7 +16,7 @@ function from_text(
     string|Path $path,
 ) : TextExtractor {
     return new TextExtractor(
-        \is_string($path) ? Path::realpath($path) : $path,
+        \is_string($path) ? path_real($path) : $path,
     );
 }
 
@@ -30,6 +31,6 @@ function to_text(
     string|Path $path,
     string $new_line_separator = PHP_EOL,
 ) : Loader {
-    return (new TextLoader(\is_string($path) ? Path::realpath($path) : $path))
+    return (new TextLoader(\is_string($path) ? path_real($path) : $path))
         ->withNewLineSeparator($new_line_separator);
 }

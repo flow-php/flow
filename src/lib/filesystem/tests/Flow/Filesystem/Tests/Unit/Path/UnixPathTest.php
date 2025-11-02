@@ -8,6 +8,7 @@ use function Flow\Filesystem\DSL\partition;
 use Flow\Filesystem\Exception\InvalidArgumentException;
 use Flow\Filesystem\Path\{Options, UnixPath};
 use Flow\Filesystem\Tests\Unit\PathTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class UnixPathTest extends PathTestCase
 {
@@ -221,9 +222,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals(['key' => 'value'], $path->options()->toArray());
     }
 
-    /**
-     * @dataProvider pathProvider
-     */
+    #[DataProvider('pathProvider')]
     public function test_os_agnostic_logic(string $input, string $expectedPath, string $expectedScheme) : void
     {
         $path = new UnixPath($input);
@@ -311,9 +310,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/path/file.txt', $path->path());
     }
 
-    /**
-     * @dataProvider patternProvider
-     */
+    #[DataProvider('patternProvider')]
     public function test_pattern_logic(string $pattern, string $filename, bool $expected) : void
     {
         $patternPath = new UnixPath($pattern);
@@ -468,9 +465,7 @@ final class UnixPathTest extends PathTestCase
         self::assertEquals('/path/to/file.txt', $newPath->path());
     }
 
-    /**
-     * @dataProvider partitionProvider
-     */
+    #[DataProvider('partitionProvider')]
     public function test_shared_partition_logic(string $input, array $partitionData, string $expected) : void
     {
         $path = new UnixPath($input);

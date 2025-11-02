@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\{Attribute\DocumentationDSL,
     Attribute\DocumentationExample,
     Attribute\Module,
@@ -30,7 +31,7 @@ function from_parquet(
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ?int $offset = null,
 ) : ParquetExtractor {
-    $loader = (new ParquetExtractor(\is_string($path) ? Path::realpath($path) : $path))
+    $loader = (new ParquetExtractor(\is_string($path) ? path_real($path) : $path))
         ->withOptions($options)
         ->withByteOrder($byte_order);
 
@@ -59,7 +60,7 @@ function to_parquet(
     Compressions $compressions = Compressions::SNAPPY,
     ?Schema $schema = null,
 ) : ParquetLoader {
-    $loader = (new ParquetLoader(\is_string($path) ? Path::realpath($path) : $path))
+    $loader = (new ParquetLoader(\is_string($path) ? path_real($path) : $path))
         ->withCompressions($compressions);
 
     if ($options !== null) {

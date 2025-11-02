@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\JSON\JSONMachine\{JsonExtractor, JsonLinesExtractor};
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\DocumentationExample, Attribute\Module, Attribute\Type};
 use Flow\ETL\Schema;
@@ -21,7 +22,7 @@ function from_json(
     ?string $pointer = null,
     ?Schema $schema = null,
 ) : JsonExtractor {
-    $loader = new JsonExtractor(\is_string($path) ? Path::realpath($path) : $path);
+    $loader = new JsonExtractor(\is_string($path) ? path_real($path) : $path);
 
     if ($pointer !== null) {
         $loader->withPointer($pointer);
@@ -44,7 +45,7 @@ function from_json(
 function from_json_lines(
     string|Path $path,
 ) : JsonLinesExtractor {
-    return new JsonLinesExtractor(\is_string($path) ? Path::realpath($path) : $path);
+    return new JsonLinesExtractor(\is_string($path) ? path_real($path) : $path);
 }
 
 /**
@@ -62,7 +63,7 @@ function to_json(
     string $date_time_format = \DateTimeInterface::ATOM,
     bool $put_rows_in_new_lines = false,
 ) : JsonLoader {
-    return (new JsonLoader(\is_string($path) ? Path::realpath($path) : $path))
+    return (new JsonLoader(\is_string($path) ? path_real($path) : $path))
         ->withFlags($flags)
         ->withDateTimeFormat($date_time_format)
         ->withRowsInNewLines($put_rows_in_new_lines);
@@ -79,5 +80,5 @@ function to_json(
 function to_json_lines(
     string|Path $path,
 ) : JsonLinesLoader {
-    return new JsonLinesLoader(\is_string($path) ? Path::realpath($path) : $path);
+    return new JsonLinesLoader(\is_string($path) ? path_real($path) : $path);
 }

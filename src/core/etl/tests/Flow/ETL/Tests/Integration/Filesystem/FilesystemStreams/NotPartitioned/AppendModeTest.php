@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\NotPartitioned;
 
 use function Flow\ETL\DSL\append;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
-use Flow\Filesystem\Path;
 
 final class AppendModeTest extends FilesystemStreamsTestCase
 {
@@ -32,7 +32,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $appendFileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 
         self::assertCount(2, $files);
 
@@ -55,7 +55,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $appendFileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/*')));
 
         self::assertCount(1, $files);
         self::assertSame('non-existing-file.txt', $files[0]->path->basename());

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Path;
 use Flow\Filesystem\Tests\OperatingSystem;
 
 final class PathTest extends FlowIntegrationTestCase
@@ -23,7 +23,7 @@ final class PathTest extends FlowIntegrationTestCase
 
     public function test_windows_home_directory_resolution() : void
     {
-        $homePath = Path::realpath('~/test_windows.txt');
+        $homePath = path_real('~/test_windows.txt');
 
         self::assertStringContainsString('test_windows.txt', $homePath->path());
         self::assertMatchesRegularExpression('/^[a-zA-Z]:\//', $homePath->path());

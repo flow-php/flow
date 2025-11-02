@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Unix;
 
-use Flow\Filesystem\Path;
+use function Flow\Filesystem\DSL\{path, path_real};
 use Flow\Filesystem\Tests\OperatingSystem;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +33,6 @@ final class RealpathTest extends TestCase
     #[DataProvider('double_dots_paths')]
     public function test_double_dots_in_path(string $relative, string $absolute) : void
     {
-        self::assertEquals(new Path($absolute), Path::realpath($relative));
+        self::assertEquals(path($absolute), path_real($relative));
     }
 }

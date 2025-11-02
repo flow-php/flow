@@ -8,14 +8,19 @@ use Flow\ETL\{Exception\RuntimeException, FlowContext, Loader, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\ETL\Schema;
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Option\ContentType;
 
 final readonly class AvroLoader implements Closure, FileLoader, Loader
 {
+    private Path $path;
+
     public function __construct(
-        private Path $path,
+        Path $path,
         private ?Schema $schema = null,
     ) {
         throw new RuntimeException('Avro integration was abandoned due to lack of availability of good Avro libraries.');
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::AVRO);
     }
 
     public function closure(FlowContext $context) : void

@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 
 use function Flow\ETL\DSL\overwrite;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
-use Flow\Filesystem\{FilesystemTable, Partition, Path};
+use Flow\Filesystem\{FilesystemTable, Partition};
 use Flow\Filesystem\Tests\Double\FakeNativeLocalFilesystem;
 
 final class OverwriteModeTest extends FilesystemStreamsTestCase
@@ -35,7 +36,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -58,7 +59,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $fileStream->append('new content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -78,7 +79,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('new content');
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 
@@ -92,7 +93,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
 
         $fs = new FakeNativeLocalFilesystem();
 
-        $file = new Path($fs->protocol()->scheme() . $this->filesDirectory() . DIRECTORY_SEPARATOR . __FUNCTION__ . '/file.txt');
+        $file = path($fs->protocol()->scheme() . $this->filesDirectory() . DIRECTORY_SEPARATOR . __FUNCTION__ . '/file.txt');
 
         $streams = new FilesystemStreams(new FilesystemTable($fs));
         $streams->setSaveMode(overwrite());
@@ -101,7 +102,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $appendedFile->append('new content');
 
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 

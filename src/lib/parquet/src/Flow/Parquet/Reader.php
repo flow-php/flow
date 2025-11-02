@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
-use Flow\Filesystem\{Path, SourceStream, Stream\NativeLocalSourceStream};
+use function Flow\Filesystem\DSL\path_real;
+use Flow\Filesystem\{SourceStream, Stream\NativeLocalSourceStream};
 use Flow\Parquet\ParquetFile\Data\DataConverter;
 
 final readonly class Reader
@@ -18,7 +19,7 @@ final readonly class Reader
     public function read(string $path) : ParquetFile
     {
         return new ParquetFile(
-            NativeLocalSourceStream::open(Path::realpath($path)),
+            NativeLocalSourceStream::open(path_real($path)),
             $this->byteOrder,
             DataConverter::initialize($this->options),
             $this->options

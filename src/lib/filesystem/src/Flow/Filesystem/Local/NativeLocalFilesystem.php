@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Local;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\Filesystem\{DestinationStream, FileStatus, Filesystem, Path, Path\Filter, Protocol, SourceStream};
 use Flow\Filesystem\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Filesystem\Path\Filter\OnlyFiles;
@@ -39,7 +40,7 @@ final class NativeLocalFilesystem implements Filesystem
 
     public function getSystemTmpDir() : Path
     {
-        return new Path(\sys_get_temp_dir());
+        return \Flow\Filesystem\DSL\path(\sys_get_temp_dir());
     }
 
     public function list(Path $path, Filter $pathFilter = new OnlyFiles()) : \Generator
@@ -56,7 +57,7 @@ final class NativeLocalFilesystem implements Filesystem
         }
 
         foreach (Glob::glob($path->path()) as $filePath) {
-            $status = new FileStatus(Path::realpath($filePath, $path->options()), \is_file($filePath));
+            $status = new FileStatus(path_real($filePath, $path->options()), \is_file($filePath));
 
             if ($pathFilter->accept($status)) {
                 yield $status;
@@ -148,7 +149,7 @@ final class NativeLocalFilesystem implements Filesystem
 
         foreach (Glob::glob($path->path()) as $filePath) {
             if (\file_exists($filePath)) {
-                return new FileStatus(new Path($filePath, $path->options()), true);
+                return new FileStatus(\Flow\Filesystem\DSL\path($filePath, $path->options()), true);
             }
         }
 

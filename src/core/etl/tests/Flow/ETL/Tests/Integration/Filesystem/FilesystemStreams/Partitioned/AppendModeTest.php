@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 
 use function Flow\ETL\DSL\append;
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
-use Flow\Filesystem\{Partition, Path};
+use Flow\Filesystem\Partition;
 
 final class AppendModeTest extends FilesystemStreamsTestCase
 {
@@ -35,7 +36,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $fileStream->append('appended content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(2, $files);
 
@@ -60,7 +61,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $fileStream->append('appended content');
         $streams->closeStreams($file);
 
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -80,7 +81,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('appended content');
         $streams->closeStreams($file);
-        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(path($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 

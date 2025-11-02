@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Sort\ExternalSort;
 
 use function Flow\ETL\DSL\{flow_context, from_array, ref, refs};
+use function Flow\Filesystem\DSL\path;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Sort\ExternalSort;
 use Flow\ETL\Sort\ExternalSort\BucketsCache\FilesystemBucketsCache;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Path;
 
 final class ExternalSortTest extends FlowIntegrationTestCase
 {
     public function test_memory_implementation_of_external_sort_algorithm() : void
     {
-        $cacheDir = new Path(__DIR__ . '/var/test_memory_implementation_of_external_sort_algorithm');
+        $cacheDir = path(__DIR__ . '/var/test_memory_implementation_of_external_sort_algorithm');
 
         $this->fs()->rm($cacheDir);
 

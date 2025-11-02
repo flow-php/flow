@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use function Flow\Filesystem\DSL\path_real;
 use function Flow\Types\DSL\{
     dom_element_to_string as dom_element_to_string_new,
     get_type as get_type_new,
@@ -164,6 +165,7 @@ use Flow\ETL\Retry\DelayFactory\{Fixed, Fixed\FixedMilliseconds};
 use Flow\ETL\Retry\RetryStrategy\{AnyThrowable, OnExceptionTypes};
 use Flow\ETL\Row\{Entries, EntryFactory, SortOrder};
 use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\HTMLEntry;
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Schema\{Definition, Formatter\PHPFormatter\TypeFormatter, Formatter\PHPFormatter\ValueFormatter};
@@ -300,7 +302,7 @@ function files(string|Path $directory) : FilesExtractor
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function filesystem_cache(Path|string|null $cache_dir = null, Filesystem $filesystem = new NativeLocalFilesystem(), Serializer $serializer = new NativePHPSerializer()) : FilesystemCache
 {
-    return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? Path::realpath($cache_dir) : $cache_dir);
+    return new FilesystemCache($filesystem, $serializer, \is_string($cache_dir) ? path_real($cache_dir) : $cache_dir);
 }
 
 /**
@@ -624,6 +626,15 @@ function xml_entry(string $name, \DOMDocument|string|null $value, ?Metadata $met
 function xml_element_entry(string $name, \DOMElement|string|null $value, ?Metadata $metadata = null) : Entry
 {
     return new XMLElementEntry($name, $value, $metadata);
+}
+
+/**
+ * @return Entry<?HTMLDocument>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
+function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null) : Entry
+{
+    return new HTMLEntry($name, $value, $metadata);
 }
 
 /**

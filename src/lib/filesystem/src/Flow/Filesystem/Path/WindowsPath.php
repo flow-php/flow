@@ -17,7 +17,7 @@ final readonly class WindowsPath
     private Protocol $protocol;
 
     /**
-     * @param array<array-key, mixed>|Options $options
+     * @param array<array-key, null|bool|float|int|string|\UnitEnum>|Options $options
      */
     public function __construct(string $uri, array|Options $options = [])
     {
@@ -35,7 +35,9 @@ final readonly class WindowsPath
     }
 
     /**
-     * @param array<array-key, mixed>|Options $options
+     * @param array<array-key, null|bool|float|int|string|\UnitEnum>|Options $options
+     *
+     * @throws RuntimeException
      */
     public static function realpath(string $path, array|Options $options = []) : self
     {
@@ -341,6 +343,11 @@ final readonly class WindowsPath
     public function uri() : string
     {
         return $this->protocol->scheme() . \ltrim($this->path, '/');
+    }
+
+    public function withOptions(Options $options) : self
+    {
+        return new self($this->uri(), $options);
     }
 
     private function fnmatch(string $pattern, string $filename, int $flags = 0) : bool

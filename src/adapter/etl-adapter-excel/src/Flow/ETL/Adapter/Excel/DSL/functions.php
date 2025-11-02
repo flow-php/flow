@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Excel\DSL;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\{Adapter\Excel\ExcelExtractor,
     Adapter\Excel\Function\IsValidExcelSheetName,
     Attribute\DocumentationDSL,
@@ -18,7 +19,7 @@ use Flow\Filesystem\Path;
 function from_excel(
     string|Path $path,
 ) : ExcelExtractor {
-    return new ExcelExtractor(\is_string($path) ? Path::realpath($path) : $path);
+    return new ExcelExtractor(\is_string($path) ? path_real($path) : $path);
 }
 
 #[DocumentationDSL(module: Module::EXCEL, type: DSLType::HELPER)]

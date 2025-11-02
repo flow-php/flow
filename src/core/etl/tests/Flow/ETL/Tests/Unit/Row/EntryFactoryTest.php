@@ -24,6 +24,8 @@ use function Flow\ETL\DSL\{bool_schema,
     enum_schema,
     float_schema,
     flow_context,
+    html_entry,
+    html_schema,
     integer_schema,
     json_schema,
     list_schema,
@@ -39,6 +41,7 @@ use Flow\ETL\Row\Entry\TimeEntry;
 use Flow\ETL\Row\{Entry, EntryFactory};
 use Flow\ETL\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
+use Flow\Types\Value\HTMLDocument;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
@@ -59,6 +62,11 @@ final class EntryFactoryTest extends TestCase
             xml_entry('e', $xml),
         ];
 
+        yield 'html' => [
+            $html = '<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>',
+            html_entry('e', $html),
+        ];
+
         yield 'uuid' => [
             $uuid = '00000000-0000-0000-0000-000000000000',
             uuid_entry('e', $uuid),
@@ -77,6 +85,10 @@ final class EntryFactoryTest extends TestCase
 
         yield 'xml alike' => [
             '<root',
+        ];
+
+        yield 'html alike' => [
+            '<html',
         ];
 
         yield 'space' => [
@@ -235,6 +247,32 @@ final class EntryFactoryTest extends TestCase
         self::assertEquals(
             str_entry('e', ''),
             $this->entryFactory->create('e', '')
+        );
+    }
+
+    public function test_html_from_dom_document() : void
+    {
+        $doc = HTMLDocument::fromString($html = '<!DOCTYPE html><html><head></head><body><div>2</div><p>3</p></body></html>');
+
+        self::assertEquals(
+            html_entry('e', $html),
+            $this->entryFactory->create('e', $doc)
+        );
+    }
+
+    public function test_html_from_string() : void
+    {
+        self::assertEquals(
+            html_entry('e', $html = '<!DOCTYPE html><html><head></head><body><div>foo</div><p>3</p></body></html>'),
+            $this->entryFactory->create('e', $html)
+        );
+    }
+
+    public function test_html_string_with_xml_definition_provided() : void
+    {
+        self::assertEquals(
+            html_entry('e', $html = '<!DOCTYPE html><html><head></head><body><div>2</div><p>bar</p></body></html>'),
+            $this->entryFactory->create('e', $html, schema(html_schema('e')))
         );
     }
 

@@ -72,10 +72,10 @@
     <testsuite name="lib-parquet-viewer-integration">
       <directory>src/lib/parquet-viewer/tests/Flow/ParquetViewer/Tests/Integration</directory>
     </testsuite>
-    <testsuite name="snappy-integration">
+    <testsuite name="lib-snappy-integration">
       <directory>src/lib/snappy/tests/Flow/Snappy/Tests/Integration</directory>
     </testsuite>
-    <testsuite name="types-unit">
+    <testsuite name="lib-types-unit">
       <directory>src/lib/types/tests/Flow/Types/Tests/Unit</directory>
     </testsuite>
     <testsuite name="bridge-filesystem-azure-unit">
@@ -167,13 +167,6 @@
     </testsuite>
     <testsuite name="adapter-xml-integration">
       <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="infection">
-      <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
-      <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
-      <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
-      <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
-      <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
     </testsuite>
   </testsuites>
   <source>

@@ -8,13 +8,18 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\ETL\Loader\{Closure, FileLoader};
 use Flow\Filesystem\Path;
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Option\ContentType;
 
 final class TextLoader implements Closure, FileLoader, Loader
 {
     private string $newLineSeparator = PHP_EOL;
 
-    public function __construct(private readonly Path $path)
+    private readonly Path $path;
+
+    public function __construct(Path $path)
     {
+        $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::TEXT);
     }
 
     public function closure(FlowContext $context) : void

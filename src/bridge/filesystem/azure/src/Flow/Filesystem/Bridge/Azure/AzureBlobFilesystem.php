@@ -59,7 +59,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
         }
 
         foreach ($this->blobService->listBlobs($options) as $blob) {
-            $blobPath = new Path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim($blob->name(), DIRECTORY_SEPARATOR), $path->options());
+            $blobPath = \Flow\Filesystem\DSL\path($path->protocol()->scheme() . DIRECTORY_SEPARATOR . \ltrim($blob->name(), DIRECTORY_SEPARATOR), $path->options());
             $blobFileStatus = new FileStatus($blobPath, (bool) $blobPath->extension());
 
             if ($path->isPattern() && !$path->matches($blobPath)) {
@@ -122,7 +122,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
              * entire path, like for example azure-blob://nested/folder we need to first add / at the end, to accidentally
              * not delete files that would also match the prefix, like: azure-blob://nested/folder_but_file.txt.
              */
-            $folderPath = new Path(\trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+            $folderPath = \Flow\Filesystem\DSL\path(\trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
             $blobProperties = $this->blobService->getBlobProperties($folderPath->path());
 
             if ($blobProperties === null) {
@@ -161,7 +161,7 @@ final readonly class AzureBlobFilesystem implements Filesystem
                  * entire path, like for example azure-blob://nested/folder we need to first add / at the end, to accidentally
                  * not match files that would also match the prefix, like: azure-blob://nested/folder_but_file.txt.
                  */
-                $folderPath = new Path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
+                $folderPath = \Flow\Filesystem\DSL\path(trim($path->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path->options());
 
                 foreach ($this->list($folderPath) as $fileStatus) {
                     return new FileStatus($folderPath, false);

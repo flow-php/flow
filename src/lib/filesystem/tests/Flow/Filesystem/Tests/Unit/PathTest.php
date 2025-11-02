@@ -6,6 +6,8 @@ namespace Flow\Filesystem\Tests\Unit;
 
 use function Flow\Filesystem\DSL\{partition, partitions, path, path_real};
 use Flow\Filesystem\Partitions;
+use Flow\Filesystem\Path\Option;
+use Flow\Filesystem\Path\Option\ContentType;
 use PHPUnit\Framework\Attributes\{DataProvider, TestWith};
 use PHPUnit\Framework\TestCase;
 
@@ -285,6 +287,30 @@ final class PathTest extends TestCase
             'flow-file://var/dir/file.parquet',
             $path->setExtension('parquet')->uri()
         );
+    }
+
+    public function test_set_option() : void
+    {
+        $path = path('flow-file://var/dir/file.csv')->setOption(Option::CONTENT_TYPE, ContentType::TEXT);
+
+        self::assertEquals(
+            ContentType::TEXT,
+            $path->getOption(Option::CONTENT_TYPE)
+        );
+    }
+
+    public function test_set_option_when_empty() : void
+    {
+        $path = path('flow-file://var/dir/file.csv')
+            ->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::TEXT)
+            ->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::CSV);
+
+        self::assertEquals(
+            ContentType::TEXT,
+            $path->getOption(Option::CONTENT_TYPE)
+        );
+        self::assertTrue($path->hasOption(Option::CONTENT_TYPE));
+        self::assertFalse($path->hasOption('test'));
     }
 
     #[TestWith(['file://var/www/index.html', 1,  'file://www/index.html'])]

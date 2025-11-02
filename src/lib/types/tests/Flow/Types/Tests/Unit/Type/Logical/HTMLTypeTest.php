@@ -6,6 +6,7 @@ namespace Flow\Types\Tests\Unit\Type\Logical;
 
 use function Flow\Types\DSL\{type_from_array, type_html};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
+use Flow\Types\Value\HTMLDocument;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -13,8 +14,8 @@ final class HTMLTypeTest extends TestCase
 {
     public static function assert_data_provider() : \Generator
     {
-        yield 'valid \DOMDocument' => [
-            'value' => new \DOMDocument,
+        yield 'valid HTMLDocument' => [
+            'value' => new HTMLDocument('<!DOCTYPE html><html><head></head><body></body></html>'),
             'exceptionClass' => null,
         ];
 
@@ -57,30 +58,66 @@ final class HTMLTypeTest extends TestCase
             'value' => new \DateTimeImmutable(),
             'exceptionClass' => InvalidTypeException::class,
         ];
+
+        yield 'incomplete HTML' => [
+            'value' => '<div><span>1</span></div>',
+            'exceptionClass' => InvalidTypeException::class,
+        ];
+
+        yield 'random object' => [
+            'value' => new \stdClass(),
+            'exceptionClass' => InvalidTypeException::class,
+        ];
     }
 
     public static function cast_data_provider() : \Generator
     {
-        yield 'string to HTML' => [
-            'value' => '<!DOCTYPE html><html lang="en"><body><div><span>1</span></div></body></html>',
-            'expected' => <<<'HTML'
+        yield 'valid HTMLDocument' => [
+            'value' => new HTMLDocument($html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
+            'expected' => $html,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid HTML string' => [
+            'value' => $html = '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
+            'expected' => $html,
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid HTML with spaces' => [
+            'value' => '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
+            'expected' => '<!DOCTYPE html><html>   <head><title></title></head>    <body><p>invalid</p>  </body>  </html>',
+            'exceptionClass' => null,
+        ];
+
+        yield 'valid HTML with new lines' => [
+            'value' => <<<'HTML'
 <!DOCTYPE html>
-<html lang="en"><body><div><span>1</span></div></body></html>
-
+<html>
+    <head><title></title></head>
+    <body>
+        <p> invalid</p>
+    </body>
+</html>
 HTML,
+            'expected' => '<!DOCTYPE html><html>    <head><title></title></head>    <body>        <p> invalid</p>    </body></html>',
             'exceptionClass' => null,
         ];
 
-        yield 'incomplete string to HTML' => [
-            'value' => '<div><span>1</span></div>',
-            'expected' => <<<'HTML'
-<div><span>1</span></div>
-
-HTML,
-            'exceptionClass' => null,
+        yield 'missing doctype' => [
+            'value' => '<html><body><div><span>bar</span></div></body></html>',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
         ];
 
-        yield 'object to HTML' => [
+        yield 'missing head' => [
+            'value' => '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html><body><p>invalid</p></body></html>',
+            'expected' => null,
+            'exceptionClass' => CastingException::class,
+        ];
+
+        yield 'random object' => [
             'value' => new \stdClass(),
             'expected' => null,
             'exceptionClass' => CastingException::class,
@@ -89,23 +126,13 @@ HTML,
 
     public static function is_valid_data_provider() : \Generator
     {
-        yield 'valid \DOMDocument' => [
-            'value' => new \DOMDocument(),
+        yield 'valid HTMLDocument' => [
+            'value' => new HTMLDocument('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>'),
             'expected' => true,
         ];
 
-        yield 'invalid HTML string' => [
-            'value' => '<html></html>',
-            'expected' => false,
-        ];
-
-        yield 'invalid date string' => [
-            'value' => '2020-01-01',
-            'expected' => false,
-        ];
-
-        yield 'invalid datetime string' => [
-            'value' => '2020-01-01 00:00:00',
+        yield 'valid HTML string' => [
+            'value' => '<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>',
             'expected' => false,
         ];
     }
@@ -117,20 +144,19 @@ HTML,
             $this->expectException($exceptionClass);
             type_html()->assert($value);
         } else {
-            self::assertInstanceOf(\DOMDocument::class, type_html()->assert($value));
+            self::assertInstanceOf(HTMLDocument::class, type_html()->assert($value));
         }
     }
 
     #[DataProvider('cast_data_provider')]
-    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass) : void
+    public function test_cast(mixed $value, mixed $expected, ?string $exceptionClass = null) : void
     {
         if ($exceptionClass !== null) {
             $this->expectException($exceptionClass);
-            type_html()->cast($value);
-        } else {
-            $result = type_html()->cast($value);
-            self::assertSame($expected, $result->saveHtml());
         }
+
+        $result = type_html()->cast($value);
+        self::assertSame($expected, $result->toString());
     }
 
     #[DataProvider('is_valid_data_provider')]

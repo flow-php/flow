@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Filesystem\Tests\Integration\OS\Windows;
 
-use function Flow\Filesystem\DSL\native_local_filesystem;
-use Flow\Filesystem\Path;
+use function Flow\Filesystem\DSL\{native_local_filesystem, path};
 use Flow\Filesystem\Tests\Integration\NativeLocalFilesystemTestCase;
 use Flow\Filesystem\Tests\OperatingSystem;
 
@@ -26,17 +25,17 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
     {
         $fs = native_local_filesystem();
 
-        $fs->writeTo(new Path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb'));
+        $fs->writeTo(path(__DIR__ . '/../var/some_path_to/file.txt'))->fromResource(\fopen(__DIR__ . '/../../Fixtures/orders.csv', 'rb'));
 
-        self::assertTrue($fs->status(new Path(__DIR__ . '/../var/some_path_to/*.txt'))->isFile());
+        self::assertTrue($fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'))->isFile());
 
         $expectedUri = 'file://' . \str_replace('\\', '/', __DIR__ . '/../var/some_path_to/file.txt');
         self::assertSame(
             $expectedUri,
-            $fs->status(new Path(__DIR__ . '/../var/some_path_to/*.txt'))->path->uri()
+            $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'))->path->uri()
         );
 
-        $fs->rm(new Path(__DIR__ . '/../var/some_path_to'));
+        $fs->rm(path(__DIR__ . '/../var/some_path_to'));
     }
 
     public function test_tmp_dir_windows() : void
@@ -54,7 +53,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
         \file_put_contents($tempFile, 'test content');
 
-        $path = new Path($tempFile);
+        $path = path($tempFile);
         self::assertTrue($fs->status($path)->isFile());
 
         self::assertMatchesRegularExpression('/^file:\/\/[a-zA-Z]:\//', $path->uri());
@@ -70,7 +69,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
         $tempFile = \tempnam(\sys_get_temp_dir(), 'flow_test_');
         \file_put_contents($tempFile, 'test content');
 
-        $path = new Path($tempFile);
+        $path = path($tempFile);
         self::assertTrue($fs->status($path)->isFile());
 
         self::assertMatchesRegularExpression('/^file:\/\/[a-zA-Z]:\//', $path->uri());
@@ -87,7 +86,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
             self::markTestSkipped('UNC path not accessible on this system');
         }
 
-        $path = new Path($uncPath);
+        $path = path($uncPath);
         self::assertStringStartsWith('//', $path->path());
     }
 }

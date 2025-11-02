@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\ChartJS\Chart\{BarChart, LineChart, PieChart};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type};
 use Flow\ETL\Row\{EntryReference, References};
@@ -42,11 +43,11 @@ function to_chartjs(Chart $type) : ChartJSLoader
 function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|string|null $template = null) : ChartJSLoader
 {
     if (\is_string($output)) {
-        $output = Path::realpath($output);
+        $output = path_real($output);
     }
 
     if (\is_string($template)) {
-        $template = Path::realpath($template);
+        $template = path_real($template);
     }
 
     $loader = new ChartJSLoader($type);

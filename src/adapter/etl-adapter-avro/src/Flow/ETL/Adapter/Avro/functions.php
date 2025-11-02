@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL\Adapter\Avro;
 
+use function Flow\Filesystem\DSL\path_real;
 use Flow\ETL\Adapter\Avro\FlixTech\{AvroExtractor, AvroLoader};
 use Flow\ETL\{Attribute\DocumentationDSL, Attribute\Module, Attribute\Type, Schema};
 use Flow\Filesystem\Path;
@@ -12,7 +13,7 @@ use Flow\Filesystem\Path;
 function from_avro(Path|string $path) : AvroExtractor
 {
     return new AvroExtractor(
-        \is_string($path) ? Path::realpath($path) : $path
+        \is_string($path) ? path_real($path) : $path
     );
 }
 
@@ -20,7 +21,7 @@ function from_avro(Path|string $path) : AvroExtractor
 function to_avro(Path|string $path, ?Schema $schema = null) : AvroLoader
 {
     return new AvroLoader(
-        \is_string($path) ? Path::realpath($path) : $path,
+        \is_string($path) ? path_real($path) : $path,
         $schema
     );
 }

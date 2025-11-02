@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="../phpunit/vendor/phpunit/phpunit/phpunit.xsd"
+        bootstrap="../../vendor/autoload.php"
+        colors="true"
+        displayDetailsOnTestsThatTriggerWarnings="true"
+        displayDetailsOnTestsThatTriggerErrors="true"
+        cacheDirectory="../../var/phpunit/infection-cache"
+>
+  <testsuites>
+    <testsuite name="infection">
+      <directory>../../src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
+      <directory>../../src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
+        <directory>../../src/lib/dremel/tests/Flow/Dremel/Tests/Unit</directory>
+        <directory>../../src/lib/types/tests/Flow/Types/Tests/Unit</directory>
+      <directory>../../src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
+      <directory>../../src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
+      <directory>../../src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+        <directory suffix=".php">../../src/core/etl/src</directory>
+        <directory suffix=".php">../../src/core/lib/array-dot</directory>
+        <directory suffix=".php">../../src/core/lib/dremel</directory>
+        <directory suffix=".php">../../src/core/lib/types</directory>
+        <directory suffix=".php">../../src/core/lib/doctrine-dbal-bulk</directory>
+        <directory suffix=".php">../../src/core/lib/filesystem</directory>
+        <directory suffix=".php">../../src/core/lib/parquet</directory>
+    </include>
+    <exclude>
+      <directory suffix=".php">../../src/lib/parquet/src/Flow/Parquet/Thrift</directory>
+      <file>../../src/core/etl/src/Flow/ETL/DSL/functions.php</file>
+    </exclude>
+  </source>
+</phpunit>

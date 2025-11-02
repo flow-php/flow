@@ -6,17 +6,17 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
 use function Flow\ETL\DSL\{config, data_frame};
 use function Flow\ETL\DSL\flow_context;
+use function Flow\Filesystem\DSL\{path, path_real};
 use function Flow\Types\DSL\type_string;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Tests\FlowIntegrationTestCase;
-use Flow\Filesystem\Path;
 
 final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 {
     public function test_limit() : void
     {
-        $extractor = new XMLReaderExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
         $extractor->changeLimit(2);
 
         self::assertCount(
@@ -30,7 +30,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         self::assertEquals(
             5,
             (data_frame())
-                ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/deepest_items_flat.xml'), 'root/items/item/deep'))
+                ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/deepest_items_flat.xml'), 'root/items/item/deep'))
                 ->fetch()
                 ->count()
         );
@@ -44,7 +44,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
         self::assertEquals(
             1,
             (data_frame())
-                ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items.xml')))
+                ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml')))
                 ->fetch()
                 ->count()
         );
@@ -60,7 +60,7 @@ final class XMLReaderExtractorTest extends FlowIntegrationTestCase
 XML,
             type_string()->cast(
                 (data_frame())
-                    ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
+                    ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
                     ->fetch()[0]
                     ->valueOf('node')
             )
@@ -74,7 +74,7 @@ XML,
 XML,
             type_string()->cast(
                 (data_frame())
-                    ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
+                    ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items_flat.xml'), 'root/items/item'))
                     ->fetch()[4]
                     ->valueOf('node')
             )
@@ -105,7 +105,7 @@ XML,
 XML,
             type_string()->cast(
                 (data_frame())
-                    ->read(new XMLReaderExtractor(new Path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
+                    ->read(new XMLReaderExtractor(path(__DIR__ . '/../Fixtures/simple_items.xml'), 'root/items'))
                     ->fetch()[0]->valueOf('node')
             )
         );
@@ -113,7 +113,7 @@ XML,
 
     public function test_signal_stop() : void
     {
-        $extractor = new XMLReaderExtractor(Path::realpath(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
+        $extractor = new XMLReaderExtractor(path_real(__DIR__ . '/../Fixtures/flow_orders.xml'), 'root/row');
 
         $generator = $extractor->extract(flow_context(config()));
 
