@@ -16,10 +16,9 @@ use function Flow\Types\DSL\{type_boolean,
     type_time_zone,
     type_uuid,
     type_xml};
-use Dom\HTMLDocument;
 use Flow\Types\Type;
 use Flow\Types\Type\TypeNarrower;
-use Flow\Types\Value\Uuid;
+use Flow\Types\Value\{HTMLDocument, Uuid};
 
 final readonly class StringTypeNarrower implements TypeNarrower
 {

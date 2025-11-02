@@ -43,7 +43,6 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Native\{
     ArrayType,
     BooleanType,
@@ -129,10 +128,9 @@ final readonly class EntryFactory
                 EnumType::class => enum_entry($entryName, null, $metadata),
                 ArrayType::class, JsonType::class => json_entry($entryName, null, $metadata),
                 NullType::class => StringEntry::fromNull($entryName, $metadata),
-                HTMLType::class => string_entry($entryName, null, $metadata),
+                HTMLType::class => html_entry($entryName, null, $metadata),
                 XMLType::class => xml_entry($entryName, null, $metadata),
                 XMLElementType::class => xml_element_entry($entryName, null, $metadata),
-                HTMLType::class => html_entry($entryName, null, $metadata),
                 default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
             };
         }
@@ -183,7 +181,7 @@ final readonly class EntryFactory
             }
 
             if ($type instanceof HTMLType) {
-                return string_entry($entryName, type_optional(type_string())->cast($value), $metadata);
+                return html_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof NullType) {
@@ -202,10 +200,6 @@ final readonly class EntryFactory
                 } catch (InvalidArgumentException) {
                     return json_entry($entryName, type_optional($type)->cast($value), $metadata);
                 }
-            }
-
-            if ($type instanceof HTMLType) {
-                return html_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof XMLType) {
