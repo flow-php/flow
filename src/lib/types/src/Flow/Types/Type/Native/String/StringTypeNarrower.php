@@ -180,39 +180,7 @@ final readonly class StringTypeNarrower implements TypeNarrower
 
     private function isHTML() : bool
     {
-        if ($this->string === '') {
-            return false;
-        }
-
-        if ('<' !== $this->string[0]) {
-            return false;
-        }
-
-        if (\class_exists('\Dom\HTMLDocument', false)) {
-            $options = \LIBXML_HTML_NOIMPLIED;
-
-            if (defined('Dom\HTML_NO_DEFAULT_NS')) {
-                $options |= constant('\Dom\HTML_NO_DEFAULT_NS');
-            }
-
-            HTMLDocument::createFromString($this->string, $options);
-        } elseif (\preg_match('/(<!doctype(.+?)>)?<html(.+?)>(.+?)<\/html>/im', $this->string) === 1) {
-            try {
-                \libxml_use_internal_errors(true);
-
-                $doc = new \DOMDocument();
-                $result = @$doc->loadHTML($this->string);
-
-                return (bool) $result;
-            } catch (\Exception) {
-                return false;
-            } finally {
-                \libxml_clear_errors(); // Clear any errors if needed
-                \libxml_use_internal_errors(false); // Restore standard error handling
-            }
-        }
-
-        return false;
+        return HTMLDocument::isValid($this->string);
     }
 
     private function isInteger() : bool
