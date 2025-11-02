@@ -141,6 +141,75 @@ ace.define("ace/theme/flow", ["require", "exports", "module", "ace/lib/dom"], fu
 .ace-flow .ace_indent-guide-active {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQIW2NgYGBgYHjy5Ml/ACIKAsyJx1gMAAAAAElFTkSuQmCC) right repeat-y;
 }
+
+/* === AUTOCOMPLETE STYLING === */
+.ace_autocomplete {
+    background: #21212b !important;
+    border: 2px solid #79c0ff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    width: 550px !important;
+    font-family: "Cabin Variable", system-ui !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    padding: 6px !important;
+}
+
+.ace_autocomplete .ace_line {
+    padding: 8px 14px !important;
+    border-radius: 5px !important;
+    margin: 2px 0 !important;
+    color: #f8f8f2 !important;
+}
+
+.ace_autocomplete .ace_line.ace_selected {
+    background: linear-gradient(90deg, #79c0ff 0%, #6bb0f0 100%) !important;
+    color: #0d1117 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(121, 192, 255, 0.3) !important;
+}
+
+.ace_autocomplete .ace_completion-highlight {
+    color: #ff7b72 !important;
+    font-weight: 700 !important;
+}
+
+.ace_autocomplete .ace_line.ace_selected .ace_completion-highlight {
+    color: #0d1117 !important;
+}
+
+.ace_autocomplete .ace_rightAlignedText,
+.ace_autocomplete .ace_completion-meta {
+    color: #8b949e !important;
+    font-size: 12px !important;
+    font-style: italic !important;
+    margin-left: 16px !important;
+}
+
+.ace_autocomplete .ace_line.ace_selected .ace_completion-meta {
+    color: #0d1117 !important;
+    font-weight: 500 !important;
+}
+
+.ace_doc-tooltip {
+    background: #21212b !important;
+    border: 2px solid #79c0ff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    color: #f8f8f2 !important;
+    font-family: "Cabin Variable", system-ui !important;
+    font-size: 13px !important;
+    max-width: 500px !important;
+    padding: 0 !important;
+}
+
+.ace_doc-tooltip code {
+    background: #1b1925 !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    color: #ff7b72 !important;
+    font-family: monospace !important;
+}
 `;
 
     var dom = require("../lib/dom");

@@ -14,7 +14,6 @@ echo "=== Build started at $(date) ==="
 
 PHP_VERSION=8.4.13
 PHP_PATH=php-$PHP_VERSION
-FLOW_PHAR=flow.phar
 
 echo "Build libxml2 for WebAssembly"
 LIBXML2_VERSION=2.11.4
@@ -154,3 +153,4 @@ OUTPUT_DIR="$PROJECT_ROOT/../web/landing/assets/wasm"
 mkdir -p "$OUTPUT_DIR"
 cp out/php.wasm out/php.js "$OUTPUT_DIR/"
 
+exit 0;

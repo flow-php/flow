@@ -1,6 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 import ace from "ace-builds"
 import "../ace-themes/theme-flow.js"
+import { flowCompleter } from "../completers/flow_completer.js"
 
 export default class extends Controller {
     #editor
@@ -23,6 +24,34 @@ export default class extends Controller {
         this.#editor.session.setUseWorker(false);
         this.#editor.setShowPrintMargin(false);
         this.#editor.setFontSize(16);
+
+        ace.config.loadModule("ace/ext/language_tools", (langTools) => {
+            const phpKeywordCompleter = langTools.keyWordCompleter;
+
+            const contextAwareKeywordCompleter = {
+                getCompletions: function(editor, session, pos, prefix, callback) {
+                    const line = session.getLine(pos.row);
+                    const lineUpToCursor = line.substring(0, pos.column);
+
+                    if (lineUpToCursor.match(/ref\s*\(\s*['"][^'"]*['"]\s*\)\s*->\s*\w*$/)) {
+                        callback(null, []);
+                        return;
+                    }
+
+                    phpKeywordCompleter.getCompletions(editor, session, pos, prefix, callback);
+                }
+            };
+
+            langTools.setCompleters([flowCompleter]);
+            langTools.addCompleter(contextAwareKeywordCompleter);
+            langTools.addCompleter(langTools.snippetCompleter);
+
+            this.#editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true
+            });
+        });
 
         this.#editor.session.on('change', () => {
             textarea.value = this.#editor.getValue()

@@ -434,6 +434,7 @@
             "cp ./build/flow.phar ./web/landing/assets/wasm/flow.phar"
         ],
         "build:wasm": [
+            "Composer\\Config::disableProcessTimeout",
             "cd wasm && ./build.sh",
             "@build:phar"
         ],
