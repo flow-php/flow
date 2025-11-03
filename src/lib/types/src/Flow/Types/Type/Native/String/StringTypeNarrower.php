@@ -165,7 +165,7 @@ final class StringTypeNarrower implements TypeNarrower
 
         $hasRelativeTime = false;
 
-        if (isset($dateParts['relative'])) {
+        if (isset($dateParts['relative']) && \is_array($dateParts['relative'])) {
             $relative = $dateParts['relative'];
             $hasRelativeTime = ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;
         }

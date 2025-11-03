@@ -60,7 +60,6 @@ final readonly class AutoCaster
         if ($narrowedType instanceof NullType) {
             return null;
         }
-
         return $narrowedType->cast($value);
     }
 }
