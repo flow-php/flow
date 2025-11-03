@@ -85,11 +85,11 @@ final readonly class EntryFactory
         $valueType = (new TypeDetector())->detectType($value);
 
         if ($valueType instanceof StringType) {
-            $valueType = StringTypeNarrower::narrow($value);
+            $valueType = (new StringTypeNarrower())->narrow($value);
         }
 
         if ($valueType instanceof InstanceOfType) {
-            $valueType = InstanceOfTypeNarrower::narrow($value);
+            $valueType = (new InstanceOfTypeNarrower())->narrow($value);
         }
 
         return $this->createAs($entryName, $value, $valueType);

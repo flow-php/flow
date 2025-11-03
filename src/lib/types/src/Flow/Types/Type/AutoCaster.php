@@ -55,7 +55,7 @@ final readonly class AutoCaster
 
     private function castToString(string $value) : mixed
     {
-        $narrowedType = StringTypeNarrower::narrow($value);
+        $narrowedType = (new StringTypeNarrower())->narrow($value);
 
         if ($narrowedType instanceof NullType) {
             return null;

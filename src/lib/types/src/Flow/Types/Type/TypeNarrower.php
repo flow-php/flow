@@ -11,5 +11,5 @@ interface TypeNarrower
     /**
      * @return Type<mixed>
      */
-    public static function narrow(mixed $value) : Type;
+    public function narrow(mixed $value) : Type;
 }

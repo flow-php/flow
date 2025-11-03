@@ -20,67 +20,62 @@ use Flow\Types\Type;
 use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Value\{HTMLDocument, Uuid};
 
-final readonly class StringTypeNarrower implements TypeNarrower
+final class StringTypeNarrower implements TypeNarrower
 {
     private string $string;
-
-    private function __construct(string $string)
-    {
-        $this->string = \trim($string);
-    }
 
     /**
      * @return Type<mixed>
      */
-    public static function narrow(mixed $value) : Type
+    public function narrow(mixed $value) : Type
     {
         if (!\is_string($value)) {
             return type_string();
         }
 
-        $checker = new self($value);
+        $this->setString($value);
 
-        if ($checker->isNull()) {
+        if ($this->isNull()) {
             return type_null();
         }
 
-        if ($checker->isJson()) {
+        if ($this->isJson()) {
             return type_json();
         }
 
-        if ($checker->isUuid()) {
+        if ($this->isUuid()) {
             return type_uuid();
         }
 
-        if ($checker->isHTML()) {
+        if ($this->isHTML()) {
             return type_html();
         }
 
-        if ($checker->isXML()) {
+        if ($this->isXML()) {
             return type_xml();
         }
 
-        if ($checker->isDateTime()) {
+        if ($this->isDateTime()) {
             return type_datetime();
         }
 
-        if ($checker->isDate()) {
+        if ($this->isDate()) {
             return type_date();
         }
 
-        if ($checker->isBoolean()) {
+        if ($this->isBoolean()) {
             return type_boolean();
         }
 
-        if ($checker->isFloat()) {
+        if ($this->isFloat()) {
             return type_float();
         }
 
-        if ($checker->isInteger()) {
+        if ($this->isInteger()) {
             return type_integer();
         }
 
-        if ($checker->isTimeZone()) {
+        if ($this->isTimeZone()) {
             return type_time_zone();
         }
 
@@ -93,7 +88,7 @@ final readonly class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
-        return \in_array(\strtolower($this->string), ['true', 'false', 'yes', 'no', 'on', 'off'], true);
+        return \in_array(\strtolower($this->string), ['true', 'false'], true);
     }
 
     private function isDate() : bool
@@ -120,19 +115,19 @@ final readonly class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
-        if ($dateParts['hour'] !== false) {
+        if (($dateParts['hour'] ?? false) !== false) {
             return false;
         }
 
-        if ($dateParts['minute'] !== false) {
+        if (($dateParts['minute'] ?? false) !== false) {
             return false;
         }
 
-        if ($dateParts['second'] !== false) {
+        if (($dateParts['second'] ?? false) !== false) {
             return false;
         }
 
-        if ($dateParts['fraction'] !== false) {
+        if (($dateParts['fraction'] ?? false) !== false) {
             return false;
         }
 
@@ -163,7 +158,10 @@ final readonly class StringTypeNarrower implements TypeNarrower
             return false;
         }
 
-        $hasDirectTime = $dateParts['hour'] !== false || $dateParts['minute'] !== false || $dateParts['second'] !== false || $dateParts['fraction'] !== false;
+        $hasDirectTime = ($dateParts['hour'] ?? false) !== false
+            || ($dateParts['minute'] ?? false) !== false
+            || ($dateParts['second'] ?? false) !== false
+            || ($dateParts['fraction'] ?? false) !== false;
 
         $hasRelativeTime = false;
 
@@ -196,7 +194,7 @@ final readonly class StringTypeNarrower implements TypeNarrower
 
     private function isInteger() : bool
     {
-        if ($this->string === '' || $this->string === '0') {
+        if ($this->string === '') {
             return false;
         }
 
@@ -303,5 +301,10 @@ final readonly class StringTypeNarrower implements TypeNarrower
         }
 
         return false;
+    }
+
+    private function setString(string $string) : void
+    {
+        $this->string = \trim($string);
     }
 }

@@ -13,7 +13,7 @@ final readonly class InstanceOfTypeNarrower implements TypeNarrower
     /**
      * @return Type<mixed>
      */
-    public static function narrow(mixed $value) : Type
+    public function narrow(mixed $value) : Type
     {
         if (!\is_object($value)) {
             return get_type($value);

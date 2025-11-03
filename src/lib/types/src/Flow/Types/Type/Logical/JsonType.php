@@ -46,7 +46,7 @@ final readonly class JsonType implements Type
             return false;
         }
 
-        return StringTypeNarrower::narrow($value) instanceof self;
+        return (new StringTypeNarrower())->narrow($value) instanceof self;
     }
 
     public function normalize() : array
