@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_array, type_integer, type_optional, type_string, type_structure};
+use function Flow\Types\DSL\{type_array, type_boolean, type_integer, type_optional, type_string, type_structure};
 use Cocur\Slugify\Slugify;
+use Flow\ETL\Function\ScalarFunctionChain;
 
 final readonly class FunctionModel
 {
@@ -18,6 +19,7 @@ final readonly class FunctionModel
         public ParametersModel $parameters,
         public TypesModel $returnType,
         public AttributesModel $attributes,
+        public bool $scalarFunctionChain,
         public ?string $docComment = null,
     ) {
 
@@ -37,6 +39,7 @@ final readonly class FunctionModel
             'parameters' => type_array(),
             'return_type' => type_array(),
             'attributes' => type_array(),
+            'scalar_function_chain' => type_boolean(),
             'doc_comment' => type_optional(type_string()),
         ])->assert($data);
 
@@ -56,6 +59,7 @@ final readonly class FunctionModel
             ParametersModel::fromArray($parameters),
             TypesModel::fromArray($returnType),
             AttributesModel::fromArray($attributes),
+            $data['scalar_function_chain'],
             $data['doc_comment']
         );
     }
@@ -77,6 +81,7 @@ final readonly class FunctionModel
             ParametersModel::fromFunctionReflection($reflectionFunction),
             TypesModel::fromReflection($returnTypeReflection),
             AttributesModel::fromReflection($reflectionFunction),
+            self::isScalarFunctionChain($returnTypeReflection),
             $reflectionFunction->getDocComment() ? \base64_encode($reflectionFunction->getDocComment()) : null,
         );
     }
@@ -95,7 +100,31 @@ final readonly class FunctionModel
             'parameters' => $this->parameters->normalize(),
             'return_type' => $this->returnType->normalize(),
             'attributes' => $this->attributes->normalize(),
+            'scalar_function_chain' => $this->scalarFunctionChain,
             'doc_comment' => $this->docComment,
         ];
+    }
+
+    private static function isScalarFunctionChain(\ReflectionType $reflectionType) : bool
+    {
+        if ($reflectionType instanceof \ReflectionNamedType) {
+            $typeName = $reflectionType->getName();
+
+            if (!\class_exists($typeName)) {
+                return false;
+            }
+
+            return \is_a($typeName, ScalarFunctionChain::class, true);
+        }
+
+        if ($reflectionType instanceof \ReflectionUnionType || $reflectionType instanceof \ReflectionIntersectionType) {
+            foreach ($reflectionType->getTypes() as $type) {
+                if (self::isScalarFunctionChain($type)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

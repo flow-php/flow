@@ -43,6 +43,7 @@ final class GenerateDSLCompleterCommand extends Command
         $functionsData = \array_map(
             fn (DSLDefinition $definition) : array => [
                 'name' => $definition->name(),
+                'fullName' => '\\' . $definition->data()['namespace'] . '\\' . $definition->name(),
                 'snippet' => $this->buildSnippet($definition),
                 'docComment' => $this->formatDocComment($definition),
                 'highlightedSignature' => $this->buildHighlightedSignature($definition),
@@ -116,9 +117,10 @@ final class GenerateDSLCompleterCommand extends Command
     private function buildSnippet(DSLDefinition $definition) : string
     {
         $params = $definition->data()['parameters'];
+        $fullFunctionName = '\\' . $definition->data()['namespace'] . '\\' . $definition->name();
 
         if (empty($params)) {
-            return $definition->name() . '()';
+            return $fullFunctionName . '()';
         }
 
         $snippetParams = [];
@@ -133,7 +135,7 @@ final class GenerateDSLCompleterCommand extends Command
             $tabstop++;
         }
 
-        return $definition->name() . '(' . \implode(', ', $snippetParams) . ')';
+        return $fullFunctionName . '(' . \implode(', ', $snippetParams) . ')';
     }
 
     private function formatDocComment(DSLDefinition $definition) : string
