@@ -53,5 +53,9 @@ services:
         arguments:
             $dslPath: '%dsl_definitions_path%'
 
+    Flow\Website\Command\GenerateDSLCompleterCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     twig.markdown.league_common_mark_converter_factory:
         class: Flow\Website\Service\Markdown\LeagueCommonMarkConverterFactory

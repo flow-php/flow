@@ -15,11 +15,11 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
-final class Github
+final readonly class Github
 {
     public function __construct(
-        private readonly ContributorsRequestFactory $requestFactory,
-        private readonly ContainerBagInterface $parameters,
+        private ContributorsRequestFactory $requestFactory,
+        private ContainerBagInterface $parameters,
     ) {
     }
 
@@ -66,7 +66,7 @@ final class Github
                 ->run();
 
             return $memory->dump();
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return [];
         }
     }

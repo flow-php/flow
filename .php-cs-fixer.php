@@ -26,8 +26,9 @@ $finder = Finder::create()
         __DIR__ . '/src/lib/**/tests',
         __DIR__ . '/src/tools/**/src',
         __DIR__ . '/src/tools/**/tests',
-        __DIR__ . '/web/**/src',
-        __DIR__ . '/web/**/tests',
+        __DIR__ . '/web/landing/src',
+        __DIR__ . '/web/landing/tests',
+        __DIR__ . '/web/landing/bin',
         __DIR__ . '/examples',
         __DIR__ . '/tools/rector/src',
     ])

@@ -6,13 +6,13 @@ namespace Flow\Website\Blog;
 
 use function Flow\Types\DSL\{type_string, type_structure};
 
-final class Post
+final readonly class Post
 {
     public function __construct(
-        public readonly string $title,
-        public readonly string $description,
-        public readonly \DateTimeImmutable $date,
-        public readonly string $slug,
+        public string $title,
+        public string $description,
+        public \DateTimeImmutable $date,
+        public string $slug,
     ) {
     }
 

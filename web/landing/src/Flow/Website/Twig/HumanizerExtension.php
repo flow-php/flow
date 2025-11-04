@@ -13,7 +13,7 @@ final class HumanizerExtension extends AbstractExtension
     public function getFilters()
     {
         return [
-            new TwigFilter('humanize', [$this, 'humanize']),
+            new TwigFilter('humanize', $this->humanize(...)),
         ];
     }
 

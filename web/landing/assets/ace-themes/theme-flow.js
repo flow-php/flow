@@ -205,22 +205,57 @@ ace.define("ace/theme/flow", ["require", "exports", "module", "ace/lib/dom"], fu
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
     color: #f8f8f2 !important;
     font-family: "Cabin Variable", system-ui !important;
-    font-size: 13px !important;
-    max-width: 500px !important;
-    padding: 0 !important;
+    font-size: 14px !important;
+    max-width: 600px !important;
+    padding: 16px !important;
+    line-height: 1.6 !important;
+}
+
+.ace_doc-tooltip pre {
+    background: #1b1925 !important;
+    padding: 12px !important;
+    border-radius: 6px !important;
+    margin: 0 0 12px 0 !important;
+    border-left: 3px solid #79c0ff !important;
+    overflow-x: auto !important;
 }
 
 .ace_doc-tooltip code {
-    background: #1b1925 !important;
-    padding: 4px 8px !important;
-    border-radius: 4px !important;
+    font-family: "Fira Code", "JetBrains Mono", "Consolas", monospace !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.ace_doc-tooltip p {
+    margin: 0 !important;
+    color: #8b949e !important;
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+}
+
+/* Syntax highlighting for tooltip code */
+.ace_doc-tooltip .fn-name {
+    color: #d2a8ff !important;
+    font-weight: 600 !important;
+}
+
+.ace_doc-tooltip .fn-type {
+    color: #79c0ff !important;
+}
+
+.ace_doc-tooltip .fn-param {
+    color: #f8f8f2 !important;
+}
+
+.ace_doc-tooltip .fn-operator {
     color: #ff7b72 !important;
-    font-family: monospace !important;
+}
+
+.ace_doc-tooltip .fn-return {
+    color: #79c0ff !important;
+    font-weight: 600 !important;
 }
 `;
-
-    var dom = require("../lib/dom");
-    dom.importCssString(exports.cssText, exports.cssClass, false);
 });
 (function() {
     ace.require(["ace/theme/flow"], function(m) {

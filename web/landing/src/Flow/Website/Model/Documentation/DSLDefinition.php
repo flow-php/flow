@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Model\Documentation;
 
-final class DSLDefinition
+final readonly class DSLDefinition
 {
     /**
      * @param array{
@@ -19,7 +19,7 @@ final class DSLDefinition
      *      doc_comment: null|string,
      *  } $data
      */
-    public function __construct(private readonly array $data)
+    public function __construct(private array $data)
     {
     }
 
@@ -30,7 +30,7 @@ final class DSLDefinition
 
     public function docComment() : string
     {
-        return \base64_decode($this->data['doc_comment'], true);
+        return \base64_decode((string) $this->data['doc_comment'], true);
     }
 
     /**

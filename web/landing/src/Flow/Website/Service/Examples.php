@@ -7,9 +7,9 @@ namespace Flow\Website\Service;
 use function Flow\Types\DSL\type_string;
 use Flow\Website\Service\Example\Output;
 
-final class Examples
+final readonly class Examples
 {
-    public function __construct(private readonly string $examplesPath)
+    public function __construct(private string $examplesPath)
     {
     }
 

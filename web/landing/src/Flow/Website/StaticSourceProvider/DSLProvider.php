@@ -7,9 +7,9 @@ namespace Flow\Website\StaticSourceProvider;
 use Flow\Website\Service\Documentation\DSLDefinitions;
 use NorbertTech\StaticContentGeneratorBundle\Content\{Source, SourceProvider};
 
-final class DSLProvider implements SourceProvider
+final readonly class DSLProvider implements SourceProvider
 {
-    public function __construct(private readonly DSLDefinitions $dslDefinitions)
+    public function __construct(private DSLDefinitions $dslDefinitions)
     {
     }
 

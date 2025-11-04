@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service\Example;
 
-final class Output
+final readonly class Output
 {
-    public function __construct(public readonly string $content, public readonly string $type)
+    public function __construct(public string $content, public string $type)
     {
     }
 }
