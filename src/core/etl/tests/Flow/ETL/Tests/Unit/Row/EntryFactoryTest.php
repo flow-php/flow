@@ -14,6 +14,7 @@ use function Flow\ETL\DSL\{bool_entry,
     json_object_entry,
     list_entry,
     str_entry,
+    string_entry,
     time_entry,
     uuid_entry,
     xml_entry};
@@ -59,17 +60,17 @@ final class EntryFactoryTest extends TestCase
 
         yield 'xml' => [
             $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>',
-            xml_entry('e', $xml),
+            string_entry('e', $xml),
         ];
 
         yield 'html' => [
             $html = '<!DOCTYPE html><html><head></head><body><div id="id">2</div><p>3</p></body></html>',
-            html_entry('e', $html),
+            string_entry('e', $html),
         ];
 
         yield 'uuid' => [
             $uuid = '00000000-0000-0000-0000-000000000000',
-            uuid_entry('e', $uuid),
+            string_entry('e', $uuid),
         ];
     }
 
@@ -263,7 +264,7 @@ final class EntryFactoryTest extends TestCase
     public function test_html_from_string() : void
     {
         self::assertEquals(
-            html_entry('e', $html = '<!DOCTYPE html><html><head></head><body><div>foo</div><p>3</p></body></html>'),
+            string_entry('e', $html = '<!DOCTYPE html><html><head></head><body><div>foo</div><p>3</p></body></html>'),
             $this->entryFactory->create('e', $html)
         );
     }
@@ -529,16 +530,17 @@ final class EntryFactoryTest extends TestCase
             self::markTestSkipped("Package 'ramsey/uuid' is required for this test.");
         }
 
+        $uuidObject = Uuid::uuid4();
         self::assertEquals(
-            uuid_entry('e', $uuid = Uuid::uuid4()->toString()),
-            $this->entryFactory->create('e', $uuid)
+            uuid_entry('e', $uuidObject->toString()),
+            $this->entryFactory->create('e', $uuidObject)
         );
     }
 
     public function test_uuid_from_string() : void
     {
         self::assertEquals(
-            uuid_entry('e', $uuid = '00000000-0000-0000-0000-000000000000'),
+            string_entry('e', $uuid = '00000000-0000-0000-0000-000000000000'),
             $this->entryFactory->create('e', $uuid)
         );
     }
@@ -554,7 +556,7 @@ final class EntryFactoryTest extends TestCase
     public function test_uuid_type() : void
     {
         self::assertEquals(
-            uuid_entry('e', '00000000-0000-0000-0000-000000000000'),
+            string_entry('e', '00000000-0000-0000-0000-000000000000'),
             $this->entryFactory->create('e', '00000000-0000-0000-0000-000000000000')
         );
     }
@@ -588,7 +590,7 @@ final class EntryFactoryTest extends TestCase
     public function test_xml_from_string() : void
     {
         self::assertEquals(
-            xml_entry('e', $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>'),
+            string_entry('e', $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>'),
             $this->entryFactory->create('e', $xml)
         );
     }

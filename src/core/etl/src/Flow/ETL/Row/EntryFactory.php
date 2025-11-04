@@ -32,7 +32,6 @@ use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
     HTMLType,
     InstanceOfType,
-    InstanceOfTypeNarrower,
     JsonType,
     ListType,
     MapType,
@@ -53,7 +52,6 @@ use Flow\Types\Type\Native\{
     StringType,
     UnionType
 };
-use Flow\Types\Type\Native\String\StringTypeNarrower;
 use Flow\Types\Type\TypeDetector;
 
 final readonly class EntryFactory
@@ -83,14 +81,6 @@ final readonly class EntryFactory
         }
 
         $valueType = (new TypeDetector())->detectType($value);
-
-        if ($valueType instanceof StringType) {
-            $valueType = (new StringTypeNarrower())->narrow($value);
-        }
-
-        if ($valueType instanceof InstanceOfType) {
-            $valueType = (new InstanceOfTypeNarrower())->narrow($value);
-        }
 
         return $this->createAs($entryName, $value, $valueType);
     }
