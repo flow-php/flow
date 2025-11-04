@@ -39,7 +39,7 @@ final class TypeDetector
         }
 
         if (\is_string($value)) {
-            #TODO: #1955 Improve type detection for strings
+            // TODO: #1955 Improve type detection for strings
             if (type_json()->isValid($value)) {
                 return type_json();
             }
