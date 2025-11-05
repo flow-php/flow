@@ -22,7 +22,7 @@ final class FileSchemaCommandTest extends TestCase
 
         self::assertCommandOutputIdentical(
             <<<'OUTPUT'
-[{"ref":"order_id","type":{"type":"uuid"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":false,"metadata":[]}]
+[{"ref":"order_id","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"created_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"updated_at","type":{"type":"string"},"nullable":false,"metadata":[]},{"ref":"discount","type":{"type":"string"},"nullable":true,"metadata":[]},{"ref":"address","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"notes","type":{"type":"json"},"nullable":false,"metadata":[]},{"ref":"items","type":{"type":"json"},"nullable":false,"metadata":[]}]
 
 OUTPUT,
             $tester->getDisplay()
@@ -40,7 +40,7 @@ OUTPUT,
         self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 schema
-|-- order_id: uuid
+|-- order_id: string
 |-- created_at: string
 |-- updated_at: string
 |-- discount: ?string
@@ -85,7 +85,7 @@ OUTPUT,
         self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 schema
-|-- order_id: uuid
+|-- order_id: string
 |-- created_at: string
 |-- updated_at: string
 |-- discount: ?string
@@ -117,7 +117,7 @@ OUTPUT,
 +------------+--------+----------+----------+
 |       name |   type | nullable | metadata |
 +------------+--------+----------+----------+
-|   order_id |   uuid |    false |       [] |
+|   order_id | string |    false |       [] |
 | created_at | string |    false |       [] |
 | updated_at | string |    false |       [] |
 |   discount | string |    false |       [] |
@@ -143,7 +143,7 @@ OUTPUT,
         self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 \Flow\ETL\DSL\schema(
-    \Flow\ETL\DSL\uuid_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
+    \Flow\ETL\DSL\string_schema("order_id", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("created_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("updated_at", nullable: false, metadata: \Flow\ETL\DSL\schema_metadata()),
     \Flow\ETL\DSL\string_schema("discount", nullable: true, metadata: \Flow\ETL\DSL\schema_metadata()),
@@ -171,7 +171,7 @@ OUTPUT,
     {
         "ref": "order_id",
         "type": {
-            "type": "uuid"
+            "type": "string"
         },
         "nullable": false,
         "metadata": []
@@ -244,7 +244,7 @@ OUTPUT,
 +------------+--------+----------+----------+
 |       name |   type | nullable | metadata |
 +------------+--------+----------+----------+
-|   order_id |   uuid |    false |       [] |
+|   order_id | string |    false |       [] |
 | created_at | string |    false |       [] |
 | updated_at | string |    false |       [] |
 |   discount | string |     true |       [] |
@@ -328,7 +328,7 @@ OUTPUT,
 +------------+--------+----------+----------+
 |       name |   type | nullable | metadata |
 +------------+--------+----------+----------+
-|   order_id |   uuid |    false |       [] |
+|   order_id | string |    false |       [] |
 | created_at | string |    false |       [] |
 | updated_at | string |    false |       [] |
 |   discount | string |     true |       [] |
@@ -463,7 +463,7 @@ OUTPUT,
         self::assertCommandOutputIdentical(
             <<<'OUTPUT'
 schema
-|-- order_id: uuid
+|-- order_id: string
 |-- created_at: string
 |-- updated_at: string
 |-- discount: ?string

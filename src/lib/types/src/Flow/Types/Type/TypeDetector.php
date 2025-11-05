@@ -39,8 +39,13 @@ final class TypeDetector
         }
 
         if (\is_string($value)) {
+            // TODO: #1955 Improve type detection for strings
             if (type_json()->isValid($value)) {
                 return type_json();
+            }
+
+            if (type_uuid()->isValid($value)) {
+                return type_uuid();
             }
 
             return type_string();
@@ -96,6 +101,12 @@ final class TypeDetector
         }
 
         if (\is_object($value)) {
+            foreach (['Ramsey\Uuid\UuidInterface', 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
+                if (\is_a($value, $uuidClass, true)) {
+                    return type_uuid();
+                }
+            }
+
             if (type_uuid()->isValid($value)) {
                 return type_uuid();
             }

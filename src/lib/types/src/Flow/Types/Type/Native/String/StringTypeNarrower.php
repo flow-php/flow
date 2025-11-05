@@ -4,27 +4,94 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Native\String;
 
+use function Flow\Types\DSL\{type_boolean,
+    type_date,
+    type_datetime,
+    type_float,
+    type_html,
+    type_integer,
+    type_json,
+    type_null,
+    type_string,
+    type_time_zone,
+    type_uuid,
+    type_xml};
+use Flow\Types\Type;
+use Flow\Types\Type\TypeNarrower;
 use Flow\Types\Value\{HTMLDocument, Uuid};
 
-final readonly class StringTypeChecker
+final class StringTypeNarrower implements TypeNarrower
 {
     private string $string;
 
-    public function __construct(string $string)
+    /**
+     * @return Type<mixed>
+     */
+    public function narrow(mixed $value) : Type
     {
-        $this->string = \trim($string);
+        if (!\is_string($value)) {
+            return type_string();
+        }
+
+        $this->setString($value);
+
+        if ($this->isNull()) {
+            return type_null();
+        }
+
+        if ($this->isJson()) {
+            return type_json();
+        }
+
+        if ($this->isUuid()) {
+            return type_uuid();
+        }
+
+        if ($this->isHTML()) {
+            return type_html();
+        }
+
+        if ($this->isXML()) {
+            return type_xml();
+        }
+
+        if ($this->isDateTime()) {
+            return type_datetime();
+        }
+
+        if ($this->isDate()) {
+            return type_date();
+        }
+
+        if ($this->isBoolean()) {
+            return type_boolean();
+        }
+
+        if ($this->isFloat()) {
+            return type_float();
+        }
+
+        if ($this->isInteger()) {
+            return type_integer();
+        }
+
+        if ($this->isTimeZone()) {
+            return type_time_zone();
+        }
+
+        return type_string();
     }
 
-    public function isBoolean() : bool
+    private function isBoolean() : bool
     {
         if ($this->string === '') {
             return false;
         }
 
-        return \in_array(\strtolower($this->string), ['true', 'false', 'yes', 'no', 'on', 'off'], true);
+        return \in_array(\strtolower($this->string), ['true', 'false'], true);
     }
 
-    public function isDate() : bool
+    private function isDate() : bool
     {
         if ($this->string === '') {
             return false;
@@ -48,26 +115,26 @@ final readonly class StringTypeChecker
             return false;
         }
 
-        if ($dateParts['hour'] !== false) {
+        if (($dateParts['hour'] ?? false) !== false) {
             return false;
         }
 
-        if ($dateParts['minute'] !== false) {
+        if (($dateParts['minute'] ?? false) !== false) {
             return false;
         }
 
-        if ($dateParts['second'] !== false) {
+        if (($dateParts['second'] ?? false) !== false) {
             return false;
         }
 
-        if ($dateParts['fraction'] !== false) {
+        if (($dateParts['fraction'] ?? false) !== false) {
             return false;
         }
 
         return true;
     }
 
-    public function isDateTime() : bool
+    private function isDateTime() : bool
     {
         if ($this->string === '') {
             return false;
@@ -91,24 +158,41 @@ final readonly class StringTypeChecker
             return false;
         }
 
-        return true;
+        $hasDirectTime = ($dateParts['hour'] ?? false) !== false
+            || ($dateParts['minute'] ?? false) !== false
+            || ($dateParts['second'] ?? false) !== false
+            || ($dateParts['fraction'] ?? false) !== false;
+
+        $hasRelativeTime = false;
+
+        if (isset($dateParts['relative']) && \is_array($dateParts['relative'])) {
+            $relative = $dateParts['relative'];
+            $hasRelativeTime = ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;
+        }
+
+        return $hasDirectTime || $hasRelativeTime;
     }
 
-    public function isFloat() : bool
+    private function isFloat() : bool
     {
         if ($this->string === '') {
             return false;
+        }
+
+        // scientific notation
+        if (\is_numeric($this->string) && (\str_contains($this->string, 'e') || \str_contains($this->string, 'E'))) {
+            return true;
         }
 
         return \is_numeric($this->string) && \str_contains($this->string, '.');
     }
 
-    public function isHTML() : bool
+    private function isHTML() : bool
     {
         return HTMLDocument::isValid($this->string);
     }
 
-    public function isInteger() : bool
+    private function isInteger() : bool
     {
         if ($this->string === '') {
             return false;
@@ -121,7 +205,7 @@ final readonly class StringTypeChecker
         return false;
     }
 
-    public function isJson() : bool
+    private function isJson() : bool
     {
         if ($this->string === '') {
             return false;
@@ -149,12 +233,12 @@ final readonly class StringTypeChecker
         }
     }
 
-    public function isNull() : bool
+    private function isNull() : bool
     {
         return \in_array(\mb_strtolower($this->string), ['null', 'nil'], true);
     }
 
-    public function isTimeZone() : bool
+    private function isTimeZone() : bool
     {
         if ($this->string === '') {
             return false;
@@ -177,7 +261,7 @@ final readonly class StringTypeChecker
         return false;
     }
 
-    public function isUuid() : bool
+    private function isUuid() : bool
     {
         if ($this->string === '') {
             return false;
@@ -190,7 +274,7 @@ final readonly class StringTypeChecker
         return 0 !== \preg_match(Uuid::UUID_REGEXP, $this->string);
     }
 
-    public function isXML() : bool
+    private function isXML() : bool
     {
         if ($this->string === '') {
             return false;
@@ -219,8 +303,8 @@ final readonly class StringTypeChecker
         return false;
     }
 
-    public function value() : string
+    private function setString(string $string) : void
     {
-        return $this->string;
+        $this->string = \trim($string);
     }
 }

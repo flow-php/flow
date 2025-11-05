@@ -21,19 +21,8 @@ use function Flow\ETL\DSL\{bool_entry,
     uuid_entry,
     xml_element_entry,
     xml_entry};
-use function Flow\Types\DSL\{type_date,
-    type_datetime,
-    type_html,
-    type_json,
-    type_optional,
-    type_string,
-    type_time,
-    type_uuid,
-    type_xml,
-    type_xml_element};
-use Flow\ETL\Exception\{InvalidArgumentException,
-    RuntimeException,
-    SchemaDefinitionNotFoundException};
+use function Flow\Types\DSL\{type_optional, type_string};
+use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};
 use Flow\ETL\Row\Entry\{ListEntry, MapEntry, StringEntry, StructureEntry};
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
@@ -41,6 +30,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    HTMLType,
     InstanceOfType,
     JsonType,
     ListType,
@@ -52,7 +42,6 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Native\{
     ArrayType,
     BooleanType,
@@ -63,9 +52,7 @@ use Flow\Types\Type\Native\{
     StringType,
     UnionType
 };
-use Flow\Types\Type\Native\String\StringTypeChecker;
 use Flow\Types\Type\TypeDetector;
-use Flow\Types\Value\Uuid;
 
 final readonly class EntryFactory
 {
@@ -73,7 +60,6 @@ final readonly class EntryFactory
      * @param null|Definition<mixed>|Schema $schema
      *
      * @throws InvalidArgumentException
-     * @throws RuntimeException
      * @throws SchemaDefinitionNotFoundException
      *
      * @return Entry<mixed>
@@ -95,45 +81,6 @@ final readonly class EntryFactory
         }
 
         $valueType = (new TypeDetector())->detectType($value);
-
-        if ($valueType instanceof StringType) {
-            $value = type_string()->assert($value);
-            $stringChecker = new StringTypeChecker($value);
-
-            if ($stringChecker->isJson()) {
-                $valueType = type_json();
-            } elseif ($stringChecker->isUuid()) {
-                $valueType = type_uuid();
-            } elseif ($stringChecker->isHTML()) {
-                $valueType = type_html();
-            } elseif ($stringChecker->isXML()) {
-                $valueType = type_xml();
-            }
-        }
-
-        if ($valueType instanceof InstanceOfType) {
-            if ($valueType->class === \DOMDocument::class) {
-                $valueType = type_xml();
-            } elseif ($valueType->class === \DOMElement::class) {
-                $valueType = type_xml_element();
-            } elseif ($valueType->class === \DateInterval::class) {
-                $valueType = type_time();
-            } elseif (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
-                if ($value instanceof \DateTimeInterface && $value->format('H:i:s') === '00:00:00') {
-                    $valueType = type_date();
-                } else {
-                    $valueType = type_datetime();
-                }
-            } else {
-                foreach (['Ramsey\Uuid\UuidInterface', Uuid::class, 'Symfony\Component\Uid\Uuid'] as $uuidClass) {
-                    if (\is_a($valueType->class, $uuidClass, true)) {
-                        $valueType = type_uuid();
-
-                        break;
-                    }
-                }
-            }
-        }
 
         return $this->createAs($entryName, $value, $valueType);
     }
@@ -221,6 +168,10 @@ final readonly class EntryFactory
 
             if ($type instanceof TimeZoneType) {
                 return string_entry($entryName, type_optional(type_string())->cast($value), $metadata);
+            }
+
+            if ($type instanceof NullType) {
+                return StringEntry::fromNull($entryName, $metadata);
             }
 
             if ($type instanceof EnumType) {

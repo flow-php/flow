@@ -7,7 +7,7 @@ namespace Flow\Types\Type\Logical;
 use function Flow\Types\DSL\type_json;
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\String\StringTypeChecker;
+use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 /**
  * @implements Type<string>
@@ -46,7 +46,7 @@ final readonly class JsonType implements Type
             return false;
         }
 
-        return (new StringTypeChecker($value))->isJson();
+        return (new StringTypeNarrower())->narrow($value) instanceof self;
     }
 
     public function normalize() : array
