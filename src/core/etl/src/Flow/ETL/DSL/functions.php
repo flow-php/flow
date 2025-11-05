@@ -545,6 +545,10 @@ function float_entry(string $name, float|int|string|null $value, ?Metadata $meta
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
 function json_entry(string $name, array|string|null $data, ?Metadata $metadata = null) : Entry
 {
+    if (\is_array($data)) {
+        return JsonEntry::object($name, $data, $metadata);
+    }
+
     return new JsonEntry($name, $data, $metadata);
 }
 

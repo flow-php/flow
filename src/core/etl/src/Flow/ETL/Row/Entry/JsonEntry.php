@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\Types\DSL\{type_equals, type_json, type_optional};
-use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
 
 /**
- * @implements Entry<?array<mixed>>
+ * @implements Entry<?string>
  */
 final class JsonEntry implements Entry
 {
@@ -28,58 +27,55 @@ final class JsonEntry implements Entry
     private readonly Type $type;
 
     /**
-     * @var null|array<array-key, mixed>
+     * @var null|string
      */
-    private readonly ?array $value;
+    private readonly ?string $value;
 
     /**
-     * @param null|array<array-key, mixed>|string $value
+     * @param null|string $value
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        array|string|null $value,
+        string|null $value,
         ?Metadata $metadata = null,
     ) {
-        if ('' === $name) {
-            throw InvalidArgumentException::because('Entry name cannot be empty');
+        if ($value !== null && !type_json()->isValid($value)) {
+            throw new InvalidArgumentException("Invalid JSON value given: '{$value}'");
         }
 
-        if (\is_string($value)) {
+        if ($value !== null) {
             $this->object = \str_starts_with($value, '{') && \str_ends_with($value, '}');
-
-            try {
-                $this->value = (array) \json_decode($value, true, flags: \JSON_THROW_ON_ERROR);
-            } catch (\JsonException $e) {
-                throw new InvalidArgumentException("Invalid value given: '{$value}', reason: " . $e->getMessage(), previous: $e);
-            }
-        } else {
-            $this->value = $value;
         }
 
+        $this->value = $value;
         $this->metadata = $metadata ?: Metadata::empty();
         $this->type = type_json();
     }
 
     /**
-     * @param null|array<array-key, mixed> $value
+     * @param null|array<string, mixed> $value
      *
      * @throws InvalidArgumentException
+     * @throws \JsonException
      *
-     * @return Entry<?array<mixed>>
+     * @return Entry<?string>
      */
     public static function object(string $name, ?array $value, ?Metadata $metadata = null) : Entry
     {
-        if (\is_array($value)) {
-            foreach (\array_keys($value) as $key) {
-                if (!\is_string($key)) {
-                    throw InvalidArgumentException::because('All keys for JsonEntry object must be strings');
-                }
+        if ($value === null) {
+            return new self($name, null, $metadata);
+        }
+
+        foreach (\array_keys($value) as $key) {
+            if (!\is_string($key)) {
+                throw InvalidArgumentException::because('All keys for JsonEntry object must be strings');
             }
         }
 
-        $entry = new self($name, $value, $metadata);
+        $json = \json_encode($value, \JSON_THROW_ON_ERROR);
+        $entry = new self($name, $json, $metadata);
         $entry->object = true;
 
         return $entry;
@@ -136,15 +132,15 @@ final class JsonEntry implements Entry
                 && type_equals($this->type, $entry->type);
         }
 
-        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
+        return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $thisValue === $entryValue;
     }
 
     public function map(callable $mapper) : Entry
     {
-        $mappedValue = new self($this->name, $mapper($this->value()));
-        $mappedValue->object = $this->object;
+        $entry = new self($this->name, $mapper($this->value()), $this->metadata);
+        $entry->object = $this->object;
 
-        return $mappedValue;
+        return $entry;
     }
 
     public function name() : string
@@ -154,7 +150,7 @@ final class JsonEntry implements Entry
 
     public function rename(string $name) : Entry
     {
-        $entry = new self($name, $this->value);
+        $entry = new self($name, $this->value, $this->metadata);
         $entry->object = $this->object;
 
         return $entry;
@@ -162,15 +158,7 @@ final class JsonEntry implements Entry
 
     public function toString() : string
     {
-        if ($this->value === null) {
-            return '';
-        }
-
-        if (!\count($this->value) && $this->object) {
-            return '{}';
-        }
-
-        return \json_encode($this->value, \JSON_THROW_ON_ERROR);
+        return $this->value ?? '';
     }
 
     /**
@@ -183,7 +171,7 @@ final class JsonEntry implements Entry
         return $this->type;
     }
 
-    public function value() : ?array
+    public function value() : ?string
     {
         return $this->value;
     }
