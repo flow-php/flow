@@ -75,7 +75,7 @@ final class GenerateDSLCompleterCommand extends Command
     }
 
     /**
-     * @param array{name: string, type?: array, has_default_value: bool} $param
+     * @param array{name: string, type?: array, has_default_value: bool, default_value?: ?string} $param
      */
     private function buildHighlightedParam(array $param) : string
     {
@@ -87,8 +87,8 @@ final class GenerateDSLCompleterCommand extends Command
 
         $paramStr .= '<span class="fn-param">$' . $param['name'] . '</span>';
 
-        if ($param['has_default_value']) {
-            $paramStr .= ' <span class="fn-operator">=</span> <span class="fn-operator">...</span>';
+        if ($param['has_default_value'] && isset($param['default_value'])) {
+            $paramStr .= ' <span class="fn-operator">=</span> <span class="fn-default">' . \htmlspecialchars($param['default_value']) . '</span>';
         }
 
         return $paramStr;

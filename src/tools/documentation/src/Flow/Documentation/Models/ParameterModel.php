@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Documentation\Models;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_string, type_structure};
+use function Flow\Types\DSL\{type_array, type_boolean, type_optional, type_string, type_structure};
 
 final readonly class ParameterModel
 {
@@ -13,6 +13,7 @@ final readonly class ParameterModel
      * @param TypesModel $type
      * @param bool $isNullable
      * @param bool $isVariadic
+     * @param ?string $defaultValue
      */
     public function __construct(
         public string $name,
@@ -20,6 +21,7 @@ final readonly class ParameterModel
         public bool $hasDefaultValue,
         public bool $isNullable,
         public bool $isVariadic,
+        public ?string $defaultValue = null,
     ) {
     }
 
@@ -34,6 +36,7 @@ final readonly class ParameterModel
             'has_default_value' => type_boolean(),
             'is_nullable' => type_boolean(),
             'is_variadic' => type_boolean(),
+            'default_value' => type_optional(type_string()),
         ])->assert($data);
 
         /** @phpstan-var array<array<string, mixed>> $type */
@@ -45,14 +48,19 @@ final readonly class ParameterModel
             $data['has_default_value'],
             $data['is_nullable'],
             $data['is_variadic'],
+            $data['default_value'],
         );
     }
 
     public static function fromReflection(\ReflectionParameter $reflectionParameter) : self
     {
+        $defaultValue = null;
+        $hasDefaultValue = false;
+
         try {
-            $reflectionParameter->getDefaultValue();
+            $default = $reflectionParameter->getDefaultValue();
             $hasDefaultValue = true;
+            $defaultValue = self::exportDefaultValue($default);
         } catch (\Throwable) {
             $hasDefaultValue = false;
         }
@@ -69,6 +77,7 @@ final readonly class ParameterModel
             $hasDefaultValue,
             $reflectionParameter->allowsNull(),
             $reflectionParameter->isVariadic(),
+            $defaultValue,
         );
     }
 
@@ -83,6 +92,43 @@ final readonly class ParameterModel
             'has_default_value' => $this->hasDefaultValue,
             'is_nullable' => $this->isNullable,
             'is_variadic' => $this->isVariadic,
+            'default_value' => $this->defaultValue,
         ];
+    }
+
+    private static function exportDefaultValue(mixed $value) : string
+    {
+        if ($value === null) {
+            return 'null';
+        }
+
+        if (\is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (\is_string($value)) {
+            $escaped = \addslashes($value);
+            $escaped = \str_replace(["\n", "\r", "\t"], ['\\n', '\\r', '\\t'], $escaped);
+
+            return "'" . $escaped . "'";
+        }
+
+        if (\is_int($value) || \is_float($value)) {
+            return (string) $value;
+        }
+
+        if (\is_array($value)) {
+            if (empty($value)) {
+                return '[]';
+            }
+
+            return '[...]';
+        }
+
+        if (\is_object($value)) {
+            return $value::class . '::...';
+        }
+
+        return '...';
     }
 }
