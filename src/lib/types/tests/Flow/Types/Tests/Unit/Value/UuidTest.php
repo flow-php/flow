@@ -18,6 +18,12 @@ final class UuidTest extends TestCase
         new Uuid('invalid-uuid-string');
     }
 
+    public function test_construct_with_invalid_uuid_throws_exception() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new Uuid('********-****-****-****************');
+    }
+
     public function test_construct_with_ramsey_uuid_instance() : void
     {
         $ramseyUuid = RamseyUuid::uuid4();
@@ -47,7 +53,6 @@ final class UuidTest extends TestCase
         $uuidString = '123e4567-e89b-12d3-a456-426614174000';
         $uuid = Uuid::fromString($uuidString);
 
-        self::assertInstanceOf(Uuid::class, $uuid);
         self::assertSame($uuidString, $uuid->toString());
     }
 

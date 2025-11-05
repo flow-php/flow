@@ -13,7 +13,7 @@ final readonly class Uuid implements \Stringable
      * This regexp is a port of the Uuid library,
      * which is copyright Ben Ramsey, @see https://github.com/ramsey/uuid.
      */
-    public const UUID_REGEXP = '/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/ms';
+    private const UUID_REGEXP = '/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/ms';
 
     private string $value;
 
@@ -28,11 +28,13 @@ final readonly class Uuid implements \Stringable
                     $this->value = (string) \Ramsey\Uuid\Uuid::fromString($value);
                 } elseif (\class_exists(\Symfony\Component\Uid\Uuid::class)) {
                     $this->value = \Symfony\Component\Uid\Uuid::fromString($value)->toRfc4122();
+                } elseif (self::isValid($value)) {
+                    $this->value = $value;
                 } else {
                     throw new RuntimeException("\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.");
                 }
             } catch (\InvalidArgumentException $e) {
-                throw new InvalidArgumentException("Invalid UUID: '{$value}'", 0, $e);
+                throw new InvalidArgumentException("Invalid UUID: '{$value}'", $e->getCode(), $e);
             }
         } elseif ($value instanceof UuidInterface) {
             $this->value = $value->toString();
@@ -44,6 +46,15 @@ final readonly class Uuid implements \Stringable
     public static function fromString(string $value) : self
     {
         return new self($value);
+    }
+
+    public static function isValid(string $value) : bool
+    {
+        if (\strlen($value) !== 36) {
+            return false;
+        }
+
+        return 1 === \preg_match(self::UUID_REGEXP, $value);
     }
 
     public function __toString() : string
