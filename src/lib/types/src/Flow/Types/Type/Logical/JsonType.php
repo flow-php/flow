@@ -7,7 +7,6 @@ namespace Flow\Types\Type\Logical;
 use function Flow\Types\DSL\type_json;
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
-use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 /**
  * @implements Type<string>
@@ -46,7 +45,22 @@ final readonly class JsonType implements Type
             return false;
         }
 
-        return (new StringTypeNarrower())->narrow($value) instanceof self;
+        if ($value === '') {
+            return false;
+        }
+
+        if ('{' !== $value[0] && '[' !== $value[0]) {
+            return false;
+        }
+
+        if (
+            !(\str_starts_with($value, '{') && \str_ends_with($value, '}'))
+            && !(\str_starts_with($value, '[') && \str_ends_with($value, ']'))
+        ) {
+            return false;
+        }
+
+        return \json_validate($value);
     }
 
     public function normalize() : array

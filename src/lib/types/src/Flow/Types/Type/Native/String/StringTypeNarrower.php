@@ -33,7 +33,7 @@ final class StringTypeNarrower implements TypeNarrower
             return type_string();
         }
 
-        $this->setString($value);
+        $this->string = \trim($value);
 
         if ($this->isNull()) {
             return type_null();
@@ -207,30 +207,7 @@ final class StringTypeNarrower implements TypeNarrower
 
     private function isJson() : bool
     {
-        if ($this->string === '') {
-            return false;
-        }
-
-        if ('{' !== $this->string[0] && '[' !== $this->string[0]) {
-            return false;
-        }
-
-        if (\function_exists('json_validate')) {
-            return \json_validate($this->string);
-        }
-
-        if (
-            (!\str_starts_with($this->string, '{') || !\str_ends_with($this->string, '}'))
-            && (!\str_starts_with($this->string, '[') || !\str_ends_with($this->string, ']'))
-        ) {
-            return false;
-        }
-
-        try {
-            return \is_array(\json_decode($this->string, true, flags: \JSON_THROW_ON_ERROR));
-        } catch (\Exception) {
-            return false;
-        }
+        return type_json()->isValid($this->string);
     }
 
     private function isNull() : bool
@@ -263,15 +240,7 @@ final class StringTypeNarrower implements TypeNarrower
 
     private function isUuid() : bool
     {
-        if ($this->string === '') {
-            return false;
-        }
-
-        if (\strlen($this->string) !== 36) {
-            return false;
-        }
-
-        return 0 !== \preg_match(Uuid::UUID_REGEXP, $this->string);
+        return Uuid::isValid($this->string);
     }
 
     private function isXML() : bool
@@ -301,10 +270,5 @@ final class StringTypeNarrower implements TypeNarrower
         }
 
         return false;
-    }
-
-    private function setString(string $string) : void
-    {
-        $this->string = \trim($string);
     }
 }

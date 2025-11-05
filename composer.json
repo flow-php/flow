@@ -40,6 +40,7 @@
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
         "symfony/console": "^5.4 || ^6.4 || ^7.0",
         "symfony/http-foundation": "~5.4.0 || ~6.4.0 || ~7",
+        "symfony/polyfill-php83": "^1.33",
         "symfony/string": "^5.4 || ^6.4 || ^7.0",
         "symfony/uid": "^6.3 || ^7.0",
         "webmozart/glob": "^3.0 || ^4.0"

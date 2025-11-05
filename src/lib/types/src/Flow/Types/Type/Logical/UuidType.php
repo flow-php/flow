@@ -49,10 +49,8 @@ final readonly class UuidType implements Type
 
     public function isValid(mixed $value) : bool
     {
-        if (\is_object($value)) {
-            if ($value instanceof Uuid) {
-                return true;
-            }
+        if ($value instanceof Uuid) {
+            return true;
         }
 
         return false;
