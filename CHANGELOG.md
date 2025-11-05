@@ -1,6 +1,10 @@
-## [Unreleased] - 2025-11-02
+## [Unreleased] - 2025-11-05
 
 ### Added
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **TypeNarrower interface for type narrowing pattern** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **StringTypeNarrower class implementing TypeNarrower interface** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **InstanceOfTypeNarrower class for handling external UUID libraries** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **Support for detecting additional string types: boolean, integer, float, date, datetime, timezone, null** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1949](https://github.com/flow-php/flow/pull/1949) - **PHP WAS compilation script** - [@norberttech](https://github.com/norberttech)
 - [#1949](https://github.com/flow-php/flow/pull/1949) - **Interactive Playground to website** - [@norberttech](https://github.com/norberttech)
 - [#1949](https://github.com/flow-php/flow/pull/1949) - **Basic error handling in interactive playground** - [@norberttech](https://github.com/norberttech)
@@ -11,6 +15,10 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **StringTypeChecker renamed to StringTypeNarrower with new interface contract** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **Refactored EntryFactory to use modular TypeNarrower pattern** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **EntryFactory now uses InstanceOfTypeNarrower for UUID library detection** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **JsonType.isValid() method now uses StringTypeNarrower for validation** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1948](https://github.com/flow-php/flow/pull/1948) - **Make `HTMLDocument` reliable** - [@stloyd](https://github.com/stloyd)
 - [2342f9](https://github.com/flow-php/flow/commit/2342f961173c05c955f4bd96e9b1b66be7d44f4f) - **Mark HTMLDocument tests as skipped** - [@norberttech](https://github.com/norberttech)
 - [#1947](https://github.com/flow-php/flow/pull/1947) - **Updated nix repository commit** - [@norberttech](https://github.com/norberttech)
@@ -23,11 +31,14 @@
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **Redundant InstanceOfType handling in EntryFactory::create() method** - [@MrHDOLEK](https://github.com/MrHDOLEK)
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **Missing NullType support in EntryFactory::createAs() method** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1942](https://github.com/flow-php/flow/pull/1942) - **AsyncAWSS3DestinationStream - set correct content type** - [@norberttech](https://github.com/norberttech)
 - [#1944](https://github.com/flow-php/flow/pull/1944) - **Incorrect library test group names** - [@stloyd](https://github.com/stloyd)
 - [#1945](https://github.com/flow-php/flow/pull/1945) - **Fixed broken `HTMLTypeTest`** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#1943](https://github.com/flow-php/flow/pull/1943) - **Duplicate UUID library detection logic from EntryFactory** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [26078b](https://github.com/flow-php/flow/commit/26078bf7f1abe3d4f87a634b0419db130014f6d8) - **wasm development lefotvers** - [@norberttech](https://github.com/norberttech)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Remove `Rows::fromArray()`** - [@stloyd](https://github.com/stloyd)
 
@@ -2785,6 +2796,7 @@
 - @Krizhnikov
 - @leith
 - @mleczakm
+- @MrHDOLEK
 - @norbertmwk
 - @norberttech
 - @owsiakl
