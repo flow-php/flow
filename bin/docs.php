@@ -3,8 +3,11 @@
 
 declare(strict_types=1);
 
-use Flow\Documentation\{FunctionCollector, FunctionsExtractor};
+use Flow\Documentation\{FunctionCollector, FunctionsExtractor, MethodCollector, MethodsExtractor};
 use Flow\ETL\Attribute\Module;
+use Flow\ETL\DataFrame;
+use Flow\ETL\DataFrame\GroupedDataFrame;
+use Flow\ETL\Function\ScalarFunctionChain;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\{InputArgument, InputInterface};
@@ -76,6 +79,45 @@ $application->add(new class extends Command {
         }
 
         \file_put_contents(__DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'), \json_encode($normalizedFunctions));
+
+        return Command::SUCCESS;
+    }
+});
+
+$application->add(new class extends Command {
+    public function configure() : void
+    {
+        $this
+            ->setName('api:dump')
+            ->setDescription('Dump API methods from classes into json file.')
+            ->addArgument('output', InputArgument::REQUIRED, 'Where to dump methods.');
+    }
+
+    public function execute(InputInterface $input, OutputInterface $output) : int
+    {
+        $repositoryRootPath = dirname(__DIR__) . '/';
+
+        $classes = [
+            ScalarFunctionChain::class,
+            DataFrame::class,
+            GroupedDataFrame::class,
+        ];
+
+        $normalizedMethods = [];
+
+        foreach ($classes as $className) {
+            $extractor = new MethodsExtractor(
+                $repositoryRootPath,
+                $className,
+                new MethodCollector()
+            );
+
+            foreach ($extractor->extract() as $method) {
+                $normalizedMethods[] = $method->normalize();
+            }
+        }
+
+        \file_put_contents(__DIR__ . '/../' . \ltrim((string) $input->getArgument('output'), '/'), \json_encode($normalizedMethods));
 
         return Command::SUCCESS;
     }

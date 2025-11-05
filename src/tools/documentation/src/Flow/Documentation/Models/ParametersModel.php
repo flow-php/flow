@@ -39,6 +39,17 @@ final readonly class ParametersModel
         return new self($arguments);
     }
 
+    public static function fromMethodReflection(\ReflectionMethod $reflectionMethod) : self
+    {
+        $arguments = [];
+
+        foreach ($reflectionMethod->getParameters() as $parameter) {
+            $arguments[] = ParameterModel::fromReflection($parameter);
+        }
+
+        return new self($arguments);
+    }
+
     /**
      * @return array<array<string, mixed>>
      */

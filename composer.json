@@ -440,7 +440,8 @@
             "@build:phar"
         ],
         "build:docs": [
-            "bin/docs.php dsl:dump web/landing/resources/dsl.json"
+            "bin/docs.php dsl:dump web/landing/resources/dsl.json",
+            "bin/docs.php api:dump web/landing/resources/api.json"
         ],
         "build:docs:api": [
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/core.xml",
