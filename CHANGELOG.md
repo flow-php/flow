@@ -15,6 +15,7 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1958](https://github.com/flow-php/flow/pull/1958) - **Move JSON & Uuid validation out of `StringTypeNarrower`** - [@stloyd](https://github.com/stloyd)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **StringTypeChecker renamed to StringTypeNarrower with new interface contract** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **Refactored EntryFactory to use modular TypeNarrower pattern** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **EntryFactory now uses InstanceOfTypeNarrower for UUID library detection** - [@MrHDOLEK](https://github.com/MrHDOLEK)
