@@ -1,0 +1,93 @@
+/**
+ * ACE Editor Completer for Flow PHP Flow Methods
+ *
+ * Auto-generated on {{ generated_at|date('Y-m-d H:i:s') }}
+ * Flow methods: {{ total_count }}
+ * Flow-returning functions: {{ flow_functions|length }}
+ *
+ * This completer triggers after Flow-returning functions: df()->, data_frame()->
+ */
+
+ace.define("ace/completers/flow", ["require", "exports", "module"], function(require, exports, module) {
+    "use strict";
+
+    var snippetManager = require("ace/snippets").snippetManager;
+
+    // Map of Flow-returning functions from dsl.json (df, data_frame)
+    var flowFunctions = [
+        {% for func in flow_functions %}"{{ func }}"{% if not loop.last %}, {% endif %}{% endfor %}
+    ];
+
+    // Flow methods
+    var flowMethods = [
+        {% for method in flow_methods %}
+        {
+            name: "{{ method.name }}",
+            caption: "{{ method.name }}",
+            snippet: "{{ method.snippet|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}",
+            meta: "flow",
+            score: 900000,
+            docHTML: "<pre><code>{{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'"})|raw }}</code></pre>{% if method.docComment %}<p>{{ method.docComment|replace({'"': '\\"', "'": "\\'"})|raw }}</p>{% endif %}"
+        }{% if not loop.last %},{% endif %}
+
+        {% endfor %}
+    ];
+
+    var flowCompleter = {
+        identifierRegexps: [/[a-zA-Z_0-9\$\->\u00A2-\uFFFF]/],
+
+        getCompletions: function(editor, session, pos, prefix, callback) {
+            if (session.$mode && session.$mode.$id !== 'ace/mode/php') {
+                callback(null, []);
+                return;
+            }
+
+            // Don't show completions inside strings
+            var token = session.getTokenAt(pos.row, pos.column);
+            if (token && (token.type === 'string' || token.type.indexOf('string') !== -1)) {
+                callback(null, []);
+                return;
+            }
+
+            var line = session.getLine(pos.row);
+            var beforeCursor = line.slice(0, pos.column - prefix.length);
+
+            // Check if after a Flow-returning function: df()-> or data_frame()->
+            // Pattern matches: df()-> or df()->e or df()->extract etc.
+            var flowFuncPattern = new RegExp('(' + flowFunctions.join('|') + ')\\s*\\([^\\)]*\\)\\s*->');
+            if (!flowFuncPattern.test(beforeCursor)) {
+                callback(null, []);
+                return;
+            }
+
+            // Filter and score based on prefix match
+            var completions = flowMethods.filter(function(item) {
+                return !prefix || item.name.toLowerCase().indexOf(prefix.toLowerCase()) === 0;
+            }).map(function(item) {
+                var itemCopy = Object.assign({}, item);
+                if (item.name.toLowerCase().indexOf(prefix.toLowerCase()) === 0) {
+                    itemCopy.score = 900000 + (10000 - prefix.length);
+                }
+                return itemCopy;
+            });
+
+            callback(null, completions);
+        },
+
+        getDocTooltip: function(item) {
+            if (item.docHTML) {
+                return { docHTML: item.docHTML };
+            }
+        },
+
+        insertMatch: function(editor, data) {
+            if (data.snippet) {
+                snippetManager.insertSnippet(editor, data.snippet);
+            } else {
+                editor.completer.insertMatch(data);
+            }
+        }
+    };
+
+    module.exports = flowCompleter;
+});

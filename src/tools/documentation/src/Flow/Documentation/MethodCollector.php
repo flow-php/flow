@@ -24,6 +24,11 @@ final class MethodCollector
                 continue;
             }
 
+            // Skip magic methods __construct and __destruct
+            if ($method->getName() === '__construct' || $method->getName() === '__destruct') {
+                continue;
+            }
+
             $this->methods[] = $method->getName();
         }
     }

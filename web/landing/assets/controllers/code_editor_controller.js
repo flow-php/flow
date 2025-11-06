@@ -1,7 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import ace from "ace-builds"
 import "../ace-themes/theme-flow.js"
-import "../ace/completers/flow_dsl.js"
 
 export default class extends Controller {
     #editor
@@ -41,11 +40,6 @@ export default class extends Controller {
                 enableBasicAutocompletion: true,
                 enableLiveAutocompletion: true,
                 enableSnippets: true
-            });
-
-            ace.config.loadModule("ace/completers/flow_dsl", (dslCompleter) => {
-                langTools.addCompleter(dslCompleter);
-                this.#log('Added Flow DSL completer');
             });
 
             this.#fullyInitialized = true

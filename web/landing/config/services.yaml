@@ -57,5 +57,13 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    Flow\Website\Command\GenerateDataFrameCompleterCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    Flow\Website\Command\GenerateFlowCompleterCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     twig.markdown.league_common_mark_converter_factory:
         class: Flow\Website\Service\Markdown\LeagueCommonMarkConverterFactory

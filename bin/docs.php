@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 use Flow\Documentation\{FunctionCollector, FunctionsExtractor, MethodCollector, MethodsExtractor};
 use Flow\ETL\Attribute\Module;
-use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrame\GroupedDataFrame;
+use Flow\ETL\{DataFrame, Flow};
 use Flow\ETL\Function\ScalarFunctionChain;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
@@ -99,6 +99,7 @@ $application->add(new class extends Command {
 
         $classes = [
             ScalarFunctionChain::class,
+            Flow::class,
             DataFrame::class,
             GroupedDataFrame::class,
         ];
