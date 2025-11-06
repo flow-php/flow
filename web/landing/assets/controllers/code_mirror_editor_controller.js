@@ -2,9 +2,11 @@ import { Controller } from "@hotwired/stimulus"
 import { EditorView, basicSetup } from "codemirror"
 import { EditorState, StateField, StateEffect } from "@codemirror/state"
 import { Decoration } from "@codemirror/view"
+import { keymap } from "@codemirror/view"
 import { php } from "@codemirror/lang-php"
-import { autocompletion } from "@codemirror/autocomplete"
+import { autocompletion, snippetKeymap } from "@codemirror/autocomplete"
 import { flowThemeExtension } from "../codemirror/themes/theme-flow.js"
+import { flowCompletions } from "../codemirror/completions/flow.js"
 import Violation from "../models/Violation.js"
 
 export default class extends Controller {
@@ -57,7 +59,9 @@ export default class extends Controller {
                 php(),
                 flowThemeExtension,
                 errorField,
+                keymap.of(snippetKeymap),
                 autocompletion({
+                    override: [flowCompletions],
                     activateOnTyping: true,
                     maxRenderedOptions: 20
                 }),

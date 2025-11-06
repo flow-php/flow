@@ -13,7 +13,7 @@ use Twig\Environment;
 
 #[AsCommand(
     name: 'app:generate:flow-completer',
-    description: 'Generate ACE Editor completer for Flow methods'
+    description: 'Generate CodeMirror completer for Flow methods'
 )]
 final class GenerateFlowCompleterCommand extends Command
 {
@@ -77,24 +77,25 @@ final class GenerateFlowCompleterCommand extends Command
             $flowMethods
         );
 
-        $content = $this->twig->render('completers/flow.js.twig', [
+        // Generate CodeMirror completer
+        $codeMirrorContent = $this->twig->render('completers/flow-codemirror.js.twig', [
             'flow_methods' => $methodsData,
             'flow_functions' => $flowReturningFunctions,
             'generated_at' => new \DateTime(),
             'total_count' => \count($methodsData),
         ]);
 
-        $outputFile = $this->projectDir . '/assets/ace/completers/flow.js';
-        $outputDir = \dirname($outputFile);
+        $codeMirrorOutputFile = $this->projectDir . '/assets/codemirror/completions/flow.js';
+        $codeMirrorOutputDir = \dirname($codeMirrorOutputFile);
 
-        if (!\is_dir($outputDir)) {
-            \mkdir($outputDir, 0755, true);
-            $io->info("Created directory: {$outputDir}");
+        if (!\is_dir($codeMirrorOutputDir)) {
+            \mkdir($codeMirrorOutputDir, 0755, true);
+            $io->info("Created directory: {$codeMirrorOutputDir}");
         }
 
-        \file_put_contents($outputFile, $content);
+        \file_put_contents($codeMirrorOutputFile, $codeMirrorContent);
 
-        $io->success("Generated Flow completer: {$outputFile}");
+        $io->success("Generated Flow completer: {$codeMirrorOutputFile}");
         $io->info('Flow methods: ' . \count($methodsData));
         $io->info('Flow-returning functions: ' . \count($flowReturningFunctions));
 
@@ -158,6 +159,8 @@ final class GenerateFlowCompleterCommand extends Command
             'highlightedSignature' => $this->buildHighlightedSignature($method),
             'meta' => $method['class_slug'],
             'className' => $method['class'],
+            'parameters' => $method['parameters'],
+            'hasParameters' => !empty($method['parameters']),
         ];
     }
 
