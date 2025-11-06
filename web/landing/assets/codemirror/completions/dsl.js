@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Auto-generated on 2025\u002D11\u002D06\u002017\u003A49\u003A49
+ * Auto-generated on 2025\u002D11\u002D06\u002020\u003A30\u003A28
  * Total functions: 341
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
@@ -31,7 +31,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("add_row_index(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:startFrom" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\add_row_index(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:startFrom" + "}" + ")"),
         boost: 10
     },        {
         label: "all",
@@ -46,7 +46,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("all(" + "$" + "{" + "1:functions" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\all(" + "$" + "{" + "1:functions" + "}" + ")"),
         boost: 10
     },        {
         label: "analyze",
@@ -61,7 +61,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("analyze()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\analyze()"),
         boost: 10
     },        {
         label: "any",
@@ -76,7 +76,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("any(" + "$" + "{" + "1:values" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\any(" + "$" + "{" + "1:values" + "}" + ")"),
         boost: 10
     },        {
         label: "append",
@@ -91,7 +91,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("append()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\append()"),
         boost: 10
     },        {
         label: "array_exists",
@@ -109,7 +109,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_exists(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_exists(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
         boost: 10
     },        {
         label: "array_expand",
@@ -127,7 +127,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_expand(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:expand" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_expand(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:expand" + "}" + ")"),
         boost: 10
     },        {
         label: "array_get",
@@ -142,7 +142,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_get(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_get(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ")"),
         boost: 10
     },        {
         label: "array_get_collection",
@@ -160,7 +160,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_get_collection(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_get_collection(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
         boost: 10
     },        {
         label: "array_get_collection_first",
@@ -175,7 +175,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_get_collection_first(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_get_collection_first(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:keys" + "}" + ")"),
         boost: 10
     },        {
         label: "array_keys_style_convert",
@@ -190,7 +190,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_keys_style_convert(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:style" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_keys_style_convert(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:style" + "}" + ")"),
         boost: 10
     },        {
         label: "array_key_rename",
@@ -205,7 +205,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_key_rename(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ", " + "$" + "{" + "3:newName" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_key_rename(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:path" + "}" + ", " + "$" + "{" + "3:newName" + "}" + ")"),
         boost: 10
     },        {
         label: "array_merge",
@@ -223,7 +223,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_merge(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_merge(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },        {
         label: "array_merge_collection",
@@ -241,7 +241,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_merge_collection(" + "$" + "{" + "1:array" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_merge_collection(" + "$" + "{" + "1:array" + "}" + ")"),
         boost: 10
     },        {
         label: "array_reverse",
@@ -259,7 +259,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_reverse(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:preserveKeys" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_reverse(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:preserveKeys" + "}" + ")"),
         boost: 10
     },        {
         label: "array_sort",
@@ -274,7 +274,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_sort(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:sort_function" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:recursive" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_sort(" + "$" + "{" + "1:function" + "}" + ", " + "$" + "{" + "2:sort_function" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:recursive" + "}" + ")"),
         boost: 10
     },        {
         label: "array_to_generator",
@@ -292,7 +292,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_to_generator(" + "$" + "{" + "1:data" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\array_to_generator(" + "$" + "{" + "1:data" + "}" + ")"),
         boost: 10
     },        {
         label: "array_to_row",
@@ -310,7 +310,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:entryFactory" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_row(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:entryFactory" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "array_to_rows",
@@ -328,7 +328,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:entryFactory" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_to_rows(" + "$" + "{" + "1:data" + "}" + ", " + "$" + "{" + "2:entryFactory" + "}" + ", " + "$" + "{" + "3:partitions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "array_unpack",
@@ -346,7 +346,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("array_unpack(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:skip_keys" + "}" + ", " + "$" + "{" + "3:entry_prefix" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\array_unpack(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:skip_keys" + "}" + ", " + "$" + "{" + "3:entry_prefix" + "}" + ")"),
         boost: 10
     },        {
         label: "average",
@@ -361,7 +361,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("average(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:scale" + "}" + ", " + "$" + "{" + "3:rounding" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\average(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:scale" + "}" + ", " + "$" + "{" + "3:rounding" + "}" + ")"),
         boost: 10
     },        {
         label: "aws_s3_client",
@@ -379,7 +379,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("aws_s3_client(" + "$" + "{" + "1:configuration" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\Bridge\\AsyncAWS\\DSL\\aws_s3_client(" + "$" + "{" + "1:configuration" + "}" + ")"),
         boost: 10
     },        {
         label: "aws_s3_filesystem",
@@ -394,7 +394,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("aws_s3_filesystem(" + "$" + "{" + "1:bucket" + "}" + ", " + "$" + "{" + "2:s3Client" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\Bridge\\AsyncAWS\\DSL\\aws_s3_filesystem(" + "$" + "{" + "1:bucket" + "}" + ", " + "$" + "{" + "2:s3Client" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
         boost: 10
     },        {
         label: "azure_blob_service",
@@ -409,7 +409,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azure_blob_service(" + "$" + "{" + "1:configuration" + "}" + ", " + "$" + "{" + "2:azure_authorization_factory" + "}" + ", " + "$" + "{" + "3:client" + "}" + ", " + "$" + "{" + "4:azure_http_factory" + "}" + ", " + "$" + "{" + "5:azure_url_factory" + "}" + ", " + "$" + "{" + "6:logger" + "}" + ")"),
+        apply: snippet("\\Flow\\Azure\\SDK\\DSL\\azure_blob_service(" + "$" + "{" + "1:configuration" + "}" + ", " + "$" + "{" + "2:azure_authorization_factory" + "}" + ", " + "$" + "{" + "3:client" + "}" + ", " + "$" + "{" + "4:azure_http_factory" + "}" + ", " + "$" + "{" + "5:azure_url_factory" + "}" + ", " + "$" + "{" + "6:logger" + "}" + ")"),
         boost: 10
     },        {
         label: "azure_blob_service_config",
@@ -424,7 +424,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azure_blob_service_config(" + "$" + "{" + "1:account" + "}" + ", " + "$" + "{" + "2:container" + "}" + ")"),
+        apply: snippet("\\Flow\\Azure\\SDK\\DSL\\azure_blob_service_config(" + "$" + "{" + "1:account" + "}" + ", " + "$" + "{" + "2:container" + "}" + ")"),
         boost: 10
     },        {
         label: "azure_filesystem",
@@ -439,7 +439,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azure_filesystem(" + "$" + "{" + "1:blob_service" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\Bridge\\Azure\\DSL\\azure_filesystem(" + "$" + "{" + "1:blob_service" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
         boost: 10
     },        {
         label: "azure_filesystem_options",
@@ -454,7 +454,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azure_filesystem_options()"),
+        apply: snippet("\\Flow\\Filesystem\\Bridge\\Azure\\DSL\\azure_filesystem_options()"),
         boost: 10
     },        {
         label: "azure_http_factory",
@@ -469,7 +469,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azure_http_factory(" + "$" + "{" + "1:request_factory" + "}" + ", " + "$" + "{" + "2:stream_factory" + "}" + ")"),
+        apply: snippet("\\Flow\\Azure\\SDK\\DSL\\azure_http_factory(" + "$" + "{" + "1:request_factory" + "}" + ", " + "$" + "{" + "2:stream_factory" + "}" + ")"),
         boost: 10
     },        {
         label: "azure_shared_key_authorization_factory",
@@ -484,7 +484,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azure_shared_key_authorization_factory(" + "$" + "{" + "1:account" + "}" + ", " + "$" + "{" + "2:key" + "}" + ")"),
+        apply: snippet("\\Flow\\Azure\\SDK\\DSL\\azure_shared_key_authorization_factory(" + "$" + "{" + "1:account" + "}" + ", " + "$" + "{" + "2:key" + "}" + ")"),
         boost: 10
     },        {
         label: "azure_url_factory",
@@ -499,7 +499,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azure_url_factory(" + "$" + "{" + "1:host" + "}" + ")"),
+        apply: snippet("\\Flow\\Azure\\SDK\\DSL\\azure_url_factory(" + "$" + "{" + "1:host" + "}" + ")"),
         boost: 10
     },        {
         label: "azurite_url_factory",
@@ -514,7 +514,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("azurite_url_factory(" + "$" + "{" + "1:host" + "}" + ", " + "$" + "{" + "2:port" + "}" + ", " + "$" + "{" + "3:secure" + "}" + ")"),
+        apply: snippet("\\Flow\\Azure\\SDK\\DSL\\azurite_url_factory(" + "$" + "{" + "1:host" + "}" + ", " + "$" + "{" + "2:port" + "}" + ", " + "$" + "{" + "3:secure" + "}" + ")"),
         boost: 10
     },        {
         label: "bar_chart",
@@ -529,7 +529,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("bar_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\bar_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
         boost: 10
     },        {
         label: "batched_by",
@@ -547,7 +547,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("batched_by(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:column" + "}" + ", " + "$" + "{" + "3:min_size" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\batched_by(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:column" + "}" + ", " + "$" + "{" + "3:min_size" + "}" + ")"),
         boost: 10
     },        {
         label: "batches",
@@ -565,7 +565,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("batches(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:size" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\batches(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:size" + "}" + ")"),
         boost: 10
     },        {
         label: "batch_size",
@@ -583,7 +583,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("batch_size(" + "$" + "{" + "1:size" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\batch_size(" + "$" + "{" + "1:size" + "}" + ")"),
         boost: 10
     },        {
         label: "between",
@@ -598,7 +598,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("between(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:lower_bound" + "}" + ", " + "$" + "{" + "3:upper_bound" + "}" + ", " + "$" + "{" + "4:boundary" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\between(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:lower_bound" + "}" + ", " + "$" + "{" + "3:upper_bound" + "}" + ", " + "$" + "{" + "4:boundary" + "}" + ")"),
         boost: 10
     },        {
         label: "boolean_entry",
@@ -616,7 +616,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("boolean_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\boolean_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "bool_entry",
@@ -634,7 +634,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("bool_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\bool_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "bool_schema",
@@ -652,7 +652,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("bool_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\bool_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "call",
@@ -670,7 +670,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("call(" + "$" + "{" + "1:callable" + "}" + ", " + "$" + "{" + "2:parameters" + "}" + ", " + "$" + "{" + "3:return_type" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\call(" + "$" + "{" + "1:callable" + "}" + ", " + "$" + "{" + "2:parameters" + "}" + ", " + "$" + "{" + "3:return_type" + "}" + ")"),
         boost: 10
     },        {
         label: "capitalize",
@@ -685,7 +685,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("capitalize(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\capitalize(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "cast",
@@ -703,7 +703,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("cast(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\cast(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
         boost: 10
     },        {
         label: "chunks_from",
@@ -721,7 +721,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("chunks_from(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:chunk_size" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\chunks_from(" + "$" + "{" + "1:extractor" + "}" + ", " + "$" + "{" + "2:chunk_size" + "}" + ")"),
         boost: 10
     },        {
         label: "coalesce",
@@ -736,7 +736,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("coalesce(" + "$" + "{" + "1:values" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\coalesce(" + "$" + "{" + "1:values" + "}" + ")"),
         boost: 10
     },        {
         label: "col",
@@ -754,7 +754,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("col(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\col(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },        {
         label: "collect",
@@ -769,7 +769,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("collect(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\collect(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "collect_unique",
@@ -784,7 +784,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("collect_unique(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\collect_unique(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "combine",
@@ -802,7 +802,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("combine(" + "$" + "{" + "1:keys" + "}" + ", " + "$" + "{" + "2:values" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\combine(" + "$" + "{" + "1:keys" + "}" + ", " + "$" + "{" + "2:values" + "}" + ")"),
         boost: 10
     },        {
         label: "compare_all",
@@ -817,7 +817,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("compare_all(" + "$" + "{" + "1:comparisons" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\compare_all(" + "$" + "{" + "1:comparisons" + "}" + ")"),
         boost: 10
     },        {
         label: "compare_any",
@@ -832,7 +832,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("compare_any(" + "$" + "{" + "1:comparisons" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\compare_any(" + "$" + "{" + "1:comparisons" + "}" + ")"),
         boost: 10
     },        {
         label: "compare_entries_by_name",
@@ -847,7 +847,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("compare_entries_by_name(" + "$" + "{" + "1:order" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\compare_entries_by_name(" + "$" + "{" + "1:order" + "}" + ")"),
         boost: 10
     },        {
         label: "compare_entries_by_name_desc",
@@ -862,7 +862,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("compare_entries_by_name_desc()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\compare_entries_by_name_desc()"),
         boost: 10
     },        {
         label: "compare_entries_by_type",
@@ -880,7 +880,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("compare_entries_by_type(" + "$" + "{" + "1:priorities" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\compare_entries_by_type(" + "$" + "{" + "1:priorities" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
         boost: 10
     },        {
         label: "compare_entries_by_type_and_name",
@@ -898,7 +898,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("compare_entries_by_type_and_name(" + "$" + "{" + "1:priorities" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\compare_entries_by_type_and_name(" + "$" + "{" + "1:priorities" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
         boost: 10
     },        {
         label: "compare_entries_by_type_desc",
@@ -916,7 +916,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("compare_entries_by_type_desc(" + "$" + "{" + "1:priorities" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\compare_entries_by_type_desc(" + "$" + "{" + "1:priorities" + "}" + ")"),
         boost: 10
     },        {
         label: "concat",
@@ -934,7 +934,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("concat(" + "$" + "{" + "1:functions" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\concat(" + "$" + "{" + "1:functions" + "}" + ")"),
         boost: 10
     },        {
         label: "concat_ws",
@@ -952,7 +952,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("concat_ws(" + "$" + "{" + "1:separator" + "}" + ", " + "$" + "{" + "2:functions" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\concat_ws(" + "$" + "{" + "1:separator" + "}" + ", " + "$" + "{" + "2:functions" + "}" + ")"),
         boost: 10
     },        {
         label: "config",
@@ -967,7 +967,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("config()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\config()"),
         boost: 10
     },        {
         label: "config_builder",
@@ -982,7 +982,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("config_builder()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\config_builder()"),
         boost: 10
     },        {
         label: "constraint_sorted_by",
@@ -997,7 +997,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("constraint_sorted_by(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\constraint_sorted_by(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ")"),
         boost: 10
     },        {
         label: "constraint_unique",
@@ -1012,7 +1012,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("constraint_unique(" + "$" + "{" + "1:reference" + "}" + ", " + "$" + "{" + "2:references" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\constraint_unique(" + "$" + "{" + "1:reference" + "}" + ", " + "$" + "{" + "2:references" + "}" + ")"),
         boost: 10
     },        {
         label: "count",
@@ -1027,7 +1027,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("count(" + "$" + "{" + "1:function" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\count(" + "$" + "{" + "1:function" + "}" + ")"),
         boost: 10
     },        {
         label: "csv_detect_separator",
@@ -1045,7 +1045,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("csv_detect_separator(" + "$" + "{" + "1:stream" + "}" + ", " + "$" + "{" + "2:lines" + "}" + ", " + "$" + "{" + "3:fallback" + "}" + ", " + "$" + "{" + "4:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\csv_detect_separator(" + "$" + "{" + "1:stream" + "}" + ", " + "$" + "{" + "2:lines" + "}" + ", " + "$" + "{" + "3:fallback" + "}" + ", " + "$" + "{" + "4:options" + "}" + ")"),
         boost: 10
     },        {
         label: "data_frame",
@@ -1060,7 +1060,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("data_frame(" + "$" + "{" + "1:config" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\data_frame(" + "$" + "{" + "1:config" + "}" + ")"),
         boost: 10
     },        {
         label: "datetime_entry",
@@ -1078,7 +1078,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("datetime_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\datetime_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "datetime_schema",
@@ -1096,7 +1096,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("datetime_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\datetime_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "date_entry",
@@ -1114,7 +1114,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("date_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\date_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "date_interval_to_microseconds",
@@ -1129,7 +1129,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("date_interval_to_microseconds(" + "$" + "{" + "1:interval" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\date_interval_to_microseconds(" + "$" + "{" + "1:interval" + "}" + ")"),
         boost: 10
     },        {
         label: "date_interval_to_milliseconds",
@@ -1144,7 +1144,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("date_interval_to_milliseconds(" + "$" + "{" + "1:interval" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\date_interval_to_milliseconds(" + "$" + "{" + "1:interval" + "}" + ")"),
         boost: 10
     },        {
         label: "date_interval_to_seconds",
@@ -1159,7 +1159,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("date_interval_to_seconds(" + "$" + "{" + "1:interval" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\date_interval_to_seconds(" + "$" + "{" + "1:interval" + "}" + ")"),
         boost: 10
     },        {
         label: "date_schema",
@@ -1177,7 +1177,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("date_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\date_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "date_time_format",
@@ -1192,7 +1192,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("date_time_format(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:format" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\date_time_format(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:format" + "}" + ")"),
         boost: 10
     },        {
         label: "dbal_dataframe_factory",
@@ -1210,7 +1210,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("dbal_dataframe_factory(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\dbal_dataframe_factory(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ")"),
         boost: 10
     },        {
         label: "dbal_from_queries",
@@ -1228,7 +1228,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("dbal_from_queries(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters_set" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\dbal_from_queries(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters_set" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
         boost: 10
     },        {
         label: "dbal_from_query",
@@ -1246,7 +1246,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("dbal_from_query(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\dbal_from_query(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
         boost: 10
     },        {
         label: "delay_exponential",
@@ -1261,7 +1261,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("delay_exponential(" + "$" + "{" + "1:base" + "}" + ", " + "$" + "{" + "2:multiplier" + "}" + ", " + "$" + "{" + "3:max_delay" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\delay_exponential(" + "$" + "{" + "1:base" + "}" + ", " + "$" + "{" + "2:multiplier" + "}" + ", " + "$" + "{" + "3:max_delay" + "}" + ")"),
         boost: 10
     },        {
         label: "delay_fixed",
@@ -1276,7 +1276,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("delay_fixed(" + "$" + "{" + "1:delay" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\delay_fixed(" + "$" + "{" + "1:delay" + "}" + ")"),
         boost: 10
     },        {
         label: "delay_jitter",
@@ -1294,7 +1294,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("delay_jitter(" + "$" + "{" + "1:delay" + "}" + ", " + "$" + "{" + "2:jitter_factor" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\delay_jitter(" + "$" + "{" + "1:delay" + "}" + ", " + "$" + "{" + "2:jitter_factor" + "}" + ")"),
         boost: 10
     },        {
         label: "delay_linear",
@@ -1309,7 +1309,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("delay_linear(" + "$" + "{" + "1:delay" + "}" + ", " + "$" + "{" + "2:increment" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\delay_linear(" + "$" + "{" + "1:delay" + "}" + ", " + "$" + "{" + "2:increment" + "}" + ")"),
         boost: 10
     },        {
         label: "dense_rank",
@@ -1324,7 +1324,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("dense_rank()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\dense_rank()"),
         boost: 10
     },        {
         label: "dens_rank",
@@ -1339,7 +1339,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("dens_rank()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\dens_rank()"),
         boost: 10
     },        {
         label: "df",
@@ -1357,7 +1357,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("df(" + "$" + "{" + "1:config" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\df(" + "$" + "{" + "1:config" + "}" + ")"),
         boost: 10
     },        {
         label: "dom_element_to_string",
@@ -1375,7 +1375,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("dom_element_to_string(" + "$" + "{" + "1:element" + "}" + ", " + "$" + "{" + "2:format_output" + "}" + ", " + "$" + "{" + "3:preserver_white_space" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\dom_element_to_string(" + "$" + "{" + "1:element" + "}" + ", " + "$" + "{" + "2:format_output" + "}" + ", " + "$" + "{" + "3:preserver_white_space" + "}" + ")"),
         boost: 10
     },        {
         label: "dom_element_to_string",
@@ -1390,7 +1390,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("dom_element_to_string(" + "$" + "{" + "1:element" + "}" + ", " + "$" + "{" + "2:format_output" + "}" + ", " + "$" + "{" + "3:preserver_white_space" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\dom_element_to_string(" + "$" + "{" + "1:element" + "}" + ", " + "$" + "{" + "2:format_output" + "}" + ", " + "$" + "{" + "3:preserver_white_space" + "}" + ")"),
         boost: 10
     },        {
         label: "drop",
@@ -1405,7 +1405,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("drop(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\drop(" + "$" + "{" + "1:entries" + "}" + ")"),
         boost: 10
     },        {
         label: "duration_microseconds",
@@ -1420,7 +1420,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("duration_microseconds(" + "$" + "{" + "1:microseconds" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\duration_microseconds(" + "$" + "{" + "1:microseconds" + "}" + ")"),
         boost: 10
     },        {
         label: "duration_milliseconds",
@@ -1435,7 +1435,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("duration_milliseconds(" + "$" + "{" + "1:milliseconds" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\duration_milliseconds(" + "$" + "{" + "1:milliseconds" + "}" + ")"),
         boost: 10
     },        {
         label: "duration_minutes",
@@ -1450,7 +1450,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("duration_minutes(" + "$" + "{" + "1:minutes" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\duration_minutes(" + "$" + "{" + "1:minutes" + "}" + ")"),
         boost: 10
     },        {
         label: "duration_seconds",
@@ -1465,7 +1465,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("duration_seconds(" + "$" + "{" + "1:seconds" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\duration_seconds(" + "$" + "{" + "1:seconds" + "}" + ")"),
         boost: 10
     },        {
         label: "empty_generator",
@@ -1480,7 +1480,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("empty_generator()"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\empty_generator()"),
         boost: 10
     },        {
         label: "entries",
@@ -1498,7 +1498,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("entries(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\entries(" + "$" + "{" + "1:entries" + "}" + ")"),
         boost: 10
     },        {
         label: "entry",
@@ -1516,7 +1516,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("entry(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\entry(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },        {
         label: "entry_id_factory",
@@ -1531,7 +1531,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("entry_id_factory(" + "$" + "{" + "1:entry_name" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\entry_id_factory(" + "$" + "{" + "1:entry_name" + "}" + ")"),
         boost: 10
     },        {
         label: "enum_entry",
@@ -1549,7 +1549,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("enum_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:enum" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\enum_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:enum" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "enum_schema",
@@ -1567,7 +1567,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("enum_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\enum_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "equal",
@@ -1582,7 +1582,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("equal(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\equal(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },        {
         label: "es_hits_to_rows",
@@ -1600,7 +1600,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("es_hits_to_rows(" + "$" + "{" + "1:source" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\es_hits_to_rows(" + "$" + "{" + "1:source" + "}" + ")"),
         boost: 10
     },        {
         label: "exception_if_exists",
@@ -1615,7 +1615,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("exception_if_exists()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\exception_if_exists()"),
         boost: 10
     },        {
         label: "execution_context",
@@ -1630,7 +1630,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("execution_context(" + "$" + "{" + "1:config" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\execution_context(" + "$" + "{" + "1:config" + "}" + ")"),
         boost: 10
     },        {
         label: "exists",
@@ -1645,7 +1645,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("exists(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\exists(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "files",
@@ -1660,7 +1660,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("files(" + "$" + "{" + "1:directory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\files(" + "$" + "{" + "1:directory" + "}" + ")"),
         boost: 10
     },        {
         label: "filesystem_cache",
@@ -1675,7 +1675,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("filesystem_cache(" + "$" + "{" + "1:cache_dir" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ", " + "$" + "{" + "3:serializer" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\filesystem_cache(" + "$" + "{" + "1:cache_dir" + "}" + ", " + "$" + "{" + "2:filesystem" + "}" + ", " + "$" + "{" + "3:serializer" + "}" + ")"),
         boost: 10
     },        {
         label: "first",
@@ -1690,7 +1690,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("first(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\first(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "float_entry",
@@ -1708,7 +1708,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("float_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\float_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "float_schema",
@@ -1726,7 +1726,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("float_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\float_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "flow_context",
@@ -1741,7 +1741,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("flow_context(" + "$" + "{" + "1:config" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\flow_context(" + "$" + "{" + "1:config" + "}" + ")"),
         boost: 10
     },        {
         label: "from_all",
@@ -1756,7 +1756,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_all(" + "$" + "{" + "1:extractors" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_all(" + "$" + "{" + "1:extractors" + "}" + ")"),
         boost: 10
     },        {
         label: "from_array",
@@ -1774,7 +1774,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_array(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_array(" + "$" + "{" + "1:array" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "from_avro",
@@ -1789,7 +1789,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_avro(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\Adapter\\Avro\\from_avro(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },        {
         label: "from_cache",
@@ -1807,7 +1807,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_cache(" + "$" + "{" + "1:id" + "}" + ", " + "$" + "{" + "2:fallback_extractor" + "}" + ", " + "$" + "{" + "3:clear" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_cache(" + "$" + "{" + "1:id" + "}" + ", " + "$" + "{" + "2:fallback_extractor" + "}" + ", " + "$" + "{" + "3:clear" + "}" + ")"),
         boost: 10
     },        {
         label: "from_csv",
@@ -1825,7 +1825,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_csv(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:empty_to_null" + "}" + ", " + "$" + "{" + "4:separator" + "}" + ", " + "$" + "{" + "5:enclosure" + "}" + ", " + "$" + "{" + "6:escape" + "}" + ", " + "$" + "{" + "7:characters_read_in_line" + "}" + ", " + "$" + "{" + "8:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\from_csv(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:empty_to_null" + "}" + ", " + "$" + "{" + "4:separator" + "}" + ", " + "$" + "{" + "5:enclosure" + "}" + ", " + "$" + "{" + "6:escape" + "}" + ", " + "$" + "{" + "7:characters_read_in_line" + "}" + ", " + "$" + "{" + "8:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "from_data_frame",
@@ -1840,7 +1840,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_data_frame(" + "$" + "{" + "1:data_frame" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_data_frame(" + "$" + "{" + "1:data_frame" + "}" + ")"),
         boost: 10
     },        {
         label: "from_dbal_key_set_qb",
@@ -1855,7 +1855,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_dbal_key_set_qb(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:queryBuilder" + "}" + ", " + "$" + "{" + "3:key_set" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\from_dbal_key_set_qb(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:queryBuilder" + "}" + ", " + "$" + "{" + "3:key_set" + "}" + ")"),
         boost: 10
     },        {
         label: "from_dbal_limit_offset",
@@ -1873,7 +1873,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_dbal_limit_offset(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:order_by" + "}" + ", " + "$" + "{" + "4:page_size" + "}" + ", " + "$" + "{" + "5:maximum" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\from_dbal_limit_offset(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:order_by" + "}" + ", " + "$" + "{" + "4:page_size" + "}" + ", " + "$" + "{" + "5:maximum" + "}" + ")"),
         boost: 10
     },        {
         label: "from_dbal_limit_offset_qb",
@@ -1891,7 +1891,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_dbal_limit_offset_qb(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:queryBuilder" + "}" + ", " + "$" + "{" + "3:page_size" + "}" + ", " + "$" + "{" + "4:maximum" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\from_dbal_limit_offset_qb(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:queryBuilder" + "}" + ", " + "$" + "{" + "3:page_size" + "}" + ", " + "$" + "{" + "4:maximum" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "from_dbal_queries",
@@ -1909,7 +1909,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_dbal_queries(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters_set" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\from_dbal_queries(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters_set" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
         boost: 10
     },        {
         label: "from_dbal_query",
@@ -1927,7 +1927,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_dbal_query(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\from_dbal_query(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:query" + "}" + ", " + "$" + "{" + "3:parameters" + "}" + ", " + "$" + "{" + "4:types" + "}" + ")"),
         boost: 10
     },        {
         label: "from_dynamic_http_requests",
@@ -1942,7 +1942,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_dynamic_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requestFactory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_dynamic_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requestFactory" + "}" + ")"),
         boost: 10
     },        {
         label: "from_es",
@@ -1960,7 +1960,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_es(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:parameters" + "}" + ", " + "$" + "{" + "3:pit_params" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\from_es(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:parameters" + "}" + ", " + "$" + "{" + "3:pit_params" + "}" + ")"),
         boost: 10
     },        {
         label: "from_excel",
@@ -1975,7 +1975,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_excel(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\from_excel(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },        {
         label: "from_google_sheet",
@@ -1993,7 +1993,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_google_sheet(" + "$" + "{" + "1:auth_config" + "}" + ", " + "$" + "{" + "2:spreadsheet_id" + "}" + ", " + "$" + "{" + "3:sheet_name" + "}" + ", " + "$" + "{" + "4:with_header" + "}" + ", " + "$" + "{" + "5:rows_per_page" + "}" + ", " + "$" + "{" + "6:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\GoogleSheet\\from_google_sheet(" + "$" + "{" + "1:auth_config" + "}" + ", " + "$" + "{" + "2:spreadsheet_id" + "}" + ", " + "$" + "{" + "3:sheet_name" + "}" + ", " + "$" + "{" + "4:with_header" + "}" + ", " + "$" + "{" + "5:rows_per_page" + "}" + ", " + "$" + "{" + "6:options" + "}" + ")"),
         boost: 10
     },        {
         label: "from_google_sheet_columns",
@@ -2011,7 +2011,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_google_sheet_columns(" + "$" + "{" + "1:auth_config" + "}" + ", " + "$" + "{" + "2:spreadsheet_id" + "}" + ", " + "$" + "{" + "3:sheet_name" + "}" + ", " + "$" + "{" + "4:start_range_column" + "}" + ", " + "$" + "{" + "5:end_range_column" + "}" + ", " + "$" + "{" + "6:with_header" + "}" + ", " + "$" + "{" + "7:rows_per_page" + "}" + ", " + "$" + "{" + "8:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\GoogleSheet\\from_google_sheet_columns(" + "$" + "{" + "1:auth_config" + "}" + ", " + "$" + "{" + "2:spreadsheet_id" + "}" + ", " + "$" + "{" + "3:sheet_name" + "}" + ", " + "$" + "{" + "4:start_range_column" + "}" + ", " + "$" + "{" + "5:end_range_column" + "}" + ", " + "$" + "{" + "6:with_header" + "}" + ", " + "$" + "{" + "7:rows_per_page" + "}" + ", " + "$" + "{" + "8:options" + "}" + ")"),
         boost: 10
     },        {
         label: "from_json",
@@ -2029,7 +2029,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:pointer" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\from_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:pointer" + "}" + ", " + "$" + "{" + "3:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "from_json_lines",
@@ -2047,7 +2047,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\from_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },        {
         label: "from_meilisearch",
@@ -2065,7 +2065,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_meilisearch(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:params" + "}" + ", " + "$" + "{" + "3:index" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\from_meilisearch(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:params" + "}" + ", " + "$" + "{" + "3:index" + "}" + ")"),
         boost: 10
     },        {
         label: "from_memory",
@@ -2080,7 +2080,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_memory(" + "$" + "{" + "1:memory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_memory(" + "$" + "{" + "1:memory" + "}" + ")"),
         boost: 10
     },        {
         label: "from_parquet",
@@ -2098,7 +2098,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:byte_order" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\from_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:options" + "}" + ", " + "$" + "{" + "4:byte_order" + "}" + ", " + "$" + "{" + "5:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "from_path_partitions",
@@ -2113,7 +2113,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_path_partitions(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_path_partitions(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },        {
         label: "from_pipeline",
@@ -2128,7 +2128,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_pipeline(" + "$" + "{" + "1:pipeline" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_pipeline(" + "$" + "{" + "1:pipeline" + "}" + ")"),
         boost: 10
     },        {
         label: "from_rows",
@@ -2143,7 +2143,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_rows(" + "$" + "{" + "1:rows" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_rows(" + "$" + "{" + "1:rows" + "}" + ")"),
         boost: 10
     },        {
         label: "from_sequence_date_period",
@@ -2158,7 +2158,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_sequence_date_period(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:end" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_date_period(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:end" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
         boost: 10
     },        {
         label: "from_sequence_date_period_recurrences",
@@ -2173,7 +2173,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_sequence_date_period_recurrences(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:recurrences" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_date_period_recurrences(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:interval" + "}" + ", " + "$" + "{" + "4:recurrences" + "}" + ", " + "$" + "{" + "5:options" + "}" + ")"),
         boost: 10
     },        {
         label: "from_sequence_number",
@@ -2188,7 +2188,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_sequence_number(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:end" + "}" + ", " + "$" + "{" + "4:step" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\from_sequence_number(" + "$" + "{" + "1:entry_name" + "}" + ", " + "$" + "{" + "2:start" + "}" + ", " + "$" + "{" + "3:end" + "}" + ", " + "$" + "{" + "4:step" + "}" + ")"),
         boost: 10
     },        {
         label: "from_static_http_requests",
@@ -2206,7 +2206,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_static_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requests" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Http\\from_static_http_requests(" + "$" + "{" + "1:client" + "}" + ", " + "$" + "{" + "2:requests" + "}" + ")"),
         boost: 10
     },        {
         label: "from_text",
@@ -2224,7 +2224,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_text(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Text\\from_text(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },        {
         label: "from_xml",
@@ -2242,7 +2242,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("from_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:xml_node_path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\XML\\from_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:xml_node_path" + "}" + ")"),
         boost: 10
     },        {
         label: "fstab",
@@ -2260,7 +2260,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("fstab(" + "$" + "{" + "1:filesystems" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\fstab(" + "$" + "{" + "1:filesystems" + "}" + ")"),
         boost: 10
     },        {
         label: "generate_random_int",
@@ -2275,7 +2275,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("generate_random_int(" + "$" + "{" + "1:start" + "}" + ", " + "$" + "{" + "2:end" + "}" + ", " + "$" + "{" + "3:generator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\generate_random_int(" + "$" + "{" + "1:start" + "}" + ", " + "$" + "{" + "2:end" + "}" + ", " + "$" + "{" + "3:generator" + "}" + ")"),
         boost: 10
     },        {
         label: "generate_random_string",
@@ -2290,7 +2290,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("generate_random_string(" + "$" + "{" + "1:length" + "}" + ", " + "$" + "{" + "2:generator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\generate_random_string(" + "$" + "{" + "1:length" + "}" + ", " + "$" + "{" + "2:generator" + "}" + ")"),
         boost: 10
     },        {
         label: "get_type",
@@ -2308,7 +2308,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("get_type(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\get_type(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "get_type",
@@ -2326,7 +2326,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("get_type(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\get_type(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "greatest",
@@ -2341,7 +2341,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("greatest(" + "$" + "{" + "1:values" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\greatest(" + "$" + "{" + "1:values" + "}" + ")"),
         boost: 10
     },        {
         label: "hash",
@@ -2356,7 +2356,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("hash(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\hash(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:algorithm" + "}" + ")"),
         boost: 10
     },        {
         label: "hash_id_factory",
@@ -2371,7 +2371,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("hash_id_factory(" + "$" + "{" + "1:entry_names" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\hash_id_factory(" + "$" + "{" + "1:entry_names" + "}" + ")"),
         boost: 10
     },        {
         label: "html_entry",
@@ -2389,7 +2389,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("html_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\html_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "html_schema",
@@ -2407,7 +2407,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("html_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\html_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "identical",
@@ -2422,7 +2422,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("identical(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\identical(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },        {
         label: "ignore",
@@ -2437,7 +2437,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("ignore()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\ignore()"),
         boost: 10
     },        {
         label: "ignore_error_handler",
@@ -2452,7 +2452,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("ignore_error_handler()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\ignore_error_handler()"),
         boost: 10
     },        {
         label: "integer_entry",
@@ -2470,7 +2470,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("integer_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\integer_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "integer_schema",
@@ -2488,7 +2488,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("integer_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\integer_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "int_entry",
@@ -2506,7 +2506,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("int_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\int_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "int_schema",
@@ -2524,7 +2524,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("int_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\int_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "is_type",
@@ -2542,7 +2542,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("is_type(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\is_type(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:value" + "}" + ")"),
         boost: 10
     },        {
         label: "is_valid_excel_sheet_name",
@@ -2557,7 +2557,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("is_valid_excel_sheet_name(" + "$" + "{" + "1:sheet_name" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Excel\\DSL\\is_valid_excel_sheet_name(" + "$" + "{" + "1:sheet_name" + "}" + ")"),
         boost: 10
     },        {
         label: "join_on",
@@ -2575,7 +2575,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("join_on(" + "$" + "{" + "1:comparisons" + "}" + ", " + "$" + "{" + "2:join_prefix" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\join_on(" + "$" + "{" + "1:comparisons" + "}" + ", " + "$" + "{" + "2:join_prefix" + "}" + ")"),
         boost: 10
     },        {
         label: "json_entry",
@@ -2593,7 +2593,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("json_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\json_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "json_object_entry",
@@ -2611,7 +2611,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("json_object_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\json_object_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "json_schema",
@@ -2629,7 +2629,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("json_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\json_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "last",
@@ -2644,7 +2644,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("last(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\last(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "least",
@@ -2659,7 +2659,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("least(" + "$" + "{" + "1:values" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\least(" + "$" + "{" + "1:values" + "}" + ")"),
         boost: 10
     },        {
         label: "limit",
@@ -2674,7 +2674,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("limit(" + "$" + "{" + "1:limit" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\limit(" + "$" + "{" + "1:limit" + "}" + ")"),
         boost: 10
     },        {
         label: "line_chart",
@@ -2689,7 +2689,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("line_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\line_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
         boost: 10
     },        {
         label: "list_entry",
@@ -2707,7 +2707,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("list_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\list_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "list_ref",
@@ -2722,7 +2722,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("list_ref(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\list_ref(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },        {
         label: "list_schema",
@@ -2740,7 +2740,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("list_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\list_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "lit",
@@ -2755,7 +2755,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("lit(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\lit(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "lower",
@@ -2770,7 +2770,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("lower(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\lower(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "map_entry",
@@ -2788,7 +2788,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("map_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:mapType" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\map_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:mapType" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "map_schema",
@@ -2806,7 +2806,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("map_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\map_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "mask_columns",
@@ -2824,7 +2824,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("mask_columns(" + "$" + "{" + "1:columns" + "}" + ", " + "$" + "{" + "2:mask" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\mask_columns(" + "$" + "{" + "1:columns" + "}" + ", " + "$" + "{" + "2:mask" + "}" + ")"),
         boost: 10
     },        {
         label: "match_cases",
@@ -2842,7 +2842,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("match_cases(" + "$" + "{" + "1:cases" + "}" + ", " + "$" + "{" + "2:default" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\match_cases(" + "$" + "{" + "1:cases" + "}" + ", " + "$" + "{" + "2:default" + "}" + ")"),
         boost: 10
     },        {
         label: "match_condition",
@@ -2857,7 +2857,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("match_condition(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:then" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\match_condition(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:then" + "}" + ")"),
         boost: 10
     },        {
         label: "max",
@@ -2872,7 +2872,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("max(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\max(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "meilisearch_hits_to_rows",
@@ -2890,7 +2890,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("meilisearch_hits_to_rows()"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\meilisearch_hits_to_rows()"),
         boost: 10
     },        {
         label: "memory_filesystem",
@@ -2908,7 +2908,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("memory_filesystem()"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\memory_filesystem()"),
         boost: 10
     },        {
         label: "min",
@@ -2923,7 +2923,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("min(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\min(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "mysql_insert_options",
@@ -2941,7 +2941,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("mysql_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:upsert" + "}" + ", " + "$" + "{" + "3:update_columns" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\mysql_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:upsert" + "}" + ", " + "$" + "{" + "3:update_columns" + "}" + ")"),
         boost: 10
     },        {
         label: "native_local_filesystem",
@@ -2956,7 +2956,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("native_local_filesystem()"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\native_local_filesystem()"),
         boost: 10
     },        {
         label: "not",
@@ -2971,7 +2971,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("not(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\not(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "now",
@@ -2986,7 +2986,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("now(" + "$" + "{" + "1:time_zone" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\now(" + "$" + "{" + "1:time_zone" + "}" + ")"),
         boost: 10
     },        {
         label: "null_entry",
@@ -3004,7 +3004,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("null_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\null_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "null_schema",
@@ -3022,7 +3022,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("null_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\null_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "number_format",
@@ -3037,7 +3037,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("number_format(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:decimals" + "}" + ", " + "$" + "{" + "3:decimal_separator" + "}" + ", " + "$" + "{" + "4:thousands_separator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\number_format(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:decimals" + "}" + ", " + "$" + "{" + "3:decimal_separator" + "}" + ", " + "$" + "{" + "4:thousands_separator" + "}" + ")"),
         boost: 10
     },        {
         label: "optional",
@@ -3052,7 +3052,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("optional(" + "$" + "{" + "1:function" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\optional(" + "$" + "{" + "1:function" + "}" + ")"),
         boost: 10
     },        {
         label: "overwrite",
@@ -3067,7 +3067,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("overwrite()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\overwrite()"),
         boost: 10
     },        {
         label: "pagination_key_asc",
@@ -3082,7 +3082,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("pagination_key_asc(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\pagination_key_asc(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
         boost: 10
     },        {
         label: "pagination_key_desc",
@@ -3097,7 +3097,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("pagination_key_desc(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\pagination_key_desc(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:type" + "}" + ")"),
         boost: 10
     },        {
         label: "pagination_key_set",
@@ -3112,7 +3112,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("pagination_key_set(" + "$" + "{" + "1:keys" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\pagination_key_set(" + "$" + "{" + "1:keys" + "}" + ")"),
         boost: 10
     },        {
         label: "partition",
@@ -3127,7 +3127,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("partition(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\partition(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ")"),
         boost: 10
     },        {
         label: "partitions",
@@ -3142,7 +3142,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("partitions(" + "$" + "{" + "1:partition" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\partitions(" + "$" + "{" + "1:partition" + "}" + ")"),
         boost: 10
     },        {
         label: "path",
@@ -3160,7 +3160,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("path(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\path(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
         boost: 10
     },        {
         label: "path_memory",
@@ -3178,7 +3178,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("path_memory(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\path_memory(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
         boost: 10
     },        {
         label: "path_real",
@@ -3196,7 +3196,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("path_real(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\path_real(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
         boost: 10
     },        {
         label: "path_stdout",
@@ -3214,7 +3214,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("path_stdout(" + "$" + "{" + "1:options" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\path_stdout(" + "$" + "{" + "1:options" + "}" + ")"),
         boost: 10
     },        {
         label: "pie_chart",
@@ -3229,7 +3229,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("pie_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\pie_chart(" + "$" + "{" + "1:label" + "}" + ", " + "$" + "{" + "2:datasets" + "}" + ")"),
         boost: 10
     },        {
         label: "postgresql_insert_options",
@@ -3247,7 +3247,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("postgresql_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:constraint" + "}" + ", " + "$" + "{" + "3:conflict_columns" + "}" + ", " + "$" + "{" + "4:update_columns" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\postgresql_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:constraint" + "}" + ", " + "$" + "{" + "3:conflict_columns" + "}" + ", " + "$" + "{" + "4:update_columns" + "}" + ")"),
         boost: 10
     },        {
         label: "postgresql_update_options",
@@ -3265,7 +3265,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("postgresql_update_options(" + "$" + "{" + "1:primary_key_columns" + "}" + ", " + "$" + "{" + "2:update_columns" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\postgresql_update_options(" + "$" + "{" + "1:primary_key_columns" + "}" + ", " + "$" + "{" + "2:update_columns" + "}" + ")"),
         boost: 10
     },        {
         label: "print_rows",
@@ -3280,7 +3280,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("print_rows(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\print_rows(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ")"),
         boost: 10
     },        {
         label: "print_schema",
@@ -3298,7 +3298,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("print_schema(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:formatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\print_schema(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:formatter" + "}" + ")"),
         boost: 10
     },        {
         label: "protocol",
@@ -3313,7 +3313,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("protocol(" + "$" + "{" + "1:protocol" + "}" + ")"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\protocol(" + "$" + "{" + "1:protocol" + "}" + ")"),
         boost: 10
     },        {
         label: "random_string",
@@ -3328,7 +3328,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("random_string(" + "$" + "{" + "1:length" + "}" + ", " + "$" + "{" + "2:generator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\random_string(" + "$" + "{" + "1:length" + "}" + ", " + "$" + "{" + "2:generator" + "}" + ")"),
         boost: 10
     },        {
         label: "rank",
@@ -3343,7 +3343,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("rank()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\rank()"),
         boost: 10
     },        {
         label: "ref",
@@ -3358,7 +3358,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("ref(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\ref(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },        {
         label: "refs",
@@ -3373,7 +3373,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("refs(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\refs(" + "$" + "{" + "1:entries" + "}" + ")"),
         boost: 10
     },        {
         label: "regex",
@@ -3388,7 +3388,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("regex(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\regex(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "regex_all",
@@ -3403,7 +3403,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("regex_all(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\regex_all(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "regex_match",
@@ -3418,7 +3418,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("regex_match(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\regex_match(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "regex_match_all",
@@ -3433,7 +3433,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("regex_match_all(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\regex_match_all(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:subject" + "}" + ", " + "$" + "{" + "3:flags" + "}" + ", " + "$" + "{" + "4:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "regex_replace",
@@ -3448,7 +3448,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("regex_replace(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:replacement" + "}" + ", " + "$" + "{" + "3:subject" + "}" + ", " + "$" + "{" + "4:limit" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\regex_replace(" + "$" + "{" + "1:pattern" + "}" + ", " + "$" + "{" + "2:replacement" + "}" + ", " + "$" + "{" + "3:subject" + "}" + ", " + "$" + "{" + "4:limit" + "}" + ")"),
         boost: 10
     },        {
         label: "rename_replace",
@@ -3466,7 +3466,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("rename_replace(" + "$" + "{" + "1:search" + "}" + ", " + "$" + "{" + "2:replace" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\rename_replace(" + "$" + "{" + "1:search" + "}" + ", " + "$" + "{" + "2:replace" + "}" + ")"),
         boost: 10
     },        {
         label: "rename_style",
@@ -3481,7 +3481,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("rename_style(" + "$" + "{" + "1:style" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\rename_style(" + "$" + "{" + "1:style" + "}" + ")"),
         boost: 10
     },        {
         label: "retry_any_throwable",
@@ -3496,7 +3496,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("retry_any_throwable(" + "$" + "{" + "1:limit" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\retry_any_throwable(" + "$" + "{" + "1:limit" + "}" + ")"),
         boost: 10
     },        {
         label: "retry_on_exception_types",
@@ -3514,7 +3514,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("retry_on_exception_types(" + "$" + "{" + "1:exception_types" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\retry_on_exception_types(" + "$" + "{" + "1:exception_types" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ")"),
         boost: 10
     },        {
         label: "round",
@@ -3529,7 +3529,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("round(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:precision" + "}" + ", " + "$" + "{" + "3:mode" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\round(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:precision" + "}" + ", " + "$" + "{" + "3:mode" + "}" + ")"),
         boost: 10
     },        {
         label: "row",
@@ -3547,7 +3547,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("row(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\row(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },        {
         label: "rows",
@@ -3562,7 +3562,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("rows(" + "$" + "{" + "1:row" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\rows(" + "$" + "{" + "1:row" + "}" + ")"),
         boost: 10
     },        {
         label: "rows_partitioned",
@@ -3580,7 +3580,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("rows_partitioned(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:partitions" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\rows_partitioned(" + "$" + "{" + "1:rows" + "}" + ", " + "$" + "{" + "2:partitions" + "}" + ")"),
         boost: 10
     },        {
         label: "row_number",
@@ -3595,7 +3595,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("row_number()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\row_number()"),
         boost: 10
     },        {
         label: "sanitize",
@@ -3610,7 +3610,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("sanitize(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:placeholder" + "}" + ", " + "$" + "{" + "3:skipCharacters" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\sanitize(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:placeholder" + "}" + ", " + "$" + "{" + "3:skipCharacters" + "}" + ")"),
         boost: 10
     },        {
         label: "schema",
@@ -3628,7 +3628,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema(" + "$" + "{" + "1:definitions" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema(" + "$" + "{" + "1:definitions" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_evolving_validator",
@@ -3643,7 +3643,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_evolving_validator()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_evolving_validator()"),
         boost: 10
     },        {
         label: "schema_from_json",
@@ -3661,7 +3661,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_from_json(" + "$" + "{" + "1:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_from_json(" + "$" + "{" + "1:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_from_parquet",
@@ -3676,7 +3676,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_from_parquet(" + "$" + "{" + "1:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\schema_from_parquet(" + "$" + "{" + "1:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_metadata",
@@ -3694,7 +3694,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_metadata(" + "$" + "{" + "1:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_metadata(" + "$" + "{" + "1:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_selective_validator",
@@ -3709,7 +3709,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_selective_validator()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_selective_validator()"),
         boost: 10
     },        {
         label: "schema_strict_validator",
@@ -3724,7 +3724,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_strict_validator()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_strict_validator()"),
         boost: 10
     },        {
         label: "schema_to_ascii",
@@ -3742,7 +3742,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_to_ascii(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:formatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_to_ascii(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:formatter" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_to_json",
@@ -3760,7 +3760,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_to_json(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:pretty" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_to_json(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:pretty" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_to_parquet",
@@ -3775,7 +3775,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_to_parquet(" + "$" + "{" + "1:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\schema_to_parquet(" + "$" + "{" + "1:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_to_php",
@@ -3793,7 +3793,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_to_php(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:valueFormatter" + "}" + ", " + "$" + "{" + "3:typeFormatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_to_php(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:valueFormatter" + "}" + ", " + "$" + "{" + "3:typeFormatter" + "}" + ")"),
         boost: 10
     },        {
         label: "schema_validate",
@@ -3811,7 +3811,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("schema_validate(" + "$" + "{" + "1:expected" + "}" + ", " + "$" + "{" + "2:given" + "}" + ", " + "$" + "{" + "3:validator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\schema_validate(" + "$" + "{" + "1:expected" + "}" + ", " + "$" + "{" + "2:given" + "}" + ", " + "$" + "{" + "3:validator" + "}" + ")"),
         boost: 10
     },        {
         label: "select",
@@ -3826,7 +3826,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("select(" + "$" + "{" + "1:entries" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\select(" + "$" + "{" + "1:entries" + "}" + ")"),
         boost: 10
     },        {
         label: "size",
@@ -3841,7 +3841,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("size(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\size(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "skip_rows_handler",
@@ -3856,7 +3856,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("skip_rows_handler()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\skip_rows_handler()"),
         boost: 10
     },        {
         label: "split",
@@ -3871,7 +3871,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("split(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:separator" + "}" + ", " + "$" + "{" + "3:limit" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\split(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:separator" + "}" + ", " + "$" + "{" + "3:limit" + "}" + ")"),
         boost: 10
     },        {
         label: "sprintf",
@@ -3886,7 +3886,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("sprintf(" + "$" + "{" + "1:format" + "}" + ", " + "$" + "{" + "2:args" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\sprintf(" + "$" + "{" + "1:format" + "}" + ", " + "$" + "{" + "2:args" + "}" + ")"),
         boost: 10
     },        {
         label: "sqlite_insert_options",
@@ -3904,7 +3904,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("sqlite_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:conflict_columns" + "}" + ", " + "$" + "{" + "3:update_columns" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\sqlite_insert_options(" + "$" + "{" + "1:skip_conflicts" + "}" + ", " + "$" + "{" + "2:conflict_columns" + "}" + ", " + "$" + "{" + "3:update_columns" + "}" + ")"),
         boost: 10
     },        {
         label: "stdout_filesystem",
@@ -3922,7 +3922,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("stdout_filesystem()"),
+        apply: snippet("\\Flow\\Filesystem\\DSL\\stdout_filesystem()"),
         boost: 10
     },        {
         label: "string_agg",
@@ -3937,7 +3937,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("string_agg(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:separator" + "}" + ", " + "$" + "{" + "3:sort" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\string_agg(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:separator" + "}" + ", " + "$" + "{" + "3:sort" + "}" + ")"),
         boost: 10
     },        {
         label: "string_entry",
@@ -3955,7 +3955,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("string_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\string_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "string_schema",
@@ -3973,7 +3973,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("string_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\string_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "structure_entry",
@@ -3991,7 +3991,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("structure_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "structure_ref",
@@ -4006,7 +4006,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("structure_ref(" + "$" + "{" + "1:entry" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_ref(" + "$" + "{" + "1:entry" + "}" + ")"),
         boost: 10
     },        {
         label: "structure_schema",
@@ -4024,7 +4024,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("structure_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\structure_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "struct_entry",
@@ -4042,7 +4042,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("struct_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\struct_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:type" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "struct_schema",
@@ -4060,7 +4060,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("struct_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\struct_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:type" + "}" + ", " + "$" + "{" + "3:nullable" + "}" + ", " + "$" + "{" + "4:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "str_entry",
@@ -4078,7 +4078,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("str_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\str_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "str_schema",
@@ -4096,7 +4096,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("str_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\str_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "sum",
@@ -4111,7 +4111,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("sum(" + "$" + "{" + "1:ref" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\sum(" + "$" + "{" + "1:ref" + "}" + ")"),
         boost: 10
     },        {
         label: "table_schema_to_flow_schema",
@@ -4129,7 +4129,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("table_schema_to_flow_schema(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:types_map" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\table_schema_to_flow_schema(" + "$" + "{" + "1:table" + "}" + ", " + "$" + "{" + "2:types_map" + "}" + ")"),
         boost: 10
     },        {
         label: "throw_error_handler",
@@ -4144,7 +4144,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("throw_error_handler()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\throw_error_handler()"),
         boost: 10
     },        {
         label: "time_entry",
@@ -4162,7 +4162,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("time_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\time_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "time_schema",
@@ -4180,7 +4180,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("time_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\time_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "to_array",
@@ -4198,7 +4198,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_array(" + "$" + "{" + "1:array" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_array(" + "$" + "{" + "1:array" + "}" + ")"),
         boost: 10
     },        {
         label: "to_avro",
@@ -4213,7 +4213,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_avro(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\Adapter\\Avro\\to_avro(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "to_branch",
@@ -4228,7 +4228,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_branch(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ")"),
         boost: 10
     },        {
         label: "to_callable",
@@ -4243,7 +4243,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_callable(" + "$" + "{" + "1:callable" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_callable(" + "$" + "{" + "1:callable" + "}" + ")"),
         boost: 10
     },        {
         label: "to_chartjs",
@@ -4258,7 +4258,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_chartjs(" + "$" + "{" + "1:type" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\to_chartjs(" + "$" + "{" + "1:type" + "}" + ")"),
         boost: 10
     },        {
         label: "to_chartjs_file",
@@ -4276,7 +4276,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_chartjs_file(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:template" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\to_chartjs_file(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:template" + "}" + ")"),
         boost: 10
     },        {
         label: "to_chartjs_var",
@@ -4294,7 +4294,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_chartjs_var(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:output" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\ChartJS\\to_chartjs_var(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:output" + "}" + ")"),
         boost: 10
     },        {
         label: "to_csv",
@@ -4312,7 +4312,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_csv(" + "$" + "{" + "1:uri" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:separator" + "}" + ", " + "$" + "{" + "4:enclosure" + "}" + ", " + "$" + "{" + "5:escape" + "}" + ", " + "$" + "{" + "6:new_line_separator" + "}" + ", " + "$" + "{" + "7:datetime_format" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\CSV\\to_csv(" + "$" + "{" + "1:uri" + "}" + ", " + "$" + "{" + "2:with_header" + "}" + ", " + "$" + "{" + "3:separator" + "}" + ", " + "$" + "{" + "4:enclosure" + "}" + ", " + "$" + "{" + "5:escape" + "}" + ", " + "$" + "{" + "6:new_line_separator" + "}" + ", " + "$" + "{" + "7:datetime_format" + "}" + ")"),
         boost: 10
     },        {
         label: "to_date",
@@ -4327,7 +4327,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_date(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:format" + "}" + ", " + "$" + "{" + "3:timeZone" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_date(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:format" + "}" + ", " + "$" + "{" + "3:timeZone" + "}" + ")"),
         boost: 10
     },        {
         label: "to_date_time",
@@ -4342,7 +4342,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_date_time(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:format" + "}" + ", " + "$" + "{" + "3:timeZone" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_date_time(" + "$" + "{" + "1:ref" + "}" + ", " + "$" + "{" + "2:format" + "}" + ", " + "$" + "{" + "3:timeZone" + "}" + ")"),
         boost: 10
     },        {
         label: "to_dbal_schema_table",
@@ -4360,7 +4360,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_dbal_schema_table(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:table_name" + "}" + ", " + "$" + "{" + "3:table_options" + "}" + ", " + "$" + "{" + "4:types_map" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_schema_table(" + "$" + "{" + "1:schema" + "}" + ", " + "$" + "{" + "2:table_name" + "}" + ", " + "$" + "{" + "3:table_options" + "}" + ", " + "$" + "{" + "4:types_map" + "}" + ")"),
         boost: 10
     },        {
         label: "to_dbal_table_delete",
@@ -4378,7 +4378,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_dbal_table_delete(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_table_delete(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ")"),
         boost: 10
     },        {
         label: "to_dbal_table_insert",
@@ -4396,7 +4396,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_dbal_table_insert(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_table_insert(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
         boost: 10
     },        {
         label: "to_dbal_table_update",
@@ -4414,7 +4414,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_dbal_table_update(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_table_update(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:table" + "}" + ", " + "$" + "{" + "3:options" + "}" + ")"),
         boost: 10
     },        {
         label: "to_dbal_transaction",
@@ -4432,7 +4432,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_dbal_transaction(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:loaders" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Doctrine\\to_dbal_transaction(" + "$" + "{" + "1:connection" + "}" + ", " + "$" + "{" + "2:loaders" + "}" + ")"),
         boost: 10
     },        {
         label: "to_entry",
@@ -4450,7 +4450,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:entryFactory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:data" + "}" + ", " + "$" + "{" + "3:entryFactory" + "}" + ")"),
         boost: 10
     },        {
         label: "to_es_bulk_index",
@@ -4468,7 +4468,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_es_bulk_index(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ", " + "$" + "{" + "3:id_factory" + "}" + ", " + "$" + "{" + "4:parameters" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\to_es_bulk_index(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ", " + "$" + "{" + "3:id_factory" + "}" + ", " + "$" + "{" + "4:parameters" + "}" + ")"),
         boost: 10
     },        {
         label: "to_es_bulk_update",
@@ -4486,7 +4486,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_es_bulk_update(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ", " + "$" + "{" + "3:id_factory" + "}" + ", " + "$" + "{" + "4:parameters" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Elasticsearch\\to_es_bulk_update(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ", " + "$" + "{" + "3:id_factory" + "}" + ", " + "$" + "{" + "4:parameters" + "}" + ")"),
         boost: 10
     },        {
         label: "to_json",
@@ -4504,7 +4504,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:flags" + "}" + ", " + "$" + "{" + "3:date_time_format" + "}" + ", " + "$" + "{" + "4:put_rows_in_new_lines" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\to_json(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:flags" + "}" + ", " + "$" + "{" + "3:date_time_format" + "}" + ", " + "$" + "{" + "4:put_rows_in_new_lines" + "}" + ")"),
         boost: 10
     },        {
         label: "to_json_lines",
@@ -4522,7 +4522,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\JSON\\to_json_lines(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },        {
         label: "to_meilisearch_bulk_index",
@@ -4540,7 +4540,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_meilisearch_bulk_index(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\to_meilisearch_bulk_index(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
         boost: 10
     },        {
         label: "to_meilisearch_bulk_update",
@@ -4558,7 +4558,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_meilisearch_bulk_update(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Meilisearch\\to_meilisearch_bulk_update(" + "$" + "{" + "1:config" + "}" + ", " + "$" + "{" + "2:index" + "}" + ")"),
         boost: 10
     },        {
         label: "to_memory",
@@ -4573,7 +4573,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_memory(" + "$" + "{" + "1:memory" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_memory(" + "$" + "{" + "1:memory" + "}" + ")"),
         boost: 10
     },        {
         label: "to_output",
@@ -4588,7 +4588,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_output(" + "$" + "{" + "1:truncate" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ", " + "$" + "{" + "4:schemaFormatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_output(" + "$" + "{" + "1:truncate" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ", " + "$" + "{" + "4:schemaFormatter" + "}" + ")"),
         boost: 10
     },        {
         label: "to_parquet",
@@ -4606,7 +4606,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:compressions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Parquet\\to_parquet(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:compressions" + "}" + ", " + "$" + "{" + "4:schema" + "}" + ")"),
         boost: 10
     },        {
         label: "to_stderr",
@@ -4621,7 +4621,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_stderr(" + "$" + "{" + "1:truncate" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ", " + "$" + "{" + "4:schemaFormatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_stderr(" + "$" + "{" + "1:truncate" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ", " + "$" + "{" + "4:schemaFormatter" + "}" + ")"),
         boost: 10
     },        {
         label: "to_stdout",
@@ -4636,7 +4636,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_stdout(" + "$" + "{" + "1:truncate" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ", " + "$" + "{" + "4:schemaFormatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_stdout(" + "$" + "{" + "1:truncate" + "}" + ", " + "$" + "{" + "2:output" + "}" + ", " + "$" + "{" + "3:formatter" + "}" + ", " + "$" + "{" + "4:schemaFormatter" + "}" + ")"),
         boost: 10
     },        {
         label: "to_stream",
@@ -4651,7 +4651,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_stream(" + "$" + "{" + "1:uri" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:output" + "}" + ", " + "$" + "{" + "4:mode" + "}" + ", " + "$" + "{" + "5:formatter" + "}" + ", " + "$" + "{" + "6:schemaFormatter" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_stream(" + "$" + "{" + "1:uri" + "}" + ", " + "$" + "{" + "2:truncate" + "}" + ", " + "$" + "{" + "3:output" + "}" + ", " + "$" + "{" + "4:mode" + "}" + ", " + "$" + "{" + "5:formatter" + "}" + ", " + "$" + "{" + "6:schemaFormatter" + "}" + ")"),
         boost: 10
     },        {
         label: "to_text",
@@ -4669,7 +4669,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_text(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:new_line_separator" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\Text\\to_text(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:new_line_separator" + "}" + ")"),
         boost: 10
     },        {
         label: "to_timezone",
@@ -4684,7 +4684,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_timezone(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:timeZone" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_timezone(" + "$" + "{" + "1:value" + "}" + ", " + "$" + "{" + "2:timeZone" + "}" + ")"),
         boost: 10
     },        {
         label: "to_transformation",
@@ -4699,7 +4699,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_transformation(" + "$" + "{" + "1:transformer" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\to_transformation(" + "$" + "{" + "1:transformer" + "}" + ", " + "$" + "{" + "2:loader" + "}" + ")"),
         boost: 10
     },        {
         label: "to_xml",
@@ -4717,7 +4717,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("to_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:root_element_name" + "}" + ", " + "$" + "{" + "3:row_element_name" + "}" + ", " + "$" + "{" + "4:attribute_prefix" + "}" + ", " + "$" + "{" + "5:date_time_format" + "}" + ", " + "$" + "{" + "6:xml_writer" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\Adapter\\XML\\to_xml(" + "$" + "{" + "1:path" + "}" + ", " + "$" + "{" + "2:root_element_name" + "}" + ", " + "$" + "{" + "3:row_element_name" + "}" + ", " + "$" + "{" + "4:attribute_prefix" + "}" + ", " + "$" + "{" + "5:date_time_format" + "}" + ", " + "$" + "{" + "6:xml_writer" + "}" + ")"),
         boost: 10
     },        {
         label: "types",
@@ -4735,7 +4735,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("types(" + "$" + "{" + "1:types" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\types(" + "$" + "{" + "1:types" + "}" + ")"),
         boost: 10
     },        {
         label: "type_array",
@@ -4753,7 +4753,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_array()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_array()"),
         boost: 10
     },        {
         label: "type_boolean",
@@ -4771,7 +4771,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_boolean()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_boolean()"),
         boost: 10
     },        {
         label: "type_callable",
@@ -4789,7 +4789,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_callable()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_callable()"),
         boost: 10
     },        {
         label: "type_class_string",
@@ -4807,7 +4807,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_class_string(" + "$" + "{" + "1:class" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_class_string(" + "$" + "{" + "1:class" + "}" + ")"),
         boost: 10
     },        {
         label: "type_date",
@@ -4825,7 +4825,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_date()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\type_date()"),
         boost: 10
     },        {
         label: "type_date",
@@ -4843,7 +4843,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_date()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_date()"),
         boost: 10
     },        {
         label: "type_datetime",
@@ -4861,7 +4861,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_datetime()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_datetime()"),
         boost: 10
     },        {
         label: "type_enum",
@@ -4879,7 +4879,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_enum(" + "$" + "{" + "1:class" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_enum(" + "$" + "{" + "1:class" + "}" + ")"),
         boost: 10
     },        {
         label: "type_equals",
@@ -4897,7 +4897,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_equals(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_equals(" + "$" + "{" + "1:left" + "}" + ", " + "$" + "{" + "2:right" + "}" + ")"),
         boost: 10
     },        {
         label: "type_float",
@@ -4915,7 +4915,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_float()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_float()"),
         boost: 10
     },        {
         label: "type_from_array",
@@ -4933,7 +4933,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_from_array(" + "$" + "{" + "1:data" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_from_array(" + "$" + "{" + "1:data" + "}" + ")"),
         boost: 10
     },        {
         label: "type_html",
@@ -4951,7 +4951,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_html()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_html()"),
         boost: 10
     },        {
         label: "type_instance_of",
@@ -4969,7 +4969,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_instance_of(" + "$" + "{" + "1:class" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_instance_of(" + "$" + "{" + "1:class" + "}" + ")"),
         boost: 10
     },        {
         label: "type_int",
@@ -4987,7 +4987,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_int()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\type_int()"),
         boost: 10
     },        {
         label: "type_integer",
@@ -5005,7 +5005,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_integer()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_integer()"),
         boost: 10
     },        {
         label: "type_intersection",
@@ -5023,7 +5023,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_intersection(" + "$" + "{" + "1:first" + "}" + ", " + "$" + "{" + "2:second" + "}" + ", " + "$" + "{" + "3:types" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_intersection(" + "$" + "{" + "1:first" + "}" + ", " + "$" + "{" + "2:second" + "}" + ", " + "$" + "{" + "3:types" + "}" + ")"),
         boost: 10
     },        {
         label: "type_is",
@@ -5041,7 +5041,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_is(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:typeClass" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_is(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:typeClass" + "}" + ")"),
         boost: 10
     },        {
         label: "type_is_any",
@@ -5059,7 +5059,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_is_any(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:typeClass" + "}" + ", " + "$" + "{" + "3:typeClasses" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_is_any(" + "$" + "{" + "1:type" + "}" + ", " + "$" + "{" + "2:typeClass" + "}" + ", " + "$" + "{" + "3:typeClasses" + "}" + ")"),
         boost: 10
     },        {
         label: "type_is_nullable",
@@ -5077,7 +5077,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_is_nullable(" + "$" + "{" + "1:type" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_is_nullable(" + "$" + "{" + "1:type" + "}" + ")"),
         boost: 10
     },        {
         label: "type_json",
@@ -5095,7 +5095,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_json()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_json()"),
         boost: 10
     },        {
         label: "type_list",
@@ -5113,7 +5113,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_list(" + "$" + "{" + "1:element" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_list(" + "$" + "{" + "1:element" + "}" + ")"),
         boost: 10
     },        {
         label: "type_literal",
@@ -5131,7 +5131,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_literal(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_literal(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "type_map",
@@ -5149,7 +5149,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_map(" + "$" + "{" + "1:key_type" + "}" + ", " + "$" + "{" + "2:value_type" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_map(" + "$" + "{" + "1:key_type" + "}" + ", " + "$" + "{" + "2:value_type" + "}" + ")"),
         boost: 10
     },        {
         label: "type_mixed",
@@ -5167,7 +5167,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_mixed()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_mixed()"),
         boost: 10
     },        {
         label: "type_non_empty_string",
@@ -5185,7 +5185,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_non_empty_string()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_non_empty_string()"),
         boost: 10
     },        {
         label: "type_null",
@@ -5203,7 +5203,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_null()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_null()"),
         boost: 10
     },        {
         label: "type_numeric_string",
@@ -5221,7 +5221,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_numeric_string()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_numeric_string()"),
         boost: 10
     },        {
         label: "type_object",
@@ -5239,7 +5239,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_object()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_object()"),
         boost: 10
     },        {
         label: "type_optional",
@@ -5257,7 +5257,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_optional(" + "$" + "{" + "1:type" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_optional(" + "$" + "{" + "1:type" + "}" + ")"),
         boost: 10
     },        {
         label: "type_positive_integer",
@@ -5275,7 +5275,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_positive_integer()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_positive_integer()"),
         boost: 10
     },        {
         label: "type_resource",
@@ -5293,7 +5293,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_resource()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_resource()"),
         boost: 10
     },        {
         label: "type_scalar",
@@ -5311,7 +5311,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_scalar()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_scalar()"),
         boost: 10
     },        {
         label: "type_string",
@@ -5329,7 +5329,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_string()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_string()"),
         boost: 10
     },        {
         label: "type_structure",
@@ -5347,7 +5347,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_structure(" + "$" + "{" + "1:elements" + "}" + ", " + "$" + "{" + "2:optional_elements" + "}" + ", " + "$" + "{" + "3:allow_extra" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_structure(" + "$" + "{" + "1:elements" + "}" + ", " + "$" + "{" + "2:optional_elements" + "}" + ", " + "$" + "{" + "3:allow_extra" + "}" + ")"),
         boost: 10
     },        {
         label: "type_time",
@@ -5365,7 +5365,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_time()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_time()"),
         boost: 10
     },        {
         label: "type_time_zone",
@@ -5383,7 +5383,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_time_zone()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_time_zone()"),
         boost: 10
     },        {
         label: "type_union",
@@ -5401,7 +5401,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_union(" + "$" + "{" + "1:first" + "}" + ", " + "$" + "{" + "2:second" + "}" + ", " + "$" + "{" + "3:types" + "}" + ")"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_union(" + "$" + "{" + "1:first" + "}" + ", " + "$" + "{" + "2:second" + "}" + ", " + "$" + "{" + "3:types" + "}" + ")"),
         boost: 10
     },        {
         label: "type_uuid",
@@ -5419,7 +5419,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_uuid()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_uuid()"),
         boost: 10
     },        {
         label: "type_xml",
@@ -5437,7 +5437,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_xml()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_xml()"),
         boost: 10
     },        {
         label: "type_xml_element",
@@ -5455,7 +5455,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("type_xml_element()"),
+        apply: snippet("\\Flow\\Types\\DSL\\type_xml_element()"),
         boost: 10
     },        {
         label: "ulid",
@@ -5470,7 +5470,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("ulid(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\ulid(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "upper",
@@ -5485,7 +5485,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("upper(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\upper(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "uuid_entry",
@@ -5503,7 +5503,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("uuid_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\uuid_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "uuid_schema",
@@ -5521,7 +5521,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("uuid_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\uuid_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "uuid_v4",
@@ -5536,7 +5536,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("uuid_v4()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\uuid_v4()"),
         boost: 10
     },        {
         label: "uuid_v7",
@@ -5551,7 +5551,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("uuid_v7(" + "$" + "{" + "1:value" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\uuid_v7(" + "$" + "{" + "1:value" + "}" + ")"),
         boost: 10
     },        {
         label: "when",
@@ -5566,7 +5566,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("when(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:then" + "}" + ", " + "$" + "{" + "3:else" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\when(" + "$" + "{" + "1:condition" + "}" + ", " + "$" + "{" + "2:then" + "}" + ", " + "$" + "{" + "3:else" + "}" + ")"),
         boost: 10
     },        {
         label: "window",
@@ -5581,7 +5581,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("window()"),
+        apply: snippet("\\Flow\\ETL\\DSL\\window()"),
         boost: 10
     },        {
         label: "with_entry",
@@ -5596,7 +5596,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("with_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:function" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\with_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:function" + "}" + ")"),
         boost: 10
     },        {
         label: "write_with_retries",
@@ -5611,7 +5611,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("write_with_retries(" + "$" + "{" + "1:loader" + "}" + ", " + "$" + "{" + "2:retry_strategy" + "}" + ", " + "$" + "{" + "3:delay_factory" + "}" + ", " + "$" + "{" + "4:sleep" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\write_with_retries(" + "$" + "{" + "1:loader" + "}" + ", " + "$" + "{" + "2:retry_strategy" + "}" + ", " + "$" + "{" + "3:delay_factory" + "}" + ", " + "$" + "{" + "4:sleep" + "}" + ")"),
         boost: 10
     },        {
         label: "xml_element_entry",
@@ -5629,7 +5629,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("xml_element_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\xml_element_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "xml_element_schema",
@@ -5647,7 +5647,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("xml_element_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\xml_element_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "xml_entry",
@@ -5665,7 +5665,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("xml_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\xml_entry(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:value" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     },        {
         label: "xml_schema",
@@ -5683,7 +5683,7 @@ const dslFunctions = [
                             `
             return div
         },
-        apply: snippet("xml_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
+        apply: snippet("\\Flow\\ETL\\DSL\\xml_schema(" + "$" + "{" + "1:name" + "}" + ", " + "$" + "{" + "2:nullable" + "}" + ", " + "$" + "{" + "3:metadata" + "}" + ")"),
         boost: 10
     }    ]
 
