@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
     static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer"]
-    static outlets = ["code-editor"]
+    static outlets = ["code-mirror-editor"]
     static values = {
         flowPhar: String
     }
@@ -73,13 +73,13 @@ export default class extends Controller {
         this.#showOutput(error)
 
         // Highlight error in code editor if we have errorInfo
-        if (errorInfo && this.hasCodeEditorOutlet) {
+        if (errorInfo && this.hasCodeMirrorEditorOutlet) {
             this.#log('Highlighting error:', errorInfo)
-            this.codeEditorOutlet.highlightError(errorInfo)
+            this.codeMirrorEditorOutlet.highlightError(errorInfo)
         } else {
             this.#log('No errorInfo or code editor outlet not available', {
                 hasErrorInfo: !!errorInfo,
-                hasOutlet: this.hasCodeEditorOutlet
+                hasOutlet: this.hasCodeMirrorEditorOutlet
             })
         }
     }
@@ -102,16 +102,16 @@ export default class extends Controller {
         }
 
         // Get code from code-editor outlet
-        if (!this.hasCodeEditorOutlet) {
+        if (!this.hasCodeMirrorEditorOutlet) {
             this.#log('Code editor outlet not connected')
             this.#showOutput('Code editor not found')
             return
         }
 
         // Clear previous errors before running
-        this.codeEditorOutlet.clearErrors()
+        this.codeMirrorEditorOutlet.clearErrors()
 
-        const code = this.codeEditorOutlet.getCode()
+        const code = this.codeMirrorEditorOutlet.getCode()
         this.#showOutput('Running...')
 
         // Execute code via WASM controller

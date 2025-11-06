@@ -14,8 +14,8 @@
 {% block main %}
 <div id="playground"
      data-controller="playground-editor wasm share-code"
-     data-playground-editor-code-editor-outlet="#code-editor"
-     data-share-code-code-editor-outlet="#code-editor"
+     data-playground-editor-code-mirror-editor-outlet="#code-editor"
+     data-share-code-code-mirror-editor-outlet="#code-editor"
      data-playground-editor-flow-phar-value="{{ asset('wasm/flow.phar') }}"
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
@@ -67,7 +67,7 @@
     </div>
     <div class="editor" data-playground-editor-target="editor">
         <div class="code-container">
-                <textarea id="code-editor" data-controller="code-editor" data-theme="ace/theme/github_dark">
+                <textarea id="code-editor" data-controller="code-mirror-editor">
 <?php
 
 declare(strict_types=1);

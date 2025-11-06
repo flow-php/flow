@@ -2,9 +2,9 @@ import { Controller } from "@hotwired/stimulus"
 import LZString from "lz-string"
 
 export default class extends Controller {
-    static outlets = ["code-editor"]
+    static outlets = ["code-mirror-editor"]
 
-    codeEditorOutletConnected() {
+    codeMirrorEditorOutletConnected() {
         this.loadCodeFromUrl()
     }
 
@@ -18,11 +18,11 @@ export default class extends Controller {
 
                 const decompressed = LZString.decompressFromEncodedURIComponent(compressed)
                 console.log('[ShareCode] Decompressed code:', decompressed)
-                console.log('[ShareCode] Has code editor outlet:', this.hasCodeEditorOutlet)
+                console.log('[ShareCode] Has code editor outlet:', this.hasCodeMirrorEditorOutlet)
 
-                if (decompressed && this.hasCodeEditorOutlet) {
+                if (decompressed && this.hasCodeMirrorEditorOutlet) {
                     console.log('[ShareCode] Setting editor value...')
-                    this.codeEditorOutlet.setValue(decompressed)
+                    this.codeMirrorEditorOutlet.setValue(decompressed)
                 } else if (!decompressed) {
                     console.error('[ShareCode] Decompression returned null or empty')
                 }
@@ -33,12 +33,12 @@ export default class extends Controller {
     }
 
     share() {
-        if (!this.hasCodeEditorOutlet) {
+        if (!this.hasCodeMirrorEditorOutlet) {
             console.error('Code editor outlet not found')
             return
         }
 
-        const code = this.codeEditorOutlet.getCode()
+        const code = this.codeMirrorEditorOutlet.getCode()
         console.log('[ShareCode] Original code to compress:', code)
 
         const url = new URL(window.location.href)
