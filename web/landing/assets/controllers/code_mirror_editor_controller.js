@@ -7,6 +7,7 @@ import { php } from "@codemirror/lang-php"
 import { autocompletion, snippetKeymap } from "@codemirror/autocomplete"
 import { flowThemeExtension } from "../codemirror/themes/theme-flow.js"
 import { flowCompletions } from "../codemirror/completions/flow.js"
+import { dslCompletions } from "../codemirror/completions/dsl.js"
 import Violation from "../models/Violation.js"
 
 export default class extends Controller {
@@ -61,7 +62,7 @@ export default class extends Controller {
                 errorField,
                 keymap.of(snippetKeymap),
                 autocompletion({
-                    override: [flowCompletions],
+                    override: [flowCompletions, dslCompletions],
                     activateOnTyping: true,
                     maxRenderedOptions: 20
                 }),

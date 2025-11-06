@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP Flow Methods
  *
- * Auto-generated on 2025\u002D11\u002D06\u002014\u003A31\u003A26
+ * Auto-generated on 2025\u002D11\u002D06\u002014\u003A57\u003A19
  * Flow methods: 5
  * Flow-returning functions: 2
  *

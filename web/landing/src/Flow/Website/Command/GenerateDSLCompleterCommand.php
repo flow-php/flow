@@ -15,7 +15,7 @@ use Twig\Environment;
 
 #[AsCommand(
     name: 'app:generate:dsl-completer',
-    description: 'Generate ACE Editor completer for all DSL functions'
+    description: 'Generate CodeMirror completer for all DSL functions'
 )]
 final class GenerateDSLCompleterCommand extends Command
 {
@@ -48,17 +48,18 @@ final class GenerateDSLCompleterCommand extends Command
                 'docComment' => $this->formatDocComment($definition),
                 'highlightedSignature' => $this->buildHighlightedSignature($definition),
                 'meta' => 'flow-dsl-' . $this->getTypeName($definition),
+                'parameters' => $definition->data()['parameters'],
             ],
             $dslFunctions
         );
 
-        $content = $this->twig->render('completers/flow_dsl.js.twig', [
+        $content = $this->twig->render('completers/dsl-codemirror.js.twig', [
             'functions' => $functionsData,
             'generated_at' => new \DateTime(),
             'total_count' => \count($functionsData),
         ]);
 
-        $outputFile = $this->projectDir . '/assets/ace/completers/flow_dsl.js';
+        $outputFile = $this->projectDir . '/assets/codemirror/completions/dsl.js';
         $outputDir = \dirname($outputFile);
 
         if (!\is_dir($outputDir)) {

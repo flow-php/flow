@@ -1,0 +1,71 @@
+/**
+ * CodeMirror Completer for Flow PHP DSL Functions
+ *
+ * Auto-generated on {{ generated_at|date('Y-m-d H:i:s') }}
+ * Total functions: {{ total_count }}
+ *
+ * This completer provides autocompletion for all Flow PHP DSL functions:
+ * - Extractors (flow-extractors)
+ * - Loaders (flow-loaders)
+ * - Transformers (flow-transformers)
+ * - Scalar Functions (flow-scalar-functions)
+ * - Aggregating Functions (flow-aggregating-functions)
+ * - Window Functions (flow-window-functions)
+ * - And more...
+ */
+
+import { CompletionContext, snippet } from "@codemirror/autocomplete"
+
+// All DSL functions
+const dslFunctions = [
+    {% for func in functions %}
+    {
+        label: "{{ func.name }}",
+        type: "function",
+        detail: "{{ func.meta|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'}) }}",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    {{ func.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}
+                </div>
+                {% if func.docComment %}
+                <div style="color: #8b949e; font-size: 13px;">
+                    {{ func.docComment|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
+                </div>
+                {% endif %}
+            `
+            return div
+        },
+        apply: snippet("{{ func.name }}({% if func.parameters|length > 0 %}{% for param in func.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
+        boost: 10
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+
+/**
+ * DSL function completion source for CodeMirror
+ * @param {CompletionContext} context
+ * @returns {CompletionResult|null}
+ */
+export function dslCompletions(context) {
+    // Match word being typed
+    const word = context.matchBefore(/\w+/)
+
+    // If no word and not explicit, don't show completions
+    if (!word && !context.explicit) {
+        return null
+    }
+
+    // Filter functions based on what's being typed
+    const prefix = word ? word.text.toLowerCase() : ''
+    const options = dslFunctions.filter(func =>
+        !prefix || func.label.toLowerCase().startsWith(prefix)
+    )
+
+    return {
+        from: word ? word.from : context.pos,
+        options: options,
+        validFor: /^\w*$/  // Reuse while typing word characters
+    }
+}
