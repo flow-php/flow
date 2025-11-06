@@ -13,7 +13,7 @@ use Twig\Environment;
 
 #[AsCommand(
     name: 'app:generate:data-frame-completer',
-    description: 'Generate ACE Editor completer for DataFrame methods'
+    description: 'Generate CodeMirror completer for DataFrame methods'
 )]
 final class GenerateDataFrameCompleterCommand extends Command
 {
@@ -83,14 +83,14 @@ final class GenerateDataFrameCompleterCommand extends Command
             $dataFrameMethods
         );
 
-        $content = $this->twig->render('completers/data_frame.js.twig', [
+        $content = $this->twig->render('completers/dataframe-codemirror.js.twig', [
             'dataframe_methods' => $methodsData,
             'dataframe_returning_methods' => $dataFrameReturningMethods,
             'generated_at' => new \DateTime(),
             'total_count' => \count($methodsData),
         ]);
 
-        $outputFile = $this->projectDir . '/assets/ace/completers/data_frame.js';
+        $outputFile = $this->projectDir . '/assets/codemirror/completions/dataframe.js';
         $outputDir = \dirname($outputFile);
 
         if (!\is_dir($outputDir)) {
@@ -164,6 +164,7 @@ final class GenerateDataFrameCompleterCommand extends Command
             'highlightedSignature' => $this->buildHighlightedSignature($method),
             'meta' => $method['class_slug'],
             'className' => $method['class'],
+            'parameters' => $method['parameters'],
         ];
     }
 

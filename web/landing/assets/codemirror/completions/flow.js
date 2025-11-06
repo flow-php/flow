@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP Flow Methods
  *
- * Auto-generated on 2025\u002D11\u002D06\u002014\u003A57\u003A19
+ * Auto-generated on 2025\u002D11\u002D06\u002017\u003A31\u003A31
  * Flow methods: 5
  * Flow-returning functions: 2
  *
@@ -103,16 +103,20 @@ const flowMethods = [
  */
 export function flowCompletions(context) {
     // Get text before cursor (potentially across multiple lines)
-    // Look back up to 500 characters to find the pattern
-    const maxLookback = 500
+    // Look back up to 2000 characters to find the pattern
+    const maxLookback = 2000
     const docText = context.state.doc.toString()
     const startPos = Math.max(0, context.pos - maxLookback)
     const textBefore = docText.slice(startPos, context.pos)
 
-    // Check if we're after a Flow-returning function: df()-> or data_frame()->
-    // Pattern allows any whitespace (including newlines) between () and ->
-    // Must end with -> followed by optional word characters (the method being typed)
-    const flowFuncPattern = new RegExp('(' + flowFunctions.join('|') + ')\\s*\\([^)]*\\)\\s*->\\w*$')
+    // Check if we're directly after -> (method chaining context)
+    if (!new RegExp('->\\w*$').test(textBefore)) {
+        return null
+    }
+
+    // Check if we're after a Flow-returning function: df( or data_frame(
+    // Simple heuristic: if we find the function name followed by ( before the ->, it's a match
+    const flowFuncPattern = new RegExp('\\b(' + flowFunctions.join('|') + ')\\s*\\(')
     if (!flowFuncPattern.test(textBefore)) {
         return null
     }
@@ -134,6 +138,6 @@ export function flowCompletions(context) {
     return {
         from: word ? word.from : context.pos,
         options: options,
-        validFor: /^\w*$/  // Reuse while typing word characters
+        validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
     }
 }

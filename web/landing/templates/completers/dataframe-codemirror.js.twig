@@ -1,23 +1,21 @@
 /**
- * CodeMirror Completer for Flow PHP Flow Methods
+ * CodeMirror Completer for Flow PHP DataFrame Methods
  *
  * Auto-generated on {{ generated_at|date('Y-m-d H:i:s') }}
- * Flow methods: {{ total_count }}
- * Flow-returning functions: {{ flow_functions|length }}
+ * DataFrame methods: {{ total_count }}
+ * DataFrame-returning methods from classes: {{ dataframe_returning_methods|length }}
  *
- * This completer triggers after Flow-returning functions: df()->, data_frame()->
+ * This completer triggers after DataFrame-returning methods
  */
 
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
-// Map of Flow-returning functions from dsl.json (df, data_frame)
-const flowFunctions = [
-    {% for func in flow_functions %}"{{ func }}"{% if not loop.last %}, {% endif %}{% endfor %}
-]
+// Map of DataFrame-returning methods grouped by class
+const dataframeReturningMethods = {{ dataframe_returning_methods|json_encode|raw }};
 
-// Flow methods
-const flowMethods = [
-    {% for method in flow_methods %}
+// DataFrame methods
+const dataframeMethods = [
+    {% for method in dataframe_methods %}
     {
         label: "{{ method.name }}",
         type: "method",
@@ -26,7 +24,7 @@ const flowMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    {{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}
+                    {{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
                 </div>
                 {% if method.docComment %}
                 <div style="color: #8b949e; font-size: 13px;">
@@ -36,18 +34,18 @@ const flowMethods = [
             `
             return div
         },
-        apply: snippet("{{ method.name }}({% if method.hasParameters %}{% for param in method.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
+        apply: snippet("{{ method.name }}({% if method.parameters|length > 0 %}{% for param in method.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
         boost: 10
     }{% if not loop.last %},{% endif %}
     {% endfor %}
 ]
 
 /**
- * Flow method completion source for CodeMirror
+ * DataFrame method completion source for CodeMirror
  * @param {CompletionContext} context
  * @returns {CompletionResult|null}
  */
-export function flowCompletions(context) {
+export function dataframeCompletions(context) {
     // Get text before cursor (potentially across multiple lines)
     // Look back up to 2000 characters to find the pattern
     const maxLookback = 2000
@@ -56,14 +54,33 @@ export function flowCompletions(context) {
     const textBefore = docText.slice(startPos, context.pos)
 
     // Check if we're directly after -> (method chaining context)
+    // Match pattern: ->word* at the end
     if (!new RegExp('->\\w*$').test(textBefore)) {
         return null
     }
 
-    // Check if we're after a Flow-returning function: df( or data_frame(
-    // Simple heuristic: if we find the function name followed by ( before the ->, it's a match
-    const flowFuncPattern = new RegExp('\\b(' + flowFunctions.join('|') + ')\\s*\\(')
-    if (!flowFuncPattern.test(textBefore)) {
+    // Now check if anywhere before this -> we have a DataFrame-returning method call
+    // We need to find method calls with balanced parentheses
+    let foundMatch = false
+
+    // Collect all DataFrame-returning method names
+    const allMethods = []
+    for (const [className, methods] of Object.entries(dataframeReturningMethods)) {
+        allMethods.push(...methods)
+    }
+
+    if (allMethods.length === 0) {
+        return null
+    }
+
+    // Search for any of these methods followed by balanced parentheses
+    // Simple heuristic: if we find methodName( before the ->, assume it returns DataFrame
+    const methodPattern = new RegExp('\\b(' + allMethods.join('|') + ')\\s*\\(')
+    if (methodPattern.test(textBefore)) {
+        foundMatch = true
+    }
+
+    if (!foundMatch) {
         return null
     }
 
@@ -77,7 +94,7 @@ export function flowCompletions(context) {
 
     // Filter methods based on what's being typed
     const prefix = word ? word.text.toLowerCase() : ''
-    const options = flowMethods.filter(method =>
+    const options = dataframeMethods.filter(method =>
         !prefix || method.label.toLowerCase().startsWith(prefix)
     )
 

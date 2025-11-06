@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Auto-generated on 2025\u002D11\u002D06\u002015\u003A14\u003A56
+ * Auto-generated on 2025\u002D11\u002D06\u002017\u003A49\u003A49
  * Total functions: 341
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
@@ -5693,6 +5693,18 @@ const dslFunctions = [
  * @returns {CompletionResult|null}
  */
 export function dslCompletions(context) {
+    // Get text before cursor to check context
+    const maxLookback = 100
+    const docText = context.state.doc.toString()
+    const startPos = Math.max(0, context.pos - maxLookback)
+    const textBefore = docText.slice(startPos, context.pos)
+
+    // Don't show DSL functions after -> (method chaining context)
+    // DSL functions are standalone, not methods
+    if (new RegExp('->\\w*$').test(textBefore)) {
+        return null
+    }
+
     // Match word being typed
     const word = context.matchBefore(/\w+/)
 
@@ -5710,6 +5722,6 @@ export function dslCompletions(context) {
     return {
         from: word ? word.from : context.pos,
         options: options,
-        validFor: /^\w*$/  // Reuse while typing word characters
+        validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
     }
 }
