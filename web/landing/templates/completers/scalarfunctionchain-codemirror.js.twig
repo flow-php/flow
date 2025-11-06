@@ -1,23 +1,23 @@
 /**
- * CodeMirror Completer for Flow PHP Flow Methods
+ * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
  *
  * Auto-generated on {{ generated_at|date('Y-m-d H:i:s') }}
- * Flow methods: {{ total_count }}
- * Flow-returning functions: {{ flow_functions|length }}
+ * ScalarFunctionChain methods: {{ total_count }}
+ * ScalarFunctionChain-returning functions: {{ scalarfunctionchain_functions|length }}
  *
- * This completer triggers after Flow-returning functions: df()->, data_frame()->
+ * This completer triggers after ScalarFunctionChain-returning DSL functions
  */
 
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
-// Map of Flow-returning functions from dsl.json (df, data_frame)
-const flowFunctions = [
-    {% for func in flow_functions %}"{{ func }}"{% if not loop.last %}, {% endif %}{% endfor %}
+// DSL functions that return ScalarFunctionChain (have scalar_function_chain: true)
+const scalarFunctionChainFunctions = [
+    {% for func in scalarfunctionchain_functions %}"{{ func }}"{% if not loop.last %}, {% endif %}{% endfor %}
 ]
 
-// Flow methods
-const flowMethods = [
-    {% for method in flow_methods %}
+// ScalarFunctionChain methods
+const scalarFunctionChainMethods = [
+    {% for method in scalarfunctionchain_methods %}
     {
         label: "{{ method.name }}",
         type: "method",
@@ -26,7 +26,7 @@ const flowMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    {{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'})|raw }}
+                    {{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
                 </div>
                 {% if method.docComment %}
                 <div style="color: #8b949e; font-size: 13px;">
@@ -36,18 +36,18 @@ const flowMethods = [
             `
             return div
         },
-        apply: snippet("{{ method.name }}({% if method.hasParameters %}{% for param in method.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
+        apply: snippet("{{ method.name }}({% if method.parameters|length > 0 %}{% for param in method.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
         boost: 10
     }{% if not loop.last %},{% endif %}
     {% endfor %}
 ]
 
 /**
- * Flow method completion source for CodeMirror
+ * ScalarFunctionChain method completion source for CodeMirror
  * @param {CompletionContext} context
  * @returns {CompletionResult|null}
  */
-export function flowCompletions(context) {
+export function scalarFunctionChainCompletions(context) {
     // Get text before cursor (potentially across multiple lines)
     // Look back up to 2000 characters to find the pattern
     const maxLookback = 2000
@@ -60,13 +60,18 @@ export function flowCompletions(context) {
         return null
     }
 
-    // Check if we're after a Flow-returning function: df( or data_frame(
+    // Check if we're after a ScalarFunctionChain-returning function
+    // Pattern: any of the DSL functions with scalar_function_chain: true
+    if (scalarFunctionChainFunctions.length === 0) {
+        return null
+    }
+
     // Find all matching functions and check if any are at top level with ->
-    const flowFuncPattern = new RegExp('\\b(' + flowFunctions.join('|') + ')\\s*\\(', 'g')
+    const functionPattern = new RegExp('\\b(' + scalarFunctionChainFunctions.join('|') + ')\\s*\\(', 'g')
     let matches = []
     let match
 
-    while ((match = flowFuncPattern.exec(textBefore)) !== null) {
+    while ((match = functionPattern.exec(textBefore)) !== null) {
         matches.push({ name: match[1], index: match.index, endOfName: match.index + match[0].length })
     }
 
@@ -84,7 +89,7 @@ export function flowCompletions(context) {
         if (textBefore[i] === ')') depth++
         else if (textBefore[i] === '(') {
             depth--
-            // If we're back to depth 0, check if this ( belongs to a Flow function
+            // If we're back to depth 0, check if this ( belongs to a ScalarFunctionChain function
             if (depth === 0) {
                 // Look backwards to find the function name
                 let funcEnd = i
@@ -97,8 +102,8 @@ export function flowCompletions(context) {
                 }
                 const funcName = textBefore.slice(funcStart, funcEnd)
 
-                // Check if this is a Flow-returning function
-                if (flowFunctions.includes(funcName)) {
+                // Check if this is a ScalarFunctionChain-returning function
+                if (scalarFunctionChainFunctions.includes(funcName)) {
                     // This is it! We're directly after this function call
                     return continueWithCompletions()
                 }
@@ -122,7 +127,7 @@ export function flowCompletions(context) {
 
         // Filter methods based on what's being typed
         const prefix = word ? word.text.toLowerCase() : ''
-        const options = flowMethods.filter(method =>
+        const options = scalarFunctionChainMethods.filter(method =>
             !prefix || method.label.toLowerCase().startsWith(prefix)
         )
 

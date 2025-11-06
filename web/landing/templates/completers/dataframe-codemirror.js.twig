@@ -59,10 +59,6 @@ export function dataframeCompletions(context) {
         return null
     }
 
-    // Now check if anywhere before this -> we have a DataFrame-returning method call
-    // We need to find method calls with balanced parentheses
-    let foundMatch = false
-
     // Collect all DataFrame-returning method names
     const allMethods = []
     for (const [className, methods] of Object.entries(dataframeReturningMethods)) {
@@ -73,34 +69,77 @@ export function dataframeCompletions(context) {
         return null
     }
 
-    // Search for any of these methods followed by balanced parentheses
-    // Simple heuristic: if we find methodName( before the ->, assume it returns DataFrame
-    const methodPattern = new RegExp('\\b(' + allMethods.join('|') + ')\\s*\\(')
-    if (methodPattern.test(textBefore)) {
-        foundMatch = true
+    // Walk backwards to find the most recent completed method call at top level
+    // Strategy: find the last occurrence of methodName()->... pattern where parens are balanced
+    const methodPattern = new RegExp('\\b(' + allMethods.join('|') + ')\\s*\\(', 'g')
+    let matches = []
+    let match
+
+    while ((match = methodPattern.exec(textBefore)) !== null) {
+        matches.push({ name: match[1], index: match.index, endOfName: match.index + match[0].length })
     }
 
-    if (!foundMatch) {
-        return null
+    // Walk backwards from cursor tracking parenthesis depth
+    // to find what context we're in
+    let depth = 0
+    let i = textBefore.length - 1
+
+    // Skip back past the -> and any word being typed
+    while (i >= 0 && /[\w>-]/.test(textBefore[i])) {
+        i--
     }
 
-    // Match word being typed (method name after ->)
-    const word = context.matchBefore(/\w*/)
+    // Now count parentheses going backwards
+    while (i >= 0) {
+        if (textBefore[i] === ')') depth++
+        else if (textBefore[i] === '(') {
+            depth--
+            // If we're back to depth 0, check if this ( belongs to a DataFrame method
+            if (depth === 0) {
+                // Look backwards to find the method name
+                let methodEnd = i
+                while (methodEnd > 0 && /\s/.test(textBefore[methodEnd - 1])) {
+                    methodEnd--
+                }
+                let methodStart = methodEnd
+                while (methodStart > 0 && /\w/.test(textBefore[methodStart - 1])) {
+                    methodStart--
+                }
+                const methodName = textBefore.slice(methodStart, methodEnd)
 
-    // If no word and not explicit, don't show completions
-    if (!word && !context.explicit) {
-        return null
+                // Check if this is a DataFrame-returning method
+                if (allMethods.includes(methodName)) {
+                    // This is it! We're directly after this method call
+                    return continueWithCompletions()
+                }
+                // If not, we're done checking - we're inside some other call
+                return null
+            }
+        }
+        i--
     }
 
-    // Filter methods based on what's being typed
-    const prefix = word ? word.text.toLowerCase() : ''
-    const options = dataframeMethods.filter(method =>
-        !prefix || method.label.toLowerCase().startsWith(prefix)
-    )
+    return null
 
-    return {
-        from: word ? word.from : context.pos,
-        options: options,
-        validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
+    function continueWithCompletions() {
+        // Match word being typed (method name after ->)
+        const word = context.matchBefore(/\w*/)
+
+        // If no word and not explicit, don't show completions
+        if (!word && !context.explicit) {
+            return null
+        }
+
+        // Filter methods based on what's being typed
+        const prefix = word ? word.text.toLowerCase() : ''
+        const options = dataframeMethods.filter(method =>
+            !prefix || method.label.toLowerCase().startsWith(prefix)
+        )
+
+        return {
+            from: word ? word.from : context.pos,
+            options: options,
+            validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
+        }
     }
 }

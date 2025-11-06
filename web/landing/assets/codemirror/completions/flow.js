@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP Flow Methods
  *
- * Auto-generated on 2025\u002D11\u002D06\u002017\u003A31\u003A31
+ * Auto-generated on 2025\u002D11\u002D06\u002020\u003A20\u003A56
  * Flow methods: 5
  * Flow-returning functions: 2
  *
@@ -115,29 +115,75 @@ export function flowCompletions(context) {
     }
 
     // Check if we're after a Flow-returning function: df( or data_frame(
-    // Simple heuristic: if we find the function name followed by ( before the ->, it's a match
-    const flowFuncPattern = new RegExp('\\b(' + flowFunctions.join('|') + ')\\s*\\(')
-    if (!flowFuncPattern.test(textBefore)) {
-        return null
+    // Find all matching functions and check if any are at top level with ->
+    const flowFuncPattern = new RegExp('\\b(' + flowFunctions.join('|') + ')\\s*\\(', 'g')
+    let matches = []
+    let match
+
+    while ((match = flowFuncPattern.exec(textBefore)) !== null) {
+        matches.push({ name: match[1], index: match.index, endOfName: match.index + match[0].length })
     }
 
-    // Match word being typed (method name after ->)
-    const word = context.matchBefore(/\w*/)
+    // Walk backwards from cursor tracking parenthesis depth
+    let depth = 0
+    let i = textBefore.length - 1
 
-    // If no word and not explicit, don't show completions
-    if (!word && !context.explicit) {
-        return null
+    // Skip back past the -> and any word being typed
+    while (i >= 0 && /[\w>-]/.test(textBefore[i])) {
+        i--
     }
 
-    // Filter methods based on what's being typed
-    const prefix = word ? word.text.toLowerCase() : ''
-    const options = flowMethods.filter(method =>
-        !prefix || method.label.toLowerCase().startsWith(prefix)
-    )
+    // Now count parentheses going backwards
+    while (i >= 0) {
+        if (textBefore[i] === ')') depth++
+        else if (textBefore[i] === '(') {
+            depth--
+            // If we're back to depth 0, check if this ( belongs to a Flow function
+            if (depth === 0) {
+                // Look backwards to find the function name
+                let funcEnd = i
+                while (funcEnd > 0 && /\s/.test(textBefore[funcEnd - 1])) {
+                    funcEnd--
+                }
+                let funcStart = funcEnd
+                while (funcStart > 0 && /\w/.test(textBefore[funcStart - 1])) {
+                    funcStart--
+                }
+                const funcName = textBefore.slice(funcStart, funcEnd)
 
-    return {
-        from: word ? word.from : context.pos,
-        options: options,
-        validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
+                // Check if this is a Flow-returning function
+                if (flowFunctions.includes(funcName)) {
+                    // This is it! We're directly after this function call
+                    return continueWithCompletions()
+                }
+                // If not, we're inside some other call
+                return null
+            }
+        }
+        i--
+    }
+
+    return null
+
+    function continueWithCompletions() {
+        // Match word being typed (method name after ->)
+        const word = context.matchBefore(/\w*/)
+
+        // If no word and not explicit, don't show completions
+        if (!word && !context.explicit) {
+            return null
+        }
+
+        // Filter methods based on what's being typed
+        const prefix = word ? word.text.toLowerCase() : ''
+        const options = flowMethods.filter(method =>
+            !prefix || method.label.toLowerCase().startsWith(prefix)
+        )
+
+        return {
+            from: word ? word.from : context.pos,
+            options: options,
+            validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
+        }
     }
 }

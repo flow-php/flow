@@ -9,6 +9,7 @@ import { flowThemeExtension } from "../codemirror/themes/theme-flow.js"
 import { flowCompletions } from "../codemirror/completions/flow.js"
 import { dslCompletions } from "../codemirror/completions/dsl.js"
 import { dataframeCompletions } from "../codemirror/completions/dataframe.js"
+import { scalarFunctionChainCompletions } from "../codemirror/completions/scalarfunctionchain.js"
 import Violation from "../models/Violation.js"
 
 export default class extends Controller {
@@ -63,7 +64,7 @@ export default class extends Controller {
                 errorField,
                 keymap.of(snippetKeymap),
                 autocompletion({
-                    override: [flowCompletions, dataframeCompletions, dslCompletions],
+                    override: [flowCompletions, dataframeCompletions, scalarFunctionChainCompletions, dslCompletions],
                     activateOnTyping: true,
                     maxRenderedOptions: 20
                 }),
