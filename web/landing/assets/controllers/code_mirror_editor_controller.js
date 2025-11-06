@@ -12,6 +12,7 @@ export default class extends Controller {
     #debug = false
     #textarea
     #errorEffect
+    #editorReady = false
 
     #log(...args) {
         if (this.#debug) {
@@ -73,6 +74,7 @@ export default class extends Controller {
             parent: editorDiv
         })
 
+        this.#editorReady = true
         this.#log('CodeMirror editor initialized')
     }
 
@@ -80,6 +82,10 @@ export default class extends Controller {
         this.#debug = this.application.debug
         this.#log('Connecting CodeMirror editor controller')
         this.#initializeEditor()
+    }
+
+    isReady() {
+        return this.#editorReady && this.#editor !== null
     }
 
     disconnect() {

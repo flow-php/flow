@@ -5,6 +5,7 @@ export default class extends Controller {
     static outlets = ["code-mirror-editor"]
 
     codeMirrorEditorOutletConnected() {
+        console.log('[ShareCode] Editor outlet connected')
         this.loadCodeFromUrl()
     }
 
@@ -21,14 +22,30 @@ export default class extends Controller {
                 console.log('[ShareCode] Has code editor outlet:', this.hasCodeMirrorEditorOutlet)
 
                 if (decompressed && this.hasCodeMirrorEditorOutlet) {
-                    console.log('[ShareCode] Setting editor value...')
-                    this.codeMirrorEditorOutlet.setValue(decompressed)
+                    // Wait for editor to be ready before setting value
+                    this.#waitForEditorAndSetValue(decompressed)
                 } else if (!decompressed) {
                     console.error('[ShareCode] Decompression returned null or empty')
                 }
             } catch (e) {
                 console.error('Failed to decompress code:', e)
             }
+        }
+    }
+
+    #waitForEditorAndSetValue(code, attempts = 0) {
+        const maxAttempts = 50 // 5 seconds max
+
+        if (this.codeMirrorEditorOutlet.isReady()) {
+            console.log('[ShareCode] Editor is ready, setting value...')
+            this.codeMirrorEditorOutlet.setValue(code)
+        } else if (attempts < maxAttempts) {
+            console.log('[ShareCode] Editor not ready yet, waiting... (attempt', attempts + 1, ')')
+            setTimeout(() => {
+                this.#waitForEditorAndSetValue(code, attempts + 1)
+            }, 100)
+        } else {
+            console.error('[ShareCode] Editor did not become ready in time')
         }
     }
 
