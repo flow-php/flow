@@ -1,9 +1,9 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * Auto-generated on 2025\u002D11\u002D06\u002020\u003A20\u003A56
+ * Auto-generated on 2025\u002D11\u002D06\u002022\u003A10\u003A32
  * DataFrame methods: 61
- * DataFrame-returning methods from classes: 2
+ * DataFrame-returning methods from classes: 3
  *
  * This completer triggers after DataFrame-returning methods
  */
@@ -11,7 +11,7 @@
 import { CompletionContext, snippet } from "@codemirror/autocomplete"
 
 // Map of DataFrame-returning methods grouped by class
-const dataframeReturningMethods = {"flow":["extract","from","process","read"],"groupeddataframe":["aggregate"]};
+const dataframeReturningMethods = {"flow":["extract","from","process","read"],"dataframe":["aggregate","autoCast","batchBy","batchSize","cache","collect","collectRefs","constrain","crossJoin","drop","dropDuplicates","dropPartitions","duplicateRow","filter","filterPartitions","filters","join","joinEach","limit","load","map","match","mode","offset","onError","partitionBy","pivot","rename","renameAll","renameAllLowerCase","renameAllStyle","renameAllUpperCase","renameAllUpperCaseFirst","renameAllUpperCaseWord","renameEach","reorderEntries","rows","saveMode","select","sortBy","transform","until","validate","void","with","withEntries","withEntry","write"],"groupeddataframe":["aggregate"]};
 
 // DataFrame methods
 const dataframeMethods = [

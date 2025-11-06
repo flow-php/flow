@@ -213,8 +213,11 @@ final class GenerateDataFrameCompleterCommand extends Command
             }
 
             foreach ($method['return_type'] as $returnType) {
-                // Check if return type is DataFrame
-                if ($returnType['name'] === 'DataFrame' && $returnType['namespace'] === 'Flow\\ETL') {
+                // Check if return type is DataFrame or self (from DataFrame class)
+                $isDataFrame = $returnType['name'] === 'DataFrame' && $returnType['namespace'] === 'Flow\\ETL';
+                $isSelfFromDataFrame = $returnType['name'] === 'self' && $method['class_slug'] === 'dataframe';
+
+                if ($isDataFrame || $isSelfFromDataFrame) {
                     $classSlug = $method['class_slug'];
 
                     if (!isset($methodsByClass[$classSlug])) {
