@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
     static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer"]
-    static outlets = ["code-mirror-editor"]
+    static outlets = ["code-mirror-editor", "playground-storage"]
     static values = {
         flowPhar: String
     }
@@ -113,6 +113,11 @@ export default class extends Controller {
 
         const code = this.codeMirrorEditorOutlet.getCode()
         this.#showOutput('Running...')
+
+        // Save code to local storage
+        if (this.hasPlaygroundStorageOutlet) {
+            this.playgroundStorageOutlet.saveCode()
+        }
 
         // Execute code via WASM controller
         wasmController.evaluate(code)

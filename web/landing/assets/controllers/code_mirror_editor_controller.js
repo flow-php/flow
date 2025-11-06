@@ -73,6 +73,7 @@ export default class extends Controller {
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
                         this.#textarea.value = update.state.doc.toString()
+                        this.dispatch('code-changed', { bubbles: true })
                     }
                 })
             ]

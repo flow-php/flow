@@ -13,8 +13,10 @@
 
 {% block main %}
 <div id="playground"
-     data-controller="playground-editor wasm share-code"
+     data-controller="playground-editor wasm share-code playground-storage"
      data-playground-editor-code-mirror-editor-outlet="#code-editor"
+     data-playground-editor-playground-storage-outlet="#playground"
+     data-playground-storage-code-mirror-editor-outlet="#code-editor"
      data-share-code-code-mirror-editor-outlet="#code-editor"
      data-playground-editor-flow-phar-value="{{ asset('wasm/flow.phar') }}"
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
@@ -56,6 +58,7 @@
             </button>
             <a href="{{ path('playground') }}"
                data-controller="image-swap reset-confirm"
+               data-reset-confirm-playground-storage-outlet="#playground"
                data-action="click->reset-confirm#confirmReset mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Reset <img src="{{ asset('images/icons/refresh.svg') }}"
                            alt="Reset"
