@@ -4,7 +4,8 @@ import { EditorState, StateField, StateEffect } from "@codemirror/state"
 import { Decoration } from "@codemirror/view"
 import { keymap } from "@codemirror/view"
 import { php } from "@codemirror/lang-php"
-import { autocompletion, snippetKeymap } from "@codemirror/autocomplete"
+import { autocompletion, snippetKeymap, acceptCompletion } from "@codemirror/autocomplete"
+import { indentWithTab } from "@codemirror/commands"
 import { flowThemeExtension } from "../codemirror/themes/theme-flow.js"
 import { flowCompletions } from "../codemirror/completions/flow.js"
 import { dslCompletions } from "../codemirror/completions/dsl.js"
@@ -63,6 +64,7 @@ export default class extends Controller {
                 flowThemeExtension,
                 errorField,
                 keymap.of(snippetKeymap),
+                keymap.of([indentWithTab]),
                 autocompletion({
                     override: [flowCompletions, dataframeCompletions, scalarFunctionChainCompletions, dslCompletions],
                     activateOnTyping: true,
