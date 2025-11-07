@@ -40,6 +40,7 @@
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [b472ec](https://github.com/flow-php/flow/commit/b472ecc5ea9ed3a08f82764d82164d43a648aa72) - **path to php-cs-fixer configuration in playground** - [@norberttech](https://github.com/norberttech)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **Redundant InstanceOfType handling in EntryFactory::create() method** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **Missing NullType support in EntryFactory::createAs() method** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1942](https://github.com/flow-php/flow/pull/1942) - **AsyncAWSS3DestinationStream - set correct content type** - [@norberttech](https://github.com/norberttech)
