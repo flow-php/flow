@@ -41,7 +41,8 @@
                   wasm:output->playground-editor#onWasmOutput
                   wasm:error->playground-editor#onWasmError
                   playground-storage:loaded-from-storage->playground-editor#onStorageLoaded
-                  share-code:loaded-from-url->playground-editor#onUrlLoaded">
+                  share-code:loaded-from-url->playground-editor#onUrlLoaded
+                  share-code:notification->playground-editor#onNotification">
     <h1>Playground</h1>
 
     <div id="loader">
@@ -114,7 +115,7 @@
     </div>
     <div class="editor" data-playground-editor-target="editor">
         <div class="file-browser" data-playground-editor-target="fileBrowser">
-            <div class="file-browser-header">Files</div>
+            <div class="file-browser-header">Workspace</div>
             <div class="file-browser-content" data-playground-editor-target="fileBrowserContent">
                 <!-- Files will be populated by JavaScript -->
             </div>

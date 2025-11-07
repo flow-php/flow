@@ -17,6 +17,16 @@ export default class extends Controller {
         this.#log('Connecting editor controller')
     }
 
+    onNotification(event) {
+        const { message, type, link } = event.detail
+
+        if (link) {
+            this.#addNotification(message, type, link)
+        } else {
+            this.#addNotification(message, type)
+        }
+    }
+
     onStorageLoaded(event) {
         this.#log('Code loaded from local storage')
         this.#showIndicator('storage')
@@ -273,7 +283,7 @@ export default class extends Controller {
             this.formatButtonTarget.disabled = true
         }
 
-        wasmController.formatCode(code, (formattedCode, error) => {
+        wasmController.formatCode(code, (formattedCode, error, appliedFixers) => {
             if (this.hasFormatButtonTarget) {
                 this.formatButtonTarget.disabled = false
             }
@@ -285,6 +295,12 @@ export default class extends Controller {
 
             this.codeMirrorEditorOutlet.setValue(formattedCode)
             this.#showOutput('Code formatted successfully!')
+
+            if (appliedFixers && appliedFixers.length > 0) {
+                this.#addNotification(`Applied fixers: ${appliedFixers.join(', ')}`, 'info')
+            } else {
+                this.#addNotification('No formatting changes needed', 'info')
+            }
 
             if (this.hasPlaygroundStorageOutlet) {
                 this.playgroundStorageOutlet.saveCode()
@@ -325,6 +341,7 @@ export default class extends Controller {
         let uploadedCount = 0
         let skippedCount = 0
         const invalidFiles = []
+        const uploadedFiles = []
 
         for (const file of files) {
             const extension = file.name.split('.').pop().toLowerCase()
@@ -343,6 +360,7 @@ export default class extends Controller {
 
                 if (success) {
                     uploadedCount++
+                    uploadedFiles.push(`tmp/${file.name}`)
                     this.#log(`Uploaded: ${file.name}`)
                 } else {
                     skippedCount++
@@ -354,10 +372,16 @@ export default class extends Controller {
             }
         }
 
+        let summaryMessage = `Upload complete: ${uploadedCount} file(s) uploaded, ${skippedCount} skipped.`
         if (invalidFiles.length > 0) {
-            this.#showOutput(`Upload complete: ${uploadedCount} file(s) uploaded, ${skippedCount} skipped.\nInvalid files (allowed: ${this.#allowedExtensions.join(', ')}): ${invalidFiles.join(', ')}`)
-        } else {
-            this.#showOutput(`Upload complete: ${uploadedCount} file(s) uploaded, ${skippedCount} skipped.`)
+            summaryMessage += `\nInvalid files (allowed: ${this.#allowedExtensions.join(', ')}): ${invalidFiles.join(', ')}`
+        }
+        this.#showOutput(summaryMessage)
+
+        if (uploadedFiles.length > 0) {
+            for (const filePath of uploadedFiles) {
+                this.#addNotification(`File uploaded: ${filePath}`, 'success')
+            }
         }
 
         this.#updateFileBrowser()
@@ -421,6 +445,28 @@ export default class extends Controller {
         if (this.hasOutputTarget) {
             this.outputTarget.textContent = message
         }
+    }
+
+    #addNotification(message, type = 'info', additionalContent = null) {
+        if (!this.hasOutputTarget) {
+            return
+        }
+
+        const timestamp = new Date().toLocaleTimeString()
+        const prefix = {
+            info: '[INFO]',
+            success: '[SUCCESS]',
+            warning: '[WARNING]',
+            error: '[ERROR]'
+        }[type] || '[INFO]'
+
+        let notification = `${timestamp} ${prefix} ${message}`
+
+        if (additionalContent) {
+            notification += '\n\n' + additionalContent
+        }
+
+        this.outputTarget.textContent = notification
     }
 
     #log(...args) {

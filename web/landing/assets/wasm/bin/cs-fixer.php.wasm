@@ -61,6 +61,19 @@ try {
     echo "DEBUG: New file size: " . strlen($newContent) . "\n";
     echo "DEBUG: Content changed: " . ($originalContent !== $newContent ? 'YES' : 'NO') . "\n";
 
+    // Output applied fixers
+    $appliedFixers = [];
+    foreach ($changed as $file => $fixResult) {
+        if ($fixResult && isset($fixResult['appliedFixers']) && !empty($fixResult['appliedFixers'])) {
+            $appliedFixers = array_merge($appliedFixers, $fixResult['appliedFixers']);
+        }
+    }
+
+    if (!empty($appliedFixers)) {
+        $appliedFixers = array_unique($appliedFixers);
+        echo "APPLIED_FIXERS:" . implode(',', $appliedFixers) . "\n";
+    }
+
     echo "SUCCESS";
 } catch (Throwable $e) {
     echo "ERROR: " . $e->getMessage();

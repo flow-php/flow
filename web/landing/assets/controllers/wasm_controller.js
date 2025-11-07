@@ -76,7 +76,7 @@ export default class extends Controller {
 
     formatCode(code, callback) {
         if (!this.#phpModuleLoaded) {
-            callback(null, 'PHP module not loaded yet')
+            callback(null, 'PHP module not loaded yet', null)
             return
         }
 
@@ -106,16 +106,19 @@ require '/workspace/bin/cs-fixer.php';
 
             if (output.includes('ERROR:')) {
                 const errorMsg = output.replace('ERROR:', '').trim()
-                callback(null, errorMsg)
+                callback(null, errorMsg, null)
             } else if (output.includes('SUCCESS')) {
                 try {
                     const formattedCode = this.#phpModule.FS.readFile(tempFile, { encoding: 'utf8' })
-                    callback(formattedCode, null)
+
+                    const appliedFixers = this.#parseAppliedFixers(output)
+
+                    callback(formattedCode, null, appliedFixers)
                 } catch (readError) {
-                    callback(null, 'Failed to read formatted code: ' + readError.message)
+                    callback(null, 'Failed to read formatted code: ' + readError.message, null)
                 }
             } else {
-                callback(null, 'Unexpected output from formatter: ' + output)
+                callback(null, 'Unexpected output from formatter: ' + output, null)
             }
 
             try {
@@ -126,8 +129,16 @@ require '/workspace/bin/cs-fixer.php';
 
         } catch (error) {
             this.#logError('Format error:', error)
-            callback(null, 'Format failed: ' + error.message)
+            callback(null, 'Format failed: ' + error.message, null)
         }
+    }
+
+    #parseAppliedFixers(output) {
+        const match = output.match(/APPLIED_FIXERS:(.+)/);
+        if (match && match[1]) {
+            return match[1].split(',').filter(f => f.trim());
+        }
+        return [];
     }
 
     // Public API for checking ready state
