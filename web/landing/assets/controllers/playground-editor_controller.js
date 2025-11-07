@@ -1,8 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["runButton", "formatButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent"]
+    static targets = ["runButton", "formatButton", "uploadButton", "fileInput", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent"]
     static outlets = ["code-mirror-editor", "playground-storage"]
+
+    #allowedExtensions = ['csv', 'json', 'xml', 'php', 'phar']
 
     connect() {
         // Content is hidden by CSS initially
@@ -294,6 +296,81 @@ export default class extends Controller {
                 this.playgroundStorageOutlet.saveCode()
             }
         })
+    }
+
+    triggerUpload(event) {
+        event.preventDefault()
+
+        if (!this.hasFileInputTarget) {
+            this.#log('File input not found')
+            return
+        }
+
+        this.fileInputTarget.click()
+    }
+
+    async handleFileUpload(event) {
+        const files = event.target.files
+
+        if (!files || files.length === 0) {
+            return
+        }
+
+        const wasmController = this.#getWasmController()
+        if (!wasmController) {
+            this.#log('WASM controller not found')
+            this.#showOutput('Error: WASM controller not available')
+            return
+        }
+
+        if (!wasmController.isReady()) {
+            this.#showOutput('PHP module not loaded yet, please wait...')
+            return
+        }
+
+        let uploadedCount = 0
+        let skippedCount = 0
+        const invalidFiles = []
+
+        for (const file of files) {
+            const extension = file.name.split('.').pop().toLowerCase()
+
+            if (!this.#allowedExtensions.includes(extension)) {
+                invalidFiles.push(file.name)
+                skippedCount++
+                continue
+            }
+
+            try {
+                const arrayBuffer = await file.arrayBuffer()
+                const uint8Array = new Uint8Array(arrayBuffer)
+
+                const success = wasmController.uploadFile(file.name, uint8Array)
+
+                if (success) {
+                    uploadedCount++
+                    this.#log(`Uploaded: ${file.name}`)
+                } else {
+                    skippedCount++
+                    this.#log(`Failed to upload: ${file.name}`)
+                }
+            } catch (error) {
+                this.#log(`Error uploading ${file.name}:`, error)
+                skippedCount++
+            }
+        }
+
+        if (invalidFiles.length > 0) {
+            this.#showOutput(`Upload complete: ${uploadedCount} file(s) uploaded, ${skippedCount} skipped.\nInvalid files (allowed: ${this.#allowedExtensions.join(', ')}): ${invalidFiles.join(', ')}`)
+        } else {
+            this.#showOutput(`Upload complete: ${uploadedCount} file(s) uploaded, ${skippedCount} skipped.`)
+        }
+
+        this.#updateFileBrowser()
+
+        if (this.hasFileInputTarget) {
+            this.fileInputTarget.value = ''
+        }
     }
 
     #getWasmController() {

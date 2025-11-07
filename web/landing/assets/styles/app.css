@@ -253,7 +253,7 @@ code {
         }
 
         div.actions {
-            @apply col-start-10 col-span-3 text-right;
+            @apply col-start-8 col-span-5 text-right;
 
             button {
                 @apply mr-4;

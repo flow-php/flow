@@ -198,6 +198,39 @@ require '/workspace/bin/cs-fixer.php';
         }
     }
 
+    // Public API for uploading user files to /workspace/tmp
+    uploadFile(filename, uint8Array) {
+        if (!this.#phpModuleLoaded) {
+            this.#logError('Cannot upload file: PHP module not loaded yet')
+            return false
+        }
+
+        try {
+            const tmpDir = '/workspace/tmp'
+
+            try {
+                const pathInfo = this.#phpModule.FS.analyzePath(tmpDir)
+                if (!pathInfo.exists) {
+                    this.#log(`Creating ${tmpDir} directory`)
+                    this.#phpModule.FS.mkdir(tmpDir)
+                }
+            } catch (dirError) {
+                this.#logError(`Error checking/creating ${tmpDir}:`, dirError)
+                return false
+            }
+
+            const filePath = tmpDir + '/' + filename
+
+            this.#phpModule.FS.writeFile(filePath, uint8Array)
+            this.#log(`Successfully uploaded: ${filePath} (${uint8Array.length} bytes)`)
+
+            return true
+        } catch (error) {
+            this.#logError(`Error uploading file ${filename}:`, error)
+            return false
+        }
+    }
+
     // Public API for loading resources into WASM filesystem
     async loadResources() {
         if (!this.#phpModuleLoaded) {

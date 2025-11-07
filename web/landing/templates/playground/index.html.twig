@@ -80,6 +80,22 @@
                      data-image-swap-target="image"
                      data-hover-src="{{ asset('images/icons/share-active.svg') }}">
             </button>
+            <button
+                    data-controller="image-swap"
+                    data-playground-editor-target="uploadButton"
+                    data-action="click->playground-editor#triggerUpload mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                Upload <img src="{{ asset('images/icons/upload.svg') }}"
+                            alt="Upload"
+                            class="ml-1 inline-block"
+                            data-image-swap-target="image"
+                            data-hover-src="{{ asset('images/icons/upload-active.svg') }}">
+            </button>
+            <input type="file"
+                   data-playground-editor-target="fileInput"
+                   data-action="change->playground-editor#handleFileUpload"
+                   accept=".csv,.json,.xml,.php,.phar"
+                   multiple
+                   style="display: none;">
             <a href="{{ path('playground') }}"
                data-controller="image-swap reset-confirm"
                data-reset-confirm-playground-storage-outlet="#playground"
@@ -104,25 +120,22 @@
 <?php
 
 declare(strict_types=1);
+use Flow\ETL\Flow;
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_output, ref, lit};
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\{data_frame, to_output};
 
 require_once 'vendor/autoload.php';
 
+$flow = new Flow();
+
 data_frame()
-    ->read(from_array([
-        ['id' => 1, 'name' => 'John', 'age' => 30, 'city' => 'New York'],
-        ['id' => 2, 'name' => 'Jane', 'age' => 25, 'city' => 'London'],
-        ['id' => 3, 'name' => 'Bob', 'age' => 35, 'city' => 'Paris'],
-        ['id' => 4, 'name' => 'Alice', 'age' => 28, 'city' => 'Tokyo'],
-        ['id' => 5, 'name' => 'Charlie', 'age' => 32, 'city' => 'Berlin'],
-    ]))
-    ->filter(ref('age')->greaterThan(lit(28)))
-    ->sortBy(ref('age')->desc())
-    ->select('name', 'age', 'city')
+    ->read(from_csv(__DIR__ . '/data/orders.csv'))
+    ->limit(10)
     ->collect()
     ->write(to_output(truncate: false))
-    ->run();</textarea>
+    ->run();
+</textarea>
         </div>
     </div>
     <div class="output-container" data-playground-editor-target="outputContainer">
