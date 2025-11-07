@@ -1,7 +1,6 @@
 /**
  * CodeMirror Completer for Flow PHP DataFrame Methods
  *
- * Auto-generated on 2025\u002D11\u002D06\u002022\u003A10\u003A32
  * DataFrame methods: 61
  * DataFrame-returning methods from classes: 3
  *

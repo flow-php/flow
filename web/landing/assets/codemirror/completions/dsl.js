@@ -1,7 +1,6 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Auto-generated on 2025\u002D11\u002D06\u002020\u003A30\u003A28
  * Total functions: 341
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:

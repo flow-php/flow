@@ -1,7 +1,6 @@
 /**
  * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
  *
- * Auto-generated on 2025\u002D11\u002D06\u002020\u003A20\u003A56
  * ScalarFunctionChain methods: 119
  * ScalarFunctionChain-returning functions: 53
  *
