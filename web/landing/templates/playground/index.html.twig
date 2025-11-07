@@ -23,7 +23,7 @@
     'data/orders.csv': asset('wasm/data/orders.csv')
 } %}
 <div id="playground"
-     data-controller="playground-editor wasm share-code playground-storage"
+     data-controller="playground-editor wasm share-code playground-storage playground-help"
      data-playground-editor-code-mirror-editor-outlet="#code-editor"
      data-playground-editor-playground-storage-outlet="#playground"
      data-playground-storage-code-mirror-editor-outlet="#code-editor"
@@ -43,7 +43,35 @@
                   playground-storage:loaded-from-storage->playground-editor#onStorageLoaded
                   share-code:loaded-from-url->playground-editor#onUrlLoaded
                   share-code:notification->playground-editor#onNotification">
-    <h1>Playground</h1>
+    <div class="playground-header">
+        <h1>Playground</h1>
+        <button
+                data-action="click->playground-help#showTopic"
+                data-help-topic="help-about"
+                class="help-trigger mb-4"
+                aria-label="What is Flow Playground?">
+            <img src="{{ asset('images/icons/help.svg') }}" alt="Help" width="20" height="20">
+        </button>
+    </div>
+
+    <div id="help-section"
+         data-playground-help-target="helpSection"
+         style="display: none;">
+        <div class="help-header">
+            <h2>Help</h2>
+            <button data-action="click->playground-help#close" class="help-close" aria-label="Close help">×</button>
+        </div>
+        <div class="help-content">
+            <section class="help-topic" id="help-about">
+                <h3>Flow PHP Playground</h3>
+                <p>
+                    Flow Playground is an interactive WebAssembly-based environment that runs Flow PHP directly in your browser.<br/>
+                    This means that any code you execute in the editor below, runs in your browser, using a version of php compiled to WebAssembly.<br/>
+                    Other than that, it's just a regular PHP environment.
+                </p>
+            </section>
+        </div>
+    </div>
 
     <div id="loader">
         <div data-playground-editor-target="loadingMessage"></div>
