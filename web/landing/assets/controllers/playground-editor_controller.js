@@ -3,6 +3,12 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
     static targets = ["runButton", "formatButton", "uploadButton", "fileInput", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent"]
     static outlets = ["code-mirror-editor", "playground-storage"]
+    static values = {
+        packageIcon: String,
+        linkIcon: String,
+        folderIcon: String,
+        fileIcon: String
+    }
 
     #allowedExtensions = ['csv', 'json', 'xml', 'php', 'phar']
 
@@ -27,15 +33,8 @@ export default class extends Controller {
         }
 
         const icons = {
-            storage: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>`,
-            url: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>`
+            storage: `<img src="${this.packageIconValue}" width="16" height="16" alt="">`,
+            url: `<img src="${this.linkIconValue}" width="16" height="16" alt="">`
         }
 
         const labels = {
@@ -139,9 +138,7 @@ export default class extends Controller {
             if (entry.type === 'directory') {
                 html += `
                     <li class="file-tree-item directory" style="padding-left: ${indent}px">
-                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                        </svg>
+                        <img src="${this.folderIconValue}" class="icon" width="16" height="16" alt="">
                         <span>${entry.name}</span>
                     </li>
                 `
@@ -153,10 +150,7 @@ export default class extends Controller {
             } else {
                 html += `
                     <li class="file-tree-item file" style="padding-left: ${indent}px">
-                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                            <polyline points="13 2 13 9 20 9"></polyline>
-                        </svg>
+                        <img src="${this.fileIconValue}" class="icon" width="16" height="16" alt="">
                         <span>${entry.name}</span>
                     </li>
                 `

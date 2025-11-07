@@ -31,6 +31,10 @@
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
      data-wasm-resources-value="{{ wasm_resources|json_encode }}"
+     data-playground-editor-package-icon-value="{{ asset('images/icons/package.svg') }}"
+     data-playground-editor-link-icon-value="{{ asset('images/icons/link.svg') }}"
+     data-playground-editor-folder-icon-value="{{ asset('images/icons/folder.svg') }}"
+     data-playground-editor-file-icon-value="{{ asset('images/icons/file.svg') }}"
      data-action="wasm:ready->playground-editor#onWasmReady
                   wasm:resources-loaded->playground-editor#onWasmResourcesLoaded
                   wasm:progress->playground-editor#onWasmProgress
