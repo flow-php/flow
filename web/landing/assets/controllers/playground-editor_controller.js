@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator"]
+    static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent"]
     static outlets = ["code-mirror-editor", "playground-storage"]
 
     connect() {
@@ -56,6 +56,101 @@ export default class extends Controller {
         this.#log('WASM resources loaded successfully')
         this.#hideLoading()
         this.#showOutput('Click "Run" to execute your code.')
+        this.#updateFileBrowser()
+    }
+
+    #updateFileBrowser() {
+        if (!this.hasFileBrowserContentTarget) {
+            return
+        }
+
+        const wasmController = this.#getWasmController()
+        if (!wasmController) {
+            this.#log('WASM controller not found')
+            return
+        }
+
+        const files = wasmController.listFiles('/')
+        this.#log('Files in WASM filesystem:', files)
+
+        // Build file tree structure
+        const tree = this.#buildFileTree(files)
+
+        // Render file tree
+        this.fileBrowserContentTarget.innerHTML = this.#renderFileTree(tree)
+    }
+
+    #buildFileTree(files) {
+        const tree = {}
+
+        for (const file of files) {
+            const parts = file.path.split('/').filter(p => p)
+            let current = tree
+
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i]
+                const isLast = i === parts.length - 1
+
+                if (!current[part]) {
+                    current[part] = {
+                        name: part,
+                        path: file.path,
+                        type: file.type,
+                        children: {}
+                    }
+                }
+
+                if (!isLast && file.type === 'directory') {
+                    current = current[part].children
+                }
+            }
+        }
+
+        return tree
+    }
+
+    #renderFileTree(tree, level = 0) {
+        let html = '<ul class="file-tree">'
+
+        const entries = Object.values(tree).sort((a, b) => {
+            // Directories first, then files
+            if (a.type === 'directory' && b.type !== 'directory') return -1
+            if (a.type !== 'directory' && b.type === 'directory') return 1
+            return a.name.localeCompare(b.name)
+        })
+
+        for (const entry of entries) {
+            const indent = level * 16
+
+            if (entry.type === 'directory') {
+                html += `
+                    <li class="file-tree-item directory" style="padding-left: ${indent}px">
+                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span>${entry.name}</span>
+                    </li>
+                `
+
+                // Render children
+                if (entry.children && Object.keys(entry.children).length > 0) {
+                    html += this.#renderFileTree(entry.children, level + 1)
+                }
+            } else {
+                html += `
+                    <li class="file-tree-item file" style="padding-left: ${indent}px">
+                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                            <polyline points="13 2 13 9 20 9"></polyline>
+                        </svg>
+                        <span>${entry.name}</span>
+                    </li>
+                `
+            }
+        }
+
+        html += '</ul>'
+        return html
     }
 
     #loadResources() {

@@ -273,15 +273,53 @@ code {
         @apply grid gap-6 grid-cols-12 mb-6;
         display: none; /* Hidden by default, shown by Stimulus */
 
-        /*div.files-container {*/
-        /*    @apply rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2*/
-        /*        col-span-2;*/
-        /*}*/
+        div.file-browser {
+            @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
+                col-span-2 bg-transparent;
+
+            .file-browser-header {
+                @apply text-sm font-bold mb-3 text-stone-400 uppercase;
+            }
+
+            .file-browser-content {
+                .file-tree {
+                    @apply list-none m-0 p-0;
+
+                    .file-tree-item {
+                        @apply flex items-center gap-2 py-1 text-sm cursor-default text-stone-300;
+
+                        &.directory {
+                            @apply font-medium text-cyan-400;
+
+                            .icon {
+                                @apply text-cyan-400;
+                            }
+                        }
+
+                        &.file {
+                            @apply text-stone-300;
+
+                            .icon {
+                                @apply text-stone-500;
+                            }
+                        }
+
+                        .icon {
+                            @apply flex-shrink-0;
+                        }
+
+                        span {
+                            @apply truncate;
+                        }
+                    }
+                }
+            }
+        }
 
         div.code-container {
             @apply
                 rounded overflow-auto shadow-2xl shadow-gray rounded border-gray border-2
-                col-span-12;
+                col-span-10;
         }
     }
 

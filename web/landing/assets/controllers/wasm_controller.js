@@ -76,6 +76,64 @@ export default class extends Controller {
         return this.#phpModule
     }
 
+    // Public API for listing files in WASM filesystem
+    listFiles(path = '/') {
+        if (!this.#phpModuleLoaded) {
+            this.#logError('Cannot list files: PHP module not loaded yet')
+            return []
+        }
+
+        try {
+            const files = []
+            const FS = this.#phpModule.FS
+
+            const readDirectory = (dirPath) => {
+                try {
+                    const entries = FS.readdir(dirPath)
+
+                    for (const entry of entries) {
+                        // Skip . and ..
+                        if (entry === '.' || entry === '..') {
+                            continue
+                        }
+
+                        const fullPath = dirPath === '/' ? '/' + entry : dirPath + '/' + entry
+
+                        try {
+                            const stat = FS.stat(fullPath)
+
+                            if (FS.isDir(stat.mode)) {
+                                files.push({
+                                    name: entry,
+                                    path: fullPath,
+                                    type: 'directory'
+                                })
+                                // Recursively read subdirectories
+                                readDirectory(fullPath)
+                            } else {
+                                files.push({
+                                    name: entry,
+                                    path: fullPath,
+                                    type: 'file'
+                                })
+                            }
+                        } catch (statError) {
+                            this.#logError(`Error stating ${fullPath}:`, statError)
+                        }
+                    }
+                } catch (readdirError) {
+                    this.#logError(`Error reading directory ${dirPath}:`, readdirError)
+                }
+            }
+
+            readDirectory(path)
+            return files
+        } catch (error) {
+            this.#logError('Error listing files:', error)
+            return []
+        }
+    }
+
     // Public API for loading resources into WASM filesystem
     async loadResources() {
         if (!this.#phpModuleLoaded) {
