@@ -12,13 +12,13 @@ use Presta\SitemapBundle\Sitemap\Url\UrlConcrete;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class SitemapSubscriber implements EventSubscriberInterface
+final readonly class SitemapSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly Examples $examples,
-        private readonly Posts $posts,
-        private readonly DSLDefinitions $dslDefinitions,
-        private readonly Pages $pages,
+        private Examples $examples,
+        private Posts $posts,
+        private DSLDefinitions $dslDefinitions,
+        private Pages $pages,
     ) {
     }
 

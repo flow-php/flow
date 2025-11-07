@@ -9,11 +9,11 @@ use League\CommonMark\Extension\CommonMark\Node\Block\{FencedCode, HtmlBlock};
 use League\CommonMark\Extension\CommonMark\Node\Inline\{Code, HtmlInline};
 use League\CommonMark\Node\Inline\Text;
 
-final class FlowVersionReplacer
+final readonly class FlowVersionReplacer
 {
     private const VERSION_PLACEHOLDER = '--FLOW_PHP_VERSION--';
 
-    public function __construct(private readonly string $flowVersion)
+    public function __construct(private string $flowVersion)
     {
     }
 
@@ -38,7 +38,7 @@ final class FlowVersionReplacer
     {
         $html = $node->getLiteral();
 
-        if (str_contains($html, self::VERSION_PLACEHOLDER)) {
+        if (str_contains((string) $html, self::VERSION_PLACEHOLDER)) {
             $node->setLiteral(str_replace(
                 self::VERSION_PLACEHOLDER,
                 $this->flowVersion,
@@ -51,7 +51,7 @@ final class FlowVersionReplacer
     {
         $literal = $node->getLiteral();
 
-        if (str_contains($literal, self::VERSION_PLACEHOLDER)) {
+        if (str_contains((string) $literal, self::VERSION_PLACEHOLDER)) {
             $node->setLiteral(str_replace(
                 self::VERSION_PLACEHOLDER,
                 $this->flowVersion,

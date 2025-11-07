@@ -94,6 +94,8 @@ emconfigure ./configure \
   --enable-mbstring \
   --disable-mbregex \
   --disable-fiber-asm \
+  --enable-filter \
+  --enable-tokenizer \
   --with-zlib \
   --with-iconv \
   --with-libxml \

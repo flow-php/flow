@@ -240,16 +240,88 @@ code {
 #playground {
     @apply py-10 px-2 sm:px-4 mx-auto max-w-screen-2xl;
 
-    h1 {
-        @apply text-5xl mb-10;
+    .playground-header {
+        @apply mb-6;
+
+        h1 {
+            @apply text-5xl mb-0 inline-block;
+        }
+
+        .help-trigger {
+            @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
+        }
+    }
+
+    #help-section {
+        @apply mb-6 rounded p-4 shadow-2xl shadow-gray border-gray border-2 bg-transparent;
+
+        .help-header {
+            @apply flex justify-between items-center mb-4 pb-3 border-b border-gray;
+
+            h2 {
+                @apply text-2xl font-bold mb-0;
+            }
+
+            .help-close {
+                @apply w-8 h-8 rounded-full bg-transparent hover:bg-stone-700 text-white text-2xl
+                    flex items-center justify-center cursor-pointer border-0 transition-colors leading-none;
+            }
+        }
+
+        .help-content {
+            .help-topic {
+                @apply mb-6 last:mb-0;
+
+                h3 {
+                    @apply text-xl font-semibold mb-3 text-cyan-400;
+                }
+
+                p {
+                    @apply mb-3 text-stone-300 leading-relaxed;
+
+                    a {
+                        @apply text-cyan-400 hover:text-cyan-300 underline;
+                    }
+                }
+
+                ul {
+                    @apply list-disc pl-6 mb-3 text-stone-300;
+
+                    li {
+                        @apply mb-2;
+
+                        strong {
+                            @apply text-cyan-400;
+                        }
+
+                        em {
+                            @apply text-stone-400 text-sm;
+                        }
+                    }
+                }
+
+                code {
+                    @apply bg-black px-2 py-1 rounded text-cyan-300 font-mono text-sm;
+                }
+            }
+        }
     }
 
     div.navigation {
         @apply grid grid-cols-12 mb-4;
-        display: none; /* Hidden by default, shown by Stimulus */
+        display: none;
+
+        div.storage-indicator {
+            @apply col-start-1 col-span-3 gap-2 text-sm;
+        }
 
         div.actions {
-            @apply col-start-10 col-span-3 text-right;
+            @apply col-start-1 col-span-12 lg:col-start-8 lg:col-span-5 text-right;
+
+            .help-trigger-nav {
+                @apply cursor-pointer border-0 bg-transparent p-0 mr-4 transition-opacity hover:opacity-70 inline-block;
+                margin-top: 5px;
+            }
 
             button {
                 @apply mr-4;
@@ -266,18 +338,68 @@ code {
     }
 
     div.editor {
-        @apply grid gap-6 grid-cols-12 mb-6;
+        @apply grid gap-6 grid-cols-1 lg:grid-cols-12 mb-6;
         display: none; /* Hidden by default, shown by Stimulus */
 
-        /*div.files-container {*/
-        /*    @apply rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2*/
-        /*        col-span-2;*/
-        /*}*/
+        div.file-browser {
+            @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
+                lg:col-span-2 bg-transparent;
+
+            .file-browser-header {
+                @apply text-sm font-bold mb-3 text-stone-400 uppercase;
+
+                .help-trigger-workspace {
+                    @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
+                }
+            }
+
+            .file-browser-content {
+                .file-tree {
+                    @apply list-none m-0 p-0;
+
+                    .file-tree-item {
+                        @apply flex items-center gap-2 py-1 text-sm cursor-default text-stone-300;
+
+                        &.directory {
+                            @apply font-medium text-cyan-400;
+
+                            .icon {
+                                @apply text-cyan-400;
+                            }
+                        }
+
+                        &.file {
+                            @apply text-stone-300;
+
+                            .icon {
+                                @apply text-stone-500;
+                            }
+
+                            &.clickable {
+                                @apply cursor-pointer hover:text-cyan-400 transition-colors;
+
+                                &:hover .icon {
+                                    @apply text-cyan-400;
+                                }
+                            }
+                        }
+
+                        .icon {
+                            @apply flex-shrink-0;
+                        }
+
+                        span {
+                            @apply truncate;
+                        }
+                    }
+                }
+            }
+        }
 
         div.code-container {
             @apply
                 rounded overflow-auto shadow-2xl shadow-gray rounded border-gray border-2
-                col-span-12;
+                col-span-10;
         }
     }
 
@@ -289,6 +411,42 @@ code {
 
         pre {
             @apply w-full h-full resize-none outline-none p-4;
+        }
+    }
+
+    .file-preview-container {
+        @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
+            mt-4 min-h-[200px] max-h-[500px];
+
+        .file-preview-header {
+            @apply flex justify-between items-center mb-4 pb-3 border-b border-gray;
+
+            h2 {
+                @apply text-xl font-bold mb-0;
+            }
+
+            .file-preview-actions {
+                @apply flex gap-2;
+
+                .preview-action-btn {
+                    @apply cursor-pointer border-0 bg-stone-800 hover:bg-stone-700 p-2 rounded
+                        transition-colors;
+                }
+
+                .preview-close-btn {
+                    @apply w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 text-white text-2xl
+                        flex items-center justify-center cursor-pointer border-0 transition-colors leading-none;
+                }
+            }
+        }
+
+        .file-preview-content {
+            @apply rounded p-4 overflow-auto border-gray border-2 relative shadow-2xl shadow-gray;
+            margin: 0;
+
+            code {
+                @apply !p-0 !bg-transparent;
+            }
         }
     }
 

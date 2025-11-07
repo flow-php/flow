@@ -9,7 +9,7 @@ use Twig\TwigFunction;
 
 final class DSLExtension extends AbstractExtension
 {
-    public function __construct(private string $dslPath)
+    public function __construct(private readonly string $dslPath)
     {
     }
 
@@ -21,7 +21,7 @@ final class DSLExtension extends AbstractExtension
     public function getFunctions()
     {
         return [
-            new TwigFunction('dsl', [$this, 'dsl']),
+            new TwigFunction('dsl', $this->dsl(...)),
         ];
     }
 }

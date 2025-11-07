@@ -7,10 +7,10 @@ namespace Flow\Website\Service\Documentation;
 use function Flow\Filesystem\DSL\{fstab, path, protocol};
 use Flow\Website\Model\Documentation\Page;
 
-final class Pages
+final readonly class Pages
 {
     public function __construct(
-        private readonly string $basePath,
+        private string $basePath,
     ) {
     }
 

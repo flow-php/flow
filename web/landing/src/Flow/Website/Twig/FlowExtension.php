@@ -12,7 +12,7 @@ final class FlowExtension extends AbstractExtension
     public function getFilters() : array
     {
         return [
-            new TwigFilter('strpad', [$this, 'strpad'], ['is_safe' => ['html']]),
+            new TwigFilter('strpad', $this->strpad(...), ['is_safe' => ['html']]),
         ];
     }
 
@@ -23,19 +23,11 @@ final class FlowExtension extends AbstractExtension
         }
 
         if (is_string($padType)) {
-            switch (true) {
-                case stristr($padType, 'left'):
-                    $padType = STR_PAD_LEFT;
-
-                    break;
-                case stristr($padType, 'both'):
-                    $padType = STR_PAD_BOTH;
-
-                    break;
-
-                default:
-                    $padType = STR_PAD_RIGHT;
-            }
+            $padType = match (true) {
+                stristr($padType, 'left') => STR_PAD_LEFT,
+                stristr($padType, 'both') => STR_PAD_BOTH,
+                default => STR_PAD_RIGHT,
+            };
 
         }
 

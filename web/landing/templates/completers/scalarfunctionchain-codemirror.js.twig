@@ -1,0 +1,139 @@
+/**
+ * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
+ *
+ * ScalarFunctionChain methods: {{ total_count }}
+ * ScalarFunctionChain-returning functions: {{ scalarfunctionchain_functions|length }}
+ *
+ * This completer triggers after ScalarFunctionChain-returning DSL functions
+ */
+
+import { CompletionContext, snippet } from "@codemirror/autocomplete"
+
+// DSL functions that return ScalarFunctionChain (have scalar_function_chain: true)
+const scalarFunctionChainFunctions = [
+    {% for func in scalarfunctionchain_functions %}"{{ func }}"{% if not loop.last %}, {% endif %}{% endfor %}
+]
+
+// ScalarFunctionChain methods
+const scalarFunctionChainMethods = [
+    {% for method in scalarfunctionchain_methods %}
+    {
+        label: "{{ method.name }}",
+        type: "method",
+        detail: "{{ method.className|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'}) }}",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    {{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
+                </div>
+                {% if method.docComment %}
+                <div style="color: #8b949e; font-size: 13px;">
+                    {{ method.docComment|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
+                </div>
+                {% endif %}
+            `
+            return div
+        },
+        apply: snippet("{{ method.name }}({% if method.parameters|length > 0 %}{% for param in method.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
+        boost: 10
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+
+/**
+ * ScalarFunctionChain method completion source for CodeMirror
+ * @param {CompletionContext} context
+ * @returns {CompletionResult|null}
+ */
+export function scalarFunctionChainCompletions(context) {
+    // Get text before cursor (potentially across multiple lines)
+    // Look back up to 2000 characters to find the pattern
+    const maxLookback = 2000
+    const docText = context.state.doc.toString()
+    const startPos = Math.max(0, context.pos - maxLookback)
+    const textBefore = docText.slice(startPos, context.pos)
+
+    // Check if we're directly after -> (method chaining context)
+    if (!new RegExp('->\\w*$').test(textBefore)) {
+        return null
+    }
+
+    // Check if we're after a ScalarFunctionChain-returning function
+    // Pattern: any of the DSL functions with scalar_function_chain: true
+    if (scalarFunctionChainFunctions.length === 0) {
+        return null
+    }
+
+    // Find all matching functions and check if any are at top level with ->
+    const functionPattern = new RegExp('\\b(' + scalarFunctionChainFunctions.join('|') + ')\\s*\\(', 'g')
+    let matches = []
+    let match
+
+    while ((match = functionPattern.exec(textBefore)) !== null) {
+        matches.push({ name: match[1], index: match.index, endOfName: match.index + match[0].length })
+    }
+
+    // Walk backwards from cursor tracking parenthesis depth
+    let depth = 0
+    let i = textBefore.length - 1
+
+    // Skip back past the -> and any word being typed
+    while (i >= 0 && /[\w>-]/.test(textBefore[i])) {
+        i--
+    }
+
+    // Now count parentheses going backwards
+    while (i >= 0) {
+        if (textBefore[i] === ')') depth++
+        else if (textBefore[i] === '(') {
+            depth--
+            // If we're back to depth 0, check if this ( belongs to a ScalarFunctionChain function
+            if (depth === 0) {
+                // Look backwards to find the function name
+                let funcEnd = i
+                while (funcEnd > 0 && /\s/.test(textBefore[funcEnd - 1])) {
+                    funcEnd--
+                }
+                let funcStart = funcEnd
+                while (funcStart > 0 && /\w/.test(textBefore[funcStart - 1])) {
+                    funcStart--
+                }
+                const funcName = textBefore.slice(funcStart, funcEnd)
+
+                // Check if this is a ScalarFunctionChain-returning function
+                if (scalarFunctionChainFunctions.includes(funcName)) {
+                    // This is it! We're directly after this function call
+                    return continueWithCompletions()
+                }
+                // If not, we're inside some other call
+                return null
+            }
+        }
+        i--
+    }
+
+    return null
+
+    function continueWithCompletions() {
+        // Match word being typed (method name after ->)
+        const word = context.matchBefore(/\w*/)
+
+        // If no word and not explicit, don't show completions
+        if (!word && !context.explicit) {
+            return null
+        }
+
+        // Filter methods based on what's being typed
+        const prefix = word ? word.text.toLowerCase() : ''
+        const options = scalarFunctionChainMethods.filter(method =>
+            !prefix || method.label.toLowerCase().startsWith(prefix)
+        )
+
+        return {
+            from: word ? word.from : context.pos,
+            options: options,
+            validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
+        }
+    }
+}

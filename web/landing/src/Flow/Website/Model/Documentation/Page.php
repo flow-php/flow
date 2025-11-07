@@ -7,11 +7,11 @@ namespace Flow\Website\Model\Documentation;
 use League\CommonMark\Extension\FrontMatter\Data\SymfonyYamlFrontMatterParser;
 use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
 
-final class Page
+final readonly class Page
 {
     public function __construct(
-        public readonly string $path,
-        public readonly string $content,
+        public string $path,
+        public string $content,
     ) {
     }
 

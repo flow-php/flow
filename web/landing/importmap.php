@@ -80,10 +80,79 @@ return [
     '@panzoom/panzoom' => [
         'version' => '4.6.0',
     ],
-    'ace-builds' => [
-        'version' => '1.36.5',
-    ],
     'lz-string' => [
         'version' => '1.5.0',
+    ],
+    'codemirror' => [
+        'version' => '6.0.2',
+    ],
+    '@codemirror/view' => [
+        'version' => '6.37.2',
+    ],
+    '@codemirror/state' => [
+        'version' => '6.5.2',
+    ],
+    '@codemirror/language' => [
+        'version' => '6.11.1',
+    ],
+    '@codemirror/commands' => [
+        'version' => '6.8.1',
+    ],
+    '@codemirror/search' => [
+        'version' => '6.5.11',
+    ],
+    '@codemirror/autocomplete' => [
+        'version' => '6.12.0',
+    ],
+    '@codemirror/lint' => [
+        'version' => '6.8.5',
+    ],
+    'style-mod' => [
+        'version' => '4.1.2',
+    ],
+    'w3c-keyname' => [
+        'version' => '2.2.8',
+    ],
+    'crelt' => [
+        'version' => '1.0.6',
+    ],
+    '@marijn/find-cluster-break' => [
+        'version' => '1.0.2',
+    ],
+    '@lezer/common' => [
+        'version' => '1.2.1',
+    ],
+    '@lezer/highlight' => [
+        'version' => '1.2.1',
+    ],
+    '@codemirror/lang-php' => [
+        'version' => '6.0.2',
+    ],
+    '@lezer/php' => [
+        'version' => '1.0.2',
+    ],
+    '@codemirror/lang-html' => [
+        'version' => '6.4.9',
+    ],
+    '@lezer/lr' => [
+        'version' => '1.3.14',
+    ],
+    '@lezer/html' => [
+        'version' => '1.3.9',
+    ],
+    '@codemirror/lang-css' => [
+        'version' => '6.2.1',
+    ],
+    '@codemirror/lang-javascript' => [
+        'version' => '6.2.2',
+    ],
+    '@lezer/css' => [
+        'version' => '1.1.3',
+    ],
+    '@lezer/javascript' => [
+        'version' => '1.4.13',
+    ],
+    '@codemirror/theme-one-dark' => [
+        'version' => '6.1.3',
     ],
 ];

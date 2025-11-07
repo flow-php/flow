@@ -28,7 +28,7 @@ final readonly class AttributesModel
         );
     }
 
-    public static function fromReflection(\ReflectionFunction $reflection) : self
+    public static function fromReflection(\ReflectionFunction|\ReflectionMethod $reflection) : self
     {
         return new self(
             array_map(

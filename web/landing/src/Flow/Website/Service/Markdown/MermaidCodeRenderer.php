@@ -10,9 +10,9 @@ use League\CommonMark\Renderer\{ChildNodeRendererInterface, NodeRendererInterfac
 use League\CommonMark\Util\HtmlElement;
 use Symfony\Component\Asset\Packages;
 
-final class MermaidCodeRenderer implements NodeRendererInterface
+final readonly class MermaidCodeRenderer implements NodeRendererInterface
 {
-    public function __construct(private readonly Packages $packages)
+    public function __construct(private Packages $packages)
     {
     }
 

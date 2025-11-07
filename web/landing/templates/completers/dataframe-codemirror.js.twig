@@ -1,0 +1,144 @@
+/**
+ * CodeMirror Completer for Flow PHP DataFrame Methods
+ *
+ * DataFrame methods: {{ total_count }}
+ * DataFrame-returning methods from classes: {{ dataframe_returning_methods|length }}
+ *
+ * This completer triggers after DataFrame-returning methods
+ */
+
+import { CompletionContext, snippet } from "@codemirror/autocomplete"
+
+// Map of DataFrame-returning methods grouped by class
+const dataframeReturningMethods = {{ dataframe_returning_methods|json_encode|raw }};
+
+// DataFrame methods
+const dataframeMethods = [
+    {% for method in dataframe_methods %}
+    {
+        label: "{{ method.name }}",
+        type: "method",
+        detail: "{{ method.className|replace({'"': '\\"', "'": "\\'", '\\': '\\\\'}) }}",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    {{ method.highlightedSignature|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
+                </div>
+                {% if method.docComment %}
+                <div style="color: #8b949e; font-size: 13px;">
+                    {{ method.docComment|replace({'"': '\\"', "'": "\\'", '\\': '\\\\', '`': '\\`'})|raw }}
+                </div>
+                {% endif %}
+            `
+            return div
+        },
+        apply: snippet("{{ method.name }}({% if method.parameters|length > 0 %}{% for param in method.parameters %}" + "$" + "{" + "{{ loop.index }}:{{ param.name }}" + "}" + "{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})"),
+        boost: 10
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+
+/**
+ * DataFrame method completion source for CodeMirror
+ * @param {CompletionContext} context
+ * @returns {CompletionResult|null}
+ */
+export function dataframeCompletions(context) {
+    // Get text before cursor (potentially across multiple lines)
+    // Look back up to 2000 characters to find the pattern
+    const maxLookback = 2000
+    const docText = context.state.doc.toString()
+    const startPos = Math.max(0, context.pos - maxLookback)
+    const textBefore = docText.slice(startPos, context.pos)
+
+    // Check if we're directly after -> (method chaining context)
+    // Match pattern: ->word* at the end
+    if (!new RegExp('->\\w*$').test(textBefore)) {
+        return null
+    }
+
+    // Collect all DataFrame-returning method names
+    const allMethods = []
+    for (const [className, methods] of Object.entries(dataframeReturningMethods)) {
+        allMethods.push(...methods)
+    }
+
+    if (allMethods.length === 0) {
+        return null
+    }
+
+    // Walk backwards to find the most recent completed method call at top level
+    // Strategy: find the last occurrence of methodName()->... pattern where parens are balanced
+    const methodPattern = new RegExp('\\b(' + allMethods.join('|') + ')\\s*\\(', 'g')
+    let matches = []
+    let match
+
+    while ((match = methodPattern.exec(textBefore)) !== null) {
+        matches.push({ name: match[1], index: match.index, endOfName: match.index + match[0].length })
+    }
+
+    // Walk backwards from cursor tracking parenthesis depth
+    // to find what context we're in
+    let depth = 0
+    let i = textBefore.length - 1
+
+    // Skip back past the -> and any word being typed
+    while (i >= 0 && /[\w>-]/.test(textBefore[i])) {
+        i--
+    }
+
+    // Now count parentheses going backwards
+    while (i >= 0) {
+        if (textBefore[i] === ')') depth++
+        else if (textBefore[i] === '(') {
+            depth--
+            // If we're back to depth 0, check if this ( belongs to a DataFrame method
+            if (depth === 0) {
+                // Look backwards to find the method name
+                let methodEnd = i
+                while (methodEnd > 0 && /\s/.test(textBefore[methodEnd - 1])) {
+                    methodEnd--
+                }
+                let methodStart = methodEnd
+                while (methodStart > 0 && /\w/.test(textBefore[methodStart - 1])) {
+                    methodStart--
+                }
+                const methodName = textBefore.slice(methodStart, methodEnd)
+
+                // Check if this is a DataFrame-returning method
+                if (allMethods.includes(methodName)) {
+                    // This is it! We're directly after this method call
+                    return continueWithCompletions()
+                }
+                // If not, we're done checking - we're inside some other call
+                return null
+            }
+        }
+        i--
+    }
+
+    return null
+
+    function continueWithCompletions() {
+        // Match word being typed (method name after ->)
+        const word = context.matchBefore(/\w*/)
+
+        // If no word and not explicit, don't show completions
+        if (!word && !context.explicit) {
+            return null
+        }
+
+        // Filter methods based on what's being typed
+        const prefix = word ? word.text.toLowerCase() : ''
+        const options = dataframeMethods.filter(method =>
+            !prefix || method.label.toLowerCase().startsWith(prefix)
+        )
+
+        return {
+            from: word ? word.from : context.pos,
+            options: options,
+            validFor: new RegExp('^\\w*$')  // Reuse while typing word characters
+        }
+    }
+}

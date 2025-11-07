@@ -16,9 +16,9 @@ use League\CommonMark\Extension\Table\TableExtension;
 use Symfony\Component\Asset\Packages;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
-final class LeagueCommonMarkConverterFactory
+final readonly class LeagueCommonMarkConverterFactory
 {
-    public function __construct(private readonly ContainerBagInterface $parameters, private readonly Packages $packages)
+    public function __construct(private ContainerBagInterface $parameters, private Packages $packages)
     {
     }
 

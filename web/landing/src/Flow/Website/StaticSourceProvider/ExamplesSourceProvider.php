@@ -7,9 +7,9 @@ namespace Flow\Website\StaticSourceProvider;
 use Flow\Website\Service\Examples;
 use NorbertTech\StaticContentGeneratorBundle\Content\{Source, SourceProvider};
 
-final class ExamplesSourceProvider implements SourceProvider
+final readonly class ExamplesSourceProvider implements SourceProvider
 {
-    public function __construct(private readonly Examples $examples)
+    public function __construct(private Examples $examples)
     {
 
     }

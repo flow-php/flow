@@ -2,9 +2,14 @@ import { Controller } from "@hotwired/stimulus"
 import LZString from "lz-string"
 
 export default class extends Controller {
-    static outlets = ["code-editor"]
+    static outlets = ["code-mirror-editor", "playground-editor"]
+    #debug = false
 
-    codeEditorOutletConnected() {
+    connect() {
+        this.#debug = this.application.debug
+    }
+
+    codeMirrorEditorOutletConnected() {
         this.loadCodeFromUrl()
     }
 
@@ -14,15 +19,16 @@ export default class extends Controller {
         if (query.has('c')) {
             try {
                 const compressed = query.get('c')
-                console.log('[ShareCode] Compressed code:', compressed)
+                this.#log('[ShareCode] Compressed code:', compressed)
 
                 const decompressed = LZString.decompressFromEncodedURIComponent(compressed)
-                console.log('[ShareCode] Decompressed code:', decompressed)
-                console.log('[ShareCode] Has code editor outlet:', this.hasCodeEditorOutlet)
+                this.#log('[ShareCode] Decompressed code:', decompressed)
+                this.#log('[ShareCode] Has code editor outlet:', this.hasCodeMirrorEditorOutlet)
 
-                if (decompressed && this.hasCodeEditorOutlet) {
-                    console.log('[ShareCode] Setting editor value...')
-                    this.codeEditorOutlet.setValue(decompressed)
+                if (decompressed && this.hasCodeMirrorEditorOutlet) {
+                    // Wait for editor to be ready before setting value
+                    this.#waitForEditorAndSetValue(decompressed)
+                    this.dispatch('loaded-from-url', { bubbles: true })
                 } else if (!decompressed) {
                     console.error('[ShareCode] Decompression returned null or empty')
                 }
@@ -32,37 +38,72 @@ export default class extends Controller {
         }
     }
 
+    #waitForEditorAndSetValue(code, attempts = 0) {
+        const maxAttempts = 50 // 5 seconds max
+
+        if (this.codeMirrorEditorOutlet.isReady()) {
+            this.#log('[ShareCode] Editor is ready, setting value...')
+            this.codeMirrorEditorOutlet.setValue(code)
+        } else if (attempts < maxAttempts) {
+            this.#log('[ShareCode] Editor not ready yet, waiting... (attempt', attempts + 1, ')')
+            setTimeout(() => {
+                this.#waitForEditorAndSetValue(code, attempts + 1)
+            }, 100)
+        } else {
+            this.#logError('[ShareCode] Editor did not become ready in time')
+        }
+    }
+
     share() {
-        if (!this.hasCodeEditorOutlet) {
-            console.error('Code editor outlet not found')
+        if (!this.hasCodeMirrorEditorOutlet) {
+            this.#logError('Code editor outlet not found')
             return
         }
 
-        const code = this.codeEditorOutlet.getCode()
-        console.log('[ShareCode] Original code to compress:', code)
+        const code = this.codeMirrorEditorOutlet.getCode()
+        this.#log('[ShareCode] Original code to compress:', code)
 
         const url = new URL(window.location.href)
         url.search = ''
 
         const compressed = LZString.compressToEncodedURIComponent(code)
-        console.log('[ShareCode] Compressed code:', compressed)
+        this.#log('[ShareCode] Compressed code:', compressed)
 
         url.searchParams.set('c', compressed)
 
         const link = url.toString()
-        console.log('[ShareCode] Share link:', link)
+        this.#log('[ShareCode] Share link:', link)
 
         window.history.pushState({}, '', link)
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(link).then(() => {
-                alert('Share link copied to clipboard!')
+                this.#showNotification('Share link copied to clipboard!', 'success', link)
             }).catch((err) => {
                 console.error('Failed to copy:', err)
                 prompt('Copy this link:', link)
             })
         } else {
             prompt('Copy this link:', link)
+        }
+    }
+
+    #showNotification(message, type = 'info', link = null) {
+        this.dispatch('notification', {
+            detail: { message, type, link },
+            bubbles: true
+        })
+    }
+
+    #log(...args) {
+        if (this.#debug) {
+            console.log('[Code Sharing]', ...args)
+        }
+    }
+
+    #logError(...args) {
+        if (this.#debug) {
+            console.error('[Code Sharing]', ...args)
         }
     }
 }

@@ -86,6 +86,7 @@ return RectorConfig::configure()
         __DIR__ . '/src/adapter/*/*/tests',
         __DIR__ . '/src/bridge/*/*/tests',
         __DIR__ . '/src/tools/*/*/tests',
+        __DIR__ . '/web/landing/tests',
     ])
     ->withSets([
         LevelSetList::UP_TO_PHP_82,

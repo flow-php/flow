@@ -8,11 +8,11 @@ use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
-final class ContributorsRequestFactory implements NextRequestFactory
+final readonly class ContributorsRequestFactory implements NextRequestFactory
 {
     public function __construct(
-        public readonly string $githubToken,
-        private readonly Psr17Factory $factory = new Psr17Factory(),
+        public string $githubToken,
+        private Psr17Factory $factory = new Psr17Factory(),
     ) {
     }
 

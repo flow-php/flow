@@ -6,12 +6,12 @@ namespace Flow\Website\Service\Documentation;
 
 use Flow\Website\Model\Documentation\{DSLDefinition, Module, Type};
 
-final class DSLDefinitions
+final readonly class DSLDefinitions
 {
     /**
      * @param array<DSLDefinition> $definitions
      */
-    private function __construct(private readonly array $definitions)
+    private function __construct(private array $definitions)
     {
     }
 

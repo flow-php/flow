@@ -2,3 +2,7 @@ framework:
     asset_mapper:
         paths:
             - assets/
+        # Override the MIME type for .php files to serve them as plain text
+        # instead of executable PHP (application/x-httpd-php)
+        extensions:
+            php: 'text/plain; charset=utf-8'

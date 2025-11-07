@@ -1,0 +1,74 @@
+<?php
+
+if ($argc < 2) {
+    echo "ERROR: Missing file argument";
+    exit(1);
+}
+
+$tempFile = $argv[1];
+
+try {
+    require 'phar:///workspace/tools/php-cs-fixer.phar/vendor/autoload.php';
+
+    $config = require '/workspace/.php-cs-fixer.php';
+
+    if (!file_exists($tempFile)) {
+        echo "ERROR: File does not exist: $tempFile";
+        exit(1);
+    }
+
+    $originalContent = file_get_contents($tempFile);
+    echo "DEBUG: Original file size: " . strlen($originalContent) . "\n";
+
+    $finder = new PhpCsFixer\Finder();
+    $finder->append([$tempFile]);
+
+    $foundFiles = iterator_to_array($finder);
+    echo "DEBUG: Finder found " . count($foundFiles) . " files\n";
+    foreach ($foundFiles as $file) {
+        echo "DEBUG: Found file: " . $file->getPathname() . "\n";
+    }
+
+    // Get fixers from config
+    $factory = new PhpCsFixer\FixerFactory();
+    $factory->registerBuiltInFixers();
+    $fixers = $factory->useRuleSet(new PhpCsFixer\RuleSet\RuleSet($config->getRules()))->getFixers();
+
+    echo "DEBUG: Total fixers: " . count($fixers) . "\n";
+
+    $fixer = new PhpCsFixer\Runner\Runner(
+        $finder,
+        $fixers,
+        new PhpCsFixer\Differ\NullDiffer(),
+        null,
+        new PhpCsFixer\Error\ErrorsManager(),
+        new PhpCsFixer\Linter\TokenizerLinter(),
+        false,
+        new PhpCsFixer\Cache\NullCacheManager()
+    );
+
+    $changed = $fixer->fix();
+
+    echo "DEBUG: Files changed by fixer: " . count($changed) . "\n";
+
+    $newContent = file_get_contents($tempFile);
+    echo "DEBUG: New file size: " . strlen($newContent) . "\n";
+    echo "DEBUG: Content changed: " . ($originalContent !== $newContent ? 'YES' : 'NO') . "\n";
+
+    $appliedFixers = [];
+    foreach ($changed as $file => $fixResult) {
+        if ($fixResult && isset($fixResult['appliedFixers']) && !empty($fixResult['appliedFixers'])) {
+            $appliedFixers = array_merge($appliedFixers, $fixResult['appliedFixers']);
+        }
+    }
+
+    if (!empty($appliedFixers)) {
+        $appliedFixers = array_unique($appliedFixers);
+        echo "APPLIED_FIXERS:" . implode(',', $appliedFixers) . "\n";
+    }
+
+    echo "SUCCESS";
+} catch (Throwable $e) {
+    echo "ERROR: " . $e->getMessage();
+    exit(1);
+}
