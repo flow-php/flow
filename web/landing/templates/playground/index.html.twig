@@ -69,6 +69,32 @@
                     This means that any code you execute in the editor below, runs in your browser, using a version of php compiled to WebAssembly.<br/>
                     Other than that, it's just a regular PHP environment.
                 </p>
+                <p>
+                    <strong>Under Development:</strong> This playground is still under active development. <br/>
+                    If you encounter any bugs or have feedback, we'd love to hear from you! Please report issues on <a href="https://github.com/flow-php/flow" target="_blank">GitHub</a> or reach out to us on <a href="https://discord.gg/fAv6Xa6RNr" target="_blank">Discord</a>.
+
+                </p>
+            </section>
+
+            <section class="help-topic" id="help-navigation">
+                <h3>Action Buttons</h3>
+                <ul>
+                    <li><strong>Run</strong> - Executes your PHP code in the playground and displays the output below the editor.</li>
+                    <li><strong>Format</strong> - Automatically formats your PHP code using PHP-CS-Fixer rules for consistent code style.</li>
+                    <li><strong>Share</strong> - Generates a shareable URL with your current code so you can share it with others. Your code is compressed and encoded directly into the URL. <br/><em>Important: Never include sensitive information like passwords or API keys in your code when sharing, as they will be visible in the URL.</em></li>
+                    <li><strong>Upload</strong> - Upload local files (CSV, JSON, XML, PHP, PHAR) to the virtual WASM filesystem. <br/><em>Note: Uploaded files are stored only in your browser's memory and will disappear when you refresh the page.</em></li>
+                    <li><strong>Reset</strong> - Clears your code and resets the playground to its default state.</li>
+                </ul>
+            </section>
+
+            <section class="help-topic" id="help-workspace">
+                <h3>Workspace</h3>
+                <p>
+                    The Workspace panel displays the contents of the <code>/workspace</code> folder from the WebAssembly virtual filesystem. This is where your code and uploaded files are stored during your playground session.
+                </p>
+                <p>
+                    All files in the workspace are stored locally in your browser's memory and are never uploaded to any server. This means you can safely experiment with real datasets and documents without any privacy concerns. However, keep in mind that all files will be lost when you refresh the page or close your browser.
+                </p>
             </section>
         </div>
     </div>
@@ -84,6 +110,13 @@
     <div class="navigation" data-playground-editor-target="navigation">
         <div class="storage-indicator" data-playground-editor-target="storageIndicator" style="display: none;"></div>
         <div class="actions">
+            <button
+                    data-action="click->playground-help#showTopic"
+                    data-help-topic="help-navigation"
+                    class="help-trigger-nav pt-2"
+                    aria-label="What do these buttons do?">
+                <img src="{{ asset('images/icons/help.svg') }}" alt="Help" width="18" height="18">
+            </button>
             <button
                     data-controller="image-swap"
                     data-playground-editor-target="runButton"
@@ -143,7 +176,16 @@
     </div>
     <div class="editor" data-playground-editor-target="editor">
         <div class="file-browser" data-playground-editor-target="fileBrowser">
-            <div class="file-browser-header">Workspace</div>
+            <div class="file-browser-header">
+                Workspace
+                <button
+                        data-action="click->playground-help#showTopic"
+                        data-help-topic="help-workspace"
+                        class="help-trigger-workspace"
+                        aria-label="What is the Workspace?">
+                    <img src="{{ asset('images/icons/help.svg') }}" alt="Help" width="14" height="14">
+                </button>
+            </div>
             <div class="file-browser-content" data-playground-editor-target="fileBrowserContent">
                 <!-- Files will be populated by JavaScript -->
             </div>
@@ -153,6 +195,7 @@
 <?php
 
 declare(strict_types=1);
+
 use Flow\ETL\Flow;
 
 use function Flow\ETL\Adapter\CSV\from_csv;

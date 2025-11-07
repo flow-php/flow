@@ -40,12 +40,19 @@ export default class extends Controller {
 
             const topicId = event.currentTarget.dataset.helpTopic
             if (topicId) {
+                // Hide all topics first
+                const allTopics = document.querySelectorAll('.help-topic')
+                allTopics.forEach(topic => {
+                    topic.style.display = 'none'
+                })
+
+                // Show the help section
                 this.show()
 
-                // Scroll to the specific topic
+                // Show only the specific topic
                 const topicElement = document.getElementById(topicId)
                 if (topicElement) {
-                    topicElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    topicElement.style.display = 'block'
                 }
             }
         }

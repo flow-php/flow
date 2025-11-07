@@ -278,6 +278,26 @@ code {
 
                 p {
                     @apply mb-3 text-stone-300 leading-relaxed;
+
+                    a {
+                        @apply text-cyan-400 hover:text-cyan-300 underline;
+                    }
+                }
+
+                ul {
+                    @apply list-disc pl-6 mb-3 text-stone-300;
+
+                    li {
+                        @apply mb-2;
+
+                        strong {
+                            @apply text-cyan-400;
+                        }
+
+                        em {
+                            @apply text-stone-400 text-sm;
+                        }
+                    }
                 }
 
                 code {
@@ -297,6 +317,11 @@ code {
 
         div.actions {
             @apply col-start-8 col-span-5 text-right;
+
+            .help-trigger-nav {
+                @apply cursor-pointer border-0 bg-transparent p-0 mr-4 transition-opacity hover:opacity-70 inline-block;
+                margin-top: 5px;
+            }
 
             button {
                 @apply mr-4;
@@ -322,6 +347,10 @@ code {
 
             .file-browser-header {
                 @apply text-sm font-bold mb-3 text-stone-400 uppercase;
+
+                .help-trigger-workspace {
+                    @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
+                }
             }
 
             .file-browser-content {
