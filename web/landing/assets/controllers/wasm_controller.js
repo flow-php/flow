@@ -3,11 +3,13 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
     static values = {
         phpJs: String,
-        phpWasm: String
+        phpWasm: String,
+        resources: Object
     }
 
     #phpModule = null
     #phpModuleLoaded = false
+    #resourcesLoaded = false
     #combinedOutput = ''
     #debug = false
 
@@ -20,6 +22,7 @@ export default class extends Controller {
     disconnect() {
         this.#phpModule = null
         this.#phpModuleLoaded = false
+        this.#resourcesLoaded = false
     }
 
     // Public API for execution
@@ -71,6 +74,86 @@ export default class extends Controller {
     // Public API for accessing PHP module (for filesystem operations)
     getModule() {
         return this.#phpModule
+    }
+
+    // Public API for loading resources into WASM filesystem
+    async loadResources() {
+        if (!this.#phpModuleLoaded) {
+            this.#logError('Cannot load resources: PHP module not loaded yet')
+            return false
+        }
+
+        if (this.#resourcesLoaded) {
+            this.#log('Resources already loaded')
+            return true
+        }
+
+        if (!this.resourcesValue || Object.keys(this.resourcesValue).length === 0) {
+            this.#log('No resources configured to load')
+            this.#resourcesLoaded = true
+            this.#dispatchResourcesLoaded()
+            return true
+        }
+
+        this.#log('Loading resources into WASM filesystem...', this.resourcesValue)
+
+        const resources = Object.entries(this.resourcesValue)
+        const totalResources = resources.length
+        let loadedCount = 0
+
+        try {
+            for (const [virtualPath, assetUrl] of resources) {
+                this.#log(`Loading resource: ${virtualPath} from ${assetUrl}`)
+                this.#dispatchProgress(`Loading ${virtualPath}...`, Math.floor((loadedCount / totalResources) * 100))
+
+                const response = await fetch(assetUrl)
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${virtualPath}: ${response.statusText}`)
+                }
+
+                const buffer = await response.arrayBuffer()
+                const uint8Array = new Uint8Array(buffer)
+
+                this.#ensureDirectoryExists(virtualPath)
+
+                this.#phpModule.FS.writeFile('/' + virtualPath, uint8Array)
+                this.#log(`Successfully loaded: ${virtualPath} (${uint8Array.length} bytes)`)
+
+                loadedCount++
+            }
+
+            this.#resourcesLoaded = true
+            this.#log('All resources loaded successfully')
+            this.#dispatchResourcesLoaded()
+            return true
+        } catch (error) {
+            this.#logError('Failed to load resources:', error)
+            this.#dispatchError('Failed to load resources: ' + error.message)
+            return false
+        }
+    }
+
+    #ensureDirectoryExists(filePath) {
+        const parts = filePath.split('/')
+        const directories = parts.slice(0, -1)
+
+        let currentPath = ''
+        for (const dir of directories) {
+            if (!dir) continue
+
+            currentPath += '/' + dir
+
+            try {
+                const pathInfo = this.#phpModule.FS.analyzePath(currentPath)
+                if (!pathInfo.exists) {
+                    this.#log(`Creating directory: ${currentPath}`)
+                    this.#phpModule.FS.mkdir(currentPath)
+                }
+            } catch (error) {
+                this.#logError(`Error checking/creating directory ${currentPath}:`, error)
+                throw error
+            }
+        }
     }
 
     #loadPHPModule() {
@@ -142,6 +225,10 @@ export default class extends Controller {
 
     #dispatchReady() {
         this.dispatch('ready')
+    }
+
+    #dispatchResourcesLoaded() {
+        this.dispatch('resources-loaded')
     }
 
     #dispatchProgress(message, percent) {

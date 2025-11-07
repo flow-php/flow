@@ -12,16 +12,21 @@
 {% endblock %}
 
 {% block main %}
+{% set wasm_resources = {
+    'flow.phar': asset('wasm/flow.phar'),
+    'vendor/autoload.php': asset('wasm/vendor/autoload.php.wasm')
+} %}
 <div id="playground"
      data-controller="playground-editor wasm share-code playground-storage"
      data-playground-editor-code-mirror-editor-outlet="#code-editor"
      data-playground-editor-playground-storage-outlet="#playground"
      data-playground-storage-code-mirror-editor-outlet="#code-editor"
      data-share-code-code-mirror-editor-outlet="#code-editor"
-     data-playground-editor-flow-phar-value="{{ asset('wasm/flow.phar') }}"
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
+     data-wasm-resources-value="{{ wasm_resources|json_encode }}"
      data-action="wasm:ready->playground-editor#onWasmReady
+                  wasm:resources-loaded->playground-editor#onWasmResourcesLoaded
                   wasm:progress->playground-editor#onWasmProgress
                   wasm:output->playground-editor#onWasmOutput
                   wasm:error->playground-editor#onWasmError">
@@ -77,7 +82,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\DSL\{data_frame, from_array, to_output, ref, lit};
 
-require_once 'phar://flow.phar/vendor/autoload.php';
+require_once 'vendor/autoload.php';
 
 data_frame()
     ->read(from_array([
