@@ -1,6 +1,13 @@
-## [Unreleased] - 2025-11-05
+## [Unreleased] - 2025-11-07
 
 ### Added
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **File browser to playground** - [@norberttech](https://github.com/norberttech)
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **cs fixer to playground** - [@norberttech](https://github.com/norberttech)
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **uploading files to playground** - [@norberttech](https://github.com/norberttech)
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **help section to playground** - [@norberttech](https://github.com/norberttech)
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **autocompleters for Flow API to playground** - [@norberttech](https://github.com/norberttech)
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **autocompleters for Flow API to playground** - [@norberttech](https://github.com/norberttech)
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **predefined datasets to playground** - [@norberttech](https://github.com/norberttech)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **TypeNarrower interface for type narrowing pattern** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **StringTypeNarrower class implementing TypeNarrower interface** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **InstanceOfTypeNarrower class for handling external UUID libraries** - [@MrHDOLEK](https://github.com/MrHDOLEK)
@@ -15,6 +22,7 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1968](https://github.com/flow-php/flow/pull/1968) - **Moved away from ace editor to codemirror in playground** - [@norberttech](https://github.com/norberttech)
 - [#1958](https://github.com/flow-php/flow/pull/1958) - **Move JSON & Uuid validation out of `StringTypeNarrower`** - [@stloyd](https://github.com/stloyd)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **StringTypeChecker renamed to StringTypeNarrower with new interface contract** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **Refactored EntryFactory to use modular TypeNarrower pattern** - [@MrHDOLEK](https://github.com/MrHDOLEK)
