@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent"]
+    static targets = ["runButton", "formatButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent"]
     static outlets = ["code-mirror-editor", "playground-storage"]
 
     connect() {
@@ -247,6 +247,53 @@ export default class extends Controller {
 
         // Execute code via WASM controller
         wasmController.evaluate(code)
+    }
+
+    // Format button click handler
+    format(event) {
+        event.preventDefault()
+
+        const wasmController = this.#getWasmController()
+        if (!wasmController) {
+            this.#log('WASM controller not found')
+            return
+        }
+
+        if (!wasmController.isReady()) {
+            this.#showOutput('PHP module not loaded yet, please wait...')
+            return
+        }
+
+        if (!this.hasCodeMirrorEditorOutlet) {
+            this.#log('Code editor outlet not connected')
+            this.#showOutput('Code editor not found')
+            return
+        }
+
+        const code = this.codeMirrorEditorOutlet.getCode()
+        this.#showOutput('Formatting code...')
+
+        if (this.hasFormatButtonTarget) {
+            this.formatButtonTarget.disabled = true
+        }
+
+        wasmController.formatCode(code, (formattedCode, error) => {
+            if (this.hasFormatButtonTarget) {
+                this.formatButtonTarget.disabled = false
+            }
+
+            if (error) {
+                this.#showOutput('Format error: ' + error)
+                return
+            }
+
+            this.codeMirrorEditorOutlet.setValue(formattedCode)
+            this.#showOutput('Code formatted successfully!')
+
+            if (this.hasPlaygroundStorageOutlet) {
+                this.playgroundStorageOutlet.saveCode()
+            }
+        })
     }
 
     #getWasmController() {

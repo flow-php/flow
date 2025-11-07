@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-require_once 'phar://flow.phar/vendor/autoload.php';
+require_once 'phar://tools/flow.phar/vendor/autoload.php';

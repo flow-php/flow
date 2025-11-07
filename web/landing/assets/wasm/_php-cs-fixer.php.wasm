@@ -1,0 +1,25 @@
+<?php
+
+use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
+
+$finder = Finder::create()
+    ->in('/workspace')
+    ->name('*.php');
+
+return (new Config())
+    ->setRiskyAllowed(true)
+    ->setRules([
+        '@PSR12' => true,
+        'array_syntax' => ['syntax' => 'short'],
+        'no_unused_imports' => true,
+        'ordered_imports' => [
+            'imports_order' => ['class', 'function', 'const'],
+            'sort_algorithm' => 'alpha',
+        ],
+        'declare_strict_types' => true,
+        'fully_qualified_strict_types' => [
+            'import_symbols' => true,
+        ],
+    ])
+    ->setFinder($finder);

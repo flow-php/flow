@@ -74,6 +74,62 @@ export default class extends Controller {
         }
     }
 
+    formatCode(code, callback) {
+        if (!this.#phpModuleLoaded) {
+            callback(null, 'PHP module not loaded yet')
+            return
+        }
+
+        this.#combinedOutput = ''
+
+        try {
+            this.#phpModule.FS.chdir('/workspace')
+
+            const tempFile = '/workspace/temp_format.php'
+
+            this.#phpModule.FS.writeFile(tempFile, code)
+
+            const formatScript = `<?php
+\$argc = 2;
+\$argv = ['cs-fixer.php', '${tempFile}'];
+require '/workspace/bin/cs-fixer.php';
+?>`
+
+            this.#phpModule.ccall(
+                'pib_eval',
+                'number',
+                ['string'],
+                [formatScript]
+            )
+
+            const output = this.#combinedOutput.trim()
+
+            if (output.includes('ERROR:')) {
+                const errorMsg = output.replace('ERROR:', '').trim()
+                callback(null, errorMsg)
+            } else if (output.includes('SUCCESS')) {
+                try {
+                    const formattedCode = this.#phpModule.FS.readFile(tempFile, { encoding: 'utf8' })
+                    callback(formattedCode, null)
+                } catch (readError) {
+                    callback(null, 'Failed to read formatted code: ' + readError.message)
+                }
+            } else {
+                callback(null, 'Unexpected output from formatter: ' + output)
+            }
+
+            try {
+                this.#phpModule.FS.unlink(tempFile)
+            } catch (e) {
+                this.#log('Failed to delete temp file:', e)
+            }
+
+        } catch (error) {
+            this.#logError('Format error:', error)
+            callback(null, 'Format failed: ' + error.message)
+        }
+    }
+
     // Public API for checking ready state
     isReady() {
         return this.#phpModuleLoaded

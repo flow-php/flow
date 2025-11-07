@@ -13,8 +13,14 @@
 
 {% block main %}
 {% set wasm_resources = {
-    'flow.phar': asset('wasm/flow.phar'),
-    'vendor/autoload.php': asset('wasm/vendor/autoload.php.wasm')
+    'tools/flow.phar': asset('wasm/tools/flow.phar'),
+    'tools/php-cs-fixer.phar': asset('wasm/tools/php-cs-fixer.phar'),
+    'vendor/autoload.php': asset('wasm/vendor/autoload.php.wasm'),
+    '.php-cs-fixer.php': asset('wasm/_php-cs-fixer.php.wasm'),
+    'bin/cs-fixer.php': asset('wasm/bin/cs-fixer.php.wasm'),
+    'data/orders.xml': asset('wasm/data/orders.xml'),
+    'data/orders.json': asset('wasm/data/orders.json'),
+    'data/orders.csv': asset('wasm/data/orders.csv')
 } %}
 <div id="playground"
      data-controller="playground-editor wasm share-code playground-storage"
@@ -54,6 +60,16 @@
                          class="ml-1 inline-block"
                          data-image-swap-target="image"
                          data-hover-src="{{ asset('images/icons/play-active.svg') }}">
+            </button>
+            <button
+                    data-controller="image-swap"
+                    data-playground-editor-target="formatButton"
+                    data-action="click->playground-editor#format mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                Format <img src="{{ asset('images/icons/code.svg') }}"
+                            alt="Format"
+                            class="ml-1 inline-block"
+                            data-image-swap-target="image"
+                            data-hover-src="{{ asset('images/icons/code-active.svg') }}">
             </button>
             <button
                     data-controller="image-swap"
