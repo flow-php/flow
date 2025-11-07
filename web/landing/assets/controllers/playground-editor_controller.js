@@ -1,12 +1,48 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer"]
+    static targets = ["runButton", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator"]
     static outlets = ["code-mirror-editor", "playground-storage"]
 
     connect() {
         // Content is hidden by CSS initially
         this.#log('Connecting editor controller')
+    }
+
+    onStorageLoaded(event) {
+        this.#log('Code loaded from local storage')
+        this.#showIndicator('storage')
+    }
+
+    onUrlLoaded(event) {
+        this.#log('Code loaded from URL')
+        this.#showIndicator('url')
+    }
+
+    #showIndicator(source) {
+        if (!this.hasStorageIndicatorTarget) {
+            return
+        }
+
+        const icons = {
+            storage: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>`,
+            url: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>`
+        }
+
+        const labels = {
+            storage: 'Loaded from local storage',
+            url: 'Loaded from shared link'
+        }
+
+        this.storageIndicatorTarget.innerHTML = icons[source] + '<span>' + labels[source] + '</span>'
+        this.storageIndicatorTarget.style.display = 'flex'
     }
 
     // Called when WASM is ready via event

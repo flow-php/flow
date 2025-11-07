@@ -248,6 +248,10 @@ code {
         @apply grid grid-cols-12 mb-4;
         display: none; /* Hidden by default, shown by Stimulus */
 
+        div.storage-indicator {
+            @apply col-start-1 col-span-3 gap-2 text-sm;
+        }
+
         div.actions {
             @apply col-start-10 col-span-3 text-right;
 

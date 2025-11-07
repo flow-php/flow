@@ -24,6 +24,7 @@ export default class extends Controller {
                 if (decompressed && this.hasCodeMirrorEditorOutlet) {
                     // Wait for editor to be ready before setting value
                     this.#waitForEditorAndSetValue(decompressed)
+                    this.dispatch('loaded-from-url', { bubbles: true })
                 } else if (!decompressed) {
                     console.error('[ShareCode] Decompression returned null or empty')
                 }

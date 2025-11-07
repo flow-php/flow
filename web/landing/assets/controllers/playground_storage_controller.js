@@ -61,6 +61,7 @@ export default class extends Controller {
 
         if (savedCode) {
             this.#waitForEditorAndSetValue(savedCode);
+            this.dispatch('loaded-from-storage', { bubbles: true });
         }
     }
 

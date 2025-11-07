@@ -29,7 +29,9 @@
                   wasm:resources-loaded->playground-editor#onWasmResourcesLoaded
                   wasm:progress->playground-editor#onWasmProgress
                   wasm:output->playground-editor#onWasmOutput
-                  wasm:error->playground-editor#onWasmError">
+                  wasm:error->playground-editor#onWasmError
+                  playground-storage:loaded-from-storage->playground-editor#onStorageLoaded
+                  share-code:loaded-from-url->playground-editor#onUrlLoaded">
     <h1>Playground</h1>
 
     <div id="loader">
@@ -41,6 +43,7 @@
     </div>
 
     <div class="navigation" data-playground-editor-target="navigation">
+        <div class="storage-indicator" data-playground-editor-target="storageIndicator" style="display: none;"></div>
         <div class="actions">
             <button
                     data-controller="image-swap"
