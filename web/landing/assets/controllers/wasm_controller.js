@@ -38,6 +38,14 @@ export default class extends Controller {
         this.#combinedOutput = ''
 
         try {
+            // Change working directory to /workspace before execution
+            try {
+                this.#phpModule.FS.chdir('/workspace')
+                this.#log('Changed working directory to /workspace')
+            } catch (chdirError) {
+                this.#logError('Failed to change directory to /workspace:', chdirError)
+            }
+
             const result = this.#phpModule.ccall(
                 'pib_eval',
                 'number',
@@ -155,13 +163,20 @@ export default class extends Controller {
 
         this.#log('Loading resources into WASM filesystem...', this.resourcesValue)
 
-        const resources = Object.entries(this.resourcesValue)
-        const totalResources = resources.length
-        let loadedCount = 0
-
         try {
+            // Create /workspace directory
+            this.#log('Creating /workspace directory')
+            this.#phpModule.FS.mkdir('/workspace')
+
+            const resources = Object.entries(this.resourcesValue)
+            const totalResources = resources.length
+            let loadedCount = 0
+
             for (const [virtualPath, assetUrl] of resources) {
-                this.#log(`Loading resource: ${virtualPath} from ${assetUrl}`)
+                // Prefix all paths with /workspace
+                const workspacePath = 'workspace/' + virtualPath
+
+                this.#log(`Loading resource: ${workspacePath} from ${assetUrl}`)
                 this.#dispatchProgress(`Loading ${virtualPath}...`, Math.floor((loadedCount / totalResources) * 100))
 
                 const response = await fetch(assetUrl)
@@ -172,10 +187,10 @@ export default class extends Controller {
                 const buffer = await response.arrayBuffer()
                 const uint8Array = new Uint8Array(buffer)
 
-                this.#ensureDirectoryExists(virtualPath)
+                this.#ensureDirectoryExists(workspacePath)
 
-                this.#phpModule.FS.writeFile('/' + virtualPath, uint8Array)
-                this.#log(`Successfully loaded: ${virtualPath} (${uint8Array.length} bytes)`)
+                this.#phpModule.FS.writeFile('/' + workspacePath, uint8Array)
+                this.#log(`Successfully loaded: ${workspacePath} (${uint8Array.length} bytes)`)
 
                 loadedCount++
             }

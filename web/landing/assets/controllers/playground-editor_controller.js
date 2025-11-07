@@ -70,11 +70,20 @@ export default class extends Controller {
             return
         }
 
-        const files = wasmController.listFiles('/')
-        this.#log('Files in WASM filesystem:', files)
+        // Only list files from /workspace directory
+        const files = wasmController.listFiles('/workspace')
+        this.#log('Files in /workspace:', files)
+
+        // Filter to only include files within workspace and strip the /workspace prefix
+        const workspaceFiles = files
+            .filter(file => file.path.startsWith('/workspace/'))
+            .map(file => ({
+                ...file,
+                path: file.path.substring('/workspace'.length) || '/'
+            }))
 
         // Build file tree structure
-        const tree = this.#buildFileTree(files)
+        const tree = this.#buildFileTree(workspaceFiles)
 
         // Render file tree
         this.fileBrowserContentTarget.innerHTML = this.#renderFileTree(tree)
@@ -92,15 +101,18 @@ export default class extends Controller {
                 const isLast = i === parts.length - 1
 
                 if (!current[part]) {
+                    // For the last part, use the file's actual type
+                    // For intermediate parts, they must be directories
                     current[part] = {
                         name: part,
-                        path: file.path,
-                        type: file.type,
+                        path: isLast ? file.path : parts.slice(0, i + 1).join('/'),
+                        type: isLast ? file.type : 'directory',
                         children: {}
                     }
                 }
 
-                if (!isLast && file.type === 'directory') {
+                // Navigate to children for all parts except the last one
+                if (!isLast) {
                     current = current[part].children
                 }
             }
@@ -174,6 +186,7 @@ export default class extends Controller {
     onWasmOutput(event) {
         const { output } = event.detail
         this.#showOutput(output)
+        this.#updateFileBrowser()
     }
 
     // Called when WASM has an error
@@ -183,6 +196,7 @@ export default class extends Controller {
         this.#hideLoading()
         this.#showContentAfterLoading()
         this.#showOutput(error)
+        this.#updateFileBrowser()
 
         // Highlight error in code editor if we have errorInfo
         if (errorInfo && this.hasCodeMirrorEditorOutlet) {
