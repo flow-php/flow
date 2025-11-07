@@ -93,7 +93,18 @@
                     The Workspace panel displays the contents of the <code>/workspace</code> folder from the WebAssembly virtual filesystem. This is where your code and uploaded files are stored during your playground session.
                 </p>
                 <p>
-                    All files in the workspace are stored locally in your browser's memory and are never uploaded to any server. This means you can safely experiment with real datasets and documents without any privacy concerns. However, keep in mind that all files will be lost when you refresh the page or close your browser.
+                    All files in the workspace are stored locally in your browser's memory and are never uploaded to any server. <br/>
+                    This means you can safely experiment with real datasets and documents without any privacy concerns. <br/>
+                    However, keep in mind that all files will be lost when you refresh the page or close your browser.
+                </p>
+                <p>
+                    <ul>
+                        <li><code>bin</code> - this is where we keep scripts used by playground, like for exampel code formatter</li>
+                        <li><code>data</code> - here you can find sample datasets to play with, reference them as <code>__DIR__ . '/data/orders.csv</code></li>
+                        <li><code>tmp</code> - this is where we are going to upload your files</li>
+                        <li><code>vendor</code> - place for playground dependencies and autoloader</li>
+                        <li><code>tools</code> - place for playground tools, like <code>flow.phar</code></li>
+                    </ul>
                 </p>
             </section>
         </div>
@@ -217,6 +228,18 @@ data_frame()
     <div class="output-container" data-playground-editor-target="outputContainer">
         <h2>Output</h2>
         <pre id="output" data-playground-editor-target="output"></pre>
+    </div>
+    <div class="file-preview-container" data-playground-editor-target="filePreviewContainer" style="display: none;">
+        <div class="file-preview-header">
+            <h2 data-playground-editor-target="filePreviewTitle">File Preview</h2>
+            <div class="file-preview-actions">
+                <button data-action="click->playground-editor#downloadPreviewFile" class="preview-action-btn" aria-label="Download file">
+                    <img src="{{ asset('images/icons/upload.svg') }}" alt="Download" width="16" height="16" style="transform: rotate(180deg);">
+                </button>
+                <button data-action="click->playground-editor#closeFilePreview" class="preview-close-btn" aria-label="Close preview">×</button>
+            </div>
+        </div>
+        <pre class="file-preview-content"><code data-playground-editor-target="filePreviewContent"></code></pre>
     </div>
 </div>
 {% endblock %}

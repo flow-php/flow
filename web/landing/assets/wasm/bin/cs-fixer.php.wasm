@@ -12,21 +12,17 @@ try {
 
     $config = require '/workspace/.php-cs-fixer.php';
 
-    // Debug: Check if file exists
     if (!file_exists($tempFile)) {
         echo "ERROR: File does not exist: $tempFile";
         exit(1);
     }
 
-    // Debug: Read original content
     $originalContent = file_get_contents($tempFile);
     echo "DEBUG: Original file size: " . strlen($originalContent) . "\n";
 
-    // Use a more specific finder - only the exact file
     $finder = new PhpCsFixer\Finder();
     $finder->append([$tempFile]);
 
-    // Debug: Check what finder found
     $foundFiles = iterator_to_array($finder);
     echo "DEBUG: Finder found " . count($foundFiles) . " files\n";
     foreach ($foundFiles as $file) {
@@ -40,7 +36,6 @@ try {
 
     echo "DEBUG: Total fixers: " . count($fixers) . "\n";
 
-    // Use TokenizerLinter instead of ProcessLinter (doesn't require exec)
     $fixer = new PhpCsFixer\Runner\Runner(
         $finder,
         $fixers,
@@ -56,12 +51,10 @@ try {
 
     echo "DEBUG: Files changed by fixer: " . count($changed) . "\n";
 
-    // Debug: Read content after fixing
     $newContent = file_get_contents($tempFile);
     echo "DEBUG: New file size: " . strlen($newContent) . "\n";
     echo "DEBUG: Content changed: " . ($originalContent !== $newContent ? 'YES' : 'NO') . "\n";
 
-    // Output applied fixers
     $appliedFixers = [];
     foreach ($changed as $file => $fixResult) {
         if ($fixResult && isset($fixResult['appliedFixers']) && !empty($fixResult['appliedFixers'])) {

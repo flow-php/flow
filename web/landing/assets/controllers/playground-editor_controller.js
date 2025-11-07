@@ -1,7 +1,12 @@
 import { Controller } from "@hotwired/stimulus"
+import Prism from 'prismjs'
+import 'prismjs/components/prism-markup-templating.min.js'
+import 'prismjs/components/prism-php.min.js'
+import 'prismjs/components/prism-json.min.js'
+import 'prismjs/components/prism-csv.min.js'
 
 export default class extends Controller {
-    static targets = ["runButton", "formatButton", "uploadButton", "fileInput", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent"]
+    static targets = ["runButton", "formatButton", "uploadButton", "fileInput", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent", "filePreviewContainer", "filePreviewTitle", "filePreviewContent"]
     static outlets = ["code-mirror-editor", "playground-storage"]
     static values = {
         packageIcon: String,
@@ -9,6 +14,8 @@ export default class extends Controller {
         folderIcon: String,
         fileIcon: String
     }
+
+    #currentPreviewFile = null
 
     #allowedExtensions = ['csv', 'json', 'xml', 'php', 'phar']
 
@@ -159,7 +166,9 @@ export default class extends Controller {
                 }
             } else {
                 html += `
-                    <li class="file-tree-item file" style="padding-left: ${indent}px">
+                    <li class="file-tree-item file clickable" style="padding-left: ${indent}px"
+                        data-action="click->playground-editor#previewFile"
+                        data-file-path="${entry.path}">
                         <img src="${this.fileIconValue}" class="icon" width="16" height="16" alt="">
                         <span>${entry.name}</span>
                     </li>
@@ -467,6 +476,120 @@ export default class extends Controller {
         }
 
         this.outputTarget.textContent = notification
+    }
+
+    previewFile(event) {
+        const filePath = event.currentTarget.dataset.filePath
+        if (!filePath) {
+            this.#log('No file path found')
+            return
+        }
+
+        const wasmController = this.#getWasmController()
+        if (!wasmController) {
+            this.#log('WASM controller not found')
+            return
+        }
+
+        try {
+            // Read file content from WASM filesystem
+            const fullPath = `/workspace${filePath}`
+            this.#log('Reading file:', fullPath)
+
+            const content = wasmController.readFile(fullPath)
+
+            if (content === null || content === undefined) {
+                this.#addNotification(`Failed to read file: ${filePath}`, 'error')
+                return
+            }
+
+            // Store current preview file for download
+            this.#currentPreviewFile = { path: filePath, content: content }
+
+            // Update preview title
+            if (this.hasFilePreviewTitleTarget) {
+                this.filePreviewTitleTarget.textContent = `File Preview: ${filePath}`
+            }
+
+            // Update preview content with syntax highlighting
+            if (this.hasFilePreviewContentTarget) {
+                // Get file extension for language detection
+                const extension = filePath.split('.').pop().toLowerCase()
+                const languageMap = {
+                    'php': 'php',
+                    'json': 'json',
+                    'csv': 'csv',
+                    'xml': 'markup',
+                    'phar': 'php'
+                }
+
+                const language = languageMap[extension] || 'none'
+
+                // Set content and language class
+                this.filePreviewContentTarget.textContent = content
+                this.filePreviewContentTarget.className = `language-${language}`
+
+                // Apply syntax highlighting
+                Prism.highlightElement(this.filePreviewContentTarget)
+            }
+
+            // Show preview container
+            if (this.hasFilePreviewContainerTarget) {
+                this.filePreviewContainerTarget.style.display = 'block'
+
+                // Scroll to preview smoothly
+                this.filePreviewContainerTarget.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+
+            this.#log('File preview loaded:', filePath)
+        } catch (error) {
+            this.#log('Error reading file:', error)
+            this.#addNotification(`Error reading file: ${error.message}`, 'error')
+        }
+    }
+
+    closeFilePreview(event) {
+        if (event) {
+            event.preventDefault()
+        }
+
+        if (this.hasFilePreviewContainerTarget) {
+            this.filePreviewContainerTarget.style.display = 'none'
+        }
+
+        this.#currentPreviewFile = null
+    }
+
+    downloadPreviewFile(event) {
+        if (event) {
+            event.preventDefault()
+        }
+
+        if (!this.#currentPreviewFile) {
+            this.#log('No file to download')
+            return
+        }
+
+        try {
+            const { path, content } = this.#currentPreviewFile
+            const fileName = path.split('/').pop()
+
+            // Create blob and download
+            const blob = new Blob([content], { type: 'text/plain' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = fileName
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+
+            this.#addNotification(`Downloaded: ${fileName}`, 'success')
+        } catch (error) {
+            this.#log('Error downloading file:', error)
+            this.#addNotification(`Error downloading file: ${error.message}`, 'error')
+        }
     }
 
     #log(...args) {

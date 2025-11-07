@@ -316,7 +316,7 @@ code {
         }
 
         div.actions {
-            @apply col-start-8 col-span-5 text-right;
+            @apply col-start-1 col-span-12 lg:col-start-8 lg:col-span-5 text-right;
 
             .help-trigger-nav {
                 @apply cursor-pointer border-0 bg-transparent p-0 mr-4 transition-opacity hover:opacity-70 inline-block;
@@ -338,12 +338,12 @@ code {
     }
 
     div.editor {
-        @apply grid gap-6 grid-cols-12 mb-6;
+        @apply grid gap-6 grid-cols-1 lg:grid-cols-12 mb-6;
         display: none; /* Hidden by default, shown by Stimulus */
 
         div.file-browser {
             @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
-                col-span-2 bg-transparent;
+                lg:col-span-2 bg-transparent;
 
             .file-browser-header {
                 @apply text-sm font-bold mb-3 text-stone-400 uppercase;
@@ -374,6 +374,14 @@ code {
                             .icon {
                                 @apply text-stone-500;
                             }
+
+                            &.clickable {
+                                @apply cursor-pointer hover:text-cyan-400 transition-colors;
+
+                                &:hover .icon {
+                                    @apply text-cyan-400;
+                                }
+                            }
                         }
 
                         .icon {
@@ -403,6 +411,42 @@ code {
 
         pre {
             @apply w-full h-full resize-none outline-none p-4;
+        }
+    }
+
+    .file-preview-container {
+        @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
+            mt-4 min-h-[200px] max-h-[500px];
+
+        .file-preview-header {
+            @apply flex justify-between items-center mb-4 pb-3 border-b border-gray;
+
+            h2 {
+                @apply text-xl font-bold mb-0;
+            }
+
+            .file-preview-actions {
+                @apply flex gap-2;
+
+                .preview-action-btn {
+                    @apply cursor-pointer border-0 bg-stone-800 hover:bg-stone-700 p-2 rounded
+                        transition-colors;
+                }
+
+                .preview-close-btn {
+                    @apply w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 text-white text-2xl
+                        flex items-center justify-center cursor-pointer border-0 transition-colors leading-none;
+                }
+            }
+        }
+
+        .file-preview-content {
+            @apply rounded p-4 overflow-auto border-gray border-2 relative shadow-2xl shadow-gray;
+            margin: 0;
+
+            code {
+                @apply !p-0 !bg-transparent;
+            }
         }
     }
 

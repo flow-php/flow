@@ -209,6 +209,24 @@ require '/workspace/bin/cs-fixer.php';
         }
     }
 
+    // Public API for reading file content from WASM filesystem
+    readFile(filePath) {
+        if (!this.#phpModuleLoaded) {
+            this.#logError('Cannot read file: PHP module not loaded yet')
+            return null
+        }
+
+        try {
+            const FS = this.#phpModule.FS
+            const content = FS.readFile(filePath, { encoding: 'utf8' })
+            this.#log('File read successfully:', filePath)
+            return content
+        } catch (error) {
+            this.#logError('Error reading file:', error)
+            return null
+        }
+    }
+
     // Public API for uploading user files to /workspace/tmp
     uploadFile(filename, uint8Array) {
         if (!this.#phpModuleLoaded) {
