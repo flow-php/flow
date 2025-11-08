@@ -6,11 +6,20 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{config, flow_context, ref, row};
 use Dom\{Element, HTMLDocument};
+use Flow\ETL\Exception\RequiredPHPVersionException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
 final class HTMLQuerySelectorAllTest extends TestCase
 {
+    #[RequiresPhp('< 8.4')]
+    public function test_getting_element_for_older_versions() : void
+    {
+        $this->expectException(RequiredPHPVersionException::class);
+
+        ref('value')->htmlQuerySelectorAll('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', '')));
+    }
+
     #[RequiresPhp('>= 8.4')]
     public function test_getting_elements_for_given_path() : void
     {
@@ -24,14 +33,6 @@ final class HTMLQuerySelectorAllTest extends TestCase
 
         /* @phpstan-ignore-next-line */
         self::assertInstanceOf(Element::class, $result[0]);
-    }
-
-    #[RequiresPhp('< 8.4')]
-    public function test_getting_null_for_older_versions() : void
-    {
-        $this->expectException(\RuntimeException::class);
-
-        ref('value')->htmlQuerySelectorAll('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', '')));
     }
 
     #[RequiresPhp('>= 8.4')]

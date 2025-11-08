@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use DOM\{Element, HTMLDocument};
+use Flow\ETL\Exception\RequiredPHPVersionException;
 use Flow\ETL\Row;
 
 final class HTMLQuerySelectorAll extends ScalarFunctionChain
@@ -21,7 +22,7 @@ final class HTMLQuerySelectorAll extends ScalarFunctionChain
     public function eval(Row $row) : ?array
     {
         if (!\class_exists('\Dom\HTMLDocument')) {
-            throw new \RuntimeException('This function requires \Dom\HTMLDocument extension available in PHP 8.4+.');
+            throw new RequiredPHPVersionException('\Dom\HTMLDocument', '8.4');
         }
 
         $value = (new Parameter($this->value))->asInstanceOf($row, HTMLDocument::class);
