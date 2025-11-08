@@ -6,15 +6,50 @@ namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use function Flow\ETL\DSL\{config, flow_context};
 use function Flow\ETL\DSL\{from_rows, int_entry, ref, row, rows, str_entry};
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Function\{RowNumber, Sum};
+use function Flow\ETL\DSL\{row_number, window};
+use function Flow\ETL\DSL\sum;
+use Flow\ETL\{Extractor, Loader};
 use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\OverridingPipeline;
 use Flow\ETL\Pipeline\{SynchronousPipeline, WindowFunctionPipeline};
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class WindowFunctionPipelineTest extends TestCase
 {
+    public function test_add_adds_loader_to_underlying_pipeline() : void
+    {
+        $basePipeline = new SynchronousPipeline(from_rows(rows()));
+
+        $pipeline = new WindowFunctionPipeline(
+            $basePipeline,
+            'row_num',
+            (row_number())->over(window())
+        );
+
+        $loader = $this->createMock(Loader::class);
+        $result = $pipeline->add($loader);
+
+        self::assertSame($pipeline, $result);
+    }
+
+    public function test_add_adds_transformer_to_underlying_pipeline() : void
+    {
+        $basePipeline = new SynchronousPipeline(from_rows(rows()));
+
+        $pipeline = new WindowFunctionPipeline(
+            $basePipeline,
+            'row_num',
+            (row_number())->over(window())
+        );
+
+        $transformer = new ScalarFunctionTransformer('test', ref('id'));
+        $result = $pipeline->add($transformer);
+
+        self::assertSame($pipeline, $result);
+        self::assertTrue($pipeline->has(ScalarFunctionTransformer::class));
+    }
+
     public function test_handles_empty_input() : void
     {
         $basePipeline = new SynchronousPipeline(from_rows(rows()));
@@ -23,7 +58,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline = new WindowFunctionPipeline(
             $basePipeline,
             'row_num',
-            (new RowNumber())->over($window)
+            (row_number())->over($window)
         );
 
         $context = flow_context(config());
@@ -48,7 +83,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline = new WindowFunctionPipeline(
             $basePipeline,
             'total',
-            (new Sum(ref('value')))->over($window)
+            (sum(ref('value')))->over($window)
         );
 
         $context = flow_context(config());
@@ -79,7 +114,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline = new WindowFunctionPipeline(
             $basePipeline,
             'row_num',
-            (new RowNumber())->over($window)
+            (row_number())->over($window)
         );
 
         $context = flow_context(config());
@@ -90,12 +125,41 @@ final class WindowFunctionPipelineTest extends TestCase
         self::assertCount(1, $result[1]);
     }
 
+    public function test_has_returns_false_when_transformer_not_present() : void
+    {
+        $basePipeline = new SynchronousPipeline(from_rows(rows()));
+
+        $pipeline = new WindowFunctionPipeline(
+            $basePipeline,
+            'row_num',
+            (row_number())->over(window())
+        );
+
+        self::assertFalse($pipeline->has(ScalarFunctionTransformer::class));
+    }
+
+    public function test_has_returns_true_when_transformer_present() : void
+    {
+        $basePipeline = new SynchronousPipeline(from_rows(rows()));
+
+        $pipeline = new WindowFunctionPipeline(
+            $basePipeline,
+            'row_num',
+            (row_number())->over(window())
+        );
+
+        $transformer = new ScalarFunctionTransformer('test', ref('id'));
+        $pipeline->add($transformer);
+
+        self::assertTrue($pipeline->has(ScalarFunctionTransformer::class));
+    }
+
     public function test_implements_overriding_pipeline_interface() : void
     {
         $pipeline = new WindowFunctionPipeline(
             new SynchronousPipeline(from_rows(rows())),
             'row_num',
-            (new RowNumber())->over(window())
+            (row_number())->over(window())
         );
 
         self::assertInstanceOf(OverridingPipeline::class, $pipeline);
@@ -106,10 +170,45 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline = new WindowFunctionPipeline(
             new SynchronousPipeline(from_rows(rows())),
             'row_num',
-            (new RowNumber())->over(window())
+            (row_number())->over(window())
         );
 
         self::assertInstanceOf(Pipeline::class, $pipeline);
+    }
+
+    public function test_pipelines_returns_array_with_underlying_pipeline() : void
+    {
+        $basePipeline = new SynchronousPipeline(from_rows(rows()));
+
+        $pipeline = new WindowFunctionPipeline(
+            $basePipeline,
+            'row_num',
+            (row_number())->over(window())
+        );
+
+        $pipelines = $pipeline->pipelines();
+
+        self::assertCount(1, $pipelines);
+        self::assertSame($basePipeline, $pipelines[0]);
+    }
+
+    public function test_pipes_returns_pipes_from_underlying_pipeline() : void
+    {
+        $basePipeline = new SynchronousPipeline(from_rows(rows()));
+
+        $pipeline = new WindowFunctionPipeline(
+            $basePipeline,
+            'row_num',
+            (row_number())->over(window())
+        );
+
+        $transformer = new ScalarFunctionTransformer('test', ref('id'));
+        $pipeline->add($transformer);
+
+        $pipes = $pipeline->pipes();
+
+        self::assertCount(1, $pipes->all());
+        self::assertInstanceOf(ScalarFunctionTransformer::class, $pipes->all()[0]);
     }
 
     public function test_processes_multiple_partitions_separately() : void
@@ -132,7 +231,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline = new WindowFunctionPipeline(
             $basePipeline,
             'row_num',
-            (new RowNumber())->over($window)
+            (row_number())->over($window)
         );
 
         $context = flow_context(config());
@@ -165,7 +264,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline = new WindowFunctionPipeline(
             $basePipeline,
             'row_num',
-            (new RowNumber())->over($window)
+            (row_number())->over($window)
         );
 
         $context = flow_context(config());
@@ -198,7 +297,7 @@ final class WindowFunctionPipelineTest extends TestCase
         $pipeline = new WindowFunctionPipeline(
             $basePipeline,
             'row_num',
-            (new RowNumber())->over($window)
+            (row_number())->over($window)
         );
 
         $context = flow_context(config());
@@ -211,5 +310,22 @@ final class WindowFunctionPipelineTest extends TestCase
         self::assertEquals(1, $result[0][0]->get('row_num')->value());
         self::assertEquals(2, $result[0][1]->get('row_num')->value());
         self::assertEquals(3, $result[0][2]->get('row_num')->value());
+    }
+
+    public function test_source_returns_extractor_from_underlying_pipeline() : void
+    {
+        $extractor = from_rows(rows());
+        $basePipeline = new SynchronousPipeline($extractor);
+
+        $pipeline = new WindowFunctionPipeline(
+            $basePipeline,
+            'row_num',
+            (row_number())->over(window())
+        );
+
+        $source = $pipeline->source();
+
+        self::assertInstanceOf(Extractor::class, $source);
+        self::assertSame($extractor, $source);
     }
 }
