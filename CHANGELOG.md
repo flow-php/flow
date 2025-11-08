@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-11-07
+## [Unreleased] - 2025-11-08
 
 ### Added
 - [#1968](https://github.com/flow-php/flow/pull/1968) - **File browser to playground** - [@norberttech](https://github.com/norberttech)
@@ -22,6 +22,7 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1973](https://github.com/flow-php/flow/pull/1973) - **Moved logic related to Window functions to pipeline from transformer** - [@norberttech](https://github.com/norberttech)
 - [#1968](https://github.com/flow-php/flow/pull/1968) - **Moved away from ace editor to codemirror in playground** - [@norberttech](https://github.com/norberttech)
 - [#1958](https://github.com/flow-php/flow/pull/1958) - **Move JSON & Uuid validation out of `StringTypeNarrower`** - [@stloyd](https://github.com/stloyd)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **StringTypeChecker renamed to StringTypeNarrower with new interface contract** - [@MrHDOLEK](https://github.com/MrHDOLEK)
