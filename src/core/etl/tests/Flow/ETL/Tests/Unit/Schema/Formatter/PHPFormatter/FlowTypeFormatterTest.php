@@ -10,6 +10,8 @@ use function Flow\Types\DSL\{type_array,
     type_date,
     type_datetime,
     type_float,
+    type_html,
+    type_html_element,
     type_integer,
     type_json,
     type_list,
@@ -81,6 +83,8 @@ final class FlowTypeFormatterTest extends FlowTestCase
         self::assertEquals('\\Flow\\Types\\DSL\\type_date()', (new TypeFormatter())->format(type_date()));
         self::assertEquals('\\Flow\\Types\\DSL\\type_datetime()', (new TypeFormatter())->format(type_datetime()));
         self::assertEquals('\\Flow\\Types\\DSL\\type_time()', (new TypeFormatter())->format(type_time()));
+        self::assertEquals('\\Flow\\Types\\DSL\\type_html()', (new TypeFormatter())->format(type_html()));
+        self::assertEquals('\\Flow\\Types\\DSL\\type_html_element()', (new TypeFormatter())->format(type_html_element()));
         self::assertEquals('\\Flow\\Types\\DSL\\type_xml()', (new TypeFormatter())->format(type_xml()));
         self::assertEquals('\\Flow\\Types\\DSL\\type_xml_element()', (new TypeFormatter())->format(type_xml_element()));
         self::assertEquals('\\Flow\\Types\\DSL\\type_resource()', (new TypeFormatter())->format(type_resource()));

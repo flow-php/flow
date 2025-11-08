@@ -421,6 +421,19 @@ final class TypeDetectorTest extends TestCase
     }
 
     #[RequiresPhp('>= 8.4')]
+    public function test_logical_html_element_type() : void
+    {
+        $document = \Dom\HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>1</span></div></body></html>');
+
+        $type = (new TypeDetector())->detectType(
+            $document->querySelector('body')
+        );
+
+        self::assertInstanceOf(Type\Logical\HTMLElementType::class, $type);
+        self::assertSame('html_element', $type->toString());
+    }
+
+    #[RequiresPhp('>= 8.4')]
     public function test_logical_html_type() : void
     {
         $type = (new TypeDetector())->detectType(

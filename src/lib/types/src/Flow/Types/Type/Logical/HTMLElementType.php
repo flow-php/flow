@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Logical;
 
 use function Flow\Types\DSL\type_instance_of;
+use Dom\{HTMLDocument, HTMLElement};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
 /**
- * @implements Type<\DOMElement>
+ * @implements Type<HTMLElement>
  */
-final readonly class XMLElementType implements Type
+final readonly class HTMLElementType implements Type
 {
-    public function assert(mixed $value) : \DOMElement
+    public function assert(mixed $value) : HTMLElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -22,17 +23,16 @@ final readonly class XMLElementType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : \DOMElement
+    public function cast(mixed $value) : HTMLElement
     {
         if ($this->isValid($value)) {
             return $value;
         }
 
         if (\is_string($value)) {
-            $dom = new \DOMDocument();
-            $dom->loadXML($value);
+            $document = HTMLDocument::createFromString($value, \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
 
-            return type_instance_of(\DOMElement::class)->assert($dom->documentElement);
+            return type_instance_of(HTMLElement::class)->assert($document->documentElement);
         }
 
         throw new CastingException($value, $this);
@@ -40,18 +40,18 @@ final readonly class XMLElementType implements Type
 
     public function isValid(mixed $value) : bool
     {
-        return $value instanceof \DOMElement;
+        return $value instanceof HTMLElement;
     }
 
     public function normalize() : array
     {
         return [
-            'type' => 'xml_element',
+            'type' => 'html_element',
         ];
     }
 
     public function toString() : string
     {
-        return 'xml_element';
+        return 'html_element';
     }
 }

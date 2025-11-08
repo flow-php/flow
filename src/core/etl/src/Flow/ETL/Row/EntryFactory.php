@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\{bool_entry,
     datetime_entry,
     enum_entry,
     float_entry,
+    html_element_entry,
     html_entry,
     int_entry,
     json_entry,
@@ -30,6 +31,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    HTMLElementType,
     HTMLType,
     InstanceOfType,
     JsonType,
@@ -190,6 +192,10 @@ final readonly class EntryFactory
 
             if ($type instanceof HTMLType) {
                 return html_entry($entryName, type_optional($type)->cast($value), $metadata);
+            }
+
+            if ($type instanceof HTMLElementType) {
+                return html_element_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof XMLType) {

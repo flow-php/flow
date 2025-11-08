@@ -7,6 +7,8 @@ namespace Flow\ETL\Schema\Formatter\PHPFormatter;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    HTMLElementType,
+    HTMLType,
     JsonType,
     ListType,
     MapType,
@@ -89,6 +91,8 @@ final class TypeFormatter
             UuidType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_uuid'),
             CallableType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_callable'),
             JsonType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_json'),
+            HTMLType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_html'),
+            HTMLElementType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_html_element'),
             XMLType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_xml'),
             XMLElementType::class => new \ReflectionFunction('\\Flow\\Types\\DSL\\type_xml_element'),
             default => throw new \RuntimeException('Type ' . $type->toString() . ' is not a simple definition'),

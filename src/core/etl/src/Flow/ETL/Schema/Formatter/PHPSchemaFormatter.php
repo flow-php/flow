@@ -20,7 +20,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\{HTMLElementType, HTMLType};
 use Flow\Types\Type\Native\{BooleanType, EnumType, FloatType, IntegerType, StringType};
 
 final readonly class PHPSchemaFormatter implements SchemaFormatter
@@ -116,6 +116,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
                 JsonType::class,
                 UuidType::class,
                 HTMLType::class,
+                HTMLElementType::class,
                 XMLType::class,
                 XMLElementType::class,
                 DateTimeType::class => $this->simpleType($definition),
@@ -187,6 +188,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
             XMLType::class => new \ReflectionFunction('\Flow\ETL\DSL\xml_schema'),
             XMLElementType::class => new \ReflectionFunction('\Flow\ETL\DSL\xml_element_schema'),
             HTMLType::class => new \ReflectionFunction('\Flow\ETL\DSL\html_schema'),
+            HTMLElementType::class => new \ReflectionFunction('\Flow\ETL\DSL\html_element_schema'),
             default => throw new RuntimeException('Type ' . $definition->type()->toString() . ' is not a simple definition'),
         };
 
