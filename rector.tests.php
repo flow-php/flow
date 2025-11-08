@@ -77,6 +77,12 @@ use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\CodingStyle\Rector\FuncCall\FunctionFirstClassCallableRector;
 use Rector\CodingStyle\Rector\FunctionLike\FunctionLikeToFirstClassCallableRector;
 use Flow\Filesystem\Path;
+use Flow\ETL\Window;
+use Flow\ETL\Function\RowNumber;
+use Flow\ETL\Function\Min;
+use Flow\ETL\Function\Max;
+use Flow\ETL\Function\Sum;
+use Flow\ETL\Function\Average;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -129,6 +135,7 @@ return RectorConfig::configure()
             new NewObjectToFunction(FlowContext::class, 'Flow\ETL\DSL\flow_context'),
             new NewObjectToFunction(Schema::class, 'Flow\ETL\DSL\schema'),
             new NewObjectToFunction(Flow::class, 'Flow\ETL\DSL\data_frame'),
+            new NewObjectToFunction(Window::class, 'Flow\ETL\DSL\window'),
 
             // Entries
             new NewObjectToFunction(BooleanEntry::class, 'Flow\ETL\DSL\boolean_entry'),
@@ -197,6 +204,13 @@ return RectorConfig::configure()
             new NewObjectToFunction(ParquetExtractor::class, 'Flow\ETL\Adapter\Parquet\from_parquet'),
             new NewObjectToFunction(TextExtractor::class, 'Flow\ETL\Adapter\Text\from_text'),
             new NewObjectToFunction(XMLParserExtractor::class, 'Flow\ETL\Adapter\XML\from_xml'),
+
+            // Functions
+            new NewObjectToFunction(RowNumber::class, 'Flow\ETL\DSL\row_number'),
+            new NewObjectToFunction(Min::class, 'Flow\ETL\DSL\min'),
+            new NewObjectToFunction(Max::class, 'Flow\ETL\DSL\min'),
+            new NewObjectToFunction(Sum::class, 'Flow\ETL\DSL\sum'),
+            new NewObjectToFunction(Average::class, 'Flow\ETL\DSL\average'),
         ]
     )
     ->withSkip([
