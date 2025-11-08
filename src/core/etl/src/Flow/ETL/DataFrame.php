@@ -30,7 +30,8 @@ use Flow\ETL\Pipeline\{BatchingByPipeline,
     OffsetPipeline,
     PartitioningPipeline,
     SortingPipeline,
-    VoidPipeline};
+    VoidPipeline,
+    WindowFunctionPipeline};
 use Flow\ETL\Row\{EntryReference, Formatter\ASCIISchemaFormatter, Reference, References};
 use Flow\ETL\Schema\{Definition, SchemaFormatter};
 use Flow\ETL\Schema\Validator\StrictValidator;
@@ -55,8 +56,8 @@ use Flow\ETL\Transformer\{AutoCastTransformer,
     ScalarFunctionFilterTransformer,
     ScalarFunctionTransformer,
     SelectEntriesTransformer,
-    UntilTransformer,
-    WindowFunctionTransformer};
+    UntilTransformer
+};
 use Flow\Filesystem\Path\Filter;
 use Flow\Types\Type\AutoCaster;
 
@@ -1007,8 +1008,13 @@ final class DataFrame
     {
         if ($reference instanceof WindowFunction) {
             if (\count($reference->window()->partitions())) {
-                $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, $reference->window()->partitions(), $reference->window()->order()));
+                // When there are partitions, use PartitioningPipeline to ensure all data
+                // from the same partition is grouped together before processing
+                $this->pipeline = new LinkedPipeline(
+                    new PartitioningPipeline($this->pipeline, $reference->window()->partitions(), $reference->window()->order())
+                );
             } else {
+                // When there are no partitions, collect all data and sort if needed
                 $this->collect();
 
                 if (\count($reference->window()->order())) {
@@ -1016,7 +1022,10 @@ final class DataFrame
                 }
             }
 
-            $this->pipeline->add(new WindowFunctionTransformer($entry, $reference));
+            // Now wrap in WindowFunctionPipeline to apply the window function
+            $this->pipeline = new LinkedPipeline(
+                new WindowFunctionPipeline($this->pipeline, $entry, $reference)
+            );
         } else {
             $this->with(new ScalarFunctionTransformer($entry, $reference));
         }

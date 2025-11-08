@@ -77,6 +77,7 @@ use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\CodingStyle\Rector\FuncCall\FunctionFirstClassCallableRector;
 use Rector\CodingStyle\Rector\FunctionLike\FunctionLikeToFirstClassCallableRector;
 use Flow\Filesystem\Path;
+use Flow\ETL\Window;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -129,6 +130,7 @@ return RectorConfig::configure()
             new NewObjectToFunction(FlowContext::class, 'Flow\ETL\DSL\flow_context'),
             new NewObjectToFunction(Schema::class, 'Flow\ETL\DSL\schema'),
             new NewObjectToFunction(Flow::class, 'Flow\ETL\DSL\data_frame'),
+            new NewObjectToFunction(Window::class, 'Flow\ETL\DSL\window'),
 
             // Entries
             new NewObjectToFunction(BooleanEntry::class, 'Flow\ETL\DSL\boolean_entry'),
