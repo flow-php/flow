@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-11-09
 
 ### Added
+- [#1980](https://github.com/flow-php/flow/pull/1980) - **Make HTTP Adapter aware of HTML & XML entry types** - [@stloyd](https://github.com/stloyd)
 - [#1972](https://github.com/flow-php/flow/pull/1972) - **Add a new `HTMLElementEntry` & related stuff** - [@stloyd](https://github.com/stloyd)
 - [#1977](https://github.com/flow-php/flow/pull/1977) - **playground cta to website** - [@norberttech](https://github.com/norberttech)
 - [#1960](https://github.com/flow-php/flow/pull/1960) - **Add `HTMLQuerySelectorAll` & `HTMLQuerySelector` scalar functions** - [@stloyd](https://github.com/stloyd)
