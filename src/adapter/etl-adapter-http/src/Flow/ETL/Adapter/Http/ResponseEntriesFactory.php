@@ -25,7 +25,7 @@ final class ResponseEntriesFactory
         $responseBody = $response->getBody();
 
         if ($responseBody->isReadable()) {
-            $responseType = ContentTypeDetector::detectFromHeaders($response);
+            $responseType = ContentTypeDetector::detectFromResponse($response);
 
             if ($responseBody->isSeekable()) {
                 $responseBody->seek(0);

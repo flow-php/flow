@@ -45,7 +45,7 @@ final class ContentTypeDetectorTest extends TestCase
     {
         self::assertSame(
             $expected,
-            ContentTypeDetector::detectFromHeaders($response),
+            ContentTypeDetector::detectFromResponse($response),
         );
     }
 }
