@@ -14,10 +14,10 @@ final class CollectUniqueTest extends FlowTestCase
     {
         $aggregator = collect_unique(ref('data'));
 
-        $aggregator->aggregate(row(str_entry('data', 'a')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'c')));
+        $aggregator->aggregate(row(str_entry('data', 'a')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'c')), flow_context());
 
         self::assertSame(
             [

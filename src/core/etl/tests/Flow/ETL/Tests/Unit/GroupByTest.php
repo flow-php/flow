@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{config, flow_context};
-use function Flow\ETL\DSL\{int_entry, null_entry, ref, row, rows, str_entry, sum};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, null_entry, ref, row, rows, str_entry, sum};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{GroupBy, Tests\FlowTestCase};
 
@@ -19,7 +18,7 @@ final class GroupByTest extends FlowTestCase
             row(str_entry('type', 'a')),
             row(str_entry('not-type', 'b')),
             row(str_entry('type', 'c'))
-        ));
+        ), flow_context());
 
         self::assertEquals(
             rows(
@@ -42,7 +41,7 @@ final class GroupByTest extends FlowTestCase
             row(int_entry('id', 3), str_entry('type', 'c')),
             row(int_entry('id', 4), str_entry('type', 'a')),
             row(int_entry('id', 5), str_entry('type', 'd'))
-        ));
+        ), flow_context());
 
         self::assertEquals(
             rows(
@@ -84,7 +83,7 @@ final class GroupByTest extends FlowTestCase
         $group->aggregate(sum(ref('amount')));
         $group->pivot(ref('country'));
 
-        $group->group($rows);
+        $group->group($rows, flow_context());
 
         self::assertEquals(
             rows(
@@ -108,7 +107,7 @@ final class GroupByTest extends FlowTestCase
         $group->aggregate(sum(ref('amount')));
         $group->pivot(ref('country'));
 
-        $group->group($rows);
+        $group->group($rows, flow_context());
 
         self::assertEquals(
             rows(

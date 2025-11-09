@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\{config, flow_context, row, rows};
-use function Flow\ETL\DSL\{int_entry, str_entry, to_memory};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, row, rows, str_entry, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 

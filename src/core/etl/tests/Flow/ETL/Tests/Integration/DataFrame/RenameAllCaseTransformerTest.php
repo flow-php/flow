@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, str_entry};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, row, rows, str_entry};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Transformer\RenameAllCaseTransformer;
 use PHPUnit\Framework\Attributes\IgnoreDeprecations;

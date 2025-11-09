@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\{ListFunctions, ScalarFunctionChain, StructureFunctions};
-use Flow\ETL\Row;
 
 final class EntryReference extends ScalarFunctionChain implements Reference
 {
@@ -57,7 +57,7 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return $this;
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         return $row->valueOf($this->entry);
     }

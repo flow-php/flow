@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Size extends ScalarFunctionChain
 {
@@ -14,9 +14,9 @@ final class Size extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?int
+    public function eval(Row $row, FlowContext $context) : ?int
     {
-        $value = (new Parameter($this->value))->eval($row);
+        $value = (new Parameter($this->value))->eval($row, $context);
 
         if (\is_string($value)) {
             return s($value)->length();

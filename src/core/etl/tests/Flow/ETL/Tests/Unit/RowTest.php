@@ -4,31 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry,
-    datetime_entry,
-    float_entry,
-    generate_random_int,
-    int_entry,
-    json_entry,
-    list_entry,
-    map_entry,
-    row,
-    str_entry,
-    string_entry,
-    struct_entry};
-use function Flow\ETL\DSL\{bool_schema,
-    boolean_entry,
-    datetime_schema,
-    float_schema,
-    integer_entry,
-    integer_schema,
-    json_schema,
-    list_schema,
-    map_schema,
-    schema,
-    string_schema,
-    structure_entry,
-    structure_schema};
+use function Flow\ETL\DSL\{bool_entry, bool_schema, boolean_entry, datetime_entry, datetime_schema, float_entry, float_schema, generate_random_int, int_entry, integer_entry, integer_schema, json_entry, json_schema, list_entry, list_schema, map_entry, map_schema, row, schema, str_entry, string_entry, string_schema, struct_entry, structure_entry, structure_schema};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;

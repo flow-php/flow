@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_list, type_string};
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class StringContainsAny extends ScalarFunctionChain
 {
@@ -20,10 +20,10 @@ final class StringContainsAny extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : bool
+    public function eval(Row $row, FlowContext $context) : bool
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $needles = (new Parameter($this->needles))->as($row, type_list(type_string()));
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $needles = (new Parameter($this->needles))->as($row, $context, type_list(type_string()));
 
         if ($value === null || $needles === null) {
             return false;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function preg_match;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Regex extends ScalarFunctionChain
 {
@@ -26,12 +26,12 @@ final class Regex extends ScalarFunctionChain
     /**
      * @return null|array<array-key, mixed>
      */
-    public function eval(Row $row) : ?array
+    public function eval(Row $row, FlowContext $context) : ?array
     {
-        $pattern = (new Parameter($this->pattern))->asString($row);
-        $subject = (new Parameter($this->subject))->asString($row);
-        $flags = (new Parameter($this->flags))->asInt($row);
-        $offset = (new Parameter($this->offset))->asInt($row);
+        $pattern = (new Parameter($this->pattern))->asString($row, $context);
+        $subject = (new Parameter($this->subject))->asString($row, $context);
+        $flags = (new Parameter($this->flags))->asInt($row, $context);
+        $offset = (new Parameter($this->offset))->asInt($row, $context);
 
         if ($pattern === null || $subject === null || $flags === null || $offset === null) {
             return null;

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{config, flow_context, row, rows};
-use function Flow\ETL\DSL\{int_entry, lit, ref, string_entry};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, lit, ref, row, rows, string_entry};
 use Flow\ETL\{Function\ScalarFunction\ScalarResult, Tests\FlowTestCase};
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 

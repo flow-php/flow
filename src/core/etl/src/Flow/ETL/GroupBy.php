@@ -60,7 +60,7 @@ final class GroupBy
         $this->aggregations = $aggregator;
     }
 
-    public function group(Rows $rows) : void
+    public function group(Rows $rows, FlowContext $context) : void
     {
         if ($this->pivot) {
             foreach ($rows as $row) {
@@ -106,7 +106,7 @@ final class GroupBy
                 $aggregator = $this->pivotedTable[$indexValue][$pivotValue];
 
                 if ($aggregator instanceof AggregatingFunction) {
-                    $aggregator->aggregate($row);
+                    $aggregator->aggregate($row, $context);
                 }
             }
 
@@ -138,7 +138,7 @@ final class GroupBy
                 }
 
                 foreach ($this->groupedTable[$valuesHash]['aggregators'] as $aggregator) {
-                    $aggregator->aggregate($row);
+                    $aggregator->aggregate($row, $context);
                 }
             }
         }

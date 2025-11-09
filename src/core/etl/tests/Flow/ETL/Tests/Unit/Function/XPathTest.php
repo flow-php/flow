@@ -17,7 +17,7 @@ final class XPathTest extends FlowTestCase
         self::assertInstanceOf(\DOMElement::class, $xml->documentElement);
         self::assertEquals(
             [$xml->documentElement->firstChild],
-            ref('value')->xpath('/root/foo')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
+            ref('value')->xpath('/root/foo')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context())
         );
     }
 
@@ -32,7 +32,7 @@ final class XPathTest extends FlowTestCase
                 $xml->documentElement->firstChild,
                 $xml->documentElement->lastChild,
             ],
-            ref('value')->xpath('/root/foo')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
+            ref('value')->xpath('/root/foo')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context())
         );
     }
 
@@ -42,7 +42,7 @@ final class XPathTest extends FlowTestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertNull(
-            ref('value')->xpath('/root/foo/asa')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
+            ref('value')->xpath('/root/foo/asa')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context())
         );
     }
 
@@ -52,7 +52,7 @@ final class XPathTest extends FlowTestCase
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
         self::assertNull(
-            ref('value')->xpath('/root/bar')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)))
+            ref('value')->xpath('/root/bar')->eval(row(flow_context(config())->entryFactory()->create('value', $xml)), flow_context())
         );
     }
 }

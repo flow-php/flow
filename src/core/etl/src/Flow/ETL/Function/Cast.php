@@ -6,8 +6,8 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_float, type_instance_of, type_integer, type_json, type_string, type_time_zone, type_xml};
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\Row;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
 
@@ -27,9 +27,9 @@ final class Cast extends ScalarFunctionChain
      * @throws InvalidArgumentException
      * @throws \JsonException
      */
-    public function eval(Row $row) : ?ScalarResult
+    public function eval(Row $row, FlowContext $context) : ?ScalarResult
     {
-        $value = (new Parameter($this->value))->eval($row);
+        $value = (new Parameter($this->value))->eval($row, $context);
 
         $type = $this->type;
 

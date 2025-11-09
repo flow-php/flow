@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use function Flow\ETL\DSL\{bool_entry, config, flow_context, from_rows, int_entry, row, rows};
-use function Flow\ETL\DSL\{lit, ref};
+use function Flow\ETL\DSL\{bool_entry, config, flow_context, from_rows, int_entry, lit, ref, row, rows};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor, FlowContext};
 use Flow\ETL\Pipeline\{OffsetPipeline, Pipes, SynchronousPipeline};

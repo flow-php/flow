@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\{bool_entry, int_entry, string_entry};
-use function Flow\ETL\DSL\{boolean_entry, enum_entry, integer_entry, structure_entry};
+use function Flow\ETL\DSL\{bool_entry, boolean_entry, enum_entry, int_entry, integer_entry, string_entry, structure_entry};
 use function Flow\Types\DSL\{type_integer, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entries, Entry};

@@ -7,9 +7,9 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\{float_entry, int_entry};
 use Flow\Calculator\Calculator;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{FlowContext, Row, Rows, Window};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\{Row, Rows, Window};
 
 final class Sum implements AggregatingFunction, WindowFunction
 {
@@ -23,7 +23,7 @@ final class Sum implements AggregatingFunction, WindowFunction
         $this->window = null;
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
             $entry = $row->get($this->ref);

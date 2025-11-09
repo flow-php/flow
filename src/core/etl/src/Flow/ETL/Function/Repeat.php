@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Repeat extends ScalarFunctionChain
 {
@@ -15,10 +15,10 @@ final class Repeat extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $times = (new Parameter($this->times))->asInt($row);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $times = (new Parameter($this->times))->asInt($row, $context);
 
         if ($value === null) {
             return null;

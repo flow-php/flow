@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_array, type_string};
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class JsonDecode extends ScalarFunctionChain
 {
@@ -15,10 +15,10 @@ final class JsonDecode extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->value))->as($row, type_string(), type_array());
-        $flags = (int) (new Parameter($this->flags))->asInt($row);
+        $value = (new Parameter($this->value))->as($row, $context, type_string(), type_array());
+        $flags = (int) (new Parameter($this->flags))->asInt($row, $context);
 
         if ($value === null) {
             return null;

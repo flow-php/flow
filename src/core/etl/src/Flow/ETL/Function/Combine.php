@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Combine extends ScalarFunctionChain
 {
@@ -21,10 +21,10 @@ final class Combine extends ScalarFunctionChain
     /**
      * @return null|array<int|string, mixed>
      */
-    public function eval(Row $row) : ?array
+    public function eval(Row $row, FlowContext $context) : ?array
     {
-        $keys = (new Parameter($this->keys))->asArray($row);
-        $values = (new Parameter($this->values))->asArray($row);
+        $keys = (new Parameter($this->keys))->asArray($row, $context);
+        $values = (new Parameter($this->values))->asArray($row, $context);
 
         if (null === $keys || null === $values) {
             return null;

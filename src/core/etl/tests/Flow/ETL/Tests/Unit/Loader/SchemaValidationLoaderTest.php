@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\{config, row, rows};
-use function Flow\ETL\DSL\{flow_context, integer_schema, schema};
-use function Flow\ETL\DSL\{int_entry, str_entry};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, integer_schema, row, rows, schema, str_entry};
 use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Schema\Validator\StrictValidator;

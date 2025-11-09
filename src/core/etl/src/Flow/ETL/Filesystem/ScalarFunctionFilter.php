@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Filesystem;
 
 use function Flow\ETL\DSL\row;
-use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\{FlowContext, Function\ScalarFunction};
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{FileStatus, Partition};
 use Flow\Filesystem\Path\Filter;
@@ -17,6 +17,7 @@ final readonly class ScalarFunctionFilter implements Filter
         private ScalarFunction $function,
         private EntryFactory $entryFactory,
         private AutoCaster $caster,
+        private FlowContext $context,
     ) {
     }
 
@@ -28,7 +29,8 @@ final readonly class ScalarFunctionFilter implements Filter
                     fn (Partition $partition) => $this->entryFactory->create($partition->name, $this->caster->cast($partition->value)),
                     $status->path->partitions()->toArray()
                 )
-            )
+            ),
+            $this->context
         );
     }
 }

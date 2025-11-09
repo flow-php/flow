@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class ToDate extends ScalarFunctionChain
 {
@@ -15,11 +15,11 @@ final class ToDate extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?\DateTimeInterface
+    public function eval(Row $row, FlowContext $context) : ?\DateTimeInterface
     {
-        $value = (new Parameter($this->value))->eval($row);
-        $format = (new Parameter($this->format))->asString($row);
-        $timeZone = (new Parameter($this->timeZone))->asInstanceOf($row, \DateTimeZone::class);
+        $value = (new Parameter($this->value))->eval($row, $context);
+        $format = (new Parameter($this->format))->asString($row, $context);
+        $timeZone = (new Parameter($this->timeZone))->asInstanceOf($row, $context, \DateTimeZone::class);
 
         if ($value === null || $format === null || $timeZone === null) {
             return null;

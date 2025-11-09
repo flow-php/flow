@@ -19,7 +19,7 @@ final class DOMElementValueTest extends FlowTestCase
         self::assertInstanceOf(HTMLElement::class, $element->documentElement);
         self::assertEquals(
             'foobar',
-            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $element->documentElement)))
+            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $element->documentElement)), flow_context())
         );
     }
 
@@ -31,7 +31,7 @@ final class DOMElementValueTest extends FlowTestCase
         self::assertInstanceOf(HTMLElement::class, $element->documentElement);
         self::assertEquals(
             'bar',
-            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $element->documentElement)))
+            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $element->documentElement)), flow_context())
         );
     }
 
@@ -43,7 +43,7 @@ final class DOMElementValueTest extends FlowTestCase
         self::assertInstanceOf(\DOMElement::class, $xml->documentElement);
         self::assertEquals(
             'baz',
-            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)))
+            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)), flow_context())
         );
     }
 
@@ -55,7 +55,7 @@ final class DOMElementValueTest extends FlowTestCase
         self::assertInstanceOf(\DOMElement::class, $xml->documentElement);
         self::assertEquals(
             'bar',
-            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)))
+            ref('value')->domElementValue()->eval(row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)), flow_context())
         );
     }
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, row};
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, int_entry, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StringNormalizeTest extends FlowTestCase
@@ -15,7 +14,8 @@ final class StringNormalizeTest extends FlowTestCase
         self::assertSame(
             'hello',
             ref('str')->stringNormalize(\Normalizer::NFC)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -25,7 +25,8 @@ final class StringNormalizeTest extends FlowTestCase
         self::assertSame(
             '',
             ref('str')->stringNormalize()->eval(
-                row(str_entry('str', ''))
+                row(str_entry('str', '')),
+                flow_context()
             )
         );
     }
@@ -35,7 +36,8 @@ final class StringNormalizeTest extends FlowTestCase
         self::assertSame(
             'é',
             ref('str')->stringNormalize()->eval(
-                row(str_entry('str', "e\u{0301}"))
+                row(str_entry('str', "e\u{0301}")),
+                flow_context()
             )
         );
     }
@@ -45,7 +47,8 @@ final class StringNormalizeTest extends FlowTestCase
         self::assertSame(
             'é',
             ref('str')->stringNormalize(\Normalizer::NFC)->eval(
-                row(str_entry('str', "e\u{0301}"))
+                row(str_entry('str', "e\u{0301}")),
+                flow_context()
             )
         );
     }
@@ -55,7 +58,8 @@ final class StringNormalizeTest extends FlowTestCase
         self::assertSame(
             "e\u{0301}",
             ref('str')->stringNormalize(\Normalizer::NFD)->eval(
-                row(str_entry('str', 'é'))
+                row(str_entry('str', 'é')),
+                flow_context()
             )
         );
     }
@@ -64,7 +68,8 @@ final class StringNormalizeTest extends FlowTestCase
     {
         self::assertNull(
             ref('str')->stringNormalize()->eval(
-                row(str_entry('str', null))
+                row(str_entry('str', null)),
+                flow_context()
             )
         );
     }
@@ -72,7 +77,8 @@ final class StringNormalizeTest extends FlowTestCase
     public function test_normalize_with_scalar_function_form() : void
     {
         $normalized = ref('str')->stringNormalize(ref('form'))->eval(
-            row(str_entry('str', "e\u{0301}"), int_entry('form', \Normalizer::NFC))
+            row(str_entry('str', "e\u{0301}"), int_entry('form', \Normalizer::NFC)),
+            flow_context()
         );
 
         self::assertSame('é', $normalized);

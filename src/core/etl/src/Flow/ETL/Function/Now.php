@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Now extends ScalarFunctionChain
 {
@@ -12,9 +12,9 @@ final class Now extends ScalarFunctionChain
     {
     }
 
-    public function eval(Row $row) : ?\DateTimeImmutable
+    public function eval(Row $row, FlowContext $context) : ?\DateTimeImmutable
     {
-        $tz = (new Parameter($this->timeZone))->asInstanceOf($row, \DateTimeZone::class);
+        $tz = (new Parameter($this->timeZone))->asInstanceOf($row, $context, \DateTimeZone::class);
 
         if ($tz === null) {
             return null;

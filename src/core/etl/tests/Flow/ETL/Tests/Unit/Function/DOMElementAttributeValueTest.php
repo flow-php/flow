@@ -20,7 +20,8 @@ final class DOMElementAttributeValueTest extends TestCase
         self::assertEquals(
             'foobar',
             ref('value')->domElementAttributeValue('id')->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement))
+                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
+                flow_context()
             )
         );
     }
@@ -33,7 +34,8 @@ final class DOMElementAttributeValueTest extends TestCase
         self::assertInstanceOf(HTMLElement::class, $element->documentElement);
         self::assertNull(
             ref('value')->domElementAttributeValue('id')->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement))
+                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
+                flow_context()
             )
         );
     }
@@ -47,7 +49,8 @@ final class DOMElementAttributeValueTest extends TestCase
         self::assertEquals(
             'buz',
             ref('value')->domElementAttributeValue('baz')->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild))
+                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
+                flow_context()
             )
         );
     }
@@ -60,7 +63,8 @@ final class DOMElementAttributeValueTest extends TestCase
         self::assertInstanceOf(\DOMElement::class, $xml->documentElement);
         self::assertNull(
             ref('value')->domElementAttributeValue('bar')->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild))
+                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
+                flow_context()
             )
         );
     }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\{batched_by, from_rows, int_entry, ref, row, rows};
-use function Flow\ETL\DSL\{config, flow_context};
+use function Flow\ETL\DSL\{batched_by, config, flow_context, from_rows, int_entry, ref, row, rows};
 use Flow\ETL\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -13,7 +13,8 @@ final class EnsureStartTest extends FlowTestCase
     public function test_empty_string_with_prefix() : void
     {
         $result = ref('str')->ensureStart('prefix_')->eval(
-            row(str_entry('str', ''))
+            row(str_entry('str', '')),
+            flow_context()
         );
 
         self::assertEquals('prefix_', $result);
@@ -25,7 +26,8 @@ final class EnsureStartTest extends FlowTestCase
             row(
                 str_entry('str', 'hello'),
                 str_entry('prefix', null)
-            )
+            ),
+            flow_context()
         );
 
         self::assertEquals('hello', $result);
@@ -34,7 +36,8 @@ final class EnsureStartTest extends FlowTestCase
     public function test_null_value() : void
     {
         $result = ref('str')->ensureStart('prefix_')->eval(
-            row(str_entry('str', null))
+            row(str_entry('str', null)),
+            flow_context()
         );
 
         self::assertNull($result);
@@ -43,7 +46,8 @@ final class EnsureStartTest extends FlowTestCase
     public function test_string_already_starts_with_prefix() : void
     {
         $result = ref('str')->ensureStart('https://')->eval(
-            row(str_entry('str', 'https://example.com'))
+            row(str_entry('str', 'https://example.com')),
+            flow_context()
         );
 
         self::assertEquals('https://example.com', $result);
@@ -52,7 +56,8 @@ final class EnsureStartTest extends FlowTestCase
     public function test_string_doesnt_start_with_prefix() : void
     {
         $result = ref('str')->ensureStart('https://')->eval(
-            row(str_entry('str', 'example.com'))
+            row(str_entry('str', 'example.com')),
+            flow_context()
         );
 
         self::assertEquals('https://example.com', $result);
@@ -61,7 +66,8 @@ final class EnsureStartTest extends FlowTestCase
     public function test_string_with_empty_prefix() : void
     {
         $result = ref('str')->ensureStart('')->eval(
-            row(str_entry('str', 'hello'))
+            row(str_entry('str', 'hello')),
+            flow_context()
         );
 
         self::assertEquals('hello', $result);
@@ -73,7 +79,8 @@ final class EnsureStartTest extends FlowTestCase
             row(
                 str_entry('str', 'example.com'),
                 str_entry('prefix', 'https://')
-            )
+            ),
+            flow_context()
         );
 
         self::assertEquals('https://example.com', $result);

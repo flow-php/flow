@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{lit, match_cases, match_condition, ref, row, str_entry};
+use function Flow\ETL\DSL\{flow_context, lit, match_cases, match_condition, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class MatchCasesTest extends FlowTestCase
@@ -18,11 +18,11 @@ final class MatchCasesTest extends FlowTestCase
 
         self::assertSame(
             'this is slug',
-            $match->eval(row(str_entry('string', 'this-is-slug')))
+            $match->eval(row(str_entry('string', 'this-is-slug')), flow_context())
         );
         self::assertSame(
             'this is slug',
-            $match->eval(row(str_entry('string', 'this_is_slug')))
+            $match->eval(row(str_entry('string', 'this_is_slug')), flow_context())
         );
     }
 
@@ -35,7 +35,7 @@ final class MatchCasesTest extends FlowTestCase
 
         $this->expectExceptionMessage('Not a single case matches row, consider using default parameter, row: {"string":"weirdstring"}');
 
-        $match->eval(row(str_entry('string', 'weirdstring')));
+        $match->eval(row(str_entry('string', 'weirdstring')), flow_context());
     }
 
     public function test_not_matching_anything_with_default() : void
@@ -50,7 +50,7 @@ final class MatchCasesTest extends FlowTestCase
 
         self::assertEquals(
             'normal string',
-            $match->eval(row(str_entry('string', 'weirdstring')))
+            $match->eval(row(str_entry('string', 'weirdstring')), flow_context())
         );
     }
 }

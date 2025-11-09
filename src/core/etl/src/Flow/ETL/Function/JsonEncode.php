@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class JsonEncode extends ScalarFunctionChain
 {
@@ -14,10 +14,10 @@ final class JsonEncode extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->value))->eval($row);
-        $flags = (int) (new Parameter($this->flags))->asInt($row);
+        $value = (new Parameter($this->value))->eval($row, $context);
+        $flags = (int) (new Parameter($this->flags))->asInt($row, $context);
 
         try {
             return \json_encode($value, $flags);

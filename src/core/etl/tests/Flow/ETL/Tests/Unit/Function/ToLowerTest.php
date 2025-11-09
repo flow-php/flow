@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{lit, lower};
+use function Flow\ETL\DSL\{flow_context, lit, lower};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -14,7 +14,7 @@ final class ToLowerTest extends FlowTestCase
     {
         self::assertSame(
             'lower',
-            lower(lit('LOWER'))->eval(row())
+            lower(lit('LOWER'))->eval(row(), flow_context())
         );
     }
 }

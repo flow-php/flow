@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,8 @@ final class StringFoldTest extends FlowTestCase
         self::assertSame(
             "die o'brian strasse",
             ref('str')->stringFold()->eval(
-                row(str_entry('str', "Die O'Brian Straße"))
+                row(str_entry('str', "Die O'Brian Straße")),
+                flow_context()
             )
         );
     }
@@ -26,7 +27,8 @@ final class StringFoldTest extends FlowTestCase
             ref('str')->stringFold()->eval(
                 row(
                     str_entry('str', null),
-                )
+                ),
+                flow_context()
             )
         );
     }

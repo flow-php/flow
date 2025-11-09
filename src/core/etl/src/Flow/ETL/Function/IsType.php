@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Flow\Types\Type;
 use Flow\Types\Type\TypeFactory;
 
@@ -26,9 +26,9 @@ final class IsType extends ScalarFunctionChain
         $this->types = $types;
     }
 
-    public function eval(Row $row) : bool
+    public function eval(Row $row, FlowContext $context) : bool
     {
-        $value = (new Parameter($this->value))->eval($row);
+        $value = (new Parameter($this->value))->eval($row, $context);
 
         foreach ($this->types as $type) {
             $type = \is_string($type) ? TypeFactory::fromString($type) : $type;

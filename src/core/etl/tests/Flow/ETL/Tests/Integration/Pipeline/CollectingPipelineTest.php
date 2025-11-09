@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use function Flow\ETL\DSL\{config, flow_context};
-use function Flow\ETL\DSL\{from_all, from_array};
+use function Flow\ETL\DSL\{config, flow_context, from_all, from_array};
 use Flow\ETL\Pipeline\{CollectingPipeline, SynchronousPipeline};
 use Flow\ETL\Tests\FlowTestCase;
 

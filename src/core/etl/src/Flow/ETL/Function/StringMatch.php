@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class StringMatch extends ScalarFunctionChain
 {
@@ -18,10 +18,10 @@ final class StringMatch extends ScalarFunctionChain
     /**
      * @return null|array<int|string, string>
      */
-    public function eval(Row $row) : ?array
+    public function eval(Row $row, FlowContext $context) : ?array
     {
-        $haystack = (new Parameter($this->haystack))->asString($row);
-        $pattern = (new Parameter($this->pattern))->asString($row);
+        $haystack = (new Parameter($this->haystack))->asString($row, $context);
+        $pattern = (new Parameter($this->pattern))->asString($row, $context);
 
         if ($haystack === null || $pattern === null) {
             return null;

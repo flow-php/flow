@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
 use Flow\ETL\String\StringStyles;
@@ -88,7 +88,8 @@ final class StringStyleTest extends FlowTestCase
                 row(
                     str_entry('str', 'Foo: Bar-baz.'),
                     str_entry('style', 'camel')
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -98,7 +99,8 @@ final class StringStyleTest extends FlowTestCase
         self::assertSame(
             'foo-bar-baz',
             ref('str')->stringStyle('kebab')->eval(
-                row(str_entry('str', 'Foo: Bar-baz.'))
+                row(str_entry('str', 'Foo: Bar-baz.')),
+                flow_context()
             )
         );
     }
@@ -108,7 +110,8 @@ final class StringStyleTest extends FlowTestCase
         self::assertSame(
             'foo bar bri̇an',
             ref('str')->stringStyle('lower')->eval(
-                row(str_entry('str', 'FOO Bar Brİan'))
+                row(str_entry('str', 'FOO Bar Brİan')),
+                flow_context()
             )
         );
     }
@@ -124,7 +127,8 @@ final class StringStyleTest extends FlowTestCase
             ref('str')->stringStyle($style)->eval(
                 row(
                     str_entry('str', $value),
-                )
+                ),
+                flow_context()
             )
         );
     }

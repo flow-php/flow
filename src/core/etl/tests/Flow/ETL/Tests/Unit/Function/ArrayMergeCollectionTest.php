@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{array_merge_collection, int_entry, json_entry, ref};
+use function Flow\ETL\DSL\{array_merge_collection, flow_context, int_entry, json_entry, ref};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -20,14 +20,14 @@ final class ArrayMergeCollectionTest extends FlowTestCase
             ]
         ));
 
-        self::assertNull(array_merge_collection(ref('array_entry'))->eval($row));
+        self::assertNull(array_merge_collection(ref('array_entry'))->eval($row, flow_context()));
     }
 
     public function test_for_not_array_entry() : void
     {
         $row = row(int_entry('invalid_entry', 1));
 
-        self::assertNull(array_merge_collection(ref('invalid_entry'))->eval($row));
+        self::assertNull(array_merge_collection(ref('invalid_entry'))->eval($row, flow_context()));
     }
 
     public function test_merging_collection_of_arrays() : void
@@ -47,7 +47,7 @@ final class ArrayMergeCollectionTest extends FlowTestCase
 
         self::assertEquals(
             [1, 2],
-            array_merge_collection(ref('array_entry'))->eval($row)
+            array_merge_collection(ref('array_entry'))->eval($row, flow_context())
         );
     }
 }

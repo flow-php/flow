@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\Trim\Type;
-use Flow\ETL\Row;
 
 final class Trim extends ScalarFunctionChain
 {
@@ -16,11 +16,11 @@ final class Trim extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $type = (new Parameter($this->type))->asEnum($row, Type::class);
-        $characters = (new Parameter($this->characters))->asString($row);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $type = (new Parameter($this->type))->asEnum($row, $context, Type::class);
+        $characters = (new Parameter($this->characters))->asString($row, $context);
 
         if ($value === null || $type === null || $characters === null) {
             return null;

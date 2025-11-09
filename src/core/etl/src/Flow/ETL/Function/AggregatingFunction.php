@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Row\{Entry, EntryFactory};
 
 interface AggregatingFunction
 {
-    public function aggregate(Row $row) : void;
+    public function aggregate(Row $row, FlowContext $context) : void;
 
     /**
      * @return Entry<mixed>

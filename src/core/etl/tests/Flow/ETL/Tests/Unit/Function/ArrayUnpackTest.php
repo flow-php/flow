@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, json_entry, ref};
+use function Flow\ETL\DSL\{flow_context, int_entry, json_entry, ref};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Function\ArrayUnpack;
 use Flow\ETL\Tests\FlowTestCase;
@@ -25,7 +25,7 @@ final class ArrayUnpackTest extends FlowTestCase
                 'enabled' => true,
                 'array' => ['foo' => 'bar'],
             ],
-            (new ArrayUnpack(ref('array_entry')))->eval($row)
+            (new ArrayUnpack(ref('array_entry')))->eval($row, flow_context())
         );
     }
 }

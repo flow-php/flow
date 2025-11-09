@@ -6,8 +6,8 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_instance_of, type_string, type_uuid};
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\Row;
 use Flow\Types\Value\Uuid as FlowUuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\{UuidV4, UuidV7};
@@ -34,11 +34,11 @@ final class Uuid extends ScalarFunctionChain
         return new self('uuid7', $value);
     }
 
-    public function eval(Row $row) : ScalarResult
+    public function eval(Row $row, FlowContext $context) : ScalarResult
     {
-        $param = (new Parameter($this->value))->as($row, type_string(), type_instance_of(\DateTimeInterface::class));
+        $param = (new Parameter($this->value))->as($row, $context, type_string(), type_instance_of(\DateTimeInterface::class));
 
-        $uuidVersion = (new Parameter($this->uuidVersion))->asString($row);
+        $uuidVersion = (new Parameter($this->uuidVersion))->asString($row, $context);
 
         return new ScalarResult(match ($uuidVersion) {
             'uuid4' => new FlowUuid($this->generateV4()),

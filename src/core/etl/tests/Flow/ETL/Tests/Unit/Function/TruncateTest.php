@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, int_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             'hello',
             ref('str')->truncate(5, 'verylongellipsis')->eval(
-                row(str_entry('str', 'hello world'))
+                row(str_entry('str', 'hello world')),
+                flow_context()
             )
         );
     }
@@ -25,7 +26,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             '',
             ref('str')->truncate(10)->eval(
-                row(str_entry('str', ''))
+                row(str_entry('str', '')),
+                flow_context()
             )
         );
     }
@@ -35,7 +37,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             'hello',
             ref('str')->truncate(5)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -44,7 +47,8 @@ final class TruncateTest extends FlowTestCase
     {
         self::assertNull(
             ref('str')->truncate(10)->eval(
-                row(str_entry('str', null))
+                row(str_entry('str', null)),
+                flow_context()
             )
         );
     }
@@ -54,7 +58,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             'he...',
             ref('str')->truncate(5)->eval(
-                row(str_entry('str', 'hello world'))
+                row(str_entry('str', 'hello world')),
+                flow_context()
             )
         );
     }
@@ -64,7 +69,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             'hello',
             ref('str')->truncate(10)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -74,7 +80,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             'he***',
             ref('str')->truncate(5, '***')->eval(
-                row(str_entry('str', 'hello world'))
+                row(str_entry('str', 'hello world')),
+                flow_context()
             )
         );
     }
@@ -84,7 +91,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             'h',
             ref('str')->truncate(1)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -94,7 +102,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             '',
             ref('str')->truncate(0)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -104,7 +113,8 @@ final class TruncateTest extends FlowTestCase
         self::assertSame(
             'hell',
             ref('str')->truncate(-1)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -117,7 +127,8 @@ final class TruncateTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello world'),
                     str_entry('length', null)
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -130,7 +141,8 @@ final class TruncateTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello world'),
                     str_entry('ellipsis', '>>')
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -143,7 +155,8 @@ final class TruncateTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello world'),
                     int_entry('length', 5)
-                )
+                ),
+                flow_context()
             )
         );
     }

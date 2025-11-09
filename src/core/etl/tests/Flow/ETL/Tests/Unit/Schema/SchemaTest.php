@@ -4,19 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{bool_schema,
-    int_schema,
-    json_schema,
-    list_schema,
-    map_schema,
-    refs,
-    schema,
-    schema_from_json,
-    schema_to_json,
-    str_schema,
-    structure_schema,
-    uuid_schema};
-use function Flow\ETL\DSL\{integer_schema, string_schema};
+use function Flow\ETL\DSL\{bool_schema, int_schema, integer_schema, json_schema, list_schema, map_schema, refs, schema, schema_from_json, schema_to_json, str_schema, string_schema, structure_schema, uuid_schema};
 use function Flow\Types\DSL\{type_integer, type_list, type_map, type_string, type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException,
     SchemaDefinitionNotFoundException,

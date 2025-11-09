@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, json_entry, ref};
+use function Flow\ETL\DSL\{flow_context, int_entry, json_entry, ref};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -17,6 +17,7 @@ final class ArrayReverseTest extends FlowTestCase
             ref('a')->arrayReverse()
                 ->eval(
                     row(json_entry('a', [4, 10, 3, 5])),
+                    flow_context()
                 )
         );
     }
@@ -27,6 +28,7 @@ final class ArrayReverseTest extends FlowTestCase
             ref('a')->arrayReverse()
                 ->eval(
                     row(int_entry('a', 123)),
+                    flow_context()
                 )
         );
     }

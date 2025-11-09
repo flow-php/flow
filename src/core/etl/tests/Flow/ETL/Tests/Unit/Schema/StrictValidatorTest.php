@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{bool_schema, integer_schema, list_schema, schema, string_schema};
-use function Flow\ETL\DSL\{schema_strict_validator, schema_validate};
+use function Flow\ETL\DSL\{bool_schema, integer_schema, list_schema, schema, schema_strict_validator, schema_validate, string_schema};
 use function Flow\Types\DSL\{type_list, type_string};
 use Flow\ETL\{Schema\Metadata, Tests\FlowTestCase};
 

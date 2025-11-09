@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{boolean_entry, integer_entry};
-use function Flow\ETL\DSL\{data_frame, row};
-use function Flow\ETL\DSL\{ignore_error_handler, skip_rows_handler, string_entry, throw_error_handler};
+use function Flow\ETL\DSL\{boolean_entry, data_frame, ignore_error_handler, integer_entry, row, skip_rows_handler, string_entry, throw_error_handler};
 use Flow\ETL\{Extractor, FlowContext, Loader, Rows, Tests\FlowTestCase, Transformer};
 use Flow\ETL\Row\Entry\DateTimeEntry;
 

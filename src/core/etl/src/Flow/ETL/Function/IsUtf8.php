@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\b;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class IsUtf8 extends ScalarFunctionChain
 {
@@ -13,9 +13,9 @@ final class IsUtf8 extends ScalarFunctionChain
     {
     }
 
-    public function eval(Row $row) : bool
+    public function eval(Row $row, FlowContext $context) : bool
     {
-        $string = (new Parameter($this->string))->asString($row);
+        $string = (new Parameter($this->string))->asString($row, $context);
 
         if ($string === null) {
             return false;

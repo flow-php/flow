@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Function;
 
 use Flow\ETL\Adapter\Excel\Sheet\SheetNameAssertion;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\{Parameter, ScalarFunction};
-use Flow\ETL\Row;
 
 final readonly class IsValidExcelSheetName implements ScalarFunction
 {
@@ -14,9 +14,9 @@ final readonly class IsValidExcelSheetName implements ScalarFunction
     {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $sheetName = (new Parameter($this->sheetName))->asString($row);
+        $sheetName = (new Parameter($this->sheetName))->asString($row, $context);
 
         if ($sheetName === null) {
             return false;

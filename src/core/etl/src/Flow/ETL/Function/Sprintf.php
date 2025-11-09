@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Sprintf extends ScalarFunctionChain
 {
@@ -20,14 +20,14 @@ final class Sprintf extends ScalarFunctionChain
         $this->values = $values;
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $format = (new Parameter($this->format))->asString($row);
+        $format = (new Parameter($this->format))->asString($row, $context);
 
         /**
          * @var array<null|float|int|string> $values
          */
-        $values = \array_map(static fn (ScalarFunction|float|int|string|null $value) : mixed => (new Parameter($value))->eval($row), $this->values);
+        $values = \array_map(static fn (ScalarFunction|float|int|string|null $value) : mixed => (new Parameter($value))->eval($row, $context), $this->values);
 
         if ($format === null || \in_array(null, $values, true)) {
             return null;

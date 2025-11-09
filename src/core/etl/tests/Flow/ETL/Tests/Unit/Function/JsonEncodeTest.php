@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{datetime_entry, int_entry, json_entry, ref, str_entry};
+use function Flow\ETL\DSL\{datetime_entry, flow_context, int_entry, json_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -14,7 +14,7 @@ final class JsonEncodeTest extends FlowTestCase
     {
         self::assertSame(
             '{"date":"2021-01-01 00:00:00.000000","timezone_type":3,"timezone":"UTC"}',
-            ref('value')->jsonEncode()->eval(row(datetime_entry('value', new \DateTimeImmutable('2021-01-01')))),
+            ref('value')->jsonEncode()->eval(row(datetime_entry('value', new \DateTimeImmutable('2021-01-01'))), flow_context()),
         );
     }
 
@@ -22,7 +22,7 @@ final class JsonEncodeTest extends FlowTestCase
     {
         self::assertSame(
             '125',
-            ref('value')->jsonEncode()->eval(row(int_entry('value', 125))),
+            ref('value')->jsonEncode()->eval(row(int_entry('value', 125)), flow_context()),
         );
     }
 
@@ -30,7 +30,7 @@ final class JsonEncodeTest extends FlowTestCase
     {
         self::assertSame(
             '"test"',
-            ref('value')->jsonEncode()->eval(row(str_entry('value', 'test'))),
+            ref('value')->jsonEncode()->eval(row(str_entry('value', 'test')), flow_context()),
         );
     }
 
@@ -38,7 +38,7 @@ final class JsonEncodeTest extends FlowTestCase
     {
         self::assertSame(
             '{"value":1}',
-            ref('value')->jsonEncode()->eval(row(json_entry('value', ['value' => 1]))),
+            ref('value')->jsonEncode()->eval(row(json_entry('value', ['value' => 1])), flow_context()),
         );
     }
 }

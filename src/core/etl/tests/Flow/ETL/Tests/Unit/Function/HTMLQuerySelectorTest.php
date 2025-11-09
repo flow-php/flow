@@ -17,7 +17,7 @@ final class HTMLQuerySelectorTest extends TestCase
     {
         $this->expectException(RequiredPHPVersionException::class);
 
-        ref('value')->htmlQuerySelector('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', '')));
+        ref('value')->htmlQuerySelector('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
     }
 
     #[RequiresPhp('>= 8.4')]
@@ -26,7 +26,7 @@ final class HTMLQuerySelectorTest extends TestCase
         /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>');
 
-        $result = ref('value')->htmlQuerySelector('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', $html)));
+        $result = ref('value')->htmlQuerySelector('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
 
         /* @phpstan-ignore-next-line */
         self::assertInstanceOf(Element::class, $result);
@@ -38,7 +38,7 @@ final class HTMLQuerySelectorTest extends TestCase
         /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>');
 
-        $result = ref('value')->htmlQuerySelector('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', $html)));
+        $result = ref('value')->htmlQuerySelector('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
 
         self::assertNull($result);
     }
@@ -46,7 +46,7 @@ final class HTMLQuerySelectorTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_invalid_value() : void
     {
-        $result = ref('value')->htmlQuerySelector('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', '')));
+        $result = ref('value')->htmlQuerySelector('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
 
         self::assertNull($result);
     }

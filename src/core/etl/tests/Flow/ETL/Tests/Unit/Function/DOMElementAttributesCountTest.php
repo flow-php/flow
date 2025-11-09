@@ -20,7 +20,8 @@ final class DOMElementAttributesCountTest extends TestCase
         self::assertSame(
             3,
             ref('value')->domElementAttributesCount()->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement))
+                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
+                flow_context()
             )
         );
     }
@@ -34,7 +35,8 @@ final class DOMElementAttributesCountTest extends TestCase
         self::assertSame(
             1,
             ref('value')->domElementAttributesCount()->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement))
+                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
+                flow_context()
             )
         );
     }
@@ -48,7 +50,8 @@ final class DOMElementAttributesCountTest extends TestCase
         self::assertSame(
             0,
             ref('value')->domElementAttributesCount()->eval(
-                row(flow_context(config())->entryFactory()->create('value', $element->documentElement))
+                row(flow_context(config())->entryFactory()->create('value', $element->documentElement)),
+                flow_context()
             )
         );
     }
@@ -62,7 +65,8 @@ final class DOMElementAttributesCountTest extends TestCase
         self::assertSame(
             3,
             ref('value')->domElementAttributesCount()->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild))
+                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
+                flow_context()
             )
         );
     }
@@ -76,7 +80,8 @@ final class DOMElementAttributesCountTest extends TestCase
         self::assertSame(
             1,
             ref('value')->domElementAttributesCount()->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild))
+                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
+                flow_context()
             )
         );
     }
@@ -90,7 +95,8 @@ final class DOMElementAttributesCountTest extends TestCase
         self::assertSame(
             0,
             ref('value')->domElementAttributesCount()->eval(
-                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild))
+                row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)),
+                flow_context()
             )
         );
     }

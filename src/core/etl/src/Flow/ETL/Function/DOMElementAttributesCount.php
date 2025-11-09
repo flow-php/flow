@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\type_instance_of;
 use Dom\HTMlElement;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class DOMElementAttributesCount extends ScalarFunctionChain
 {
@@ -14,7 +14,7 @@ final class DOMElementAttributesCount extends ScalarFunctionChain
     {
     }
 
-    public function eval(Row $row) : ?int
+    public function eval(Row $row, FlowContext $context) : ?int
     {
         $types = [
             type_instance_of(\DOMElement::class),
@@ -24,7 +24,7 @@ final class DOMElementAttributesCount extends ScalarFunctionChain
             $types[] = type_instance_of(HTMLElement::class);
         }
 
-        $domElement = (new Parameter($this->domElement))->as($row, ...$types);
+        $domElement = (new Parameter($this->domElement))->as($row, $context, ...$types);
 
         if ($domElement === null) {
             return null;

@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
 
@@ -22,7 +22,7 @@ final class First implements AggregatingFunction
         $this->first = null;
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         if ($this->first === null) {
             try {

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{config, flow_context, row, rows};
-use function Flow\ETL\DSL\{float_entry, int_entry, ref, str_entry, sum, window};
+use function Flow\ETL\DSL\{config, float_entry, flow_context, int_entry, ref, row, rows, str_entry, sum, window};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SumTest extends FlowTestCase
@@ -14,11 +13,11 @@ final class SumTest extends FlowTestCase
     {
         $aggregator = sum(ref('int'));
 
-        $aggregator->aggregate(row(str_entry('int', '10')));
-        $aggregator->aggregate(row(str_entry('int', '20')));
-        $aggregator->aggregate(row(str_entry('int', '55')));
-        $aggregator->aggregate(row(str_entry('int', '25')));
-        $aggregator->aggregate(row(str_entry('not_int', null)));
+        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
+        $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
         self::assertSame(
             110,
@@ -30,10 +29,10 @@ final class SumTest extends FlowTestCase
     {
         $aggregator = sum(ref('int'));
 
-        $aggregator->aggregate(row(int_entry('int', 10)));
-        $aggregator->aggregate(row(int_entry('int', 20)));
-        $aggregator->aggregate(row(int_entry('int', 30)));
-        $aggregator->aggregate(row(str_entry('int', null)));
+        $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
+        $aggregator->aggregate(row(str_entry('int', null)), flow_context());
 
         self::assertSame(
             60,
@@ -45,10 +44,10 @@ final class SumTest extends FlowTestCase
     {
         $aggregator = sum(ref('int'));
 
-        $aggregator->aggregate(row(float_entry('int', 10.25)));
-        $aggregator->aggregate(row(int_entry('int', 20)));
-        $aggregator->aggregate(row(int_entry('int', 305)));
-        $aggregator->aggregate(row(int_entry('int', 25)));
+        $aggregator->aggregate(row(float_entry('int', 10.25)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 305)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 25)), flow_context());
 
         self::assertSame(
             360.25,

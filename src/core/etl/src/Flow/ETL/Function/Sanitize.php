@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Sanitize extends ScalarFunctionChain
 {
@@ -15,11 +15,11 @@ final class Sanitize extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $val = (new Parameter($this->value))->asString($row);
-        $placeholder = (new Parameter($this->placeholder))->asString($row);
-        $skipCharacters = (new Parameter($this->skipCharacters))->asInt($row);
+        $val = (new Parameter($this->value))->asString($row, $context);
+        $placeholder = (new Parameter($this->placeholder))->asString($row, $context);
+        $skipCharacters = (new Parameter($this->skipCharacters))->asInt($row, $context);
 
         if ($val === null || $placeholder === null) {
             return null;

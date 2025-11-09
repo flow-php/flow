@@ -37,7 +37,7 @@ final readonly class GroupByPipeline implements OverridingPipeline, Pipeline
     public function process(FlowContext $context) : \Generator
     {
         foreach ($this->pipeline->process($context) as $nextRows) {
-            $this->groupBy->group($nextRows);
+            $this->groupBy->group($nextRows, $context);
         }
 
         yield $this->groupBy->result($context);

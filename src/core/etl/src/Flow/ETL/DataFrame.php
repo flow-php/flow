@@ -375,7 +375,8 @@ final class DataFrame
             new ScalarFunctionFilter(
                 $filter,
                 $this->context->entryFactory(),
-                new AutoCaster()
+                new AutoCaster(),
+                $this->context
             )
         );
 

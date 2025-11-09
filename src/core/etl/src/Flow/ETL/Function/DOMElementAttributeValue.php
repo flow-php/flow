@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_instance_of, type_list};
 use Dom\HTMLElement;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class DOMElementAttributeValue extends ScalarFunctionChain
 {
@@ -16,7 +16,7 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
         $types = [
             type_instance_of(\DOMNode::class),
@@ -30,6 +30,7 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
 
         $node = (new Parameter($this->domElement))->as(
             $row,
+            $context,
             ...$types
         );
 
@@ -41,7 +42,7 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
             $node = \reset($node);
         }
 
-        $attributeName = (new Parameter($this->attribute))->asString($row);
+        $attributeName = (new Parameter($this->attribute))->asString($row, $context);
 
         if ($node === null || $attributeName === null) {
             return null;

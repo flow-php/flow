@@ -14,11 +14,11 @@ final class FirstTest extends FlowTestCase
     {
         $aggregator = first(ref('int'));
 
-        $aggregator->aggregate(row(int_entry('not_int', null)));
-        $aggregator->aggregate(row(str_entry('int', '10')));
-        $aggregator->aggregate(row(str_entry('int', '20')));
-        $aggregator->aggregate(row(str_entry('int', '55')));
-        $aggregator->aggregate(row(str_entry('int', '25')));
+        $aggregator->aggregate(row(int_entry('not_int', null)), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
 
         self::assertSame(
             '10',

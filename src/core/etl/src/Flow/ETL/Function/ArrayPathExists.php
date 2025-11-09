@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ArrayDot\array_dot_exists;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class ArrayPathExists extends ScalarFunctionChain
 {
@@ -20,11 +20,11 @@ final class ArrayPathExists extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : bool
+    public function eval(Row $row, FlowContext $context) : bool
     {
         try {
-            $array = (new Parameter($this->array))->asArray($row);
-            $path = (new Parameter($this->path))->asString($row);
+            $array = (new Parameter($this->array))->asArray($row, $context);
+            $path = (new Parameter($this->path))->asString($row, $context);
 
             if ($array === null || $path === null) {
                 return false;

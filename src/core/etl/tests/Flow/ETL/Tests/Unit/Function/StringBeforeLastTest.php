@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -18,7 +18,8 @@ final class StringBeforeLastTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello world'),
                     str_entry('needle', 'o')
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -31,7 +32,8 @@ final class StringBeforeLastTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello world'),
                     str_entry('needle', 'o')
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -44,7 +46,8 @@ final class StringBeforeLastTest extends FlowTestCase
                 row(
                     str_entry('str', ''),
                     str_entry('needle', 'o')
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -56,7 +59,8 @@ final class StringBeforeLastTest extends FlowTestCase
                 row(
                     str_entry('str', null),
                     str_entry('needle', 'o')
-                )
+                ),
+                flow_context()
             )
         );
     }

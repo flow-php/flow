@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class StringMatchAll extends ScalarFunctionChain
 {
@@ -17,10 +17,10 @@ final class StringMatchAll extends ScalarFunctionChain
     /**
      * @return array<int, array<int|string, string>>
      */
-    public function eval(Row $row) : array
+    public function eval(Row $row, FlowContext $context) : array
     {
-        $haystack = (new Parameter($this->haystack))->asString($row);
-        $pattern = (new Parameter($this->pattern))->asString($row);
+        $haystack = (new Parameter($this->haystack))->asString($row, $context);
+        $pattern = (new Parameter($this->pattern))->asString($row, $context);
 
         if ($haystack === null || $pattern === null) {
             return [];

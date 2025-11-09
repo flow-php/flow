@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{array_get_collection, array_get_collection_first, int_entry, json_entry, ref};
+use function Flow\ETL\DSL\{array_get_collection, array_get_collection_first, flow_context, int_entry, json_entry, ref};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -14,7 +14,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
     {
         $row = row(int_entry('invalid_entry', 1));
 
-        self::assertNull(array_get_collection(ref('invalid_entry'), ['id'])->eval($row));
+        self::assertNull(array_get_collection(ref('invalid_entry'), ['id'])->eval($row, flow_context()));
     }
 
     public function test_getting_keys_from_simple_array() : void
@@ -29,7 +29,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
             ]
         ));
 
-        self::assertNull(array_get_collection(ref('array_entry'), ['id'])->eval($row));
+        self::assertNull(array_get_collection(ref('array_entry'), ['id'])->eval($row, flow_context()));
     }
 
     public function test_getting_specific_keys_from_collection_of_array() : void
@@ -57,7 +57,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
                 ['id' => 1, 'status' => 'PENDING'],
                 ['id' => 2, 'status' => 'NEW'],
             ],
-            array_get_collection(ref('array_entry'), ['id', 'status'])->eval($row)
+            array_get_collection(ref('array_entry'), ['id', 'status'])->eval($row, flow_context())
         );
     }
 
@@ -87,7 +87,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
             [
                 'parent_id' => 1,
             ],
-            ref('array_entry')->arrayGetCollectionFirst('parent_id')->eval($row)
+            ref('array_entry')->arrayGetCollectionFirst('parent_id')->eval($row, flow_context())
         );
     }
 
@@ -117,7 +117,7 @@ final class ArrayGetCollectionTest extends FlowTestCase
             [
                 'parent_id' => 1,
             ],
-            array_get_collection_first(ref('array_entry'), 'parent_id')->eval($row)
+            array_get_collection_first(ref('array_entry'), 'parent_id')->eval($row, flow_context())
         );
     }
 }

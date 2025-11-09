@@ -14,11 +14,11 @@ final class LastTest extends FlowTestCase
     {
         $aggregator = last(ref('int'));
 
-        $aggregator->aggregate(row(str_entry('int', '10')));
-        $aggregator->aggregate(row(str_entry('int', '20')));
-        $aggregator->aggregate(row(str_entry('int', '55')));
-        $aggregator->aggregate(row(str_entry('int', '25')));
-        $aggregator->aggregate(row(str_entry('not_int', null)));
+        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
+        $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
         self::assertSame(
             '25',

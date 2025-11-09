@@ -30,7 +30,7 @@ final readonly class DuplicateRowTransformer implements Transformer
         $duplicatedRows = \Flow\ETL\DSL\rows();
 
         foreach ($rows->all() as $row) {
-            $condition = (new Parameter($this->condition))->asBoolean($row);
+            $condition = (new Parameter($this->condition))->asBoolean($row, $context);
 
             if ($condition) {
                 $duplicatedRow = \Flow\ETL\DSL\rows($row->duplicate());

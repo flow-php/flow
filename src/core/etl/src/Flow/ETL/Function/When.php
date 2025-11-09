@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class When extends ScalarFunctionChain
 {
@@ -15,16 +15,16 @@ final class When extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $condition = (new Parameter($this->condition))->asBoolean($row);
+        $condition = (new Parameter($this->condition))->asBoolean($row, $context);
 
         if ($condition) {
-            return (new Parameter($this->then))->eval($row);
+            return (new Parameter($this->then))->eval($row, $context);
         }
 
         if ($this->else) {
-            return (new Parameter($this->else))->eval($row);
+            return (new Parameter($this->else))->eval($row, $context);
         }
 
         return null;

@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use function Flow\ArrayDot\array_dot_get;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class ArrayGetCollection extends ScalarFunctionChain
 {
@@ -29,12 +29,12 @@ final class ArrayGetCollection extends ScalarFunctionChain
         return new self($ref, $keys, '0');
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         try {
-            $value = (new Parameter($this->ref))->asArray($row);
-            $index = (new Parameter($this->index))->asString($row);
-            $keys = (new Parameter($this->keys))->asArray($row);
+            $value = (new Parameter($this->ref))->asArray($row, $context);
+            $index = (new Parameter($this->index))->asString($row, $context);
+            $keys = (new Parameter($this->keys))->asArray($row, $context);
 
             if ($value === null || $index === null || $keys === null) {
                 return null;

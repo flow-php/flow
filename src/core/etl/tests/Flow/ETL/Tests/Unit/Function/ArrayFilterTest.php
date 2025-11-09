@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, list_entry, lit, ref, string_entry};
+use function Flow\ETL\DSL\{flow_context, int_entry, list_entry, lit, ref, string_entry};
 use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\{type_integer, type_list};
 use Flow\ETL\Tests\FlowTestCase;
@@ -18,6 +18,7 @@ final class ArrayFilterTest extends FlowTestCase
             ref('list')->arrayFilter(lit(2))
                 ->eval(
                     row(list_entry('list', [1, 2], type_list(type_integer()))),
+                    flow_context()
                 )
         );
     }
@@ -32,6 +33,7 @@ final class ArrayFilterTest extends FlowTestCase
                         list_entry('list', [1, 2], type_list(type_integer())),
                         int_entry('int', 2)
                     ),
+                    flow_context()
                 )
         );
     }
@@ -43,6 +45,7 @@ final class ArrayFilterTest extends FlowTestCase
             ref('list')->arrayFilter(lit(5))
                 ->eval(
                     row(list_entry('list', [1, 2], type_list(type_integer()))),
+                    flow_context()
                 )
         );
     }
@@ -53,6 +56,7 @@ final class ArrayFilterTest extends FlowTestCase
             ref('map')->arrayFilter(lit(1))
                 ->eval(
                     row(string_entry('map', 'test')),
+                    flow_context()
                 )
         );
     }

@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\ScalarFunction;
 
-use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Function\ScalarFunction, Row};
 
 interface ExpandResults extends ScalarFunction
 {
     /**
      * @return array<array-key, mixed>
      */
-    public function eval(Row $row) : array;
+    public function eval(Row $row, FlowContext $context) : array;
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{dense_rank, int_entry, ref, window};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{dense_rank, int_entry, ref, row, rows, window};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class DenseRankTest extends FlowTestCase

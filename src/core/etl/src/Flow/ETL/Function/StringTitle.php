@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\u;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class StringTitle extends ScalarFunctionChain
 {
@@ -15,10 +15,10 @@ final class StringTitle extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $string = (new Parameter($this->string))->asString($row);
-        $allWords = (new Parameter($this->allWords))->asBoolean($row);
+        $string = (new Parameter($this->string))->asString($row, $context);
+        $allWords = (new Parameter($this->allWords))->asBoolean($row, $context);
 
         if ($string === null) {
             return null;

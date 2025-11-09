@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class ModifyDateTime extends ScalarFunctionChain
 {
@@ -14,10 +14,10 @@ final class ModifyDateTime extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->reference))->asInstanceOf($row, \DateTimeInterface::class);
-        $modifier = (new Parameter($this->modifier))->asString($row);
+        $value = (new Parameter($this->reference))->asInstanceOf($row, $context, \DateTimeInterface::class);
+        $modifier = (new Parameter($this->modifier))->asString($row, $context);
 
         if ($modifier === null || $value === null) {
             return null;

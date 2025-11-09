@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{bool_entry, ref, str_entry};
+use function Flow\ETL\DSL\{bool_entry, flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,8 @@ final class IndexOfLastTest extends FlowTestCase
         self::assertSame(
             9,
             ref('str')->indexOfLast('l')->eval(
-                row(str_entry('str', 'hello world'))
+                row(str_entry('str', 'hello world')),
+                flow_context()
             )
         );
     }
@@ -24,7 +25,8 @@ final class IndexOfLastTest extends FlowTestCase
     {
         self::assertNull(
             ref('str')->indexOfLast('x')->eval(
-                row(str_entry('str', 'hello world'))
+                row(str_entry('str', 'hello world')),
+                flow_context()
             )
         );
     }
@@ -36,7 +38,8 @@ final class IndexOfLastTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello'),
                     str_entry('needle', null)
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -45,7 +48,8 @@ final class IndexOfLastTest extends FlowTestCase
     {
         self::assertFalse(
             ref('str')->indexOfLast('l')->eval(
-                row(str_entry('str', null))
+                row(str_entry('str', null)),
+                flow_context()
             )
         );
     }
@@ -59,7 +63,8 @@ final class IndexOfLastTest extends FlowTestCase
                     str_entry('str', 'hello world'),
                     str_entry('needle', 'L'),
                     bool_entry('ignore_case', true)
-                )
+                ),
+                flow_context()
             )
         );
     }

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use function Flow\ETL\DSL\{config, flow_context};
-use function Flow\ETL\DSL\{from_rows, int_entry, ref, row, rows, str_entry};
-use function Flow\ETL\DSL\{row_number, window};
+use function Flow\ETL\DSL\{config, flow_context, from_rows, int_entry, ref, row, row_number, rows, str_entry, window};
 use function Flow\ETL\DSL\sum;
 use Flow\ETL\{Extractor, Loader};
 use Flow\ETL\Pipeline;

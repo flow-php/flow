@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{json_entry, ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, json_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_array;
 use Flow\ETL\Function\ArraySort\Sort;
@@ -15,8 +15,8 @@ final class ArraySortTest extends FlowTestCase
     public function test_sorting_big_arrays() : void
     {
         self::assertSame(
-            ref('array')->arraySort()->eval(row(json_entry('array', type_array()->assert(\json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR))))),
-            ref('array')->arraySort()->eval(row(json_entry('array', type_array()->assert(\json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR)))))
+            ref('array')->arraySort()->eval(row(json_entry('array', type_array()->assert(\json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)))), flow_context()),
+            ref('array')->arraySort()->eval(row(json_entry('array', type_array()->assert(\json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR)))), flow_context())
         );
     }
 
@@ -43,7 +43,7 @@ final class ArraySortTest extends FlowTestCase
                         'g' => 'h',
                     ],
                 ]
-            )))
+            )), flow_context())
         );
     }
 
@@ -71,14 +71,14 @@ final class ArraySortTest extends FlowTestCase
 
                     ],
                 ]
-            )))
+            )), flow_context())
         );
     }
 
     public function test_sorting_non_array_value() : void
     {
         self::assertNull(
-            ref('array')->arraySort()->eval(row(str_entry('array', 'string')))
+            ref('array')->arraySort()->eval(row(str_entry('array', 'string')), flow_context())
         );
     }
 

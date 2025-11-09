@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{config, flow_context};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, row, rows, str_entry};
 use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\{int_entry, row, rows, str_entry};
 use Flow\ETL\{DataFrame, DataFrameFactory, Rows, Tests\FlowTestCase};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;

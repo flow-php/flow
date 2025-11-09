@@ -4,17 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry,
-    datetime_entry,
-    int_entry,
-    list_entry,
-    ref,
-    row,
-    rows,
-    rows_partitioned,
-    str_entry,
-    string_entry};
-use function Flow\ETL\DSL\{boolean_entry, integer_schema, json_schema, list_schema, string_schema};
+use function Flow\ETL\DSL\{bool_entry, boolean_entry, datetime_entry, int_entry, integer_schema, json_schema, list_entry, list_schema, ref, row, rows, rows_partitioned, str_entry, string_entry, string_schema};
 use function Flow\ETL\DSL\schema;
 use function Flow\Filesystem\DSL\{partition, partitions};
 use function Flow\Types\DSL\{type_integer, type_list, type_string};

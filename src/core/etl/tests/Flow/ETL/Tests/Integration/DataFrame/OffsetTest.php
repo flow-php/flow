@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{df, from_array, from_rows, ref};
-use function Flow\ETL\DSL\{integer_entry, list_entry};
+use function Flow\ETL\DSL\{df, from_array, from_rows, integer_entry, list_entry, ref};
 use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\{type_integer, type_list, type_structure};
 use Flow\ETL\Exception\InvalidArgumentException;

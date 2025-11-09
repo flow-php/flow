@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Coalesce extends ScalarFunctionChain
 {
@@ -19,11 +19,11 @@ final class Coalesce extends ScalarFunctionChain
         $this->values = $values;
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         foreach ($this->values as $value) {
             try {
-                $result = (new Parameter($value))->eval($row);
+                $result = (new Parameter($value))->eval($row, $context);
             } catch (\Exception) {
                 continue;
             }

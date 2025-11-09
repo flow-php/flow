@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\type_integer;
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Wordwrap extends ScalarFunctionChain
 {
@@ -18,12 +18,12 @@ final class Wordwrap extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $width = type_integer()->assert((new Parameter($this->width))->as($row, type_integer()));
-        $break = (new Parameter($this->break))->asString($row);
-        $cut = (new Parameter($this->cut))->asBoolean($row);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $width = type_integer()->assert((new Parameter($this->width))->as($row, $context, type_integer()));
+        $break = (new Parameter($this->break))->asString($row, $context);
+        $cut = (new Parameter($this->cut))->asBoolean($row, $context);
 
         if ($value === null) {
             return null;

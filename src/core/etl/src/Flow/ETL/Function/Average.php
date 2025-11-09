@@ -7,9 +7,9 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\{float_entry, integer_entry};
 use Flow\Calculator\{Calculator, Rounding};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{FlowContext, Row, Rows, Window};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\{Row, Rows, Window};
 
 final class Average implements AggregatingFunction, WindowFunction
 {
@@ -26,7 +26,7 @@ final class Average implements AggregatingFunction, WindowFunction
         $this->sum = 0;
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
             /** @var mixed $value */

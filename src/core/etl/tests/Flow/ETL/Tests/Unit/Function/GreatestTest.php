@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{greatest, int_entry, ref, row};
+use function Flow\ETL\DSL\{flow_context, greatest, int_entry, ref, row};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class GreatestTest extends FlowTestCase
@@ -20,7 +20,7 @@ final class GreatestTest extends FlowTestCase
 
         self::assertSame(
             55,
-            $greatest->eval(row(int_entry('int', 55)))
+            $greatest->eval(row(int_entry('int', 55)), flow_context())
         );
     }
 
@@ -35,7 +35,7 @@ final class GreatestTest extends FlowTestCase
 
         $this->expectExceptionMessage("Can't compare '(datetime > integer)' due to data type mismatch.");
 
-        $greatest->eval(row(int_entry('int', 55)));
+        $greatest->eval(row(int_entry('int', 55)), flow_context());
     }
 
     public function test_greatest_with_null() : void
@@ -49,7 +49,7 @@ final class GreatestTest extends FlowTestCase
 
         self::assertSame(
             1257,
-            $greatest->eval(row(int_entry('int', 55)))
+            $greatest->eval(row(int_entry('int', 55)), flow_context())
         );
     }
 }

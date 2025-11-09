@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
 final class Slug extends ScalarFunctionChain
@@ -23,12 +23,12 @@ final class Slug extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $string = (new Parameter($this->string))->asString($row);
-        $separator = (new Parameter($this->separator))->asString($row, '-');
-        $locale = (new Parameter($this->locale))->asString($row);
-        $symbolsMap = (new Parameter($this->symbolsMap))->asArray($row);
+        $string = (new Parameter($this->string))->asString($row, $context);
+        $separator = (new Parameter($this->separator))->asString($row, $context, '-');
+        $locale = (new Parameter($this->locale))->asString($row, $context);
+        $symbolsMap = (new Parameter($this->symbolsMap))->asArray($row, $context);
 
         if ($string === null) {
             return null;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, int_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,8 @@ final class RepeatTest extends FlowTestCase
         self::assertSame(
             '',
             ref('str')->repeat(3)->eval(
-                row(str_entry('str', ''))
+                row(str_entry('str', '')),
+                flow_context()
             )
         );
     }
@@ -25,7 +26,8 @@ final class RepeatTest extends FlowTestCase
         self::assertSame(
             '',
             ref('str')->repeat(-1)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -34,7 +36,8 @@ final class RepeatTest extends FlowTestCase
     {
         self::assertNull(
             ref('str')->repeat(3)->eval(
-                row(str_entry('str', null))
+                row(str_entry('str', null)),
+                flow_context()
             )
         );
     }
@@ -44,7 +47,8 @@ final class RepeatTest extends FlowTestCase
         self::assertSame(
             'hellohellohello',
             ref('str')->repeat(3)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -57,7 +61,8 @@ final class RepeatTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello'),
                     str_entry('times', null)
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -70,7 +75,8 @@ final class RepeatTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello'),
                     int_entry('times', 2)
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -80,7 +86,8 @@ final class RepeatTest extends FlowTestCase
         self::assertSame(
             '',
             ref('str')->repeat(0)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }

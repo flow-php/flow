@@ -6,9 +6,9 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{FlowContext, Row, Rows, Window};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\{Row, Rows, Window};
 
 final class Count implements AggregatingFunction, WindowFunction
 {
@@ -22,7 +22,7 @@ final class Count implements AggregatingFunction, WindowFunction
         $this->count = 0;
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
             if ($this->ref) {

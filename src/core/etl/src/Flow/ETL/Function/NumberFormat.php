@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class NumberFormat extends ScalarFunctionChain
 {
@@ -16,12 +16,12 @@ final class NumberFormat extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->asNumber($row);
-        $decimals = (new Parameter($this->decimals))->asInt($row);
-        $decimalSeparator = (new Parameter($this->decimalSeparator))->asString($row);
-        $thousandsSeparator = (new Parameter($this->thousandsSeparator))->asString($row);
+        $value = (new Parameter($this->value))->asNumber($row, $context);
+        $decimals = (new Parameter($this->decimals))->asInt($row, $context);
+        $decimalSeparator = (new Parameter($this->decimalSeparator))->asString($row, $context);
+        $thousandsSeparator = (new Parameter($this->thousandsSeparator))->asString($row, $context);
 
         if ($value === null || $decimals === null || $decimalSeparator === null || $thousandsSeparator === null) {
             return null;

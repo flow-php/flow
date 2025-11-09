@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final readonly class All implements ScalarFunction
 {
@@ -29,10 +29,10 @@ final readonly class All implements ScalarFunction
         return new self(...$this->functions, ...[new Not($scalarFunction)]);
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         foreach ($this->functions as $ref) {
-            if (!(new Parameter($ref))->eval($row)) {
+            if (!(new Parameter($ref))->eval($row, $context)) {
                 return false;
             }
         }

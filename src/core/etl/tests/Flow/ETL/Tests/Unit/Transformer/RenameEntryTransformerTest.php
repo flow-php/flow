@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{boolean_entry, flow_context, integer_entry, json_entry, string_entry};
-use function Flow\ETL\DSL\{config, row, rows};
+use function Flow\ETL\DSL\{boolean_entry, config, flow_context, integer_entry, json_entry, row, rows, string_entry};
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\RenameEntryTransformer;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -14,7 +14,8 @@ final class IsEmptyTest extends FlowTestCase
     {
         self::assertTrue(
             ref('str')->isEmpty()->eval(
-                row(str_entry('str', ''))
+                row(str_entry('str', '')),
+                flow_context()
             )
         );
     }
@@ -23,7 +24,8 @@ final class IsEmptyTest extends FlowTestCase
     {
         self::assertFalse(
             ref('str')->isEmpty()->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -32,7 +34,8 @@ final class IsEmptyTest extends FlowTestCase
     {
         self::assertNull(
             ref('str')->isEmpty()->eval(
-                row(str_entry('str', null))
+                row(str_entry('str', null)),
+                flow_context()
             )
         );
     }
@@ -41,7 +44,8 @@ final class IsEmptyTest extends FlowTestCase
     {
         self::assertFalse(
             ref('str')->isEmpty()->eval(
-                row(str_entry('str', 'a'))
+                row(str_entry('str', 'a')),
+                flow_context()
             )
         );
     }

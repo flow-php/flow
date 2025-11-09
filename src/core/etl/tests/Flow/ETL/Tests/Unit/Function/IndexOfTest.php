@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,27 +15,31 @@ final class IndexOfTest extends FlowTestCase
         self::assertSame(
             5,
             ref('str')->indexOf('x', offset: 5)->eval(
-                row(str_entry('str', 'AbBAsxa'))
+                row(str_entry('str', 'AbBAsxa')),
+                flow_context()
             )
         );
 
         self::assertSame(
             0,
             ref('str')->indexOf('A', ignoreCase: true)->eval(
-                row(str_entry('str', 'abbbbb'))
+                row(str_entry('str', 'abbbbb')),
+                flow_context()
             )
         );
 
         self::assertSame(
             5,
             ref('str')->indexOf('x', offset: 5)->eval(
-                row(str_entry('str', 'AbBAsxa'))
+                row(str_entry('str', 'AbBAsxa')),
+                flow_context()
             )
         );
 
         self::assertNull(
             ref('str')->indexOf('x', offset: 2)->eval(
-                row(str_entry('str', 'Abba'))
+                row(str_entry('str', 'Abba')),
+                flow_context()
             )
         );
     }
@@ -47,7 +51,8 @@ final class IndexOfTest extends FlowTestCase
                 row(
                     str_entry('str', 'x'),
                     str_entry('needle', null)
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -58,7 +63,8 @@ final class IndexOfTest extends FlowTestCase
             ref('str')->indexOf('x')->eval(
                 row(
                     str_entry('str', null),
-                )
+                ),
+                flow_context()
             )
         );
     }
