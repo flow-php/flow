@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP ScalarFunctionChain Methods
  *
- * ScalarFunctionChain methods: 119
+ * ScalarFunctionChain methods: 121
  * ScalarFunctionChain-returning functions: 53
  *
  * This completer triggers after ScalarFunctionChain-returning DSL functions
@@ -707,6 +707,36 @@ const scalarFunctionChainMethods = [
             return div
         },
         apply: snippet("hash(" + "$" + "{" + "1:algorithm" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "htmlQuerySelector",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">htmlQuerySelector</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HTMLQuerySelector</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("htmlQuerySelector(" + "$" + "{" + "1:path" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "htmlQuerySelectorAll",
+        type: "method",
+        detail: "Flow\\\\ETL\\\\Function\\\\ScalarFunctionChain",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">htmlQuerySelectorAll</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ScalarFunction|string</span> <span class=\"fn-param\">$path</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">HTMLQuerySelectorAll</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("htmlQuerySelectorAll(" + "$" + "{" + "1:path" + "}" + ")"),
         boost: 10
     },        {
         label: "indexOf",
