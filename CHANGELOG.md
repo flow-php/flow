@@ -23,6 +23,7 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1976](https://github.com/flow-php/flow/pull/1976) - **updated importmap dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1975](https://github.com/flow-php/flow/pull/1975) - **narrow phpstan class.notFound suppression to config only and specific classes only** - [@norberttech](https://github.com/norberttech)
 - [#1960](https://github.com/flow-php/flow/pull/1960) - **`HTMLType & `HTMLEntry` require now `\Dom\HTMLDocument`** - [@stloyd](https://github.com/stloyd)
 - [#1973](https://github.com/flow-php/flow/pull/1973) - **Moved logic related to Window functions to pipeline from transformer** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +45,7 @@
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1976](https://github.com/flow-php/flow/pull/1976) - **paths in importmap in website** - [@norberttech](https://github.com/norberttech)
 - [6da7ed](https://github.com/flow-php/flow/commit/6da7ed106fe0b216ff804986be54b7ae48660a1e) - **path to php-cs-fixer.php config in playground** - [@norberttech](https://github.com/norberttech)
 - [6f4981](https://github.com/flow-php/flow/commit/6f498185cd4489e07421799fb4593ca048e308cf) - **removed redundant htaccess file from website public folder** - [@norberttech](https://github.com/norberttech)
 - [b472ec](https://github.com/flow-php/flow/commit/b472ecc5ea9ed3a08f82764d82164d43a648aa72) - **path to php-cs-fixer configuration in playground** - [@norberttech](https://github.com/norberttech)
@@ -54,6 +56,7 @@
 - [#1945](https://github.com/flow-php/flow/pull/1945) - **Fixed broken `HTMLTypeTest`** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#1976](https://github.com/flow-php/flow/pull/1976) - **popover-polyfill from website** - [@norberttech](https://github.com/norberttech)
 - [#1943](https://github.com/flow-php/flow/pull/1943) - **Duplicate UUID library detection logic from EntryFactory** - [@MrHDOLEK](https://github.com/MrHDOLEK)
 - [26078b](https://github.com/flow-php/flow/commit/26078bf7f1abe3d4f87a634b0419db130014f6d8) - **wasm development lefotvers** - [@norberttech](https://github.com/norberttech)
 - [#1929](https://github.com/flow-php/flow/pull/1929) - **Remove `Rows::fromArray()`** - [@stloyd](https://github.com/stloyd)
