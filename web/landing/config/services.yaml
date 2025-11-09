@@ -53,6 +53,10 @@ services:
         arguments:
             $dslPath: '%dsl_definitions_path%'
 
+    Flow\Website\Twig\ImportMapExtension:
+        arguments:
+            $importMapRenderer: '@asset_mapper.importmap.renderer'
+
     Flow\Website\Command\GenerateDSLCompleterCommand:
         arguments:
             $projectDir: '%kernel.project_dir%'
