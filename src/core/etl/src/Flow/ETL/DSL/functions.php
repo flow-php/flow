@@ -632,7 +632,7 @@ function xml_element_entry(string $name, \DOMElement|string|null $value, ?Metada
  * @return Entry<?HTMLDocument>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null) : Entry // @phpstan-ignore class.notFound,class.notFound
+function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null) : Entry
 {
     return new HTMLEntry($name, $value, $metadata);
 }
@@ -1973,7 +1973,7 @@ function json_schema(string $name, bool $nullable = false, ?Metadata $metadata =
  * @return Definition<HTMLDocument>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition // @phpstan-ignore class.notFound
+function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::html($name, $nullable, $metadata);
 }

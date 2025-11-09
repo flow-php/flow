@@ -441,7 +441,7 @@ function type_literal(bool|float|int|string $value) : LiteralType
  * @return Type<HTMLDocument>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_html() : Type // @phpstan-ignore class.notFound
+function type_html() : Type
 {
     return new HTMLType();
 }
