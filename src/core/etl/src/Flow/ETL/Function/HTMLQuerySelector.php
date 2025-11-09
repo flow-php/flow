@@ -14,14 +14,13 @@ final class HTMLQuerySelector extends ScalarFunctionChain
         private readonly mixed $value,
         private readonly ScalarFunction|string $selector,
     ) {
+        if (!\class_exists('\Dom\HTMLDocument')) {
+            throw new RequiredPHPVersionException('\Dom\HTMLDocument', '8.4');
+        }
     }
 
     public function eval(Row $row) : ?Element
     {
-        if (!\class_exists('\Dom\HTMLDocument')) {
-            throw new RequiredPHPVersionException('\Dom\HTMLDocument', '8.4');
-        }
-
         $value = (new Parameter($this->value))->asInstanceOf($row, HTMLDocument::class);
         $selector = (new Parameter($this->selector))->asString($row);
 
