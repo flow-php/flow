@@ -47,6 +47,7 @@
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [3ab7d0](https://github.com/flow-php/flow/commit/3ab7d073e8b6d19f6f1b44d486953403014ff15a) - **disable automatic Link header generation on cloudflare** - [@norberttech](https://github.com/norberttech)
 - [2d27b3](https://github.com/flow-php/flow/commit/2d27b31a44ef726196cc6ddd652e658d312eb568) - **reverted changes related to adding ImportMapExtension in website** - [@norberttech](https://github.com/norberttech)
 - [93a1b2](https://github.com/flow-php/flow/commit/93a1b289039b33883fa2c01a6a2b88c14f029389) - **importmap shim async** - [@norberttech](https://github.com/norberttech)
 - [6a2282](https://github.com/flow-php/flow/commit/6a2282d8223df57bb4550d3b99bcef7f2bc1d81a) - **implemented impormap sections** - [@norberttech](https://github.com/norberttech)
