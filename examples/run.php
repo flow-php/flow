@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use Composer\Semver\Semver;
 use Flow\ETL\Dataset\Statistics\HighResolutionTime;
 use Symfony\Component\Console\Input\{ArgvInput, InputDefinition, InputOption};
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -26,7 +27,7 @@ if (false === in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 ini_set('memory_limit', -1);
 
 $output = new ConsoleOutput();
-$intput = new ArgvInput(definition: new InputDefinition(
+$input = new ArgvInput(definition: new InputDefinition(
     [
         new InputOption(name: 'composer-update', shortcut: 'u', mode: InputOption::VALUE_NONE),
         new InputOption(name: 'composer-archive', shortcut: 'a', mode: InputOption::VALUE_NONE),
@@ -36,9 +37,9 @@ $intput = new ArgvInput(definition: new InputDefinition(
     ]
 ));
 
-$topic = $intput->getOption('topic');
-$example = $intput->getOption('example');
-$option = $intput->getOption('option');
+$topic = $input->getOption('topic');
+$example = $input->getOption('example');
+$option = $input->getOption('option');
 
 $path = __DIR__ . '/topics';
 
@@ -59,13 +60,12 @@ $finder->in($path)
     ->files()
     ->name('*.php');
 
-$style = new SymfonyStyle($intput, $output);
+$style = new SymfonyStyle($input, $output);
 $style->setDecorated(true);
 
 $style->title('Running Flow PHP Examples');
 
 foreach ($finder as $file) {
-
     if ($file->getBasename() !== 'code.php') {
         continue;
     }
@@ -76,12 +76,24 @@ foreach ($finder as $file) {
         continue;
     }
 
+    if (\file_exists($composerPath = $file->getPath() . '/composer.json')) {
+        $constraints = json_decode(file_get_contents($composerPath), true)['require']['php'] ?? '^8.2';
+
+        if (!Semver::satisfies(\PHP_VERSION, $constraints)) {
+            $style->warning(
+                sprintf("Skipping example, used PHP (%s) doesn't satisfy requirements: {$constraints}", \PHP_VERSION)
+            );
+
+            continue;
+        }
+    }
+
     $start = HighResolutionTime::now();
 
     $style->info("Running example: {$file->getRelativePathname()}");
 
-    $style->note(($intput->getOption('composer-update') ? 'Updating' : 'Installing') . ' composer dependencies');
-    $composerProcess = new Symfony\Component\Process\Process(['composer', $intput->getOption('composer-update') ? 'update' : 'install'], $file->getPath());
+    $style->note(($input->getOption('composer-update') ? 'Updating' : 'Installing') . ' composer dependencies');
+    $composerProcess = new Symfony\Component\Process\Process(['composer', $input->getOption('composer-update') ? 'update' : 'install'], $file->getPath());
     $composerProcess->run();
     $style->info('Composer install finished');
 
@@ -105,7 +117,7 @@ foreach ($finder as $file) {
 
     $style->success('Example finished in ' . $start->diff($end)->toSeconds() . ' seconds');
 
-    if ($intput->getOption('composer-archive')) {
+    if ($input->getOption('composer-archive')) {
         $style->note('Generating composer archive');
         $composerProcess = new Symfony\Component\Process\Process(['composer', 'archive', '--format', 'zip', '--file', 'flow_php_example'], $file->getPath());
         $composerProcess->run();

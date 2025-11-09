@@ -32,13 +32,13 @@ $finder->in(__DIR__ . '/topics')
     ->name('*.php');
 
 $output = new ConsoleOutput();
-$intput = new ArgvInput(definition: new InputDefinition(
+$input = new ArgvInput(definition: new InputDefinition(
     [
         new InputOption(name: 'composer-update', shortcut: 'u', mode: InputOption::VALUE_NONE),
         new InputOption(name: 'composer-archive', shortcut: 'a', mode: InputOption::VALUE_NONE),
     ]
 ));
-$style = new SymfonyStyle($intput, $output);
+$style = new SymfonyStyle($input, $output);
 $style->setDecorated(true);
 
 $style->title('Cleaning Flow PHP Examples');
@@ -46,7 +46,6 @@ $style->title('Cleaning Flow PHP Examples');
 $fs = fstab()->for(protocol('file'));
 
 foreach ($finder as $file) {
-
     if ($file->getBasename() !== 'code.php') {
         continue;
     }
