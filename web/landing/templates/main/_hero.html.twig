@@ -11,6 +11,12 @@
             <a class="text-white" href="{{ url('changelog') }}">Changelog</a>
             <a class="text-white ml-4" href="{{ url('blog_post', {'date': '2025-03-16', 'slug': 'flow-php-release-cycle'}) }}">Release Cycle</a>
         </p>
+        <p class="mt-4">
+            <a class="py-2 px-4 bg-orange-100 rounded font-semibold hover:bg-orange-200 transition-colors whitespace-nowrap text-white" href="{{ path('playground') }}">
+                <img src="{{ asset('images/icons/play.svg') }}" alt="play" width="20" height="20" class="mr-2 inline-block">
+                Try Flow Online
+            </a>
+        </p>
     {% endapply %}
     <img src="{{ asset('images/elephant.svg') }}" alt="elephant" width="720" class="max-lg:hidden absolute right-0 top-0">
 </div>
