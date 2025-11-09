@@ -23,6 +23,7 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1975](https://github.com/flow-php/flow/pull/1975) - **narrow phpstan class.notFound suppression to config only and specific classes only** - [@norberttech](https://github.com/norberttech)
 - [#1960](https://github.com/flow-php/flow/pull/1960) - **`HTMLType & `HTMLEntry` require now `\Dom\HTMLDocument`** - [@stloyd](https://github.com/stloyd)
 - [#1973](https://github.com/flow-php/flow/pull/1973) - **Moved logic related to Window functions to pipeline from transformer** - [@norberttech](https://github.com/norberttech)
 - [#1968](https://github.com/flow-php/flow/pull/1968) - **Moved away from ace editor to codemirror in playground** - [@norberttech](https://github.com/norberttech)
