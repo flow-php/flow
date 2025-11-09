@@ -60,9 +60,6 @@ parameters:
     excludePaths:
         - src/cli/src/Flow/CLI/Command/*
         - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php
-        - src/core/etl/src/Flow/ETL/Function/HTMLQuerySelectorAll.php
-        - src/core/etl/src/Flow/ETL/Function/HTMLQuerySelector.php
-        - src/core/etl/src/Flow/ETL/Row/Entry/HTMLEntry.php
         - src/core/etl/src/Flow/ETL/Sort/ExternalSort/RowsMinHeap.php
         - src/adapter/etl-adapter-avro/*
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php
@@ -73,7 +70,6 @@ parameters:
         - src/lib/parquet/src/Flow/Parquet/ThriftModel/*
         - src/lib/parquet/src/Flow/Parquet/BinaryReader/*
         - src/lib/parquet/src/Flow/Parquet/Dremel/ColumnData/DefinitionConverter.php
-        - src/lib/types/src/Flow/Types/Type/Logical/HTMLType.php
 
     tmpDir: var/phpstan/cache
 
@@ -88,6 +84,23 @@ parameters:
             function: 'ddj()'
         -
             function: 'dj()'
+
+    ignoreErrors:
+        -
+            identifier: class.notFound
+            path: src/core/etl/src/Flow/ETL/Row/Entry/HTMLEntry.php
+
+        -
+            identifier: class.notFound
+            path: src/core/etl/src/Flow/ETL/Function/HTMLQuerySelector.php
+
+        -
+            identifier: class.notFound
+            path: src/core/etl/src/Flow/ETL/Function/HTMLQuerySelectorAll.php
+
+        -
+            identifier: class.notFound
+            path: src/lib/types/src/Flow/Types/Type/Logical/HTMLType.php
 
 includes:
     - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon
