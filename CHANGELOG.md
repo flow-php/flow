@@ -46,6 +46,7 @@
 - [#1925](https://github.com/flow-php/flow/pull/1925) - **Update Homebrew TAP formula: flow-php to version: 0.26.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [6a2282](https://github.com/flow-php/flow/commit/6a2282d8223df57bb4550d3b99bcef7f2bc1d81a) - **implemented impormap sections** - [@norberttech](https://github.com/norberttech)
 - [#1976](https://github.com/flow-php/flow/pull/1976) - **paths in importmap in website** - [@norberttech](https://github.com/norberttech)
 - [6da7ed](https://github.com/flow-php/flow/commit/6da7ed106fe0b216ff804986be54b7ae48660a1e) - **path to php-cs-fixer.php config in playground** - [@norberttech](https://github.com/norberttech)
 - [6f4981](https://github.com/flow-php/flow/commit/6f498185cd4489e07421799fb4593ca048e308cf) - **removed redundant htaccess file from website public folder** - [@norberttech](https://github.com/norberttech)
