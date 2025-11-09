@@ -1,4 +1,4 @@
-Read data from a json file.
+Read data from a XML file.
 
 ```php
 function from_xml(string|Path $path);

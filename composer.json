@@ -47,6 +47,7 @@
     },
     "require-dev": {
         "cocur/slugify": "^4.5",
+        "composer/semver": "^3.4",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
         "nikic/php-parser": "^5.3",
