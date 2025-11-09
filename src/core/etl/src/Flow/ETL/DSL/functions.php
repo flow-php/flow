@@ -656,7 +656,7 @@ function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $me
  * @return Entry<?HTMLElement>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
-function html_element_entry(string $name, HTMLElement|string|null $value, ?Metadata $metadata = null) : Entry // @phpstan-ignore class.notFound,class.notFound
+function html_element_entry(string $name, HTMLElement|string|null $value, ?Metadata $metadata = null) : Entry
 {
     return new HTMLElementEntry($name, $value, $metadata);
 }
@@ -2006,7 +2006,7 @@ function html_schema(string $name, bool $nullable = false, ?Metadata $metadata =
  * @return Definition<HTMLElement>
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
-function html_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition // @phpstan-ignore class.notFound
+function html_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::html_element($name, $nullable, $metadata);
 }

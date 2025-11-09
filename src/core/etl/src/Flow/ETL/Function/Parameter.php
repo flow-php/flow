@@ -25,16 +25,15 @@ final readonly class Parameter
     /**
      * @template T
      *
-     * @param Type<T> $type
      * @param Type<T> ...$types
      *
      * @return null|T
      */
-    public function as(Row $row, Type $type, Type ...$types) : mixed
+    public function as(Row $row, Type ...$types) : mixed
     {
         $value = $this->eval($row);
 
-        foreach (\array_merge([$type], $types) as $nextType) {
+        foreach ($types as $nextType) {
             if ($nextType->isValid($value)) {
                 return $value;
             }

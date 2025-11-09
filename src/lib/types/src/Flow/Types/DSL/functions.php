@@ -450,7 +450,7 @@ function type_html() : Type
  * @return Type<HTMLElement>
  */
 #[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
-function type_html_element() : Type // @phpstan-ignore class.notFound
+function type_html_element() : Type
 {
     return new HTMLElementType();
 }

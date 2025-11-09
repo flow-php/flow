@@ -123,6 +123,7 @@ final readonly class EntryFactory
                 XMLType::class => xml_entry($entryName, null, $metadata),
                 XMLElementType::class => xml_element_entry($entryName, null, $metadata),
                 HTMLType::class => html_entry($entryName, null, $metadata),
+                HTMLElementType::class => html_element_entry($entryName, null, $metadata),
                 default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
             };
         }

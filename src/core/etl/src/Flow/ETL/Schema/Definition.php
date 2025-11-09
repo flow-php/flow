@@ -152,7 +152,7 @@ final class Definition
     /**
      * @return Definition<HTMLElement>
      */
-    public static function html_element(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self // @phpstan-ignore class.notFound
+    public static function html_element(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_html_element(), $nullable, $metadata);
     }
