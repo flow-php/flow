@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\{html_entry, int_entry, json_entry, string_entry, xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry\{IntegerEntry, JsonEntry};
 use Psr\Http\Message\ResponseInterface;
 
 final class ResponseEntriesFactory
@@ -23,17 +22,11 @@ final class ResponseEntriesFactory
      */
     public function create(ResponseInterface $response) : Entries
     {
-        $responseType = 'html';
-
-        foreach ($response->getHeader('Content-Type') as $header) {
-            if (\str_contains($header, 'application/json')) {
-                $responseType = 'json';
-            }
-        }
-
         $responseBody = $response->getBody();
 
         if ($responseBody->isReadable()) {
+            $responseType = ContentTypeDetector::detectFromHeaders($response->getHeader('Content-Type'));
+
             if ($responseBody->isSeekable()) {
                 $responseBody->seek(0);
             }
@@ -44,26 +37,14 @@ final class ResponseEntriesFactory
                 $responseBody->seek(0);
             }
 
-            switch ($responseType) {
-                case 'json':
-                    if (\class_exists(JsonEntry::class)) {
-                        $decodedJson = \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR);
+            $responseBodyEntry = match ($responseType) {
+                'json' => json_entry('response_body', (array) \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR)),
+                'xml' => xml_entry('response_body', $responseBodyContent),
+                default => string_entry('response_body', $responseBodyContent),
+            };
 
-                        if (!\is_array($decodedJson)) {
-                            throw new InvalidArgumentException('Invalid JSON response body, expected array or object');
-                        }
-
-                        $responseBodyEntry = new JsonEntry('response_body', $decodedJson);
-                    } else {
-                        $responseBodyEntry = string_entry('response_body', $responseBodyContent);
-                    }
-
-                    break;
-
-                default:
-                    $responseBodyEntry = string_entry('response_body', $responseBodyContent);
-
-                    break;
+            if (class_exists('\Dom\HTMLDocument') && 'html' === $responseType) {
+                $responseBodyEntry = html_entry('response_body', $responseBodyContent);
             }
         } else {
             $responseBodyEntry = string_entry('response_body', null);
@@ -71,8 +52,8 @@ final class ResponseEntriesFactory
 
         return new Entries(
             $responseBodyEntry,
-            new JsonEntry('response_headers', $response->getHeaders()),
-            new IntegerEntry('response_status_code', $response->getStatusCode()),
+            json_entry('response_headers', $response->getHeaders()),
+            int_entry('response_status_code', $response->getStatusCode()),
             string_entry('response_protocol_version', $response->getProtocolVersion()),
             string_entry('response_reason_phrase', $response->getReasonPhrase()),
         );
