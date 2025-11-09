@@ -39,6 +39,14 @@ final class ImportMapExtension extends AbstractExtension
             $html
         );
 
+        // Remove async from es-module-shims to prevent race condition
+        // The polyfill must load before module scripts execute
+        $html = \str_replace(
+            '<script async src="https://ga.jspm.io/npm:es-module-shims',
+            '<script src="https://ga.jspm.io/npm:es-module-shims',
+            $html
+        );
+
         return $html;
     }
 }
