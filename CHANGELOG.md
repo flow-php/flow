@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-11-09
 
 ### Added
+- [#1977](https://github.com/flow-php/flow/pull/1977) - **playground cta to website** - [@norberttech](https://github.com/norberttech)
 - [#1960](https://github.com/flow-php/flow/pull/1960) - **Add `HTMLQuerySelectorAll` & `HTMLQuerySelector` scalar functions** - [@stloyd](https://github.com/stloyd)
 - [#1968](https://github.com/flow-php/flow/pull/1968) - **File browser to playground** - [@norberttech](https://github.com/norberttech)
 - [#1968](https://github.com/flow-php/flow/pull/1968) - **cs fixer to playground** - [@norberttech](https://github.com/norberttech)
