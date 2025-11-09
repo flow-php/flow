@@ -80,6 +80,12 @@
                         </a>
                     </li>
                     <li>
+                        <a class="p-3 flex items-center" href="{{ path('playground') }}">
+                            Demo
+                            <img src="{{ asset('images/icons/play.svg') }}" alt="Flow PHP Playground" width="16" height="16" class="ml-1">
+                        </a>
+                    </li>
+                    <li>
                         <a class="p-3 flex items-center" href="{{ path('example_option', {topic: 'data_frame', 'example': 'data_reading', 'option' : 'array', _fragment: 'example'}) }}">
                             Examples
                             <img src="{{ asset('images/icons/code.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
