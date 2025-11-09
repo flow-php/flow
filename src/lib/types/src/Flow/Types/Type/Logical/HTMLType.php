@@ -23,7 +23,7 @@ final readonly class HTMLType implements Type
 $@isx
 REGXP;
 
-    public function assert(mixed $value) : HTMLDocument // @phpstan-ignore class.notFound
+    public function assert(mixed $value) : HTMLDocument
     {
         if ($this->isValid($value)) {
             return $value;
@@ -32,7 +32,7 @@ REGXP;
         throw InvalidTypeException::value($value, $this);
     }
 
-    public function cast(mixed $value) : HTMLDocument // @phpstan-ignore class.notFound
+    public function cast(mixed $value) : HTMLDocument
     {
         if (!$this->isValid($value)) {
             throw new CastingException($value, $this);
@@ -40,7 +40,6 @@ REGXP;
 
         /* @phpstan-ignore-next-line */
         if (\is_string($value)) {
-            /* @phpstan-ignore-next-line class.notFound */
             return HTMLDocument::createFromString($value);
         }
 

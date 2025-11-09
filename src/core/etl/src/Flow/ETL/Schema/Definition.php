@@ -143,7 +143,7 @@ final class Definition
     /**
      * @return Definition<HTMLDocument>
      */
-    public static function html(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self // @phpstan-ignore class.notFound
+    public static function html(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_html(), $nullable, $metadata);
     }
