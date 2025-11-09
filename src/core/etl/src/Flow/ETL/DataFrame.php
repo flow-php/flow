@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction,
+    ExecutionMode,
     ScalarFunction,
     StyleConverter\StringStyles as OldStringStyles,
     WindowFunction};
@@ -571,15 +572,17 @@ final class DataFrame
      * SaveMode defines how Flow should behave when writing to a file/files that already exists.
      * For more details please see SaveMode enum.
      *
-     * @param SaveMode $mode
-     *
      * @lazy
      *
      * @return $this
      */
-    public function mode(SaveMode $mode) : self
+    public function mode(SaveMode|ExecutionMode $mode) : self
     {
-        $this->context->streams()->setSaveMode($mode);
+        if ($mode instanceof ExecutionMode) {
+            $this->context->functions()->setMode($mode);
+        } else {
+            $this->context->streams()->setMode($mode);
+        }
 
         return $this;
     }

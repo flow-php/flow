@@ -6,6 +6,7 @@ namespace Flow\ETL;
 
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
+use Flow\ETL\Function\{ExecutionMode, Functions};
 use Flow\ETL\Row\EntryFactory;
 use Flow\Filesystem\{Filesystem, Path, Protocol};
 
@@ -17,9 +18,12 @@ final class FlowContext
 {
     private ErrorHandler $errorHandler;
 
+    private readonly Functions $functions;
+
     public function __construct(public readonly Config $config)
     {
         $this->errorHandler = new ThrowError();
+        $this->functions = new Functions(ExecutionMode::LENIENT);
     }
 
     public function cache() : Cache
@@ -40,6 +44,11 @@ final class FlowContext
     public function filesystem(Path|Protocol $path) : Filesystem
     {
         return $this->config->fstab()->for($path);
+    }
+
+    public function functions() : Functions
+    {
+        return $this->functions;
     }
 
     public function setErrorHandler(ErrorHandler $handler) : self

@@ -96,7 +96,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         $file = path($fs->protocol()->scheme() . $this->filesDirectory() . DIRECTORY_SEPARATOR . __FUNCTION__ . '/file.txt');
 
         $streams = new FilesystemStreams(new FilesystemTable($fs));
-        $streams->setSaveMode(overwrite());
+        $streams->setMode(overwrite());
 
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('new content');
@@ -113,7 +113,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());
-        $streams->setSaveMode(overwrite());
+        $streams->setMode(overwrite());
 
         return $streams;
     }
