@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ToLower extends ScalarFunctionChain
@@ -18,7 +19,7 @@ final class ToLower extends ScalarFunctionChain
         $value = (new Parameter($this->value))->asString($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ToLower function requires non-null value'));
         }
 
         return \strtolower($value);

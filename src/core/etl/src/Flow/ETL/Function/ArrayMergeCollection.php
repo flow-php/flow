@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ArrayMergeCollection extends ScalarFunctionChain
@@ -23,12 +24,12 @@ final class ArrayMergeCollection extends ScalarFunctionChain
         $array = (new Parameter($this->array))->asArray($row, $context);
 
         if ($array === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayMergeCollection function requires non-null array'));
         }
 
         foreach ($array as $element) {
             if (!\is_array($element)) {
-                return null;
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayMergeCollection function requires array elements to be arrays'));
             }
         }
 

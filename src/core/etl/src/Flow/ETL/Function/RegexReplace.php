@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class RegexReplace extends ScalarFunctionChain
@@ -23,8 +24,20 @@ final class RegexReplace extends ScalarFunctionChain
         $subject = (new Parameter($this->subject))->asString($row, $context);
         $limit = $this->limit ? (new Parameter($this->limit))->asInt($row, $context) : -1;
 
-        if ($pattern === null || $replacement === null || $subject === null || $limit === null) {
-            return null;
+        if ($pattern === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null pattern'));
+        }
+
+        if ($replacement === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null replacement'));
+        }
+
+        if ($subject === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null subject'));
+        }
+
+        if ($limit === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null limit'));
         }
 
         return \preg_replace($pattern, $replacement, $subject, $limit);

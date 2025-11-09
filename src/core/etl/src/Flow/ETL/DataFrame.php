@@ -570,8 +570,11 @@ final class DataFrame
     }
 
     /**
-     * SaveMode defines how Flow should behave when writing to a file/files that already exists.
-     * For more details please see SaveMode enum.
+     * This method is used to set the behavior of the DataFrame.
+     *
+     * Available modes:
+     * - SaveMode defines how Flow should behave when writing to a file/files that already exists.
+     * - ExecutionMode - defines how functions should behave when they encounter unexpected data (e.g., type mismatches, missing values).
      *
      * @lazy
      *

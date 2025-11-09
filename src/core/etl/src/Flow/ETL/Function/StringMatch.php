@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StringMatch extends ScalarFunctionChain
@@ -23,7 +24,11 @@ final class StringMatch extends ScalarFunctionChain
         $haystack = (new Parameter($this->haystack))->asString($row, $context);
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
 
-        if ($haystack === null || $pattern === null) {
+        if ($haystack === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringMatch function requires non-null haystack'));
+        }
+
+        if ($pattern === null) {
             return null;
         }
 
@@ -32,7 +37,9 @@ final class StringMatch extends ScalarFunctionChain
             $result = s($haystack)->match($pattern);
 
             return \count($result) > 0 ? $result : null;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('StringMatch error: ' . $e->getMessage()));
+
             return null;
         }
     }

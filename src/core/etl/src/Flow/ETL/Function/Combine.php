@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class Combine extends ScalarFunctionChain
@@ -27,7 +28,7 @@ final class Combine extends ScalarFunctionChain
         $values = (new Parameter($this->values))->asArray($row, $context);
 
         if (null === $keys || null === $values) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires non-null arrays'));
         }
 
         if ([] === $keys) {
@@ -35,15 +36,15 @@ final class Combine extends ScalarFunctionChain
         }
 
         if (!\array_is_list($keys)) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires keys to be a list'));
         }
 
         if (\count($keys) !== \count($values)) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires keys and values arrays to have the same length'));
         }
 
         if (!\is_string($keys[0] ?? null) && !\is_int($keys[0] ?? null)) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Combine function requires keys to be strings or integers'));
         }
 
         /** @var array<array-key, array-key> $keys */

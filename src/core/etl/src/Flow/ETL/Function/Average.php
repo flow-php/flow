@@ -36,8 +36,8 @@ final class Average implements AggregatingFunction, WindowFunction
                 $this->sum = (new Calculator())->add($this->sum, $value);
                 $this->count++;
             }
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Average error: ' . $e->getMessage()));
         }
     }
 

@@ -4,13 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, int_entry, json_entry, lit, ref};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, json_entry, lit, ref};
 use function Flow\ETL\DSL\row;
-use Flow\ETL\Function\ArrayMerge;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\{ArrayMerge, ExecutionMode};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayMergeTest extends FlowTestCase
 {
+    public function test_array_merge_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayMerge function requires two non-null arrays');
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        ref('a')->arrayMerge(ref('b'))
+            ->eval(
+                row(int_entry('a', 1), json_entry('b', ['b' => 2])),
+                $context
+            );
+    }
+
     public function test_array_merge_two_array_row_entries() : void
     {
         self::assertSame(

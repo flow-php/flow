@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_list, type_string, type_union};
 use function Symfony\Component\String\u;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StringAfter extends ScalarFunctionChain
@@ -22,7 +23,7 @@ final class StringAfter extends ScalarFunctionChain
         $string = (new Parameter($this->string))->asString($row, $context);
 
         if ($string === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringAfter function requires non-null value'));
         }
 
         $needle = (new Parameter($this->needle))->as($row, $context, type_string(), type_list(type_string()));

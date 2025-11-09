@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\Trim\Type;
 
@@ -22,7 +23,11 @@ final class Trim extends ScalarFunctionChain
         $type = (new Parameter($this->type))->asEnum($row, $context, Type::class);
         $characters = (new Parameter($this->characters))->asString($row, $context);
 
-        if ($value === null || $type === null || $characters === null) {
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('Trim function requires non-null value'));
+        }
+
+        if ($type === null || $characters === null) {
             return null;
         }
 

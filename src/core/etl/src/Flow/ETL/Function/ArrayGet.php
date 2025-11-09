@@ -23,12 +23,12 @@ final class ArrayGet extends ScalarFunctionChain
             $path = (new Parameter($this->path))->asString($row, $context);
 
             if ($value === null || $path === null) {
-                return null;
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGet function requires non-null array and path'));
             }
 
             return array_dot_get($value, $path);
-        } catch (InvalidArgumentException) {
-            return null;
+        } catch (InvalidArgumentException $e) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGet function failed to get value from array.', 0, $e));
         }
     }
 }

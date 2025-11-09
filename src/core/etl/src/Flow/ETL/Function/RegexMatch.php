@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class RegexMatch extends ScalarFunctionChain
@@ -29,11 +30,23 @@ final class RegexMatch extends ScalarFunctionChain
         $flags = (new Parameter($this->flags))->asInt($row, $context);
         $offset = (new Parameter($this->offset))->asInt($row, $context);
 
-        if ($pattern === null || $subject === null || $flags === null || $offset === null) {
-            return null;
+        if ($pattern === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null pattern'));
         }
 
-        /** @phpstan-ignore-next-line */
+        if ($subject === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null subject'));
+        }
+
+        if ($flags === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null flags'));
+        }
+
+        if ($offset === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatch requires non-null offset'));
+        }
+
+        /** @phpstan-ignore argument.type */
         return \preg_match(pattern: $pattern, subject: $subject, flags: $flags, offset: $offset) === 1;
     }
 }

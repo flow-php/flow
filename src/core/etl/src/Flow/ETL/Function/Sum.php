@@ -33,8 +33,8 @@ final class Sum implements AggregatingFunction, WindowFunction
                 $this->sum = (new Calculator())->add($this->sum, $value);
             }
 
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
         }
     }
 

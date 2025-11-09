@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\type_integer;
 use function Symfony\Component\String\s;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class Wordwrap extends ScalarFunctionChain
@@ -26,7 +27,7 @@ final class Wordwrap extends ScalarFunctionChain
         $cut = (new Parameter($this->cut))->asBoolean($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Wordwrap function requires non-null value'));
         }
 
         if ($width <= 0) {

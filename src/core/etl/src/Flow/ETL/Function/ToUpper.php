@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ToUpper extends ScalarFunctionChain
@@ -16,9 +17,10 @@ final class ToUpper extends ScalarFunctionChain
     {
         $value = (new Parameter($this->value))->asString($row, $context);
 
-        return match (\gettype($value)) {
-            'string' => \mb_strtoupper($value),
-            default => $value,
-        };
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('ToUpper function requires non-null value'));
+        }
+
+        return \mb_strtoupper($value);
     }
 }

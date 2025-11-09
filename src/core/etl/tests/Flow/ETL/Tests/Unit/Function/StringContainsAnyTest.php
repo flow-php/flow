@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, json_entry, ref, str_entry};
+use function Flow\ETL\DSL\{config, flow_context, json_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class StringContainsAnyTest extends FlowTestCase
@@ -55,11 +57,25 @@ final class StringContainsAnyTest extends FlowTestCase
 
     public function test_contains_any_null_string() : void
     {
-        self::assertFalse(
+        self::assertNull(
             ref('str')->stringContainsAny(['hello', 'world'])->eval(
                 row(str_entry('str', null)),
                 flow_context()
             )
+        );
+    }
+
+    public function test_contains_any_null_string_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('StringContainsAny function requires non-null string');
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        ref('str')->stringContainsAny(['hello', 'world'])->eval(
+            row(str_entry('str', null)),
+            $context
         );
     }
 

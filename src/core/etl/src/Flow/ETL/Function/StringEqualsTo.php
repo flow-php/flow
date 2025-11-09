@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StringEqualsTo extends ScalarFunctionChain
@@ -20,7 +21,11 @@ final class StringEqualsTo extends ScalarFunctionChain
         $value = (new Parameter($this->value))->asString($row, $context);
         $string = (new Parameter($this->string))->asString($row, $context);
 
-        if ($value === null || $string === null) {
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringEqualsTo function requires non-null value'));
+        }
+
+        if ($string === null) {
             return null;
         }
 

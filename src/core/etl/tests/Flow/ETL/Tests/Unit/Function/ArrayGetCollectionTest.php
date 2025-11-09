@@ -4,12 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{array_get_collection, array_get_collection_first, flow_context, int_entry, json_entry, ref};
+use function Flow\ETL\DSL\{array_get_collection, array_get_collection_first, config, flow_context, int_entry, json_entry, ref};
 use function Flow\ETL\DSL\row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayGetCollectionTest extends FlowTestCase
 {
+    public function test_array_get_collection_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayGetCollection function failed to evaluate parameters');
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        $row = row(int_entry('invalid_entry', 1));
+
+        array_get_collection(ref('invalid_entry'), ['id'])->eval($row, $context);
+    }
+
     public function test_for_not_array_entry() : void
     {
         $row = row(int_entry('invalid_entry', 1));

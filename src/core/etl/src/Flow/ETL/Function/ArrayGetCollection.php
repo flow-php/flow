@@ -37,7 +37,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
             $keys = (new Parameter($this->keys))->asArray($row, $context);
 
             if ($value === null || $index === null || $keys === null) {
-                return null;
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function requires non-null array, index, and keys'));
             }
 
             $path = \sprintf("{$index}.{%s}", \implode(',', \array_map(fn (mixed $entryName) : string => '?' . (\is_scalar($entryName) ? (string) $entryName : \serialize($entryName)), $keys)));
@@ -46,17 +46,17 @@ final class ArrayGetCollection extends ScalarFunctionChain
                 $array = ($index === '0') ? \array_values($value) : $value;
 
                 $extractedValues = array_dot_get($array, $path);
-            } catch (InvalidPathException) {
-                return null;
+            } catch (InvalidPathException $e) {
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function failed to get values from array.', 0, $e));
             }
 
             if (!\is_array($extractedValues)) {
-                return null;
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function requires the result to be an array'));
             }
 
             return $extractedValues;
-        } catch (InvalidArgumentException) {
-            return null;
+        } catch (InvalidArgumentException $e) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function failed to evaluate parameters.', 0, $e));
         }
     }
 }

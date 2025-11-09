@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\u;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StringTitle extends ScalarFunctionChain
@@ -21,7 +22,7 @@ final class StringTitle extends ScalarFunctionChain
         $allWords = (new Parameter($this->allWords))->asBoolean($row, $context);
 
         if ($string === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringTitle function requires non-null value'));
         }
 
         return u($string)->title(allWords: $allWords)->toString();

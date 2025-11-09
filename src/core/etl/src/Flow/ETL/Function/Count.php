@@ -29,7 +29,8 @@ final class Count implements AggregatingFunction, WindowFunction
                 $row->valueOf($this->ref);
             }
             $this->count++;
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Count error: ' . $e->getMessage()));
         }
     }
 

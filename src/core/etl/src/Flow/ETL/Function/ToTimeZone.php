@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_instance_of, type_string};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ToTimeZone extends ScalarFunctionChain
@@ -21,7 +22,7 @@ final class ToTimeZone extends ScalarFunctionChain
         $tz = (new Parameter($this->timezone))->as($row, $context, type_string(), type_instance_of(\DateTimeZone::class));
 
         if ($dateTime === null || $tz === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ToTimeZone function requires non-null values'));
         }
 
         $tz = match (\gettype($tz)) {
@@ -31,7 +32,7 @@ final class ToTimeZone extends ScalarFunctionChain
         };
 
         if ($tz === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ToTimeZone function requires valid DateTimeZone'));
         }
 
         /** @var \DateTime|\DateTimeImmutable $dateTime */

@@ -31,7 +31,9 @@ final class ArrayPathExists extends ScalarFunctionChain
             }
 
             return array_dot_exists($array, $path);
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('ArrayPathExists error: ' . $e->getMessage()));
+
             return false;
         }
     }

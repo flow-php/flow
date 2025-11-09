@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
@@ -31,7 +32,7 @@ final class Slug extends ScalarFunctionChain
         $symbolsMap = (new Parameter($this->symbolsMap))->asArray($row, $context);
 
         if ($string === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Slug function requires non-null value'));
         }
 
         return (new AsciiSlugger(symbolsMap: $symbolsMap))->slug($string, $separator, $locale)->toString();

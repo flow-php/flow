@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class XPath extends ScalarFunctionChain
@@ -22,8 +23,12 @@ final class XPath extends ScalarFunctionChain
         $value = (new Parameter($this->value))->asInstanceOf($row, $context, \DOMNode::class);
         $path = (new Parameter($this->path))->asString($row, $context);
 
-        if ($value === null || $path === null) {
-            return null;
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('XPath requires non-null DOMNode value'));
+        }
+
+        if ($path === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('XPath requires non-null path'));
         }
 
         if ($value instanceof \DOMNode && !$value instanceof \DOMDocument) {

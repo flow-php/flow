@@ -38,8 +38,8 @@ final class Max implements AggregatingFunction
                     $this->max = \max($this->max, $value);
                 }
             }
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Max error: ' . $e->getMessage()));
         }
     }
 

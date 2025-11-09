@@ -8,6 +8,7 @@ use function Flow\Types\DSL\type_instance_of;
 use DOM\{Element, HTMLDocument};
 use Dom\HTMLElement;
 use Flow\ETL\Exception\RequiredPHPVersionException;
+use Flow\ETL\Exception\{InvalidArgumentException, RequiredPHPVersionException};
 use Flow\ETL\{FlowContext, Row};
 
 final class HTMLQuerySelectorAll extends ScalarFunctionChain
@@ -29,8 +30,12 @@ final class HTMLQuerySelectorAll extends ScalarFunctionChain
         $value = (new Parameter($this->value))->as($row, type_instance_of(HTMLDocument::class), type_instance_of(HTMLElement::class));
         $selector = (new Parameter($this->selector))->asString($row);
 
-        if (null === $value || null === $selector) {
-            return null;
+        if (null === $value) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('HTMLQuerySelectorAll requires non-null HTMLDocument'));
+        }
+
+        if (null === $selector) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('HTMLQuerySelectorAll requires non-null selector'));
         }
 
         $result = $value->querySelectorAll($selector);

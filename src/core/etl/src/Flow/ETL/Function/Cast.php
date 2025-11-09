@@ -34,7 +34,7 @@ final class Cast extends ScalarFunctionChain
         $type = $this->type;
 
         if (null === $value) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Cast function requires non-null value'));
         }
 
         if ($type instanceof Type) {
@@ -43,7 +43,7 @@ final class Cast extends ScalarFunctionChain
 
         /** @var string $type */
         try {
-            return match (\mb_strtolower($type)) {
+            $result = match (\mb_strtolower($type)) {
                 'datetime' => new ScalarResult(type_datetime()->cast($value), type_datetime()),
                 'date' => new ScalarResult(
                     match (\gettype($value)) {
@@ -69,8 +69,14 @@ final class Cast extends ScalarFunctionChain
                 'xml' => new ScalarResult(type_xml()->cast($value), type_xml()),
                 default => null,
             };
-        } catch (CastingException) {
-            return null;
+
+            if ($result === null) {
+                return $context->functions()->invalidResult(new InvalidArgumentException('Cast function does not support type: ' . $type));
+            }
+
+            return $result;
+        } catch (CastingException $e) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('Cast function failed: ' . $e->getMessage()));
         }
     }
 }

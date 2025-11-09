@@ -4,14 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, json_entry, ref, str_entry};
+use function Flow\ETL\DSL\{config, flow_context, json_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use function Flow\Types\DSL\type_array;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\ArraySort\Sort;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArraySortTest extends FlowTestCase
 {
+    public function test_array_sort_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArraySort function requires non-null array and sort function');
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        ref('array')->arraySort()->eval(row(str_entry('array', 'string')), $context);
+    }
+
     public function test_sorting_big_arrays() : void
     {
         self::assertSame(

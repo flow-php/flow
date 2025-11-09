@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ArrayValues extends ScalarFunctionChain
@@ -23,7 +24,7 @@ final class ArrayValues extends ScalarFunctionChain
         $array = (new Parameter($this->array))->asArray($row, $context);
 
         if (!\is_array($array)) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayValues function requires non-null array'));
         }
 
         return \array_values($array);

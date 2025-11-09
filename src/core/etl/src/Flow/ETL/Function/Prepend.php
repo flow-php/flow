@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class Prepend extends ScalarFunctionChain
@@ -21,7 +22,7 @@ final class Prepend extends ScalarFunctionChain
         $prefix = (new Parameter($this->prefix))->asString($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Prepend function requires non-null value'));
         }
 
         if ($prefix === null) {

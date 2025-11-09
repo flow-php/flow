@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ArrayKeep extends ScalarFunctionChain
@@ -20,7 +21,7 @@ final class ArrayKeep extends ScalarFunctionChain
         $array = (new Parameter($this->array))->asArray($row, $context);
 
         if (null === $array) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayKeep function requires non-null array'));
         }
 
         $value = (new Parameter($this->value))->eval($row, $context);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 /**
@@ -28,7 +29,7 @@ final class ArrayMerge extends ScalarFunctionChain
         $right = (new Parameter($this->right))->asArray($row, $context);
 
         if ($left === null || $right === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayMerge function requires two non-null arrays'));
         }
 
         return \array_merge($left, $right);

@@ -185,7 +185,8 @@ TXT
                             )
                         ),
                         flow_context(config())->entryFactory(),
-                        new AutoCaster()
+                        new AutoCaster(),
+                        flow_context()
                     )
                 )
         );
@@ -232,7 +233,7 @@ TXT
                 (native_local_filesystem())
                     ->list(
                         path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), flow_context(config())->entryFactory(), new AutoCaster())
+                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), flow_context(config())->entryFactory(), new AutoCaster(), flow_context())
                     )
             )
         );

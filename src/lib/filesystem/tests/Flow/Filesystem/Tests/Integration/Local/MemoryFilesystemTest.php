@@ -132,7 +132,8 @@ TXT
                             )
                         ),
                         flow_context(config())->entryFactory(),
-                        new AutoCaster()
+                        new AutoCaster(),
+                        flow_context(),
                     )
                 )
         );

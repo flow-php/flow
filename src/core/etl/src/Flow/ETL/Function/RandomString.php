@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, NativePHPRandomValueGenerator, RandomValueGenerator, Row};
 
 class RandomString implements ScalarFunction
@@ -19,7 +20,7 @@ class RandomString implements ScalarFunction
         $length = (new Parameter($this->length))->asInt($row, $context);
 
         if ($length === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('RandomString requires non-null length'));
         }
 
         return $this->generator->string($length);

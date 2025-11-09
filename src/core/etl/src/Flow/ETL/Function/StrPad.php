@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StrPad extends ScalarFunctionChain
@@ -23,7 +24,11 @@ final class StrPad extends ScalarFunctionChain
         $padString = (new Parameter($this->padString))->asString($row, $context);
         $type = (new Parameter($this->type))->asInt($row, $context);
 
-        if ($value === null || $length === null || $padString === null || $type === null) {
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('StrPad function requires non-null value'));
+        }
+
+        if ($length === null || $padString === null || $type === null) {
             return null;
         }
 

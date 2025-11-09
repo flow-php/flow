@@ -28,7 +28,7 @@ final class OnEach extends ScalarFunctionChain
         $preserveKeys = (new Parameter($this->preserveKeys))->asBoolean($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('OnEach requires non-null array'));
         }
 
         $output = [];

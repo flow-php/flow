@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\Calculator\Calculator;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class Mod extends ScalarFunctionChain
@@ -21,11 +22,11 @@ final class Mod extends ScalarFunctionChain
         $rightValue = (new Parameter($this->right))->asInt($row, $context);
 
         if ($leftValue === null || $rightValue === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Mod function requires non-null values'));
         }
 
         if ($rightValue === 0) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Mod function cannot perform modulo by zero'));
         }
 
         return (new Calculator())->modulus($leftValue, $rightValue);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class NumberFormat extends ScalarFunctionChain
@@ -24,7 +25,7 @@ final class NumberFormat extends ScalarFunctionChain
         $thousandsSeparator = (new Parameter($this->thousandsSeparator))->asString($row, $context);
 
         if ($value === null || $decimals === null || $decimalSeparator === null || $thousandsSeparator === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('NumberFormat function requires non-null values'));
         }
 
         return \number_format((float) $value, $decimals, $decimalSeparator, $thousandsSeparator);

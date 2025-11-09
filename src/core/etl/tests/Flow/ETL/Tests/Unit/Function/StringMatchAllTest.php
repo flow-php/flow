@@ -47,7 +47,7 @@ final class StringMatchAllTest extends FlowTestCase
             flow_context()
         );
 
-        self::assertEquals([], $result);
+        self::assertNull($result);
     }
 
     public function test_null_pattern() : void

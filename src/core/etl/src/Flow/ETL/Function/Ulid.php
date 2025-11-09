@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\{FlowContext, Row};
 
 if (!\class_exists(\Symfony\Component\Uid\Ulid::class)) {
@@ -24,8 +24,8 @@ final class Ulid extends ScalarFunctionChain
         if (null !== $param) {
             try {
                 return \Symfony\Component\Uid\Ulid::fromString($param);
-            } catch (\InvalidArgumentException) {
-                return null;
+            } catch (\InvalidArgumentException $e) {
+                return $context->functions()->invalidResult(new InvalidArgumentException('Ulid requires valid ULID string: ' . $e->getMessage(), 0, $e));
             }
         }
 

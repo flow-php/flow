@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StringWidth extends ScalarFunctionChain
@@ -19,7 +20,7 @@ final class StringWidth extends ScalarFunctionChain
         $value = (new Parameter($this->value))->asString($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringWidth function requires non-null value'));
         }
 
         return s($value)->width();

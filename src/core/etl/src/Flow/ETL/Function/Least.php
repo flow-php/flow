@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 use Flow\Types\Type\ValueComparator;
 
@@ -28,7 +29,7 @@ final class Least extends ScalarFunctionChain
         }
 
         if (!\count($extractedValues)) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Least requires at least one value'));
         }
 
         (new ValueComparator())->assertAllTypesComparable($extractedTypes, '<');

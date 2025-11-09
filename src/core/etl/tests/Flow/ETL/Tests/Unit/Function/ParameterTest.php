@@ -91,25 +91,25 @@ final class ParameterTest extends FlowTestCase
     public function test_as_array_with_empty_array() : void
     {
         $parameter = new Parameter(lit([]));
-        self::assertSame([], $parameter->asArray(row(), flow_context(), flow_context()));
+        self::assertSame([], $parameter->asArray(row(), flow_context()));
     }
 
     public function test_as_array_with_non_array() : void
     {
         $parameter = new Parameter(lit('not an array'));
-        self::assertNull($parameter->asArray(row(), flow_context(), flow_context()));
+        self::assertNull($parameter->asArray(row(), flow_context()));
 
         $parameter = new Parameter(lit(42));
-        self::assertNull($parameter->asArray(row(), flow_context(), flow_context()));
+        self::assertNull($parameter->asArray(row(), flow_context()));
 
         $parameter = new Parameter(lit(true));
-        self::assertNull($parameter->asArray(row(), flow_context(), flow_context()));
+        self::assertNull($parameter->asArray(row(), flow_context()));
     }
 
     public function test_as_array_with_valid_array() : void
     {
         $parameter = new Parameter(lit(['key' => 'value', 'number' => 42]));
-        $result = $parameter->asArray(row(), flow_context(), flow_context());
+        $result = $parameter->asArray(row(), flow_context());
 
         self::assertSame(['key' => 'value', 'number' => 42], $result);
     }
@@ -118,13 +118,13 @@ final class ParameterTest extends FlowTestCase
     public function test_as_boolean(mixed $input, bool $expected) : void
     {
         $parameter = new Parameter(lit($input));
-        self::assertSame($expected, $parameter->asBoolean(row(), flow_context(), flow_context()));
+        self::assertSame($expected, $parameter->asBoolean(row(), flow_context()));
     }
 
     public function test_as_entry_with_literal() : void
     {
         $parameter = new Parameter(lit('literal_value'));
-        self::assertNull($parameter->asEntry(row(), flow_context(), flow_context()));
+        self::assertNull($parameter->asEntry(row()));
     }
 
     public function test_as_entry_with_missing_reference() : void
@@ -132,7 +132,7 @@ final class ParameterTest extends FlowTestCase
         $parameter = new Parameter(ref('missing_column'));
         $row = row(str_entry('other_column', 'test_value'));
 
-        self::assertNull($parameter->asEntry($row, flow_context()));
+        self::assertNull($parameter->asEntry($row));
     }
 
     public function test_as_entry_with_reference() : void
@@ -140,7 +140,7 @@ final class ParameterTest extends FlowTestCase
         $parameter = new Parameter(ref('test_column'));
         $row = row(str_entry('test_column', 'test_value'));
 
-        $entry = $parameter->asEntry($row, flow_context());
+        $entry = $parameter->asEntry($row);
         self::assertNotNull($entry);
         self::assertSame('test_value', $entry->value());
     }
@@ -172,7 +172,7 @@ final class ParameterTest extends FlowTestCase
     public function test_as_float(mixed $input, ?float $expected) : void
     {
         $parameter = new Parameter(lit($input));
-        self::assertSame($expected, $parameter->asFloat(row(), flow_context(), flow_context()));
+        self::assertSame($expected, $parameter->asFloat(row(), flow_context()));
     }
 
     public function test_as_instance_of_with_invalid_type() : void
@@ -255,13 +255,13 @@ final class ParameterTest extends FlowTestCase
     public function test_as_object_with_non_object() : void
     {
         $parameter = new Parameter(lit('not an object'));
-        self::assertNull($parameter->asObject(row(), flow_context(), flow_context()));
+        self::assertNull($parameter->asObject(row(), flow_context()));
 
         $parameter = new Parameter(lit(42));
-        self::assertNull($parameter->asObject(row(), flow_context(), flow_context()));
+        self::assertNull($parameter->asObject(row(), flow_context()));
 
         $parameter = new Parameter(lit([]));
-        self::assertNull($parameter->asObject(row(), flow_context(), flow_context()));
+        self::assertNull($parameter->asObject(row(), flow_context()));
     }
 
     public function test_as_object_with_valid_object() : void
@@ -270,7 +270,7 @@ final class ParameterTest extends FlowTestCase
         $object->property = 'value';
         $parameter = new Parameter(lit($object));
 
-        self::assertSame($object, $parameter->asObject(row(), flow_context(), flow_context()));
+        self::assertSame($object, $parameter->asObject(row(), flow_context()));
     }
 
     public function test_as_one_of() : void
@@ -341,10 +341,10 @@ final class ParameterTest extends FlowTestCase
     public function test_as_type_with_scalar_result() : void
     {
         $parameter = new Parameter(lit(ScalarResult::from('test')));
-        self::assertInstanceOf(StringType::class, $parameter->asType(row(), flow_context(), flow_context()));
+        self::assertInstanceOf(StringType::class, $parameter->asType(row(), flow_context()));
 
         $parameter = new Parameter(lit(ScalarResult::from(123)));
-        self::assertInstanceOf(IntegerType::class, $parameter->asType(row(), flow_context(), flow_context()));
+        self::assertInstanceOf(IntegerType::class, $parameter->asType(row(), flow_context()));
     }
 
     public function test_constructor_with_mixed_value() : void

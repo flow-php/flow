@@ -38,8 +38,8 @@ final class Min implements AggregatingFunction
                     $this->min = \min($this->min, $value);
                 }
             }
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Min error: ' . $e->getMessage()));
         }
     }
 

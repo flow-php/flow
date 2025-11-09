@@ -4,13 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{array_key_rename, flow_context, int_entry, json_entry, ref};
+use function Flow\ETL\DSL\{array_key_rename, config, flow_context, int_entry, json_entry, ref};
 use function Flow\ETL\DSL\row;
 use Flow\ArrayDot\Exception\InvalidPathException;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ArrayKeyRenameTest extends FlowTestCase
 {
+    public function test_array_key_rename_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('ArrayKeyRename function requires non-null array, path, and new name');
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        $row = row(int_entry('integer_entry', 1));
+
+        array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row, $context);
+    }
+
     public function test_for_not_array_entry() : void
     {
         $row = row(int_entry('integer_entry', 1));

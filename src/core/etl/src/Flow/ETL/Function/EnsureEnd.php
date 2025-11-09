@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class EnsureEnd extends ScalarFunctionChain
@@ -21,7 +22,7 @@ final class EnsureEnd extends ScalarFunctionChain
         $suffix = (new Parameter($this->suffix))->asString($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('EnsureEnd function requires non-null value'));
         }
 
         if ($suffix === null || $suffix === '') {

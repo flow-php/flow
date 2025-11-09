@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class JsonEncode extends ScalarFunctionChain
@@ -21,7 +22,9 @@ final class JsonEncode extends ScalarFunctionChain
 
         try {
             return \json_encode($value, $flags);
-        } catch (\JsonException) {
+        } catch (\JsonException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('JsonEncode error: ' . $e->getMessage()));
+
             return null;
         }
     }

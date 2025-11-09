@@ -36,8 +36,8 @@ final class CollectUnique implements AggregatingFunction
             if (!\in_array($value, $this->collection, true)) {
                 $this->collection[] = $value;
             }
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('CollectUnique error: ' . $e->getMessage()));
         }
     }
 

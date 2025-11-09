@@ -31,8 +31,8 @@ final class Collect implements AggregatingFunction
             $values[$this->ref->name()] = $row->valueOf($this->ref);
 
             $this->collection[] = \current($values);
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Collect error: ' . $e->getMessage()));
         }
     }
 

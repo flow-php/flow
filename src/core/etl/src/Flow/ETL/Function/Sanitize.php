@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class Sanitize extends ScalarFunctionChain
@@ -21,7 +22,11 @@ final class Sanitize extends ScalarFunctionChain
         $placeholder = (new Parameter($this->placeholder))->asString($row, $context);
         $skipCharacters = (new Parameter($this->skipCharacters))->asInt($row, $context);
 
-        if ($val === null || $placeholder === null) {
+        if ($val === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('Sanitize function requires non-null value'));
+        }
+
+        if ($placeholder === null) {
             return null;
         }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_list, type_string, type_union};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StrReplace extends ScalarFunctionChain
@@ -27,7 +28,11 @@ final class StrReplace extends ScalarFunctionChain
         $search = (new Parameter($this->search))->as($row, $context, type_string(), type_list(type_string()));
         $replace = (new Parameter($this->replace))->as($row, $context, type_string(), type_list(type_string()));
 
-        if ($value === null || $search === null || $replace === null) {
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('StrReplace function requires non-null value'));
+        }
+
+        if ($search === null || $replace === null) {
             return null;
         }
 

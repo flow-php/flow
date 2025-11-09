@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ToDate extends ScalarFunctionChain
@@ -22,7 +23,7 @@ final class ToDate extends ScalarFunctionChain
         $timeZone = (new Parameter($this->timeZone))->asInstanceOf($row, $context, \DateTimeZone::class);
 
         if ($value === null || $format === null || $timeZone === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ToDate function requires non-null values'));
         }
 
         if (\is_object($value)) {
@@ -30,7 +31,7 @@ final class ToDate extends ScalarFunctionChain
                 return $value->setTimezone($timeZone)->setTime(0, 0, 0, 0);
             }
 
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ToDate function requires DateTimeInterface object'));
         }
 
         if (\is_int($value)) {
@@ -43,6 +44,6 @@ final class ToDate extends ScalarFunctionChain
             return \DateTimeImmutable::createFromFormat($format, $value, $timeZone)->setTime(0, 0, 0, 0);
         }
 
-        return null;
+        return $context->functions()->invalidResult(new InvalidArgumentException('ToDate function requires int or string value'));
     }
 }

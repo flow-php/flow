@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StringMatchAll extends ScalarFunctionChain
@@ -15,14 +16,18 @@ final class StringMatchAll extends ScalarFunctionChain
     }
 
     /**
-     * @return array<int, array<int|string, string>>
+     * @return null|array<int, array<int|string, string>>
      */
-    public function eval(Row $row, FlowContext $context) : array
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         $haystack = (new Parameter($this->haystack))->asString($row, $context);
         $pattern = (new Parameter($this->pattern))->asString($row, $context);
 
-        if ($haystack === null || $pattern === null) {
+        if ($haystack === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringMatchAll function requires non-null haystack'));
+        }
+
+        if ($pattern === null) {
             return [];
         }
 
@@ -41,7 +46,9 @@ final class StringMatchAll extends ScalarFunctionChain
             }
 
             return [];
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('StringMatchAll error: ' . $e->getMessage()));
+
             return [];
         }
     }

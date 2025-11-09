@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_instance_of, type_list};
 use Dom\HTMLElement;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class DOMElementAttributeValue extends ScalarFunctionChain
@@ -44,8 +45,12 @@ final class DOMElementAttributeValue extends ScalarFunctionChain
 
         $attributeName = (new Parameter($this->attribute))->asString($row, $context);
 
-        if ($node === null || $attributeName === null) {
-            return null;
+        if ($node === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementAttributeValue requires non-null DOMNode'));
+        }
+
+        if ($attributeName === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementAttributeValue requires non-null attribute name'));
         }
 
         if ((!$node instanceof \DOMNode && !$node instanceof HTMLElement) || !$node->hasAttributes()) {

@@ -26,8 +26,8 @@ final class Last implements AggregatingFunction
     {
         try {
             $this->last = $row->get($this->ref);
-        } catch (InvalidArgumentException) {
-            // entry not found
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Last error: ' . $e->getMessage()));
         }
     }
 
