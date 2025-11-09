@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Types\Type\Native;
 
 use function Flow\Types\DSL\dom_element_to_string;
+use Dom\{HTMLDocument, HTMLElement};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
@@ -55,6 +56,14 @@ final readonly class StringType implements Type
 
             if ($value instanceof \DOMElement) {
                 return (string) dom_element_to_string($value);
+            }
+
+            if ($value instanceof HTMLDocument) {
+                return $value->saveHtml();
+            }
+
+            if ($value instanceof HTMLElement) {
+                return $value->innerHTML;
             }
 
             if (null === $value) {

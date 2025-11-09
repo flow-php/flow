@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\{bool_entry,
     datetime_entry,
     enum_entry,
     float_entry,
+    html_element_entry,
     html_entry,
     int_entry,
     json_entry,
@@ -30,6 +31,7 @@ use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    HTMLElementType,
     HTMLType,
     InstanceOfType,
     JsonType,
@@ -121,6 +123,7 @@ final readonly class EntryFactory
                 XMLType::class => xml_entry($entryName, null, $metadata),
                 XMLElementType::class => xml_element_entry($entryName, null, $metadata),
                 HTMLType::class => html_entry($entryName, null, $metadata),
+                HTMLElementType::class => html_element_entry($entryName, null, $metadata),
                 default => throw new InvalidArgumentException("Can't convert value into type \"{$type->toString()}\""),
             };
         }
@@ -190,6 +193,10 @@ final readonly class EntryFactory
 
             if ($type instanceof HTMLType) {
                 return html_entry($entryName, type_optional($type)->cast($value), $metadata);
+            }
+
+            if ($type instanceof HTMLElementType) {
+                return html_element_entry($entryName, type_optional($type)->cast($value), $metadata);
             }
 
             if ($type instanceof XMLType) {

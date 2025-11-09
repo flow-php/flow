@@ -6,43 +6,14 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use function Flow\Types\DSL\type_string;
 use Doctrine\DBAL\Schema\{Column, Index, Table};
-use Doctrine\DBAL\Types\{DateImmutableType, DateTimeImmutableType, GuidType, TimeImmutableType};
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType,
-    DateType,
-    JsonType,
-    ListType,
-    MapType,
-    StructureType,
-    TimeType,
-    UuidType,
-    XMLElementType,
-    XMLType};
-use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
 
 final readonly class SchemaConverter
 {
-    public const DEFAULT_TYPES = [
-        StringType::class => \Doctrine\DBAL\Types\StringType::class,
-        IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
-        FloatType::class => \Doctrine\DBAL\Types\FloatType::class,
-        BooleanType::class => \Doctrine\DBAL\Types\BooleanType::class,
-        DateType::class => DateImmutableType::class,
-        TimeType::class => TimeImmutableType::class,
-        DateTimeType::class => DateTimeImmutableType::class,
-        UuidType::class => GuidType::class,
-        JsonType::class => \Doctrine\DBAL\Types\JsonType::class,
-        XMLType::class => \Doctrine\DBAL\Types\StringType::class,
-        XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
-        ListType::class => \Doctrine\DBAL\Types\JsonType::class,
-        MapType::class => \Doctrine\DBAL\Types\JsonType::class,
-        StructureType::class => \Doctrine\DBAL\Types\JsonType::class,
-    ];
-
     private TypesMap $typesMap;
 
     /**

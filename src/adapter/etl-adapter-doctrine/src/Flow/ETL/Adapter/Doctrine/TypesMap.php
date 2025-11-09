@@ -10,6 +10,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Types\Type as FlowType;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    HTMLElementType,
+    HTMLType,
     JsonType,
     ListType,
     MapType,
@@ -63,6 +65,8 @@ final class TypesMap
         JsonType::class => \Doctrine\DBAL\Types\JsonType::class,
         XMLType::class => \Doctrine\DBAL\Types\StringType::class,
         XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
+        HTMLType::class => \Doctrine\DBAL\Types\StringType::class,
+        HTMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
         ListType::class => \Doctrine\DBAL\Types\JsonType::class,
         MapType::class => \Doctrine\DBAL\Types\JsonType::class,
         StructureType::class => \Doctrine\DBAL\Types\JsonType::class,

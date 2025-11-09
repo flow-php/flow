@@ -27,6 +27,7 @@ use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\Types\Type\Logical\DateTimeType;
 use Flow\Types\Type\Logical\DateType;
+use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\Logical\JsonType;
 use Flow\Types\Type\Logical\ListType;
@@ -178,6 +179,7 @@ return RectorConfig::configure()
             new NewObjectToFunction(XMLElementType::class, 'Flow\ETL\DSL\type_xml_element'),
             new NewObjectToFunction(XMLType::class, 'Flow\ETL\DSL\type_xml'),
             new NewObjectToFunction(HTMLType::class, 'Flow\ETL\DSL\type_html'),
+            new NewObjectToFunction(HTMLElementType::class, 'Flow\ETL\DSL\type_html_element'),
 
             // Extractors
             new NewObjectToFunction(CacheExtractor::class, 'from_cache'),

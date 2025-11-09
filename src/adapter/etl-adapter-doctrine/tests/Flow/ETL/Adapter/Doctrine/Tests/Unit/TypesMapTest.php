@@ -8,7 +8,18 @@ use Doctrine\DBAL\Types\{BigIntType, BlobType, DateImmutableType, DateTimeImmuta
 use Doctrine\DBAL\Types\DateTimeTzType;
 use Flow\ETL\Adapter\Doctrine\TypesMap;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Types\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, StructureType, TimeType, UuidType, XMLElementType, XMLType};
+use Flow\Types\Type\Logical\{DateTimeType,
+    DateType,
+    HTMLElementType,
+    HTMLType,
+    JsonType,
+    ListType,
+    MapType,
+    StructureType,
+    TimeType,
+    UuidType,
+    XMLElementType,
+    XMLType};
 use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
 use PHPUnit\Framework\TestCase;
 
@@ -175,6 +186,8 @@ final class TypesMapTest extends TestCase
             JsonType::class => DbalJsonType::class,
             XMLType::class => \Doctrine\DBAL\Types\StringType::class,
             XMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
+            HTMLType::class => \Doctrine\DBAL\Types\StringType::class,
+            HTMLElementType::class => \Doctrine\DBAL\Types\StringType::class,
             ListType::class => DbalJsonType::class,
             MapType::class => DbalJsonType::class,
             StructureType::class => DbalJsonType::class,

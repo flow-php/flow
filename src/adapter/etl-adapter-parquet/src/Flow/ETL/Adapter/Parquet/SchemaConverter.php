@@ -25,6 +25,7 @@ use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColu
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{DateTimeType,
     DateType,
+    HTMLType,
     JsonType,
     ListType,
     MapType,
@@ -34,6 +35,7 @@ use Flow\Types\Type\Logical\{DateTimeType,
     UuidType,
     XMLElementType,
     XMLType};
+use Flow\Types\Type\Logical\HTMLElementType;
 use Flow\Types\Type\Native\{BooleanType, FloatType, IntegerType, StringType};
 
 final class SchemaConverter
@@ -77,6 +79,10 @@ final class SchemaConverter
                 return FlatColumn::float($name, $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case IntegerType::class:
                 return FlatColumn::int64($name, $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
+            case HTMLType::class:
+            case HTMLElementType::class:
+            case XMLElementType::class:
+            case XMLType::class:
             case StringType::class:
                 return FlatColumn::string($name, $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case BooleanType::class:
@@ -91,9 +97,6 @@ final class SchemaConverter
                 return FlatColumn::uuid($name, $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case JsonType::class:
                 return FlatColumn::json($name, $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
-            case XMLType::class:
-            case XMLElementType::class:
-                return FlatColumn::string($name, $nullable ? ParquetSchema\Repetition::OPTIONAL : ParquetSchema\Repetition::REQUIRED);
             case ListType::class:
                 $elementType = $type->element();
                 $elementOptional = $elementType instanceof OptionalType;

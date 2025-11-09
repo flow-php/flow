@@ -13,6 +13,7 @@ use function Flow\Types\DSL\{type_array,
     type_equals,
     type_float,
     type_html,
+    type_html_element,
     type_integer,
     type_is,
     type_is_any,
@@ -28,7 +29,7 @@ use function Flow\Types\DSL\{type_array,
     type_xml,
     type_xml_element,
     types};
-use Dom\HTMLDocument;
+use Dom\{HTMLDocument, HTMLElement};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\Types\Type;
@@ -146,6 +147,14 @@ final class Definition
     public static function html(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, type_html(), $nullable, $metadata);
+    }
+
+    /**
+     * @return Definition<HTMLElement>
+     */
+    public static function html_element(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
+    {
+        return new self($entry, type_html_element(), $nullable, $metadata);
     }
 
     /**

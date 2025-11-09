@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\Types\Tests\Unit\Type\Native;
 
 use function Flow\Types\DSL\{type_from_array, type_string};
+use Dom\HTMLDocument;
 use Flow\Types\Exception\InvalidTypeException;
 use Flow\Types\Tests\Unit\Type\Fixtures\StringableObject;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 
 final class StringTypeTest extends TestCase
@@ -213,6 +214,22 @@ final class StringTypeTest extends TestCase
         } else {
             self::assertSame($expected, \trim(type_string()->cast($value)));
         }
+    }
+
+    #[RequiresPhp('>= 8.4')]
+    public function test_cast_html_document() : void
+    {
+        $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+
+        self::assertSame('<p><span>foobar</span></p>', type_string()->cast($element));
+    }
+
+    #[RequiresPhp('>= 8.4')]
+    public function test_cast_html_element() : void
+    {
+        $element = HTMLDocument::createFromString('<p><span>foobar</span></p>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+
+        self::assertSame('<span>foobar</span>', type_string()->cast($element->documentElement));
     }
 
     #[DataProvider('is_stringable_data_provider')]

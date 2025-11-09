@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\Types\Tests\Unit\Type;
 
-use function Flow\Types\DSL\{
-    type_array,
+use function Flow\Types\DSL\{type_array,
     type_boolean,
     type_callable,
     type_datetime,
     type_enum,
     type_float,
     type_from_array,
+    type_html,
+    type_html_element,
     type_instance_of,
     type_integer,
     type_json,
@@ -24,8 +25,7 @@ use function Flow\Types\DSL\{
     type_time,
     type_time_zone,
     type_xml,
-    type_xml_element
-};
+    type_xml_element};
 use function Flow\Types\DSL\type_uuid;
 use Flow\Types\Tests\Unit\Type\Fixtures\SomeEnum;
 use PHPUnit\Framework\TestCase;
@@ -66,6 +66,18 @@ final class TypeFactoryTest extends TestCase
     {
         $enum = type_enum(SomeEnum::class);
         self::assertEquals($enum, type_from_array($enum->normalize()));
+    }
+
+    public function test_normalizing_and_creating_html_element_type() : void
+    {
+        $htmlElement = type_html_element();
+        self::assertEquals($htmlElement, type_from_array($htmlElement->normalize()));
+    }
+
+    public function test_normalizing_and_creating_html_type() : void
+    {
+        $html = type_html();
+        self::assertEquals($html, type_from_array($html->normalize()));
     }
 
     public function test_normalizing_and_creating_json_type() : void

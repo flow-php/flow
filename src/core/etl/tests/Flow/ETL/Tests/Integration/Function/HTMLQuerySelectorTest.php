@@ -14,18 +14,41 @@ final class HTMLQuerySelectorTest extends TestCase
 {
     public function test_invalid_query_on_html_document() : void
     {
-        /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>foobar</span></div></body></html>');
 
-        $rows = df()
-            ->read(from_rows(rows(row(html_entry('html_raw', $html)))))
-            ->withEntry('html', ref('html_raw')->htmlQuerySelector('body div p'))
-            ->drop('html_raw')
-            ->fetch();
+        self::assertEquals(
+            [
+                [
+                    'html_element' => null,
+                ],
+            ],
+            df()
+                ->read(from_rows(rows(row(html_entry('html_raw', $html)))))
+                ->withEntry('html_element', ref('html_raw')->htmlQuerySelector('body div p'))
+                ->drop('html_raw')
+                ->fetch()
+                ->toArray(),
+        );
+    }
 
-        $results = $rows->toArray()[0]['html'] ?? [];
+    public function test_valid_query_on_html_document() : void
+    {
+        $html = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>foobar</span></div></body></html>');
 
-        /* @phpstan-ignore-next-line */
-        self::assertCount(0, $results);
+        $element = HTMLDocument::createFromString('<span>foobar</span>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+
+        self::assertEquals(
+            [
+                [
+                    'html_element' => $element->documentElement,
+                ],
+            ],
+            df()
+                ->read(from_rows(rows(row(html_entry('html_raw', $html)))))
+                ->withEntry('html_element', ref('html_raw')->htmlQuerySelector('body div span'))
+                ->drop('html_raw')
+                ->fetch()
+                ->toArray()
+        );
     }
 }

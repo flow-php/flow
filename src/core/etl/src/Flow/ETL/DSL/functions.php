@@ -37,7 +37,7 @@ use function Flow\Types\DSL\{
     type_xml_element as type_xml_element_new,
     types as types_new
 };
-use Dom\HTMLDocument;
+use Dom\{HTMLDocument, HTMLElement};
 use Flow\Calculator\Rounding;
 use Flow\ETL\{Analyze,
     Attribute\DocumentationDSL,
@@ -165,7 +165,22 @@ use Flow\ETL\Retry\DelayFactory\{Exponential, Jitter, Linear};
 use Flow\ETL\Retry\DelayFactory\{Fixed, Fixed\FixedMilliseconds};
 use Flow\ETL\Retry\RetryStrategy\{AnyThrowable, OnExceptionTypes};
 use Flow\ETL\Row\{Entries, EntryFactory, SortOrder};
-use Flow\ETL\Row\Entry\{BooleanEntry, DateEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, StringEntry, StructureEntry, TimeEntry, UuidEntry, XMLElementEntry, XMLEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry,
+    DateEntry,
+    DateTimeEntry,
+    EnumEntry,
+    FloatEntry,
+    HTMLElementEntry,
+    IntegerEntry,
+    JsonEntry,
+    ListEntry,
+    MapEntry,
+    StringEntry,
+    StructureEntry,
+    TimeEntry,
+    UuidEntry,
+    XMLElementEntry,
+    XMLEntry};
 use Flow\ETL\Row\Entry\HTMLEntry;
 use Flow\ETL\Row\{Entry, EntryReference, Reference, References};
 use Flow\ETL\Row\Formatter\ASCIISchemaFormatter;
@@ -635,6 +650,15 @@ function xml_element_entry(string $name, \DOMElement|string|null $value, ?Metada
 function html_entry(string $name, HTMLDocument|string|null $value, ?Metadata $metadata = null) : Entry
 {
     return new HTMLEntry($name, $value, $metadata);
+}
+
+/**
+ * @return Entry<?HTMLElement>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::ENTRY)]
+function html_element_entry(string $name, HTMLElement|string|null $value, ?Metadata $metadata = null) : Entry
+{
+    return new HTMLElementEntry($name, $value, $metadata);
 }
 
 /**
@@ -1976,6 +2000,15 @@ function json_schema(string $name, bool $nullable = false, ?Metadata $metadata =
 function html_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
 {
     return Definition::html($name, $nullable, $metadata);
+}
+
+/**
+ * @return Definition<HTMLElement>
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::SCHEMA)]
+function html_element_schema(string $name, bool $nullable = false, ?Metadata $metadata = null) : Definition
+{
+    return Definition::html_element($name, $nullable, $metadata);
 }
 
 /**

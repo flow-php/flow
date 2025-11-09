@@ -9,7 +9,18 @@ use Flow\Bridge\OpenAPI\Specification\Exception\{InvalidArgumentException, Runti
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\{Definition, Metadata};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, StructureType, TimeType, UuidType, XMLElementType, XMLType};
+use Flow\Types\Type\Logical\{DateTimeType,
+    DateType,
+    HTMLElementType,
+    HTMLType,
+    JsonType,
+    ListType,
+    MapType,
+    StructureType,
+    TimeType,
+    UuidType,
+    XMLElementType,
+    XMLType};
 use Flow\Types\Type\Native\{ArrayType, BooleanType, EnumType, FloatType, IntegerType, StringType};
 
 /**
@@ -423,13 +434,15 @@ final class OpenAPIConverter
             BooleanType::class => ['type' => 'boolean'],
             IntegerType::class => ['type' => 'integer'],
             FloatType::class => ['type' => 'number'],
-            StringType::class => ['type' => 'string'],
+            StringType::class,
+            HTMLType::class,
+            HTMLElementType::class => ['type' => 'string'],
             DateType::class => ['type' => 'string', 'format' => 'date'],
             DateTimeType::class => ['type' => 'string', 'format' => 'date-time'],
             TimeType::class => ['type' => 'string', 'format' => 'time'],
             UuidType::class => ['type' => 'string', 'format' => 'uuid'],
             JsonType::class => ['type' => 'string', 'format' => 'json'],
-            XMLType::class => ['type' => 'string', 'format' => 'xml'],
+            XMLType::class,
             XMLElementType::class => ['type' => 'string', 'format' => 'xml'],
             EnumType::class => $this->convertEnumToOpenAPI($type),
             ArrayType::class => $this->convertArrayToOpenAPI($type),

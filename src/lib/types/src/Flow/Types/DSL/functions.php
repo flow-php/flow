@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\DSL;
 
-use Dom\HTMLDocument;
+use Dom\{HTMLDocument, HTMLElement};
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\Types\Type;
 use Flow\Types\Type\{Comparator, TypeDetector, TypeFactory, Types};
@@ -27,7 +27,7 @@ use Flow\Types\Type\Logical\{ClassStringType,
     UuidType,
     XMLElementType,
     XMLType};
-use Flow\Types\Type\Logical\HTMLType;
+use Flow\Types\Type\Logical\{HTMLElementType, HTMLType};
 use Flow\Types\Type\Native\{ArrayType,
     BooleanType,
     CallableType,
@@ -444,6 +444,15 @@ function type_literal(bool|float|int|string $value) : LiteralType
 function type_html() : Type
 {
     return new HTMLType();
+}
+
+/**
+ * @return Type<HTMLElement>
+ */
+#[DocumentationDSL(module: Module::TYPES, type: DSLType::TYPE)]
+function type_html_element() : Type
+{
+    return new HTMLElementType();
 }
 
 /**

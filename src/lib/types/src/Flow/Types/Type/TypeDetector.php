@@ -11,6 +11,7 @@ use function Flow\Types\DSL\{type_array,
     type_enum,
     type_float,
     type_html,
+    type_html_element,
     type_instance_of,
     type_integer,
     type_json,
@@ -129,6 +130,10 @@ final class TypeDetector
 
             if (type_html()->isValid($value)) {
                 return type_html();
+            }
+
+            if (type_html_element()->isValid($value)) {
+                return type_html_element();
             }
 
             if (type_xml()->isValid($value)) {

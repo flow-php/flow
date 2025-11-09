@@ -10,7 +10,6 @@ use Flow\ETL\Exception\RequiredPHPVersionException;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 
-#[RequiresPhp('>= 8.4')]
 final class HTMLQuerySelectorTest extends TestCase
 {
     #[RequiresPhp('< 8.4')]

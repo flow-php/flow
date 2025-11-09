@@ -25,6 +25,8 @@ use function Flow\ETL\DSL\{bool_schema,
     enum_schema,
     float_schema,
     flow_context,
+    html_element_entry,
+    html_element_schema,
     html_entry,
     html_schema,
     integer_schema,
@@ -251,8 +253,25 @@ final class EntryFactoryTest extends TestCase
         );
     }
 
+    public function test_html_element_from_string() : void
+    {
+        self::assertEquals(
+            string_entry('e', $html = '<div>2</div><p>bar</p>'),
+            $this->entryFactory->create('e', $html)
+        );
+    }
+
     #[RequiresPhp('>= 8.4')]
-    public function test_html_from_dom_document() : void
+    public function test_html_element_string_with_html_definition_provided() : void
+    {
+        self::assertEquals(
+            html_element_entry('e', $html = '<div>2</div><p>bar</p>'),
+            $this->entryFactory->create('e', $html, schema(html_element_schema('e')))
+        );
+    }
+
+    #[RequiresPhp('>= 8.4')]
+    public function test_html_from_dom_html_document() : void
     {
         /* @phpstan-ignore-next-line */
         $doc = HTMLDocument::createFromString($html = '<!DOCTYPE html><html lang="en"><head></head><body><div>2</div><p>3</p></body></html>');
