@@ -85,6 +85,23 @@ parameters:
         -
             function: 'dj()'
 
+    ignoreErrors:
+        -
+            identifier: class.notFound
+            path: src/core/etl/src/Flow/ETL/Row/Entry/HTMLEntry.php
+
+        -
+            identifier: class.notFound
+            path: src/core/etl/src/Flow/ETL/Function/HTMLQuerySelector.php
+
+        -
+            identifier: class.notFound
+            path: src/core/etl/src/Flow/ETL/Function/HTMLQuerySelectorAll.php
+
+        -
+            identifier: class.notFound
+            path: src/lib/types/src/Flow/Types/Type/Logical/HTMLType.php
+
 includes:
     - tools/phpstan/vendor/spaze/phpstan-disallowed-calls/extension.neon
 

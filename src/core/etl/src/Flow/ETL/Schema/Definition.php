@@ -28,12 +28,13 @@ use function Flow\Types\DSL\{type_array,
     type_xml,
     type_xml_element,
     types};
+use Dom\HTMLDocument;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, MapType, OptionalType, StructureType};
 use Flow\Types\Type\{Native\FloatType, Native\IntegerType, Native\UnionType, TypeFactory};
-use Flow\Types\Value\{HTMLDocument, Uuid};
+use Flow\Types\Value\Uuid;
 
 /**
  * @template-covariant T
@@ -142,7 +143,7 @@ final class Definition
     /**
      * @return Definition<HTMLDocument>
      */
-    public static function html(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
+    public static function html(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self // @phpstan-ignore class.notFound
     {
         return new self($entry, type_html(), $nullable, $metadata);
     }

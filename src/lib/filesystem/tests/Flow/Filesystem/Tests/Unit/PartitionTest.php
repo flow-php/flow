@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{datetime_entry, html_entry, ref, row, xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\{HTMLEntry, XMLEntry};
 use Flow\Filesystem\Partition;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\{DataProvider, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 
 final class PartitionTest extends TestCase
@@ -47,6 +47,7 @@ final class PartitionTest extends TestCase
         );
     }
 
+    #[RequiresPhp('>= 8.4')]
     public function test_creating_partition_value_from_html_entry() : void
     {
         $this->expectExceptionMessage(HTMLEntry::class . ' can\'t be used as a partition');

@@ -17,13 +17,12 @@ use function Flow\Types\DSL\{type_boolean,
     type_uuid,
     type_xml};
 use Flow\Types\Type;
+use Flow\Types\Type\Logical\HTMLType;
 use Flow\Types\Type\TypeNarrower;
-use Flow\Types\Value\{HTMLDocument, Uuid};
+use Flow\Types\Value\Uuid;
 
 final class StringTypeNarrower implements TypeNarrower
 {
-    private string $string;
-
     /**
      * @return Type<mixed>
      */
@@ -33,71 +32,42 @@ final class StringTypeNarrower implements TypeNarrower
             return type_string();
         }
 
-        $this->string = \trim($value);
+        $value = \trim($value);
 
-        if ($this->isNull()) {
-            return type_null();
+        if ($value === '') {
+            return type_string();
         }
 
-        if ($this->isJson()) {
-            return type_json();
-        }
-
-        if ($this->isUuid()) {
-            return type_uuid();
-        }
-
-        if ($this->isHTML()) {
-            return type_html();
-        }
-
-        if ($this->isXML()) {
-            return type_xml();
-        }
-
-        if ($this->isDateTime()) {
-            return type_datetime();
-        }
-
-        if ($this->isDate()) {
-            return type_date();
-        }
-
-        if ($this->isBoolean()) {
-            return type_boolean();
-        }
-
-        if ($this->isFloat()) {
-            return type_float();
-        }
-
-        if ($this->isInteger()) {
-            return type_integer();
-        }
-
-        if ($this->isTimeZone()) {
-            return type_time_zone();
-        }
-
-        return type_string();
+        return match (true) {
+            $this->isNull($value) => type_null(),
+            $this->isJson($value) => type_json(),
+            $this->isUuid($value) => type_uuid(),
+            $this->isHTML($value) => type_html(),
+            $this->isXML($value) => type_xml(),
+            $this->isDateTime($value) => type_datetime(),
+            $this->isDate($value) => type_date(),
+            $this->isBoolean($value) => type_boolean(),
+            $this->isFloat($value) => type_float(),
+            $this->isInteger($value) => type_integer(),
+            $this->isTimeZone($value) => type_time_zone(),
+            default => type_string(),
+        };
     }
 
-    private function isBoolean() : bool
+    /**
+     * @param non-empty-string $value
+     */
+    private function isBoolean(string $value) : bool
     {
-        if ($this->string === '') {
-            return false;
-        }
-
-        return \in_array(\strtolower($this->string), ['true', 'false'], true);
+        return \in_array(\strtolower($value), ['true', 'false'], true);
     }
 
-    private function isDate() : bool
+    /**
+     * @param non-empty-string $value
+     */
+    private function isDate(string $value) : bool
     {
-        if ($this->string === '') {
-            return false;
-        }
-
-        $dateParts = \date_parse($this->string);
+        $dateParts = \date_parse($value);
 
         if ($dateParts['error_count'] > 0) {
             return false;
@@ -134,13 +104,12 @@ final class StringTypeNarrower implements TypeNarrower
         return true;
     }
 
-    private function isDateTime() : bool
+    /**
+     * @param non-empty-string $value
+     */
+    private function isDateTime(string $value) : bool
     {
-        if ($this->string === '') {
-            return false;
-        }
-
-        $dateParts = \date_parse($this->string);
+        $dateParts = \date_parse($value);
 
         if ($dateParts['error_count'] > 0) {
             return false;
@@ -163,71 +132,88 @@ final class StringTypeNarrower implements TypeNarrower
             || ($dateParts['second'] ?? false) !== false
             || ($dateParts['fraction'] ?? false) !== false;
 
-        $hasRelativeTime = false;
-
-        if (isset($dateParts['relative']) && \is_array($dateParts['relative'])) {
-            $relative = $dateParts['relative'];
-            $hasRelativeTime = ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;
-        }
-
-        return $hasDirectTime || $hasRelativeTime;
-    }
-
-    private function isFloat() : bool
-    {
-        if ($this->string === '') {
-            return false;
-        }
-
-        // scientific notation
-        if (\is_numeric($this->string) && (\str_contains($this->string, 'e') || \str_contains($this->string, 'E'))) {
+        if ($hasDirectTime) {
             return true;
         }
 
-        return \is_numeric($this->string) && \str_contains($this->string, '.');
-    }
+        if (\is_array($dateParts['relative'] ?? false)) {
+            $relative = $dateParts['relative'];
 
-    private function isHTML() : bool
-    {
-        return HTMLDocument::isValid($this->string);
-    }
-
-    private function isInteger() : bool
-    {
-        if ($this->string === '') {
-            return false;
-        }
-
-        if (\is_numeric($this->string)) {
-            return (string) ((int) $this->string) === $this->string;
+            return ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;
         }
 
         return false;
     }
 
-    private function isJson() : bool
+    /**
+     * @param non-empty-string $value
+     */
+    private function isFloat(string $value) : bool
     {
-        return type_json()->isValid($this->string);
-    }
-
-    private function isNull() : bool
-    {
-        return \in_array(\mb_strtolower($this->string), ['null', 'nil'], true);
-    }
-
-    private function isTimeZone() : bool
-    {
-        if ($this->string === '') {
+        if (!\is_numeric($value)) {
             return false;
         }
 
-        if (\in_array($this->string, \DateTimeZone::listIdentifiers(), true)) {
+        // scientific notation
+        if (\str_contains($value, 'e') || \str_contains($value, 'E')) {
             return true;
         }
 
-        if (\preg_match('/^[+-]\d{2}:\d{2}$/', $this->string) === 1) {
+        return \str_contains($value, '.');
+    }
+
+    /**
+     * @param non-empty-string $value
+     */
+    private function isHTML(string $value) : bool
+    {
+        if ('<' !== $value[0]) {
+            return false;
+        }
+
+        return \preg_match(HTMLType::HTML_ALIKE_REGEX, $value) === 1;
+    }
+
+    /**
+     * @param non-empty-string $value
+     */
+    private function isInteger(string $value) : bool
+    {
+        if (\is_numeric($value)) {
+            return (string) ((int) $value) === $value;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param non-empty-string $value
+     */
+    private function isJson(string $value) : bool
+    {
+        return type_json()->isValid($value);
+    }
+
+    /**
+     * @param non-empty-string $value
+     */
+    private function isNull(string $value) : bool
+    {
+        return \in_array(\mb_strtolower($value), ['null', 'nil'], true);
+    }
+
+    /**
+     * @param non-empty-string $value
+     */
+    private function isTimeZone(string $value) : bool
+    {
+        if (\in_array($value, \DateTimeZone::listIdentifiers(), true)) {
+            return true;
+        }
+
+        if (\preg_match('/^[+-]\d{2}:\d{2}$/', $value) === 1) {
             try {
-                new \DateTimeZone($this->string);
+                new \DateTimeZone($value);
 
                 return true;
             } catch (\Exception) {
@@ -238,27 +224,29 @@ final class StringTypeNarrower implements TypeNarrower
         return false;
     }
 
-    private function isUuid() : bool
+    /**
+     * @param non-empty-string $value
+     */
+    private function isUuid(string $value) : bool
     {
-        return Uuid::isValid($this->string);
+        return Uuid::isValid($value);
     }
 
-    private function isXML() : bool
+    /**
+     * @param non-empty-string $value
+     */
+    private function isXML(string $value) : bool
     {
-        if ($this->string === '') {
+        if ('<' !== $value[0]) {
             return false;
         }
 
-        if ('<' !== $this->string[0]) {
-            return false;
-        }
-
-        if (\preg_match('/<(.+?)>(.+?)<\/(.+?)>/', $this->string) === 1) {
+        if (\preg_match('/<(.+?)>(.+?)<\/(.+?)>/', $value) === 1) {
             try {
                 \libxml_use_internal_errors(true);
 
                 $doc = new \DOMDocument();
-                $result = @$doc->loadXML($this->string);
+                $result = @$doc->loadXML($value);
 
                 return (bool) $result;
             } catch (\Exception) {
