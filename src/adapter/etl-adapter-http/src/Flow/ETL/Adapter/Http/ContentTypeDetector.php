@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
+use Psr\Http\Message\ResponseInterface;
+
 final class ContentTypeDetector
 {
-    /**
-     * @param array<string> $headers
-     */
-    public static function detectFromHeaders(array $headers) : string
+    public static function detectFromHeaders(ResponseInterface $response) : string
     {
-        foreach ($headers as $header) {
+        foreach ($response->getHeader('Content-Type') as $header) {
             if (\str_contains($header, 'application/json')) {
                 return 'json';
             }
