@@ -38,14 +38,11 @@ final class ResponseEntriesFactory
             }
 
             $responseBodyEntry = match ($responseType) {
-                'json' => json_entry('response_body', (array) \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR)),
-                'xml' => xml_entry('response_body', $responseBodyContent),
+                ResponseType::JSON => json_entry('response_body', (array) \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR)),
+                ResponseType::XML => xml_entry('response_body', $responseBodyContent),
+                ResponseType::HTML => class_exists('\Dom\HTMLDocument') ? html_entry('response_body', $responseBodyContent) : string_entry('response_body', $responseBodyContent),
                 default => string_entry('response_body', $responseBodyContent),
             };
-
-            if (class_exists('\Dom\HTMLDocument') && 'html' === $responseType) {
-                $responseBodyEntry = html_entry('response_body', $responseBodyContent);
-            }
         } else {
             $responseBodyEntry = string_entry('response_body', null);
         }
