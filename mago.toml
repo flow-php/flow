@@ -1,0 +1,140 @@
+# Welcome to Mago!
+# For full documentation, see https://mago.carthage.software/tools/overview
+php-version = "8.2.0"
+
+[source]
+paths = [
+    "src/adapter/etl-adapter-avro/src/Flow",
+    "src/adapter/etl-adapter-avro/tests/Flow",
+    "src/adapter/etl-adapter-chartjs/src/Flow",
+    "src/adapter/etl-adapter-chartjs/tests/Flow",
+    "src/adapter/etl-adapter-csv/src/Flow",
+    "src/adapter/etl-adapter-csv/tests/Flow",
+    "src/adapter/etl-adapter-doctrine/src/Flow",
+    "src/adapter/etl-adapter-doctrine/tests/Flow",
+    "src/adapter/etl-adapter-elasticsearch/src/Flow",
+    "src/adapter/etl-adapter-elasticsearch/tests/Flow",
+    "src/adapter/etl-adapter-excel/src/Flow",
+    "src/adapter/etl-adapter-excel/tests/Flow",
+    "src/adapter/etl-adapter-google-sheet/src/Flow",
+    "src/adapter/etl-adapter-google-sheet/tests/Flow",
+    "src/adapter/etl-adapter-http/src/Flow",
+    "src/adapter/etl-adapter-http/tests/Flow",
+    "src/adapter/etl-adapter-json/src/Flow",
+    "src/adapter/etl-adapter-json/tests/Flow",
+    "src/adapter/etl-adapter-logger/src/Flow",
+    "src/adapter/etl-adapter-logger/tests/Flow",
+    "src/adapter/etl-adapter-meilisearch/src/Flow",
+    "src/adapter/etl-adapter-meilisearch/tests/Flow",
+    "src/adapter/etl-adapter-parquet/src/Flow",
+    "src/adapter/etl-adapter-parquet/tests/Flow",
+    "src/adapter/etl-adapter-text/src/Flow",
+    "src/adapter/etl-adapter-text/tests/Flow",
+    "src/adapter/etl-adapter-xml/src/Flow",
+    "src/adapter/etl-adapter-xml/tests/Flow",
+    "src/bridge/filesystem/async-aws/src/Flow",
+    "src/bridge/filesystem/async-aws/tests/Flow",
+    "src/bridge/filesystem/azure/src/Flow",
+    "src/bridge/filesystem/azure/tests/Flow",
+    "src/bridge/monolog/http/src/Flow",
+    "src/bridge/monolog/http/tests/Flow",
+    "src/bridge/openapi/specification/src/Flow",
+    "src/bridge/openapi/specification/tests/Flow",
+    "src/bridge/symfony/http-foundation/src/Flow",
+    "src/bridge/symfony/http-foundation/tests/Flow",
+    "src/cli/src/Flow",
+    "src/cli/tests/Flow",
+    "src/core/etl/src/Flow",
+    "src/core/etl/tests/Flow",
+    "src/lib/array-dot/src/Flow",
+    "src/lib/array-dot/tests/Flow",
+    "src/lib/azure-sdk/src/Flow",
+    "src/lib/azure-sdk/tests/Flow",
+    "src/lib/doctrine-dbal-bulk/src/Flow",
+    "src/lib/doctrine-dbal-bulk/tests/Flow",
+    "src/lib/dremel/src/Flow",
+    "src/lib/dremel/tests/Flow",
+    "src/lib/filesystem/src/Flow",
+    "src/lib/filesystem/tests/Flow",
+    "src/lib/parquet-viewer/src/Flow",
+    "src/lib/parquet-viewer/tests/Flow",
+    "src/lib/parquet/src/Flow",
+    "src/lib/parquet/tests/Flow",
+    "src/lib/snappy/src/Flow",
+    "src/lib/snappy/tests/Flow",
+    "src/lib/types/src/Flow",
+    "src/lib/types/tests/Flow",
+    "src/tools/documentation/src/Flow",
+    "src/tools/documentation/tests/Flow"
+]
+includes = ["vendor"]
+excludes = [
+    "src/lib/parquet/src/Flow/Parquet/ThriftModel"
+]
+
+[formatter]
+print-width = 140
+control-brace-style = "same_line"
+closure-brace-style = "same_line"
+function-brace-style = "same_line"
+method-brace-style = "next_line"
+classlike-brace-style = "next_line"
+inline-empty-control-braces = true
+inline-empty-closure-braces = true
+inline-empty-function-braces = true
+inline-empty-method-braces = true
+inline-empty-classlike-braces = true
+inline-empty-constructor-braces = true
+inline-empty-anonymous-class-braces = true
+expand-use-groups = false
+
+[linter]
+integrations = ["symfony"]
+
+[linter.rules]
+no-redundant-use = { enabled = true }
+too-many-methods = { enabled = false }
+excessive-parameter-list = { enabled = false }
+kan-defect = { enabled = false }
+cyclomatic-complexity = { enabled = false }
+no-error-control-operator = { enabled = false }
+too-many-enum-cases = { enabled = false }
+too-many-properties = { enabled = false }
+no-literal-password = { enabled = false }
+literal-named-argument = { enabled = false }
+halstead = { enabled = false }
+no-boolean-flag-parameter = { enabled = false }
+interface-name = { enabled = false }
+class-name = { enabled = false }
+trait-name = { enabled = false }
+function-name = { enabled = false }
+constant-name = { enabled = false }
+no-else-clause = { enabled = false }
+no-empty-catch-clause = { enabled = false }
+explicit-octal = { enabled = false }
+no-redundant-parentheses = { enabled = false }
+no-boolean-literal-comparison = { enabled = false }
+no-multi-assignments = { enabled = false }
+no-goto = { enabled = false }
+use-compound-assignment = { enabled = false }
+no-ini-set = { enabled = false }
+no-assign-in-condition = { enabled = false }
+tagged-todo = { enabled = false }
+no-redundant-file = { enabled = false }
+excessive-nesting = { enabled = false }
+prefer-first-class-callable = { enabled = false }
+loop-does-not-iterate = { enabled = false }
+no-empty-loop = { enabled = false }
+no-debug-symbols = { enabled = true }
+no-shorthand-ternary = { enabled = false }
+parameter-type = { enabled = false }
+return-type = { enabled = false }
+no-redundant-method-override = { enabled = false }
+
+[analyzer]
+find-unused-definitions = true
+find-unused-expressions = false
+analyze-dead-code = false
+check-throws = false
+allow-possibly-undefined-array-keys = true
+perform-heuristic-checks = true

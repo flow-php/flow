@@ -6,6 +6,7 @@ use Rector\Set\ValueObject\LevelSetList;
 use Rector\CodingStyle\Rector\FuncCall\FunctionFirstClassCallableRector;
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
 use Rector\CodingStyle\Rector\ArrowFunction\ArrowFunctionDelegatingCallToFirstClassCallableRector;
+use Rector\Php74\Rector\Ternary\ParenthesizeNestedTernaryRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -26,6 +27,7 @@ return RectorConfig::configure()
         StringClassNameToClassConstantRector::class,
         __DIR__ . '/src/lib/parquet/src/Flow/Parquet/ThriftModel/*',
     ])
+    ->withSkip([ParenthesizeNestedTernaryRector::class])
     ->withCache(__DIR__ . '/var/rector/src')
     ->withImportNames(importShortClasses: false, removeUnusedImports: true)
     ->withSets([

@@ -224,8 +224,5 @@ return RectorConfig::configure()
     ->withCache(__DIR__ . '/var/rector/tests')
     ->withSkipPath(__DIR__ . '/src/lib/parquet/src/Flow/Parquet/Thrift')
     ->withImportNames(
-        importNames: true,
-        importDocBlockNames: true,
         importShortClasses: false,
-        removeUnusedImports: true
     );
