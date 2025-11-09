@@ -125,7 +125,7 @@ final readonly class WindowFunctionPipeline implements OverridingPipeline, Pipel
         $processedRows = [];
 
         foreach ($partitionRows as $row) {
-            $value = $this->function->apply($row, $partitionRows);
+            $value = $this->function->apply($row, $partitionRows, $context);
 
             $entryName = $this->entry instanceof Definition
                 ? $this->entry->entry()->name()

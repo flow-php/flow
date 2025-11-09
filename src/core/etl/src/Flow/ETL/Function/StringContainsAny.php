@@ -27,14 +27,10 @@ final class StringContainsAny extends ScalarFunctionChain
         $needles = (new Parameter($this->needles))->as($row, $context, type_list(type_string()));
 
         if ($value === null) {
-            $context->functions()->invalidResult(new InvalidArgumentException('StringContainsAny function requires non-null string'));
-
-            return false;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringContainsAny function requires non-null string'));
         }
 
         if ($needles === null || !\is_array($needles) || \count($needles) === 0) {
-            $context->functions()->invalidResult(new InvalidArgumentException('StringContainsAny function requires non-null needles array with at least one element'));
-
             return false;
         }
 

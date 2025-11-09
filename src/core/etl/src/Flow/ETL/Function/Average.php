@@ -41,18 +41,22 @@ final class Average implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(Row $row, Rows $partition) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $sum = 0;
         $count = 0;
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            /** @var mixed $value */
-            $value = $partitionRow->valueOf($this->ref);
+            try {
+                /** @var mixed $value */
+                $value = $partitionRow->valueOf($this->ref);
 
-            if (\is_numeric($value)) {
-                $sum = (new Calculator())->add($sum, $value);
-                $count++;
+                if (\is_numeric($value)) {
+                    $sum = (new Calculator())->add($sum, $value);
+                    $count++;
+                }
+            } catch (InvalidArgumentException $e) {
+                $context->functions()->invalidResult(new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e));
             }
         }
 

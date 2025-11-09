@@ -38,16 +38,20 @@ final class Sum implements AggregatingFunction, WindowFunction
         }
     }
 
-    public function apply(Row $row, Rows $partition) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $sum = 0;
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            $entry = $partitionRow->get($this->ref);
-            $value = $entry->value();
+            try {
+                $entry = $partitionRow->get($this->ref);
+                $value = $entry->value();
 
-            if (\is_numeric($value)) {
-                $sum = (new Calculator())->add($sum, $value);
+                if (\is_numeric($value)) {
+                    $sum = (new Calculator())->add($sum, $value);
+                }
+            } catch (InvalidArgumentException $e) {
+                $context->functions()->invalidResult(new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e));
             }
         }
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{average, config, flow_context, int_entry, ref, row, rows, str_entry, window};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class AverageTest extends FlowTestCase
@@ -86,6 +88,21 @@ final class AverageTest extends FlowTestCase
 
         $avg = average(ref('value'))->over(window()->orderBy(ref('value')));
 
-        self::assertSame(42.6, $avg->apply($row1, $rows));
+        self::assertSame(42.6, $avg->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_average_with_missing_reference_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Average window function error:');
+
+        $rows = rows($row1 = row(int_entry('id', 1)), row(int_entry('id', 2)));
+
+        $avg = average(ref('missing_column'))->over(window()->orderBy(ref('id')));
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        $avg->apply($row1, $rows, $context);
     }
 }

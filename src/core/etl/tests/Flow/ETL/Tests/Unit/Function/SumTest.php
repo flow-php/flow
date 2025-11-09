@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{config, float_entry, flow_context, int_entry, ref, row, rows, str_entry, sum, window};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SumTest extends FlowTestCase
@@ -61,6 +63,21 @@ final class SumTest extends FlowTestCase
 
         $sum = sum(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
-        self::assertSame(15, $sum->apply($row1, $rows));
+        self::assertSame(15, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_sum_with_missing_reference_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Sum window function error:');
+
+        $rows = rows($row1 = row(int_entry('id', 1)), row(int_entry('id', 2)));
+
+        $sum = sum(ref('missing_column'))->over(window()->orderBy(ref('id')));
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        $sum->apply($row1, $rows, $context);
     }
 }
