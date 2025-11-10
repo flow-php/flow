@@ -36,7 +36,9 @@
         "symfony/web-profiler-bundle": "^6.4",
         "symfonycasts/tailwind-bundle": "~0.8.0",
         "norberttech/static-content-generator-bundle": "1.x-dev",
-        "symfony/css-selector": "^6.4"
+        "symfony/css-selector": "^6.4",
+        "symfony/panther": "^2.1",
+        "dbrekelmans/bdi": "^1.2"
     },
     "autoload": {
         "psr-4": {
@@ -58,11 +60,13 @@
         "post-install-cmd": [
             "@importmap:install",
             "@build:tailwind",
-            "@tools:install"
+            "@tools:install",
+            "vendor/bin/bdi detect drivers"
         ],
         "post-update-cmd": [
             "@importmap:install",
-            "@build:tailwind"
+            "@build:tailwind",
+            "vendor/bin/bdi detect drivers"
         ],
         "tools:install": [
             "composer install --working-dir=./tools/phpunit"
@@ -72,6 +76,9 @@
         ],
         "test": [
             "tools/phpunit/vendor/bin/phpunit"
+        ],
+        "test:e2e": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=e2e"
         ],
         "assets:clear": "rm -rf public/assets",
         "importmap:install": "bin/console importmap:install",
