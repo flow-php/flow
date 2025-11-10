@@ -15,6 +15,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+if (version_compare(PHP_VERSION, '8.3', '>=')) {
+    print PHP_EOL . 'This app can be run only on PHP 8.2' . PHP_EOL;
+
+    exit(1);
+}
+
 if (false === in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     print PHP_EOL . 'This app may only be invoked from a command line, got "' . PHP_SAPI . '"' . PHP_EOL;
 
