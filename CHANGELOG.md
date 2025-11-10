@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-11-10
 
 ### Added
+- [#1985](https://github.com/flow-php/flow/pull/1985) - **Add new HTML entries into the docs** - [@stloyd](https://github.com/stloyd)
 - [#1981](https://github.com/flow-php/flow/pull/1981) - **Add HTML usage example** - [@stloyd](https://github.com/stloyd)
 - [#1980](https://github.com/flow-php/flow/pull/1980) - **Make HTTP Adapter aware of HTML & XML entry types** - [@stloyd](https://github.com/stloyd)
 - [#1972](https://github.com/flow-php/flow/pull/1972) - **Add a new `HTMLElementEntry` & related stuff** - [@stloyd](https://github.com/stloyd)
