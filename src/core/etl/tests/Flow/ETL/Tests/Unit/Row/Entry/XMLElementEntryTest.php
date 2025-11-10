@@ -12,12 +12,25 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class XMLElementEntryTest extends FlowTestCase
 {
+    public function test_create_from_dom_document() : void
+    {
+        $document = new \DOMDocument();
+        $document->loadXML('<root><name>User Name</name><id>01</id></root>');
+
+        /* @phpstan-ignore-next-line */
+        $entry = xml_element_entry('node', $document->documentElement->firstChild);
+
+        self::assertInstanceOf(\DOMElement::class, $entry->value());
+        self::assertSame('<name>User Name</name>', $entry->toString());
+        self::assertSame($document->documentElement, $entry->value()->parentNode);
+    }
+
     public function test_create_from_string() : void
     {
         $entry = xml_element_entry('node', '<node attr="test">value</node>');
 
         self::assertInstanceOf(\DOMElement::class, $entry->value());
-        self::assertEquals('<node attr="test">value</node>', $entry->toString());
+        self::assertSame('<node attr="test">value</node>', $entry->toString());
     }
 
     public function test_create_from_string_fails_with_invalid_xml() : void
@@ -34,7 +47,7 @@ final class XMLElementEntryTest extends FlowTestCase
         $duplicated = $entry->duplicate();
 
         self::assertNotSame($entry, $duplicated);
-        self::assertEquals($entry->toString(), $duplicated->toString());
+        self::assertSame($entry->toString(), $duplicated->toString());
     }
 
     public function test_serialization() : void

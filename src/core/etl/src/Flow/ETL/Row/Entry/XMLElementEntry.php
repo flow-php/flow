@@ -40,9 +40,6 @@ final class XMLElementEntry implements Entry
             }
 
             $value = $doc->documentElement;
-        } elseif ($value instanceof \DOMElement) {
-            /** @var \DOMElement $value */
-            $value = (new \DOMDocument())->importNode($value, true);
         }
 
         $this->metadata = $metadata ?: Metadata::empty();
