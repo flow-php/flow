@@ -2156,7 +2156,7 @@ function save_mode_append() : SaveMode
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function execution_strict() : ExecutionMode
 {
-    return ExecutionMode::Strict;
+    return ExecutionMode::STRICT;
 }
 
 /**

@@ -7,7 +7,6 @@ namespace Flow\ETL\Function;
 use function Flow\Types\DSL\type_instance_of;
 use DOM\{Element, HTMLDocument};
 use Dom\HTMLElement;
-use Flow\ETL\Exception\RequiredPHPVersionException;
 use Flow\ETL\Exception\{InvalidArgumentException, RequiredPHPVersionException};
 use Flow\ETL\{FlowContext, Row};
 
@@ -27,8 +26,8 @@ final class HTMLQuerySelectorAll extends ScalarFunctionChain
      */
     public function eval(Row $row, FlowContext $context) : ?array
     {
-        $value = (new Parameter($this->value))->as($row, type_instance_of(HTMLDocument::class), type_instance_of(HTMLElement::class));
-        $selector = (new Parameter($this->selector))->asString($row);
+        $value = (new Parameter($this->value))->as($row, $context, type_instance_of(HTMLDocument::class), type_instance_of(HTMLElement::class));
+        $selector = (new Parameter($this->selector))->asString($row, $context);
 
         if (null === $value) {
             return $context->functions()->invalidResult(new InvalidArgumentException('HTMLQuerySelectorAll requires non-null HTMLDocument'));
