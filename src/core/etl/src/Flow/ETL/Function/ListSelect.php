@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\{EntryReference, Reference, References};
 
@@ -25,7 +25,7 @@ final readonly class ListSelect implements ScalarFunction
     /**
      * @return null|array<int, array<string, mixed>>
      */
-    public function eval(Row $row) : ?array
+    public function eval(Row $row, FlowContext $context) : ?array
     {
         if (!$row->has($this->ref)) {
             return null;

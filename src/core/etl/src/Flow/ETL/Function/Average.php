@@ -7,9 +7,9 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\{float_entry, integer_entry};
 use Flow\Calculator\{Calculator, Rounding};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{FlowContext, Row, Rows, Window};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\{Row, Rows, Window};
 
 final class Average implements AggregatingFunction, WindowFunction
 {
@@ -26,7 +26,7 @@ final class Average implements AggregatingFunction, WindowFunction
         $this->sum = 0;
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
             /** @var mixed $value */
@@ -36,23 +36,27 @@ final class Average implements AggregatingFunction, WindowFunction
                 $this->sum = (new Calculator())->add($this->sum, $value);
                 $this->count++;
             }
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Average error: ' . $e->getMessage()));
         }
     }
 
-    public function apply(Row $row, Rows $partition) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $sum = 0;
         $count = 0;
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            /** @var mixed $value */
-            $value = $partitionRow->valueOf($this->ref);
+            try {
+                /** @var mixed $value */
+                $value = $partitionRow->valueOf($this->ref);
 
-            if (\is_numeric($value)) {
-                $sum = (new Calculator())->add($sum, $value);
-                $count++;
+                if (\is_numeric($value)) {
+                    $sum = (new Calculator())->add($sum, $value);
+                    $count++;
+                }
+            } catch (InvalidArgumentException $e) {
+                $context->functions()->invalidResult(new InvalidArgumentException('Average window function error: ' . $e->getMessage(), 0, $e));
             }
         }
 

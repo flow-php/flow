@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\Between\Boundary;
-use Flow\ETL\Row;
 
 final class Between extends ScalarFunctionChain
 {
@@ -17,15 +18,15 @@ final class Between extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->value))->eval($row);
-        $lowerBound = (new Parameter($this->lowerBoundRef))->eval($row);
-        $upperBound = (new Parameter($this->upperBoundRef))->eval($row);
-        $boundary = (new Parameter($this->boundary))->asEnum($row, Boundary::class);
+        $value = (new Parameter($this->value))->eval($row, $context);
+        $lowerBound = (new Parameter($this->lowerBoundRef))->eval($row, $context);
+        $upperBound = (new Parameter($this->upperBoundRef))->eval($row, $context);
+        $boundary = (new Parameter($this->boundary))->asEnum($row, $context, Boundary::class);
 
         if (!$boundary instanceof Boundary) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Between function requires valid boundary'));
         }
 
         return $boundary->compare($value, $lowerBound, $upperBound);

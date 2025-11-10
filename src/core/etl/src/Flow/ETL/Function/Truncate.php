@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class Truncate extends ScalarFunctionChain
 {
@@ -16,14 +17,14 @@ final class Truncate extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $length = (new Parameter($this->length))->asInt($row);
-        $ellipsis = (new Parameter($this->ellipsis))->asString($row);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $length = (new Parameter($this->length))->asInt($row, $context);
+        $ellipsis = (new Parameter($this->ellipsis))->asString($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Truncate function requires non-null value'));
         }
 
         if ($length === null) {

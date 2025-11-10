@@ -13,6 +13,7 @@ use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Filesystem\{SaveMode, ScalarFunctionFilter};
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\{AggregatingFunction,
+    ExecutionMode,
     ScalarFunction,
     StyleConverter\StringStyles as OldStringStyles,
     WindowFunction};
@@ -374,7 +375,8 @@ final class DataFrame
             new ScalarFunctionFilter(
                 $filter,
                 $this->context->entryFactory(),
-                new AutoCaster()
+                new AutoCaster(),
+                $this->context
             )
         );
 
@@ -568,18 +570,23 @@ final class DataFrame
     }
 
     /**
-     * SaveMode defines how Flow should behave when writing to a file/files that already exists.
-     * For more details please see SaveMode enum.
+     * This method is used to set the behavior of the DataFrame.
      *
-     * @param SaveMode $mode
+     * Available modes:
+     * - SaveMode defines how Flow should behave when writing to a file/files that already exists.
+     * - ExecutionMode - defines how functions should behave when they encounter unexpected data (e.g., type mismatches, missing values).
      *
      * @lazy
      *
      * @return $this
      */
-    public function mode(SaveMode $mode) : self
+    public function mode(SaveMode|ExecutionMode $mode) : self
     {
-        $this->context->streams()->setSaveMode($mode);
+        if ($mode instanceof ExecutionMode) {
+            $this->context->functions()->setMode($mode);
+        } else {
+            $this->context->streams()->setMode($mode);
+        }
 
         return $this;
     }

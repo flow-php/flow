@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, lit, ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, int_entry, lit, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -13,7 +13,7 @@ final class SanitizeTest extends FlowTestCase
     public function test_sanitize_on_non_string_value() : void
     {
         self::assertNull(
-            ref('value')->sanitize()->eval(row(int_entry('value', 1000))),
+            ref('value')->sanitize()->eval(row(int_entry('value', 1000)), flow_context()),
         );
     }
 
@@ -21,7 +21,7 @@ final class SanitizeTest extends FlowTestCase
     {
         self::assertSame(
             '****',
-            ref('value')->sanitize()->eval(row(str_entry('value', 'test'))),
+            ref('value')->sanitize()->eval(row(str_entry('value', 'test')), flow_context()),
         );
     }
 
@@ -29,7 +29,7 @@ final class SanitizeTest extends FlowTestCase
     {
         self::assertSame(
             'te**',
-            ref('value')->sanitize(skipCharacters: lit(2))->eval(row(str_entry('value', 'test'))),
+            ref('value')->sanitize(skipCharacters: lit(2))->eval(row(str_entry('value', 'test')), flow_context()),
         );
     }
 
@@ -37,7 +37,7 @@ final class SanitizeTest extends FlowTestCase
     {
         self::assertSame(
             '****',
-            ref('value')->sanitize(skipCharacters: lit(5))->eval(row(str_entry('value', 'test'))),
+            ref('value')->sanitize(skipCharacters: lit(5))->eval(row(str_entry('value', 'test')), flow_context()),
         );
     }
 
@@ -45,7 +45,7 @@ final class SanitizeTest extends FlowTestCase
     {
         self::assertSame(
             '----',
-            ref('value')->sanitize(lit('-'))->eval(row(str_entry('value', 'test'))),
+            ref('value')->sanitize(lit('-'))->eval(row(str_entry('value', 'test')), flow_context()),
         );
     }
 }

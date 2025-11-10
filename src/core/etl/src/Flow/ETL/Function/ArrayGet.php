@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ArrayDot\array_dot_get;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class ArrayGet extends ScalarFunctionChain
 {
@@ -16,19 +16,19 @@ final class ArrayGet extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         try {
-            $value = (new Parameter($this->ref))->asArray($row);
-            $path = (new Parameter($this->path))->asString($row);
+            $value = (new Parameter($this->ref))->asArray($row, $context);
+            $path = (new Parameter($this->path))->asString($row, $context);
 
             if ($value === null || $path === null) {
-                return null;
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGet function requires non-null array and path'));
             }
 
             return array_dot_get($value, $path);
-        } catch (InvalidArgumentException) {
-            return null;
+        } catch (InvalidArgumentException $e) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGet function failed to get value from array.', 0, $e));
         }
     }
 }

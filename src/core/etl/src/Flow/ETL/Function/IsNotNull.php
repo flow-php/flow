@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class IsNotNull extends ScalarFunctionChain
 {
@@ -13,8 +13,8 @@ final class IsNotNull extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : bool
+    public function eval(Row $row, FlowContext $context) : bool
     {
-        return (new Parameter($this->value))->eval($row) !== null;
+        return (new Parameter($this->value))->eval($row, $context) !== null;
     }
 }

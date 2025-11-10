@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,8 @@ final class BinaryLengthTest extends FlowTestCase
         self::assertSame(
             5,
             ref('str')->binaryLength()->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -27,7 +28,8 @@ final class BinaryLengthTest extends FlowTestCase
         self::assertSame(
             5,
             ref('str')->binaryLength()->eval(
-                row(str_entry('str', $binaryData))
+                row(str_entry('str', $binaryData)),
+                flow_context()
             )
         );
     }
@@ -37,7 +39,8 @@ final class BinaryLengthTest extends FlowTestCase
         self::assertSame(
             0,
             ref('str')->binaryLength()->eval(
-                row(str_entry('str', ''))
+                row(str_entry('str', '')),
+                flow_context()
             )
         );
     }
@@ -46,7 +49,8 @@ final class BinaryLengthTest extends FlowTestCase
     {
         self::assertNull(
             ref('str')->binaryLength()->eval(
-                row(str_entry('str', null))
+                row(str_entry('str', null)),
+                flow_context()
             )
         );
     }
@@ -56,7 +60,8 @@ final class BinaryLengthTest extends FlowTestCase
         self::assertSame(
             12,
             ref('str')->binaryLength()->eval(
-                row(str_entry('str', "hello\nworld\t"))
+                row(str_entry('str', "hello\nworld\t")),
+                flow_context()
             )
         );
     }

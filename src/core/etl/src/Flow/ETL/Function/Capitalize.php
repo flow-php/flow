@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class Capitalize extends ScalarFunctionChain
 {
@@ -12,12 +13,12 @@ final class Capitalize extends ScalarFunctionChain
     {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $string = (new Parameter($this->string))->eval($row);
+        $string = (new Parameter($this->string))->eval($row, $context);
 
         if ($string === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Capitalize function requires non-null value'));
         }
 
         if (\function_exists('mb_convert_case')) {

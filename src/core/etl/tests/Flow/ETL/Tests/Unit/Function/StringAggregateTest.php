@@ -15,10 +15,10 @@ final class StringAggregateTest extends FlowTestCase
     {
         $aggregator = string_agg(ref('data'));
 
-        $aggregator->aggregate(row(str_entry('data', 'a')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'c')));
+        $aggregator->aggregate(row(str_entry('data', 'a')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'c')), flow_context());
 
         self::assertSame(
             'a, b, b, c',
@@ -44,10 +44,10 @@ final class StringAggregateTest extends FlowTestCase
     {
         $aggregator = string_agg(ref('data'), sort: SortOrder::DESC);
 
-        $aggregator->aggregate(row(str_entry('data', 'a')));
-        $aggregator->aggregate(row(int_entry('data', 1)));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'c')));
+        $aggregator->aggregate(row(str_entry('data', 'a')), flow_context());
+        $aggregator->aggregate(row(int_entry('data', 1)), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'c')), flow_context());
 
         self::assertSame(
             'c, b, a',
@@ -59,10 +59,10 @@ final class StringAggregateTest extends FlowTestCase
     {
         $aggregator = string_agg(ref('data')->as('string'));
 
-        $aggregator->aggregate(row(str_entry('data', 'a')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'c')));
+        $aggregator->aggregate(row(str_entry('data', 'a')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'c')), flow_context());
 
         self::assertSame(
             'a, b, b, c',
@@ -78,10 +78,10 @@ final class StringAggregateTest extends FlowTestCase
     {
         $aggregator = string_agg(ref('data'), sort: SortOrder::DESC);
 
-        $aggregator->aggregate(row(str_entry('data', 'a')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'b')));
-        $aggregator->aggregate(row(str_entry('data', 'c')));
+        $aggregator->aggregate(row(str_entry('data', 'a')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'b')), flow_context());
+        $aggregator->aggregate(row(str_entry('data', 'c')), flow_context());
 
         self::assertSame(
             'c, b, b, a',

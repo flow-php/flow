@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{config, flow_context, row, rows};
-use function Flow\ETL\DSL\{float_entry, int_entry, ref, str_entry, sum, window};
+use function Flow\ETL\DSL\{config, float_entry, flow_context, int_entry, ref, row, rows, str_entry, sum, window};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SumTest extends FlowTestCase
@@ -14,11 +15,11 @@ final class SumTest extends FlowTestCase
     {
         $aggregator = sum(ref('int'));
 
-        $aggregator->aggregate(row(str_entry('int', '10')));
-        $aggregator->aggregate(row(str_entry('int', '20')));
-        $aggregator->aggregate(row(str_entry('int', '55')));
-        $aggregator->aggregate(row(str_entry('int', '25')));
-        $aggregator->aggregate(row(str_entry('not_int', null)));
+        $aggregator->aggregate(row(str_entry('int', '10')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '20')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '55')), flow_context());
+        $aggregator->aggregate(row(str_entry('int', '25')), flow_context());
+        $aggregator->aggregate(row(str_entry('not_int', null)), flow_context());
 
         self::assertSame(
             110,
@@ -30,10 +31,10 @@ final class SumTest extends FlowTestCase
     {
         $aggregator = sum(ref('int'));
 
-        $aggregator->aggregate(row(int_entry('int', 10)));
-        $aggregator->aggregate(row(int_entry('int', 20)));
-        $aggregator->aggregate(row(int_entry('int', 30)));
-        $aggregator->aggregate(row(str_entry('int', null)));
+        $aggregator->aggregate(row(int_entry('int', 10)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 30)), flow_context());
+        $aggregator->aggregate(row(str_entry('int', null)), flow_context());
 
         self::assertSame(
             60,
@@ -45,10 +46,10 @@ final class SumTest extends FlowTestCase
     {
         $aggregator = sum(ref('int'));
 
-        $aggregator->aggregate(row(float_entry('int', 10.25)));
-        $aggregator->aggregate(row(int_entry('int', 20)));
-        $aggregator->aggregate(row(int_entry('int', 305)));
-        $aggregator->aggregate(row(int_entry('int', 25)));
+        $aggregator->aggregate(row(float_entry('int', 10.25)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 20)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 305)), flow_context());
+        $aggregator->aggregate(row(int_entry('int', 25)), flow_context());
 
         self::assertSame(
             360.25,
@@ -62,6 +63,21 @@ final class SumTest extends FlowTestCase
 
         $sum = sum(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
-        self::assertSame(15, $sum->apply($row1, $rows));
+        self::assertSame(15, $sum->apply($row1, $rows, flow_context()));
+    }
+
+    public function test_window_function_sum_with_missing_reference_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Sum window function error:');
+
+        $rows = rows($row1 = row(int_entry('id', 1)), row(int_entry('id', 2)));
+
+        $sum = sum(ref('missing_column'))->over(window()->orderBy(ref('id')));
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        $sum->apply($row1, $rows, $context);
     }
 }

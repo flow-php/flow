@@ -6,8 +6,8 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\Types\DSL\{get_type, type_null};
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Schema\Metadata;
 use Flow\Types\Type;
@@ -29,9 +29,9 @@ final readonly class Parameter
      *
      * @return null|T
      */
-    public function as(Row $row, Type ...$types) : mixed
+    public function as(Row $row, FlowContext $context, Type ...$types) : mixed
     {
-        $value = $this->eval($row);
+        $value = $this->eval($row, $context);
 
         foreach ($types as $nextType) {
             if ($nextType->isValid($value)) {
@@ -45,16 +45,16 @@ final readonly class Parameter
     /**
      * @return null|array<array-key, mixed>
      */
-    public function asArray(Row $row) : ?array
+    public function asArray(Row $row, FlowContext $context) : ?array
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_array($result) ? $result : null;
     }
 
-    public function asBoolean(Row $row) : bool
+    public function asBoolean(Row $row, FlowContext $context) : bool
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_scalar($result) ? (bool) $result : false;
     }
@@ -79,16 +79,16 @@ final readonly class Parameter
      *
      * @return null|T
      */
-    public function asEnum(Row $row, string $enumClass) : ?\UnitEnum
+    public function asEnum(Row $row, FlowContext $context, string $enumClass) : ?\UnitEnum
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_object($result) && \is_a($result, $enumClass) ? $result : null;
     }
 
-    public function asFloat(Row $row) : ?float
+    public function asFloat(Row $row, FlowContext $context) : ?float
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_float($result) ? $result : null;
     }
@@ -101,9 +101,9 @@ final readonly class Parameter
      *
      * @return null|T
      */
-    public function asInstanceOf(Row $row, string $class) : ?object
+    public function asInstanceOf(Row $row, FlowContext $context, string $class) : ?object
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_object($result) && \is_a($result, $class) ? $result : null;
     }
@@ -111,9 +111,9 @@ final readonly class Parameter
     /**
      * @phpstan-return ($default is null ? int|null : int)
      */
-    public function asInt(Row $row, ?int $default = null) : ?int
+    public function asInt(Row $row, FlowContext $context, ?int $default = null) : ?int
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_int($result) ? $result : $default;
     }
@@ -121,9 +121,9 @@ final readonly class Parameter
     /**
      * @return null|array<object>
      */
-    public function asListOfObjects(Row $row, string $class) : ?array
+    public function asListOfObjects(Row $row, FlowContext $context, string $class) : ?array
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         if (!\is_array($result)) {
             return null;
@@ -144,9 +144,9 @@ final readonly class Parameter
     /**
      * @phpstan-return ($default is null ? int|float|null : int|float)
      */
-    public function asNumber(Row $row, int|float|null $default = null) : int|float|null
+    public function asNumber(Row $row, FlowContext $context, int|float|null $default = null) : int|float|null
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         if (\is_string($result)) {
             return $default;
@@ -155,9 +155,9 @@ final readonly class Parameter
         return \is_numeric($result) ? $result : $default;
     }
 
-    public function asObject(Row $row) : ?object
+    public function asObject(Row $row, FlowContext $context) : ?object
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_object($result) ? $result : null;
     }
@@ -165,9 +165,9 @@ final readonly class Parameter
     /**
      * @phpstan-return ($default is null ? string|null : string)
      */
-    public function asString(Row $row, ?string $default = null) : ?string
+    public function asString(Row $row, FlowContext $context, ?string $default = null) : ?string
     {
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return \is_string($result) ? $result : $default;
     }
@@ -175,7 +175,7 @@ final readonly class Parameter
     /**
      * @return Type<mixed>
      */
-    public function asType(Row $row) : Type
+    public function asType(Row $row, FlowContext $context) : Type
     {
         if ($this->function instanceof Reference) {
             if ($row->get($this->function)->definition()->metadata()->has(Metadata::FROM_NULL)) {
@@ -185,14 +185,14 @@ final readonly class Parameter
             return $row->get($this->function)->type();
         }
 
-        $result = $this->eval($row);
+        $result = $this->eval($row, $context);
 
         return get_type($result);
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $result = $this->function->eval($row);
+        $result = $this->function->eval($row, $context);
 
         if ($result instanceof ScalarResult) {
             return $result->value;

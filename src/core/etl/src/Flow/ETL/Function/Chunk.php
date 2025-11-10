@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class Chunk extends ScalarFunctionChain
 {
@@ -18,16 +19,18 @@ final class Chunk extends ScalarFunctionChain
     /**
      * @return null|array<int, string>
      */
-    public function eval(Row $row) : ?array
+    public function eval(Row $row, FlowContext $context) : ?array
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $size = (new Parameter($this->size))->asInt($row);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $size = (new Parameter($this->size))->asInt($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Chunk function requires non-null value'));
         }
 
         if ($size === null || $size <= 0) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Chunk function requires non-null, positive size'));
+
             return [];
         }
 

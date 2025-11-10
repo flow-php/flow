@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{lit, ref, str_entry, to_timezone};
+use function Flow\ETL\DSL\{flow_context, lit, ref, str_entry, to_timezone};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,7 @@ final class ToTimeZoneTest extends FlowTestCase
         $result = to_timezone(
             lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
             lit(new \DateTimeZone('UTC'))
-        )->eval(row());
+        )->eval(row(), flow_context());
         self::assertInstanceOf(\DateTimeInterface::class, $result);
         self::assertSame(
             '2020-01-01 08:00:00.000000',
@@ -28,7 +28,7 @@ final class ToTimeZoneTest extends FlowTestCase
         $result = to_timezone(
             lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
             ref('tz')
-        )->eval(row(str_entry('tz', 'UTC')));
+        )->eval(row(str_entry('tz', 'UTC')), flow_context());
         self::assertInstanceOf(\DateTimeInterface::class, $result);
         self::assertSame(
             '2020-01-01 08:00:00.000000',
@@ -41,7 +41,7 @@ final class ToTimeZoneTest extends FlowTestCase
         $result = to_timezone(
             lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
             lit('UTC')
-        )->eval(row());
+        )->eval(row(), flow_context());
         self::assertInstanceOf(\DateTimeInterface::class, $result);
         self::assertSame(
             '2020-01-01 08:00:00.000000',

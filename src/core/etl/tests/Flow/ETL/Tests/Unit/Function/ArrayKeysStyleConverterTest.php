@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{array_keys_style_convert, int_entry, json_entry, ref};
+use function Flow\ETL\DSL\{array_keys_style_convert, flow_context, int_entry, json_entry, ref};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Tests\FlowTestCase;
@@ -18,14 +18,14 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
 
         $row = row(json_entry('invalid_entry', []));
 
-        array_keys_style_convert(ref('invalid_entry'), 'invalid')->eval($row);
+        array_keys_style_convert(ref('invalid_entry'), 'invalid')->eval($row, flow_context());
     }
 
     public function test_for_not_array_entry() : void
     {
         $row = row(int_entry('invalid_entry', 1));
 
-        self::assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row));
+        self::assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row, flow_context()));
     }
 
     public function test_transforms_case_style_for_all_keys_in_array_entry() : void
@@ -68,7 +68,7 @@ final class ArrayKeysStyleConverterTest extends FlowTestCase
                     'variant_name' => 'Variant Name',
                 ],
             ],
-            array_keys_style_convert(ref('arrayEntry'), 'snake')->eval($row)
+            array_keys_style_convert(ref('arrayEntry'), 'snake')->eval($row, flow_context())
         );
     }
 }

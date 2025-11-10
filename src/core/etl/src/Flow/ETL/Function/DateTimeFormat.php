@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class DateTimeFormat extends ScalarFunctionChain
 {
@@ -14,13 +15,13 @@ final class DateTimeFormat extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->dateTime))->asInstanceOf($row, \DateTimeInterface::class);
-        $format = (new Parameter($this->format))->asString($row);
+        $value = (new Parameter($this->dateTime))->asInstanceOf($row, $context, \DateTimeInterface::class);
+        $format = (new Parameter($this->format))->asString($row, $context);
 
         if ($value === null || $format === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('DateTimeFormat function requires non-null values'));
         }
 
         return $value->format($format);

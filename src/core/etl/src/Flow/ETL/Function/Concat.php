@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_optional, type_string};
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class Concat extends ScalarFunctionChain
 {
@@ -20,13 +20,13 @@ final class Concat extends ScalarFunctionChain
         $this->refs = $refs;
     }
 
-    public function eval(Row $row) : string
+    public function eval(Row $row, FlowContext $context) : string
     {
         /** @var array<string> $concatValues */
         $concatValues = [];
 
         foreach ($this->refs as $value) {
-            $value = \is_string($value) ? $value : type_optional(type_string())->cast((new Parameter($value))->eval($row));
+            $value = \is_string($value) ? $value : type_optional(type_string())->cast((new Parameter($value))->eval($row, $context));
 
             if (\is_string($value)) {
                 $concatValues[] = $value;

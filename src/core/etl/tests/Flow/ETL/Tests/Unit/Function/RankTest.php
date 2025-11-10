@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, rank, ref, window};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{flow_context, int_entry, rank, ref, row, rows, window};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class RankTest extends FlowTestCase
@@ -15,12 +14,13 @@ final class RankTest extends FlowTestCase
         $rows = rows($row1 = row(int_entry('id', 1), int_entry('value', 1), int_entry('salary', 6000)), $row2 = row(int_entry('id', 2), int_entry('value', 1), int_entry('salary', 6000)), $row3 = row(int_entry('id', 3), int_entry('value', 1), int_entry('salary', 6000)), $row4 = row(int_entry('id', 4), int_entry('value', 1), int_entry('salary', 2000)), $row5 = row(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)));
 
         $rank = rank()->over(window()->orderBy(ref('salary')->desc()));
+        $context = flow_context();
 
-        self::assertSame(1, $rank->apply($row1, $rows));
-        self::assertSame(1, $rank->apply($row2, $rows));
-        self::assertSame(1, $rank->apply($row3, $rows));
-        self::assertSame(5, $rank->apply($row4, $rows));
-        self::assertSame(4, $rank->apply($row5, $rows));
+        self::assertSame(1, $rank->apply($row1, $rows, $context));
+        self::assertSame(1, $rank->apply($row2, $rows, $context));
+        self::assertSame(1, $rank->apply($row3, $rows, $context));
+        self::assertSame(5, $rank->apply($row4, $rows, $context));
+        self::assertSame(4, $rank->apply($row5, $rows, $context));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries() : void
@@ -31,7 +31,7 @@ final class RankTest extends FlowTestCase
 
         $rank = rank()->over(window()->partitionBy(ref('value'))->orderBy(ref('salary'), ref('id')));
 
-        self::assertSame(1, $rank->apply($row1, $rows));
+        self::assertSame(1, $rank->apply($row1, $rows, flow_context()));
     }
 
     public function test_rank_function_without_order_by() : void
@@ -41,6 +41,6 @@ final class RankTest extends FlowTestCase
 
         $rank = rank();
 
-        self::assertSame(1, $rank->apply($row1, $rows));
+        self::assertSame(1, $rank->apply($row1, $rows, flow_context()));
     }
 }

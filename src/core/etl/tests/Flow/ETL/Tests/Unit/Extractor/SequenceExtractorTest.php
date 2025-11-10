@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\{date_entry,
-    float_entry,
-    from_sequence_date_period,
-    from_sequence_date_period_recurrences,
-    from_sequence_number};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{date_entry, float_entry, from_sequence_date_period, from_sequence_date_period_recurrences, from_sequence_number, row, rows};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class SequenceExtractorTest extends FlowTestCase

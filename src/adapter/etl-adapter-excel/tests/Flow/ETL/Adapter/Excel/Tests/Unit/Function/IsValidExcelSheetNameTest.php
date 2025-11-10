@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Excel\Tests\Unit\Function;
 
 use function Flow\ETL\Adapter\Excel\DSL\is_valid_excel_sheet_name;
-use function Flow\ETL\DSL\{ref, row, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, row, str_entry};
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
 
@@ -18,13 +18,13 @@ final class IsValidExcelSheetNameTest extends FlowTestCase
     #[TestWith(['Sheet?Name'])]
     public function test_invalid_excel_sheet_name(string $invalidNames) : void
     {
-        self::assertFalse(is_valid_excel_sheet_name($invalidNames)->eval(row()));
+        self::assertFalse(is_valid_excel_sheet_name($invalidNames)->eval(row(), flow_context()));
     }
 
     #[TestWith(['Sheet1'])]
     #[TestWith(['Excel Sheet'])]
     public function test_valid_excel_sheet_name(string $sheetName) : void
     {
-        self::assertTrue(is_valid_excel_sheet_name(ref('sheet_name'))->eval(row(str_entry('sheet_name', $sheetName))));
+        self::assertTrue(is_valid_excel_sheet_name(ref('sheet_name'))->eval(row(str_entry('sheet_name', $sheetName)), flow_context()));
     }
 }

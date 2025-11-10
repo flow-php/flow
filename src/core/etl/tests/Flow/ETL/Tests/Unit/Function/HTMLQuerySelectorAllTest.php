@@ -17,7 +17,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
     {
         $this->expectException(RequiredPHPVersionException::class);
 
-        ref('value')->htmlQuerySelectorAll('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', '')));
+        ref('value')->htmlQuerySelectorAll('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
     }
 
     #[RequiresPhp('>= 8.4')]
@@ -27,7 +27,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
         $html = HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>');
 
         /** @var array<mixed> $result */
-        $result = ref('value')->htmlQuerySelectorAll('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', $html)));
+        $result = ref('value')->htmlQuerySelectorAll('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
 
         self::assertCount(1, $result);
 
@@ -41,7 +41,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
         /* @phpstan-ignore-next-line */
         $html = HTMLDocument::createFromString('<!DOCTYPE html><html><head></head><body><div><span>foobar</span></div></body></html>');
 
-        $result = ref('value')->htmlQuerySelectorAll('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', $html)));
+        $result = ref('value')->htmlQuerySelectorAll('body div p')->eval(row(flow_context(config())->entryFactory()->create('value', $html)), flow_context());
 
         self::assertNull($result);
     }
@@ -49,7 +49,7 @@ final class HTMLQuerySelectorAllTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function test_invalid_value() : void
     {
-        $result = ref('value')->htmlQuerySelectorAll('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', '')));
+        $result = ref('value')->htmlQuerySelectorAll('body div span')->eval(row(flow_context(config())->entryFactory()->create('value', '')), flow_context());
 
         self::assertNull($result);
     }

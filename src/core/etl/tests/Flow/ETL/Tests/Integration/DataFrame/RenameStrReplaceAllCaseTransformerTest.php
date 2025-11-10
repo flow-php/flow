@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{df, from_rows, json_entry, ref};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{df, from_rows, json_entry, ref, row, rows};
 use Flow\ETL\Tests\FlowIntegrationTestCase;
 use Flow\ETL\Transformer\RenameStrReplaceAllEntriesTransformer;
 use PHPUnit\Framework\Attributes\IgnoreDeprecations;

@@ -173,7 +173,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         }
     }
 
-    public function setSaveMode(SaveMode $saveMode) : self
+    public function setMode(SaveMode $saveMode) : self
     {
         $this->saveMode = $saveMode;
 

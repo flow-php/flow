@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\{Row, Rows, Window};
+use Flow\ETL\{FlowContext, Row, Rows, Window};
 
 final class RowNumber implements WindowFunction
 {
@@ -16,7 +16,7 @@ final class RowNumber implements WindowFunction
         $this->window = null;
     }
 
-    public function apply(Row $row, Rows $partition) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $number = 1;
 

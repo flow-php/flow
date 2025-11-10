@@ -64,7 +64,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());
-        $streams->setSaveMode(append());
+        $streams->setMode(append());
 
         return $streams;
     }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class RegexMatchAll extends ScalarFunctionChain
 {
@@ -22,15 +23,27 @@ final class RegexMatchAll extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?bool
+    public function eval(Row $row, FlowContext $context) : ?bool
     {
-        $pattern = (new Parameter($this->pattern))->asString($row);
-        $subject = (new Parameter($this->subject))->asString($row);
-        $flags = (new Parameter($this->flags))->asInt($row);
-        $offset = (new Parameter($this->offset))->asInt($row);
+        $pattern = (new Parameter($this->pattern))->asString($row, $context);
+        $subject = (new Parameter($this->subject))->asString($row, $context);
+        $flags = (new Parameter($this->flags))->asInt($row, $context);
+        $offset = (new Parameter($this->offset))->asInt($row, $context);
 
-        if ($pattern === null || $subject === null || $flags === null || $offset === null) {
-            return null;
+        if ($pattern === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatchAll requires non-null pattern'));
+        }
+
+        if ($subject === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatchAll requires non-null subject'));
+        }
+
+        if ($flags === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatchAll requires non-null flags'));
+        }
+
+        if ($offset === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexMatchAll requires non-null offset'));
         }
 
         return \preg_match_all(pattern: $pattern, subject: $subject, flags: $flags, offset: $offset) !== false;

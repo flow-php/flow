@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use function Flow\ArrayDot\array_dot_get;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class ArrayGetCollection extends ScalarFunctionChain
 {
@@ -29,15 +29,15 @@ final class ArrayGetCollection extends ScalarFunctionChain
         return new self($ref, $keys, '0');
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         try {
-            $value = (new Parameter($this->ref))->asArray($row);
-            $index = (new Parameter($this->index))->asString($row);
-            $keys = (new Parameter($this->keys))->asArray($row);
+            $value = (new Parameter($this->ref))->asArray($row, $context);
+            $index = (new Parameter($this->index))->asString($row, $context);
+            $keys = (new Parameter($this->keys))->asArray($row, $context);
 
             if ($value === null || $index === null || $keys === null) {
-                return null;
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function requires non-null array, index, and keys'));
             }
 
             $path = \sprintf("{$index}.{%s}", \implode(',', \array_map(fn (mixed $entryName) : string => '?' . (\is_scalar($entryName) ? (string) $entryName : \serialize($entryName)), $keys)));
@@ -46,17 +46,17 @@ final class ArrayGetCollection extends ScalarFunctionChain
                 $array = ($index === '0') ? \array_values($value) : $value;
 
                 $extractedValues = array_dot_get($array, $path);
-            } catch (InvalidPathException) {
-                return null;
+            } catch (InvalidPathException $e) {
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function failed to get values from array.', 0, $e));
             }
 
             if (!\is_array($extractedValues)) {
-                return null;
+                return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function requires the result to be an array'));
             }
 
             return $extractedValues;
-        } catch (InvalidArgumentException) {
-            return null;
+        } catch (InvalidArgumentException $e) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayGetCollection function failed to evaluate parameters.', 0, $e));
         }
     }
 }

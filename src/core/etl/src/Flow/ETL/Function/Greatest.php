@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\Types\Type\ValueComparator;
 
 final class Greatest extends ScalarFunctionChain
@@ -17,18 +18,18 @@ final class Greatest extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         $extractedValues = [];
         $extractedTypes = [];
 
         foreach ($this->values as $value) {
-            $extractedValues[] = (new Parameter($value))->eval($row);
-            $extractedTypes[] = (new Parameter($value))->asType($row);
+            $extractedValues[] = (new Parameter($value))->eval($row, $context);
+            $extractedTypes[] = (new Parameter($value))->asType($row, $context);
         }
 
         if (!\count($extractedValues)) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Greatest requires at least one value'));
         }
 
         (new ValueComparator())->assertAllTypesComparable($extractedTypes, '>');

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\MatchCases\MatchCondition;
-use Flow\ETL\Row;
 
 final class MatchCases extends ScalarFunctionChain
 {
@@ -19,21 +19,23 @@ final class MatchCases extends ScalarFunctionChain
 
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
         foreach ($this->cases as $condition) {
-            if ($condition->valid($row)) {
-                return $condition->eval($row);
+            if ($condition->valid($row, $context)) {
+                return $condition->eval($row, $context);
             }
         }
 
         if ($this->default) {
-            return (new Parameter($this->default))->eval($row);
+            return (new Parameter($this->default))->eval($row, $context);
         }
 
-        throw new RuntimeException(
-            'Not a single case matches row, consider using default parameter, row: '
-            . \json_encode($row->toArray(), JSON_THROW_ON_ERROR)
+        return $context->functions()->invalidResult(
+            new InvalidArgumentException(
+                'Not a single case matches row, consider using default parameter, row: '
+                . \json_encode($row->toArray(), JSON_THROW_ON_ERROR)
+            )
         );
     }
 }

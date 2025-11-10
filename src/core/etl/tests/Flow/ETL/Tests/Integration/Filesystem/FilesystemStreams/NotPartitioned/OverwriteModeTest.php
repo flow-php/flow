@@ -56,7 +56,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());
-        $streams->setSaveMode(overwrite());
+        $streams->setMode(overwrite());
 
         return $streams;
     }

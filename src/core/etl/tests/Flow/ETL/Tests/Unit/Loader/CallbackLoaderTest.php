@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\{config, flow_context, row};
-use function Flow\ETL\DSL\{int_entry, str_entry, to_callable};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, row, str_entry, to_callable};
 use Flow\ETL\{Rows, Tests\FlowTestCase};
 
 final class CallbackLoaderTest extends FlowTestCase

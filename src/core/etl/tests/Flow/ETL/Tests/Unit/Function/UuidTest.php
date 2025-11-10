@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{lit, uuid_v4, uuid_v7};
+use function Flow\ETL\DSL\{flow_context, lit, uuid_v4, uuid_v7};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\Types\Value\Uuid as FlowUuid;
@@ -26,7 +26,7 @@ final class UuidTest extends FlowTestCase
         }
 
         $expression = uuid_v4();
-        $result = $expression->eval(row());
+        $result = $expression->eval(row(), flow_context());
         self::assertInstanceOf(FlowUuid::class, $result->value);
         self::assertTrue(
             Uuid::isValid(
@@ -34,8 +34,8 @@ final class UuidTest extends FlowTestCase
             )
         );
         self::assertNotSame(
-            $expression->eval(row()),
-            $expression->eval(row())
+            $expression->eval(row(), flow_context()),
+            $expression->eval(row(), flow_context())
         );
     }
 
@@ -44,8 +44,8 @@ final class UuidTest extends FlowTestCase
         $expression = uuid_v4();
 
         self::assertNotEquals(
-            $expression->eval(row()),
-            $expression->eval(row())
+            $expression->eval(row(), flow_context()),
+            $expression->eval(row(), flow_context())
         );
     }
 
@@ -55,7 +55,7 @@ final class UuidTest extends FlowTestCase
             self::markTestSkipped("Package 'ramsey/uuid' is required for this test.");
         }
 
-        $result = uuid_v7(lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC'))))->eval(row());
+        $result = uuid_v7(lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC'))))->eval(row(), flow_context());
         self::assertInstanceOf(FlowUuid::class, $result->value);
         self::assertTrue(
             Uuid::isValid(
@@ -68,15 +68,15 @@ final class UuidTest extends FlowTestCase
     {
         $dateTime = lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC')));
         self::assertNotEquals(
-            uuid_v7($dateTime)->eval(row()),
-            uuid_v7($dateTime)->eval(row())
+            uuid_v7($dateTime)->eval(row(), flow_context()),
+            uuid_v7($dateTime)->eval(row(), flow_context())
         );
     }
 
     public function test_uuid7_return_null_for_non_datetime_interface() : void
     {
         self::assertNull(
-            uuid_v7(lit(''))->eval(row())->value
+            uuid_v7(lit(''))->eval(row(), flow_context())->value
         );
     }
 }

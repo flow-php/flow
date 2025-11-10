@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{array_to_row, config, flow_context};
+use function Flow\ETL\DSL\array_to_row;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 
 final class OnEach extends ScalarFunctionChain
 {
@@ -22,29 +22,29 @@ final class OnEach extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->array))->asArray($row);
-        $preserveKeys = (new Parameter($this->preserveKeys))->asBoolean($row);
+        $value = (new Parameter($this->array))->asArray($row, $context);
+        $preserveKeys = (new Parameter($this->preserveKeys))->asBoolean($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('OnEach requires non-null array'));
         }
 
         $output = [];
 
-        $entryFactory = flow_context(config())->entryFactory();
+        $entryFactory = $context->entryFactory();
 
         foreach ($value as $key => $item) {
             if ($preserveKeys) {
                 try {
-                    $output[$key] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], $entryFactory));
+                    $output[$key] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], $entryFactory), $context);
                 } catch (InvalidArgumentException) {
                     $output[$key] = null;
                 }
             } else {
                 try {
-                    $output[] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], $entryFactory));
+                    $output[] = (new Parameter($this->function))->eval(array_to_row(['element' => $item], $entryFactory), $context);
                 } catch (InvalidArgumentException) {
                     $output[] = null;
                 }

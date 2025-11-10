@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{list_entry, ref, row};
+use function Flow\ETL\DSL\{flow_context, list_entry, ref, row};
 use function Flow\Types\DSL\{type_integer, type_list, type_string, type_structure};
 use Flow\ETL\Function\ListSelect;
 use Flow\ETL\Tests\FlowTestCase;
@@ -34,7 +34,7 @@ final class ListSelectTest extends FlowTestCase
                 ['id' => 2, 'mail' => null],
                 ['id' => 3, 'mail' => null],
             ],
-            (new ListSelect(ref('list'), ref('id'), ref('mail')))->eval($list)
+            (new ListSelect(ref('list'), ref('id'), ref('mail')))->eval($list, flow_context())
         );
     }
 
@@ -61,7 +61,7 @@ final class ListSelectTest extends FlowTestCase
                 ['id' => 2],
                 ['id' => 3],
             ],
-            (new ListSelect(ref('list'), 'id'))->eval($list)
+            (new ListSelect(ref('list'), 'id'))->eval($list, flow_context())
         );
     }
 
@@ -88,7 +88,7 @@ final class ListSelectTest extends FlowTestCase
                 ['new_id' => 2],
                 ['new_id' => 3],
             ],
-            (new ListSelect(ref('list'), ref('id')->as('new_id')))->eval($list)
+            (new ListSelect(ref('list'), ref('id')->as('new_id')))->eval($list, flow_context())
         );
     }
 
@@ -111,7 +111,7 @@ final class ListSelectTest extends FlowTestCase
                 ['id' => null],
                 ['id' => null],
             ],
-            (new ListSelect(ref('list'), ref('id')))->eval($list)
+            (new ListSelect(ref('list'), ref('id')))->eval($list, flow_context())
         );
     }
 }

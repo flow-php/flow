@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Symfony\Component\String\AbstractString;
 
 final class Split extends ScalarFunctionChain
@@ -20,14 +21,18 @@ final class Split extends ScalarFunctionChain
     /**
      * @return null|array<int, string>
      */
-    public function eval(Row $row) : ?array
+    public function eval(Row $row, FlowContext $context) : ?array
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $separator = (new Parameter($this->separator))->asString($row);
-        $limit = (new Parameter($this->limit))->asInt($row);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $separator = (new Parameter($this->separator))->asString($row, $context);
+        $limit = (new Parameter($this->limit))->asInt($row, $context);
 
-        if ($value === null || $separator === null || $limit === null || $separator === '') {
-            return null;
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('Split function requires non-null value'));
+        }
+
+        if ($separator === null || $limit === null || $separator === '') {
+            return $context->functions()->invalidResult(new InvalidArgumentException('Split function requires non-null separator and limit, separator cannot be empty'));
         }
 
         return \array_map(static fn (AbstractString $s) => $s->toString(), s($value)->split($separator, $limit));

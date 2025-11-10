@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class EndsWith extends ScalarFunctionChain
 {
@@ -14,12 +15,14 @@ final class EndsWith extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : bool
+    public function eval(Row $row, FlowContext $context) : bool
     {
-        $haystack = (new Parameter($this->haystack))->asString($row);
-        $needle = (new Parameter($this->needle))->asString($row);
+        $haystack = (new Parameter($this->haystack))->asString($row, $context);
+        $needle = (new Parameter($this->needle))->asString($row, $context);
 
         if ($haystack === null || $needle === null) {
+            $context->functions()->invalidResult(new InvalidArgumentException('EndsWith function requires non-null haystack and needle'));
+
             return false;
         }
 

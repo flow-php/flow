@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\Types\Type\ValueComparator;
 
 final class GreaterThanEqual extends ScalarFunctionChain
@@ -15,17 +16,17 @@ final class GreaterThanEqual extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : bool
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $left = (new Parameter($this->left))->eval($row);
-        $leftType = (new Parameter($this->left))->asType($row);
-        $right = (new Parameter($this->right))->eval($row);
-        $rightType = (new Parameter($this->right))->asType($row);
+        $left = (new Parameter($this->left))->eval($row, $context);
+        $leftType = (new Parameter($this->left))->asType($row, $context);
+        $right = (new Parameter($this->right))->eval($row, $context);
+        $rightType = (new Parameter($this->right))->asType($row, $context);
 
         (new ValueComparator())->assertComparableTypes($leftType, $rightType, '>=');
 
         if ($left === null || $right === null) {
-            return false;
+            return $context->functions()->invalidResult(new InvalidArgumentException('GreaterThanEqual function requires non-null values'));
         }
 
         return $left >= $right;

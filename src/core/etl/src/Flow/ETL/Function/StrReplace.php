@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_list, type_string, type_union};
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class StrReplace extends ScalarFunctionChain
 {
@@ -21,14 +22,18 @@ final class StrReplace extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $search = (new Parameter($this->search))->as($row, type_string(), type_list(type_string()));
-        $replace = (new Parameter($this->replace))->as($row, type_string(), type_list(type_string()));
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $search = (new Parameter($this->search))->as($row, $context, type_string(), type_list(type_string()));
+        $replace = (new Parameter($this->replace))->as($row, $context, type_string(), type_list(type_string()));
 
-        if ($value === null || $search === null || $replace === null) {
-            return null;
+        if ($value === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('StrReplace function requires non-null value'));
+        }
+
+        if ($search === null || $replace === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('StrReplace function requires non-null search and replace'));
         }
 
         $typedSearch = type_union(type_string(), type_list(type_string()))->assert($search);

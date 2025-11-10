@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\ArraySort\Sort;
-use Flow\ETL\Row;
 
 final class ArraySort extends ScalarFunctionChain
 {
@@ -20,15 +21,15 @@ final class ArraySort extends ScalarFunctionChain
     /**
      * @return null|array<mixed>
      */
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $array = (new Parameter($this->ref))->asArray($row);
-        $flags = (new Parameter($this->flags))->asInt($row);
-        $recursive = (new Parameter($this->recursive))->asBoolean($row);
-        $sortFunction = (new Parameter($this->sortFunction))->asEnum($row, Sort::class);
+        $array = (new Parameter($this->ref))->asArray($row, $context);
+        $flags = (new Parameter($this->flags))->asInt($row, $context);
+        $recursive = (new Parameter($this->recursive))->asBoolean($row, $context);
+        $sortFunction = (new Parameter($this->sortFunction))->asEnum($row, $context, Sort::class);
 
         if ($array === null || $sortFunction === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArraySort function requires non-null array and sort function'));
         }
 
         $this->recursiveSort($array, $sortFunction->value, $flags, $recursive);

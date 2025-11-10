@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{concat, datetime_entry, hash, json_entry, lit, ref, str_entry};
+use function Flow\ETL\DSL\{concat, datetime_entry, flow_context, hash, json_entry, lit, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Tests\FlowTestCase;
@@ -15,7 +15,7 @@ final class HashTest extends FlowTestCase
     {
         self::assertSame(
             '4450cf82dc53848e2bbe9798b70b0a6a',
-            ref('value')->hash()->eval(row(json_entry('value', ['test']))),
+            ref('value')->hash()->eval(row(json_entry('value', ['test'])), flow_context()),
         );
     }
 
@@ -23,7 +23,7 @@ final class HashTest extends FlowTestCase
     {
         self::assertSame(
             NativePHPHash::xxh128('test_test'),
-            hash(concat(ref('value'), lit('_'), ref('value')), new NativePHPHash('xxh128'))->eval(row(str_entry('value', 'test')))
+            hash(concat(ref('value'), lit('_'), ref('value')), new NativePHPHash('xxh128'))->eval(row(str_entry('value', 'test')), flow_context())
         );
     }
 
@@ -31,14 +31,14 @@ final class HashTest extends FlowTestCase
     {
         self::assertSame(
             '5347d10de38eb5570c044eb710a5120a',
-            ref('value')->hash()->eval(row(datetime_entry('value', new \DateTimeImmutable('2021-01-01')))),
+            ref('value')->hash()->eval(row(datetime_entry('value', new \DateTimeImmutable('2021-01-01'))), flow_context()),
         );
     }
 
     public function test_hashing_null_value() : void
     {
         self::assertNull(
-            ref('value')->hash()->eval(row(str_entry('value', null))),
+            ref('value')->hash()->eval(row(str_entry('value', null)), flow_context()),
         );
     }
 
@@ -46,7 +46,7 @@ final class HashTest extends FlowTestCase
     {
         self::assertSame(
             '6c78e0e3bd51d358d01e758642b85fb8',
-            ref('value')->hash()->eval(row(str_entry('value', 'test'))),
+            ref('value')->hash()->eval(row(str_entry('value', 'test')), flow_context()),
         );
     }
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{float_entry, int_entry, lit, ref, str_entry};
-use function Flow\ETL\DSL\{number_format, row};
+use function Flow\ETL\DSL\{float_entry, flow_context, int_entry, lit, number_format, ref, row, str_entry};
 use Flow\ETL\Function\NumberFormat;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -23,7 +22,8 @@ final class NumberFormatTest extends FlowTestCase
         self::assertSame(
             '1,234.57',
             $expression->eval(
-                row(float_entry('value', 1234.5678), int_entry('decimals', 2), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ','))
+                row(float_entry('value', 1234.5678), int_entry('decimals', 2), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ',')),
+                flow_context()
             )
         );
     }
@@ -40,7 +40,8 @@ final class NumberFormatTest extends FlowTestCase
         self::assertSame(
             '1,234.57',
             $expression->eval(
-                row(float_entry('value', 1234.5678))
+                row(float_entry('value', 1234.5678)),
+                flow_context()
             )
         );
     }
@@ -56,7 +57,8 @@ final class NumberFormatTest extends FlowTestCase
 
         self::assertNull(
             $expression->eval(
-                row(float_entry('value', 1234.5678), float_entry('decimals', 2.5), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ','))
+                row(float_entry('value', 1234.5678), float_entry('decimals', 2.5), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ',')),
+                flow_context()
             )
         );
     }
@@ -72,7 +74,8 @@ final class NumberFormatTest extends FlowTestCase
 
         self::assertNull(
             $expression->eval(
-                row(str_entry('value', 'test'), int_entry('decimals', 2), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ','))
+                row(str_entry('value', 'test'), int_entry('decimals', 2), str_entry('decimal_separator', '.'), str_entry('thousands_separator', ',')),
+                flow_context()
             )
         );
     }

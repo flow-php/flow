@@ -6,8 +6,8 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_array, type_boolean, type_date, type_datetime, type_float, type_instance_of, type_integer, type_json, type_string, type_time_zone, type_xml};
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\Row;
 use Flow\Types\Exception\CastingException;
 use Flow\Types\Type;
 
@@ -27,14 +27,14 @@ final class Cast extends ScalarFunctionChain
      * @throws InvalidArgumentException
      * @throws \JsonException
      */
-    public function eval(Row $row) : ?ScalarResult
+    public function eval(Row $row, FlowContext $context) : ?ScalarResult
     {
-        $value = (new Parameter($this->value))->eval($row);
+        $value = (new Parameter($this->value))->eval($row, $context);
 
         $type = $this->type;
 
         if (null === $value) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Cast function requires non-null value'));
         }
 
         if ($type instanceof Type) {
@@ -43,7 +43,7 @@ final class Cast extends ScalarFunctionChain
 
         /** @var string $type */
         try {
-            return match (\mb_strtolower($type)) {
+            $result = match (\mb_strtolower($type)) {
                 'datetime' => new ScalarResult(type_datetime()->cast($value), type_datetime()),
                 'date' => new ScalarResult(
                     match (\gettype($value)) {
@@ -69,8 +69,14 @@ final class Cast extends ScalarFunctionChain
                 'xml' => new ScalarResult(type_xml()->cast($value), type_xml()),
                 default => null,
             };
-        } catch (CastingException) {
-            return null;
+
+            if ($result === null) {
+                return $context->functions()->invalidResult(new InvalidArgumentException('Cast function does not support type: ' . $type));
+            }
+
+            return $result;
+        } catch (CastingException $e) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('Cast function failed: ' . $e->getMessage()));
         }
     }
 }

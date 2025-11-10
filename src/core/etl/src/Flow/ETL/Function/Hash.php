@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
-use Flow\ETL\Row;
 
 final class Hash extends ScalarFunctionChain
 {
@@ -15,9 +15,9 @@ final class Hash extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->eval($row);
+        $value = (new Parameter($this->value))->eval($row, $context);
 
         return match ($value) {
             null => null,

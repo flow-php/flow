@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Row\{Entry, EntryFactory};
 use Flow\ETL\Row\{Reference, SortOrder};
 
@@ -20,11 +20,11 @@ final class StringAggregate implements AggregatingFunction
     {
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
-        $stringValue = (new Parameter($this->ref))->asString($row);
+        $stringValue = $row->valueOf($this->ref->to());
 
-        if ($stringValue !== null) {
+        if (\is_string($stringValue)) {
             $this->values[] = $stringValue;
         }
     }

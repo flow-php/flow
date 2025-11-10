@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
-use function Flow\ETL\DSL\{float_entry, int_entry};
-use function Flow\ETL\DSL\{row, rows};
+use function Flow\ETL\DSL\{float_entry, int_entry, row, rows};
 use Flow\ETL\Formatter\ASCII\{ASCIIHeaders, Body, Headers};
 use Flow\ETL\{Tests\CommandOutputNormalizer, Tests\FlowTestCase};
 

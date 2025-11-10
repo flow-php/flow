@@ -31,7 +31,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
                                 $context->entryFactory()->create($this->entryName(), $val, $this->entry instanceof Definition ? $this->entry : null)
                             )
                     ),
-                    $this->function->eval($r)
+                    $this->function->eval($r, $context)
                 )
             );
         }
@@ -43,7 +43,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
                      * @var array-key $key
                      * @var mixed $val
                      */
-                    foreach (type_array()->assert($this->function->eval($r)) as $key => $val) {
+                    foreach (type_array()->assert($this->function->eval($r, $context)) as $key => $val) {
                         $r = $r->set($context->entryFactory()->create($this->entryName() . '.' . $key, $val));
                     }
 
@@ -54,7 +54,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
 
         return $rows->map(
             function (Row $r) use ($context) : Row {
-                $value = $this->function->eval($r);
+                $value = $this->function->eval($r, $context);
                 $type = $this->entry instanceof Definition ? $this->entry->type() : null;
 
                 if ($value instanceof ScalarResult) {

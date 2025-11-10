@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, int_entry, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,8 @@ final class ChunkTest extends FlowTestCase
         self::assertSame(
             [],
             ref('str')->chunk(3)->eval(
-                row(str_entry('str', ''))
+                row(str_entry('str', '')),
+                flow_context()
             )
         );
     }
@@ -25,7 +26,8 @@ final class ChunkTest extends FlowTestCase
         self::assertSame(
             ['hello'],
             ref('str')->chunk(5)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -35,7 +37,8 @@ final class ChunkTest extends FlowTestCase
         self::assertSame(
             ['hello'],
             ref('str')->chunk(10)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -45,7 +48,8 @@ final class ChunkTest extends FlowTestCase
         self::assertSame(
             [],
             ref('str')->chunk(-1)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }
@@ -54,7 +58,8 @@ final class ChunkTest extends FlowTestCase
     {
         self::assertNull(
             ref('str')->chunk(3)->eval(
-                row(str_entry('str', null))
+                row(str_entry('str', null)),
+                flow_context()
             )
         );
     }
@@ -64,7 +69,8 @@ final class ChunkTest extends FlowTestCase
         self::assertSame(
             ['hel', 'lo '],
             ref('str')->chunk(3)->eval(
-                row(str_entry('str', 'hello '))
+                row(str_entry('str', 'hello ')),
+                flow_context()
             )
         );
     }
@@ -77,7 +83,8 @@ final class ChunkTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello'),
                     str_entry('size', null)
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -90,7 +97,8 @@ final class ChunkTest extends FlowTestCase
                 row(
                     str_entry('str', 'hello'),
                     int_entry('size', 2)
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -100,7 +108,8 @@ final class ChunkTest extends FlowTestCase
         self::assertSame(
             [],
             ref('str')->chunk(0)->eval(
-                row(str_entry('str', 'hello'))
+                row(str_entry('str', 'hello')),
+                flow_context()
             )
         );
     }

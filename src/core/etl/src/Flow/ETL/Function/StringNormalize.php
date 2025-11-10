@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\u;
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class StringNormalize extends ScalarFunctionChain
 {
@@ -15,13 +16,13 @@ final class StringNormalize extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $form = (new Parameter($this->form))->asInt($row, \Normalizer::NFC);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $form = (new Parameter($this->form))->asInt($row, $context, \Normalizer::NFC);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringNormalize function requires non-null value'));
         }
 
         return u($value)->normalize($form)->toString();

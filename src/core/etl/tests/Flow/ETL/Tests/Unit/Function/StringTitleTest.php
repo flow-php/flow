@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{ref, str_entry};
+use function Flow\ETL\DSL\{flow_context, ref, str_entry};
 use function Flow\ETL\DSL\row;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -15,7 +15,8 @@ final class StringTitleTest extends FlowTestCase
         self::assertSame(
             'Foo ijssel',
             ref('str')->stringTitle()->eval(
-                row(str_entry('str', 'foo ijssel'))
+                row(str_entry('str', 'foo ijssel')),
+                flow_context()
             )
         );
     }
@@ -25,7 +26,8 @@ final class StringTitleTest extends FlowTestCase
         self::assertSame(
             'Foo Ijssel',
             ref('str')->stringTitle(allWords: true)->eval(
-                row(str_entry('str', 'foo ijssel'))
+                row(str_entry('str', 'foo ijssel')),
+                flow_context()
             )
         );
     }
@@ -36,7 +38,8 @@ final class StringTitleTest extends FlowTestCase
             ref('str')->stringTitle()->eval(
                 row(
                     str_entry('str', null),
-                )
+                ),
+                flow_context()
             )
         );
     }

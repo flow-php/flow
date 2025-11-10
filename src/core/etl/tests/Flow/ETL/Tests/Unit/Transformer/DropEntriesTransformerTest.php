@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{config, flow_context};
-use function Flow\ETL\DSL\{int_entry, json_entry, row, rows, string_entry};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, json_entry, row, rows, string_entry};
 use Flow\ETL\Tests\FlowTestCase;
 use Flow\ETL\Transformer\DropEntriesTransformer;
 

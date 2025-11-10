@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class RegexReplace extends ScalarFunctionChain
 {
@@ -16,15 +17,27 @@ final class RegexReplace extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $pattern = (new Parameter($this->pattern))->asString($row);
-        $replacement = (new Parameter($this->replacement))->asString($row);
-        $subject = (new Parameter($this->subject))->asString($row);
-        $limit = $this->limit ? (new Parameter($this->limit))->asInt($row) : -1;
+        $pattern = (new Parameter($this->pattern))->asString($row, $context);
+        $replacement = (new Parameter($this->replacement))->asString($row, $context);
+        $subject = (new Parameter($this->subject))->asString($row, $context);
+        $limit = $this->limit ? (new Parameter($this->limit))->asInt($row, $context) : -1;
 
-        if ($pattern === null || $replacement === null || $subject === null || $limit === null) {
-            return null;
+        if ($pattern === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null pattern'));
+        }
+
+        if ($replacement === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null replacement'));
+        }
+
+        if ($subject === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null subject'));
+        }
+
+        if ($limit === null) {
+            return $context->functions()->invalidResult(new InvalidArgumentException('RegexReplace requires non-null limit'));
         }
 
         return \preg_replace($pattern, $replacement, $subject, $limit);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{json_entry, ref, row};
+use function Flow\ETL\DSL\{flow_context, json_entry, ref, row};
 use function Flow\Types\DSL\type_string;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -21,7 +21,8 @@ final class OnEachTest extends FlowTestCase
                             'array',
                             [1, 2, 3, 4, 5]
                         )
-                    )
+                    ),
+                    flow_context()
                 ),
         );
     }
@@ -37,7 +38,8 @@ final class OnEachTest extends FlowTestCase
                             'array',
                             []
                         )
-                    )
+                    ),
+                    flow_context()
                 ),
         );
     }
@@ -53,7 +55,8 @@ final class OnEachTest extends FlowTestCase
                             'array',
                             ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]
                         )
-                    )
+                    ),
+                    flow_context()
                 ),
         );
     }
@@ -69,7 +72,8 @@ final class OnEachTest extends FlowTestCase
                             'array',
                             ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5]
                         )
-                    )
+                    ),
+                    flow_context()
                 ),
         );
     }

@@ -4,40 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\{bool_entry,
-    date_entry,
-    datetime_entry,
-    enum_entry,
-    float_entry,
-    int_entry,
-    json_entry,
-    json_object_entry,
-    list_entry,
-    str_entry,
-    string_entry,
-    time_entry,
-    uuid_entry,
-    xml_entry};
-use function Flow\ETL\DSL\{bool_schema,
-    config,
-    date_schema,
-    datetime_schema,
-    enum_schema,
-    float_schema,
-    flow_context,
-    html_element_entry,
-    html_element_schema,
-    html_entry,
-    html_schema,
-    integer_schema,
-    json_schema,
-    list_schema,
-    schema,
-    string_schema,
-    structure_entry,
-    time_schema,
-    uuid_schema,
-    xml_schema};
+use function Flow\ETL\DSL\{bool_entry, bool_schema, config, date_entry, date_schema, datetime_entry, datetime_schema, enum_entry, enum_schema, float_entry, float_schema, flow_context, html_element_entry, html_element_schema, html_entry, html_schema, int_entry, integer_schema, json_entry, json_object_entry, json_schema, list_entry, list_schema, schema, str_entry, string_entry, string_schema, structure_entry, time_entry, time_schema, uuid_entry, uuid_schema, xml_entry, xml_schema};
 use function Flow\Types\DSL\{type_datetime, type_float, type_integer, type_list, type_map, type_null, type_string, type_structure, type_time_zone};
 use Dom\HTMLDocument;
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException};

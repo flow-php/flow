@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\{datetime_entry, float_entry, int_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
 
@@ -19,7 +19,7 @@ final class Min implements AggregatingFunction
         $this->min = null;
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
             /** @var mixed $value */
@@ -38,8 +38,8 @@ final class Min implements AggregatingFunction
                     $this->min = \min($this->min, $value);
                 }
             }
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Min error: ' . $e->getMessage()));
         }
     }
 

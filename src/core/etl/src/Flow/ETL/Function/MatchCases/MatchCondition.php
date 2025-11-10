@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function\MatchCases;
 
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\{Parameter, ScalarFunction};
-use Flow\ETL\Row;
 
 final readonly class MatchCondition implements ScalarFunction
 {
@@ -15,13 +15,13 @@ final readonly class MatchCondition implements ScalarFunction
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        return (new Parameter($this->then))->eval($row);
+        return (new Parameter($this->then))->eval($row, $context);
     }
 
-    public function valid(Row $row) : bool
+    public function valid(Row $row, FlowContext $context) : bool
     {
-        return (new Parameter($this->condition))->asBoolean($row);
+        return (new Parameter($this->condition))->asBoolean($row, $context);
     }
 }

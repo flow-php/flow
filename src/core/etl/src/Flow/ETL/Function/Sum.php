@@ -7,9 +7,9 @@ namespace Flow\ETL\Function;
 use function Flow\ETL\DSL\{float_entry, int_entry};
 use Flow\Calculator\Calculator;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{FlowContext, Row, Rows, Window};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\{Row, Rows, Window};
 
 final class Sum implements AggregatingFunction, WindowFunction
 {
@@ -23,7 +23,7 @@ final class Sum implements AggregatingFunction, WindowFunction
         $this->window = null;
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
             $entry = $row->get($this->ref);
@@ -33,21 +33,25 @@ final class Sum implements AggregatingFunction, WindowFunction
                 $this->sum = (new Calculator())->add($this->sum, $value);
             }
 
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Sum error: ' . $e->getMessage()));
         }
     }
 
-    public function apply(Row $row, Rows $partition) : mixed
+    public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $sum = 0;
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            $entry = $partitionRow->get($this->ref);
-            $value = $entry->value();
+            try {
+                $entry = $partitionRow->get($this->ref);
+                $value = $entry->value();
 
-            if (\is_numeric($value)) {
-                $sum = (new Calculator())->add($sum, $value);
+                if (\is_numeric($value)) {
+                    $sum = (new Calculator())->add($sum, $value);
+                }
+            } catch (InvalidArgumentException $e) {
+                $context->functions()->invalidResult(new InvalidArgumentException('Sum window function error: ' . $e->getMessage(), 0, $e));
             }
         }
 

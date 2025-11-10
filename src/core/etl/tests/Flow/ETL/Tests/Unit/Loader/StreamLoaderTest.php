@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\{config, flow_context};
-use function Flow\ETL\DSL\{int_entry, ref, row, rows, str_entry, to_output, to_stream};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, ref, row, rows, str_entry, to_output, to_stream};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;

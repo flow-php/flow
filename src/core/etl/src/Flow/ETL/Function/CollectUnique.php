@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\to_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Row\{Entry, Reference};
 use Flow\ETL\Row\EntryFactory;
 
@@ -22,7 +22,7 @@ final class CollectUnique implements AggregatingFunction
         $this->collection = [];
     }
 
-    public function aggregate(Row $row) : void
+    public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
             /** @var array<string, mixed> $values */
@@ -36,8 +36,8 @@ final class CollectUnique implements AggregatingFunction
             if (!\in_array($value, $this->collection, true)) {
                 $this->collection[] = $value;
             }
-        } catch (InvalidArgumentException) {
-            // do nothing?
+        } catch (InvalidArgumentException $e) {
+            $context->functions()->invalidResult(new InvalidArgumentException('CollectUnique error: ' . $e->getMessage()));
         }
     }
 

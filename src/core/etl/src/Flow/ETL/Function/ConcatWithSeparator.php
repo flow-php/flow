@@ -6,7 +6,8 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\{type_list, type_optional, type_string};
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class ConcatWithSeparator extends ScalarFunctionChain
 {
@@ -22,11 +23,13 @@ final class ConcatWithSeparator extends ScalarFunctionChain
         $this->refs = $refs;
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $separator = (new Parameter($this->separator))->asString($row);
+        $separator = (new Parameter($this->separator))->asString($row, $context);
 
         if (!\is_string($separator)) {
+            $context->functions()->invalidResult(new InvalidArgumentException('ConcatWithSeparator function requires non-null separator'));
+
             return '';
         }
 
@@ -34,7 +37,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
         $concatValues = [];
 
         foreach ($this->refs as $value) {
-            $value = (new Parameter($value))->eval($row);
+            $value = (new Parameter($value))->eval($row, $context);
 
             if (is_type(type_list(type_string()), $value)) {
                 /** @var list<string> $value */

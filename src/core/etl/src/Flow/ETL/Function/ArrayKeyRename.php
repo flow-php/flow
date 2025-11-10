@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ArrayDot\array_dot_rename;
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class ArrayKeyRename extends ScalarFunctionChain
 {
@@ -16,14 +17,14 @@ final class ArrayKeyRename extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $value = (new Parameter($this->ref))->asArray($row);
-        $path = (new Parameter($this->path))->asString($row);
-        $newName = (new Parameter($this->newName))->asString($row);
+        $value = (new Parameter($this->ref))->asArray($row, $context);
+        $path = (new Parameter($this->path))->asString($row, $context);
+        $newName = (new Parameter($this->newName))->asString($row, $context);
 
         if ($value === null || $path === null || $newName === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('ArrayKeyRename function requires non-null array, path, and new name'));
         }
 
         return array_dot_rename($value, $path, $newName);

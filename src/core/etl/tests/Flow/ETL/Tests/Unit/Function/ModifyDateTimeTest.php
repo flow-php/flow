@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{date_entry, datetime_entry, lit, ref, row};
+use function Flow\ETL\DSL\{date_entry, datetime_entry, flow_context, lit, ref, row};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class ModifyDateTimeTest extends FlowTestCase
@@ -16,7 +16,8 @@ final class ModifyDateTimeTest extends FlowTestCase
             ref('datetime')->modifyDateTime('noon')->eval(
                 row(
                     date_entry('datetime', '2025-01-01'),
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -28,7 +29,8 @@ final class ModifyDateTimeTest extends FlowTestCase
             ref('datetime')->modifyDateTime('midnight')->eval(
                 row(
                     datetime_entry('datetime', '2025-01-01 10:00:23 +00:00'),
-                )
+                ),
+                flow_context()
             )
         );
     }
@@ -39,7 +41,8 @@ final class ModifyDateTimeTest extends FlowTestCase
             ref('datetime')->modifyDateTime(lit(1))->eval(
                 row(
                     datetime_entry('datetime', '2025-01-01 10:00:23 +00:00'),
-                )
+                ),
+                flow_context()
             )
         );
     }

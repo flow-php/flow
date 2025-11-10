@@ -84,8 +84,7 @@ use Flow\ETL\Extractor\{BatchExtractor, CacheExtractor, ChainExtractor, DataFram
 use Flow\ETL\Extractor\SequenceGenerator\{DatePeriodSequenceGenerator, NumberSequenceGenerator};
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Function\{
-    All,
+use Flow\ETL\Function\{All,
     Any,
     ArrayGet,
     ArrayGetCollection,
@@ -111,6 +110,7 @@ use Flow\ETL\Function\{
     Count,
     DateTimeFormat,
     DenseRank,
+    ExecutionMode,
     Exists,
     First,
     Greatest,
@@ -151,8 +151,7 @@ use Flow\ETL\Function\{
     ToUpper,
     Ulid,
     Uuid,
-    When
-};
+    When};
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
@@ -2090,6 +2089,9 @@ function config_builder() : ConfigBuilder
     return new ConfigBuilder();
 }
 
+/**
+ * Alias for save_mode_overwrite().
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function overwrite() : SaveMode
 {
@@ -2097,11 +2099,29 @@ function overwrite() : SaveMode
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function save_mode_overwrite() : SaveMode
+{
+    return SaveMode::Overwrite;
+}
+
+/**
+ * Alias for save_mode_ignore().
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function ignore() : SaveMode
 {
     return SaveMode::Ignore;
 }
 
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function save_mode_ignore() : SaveMode
+{
+    return SaveMode::Ignore;
+}
+
+/**
+ * Alias for save_mode_exception_if_exists().
+ */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function exception_if_exists() : SaveMode
 {
@@ -2109,9 +2129,43 @@ function exception_if_exists() : SaveMode
 }
 
 #[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function save_mode_exception_if_exists() : SaveMode
+{
+    return SaveMode::ExceptionIfExists;
+}
+
+/**
+ * Alias for save_mode_append().
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
 function append() : SaveMode
 {
     return SaveMode::Append;
+}
+
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function save_mode_append() : SaveMode
+{
+    return SaveMode::Append;
+}
+
+/**
+ * In this mode, functions throws exceptions if the given entry is not found
+ * or passed parameters are invalid.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function execution_strict() : ExecutionMode
+{
+    return ExecutionMode::STRICT;
+}
+
+/**
+ * In this mode, functions returns nulls instead of throwing exceptions.
+ */
+#[DocumentationDSL(module: Module::CORE, type: DSLType::DATA_FRAME)]
+function execution_lenient() : ExecutionMode
+{
+    return ExecutionMode::LENIENT;
 }
 
 /**

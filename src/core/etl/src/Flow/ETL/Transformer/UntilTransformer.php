@@ -25,7 +25,7 @@ final class UntilTransformer implements Transformer
         $nextRows = [];
 
         foreach ($rows as $row) {
-            if (!$this->function->eval($row)) {
+            if (!$this->function->eval($row, $context)) {
                 $this->limitReached = true;
             } else {
                 $nextRows[] = $row;

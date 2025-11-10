@@ -4,23 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{average,
-    bool_entry,
-    compare_entries_by_name_desc,
-    df,
-    float_entry,
-    from_all,
-    from_array,
-    from_rows,
-    int_entry,
-    json_entry,
-    lit,
-    ref,
-    refs,
-    str_entry,
-    string_entry,
-    to_callable};
-use function Flow\ETL\DSL\{bool_schema, boolean_entry, integer_entry, integer_schema, row, rows, schema, string_schema};
+use function Flow\ETL\DSL\{average, bool_entry, bool_schema, boolean_entry, compare_entries_by_name_desc, df, float_entry, from_all, from_array, from_rows, int_entry, integer_entry, integer_schema, json_entry, lit, ref, refs, row, rows, schema, str_entry, string_entry, string_schema, to_callable};
 use function Flow\ETL\DSL\data_frame;
 use function Flow\Types\DSL\type_integer;
 use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Row, Rows, Tests\FlowTestCase, Transformation, Transformer};

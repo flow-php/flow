@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\s;
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class Append extends ScalarFunctionChain
 {
@@ -15,13 +16,13 @@ final class Append extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : ?string
+    public function eval(Row $row, FlowContext $context) : ?string
     {
-        $value = (new Parameter($this->value))->asString($row);
-        $suffix = (new Parameter($this->suffix))->asString($row);
+        $value = (new Parameter($this->value))->asString($row, $context);
+        $suffix = (new Parameter($this->suffix))->asString($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Append function requires non-null value'));
         }
 
         if ($suffix === null) {

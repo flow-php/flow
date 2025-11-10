@@ -11,9 +11,9 @@ Partitioning divides data into logical groups based on column values, enabling m
 ```php
 <?php
 
-use function Flow\ETL\DSL\{data_frame, from_array, col, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, col, to_parquet};
 
-$dataFrame = data_frame()
+data_frame()
     ->read(from_array([
         ['date' => '2024-01-01', 'department' => 'sales', 'amount' => 100],
         ['date' => '2024-01-01', 'department' => 'marketing', 'amount' => 200],
@@ -21,23 +21,54 @@ $dataFrame = data_frame()
         ['date' => '2024-01-02', 'department' => 'marketing', 'amount' => 250],
     ]))
     ->partitionBy('date') // Partition by date
-    ->sortBy(col('amount')) // Sort within each date partition
-    ->write(to_output())
+    ->write(to_parquet(__DIR__ . '/output/sales.parquet'))
     ->run();
 ```
+
+**File structure:**
+```
+output/
+├── date=2024-01-01/
+│   └── sales.parquet       # Contains 2 rows (sales + marketing for Jan 1)
+└── date=2024-01-02/
+    └── sales.parquet       # Contains 2 rows (sales + marketing for Jan 2)
+```
+
+Each partition creates a separate directory with the format `column=value`, and data files are written inside those directories.
 
 ## Multi-Column Partitioning
 
 ```php
 <?php
 
-$dataFrame = data_frame()
-    ->read($extractor)
+data_frame()
+    ->read(from_array([
+        ['date' => '2024-01-01', 'department' => 'sales', 'amount' => 100],
+        ['date' => '2024-01-01', 'department' => 'marketing', 'amount' => 200],
+        ['date' => '2024-01-02', 'department' => 'sales', 'amount' => 150],
+        ['date' => '2024-01-02', 'department' => 'marketing', 'amount' => 250],
+    ]))
     ->partitionBy('date', 'department') // Partition by date AND department
-    ->aggregate(sum(col('amount'))->as('total_amount'))
-    ->write($loader)
+    ->write(to_parquet(__DIR__ . '/output/sales.parquet'))
     ->run();
 ```
+
+**File structure with nested partitions:**
+```
+output/
+├── date=2024-01-01/
+│   ├── department=sales/
+│   │   └── sales.parquet       # 1 row: sales on Jan 1
+│   └── department=marketing/
+│       └── sales.parquet       # 1 row: marketing on Jan 1
+└── date=2024-01-02/
+    ├── department=sales/
+    │   └── sales.parquet       # 1 row: sales on Jan 2
+    └── department=marketing/
+        └── sales.parquet       # 1 row: marketing on Jan 2
+```
+
+Each partition column creates an additional nesting level in the directory hierarchy.
 
 ### Dropping Partitions
 

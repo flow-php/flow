@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Schema;
 
-use function Flow\ETL\DSL\{bool_schema, schema};
-use function Flow\ETL\DSL\{int_schema, schema_evolving_validator, schema_validate, str_schema};
+use function Flow\ETL\DSL\{bool_schema, int_schema, schema, schema_evolving_validator, schema_validate, str_schema};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class EvolvingValidatorTest extends FlowTestCase

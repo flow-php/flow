@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{int_entry, least, ref, row};
+use function Flow\ETL\DSL\{flow_context, int_entry, least, ref, row};
 use Flow\ETL\Tests\FlowTestCase;
 
 final class LeastTest extends FlowTestCase
@@ -20,7 +20,7 @@ final class LeastTest extends FlowTestCase
 
         $this->expectExceptionMessage("Can't compare '(datetime < integer)' due to data type mismatch.");
 
-        $lest->eval(row(int_entry('int', 55)));
+        $lest->eval(row(int_entry('int', 55)), flow_context());
     }
 
     public function test_least_value() : void
@@ -34,7 +34,7 @@ final class LeastTest extends FlowTestCase
 
         self::assertSame(
             10,
-            $lest->eval(row(int_entry('int', 55)))
+            $lest->eval(row(int_entry('int', 55)), flow_context())
         );
     }
 
@@ -48,7 +48,7 @@ final class LeastTest extends FlowTestCase
         );
 
         self::assertNull(
-            $ltest->eval(row(int_entry('int', 4)))
+            $ltest->eval(row(int_entry('int', 4)), flow_context())
         );
     }
 }

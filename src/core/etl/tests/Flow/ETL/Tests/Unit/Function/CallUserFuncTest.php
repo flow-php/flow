@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{call, list_entry, lit, ref, row, string_entry};
+use function Flow\ETL\DSL\{call, flow_context, list_entry, lit, ref, row, string_entry};
 use function Flow\Types\DSL\{type_integer, type_list};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
 use Flow\ETL\Tests\FlowTestCase;
@@ -14,7 +14,7 @@ final class CallUserFuncTest extends FlowTestCase
 {
     public function test_call_user_func_as_dsl() : void
     {
-        self::assertIsInt(call('time')->eval(row()));
+        self::assertIsInt(call('time')->eval(row(), flow_context()));
     }
 
     public function test_call_user_func_with_native_function() : void
@@ -27,7 +27,7 @@ final class CallUserFuncTest extends FlowTestCase
             3,
             ref('list')
                 ->call(lit('count'))
-                ->eval($row)
+                ->eval($row, flow_context())
         );
     }
 
@@ -43,7 +43,7 @@ final class CallUserFuncTest extends FlowTestCase
             3,
             ref('list')
                 ->call(lit($calculator->count(...)))
-                ->eval($row)
+                ->eval($row, flow_context())
         );
     }
 
@@ -57,7 +57,7 @@ final class CallUserFuncTest extends FlowTestCase
             ['1', '2', '3'],
             ref('item_ids')
                 ->call(lit('explode'), ['separator' => ','], refAlias: 'string')
-                ->eval($row)
+                ->eval($row, flow_context())
         );
     }
 
@@ -71,7 +71,7 @@ final class CallUserFuncTest extends FlowTestCase
             new ScalarResult([1, 2, 3], type_list(type_integer())),
             ref('item_ids')
                 ->call(lit('explode'), ['separator' => ','], refAlias: 'string', returnType: type_list(type_integer()))
-                ->eval($row)
+                ->eval($row, flow_context())
         );
     }
 
@@ -85,7 +85,7 @@ final class CallUserFuncTest extends FlowTestCase
             3,
             ref('list')
                 ->call(lit(StaticCalculator::class . '::count'))
-                ->eval($row)
+                ->eval($row, flow_context())
         );
     }
 }

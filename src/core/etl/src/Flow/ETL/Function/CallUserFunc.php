@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\ScalarFunction\ScalarResult;
-use Flow\ETL\Row;
 use Flow\Types\Type;
 
 final class CallUserFunc extends ScalarFunctionChain
@@ -25,18 +26,18 @@ final class CallUserFunc extends ScalarFunctionChain
         $this->callable = $callable;
     }
 
-    public function eval(Row $row) : mixed
+    public function eval(Row $row, FlowContext $context) : mixed
     {
-        $callable = (new Parameter($this->callable))->eval($row);
+        $callable = (new Parameter($this->callable))->eval($row, $context);
 
         if (!\is_callable($callable)) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('CallUserFunc requires a valid callable'));
         }
 
         $parameters = [];
 
         foreach ($this->parameters as $key => $parameter) {
-            $parameters[$key] = (new Parameter($parameter))->eval($row);
+            $parameters[$key] = (new Parameter($parameter))->eval($row, $context);
         }
 
         if ($this->returnType) {

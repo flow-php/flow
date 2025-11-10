@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Row;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\{FlowContext, Row};
 
 final class Round extends ScalarFunctionChain
 {
@@ -15,14 +16,14 @@ final class Round extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row) : int|float|null
+    public function eval(Row $row, FlowContext $context) : int|float|null
     {
-        $value = (new Parameter($this->value))->asNumber($row);
-        $precision = (new Parameter($this->precision))->asInt($row);
-        $mode = (new Parameter($this->mode))->asInt($row);
+        $value = (new Parameter($this->value))->asNumber($row, $context);
+        $precision = (new Parameter($this->precision))->asInt($row, $context);
+        $mode = (new Parameter($this->mode))->asInt($row, $context);
 
         if ($value === null || $precision === null || $mode === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Round function requires non-null values'));
         }
 
         if ($mode < 1 || $mode > 4) {

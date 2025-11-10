@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{config, flow_context, row, rows};
-use function Flow\ETL\DSL\{int_entry, list_entry, lit, ref, str_entry, xml_entry};
+use function Flow\ETL\DSL\{config, flow_context, int_entry, list_entry, lit, ref, row, rows, str_entry, xml_entry};
 use function Flow\Types\DSL\{type_list, type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Function\ArrayExpand, Function\ArrayUnpack, Tests\FlowTestCase};

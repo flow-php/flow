@@ -53,7 +53,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());
-        $streams->setSaveMode(ignore());
+        $streams->setMode(ignore());
 
         return $streams;
     }
