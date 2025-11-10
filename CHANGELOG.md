@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-11-10
 
 ### Added
+- [#1996](https://github.com/flow-php/flow/pull/1996) - **e2e tests to website playground** - [@norberttech](https://github.com/norberttech)
 - [#1994](https://github.com/flow-php/flow/pull/1994) - **Add a new `DOMElementParent` function** - [@stloyd](https://github.com/stloyd)
 - [#1986](https://github.com/flow-php/flow/pull/1986) - **ExecutionMode** - [@norberttech](https://github.com/norberttech)
 - [#1986](https://github.com/flow-php/flow/pull/1986) - **SaveMode - Documentation** - [@norberttech](https://github.com/norberttech)
