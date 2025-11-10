@@ -23,29 +23,14 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
+      - name: "Setup PHP Environment"
+        uses: "./.github/actions/setup-php-env"
         with:
-          tools: composer:v2
-          php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1, post_max_size=32M, upload_max_filesize=32M
-          extensions: :psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, curl
-
-      - name: "Get Composer Cache Directory"
-        id: composer-cache
-        run: |
-          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: "Cache Composer dependencies"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-8.2-locked-composer-${{ hashFiles('**/composer.lock') }}"
-          restore-keys: |
-            php-8.2-locked-composer-
-
-      - name: "Install dependencies"
-        run: "composer install --no-interaction --no-progress "
+          php-version: "8.2"
+          dependencies: "locked"
+          coverage: "none"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
+          cache-key-suffix: "-locked"
 
       - name: "Build Docs"
         run: "composer build:docs"
