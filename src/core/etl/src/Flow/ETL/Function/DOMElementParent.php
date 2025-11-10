@@ -36,22 +36,14 @@ final class DOMElementParent extends ScalarFunctionChain
             $node = $node->documentElement;
         }
 
-        if (\is_array($node) && \count($node)) {
-            $node = \reset($node);
-        }
-
         if ($node === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementParent requires non-null DOMNode'));
+            return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementParent requires non-null DOMNode or HTMLElement.'));
         }
 
         if ($node instanceof HTMLElement) {
             return $node->parentElement;
         }
 
-        if ($node instanceof \DOMNode) {
-            return $node->parentNode;
-        }
-
-        return null;
+        return $node->parentNode;
     }
 }
