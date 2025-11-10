@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-11-09
+## [Unreleased] - 2025-11-10
 
 ### Added
 - [#1981](https://github.com/flow-php/flow/pull/1981) - **Add HTML usage example** - [@stloyd](https://github.com/stloyd)
@@ -27,6 +27,7 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1984](https://github.com/flow-php/flow/pull/1984) - **Allow usage of `HTMLElement` in `HTMLQuerySelector*`** - [@stloyd](https://github.com/stloyd)
 - [#1978](https://github.com/flow-php/flow/pull/1978) - **Allow enforcing PHP requirements in examples** - [@stloyd](https://github.com/stloyd)
 - [#1976](https://github.com/flow-php/flow/pull/1976) - **updated importmap dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1975](https://github.com/flow-php/flow/pull/1975) - **narrow phpstan class.notFound suppression to config only and specific classes only** - [@norberttech](https://github.com/norberttech)
