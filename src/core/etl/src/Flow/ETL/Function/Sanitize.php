@@ -27,7 +27,7 @@ final class Sanitize extends ScalarFunctionChain
         }
 
         if ($placeholder === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Sanitize function requires non-null placeholder'));
         }
 
         $size = \mb_strlen($val);

@@ -27,6 +27,8 @@ final class ArrayPathExists extends ScalarFunctionChain
             $path = (new Parameter($this->path))->asString($row, $context);
 
             if ($array === null || $path === null) {
+                $context->functions()->invalidResult(new InvalidArgumentException('ArrayPathExists function requires non-null array and path'));
+
                 return false;
             }
 

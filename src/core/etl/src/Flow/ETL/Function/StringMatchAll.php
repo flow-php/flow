@@ -28,6 +28,8 @@ final class StringMatchAll extends ScalarFunctionChain
         }
 
         if ($pattern === null) {
+            $context->functions()->invalidResult(new InvalidArgumentException('StringMatchAll function requires non-null pattern'));
+
             return [];
         }
 

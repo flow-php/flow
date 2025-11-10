@@ -26,7 +26,7 @@ final class StringEqualsTo extends ScalarFunctionChain
         }
 
         if ($string === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringEqualsTo function requires non-null string'));
         }
 
         return s($value)->equalsTo($string);

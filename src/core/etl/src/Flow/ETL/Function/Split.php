@@ -32,7 +32,7 @@ final class Split extends ScalarFunctionChain
         }
 
         if ($separator === null || $limit === null || $separator === '') {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Split function requires non-null separator and limit, separator cannot be empty'));
         }
 
         return \array_map(static fn (AbstractString $s) => $s->toString(), s($value)->split($separator, $limit));

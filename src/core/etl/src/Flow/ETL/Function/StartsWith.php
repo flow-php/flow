@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class StartsWith extends ScalarFunctionChain
@@ -20,6 +21,8 @@ final class StartsWith extends ScalarFunctionChain
         $needle = (new Parameter($this->needle))->asString($row, $context);
 
         if ($haystack === null || $needle === null) {
+            $context->functions()->invalidResult(new InvalidArgumentException('StartsWith function requires non-null haystack and needle'));
+
             return false;
         }
 

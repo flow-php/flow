@@ -22,7 +22,7 @@ final class JsonDecode extends ScalarFunctionChain
         $flags = (int) (new Parameter($this->flags))->asInt($row, $context);
 
         if ($value === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('JsonDecode function requires non-null value'));
         }
 
         if (\is_array($value)) {

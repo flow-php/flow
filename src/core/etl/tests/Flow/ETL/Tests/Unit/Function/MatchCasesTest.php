@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{flow_context, lit, match_cases, match_condition, ref, row, str_entry};
+use function Flow\ETL\DSL\{config, flow_context, lit, match_cases, match_condition, ref, row, str_entry};
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Tests\FlowTestCase;
 
 final class MatchCasesTest extends FlowTestCase
@@ -26,16 +28,33 @@ final class MatchCasesTest extends FlowTestCase
         );
     }
 
-    public function test_not_matching_anything() : void
+    public function test_not_matching_anything_in_lenient_mode() : void
     {
         $match = match_cases([
             match_condition(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
             match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
         ]);
 
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::LENIENT);
+
+        self::assertNull($match->eval(row(str_entry('string', 'weirdstring')), $context));
+    }
+
+    public function test_not_matching_anything_in_strict_mode() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Not a single case matches row, consider using default parameter, row: {"string":"weirdstring"}');
 
-        $match->eval(row(str_entry('string', 'weirdstring')), flow_context());
+        $match = match_cases([
+            match_condition(ref('string')->contains('_'), ref('string')->strReplace('_', ' ')),
+            match_condition(ref('string')->contains('-'), ref('string')->strReplace('-', ' ')),
+        ]);
+
+        $context = flow_context(config());
+        $context->functions()->setMode(ExecutionMode::STRICT);
+
+        $match->eval(row(str_entry('string', 'weirdstring')), $context);
     }
 
     public function test_not_matching_anything_with_default() : void

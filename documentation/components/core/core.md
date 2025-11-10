@@ -84,6 +84,8 @@ For detailed information about specific DataFrame operations, see the following 
 - **[Rename](rename.md)** - Column renaming strategies
 - **[Map](map.md)** - Row transformations and data mapping
 - **[Filter](filter.md)** - Row filtering and conditions
+- **[Execution Mode](execution-mode.md)** - configure how strict DataFrame is during execution
+- **[Save Mode](save-mode.md)** - configure how flow is saving files
 
 ### Data Processing
 - **[Join](join.md)** - DataFrame joining operations

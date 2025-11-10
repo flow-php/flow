@@ -33,7 +33,7 @@ final class StrReplace extends ScalarFunctionChain
         }
 
         if ($search === null || $replace === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StrReplace function requires non-null search and replace'));
         }
 
         $typedSearch = type_union(type_string(), type_list(type_string()))->assert($search);

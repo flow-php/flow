@@ -29,6 +29,8 @@ final class Chunk extends ScalarFunctionChain
         }
 
         if ($size === null || $size <= 0) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Chunk function requires non-null, positive size'));
+
             return [];
         }
 

@@ -28,7 +28,7 @@ final class Trim extends ScalarFunctionChain
         }
 
         if ($type === null || $characters === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('Trim function requires non-null type and characters'));
         }
 
         return match ($type) {

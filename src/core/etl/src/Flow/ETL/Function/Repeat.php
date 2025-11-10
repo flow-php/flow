@@ -26,6 +26,8 @@ final class Repeat extends ScalarFunctionChain
         }
 
         if ($times === null || $times <= 0) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Repeat function requires non-null, positive times'));
+
             return '';
         }
 

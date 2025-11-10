@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_array, type_string};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class Contains extends ScalarFunctionChain
@@ -21,6 +22,8 @@ final class Contains extends ScalarFunctionChain
         $needle = (new Parameter($this->needle))->asString($row, $context);
 
         if ($haystack === null || $needle === null) {
+            $context->functions()->invalidResult(new InvalidArgumentException('Contains function requires non-null haystack and needle'));
+
             return false;
         }
 
@@ -31,6 +34,8 @@ final class Contains extends ScalarFunctionChain
         if (\is_array($haystack)) {
             return \in_array($needle, $haystack, true);
         }
+
+        $context->functions()->invalidResult(new InvalidArgumentException('Contains function requires haystack to be string or array'));
 
         return false;
     }

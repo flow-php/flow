@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{InvalidArgumentException};
 use Flow\ETL\{FlowContext, Row};
 use Flow\ETL\Function\MatchCases\MatchCondition;
 
@@ -31,9 +31,11 @@ final class MatchCases extends ScalarFunctionChain
             return (new Parameter($this->default))->eval($row, $context);
         }
 
-        throw new RuntimeException(
-            'Not a single case matches row, consider using default parameter, row: '
-            . \json_encode($row->toArray(), JSON_THROW_ON_ERROR)
+        return $context->functions()->invalidResult(
+            new InvalidArgumentException(
+                'Not a single case matches row, consider using default parameter, row: '
+                . \json_encode($row->toArray(), JSON_THROW_ON_ERROR)
+            )
         );
     }
 }

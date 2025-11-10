@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Symfony\Component\String\b;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class IsUtf8 extends ScalarFunctionChain
@@ -18,6 +19,8 @@ final class IsUtf8 extends ScalarFunctionChain
         $string = (new Parameter($this->string))->asString($row, $context);
 
         if ($string === null) {
+            $context->functions()->invalidResult(new InvalidArgumentException('IsUtf8 function requires non-null string'));
+
             return false;
         }
 

@@ -29,7 +29,7 @@ final class StringMatch extends ScalarFunctionChain
         }
 
         if ($pattern === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringMatch function requires non-null pattern'));
         }
 
         try {

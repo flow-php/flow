@@ -57,7 +57,7 @@ final class StringContainsAnyTest extends FlowTestCase
 
     public function test_contains_any_null_string() : void
     {
-        self::assertNull(
+        self::assertFalse(
             ref('str')->stringContainsAny(['hello', 'world'])->eval(
                 row(str_entry('str', null)),
                 flow_context()

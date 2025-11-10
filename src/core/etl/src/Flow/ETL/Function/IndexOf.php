@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\type_integer;
 use function Symfony\Component\String\u;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class IndexOf extends ScalarFunctionChain
@@ -26,6 +27,8 @@ final class IndexOf extends ScalarFunctionChain
         $ignoreCase = (new Parameter($this->ignoreCase))->asBoolean($row, $context);
 
         if ($string === null || $needle === null) {
+            $context->functions()->invalidResult(new InvalidArgumentException('IndexOf function requires non-null string and needle'));
+
             return false;
         }
 

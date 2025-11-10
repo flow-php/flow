@@ -6,6 +6,7 @@ namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\is_type;
 use function Flow\Types\DSL\{type_list, type_optional, type_string};
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{FlowContext, Row};
 
 final class ConcatWithSeparator extends ScalarFunctionChain
@@ -27,6 +28,8 @@ final class ConcatWithSeparator extends ScalarFunctionChain
         $separator = (new Parameter($this->separator))->asString($row, $context);
 
         if (!\is_string($separator)) {
+            $context->functions()->invalidResult(new InvalidArgumentException('ConcatWithSeparator function requires non-null separator'));
+
             return '';
         }
 

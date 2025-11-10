@@ -21,16 +21,20 @@ final class StringContainsAny extends ScalarFunctionChain
     ) {
     }
 
-    public function eval(Row $row, FlowContext $context) : mixed
+    public function eval(Row $row, FlowContext $context) : bool
     {
         $value = (new Parameter($this->value))->asString($row, $context);
         $needles = (new Parameter($this->needles))->as($row, $context, type_list(type_string()));
 
         if ($value === null) {
-            return $context->functions()->invalidResult(new InvalidArgumentException('StringContainsAny function requires non-null string'));
+            $context->functions()->invalidResult(new InvalidArgumentException('StringContainsAny function requires non-null string'));
+
+            return false;
         }
 
         if ($needles === null || !\is_array($needles) || \count($needles) === 0) {
+            $context->functions()->invalidResult(new InvalidArgumentException('StringContainsAny function requires non-null, non-empty needles array'));
+
             return false;
         }
 

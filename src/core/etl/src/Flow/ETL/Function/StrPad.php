@@ -29,7 +29,7 @@ final class StrPad extends ScalarFunctionChain
         }
 
         if ($length === null || $padString === null || $type === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StrPad function requires non-null length, padString and type'));
         }
 
         return \str_pad($value, $length, $padString, $type);

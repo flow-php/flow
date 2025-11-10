@@ -28,7 +28,7 @@ final class StringStyle extends ScalarFunctionChain
         }
 
         if ($style === null) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringStyle function requires non-null style'));
         }
 
         if (is_string($style)) {
@@ -38,7 +38,7 @@ final class StringStyle extends ScalarFunctionChain
         }
 
         if (!$style instanceof StringStyles) {
-            return null;
+            return $context->functions()->invalidResult(new InvalidArgumentException('StringStyle function requires valid StringStyles enum'));
         }
 
         return $style->convert($string);
