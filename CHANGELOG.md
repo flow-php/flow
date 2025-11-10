@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-11-10
+## [0.27.0] - 2025-11-10
 
 ### Added
 - [#1996](https://github.com/flow-php/flow/pull/1996) - **e2e tests to website playground** - [@norberttech](https://github.com/norberttech)
