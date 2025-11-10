@@ -33,20 +33,41 @@ final class HTMLQuerySelectorTest extends TestCase
 
     public function test_valid_query_on_html_document() : void
     {
-        $html = HTMLDocument::createFromString('<!DOCTYPE html><html lang="en"><head></head><body><div><span>foobar</span></div></body></html>');
-
-        $element = HTMLDocument::createFromString('<span>foobar</span>', \LIBXML_HTML_NOIMPLIED | \LIBXML_NOERROR);
+        $html = HTMLDocument::createFromString(
+            <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+<div><span>foo</span></div>
+<div><p>bar</p></div>
+<div><p>baz</p></div>
+</body>
+</html>
+HTML
+        );
 
         self::assertEquals(
             [
                 [
-                    'html_element' => $element->documentElement,
+                    'span_element' => 'foo',
+                    'p_element' => null,
+                ],
+                [
+                    'span_element' => null,
+                    'p_element' => 'bar',
+                ],
+                [
+                    'span_element' => null,
+                    'p_element' => 'baz',
                 ],
             ],
             df()
                 ->read(from_rows(rows(row(html_entry('html_raw', $html)))))
-                ->withEntry('html_element', ref('html_raw')->htmlQuerySelector('body div span'))
-                ->drop('html_raw')
+                ->withEntry('containers', ref('html_raw')->htmlQuerySelectorAll('body div')->expand())
+                ->withEntry('span_element', ref('containers')->htmlQuerySelector('body span')->domElementValue())
+                ->withEntry('p_element', ref('containers')->htmlQuerySelector('p')->domElementValue())
+                ->select('span_element', 'p_element')
                 ->fetch()
                 ->toArray()
         );
