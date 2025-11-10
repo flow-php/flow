@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use Dom\{Element, HTMLDocument};
+use function Flow\Types\DSL\type_instance_of;
+use Dom\{Element, HTMLDocument, HTMLElement};
 use Flow\ETL\Exception\RequiredPHPVersionException;
 use Flow\ETL\Row;
 
@@ -21,7 +22,7 @@ final class HTMLQuerySelector extends ScalarFunctionChain
 
     public function eval(Row $row) : ?Element
     {
-        $value = (new Parameter($this->value))->asInstanceOf($row, HTMLDocument::class);
+        $value = (new Parameter($this->value))->as($row, type_instance_of(HTMLDocument::class), type_instance_of(HTMLElement::class));
         $selector = (new Parameter($this->selector))->asString($row);
 
         if (null === $value || null === $selector) {
