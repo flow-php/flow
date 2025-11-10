@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cdefae1f6acac2a99742b3f24a7bca6a",
+    "content-hash": "3c1f0626f6f321063fcd530961b74efd",
     "packages": [],
     "packages-dev": [
         {
             "name": "carthage-software/mago",
-            "version": "1.0.0-beta.34",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/carthage-software/mago.git",
-                "reference": "1a29b3aae45456ec840d1af94be1346820415e38"
+                "reference": "ff6906c314fa103027ea27cbf9e27865b58c315c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/carthage-software/mago/zipball/1a29b3aae45456ec840d1af94be1346820415e38",
-                "reference": "1a29b3aae45456ec840d1af94be1346820415e38",
+                "url": "https://api.github.com/repos/carthage-software/mago/zipball/ff6906c314fa103027ea27cbf9e27865b58c315c",
+                "reference": "ff6906c314fa103027ea27cbf9e27865b58c315c",
                 "shasum": ""
             },
             "require": {
@@ -28,6 +28,7 @@
             "require-dev": {
                 "composer/composer": "^2.8"
             },
+            "default-branch": true,
             "bin": [
                 "composer/bin/mago"
             ],
@@ -56,7 +57,7 @@
             ],
             "support": {
                 "issues": "https://github.com/carthage-software/mago/issues",
-                "source": "https://github.com/carthage-software/mago/tree/1.0.0-beta.34"
+                "source": "https://github.com/carthage-software/mago/tree/main"
             },
             "funding": [
                 {
@@ -64,12 +65,14 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-19T06:57:10+00:00"
+            "time": "2025-11-09T23:04:42+00:00"
         }
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "carthage-software/mago": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {},

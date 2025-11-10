@@ -5,7 +5,7 @@
   "prefer-stable": true,
   "require-dev": {
     "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
-    "carthage-software/mago": "^1.0.0-beta.34"
+    "carthage-software/mago": "dev-main"
   },
   "config": {
     "allow-plugins": true
