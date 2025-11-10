@@ -19,14 +19,14 @@
         "flow-php/filesystem": "self.version",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
         "webmozart/glob": "^3.0 || ^4.0",
-        "symfony/string": "^5.4 || ^6.4 || ^7.0"
+        "symfony/string": "^6.4 || ^7.3 || ^8.0"
     },
     "suggest": {
         "ext-bcmath": "BCMath extension for PHP for more precise calculations"
     },
     "require-dev": {
         "ramsey/uuid": "^4.5",
-        "symfony/uid": "^6.3 || ^7.0"
+        "symfony/uid": "^6.4 || ^7.3 || ^8.0"
     },
     "config": {
         "optimize-autoloader": true,

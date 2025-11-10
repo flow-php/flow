@@ -12,7 +12,7 @@
     ],
     "require": {
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
-        "symfony/http-foundation": "~5.4.0 || ~6.4.0 || ~7",
+        "symfony/http-foundation": "^6.4 || ^7.3 || ^8.0",
         "flow-php/etl": "self.version"
     },
     "require-dev": {
