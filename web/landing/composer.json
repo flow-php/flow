@@ -77,9 +77,6 @@
         "test": [
             "tools/phpunit/vendor/bin/phpunit"
         ],
-        "test:e2e": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=e2e"
-        ],
         "assets:clear": "rm -rf public/assets",
         "importmap:install": "bin/console importmap:install",
         "build:assets": [

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Website\Tests\Functional;
+namespace Flow\Website\Tests\Integration;
 
 use Flow\Website\Kernel;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
