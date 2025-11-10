@@ -1,6 +1,6 @@
 # Chart JS Adapter
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/chartjs)
 - [📁Files](/documentation/api/adapter/chartjs/indices/files.html)
 

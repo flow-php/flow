@@ -1,6 +1,6 @@
 # ETL Adapter: Google Sheet
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/google-sheet)
 - [📁Files](/documentation/api/adapter/google-sheet/indices/files.html)
 

@@ -1,6 +1,6 @@
 # ETL Adapter: XML
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/xml)
 - [📁Files](/documentation/api/adapter/xml/indices/files.html)
 

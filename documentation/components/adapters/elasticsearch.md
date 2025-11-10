@@ -1,6 +1,6 @@
 # ETL Adapter: Elasticsearch
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/elasticsearch)
 - [📁Files](/documentation/api/adapter/elasticsearch/indices/files.html)
 

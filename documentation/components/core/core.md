@@ -78,38 +78,38 @@ $dataFrame = data_frame()
 For detailed information about specific DataFrame operations, see the following component documentation:
 
 ### Core Operations
-- **[Building Blocks](building-blocks.md)** - Understanding Rows, Entries, and basic data structures
-- **[Transformations](transformations.md)** - Reusable DataFrame transformations and the Transformation interface
-- **[Select/Drop](select-drop.md)** - Column selection and removal
-- **[Rename](rename.md)** - Column renaming strategies
-- **[Map](map.md)** - Row transformations and data mapping
-- **[Filter](filter.md)** - Row filtering and conditions
-- **[Execution Mode](execution-mode.md)** - configure how strict DataFrame is during execution
-- **[Save Mode](save-mode.md)** - configure how flow is saving files
+- **[Building Blocks](/documentation/components/core/building-blocks.md)** - Understanding Rows, Entries, and basic data structures
+- **[Transformations](/documentation/components/core/transformations.md)** - Reusable DataFrame transformations and the Transformation interface
+- **[Select/Drop](/documentation/components/core/select-drop.md)** - Column selection and removal
+- **[Rename](/documentation/components/core/rename.md)** - Column renaming strategies
+- **[Map](/documentation/components/core/map.md)** - Row transformations and data mapping
+- **[Filter](/documentation/components/core/filter.md)** - Row filtering and conditions
+- **[Execution Mode](/documentation/components/core/execution-mode.md)** - configure how strict DataFrame is during execution
+- **[Save Mode](/documentation/components/core/save-mode.md)** - configure how flow is saving files
 
 ### Data Processing
-- **[Join](join.md)** - DataFrame joining operations
-- **[Group By](group-by.md)** - Grouping and aggregation operations
-- **[Pivot](pivot.md)** - Transform data from long to wide format
-- **[Sort](sort.md)** - Data sorting
-- **[Limit](limit.md)** - Result limiting and pagination
-- **[Offset](offset.md)** - Skipping rows and pagination
-- **[Until](until.md)** - Conditional processing termination
-- **[Window Functions](window-functions.md)** - Advanced analytical functions
+- **[Join](/documentation/components/core/join.md)** - DataFrame joining operations
+- **[Group By](/documentation/components/core/group-by.md)** - Grouping and aggregation operations
+- **[Pivot](/documentation/components/core/pivot.md)** - Transform data from long to wide format
+- **[Sort](/documentation/components/core/sort.md)** - Data sorting
+- **[Limit](/documentation/components/core/limit.md)** - Result limiting and pagination
+- **[Offset](/documentation/components/core/offset.md)** - Skipping rows and pagination
+- **[Until](/documentation/components/core/until.md)** - Conditional processing termination
+- **[Window Functions](/documentation/components/core/window-functions.md)** - Advanced analytical functions
 
 ### Memory & Performance
-- **[Batch Processing](batch-processing.md)** - Controlling batch sizes and memory collection
-- **[Partitioning](partitioning.md)** - Data partitioning for efficient processing
-- **[Caching](caching.md)** - Performance optimization through caching
-- **[Data Retrieval](data-retrieval.md)** - Methods for getting processed data
+- **[Batch Processing](/documentation/components/core/batch-processing.md)** - Controlling batch sizes and memory collection
+- **[Partitioning](/documentation/components/core/partitioning.md)** - Data partitioning for efficient processing
+- **[Caching](/documentation/components/core/caching.md)** - Performance optimization through caching
+- **[Data Retrieval](/documentation/components/core/data-retrieval.md)** - Methods for getting processed data
 
 ### Data Quality & Validation
-- **[Schema](schema.md)** - Schema management and validation
-- **[Constraints](constraints.md)** - Data integrity constraints and business rules
-- **[Error Handling](error-handling.md)** - Error management strategies
+- **[Schema](/documentation/components/core/schema.md)** - Schema management and validation
+- **[Constraints](/documentation/components/core/constraints.md)** - Data integrity constraints and business rules
+- **[Error Handling](/documentation/components/core/error-handling.md)** - Error management strategies
 
 ### Reliability & Recovery
-- **[Retry Mechanisms](retry.md)** - Automatic retry for transient failures
+- **[Retry Mechanisms](/documentation/components/core/retry.md)** - Automatic retry for transient failures
 
 ### Output & Display
-- **[Display](display.md)** - Data visualization and output
+- **[Display](/documentation/components/core/display.md)** - Data visualization and output

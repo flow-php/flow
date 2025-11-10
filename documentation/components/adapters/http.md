@@ -1,6 +1,6 @@
 # ETL Adapter: HTTP
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/http)
 - [📁Files](/documentation/api/adapter/http/indices/files.html)
 

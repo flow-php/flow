@@ -1,6 +1,6 @@
 # Parquet Viewer
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/lib/parquet-viewer)
 - [📁Files](/documentation/api/lib/parquet-viewer/indices/files.html)
 

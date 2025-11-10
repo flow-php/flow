@@ -1,6 +1,6 @@
 # ETL Adapter: Parquet
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/parquet)
 - [📁Files](/documentation/api/adapter/parquet/indices/files.html)
 
