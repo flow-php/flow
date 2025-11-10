@@ -1,6 +1,6 @@
 # Snappy
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/lib/snappy)
 - [📁Files](/documentation/api/lib/snappy/indices/files.html)
 

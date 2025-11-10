@@ -41,4 +41,4 @@ However, the result of this operation is not very useful. It will just return a 
 
 To make it more useful, you need to use one of the aggregation functions.
 
-[➡️ Aggregations](aggregations.md)
+[➡️ Aggregations](/documentation/components/core/aggregations.md)

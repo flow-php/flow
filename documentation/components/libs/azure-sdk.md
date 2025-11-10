@@ -1,6 +1,6 @@
 # Azure SDK
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/lib/azure-sdk)
 - [📁Files](/documentation/api/lib/azure-sdk/indices/files.html)
 

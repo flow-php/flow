@@ -1,6 +1,6 @@
 # OpenAPI Specification Bridge
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/bridge/openapi/specification)
 - [📁Files](/documentation/api/bridge/openapi/specification/indices/files.html)
 

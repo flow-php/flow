@@ -1,6 +1,6 @@
 # Monolog HTTP Bridge
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/bridge/monolog/http)
 - [📁Files](/documentation/api/bridge/monolog/http/indices/files.html)
 

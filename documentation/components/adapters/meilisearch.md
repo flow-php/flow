@@ -1,6 +1,6 @@
 # ETL Adapter: MeiliSearch
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/meilisearch)
 - [📁Files](/documentation/api/adapter/meilisearch/indices/files.html)
 

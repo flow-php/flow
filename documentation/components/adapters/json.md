@@ -1,6 +1,6 @@
 # ETL Adapter: JSON
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/json)
 - [📁Files](/documentation/api/adapter/json/indices/files.html)
 

@@ -1,6 +1,6 @@
 # Filesystem Azure Bridge
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/bridge/filesystem/azure)
 - [📁Files](/documentation/api/bridge/filesystem/azure/indices/files.html)
 

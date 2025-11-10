@@ -1,6 +1,6 @@
 # Symfony Http Foundation Bridge
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/bridge/symfony/http-foundation)
 - [📁Files](/documentation/api/bridge/symfony/http-foundation/indices/files.html)
 

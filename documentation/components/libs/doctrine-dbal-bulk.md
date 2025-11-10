@@ -1,6 +1,6 @@
 # Doctrine Bulk
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/lib/doctrine-dbal-bulk)
 - [📁Files](/documentation/api/lib/doctrine-dbal-bulk/indices/files.html)
 

@@ -1,6 +1,6 @@
 # Excel Adapter 
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/adapter/excel)
 - [📁Files](/documentation/api/adapter/excel/indices/files.html)
 

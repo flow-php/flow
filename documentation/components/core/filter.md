@@ -47,4 +47,4 @@ data_frame()
 
 > **Performance Note**: Callback-based filtering cannot be optimized by the engine and should be used sparingly. When possible, prefer built-in scalar functions for better performance.
 
-- [➡️ Until](until.md)
+- [➡️ Until](/documentation/components/core/until.md)

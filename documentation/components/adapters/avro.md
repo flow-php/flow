@@ -1,6 +1,6 @@
 # Avro Adapter
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 
 Avro integration was temporarily abandoned due to the lack of availability of good libraries for PHP. 
 If you are interested in this integration, please let us know by creating an issue in the repository.

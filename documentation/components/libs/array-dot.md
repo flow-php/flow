@@ -1,6 +1,6 @@
 # Array Dot
 
-- [⬅️️ Back](../../introduction.md)
+- [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/lib/array-dot)
 - [📁Files](/documentation/api/lib/array-dot/indices/files.html)
 
