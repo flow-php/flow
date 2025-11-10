@@ -1,7 +1,9 @@
 import { startStimulusApp } from '@symfony/stimulus-bundle';
 
-addEventListener("DOMContentLoaded", (event) => {
+function initializeStimulus() {
     const app = startStimulusApp()
+
+    window.Stimulus = app;
 
     let env = window.document.body.dataset.environment;
 
@@ -12,4 +14,10 @@ addEventListener("DOMContentLoaded", (event) => {
     if (env === 'prod') {
         app.debug = false;
     }
-})
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", initializeStimulus);
+} else {
+    initializeStimulus();
+}

@@ -571,10 +571,10 @@ const dataframeMethods = [
             const div = document.createElement("div")
             div.innerHTML = `
                 <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
-                    <span class=\"fn-name\">mode</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SaveMode</span> <span class=\"fn-param\">$mode</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
+                    <span class=\"fn-name\">mode</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">SaveMode|ExecutionMode</span> <span class=\"fn-param\">$mode</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">self</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    SaveMode defines how Flow should behave when writing to a file/files that already exists.<br>For more details please see SaveMode enum.<br>@param SaveMode $mode<br>@lazy<br>@return $this
+                    This method is used to set the behavior of the DataFrame.<br>Available modes:<br>- SaveMode defines how Flow should behave when writing to a file/files that already exists.<br>- ExecutionMode - defines how functions should behave when they encounter unexpected data (e.g., type mismatches, missing values).<br>@lazy<br>@return $this
                 </div>
                             `
             return div

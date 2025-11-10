@@ -4,6 +4,7 @@
         xsi:noNamespaceSchemaLocation="tools/phpunit/vendor/phpunit/phpunit/phpunit.xsd"
         bootstrap="tests/autoload.php"
         colors="true"
+        cacheDirectory="./var/phpunit/"
         cacheResultFile="./var/phpunit/phpunit.cache"
         displayDetailsOnTestsThatTriggerWarnings="true"
         displayDetailsOnTestsThatTriggerErrors="true"
@@ -11,6 +12,7 @@
 >
   <php>
     <env name="APP_ENV" value="test"/>
+    <server name="PANTHER_WEB_SERVER_ROUTER" value="../tests/router.php"/>
   </php>
   <testsuites>
     <testsuite name="integration">
@@ -18,9 +20,6 @@
     </testsuite>
     <testsuite name="functional">
       <directory>tests/Flow/Website/Tests/Functional</directory>
-    </testsuite>
-    <testsuite name="e2e">
-      <directory>tests/Flow/Website/Tests/E2E</directory>
     </testsuite>
   </testsuites>
   <source>
