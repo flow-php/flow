@@ -67,7 +67,7 @@ code {
 }
 
 #blog-post {
-    @apply pb-5 px-2 sm:px-4 mx-auto max-w-screen-xl;
+    @apply pb-5 px-2 sm:px-4 mx-auto max-w-screen-2xl;
 }
 
 #blog-post hr, p, pre, ul, h2, h3 {
@@ -137,7 +137,7 @@ code {
 
 
 #documentation-page {
-    @apply pb-5 px-2 sm:px-4 mx-auto max-w-screen-xl;
+    @apply pb-5 px-2 sm:px-4 mx-auto max-w-screen-2xl;
 }
 
 #documentation-page a {
