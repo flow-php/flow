@@ -30,6 +30,7 @@
 - [#1917](https://github.com/flow-php/flow/pull/1917) - **Add a new `HTMLType`** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#1995](https://github.com/flow-php/flow/pull/1995) - **Enforce running docs command on PHP 8.2 only** - [@stloyd](https://github.com/stloyd)
 - [#1988](https://github.com/flow-php/flow/pull/1988) - **website width to 2xl from xl** - [@norberttech](https://github.com/norberttech)
 - [#1983](https://github.com/flow-php/flow/pull/1983) - **Unify and bump minimal Symfony requirements** - [@stloyd](https://github.com/stloyd)
 - [#1986](https://github.com/flow-php/flow/pull/1986) - **Improved partitioning documentation** - [@norberttech](https://github.com/norberttech)
