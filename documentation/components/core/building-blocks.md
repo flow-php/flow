@@ -59,10 +59,12 @@ $rows = array_to_rows([
 - [String](/src/core/etl/src/Flow/ETL/Row/Entry/StringEntry.php)
 - [Structure](/src/core/etl/src/Flow/ETL/Row/Entry/StructureEntry.php)
 - [Uuid](/src/core/etl/src/Flow/ETL/Row/Entry/UuidEntry.php)
+- [HTML](/src/core/etl/src/Flow/ETL/Row/Entry/HTMLEntry.php)
+- [HTMLElement](/src/core/etl/src/Flow/ETL/Row/Entry/HTMLElementEntry.php)
 - [XML](/src/core/etl/src/Flow/ETL/Row/Entry/XMLEntry.php)
 - [XMLElement](/src/core/etl/src/Flow/ETL/Row/Entry/XMLElementEntry.php)
 
-Internally flow is using [EntryFactory](/src/core/etl/src/Flow/ETL/Row/EntryFactory.php) to create entries.
+Internally, Flow is using [EntryFactory](/src/core/etl/src/Flow/ETL/Row/EntryFactory.php) to create entries.
 It will try to detect and create the most appropriate entry type based on the value.
 
 Flow Entries are based on [Flow Types Library](/documentation/components/libs/types.md)
