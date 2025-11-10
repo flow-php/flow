@@ -19,6 +19,9 @@
     <testsuite name="functional">
       <directory>tests/Flow/Website/Tests/Functional</directory>
     </testsuite>
+    <testsuite name="e2e">
+      <directory>tests/Flow/Website/Tests/E2E</directory>
+    </testsuite>
   </testsuites>
   <source>
     <include>
