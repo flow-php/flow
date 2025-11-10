@@ -9,7 +9,7 @@
 {%- endblock -%}
 
 {% block main %}
-    <section class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-xl">
+    <section class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-2xl">
         <ul class="inline">
             <li class="inline mr-2">
                 <a href="{{ path('blog') }}" class="text-blue-500 hover:underline">Blog</a>
@@ -22,7 +22,7 @@
             </li>
         </ul>
     </section>
-    <div class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-xl">
+    <div class="mt-5 mb-5 sm:px-4 mx-auto max-w-screen-2xl">
         <a class="btn btn-primary" href="https://github.com/flow-php/flow/edit/1.x/web/landing/templates/blog/posts/{{ date }}/{{ slug }}/post.html.twig" target="_blank">
             Edit
             <img src="{{ asset('images/icons/github.svg') }}" alt="external resource" width="16" height="16" class="ml-1">
@@ -30,7 +30,7 @@
     </div>
 
     {{ block('article') }}
-    <section class="mb-10 px-2 sm:px-4 mx-auto max-w-screen-xl">
+    <section class="mb-10 px-2 sm:px-4 mx-auto max-w-screen-2xl">
         <script src="https://giscus.app/client.js"
                 data-repo="flow-php/flow-php.com"
                 data-repo-id="R_kgDOHja2Yg"
