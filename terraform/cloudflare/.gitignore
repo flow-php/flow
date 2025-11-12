@@ -1,0 +1,31 @@
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Terraform variable files with sensitive data
+*.auto.tfvars
+
+# Terraform CLI configuration files
+.terraformrc
+terraform.rc
+
+# Terraform directory
+.terraform/
+
+# Wrangler / Workers local development
+workers/.dev.vars
+workers/.wrangler/
+.terraform.lock.hcl
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Plans
+*.tfplan

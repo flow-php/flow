@@ -55,6 +55,10 @@ pkgs.mkShell {
         pkgs.xz
         pkgs.libxml2
         pkgs.pkg-config
+
+        # Terraform
+        pkgs.terraform
+        pkgs.wrangler
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
     ;
