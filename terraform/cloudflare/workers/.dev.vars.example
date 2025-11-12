@@ -1,0 +1,4 @@
+# Copy this file to .dev.vars and fill in your actual Turnstile secret key
+# .dev.vars is gitignored and used for local development with wrangler
+
+TURNSTILE_SECRET_KEY=your-turnstile-secret-key-here

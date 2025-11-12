@@ -1,0 +1,9 @@
+name = "turnstile-verify"
+main = "turnstile-verify.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# Non-sensitive environment variables go here
+
+# Secrets should be added via: wrangler secret put TURNSTILE_SECRET_KEY
+# Or for local dev, create a .dev.vars file (which is in .gitignore)
