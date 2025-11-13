@@ -8,19 +8,19 @@ resource "cloudflare_ruleset" "playground_bot_protection" {
   rules = [
     {
       action      = "block"
-      expression  = "(http.request.uri.path contains \"/playground\" and ip.geoip.country in {\"CN\" \"RU\" \"VN\" \"IN\" \"BR\" \"ID\"})"
+      expression  = "(starts_with(http.request.uri.path, \"/playground\") and ip.geoip.country in {\"CN\" \"RU\" \"VN\" \"IN\" \"BR\" \"ID\"})"
       description = "Block playground access from CN, RU, VN, IN, BR, ID"
       enabled     = true
     },
     {
       action      = "managed_challenge"
-      expression  = "(http.request.uri.path contains \"/playground\")"
+      expression  = "(starts_with(http.request.uri.path, \"/playground\"))"
       description = "Managed challenge for playground access"
       enabled     = true
     },
     {
       action      = "challenge"
-      expression  = "(http.request.uri.path contains \"/playground\" and cf.threat_score gt 14)"
+      expression  = "(starts_with(http.request.uri.path, \"/playground\") and cf.threat_score gt 14)"
       description = "Challenge IPs with bad reputation accessing playground"
       enabled     = true
     }
