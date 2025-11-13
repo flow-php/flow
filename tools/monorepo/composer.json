@@ -5,7 +5,7 @@
   "prefer-stable": true,
   "require-dev": {
     "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
-    "symplify/monorepo-builder": "11.2.22"
+    "symplify/monorepo-builder": "12.3.0"
   },
   "config": {
     "allow-plugins": false
