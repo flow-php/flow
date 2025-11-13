@@ -1,4 +1,7 @@
-## [Unreleased] - 2025-11-10
+## [Unreleased] - 2025-11-13
+
+### Added
+- [#2005](https://github.com/flow-php/flow/pull/2005) - **Terraform configuration for cloudflare** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [#1997](https://github.com/flow-php/flow/pull/1997) - **Update Homebrew TAP formula: flow-php to version: 0.27.0** - [@norberttech](https://github.com/norberttech)
