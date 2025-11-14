@@ -10,6 +10,7 @@ parameters:
     router.request_context.host: '%env(DOMAIN)%'
     router.request_context.scheme: '%env(SCHEME)%'
     flow_version: '%env(FLOW_VERSION)%'
+    turnstile_appearance_default: 'interaction-only'
 
 services:
     _defaults:

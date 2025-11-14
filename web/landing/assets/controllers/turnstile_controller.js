@@ -20,6 +20,9 @@ export default class extends Controller {
             return
         }
 
+        // Get appearance mode from data attribute (default: interaction-only)
+        const appearance = this.element.dataset.turnstileAppearance || 'interaction-only'
+
         this.#widgetId = turnstile.render('#turnstile-widget', {
             sitekey: this.#siteKey,
             callback: (token) => {
@@ -36,11 +39,11 @@ export default class extends Controller {
                     this.#pendingPromise = null
                 }
             },
-            appearance: 'interaction-only',
-            size: 'compact'
+            appearance: appearance,
+            size: 'normal'
         })
 
-        this.#log('Turnstile widget initialized with ID:', this.#widgetId)
+        this.#log('Turnstile widget initialized with ID:', this.#widgetId, 'appearance:', appearance)
     }
 
     async getToken() {

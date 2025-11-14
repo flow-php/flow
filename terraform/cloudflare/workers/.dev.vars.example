@@ -1,6 +1,10 @@
-# Turnstile Secret Key (not needed for local development)
-# For local development, any value works since ENVIRONMENT=development bypasses Turnstile
+# Turnstile Secret Key (not needed for bypass/mock/mock-fail modes)
+# Get from: cd .. && terraform output -raw turnstile_secret_key
 TURNSTILE_SECRET_KEY=dummy
 
-# Environment flag for development mode (bypasses Turnstile verification)
-ENVIRONMENT=development
+# Turnstile verification mode:
+# - bypass: Skip verification entirely (no token required, fastest for development)
+# - mock: Accept any token without API call (test full widget flow without real verification)
+# - mock-fail: Reject any token (test error handling and failure scenarios)
+# - verify: Full production verification with Cloudflare API (default if not set)
+TURNSTILE_MODE=bypass

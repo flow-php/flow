@@ -25,6 +25,7 @@
 <div id="playground"
      data-controller="playground-editor wasm share-code playground-storage playground-help turnstile"
      data-turnstile-site-key="{{ turnstile_site_key }}"
+     data-turnstile-appearance="{{ turnstile_appearance }}"
      data-share-code-api-url-value="{{ playground_api_url }}"
      data-share-code-snippets-url-value="{{ playground_snippets_url }}"
      data-playground-editor-code-mirror-editor-outlet="#code-editor"
@@ -60,6 +61,8 @@
             <img src="{{ asset('images/icons/help.svg') }}" alt="Help" width="20" height="20">
         </button>
     </div>
+
+    <div id="turnstile-widget" class="mb-5 max-w-[550px]"></div>
 
     <div id="help-section"
          data-playground-help-target="helpSection"
@@ -248,9 +251,6 @@ data_frame()
         </div>
         <pre class="file-preview-content"><code data-playground-editor-target="filePreviewContent"></code></pre>
     </div>
-
-    <!-- Invisible Turnstile widget container -->
-    <div id="turnstile-widget" style="display: none;"></div>
 </div>
 {% endblock %}
 
