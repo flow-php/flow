@@ -236,9 +236,15 @@ export default class extends Controller {
 
             window.history.pushState({}, '', shareUrl)
 
+            // Try to copy to clipboard (may fail if document is not focused)
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(shareUrl)
-                this.#showNotification('Share link copied to clipboard!', 'success', shareUrl)
+                try {
+                    await navigator.clipboard.writeText(shareUrl)
+                    this.#showNotification('Share link copied to clipboard!', 'success', shareUrl)
+                } catch (clipboardError) {
+                    this.#log('Clipboard write failed (document not focused):', clipboardError)
+                    this.#showNotification(`Share link created: ${shareUrl}`, 'success', shareUrl)
+                }
             } else {
                 prompt('Copy this link:', shareUrl)
             }

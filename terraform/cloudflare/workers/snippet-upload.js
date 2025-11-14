@@ -146,13 +146,15 @@ async function handleUpload(request, env, corsHeaders) {
  * Verify Turnstile CAPTCHA token
  * @param {Request} request - The incoming request
  * @param {string} secretKey - Turnstile secret key from env
- * @param {object} env - Environment bindings (for checking ENVIRONMENT)
+ * @param {object} env - Environment bindings (for checking TURNSTILE_MODE)
  * @returns {Promise<object>} - { success: boolean, error?: string }
  */
 async function verifyTurnstile(request, secretKey, env) {
-  // Development mode bypass (only works locally via wrangler dev)
-  if (env.ENVIRONMENT === 'development') {
-    console.log('[Turnstile] Development mode - bypassing verification')
+  const mode = env.TURNSTILE_MODE || 'verify'
+
+  // Mode: bypass - completely skip verification (no token required)
+  if (mode === 'bypass') {
+    console.log('[Turnstile] Mode: bypass - skipping verification')
     return { success: true }
   }
 
@@ -163,6 +165,21 @@ async function verifyTurnstile(request, secretKey, env) {
     console.warn('[Turnstile] No token provided')
     return { success: false, error: 'CAPTCHA token is required' }
   }
+
+  // Mode: mock - accept any token without calling Cloudflare API (for testing widget flow)
+  if (mode === 'mock') {
+    console.log('[Turnstile] Mode: mock - accepting token without verification')
+    return { success: true }
+  }
+
+  // Mode: mock-fail - reject any token (for testing error handling)
+  if (mode === 'mock-fail') {
+    console.log('[Turnstile] Mode: mock-fail - rejecting token for testing')
+    return { success: false, error: 'CAPTCHA verification failed (mock failure)' }
+  }
+
+  // Mode: verify - full production verification with Cloudflare API
+  console.log('[Turnstile] Mode: verify - calling Cloudflare API')
 
   // Get client IP
   const ip = request.headers.get('CF-Connecting-IP') || ''
