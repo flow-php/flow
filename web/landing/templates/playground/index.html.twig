@@ -23,11 +23,17 @@
     'data/orders.csv': asset('wasm/data/orders.csv')
 } %}
 <div id="playground"
-     data-controller="playground-editor wasm share-code playground-storage playground-help"
+     data-controller="playground-editor wasm share-code playground-storage playground-help turnstile"
+     data-turnstile-site-key="{{ turnstile_site_key }}"
+     data-share-code-api-url-value="{{ playground_api_url }}"
+     data-share-code-snippets-url-value="{{ playground_snippets_url }}"
      data-playground-editor-code-mirror-editor-outlet="#code-editor"
      data-playground-editor-playground-storage-outlet="#playground"
      data-playground-storage-code-mirror-editor-outlet="#code-editor"
      data-share-code-code-mirror-editor-outlet="#code-editor"
+     data-share-code-playground-editor-outlet="#playground"
+     data-share-code-wasm-outlet="#playground"
+     data-share-code-turnstile-outlet="#playground"
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
      data-wasm-resources-value="{{ wasm_resources|json_encode }}"
@@ -42,6 +48,7 @@
                   wasm:error->playground-editor#onWasmError
                   playground-storage:loaded-from-storage->playground-editor#onStorageLoaded
                   share-code:loaded-from-url->playground-editor#onUrlLoaded
+                  share-code:datasets-loaded->playground-editor#onDatasetsLoaded
                   share-code:notification->playground-editor#onNotification">
     <div class="playground-header">
         <h1>Playground</h1>
@@ -81,8 +88,8 @@
                 <ul>
                     <li><strong>Run</strong> - Executes your PHP code in the playground and displays the output below the editor.</li>
                     <li><strong>Format</strong> - Automatically formats your PHP code using PHP-CS-Fixer rules for consistent code style.</li>
-                    <li><strong>Share</strong> - Generates a shareable URL with your current code so you can share it with others. Your code is compressed and encoded directly into the URL. <br/><em>Important: Never include sensitive information like passwords or API keys in your code when sharing, as they will be visible in the URL.</em></li>
-                    <li><strong>Upload</strong> - Upload local files (CSV, JSON, XML, PHP, PHAR) to the virtual WASM filesystem. <br/><em>Note: Uploaded files are stored only in your browser's memory and will disappear when you refresh the page.</em></li>
+                    <li><strong>Share</strong> - Generates a shareable link by securely uploading your code to our server. Your code and any uploaded datasets are stored for 90 days and accessible via a short URL. You can include up to 3 datasets (CSV, JSON, or XML files, max 2MB each) in your share. <br/><em>Important: Never include sensitive information like passwords, API keys, or personal data in your code when sharing. Shared snippets are publicly accessible to anyone with the link.</em></li>
+                    <li><strong>Upload</strong> - Upload local files (CSV, JSON, XML, PHP, PHAR) to the virtual WASM filesystem. You can upload up to 3 files (max 2MB each). When you share your code, uploaded datasets will be included automatically. <br/><em>Note: Uploaded files are stored only in your browser's memory and will disappear when you refresh the page, unless you share your code.</em></li>
                     <li><strong>Reset</strong> - Clears your code and resets the playground to its default state.</li>
                 </ul>
             </section>
@@ -241,5 +248,14 @@ data_frame()
         </div>
         <pre class="file-preview-content"><code data-playground-editor-target="filePreviewContent"></code></pre>
     </div>
+
+    <!-- Invisible Turnstile widget container -->
+    <div id="turnstile-widget" style="display: none;"></div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <!-- Cloudflare Turnstile Script -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 {% endblock %}

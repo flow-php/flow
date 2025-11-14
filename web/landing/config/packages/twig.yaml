@@ -3,6 +3,9 @@ twig:
     globals:
         umami_id: '%env(UMAMI_ID)%'
         flow_version: '%flow_version%'
+        turnstile_site_key: '%env(TURNSTILE_SITE_KEY)%'
+        playground_api_url: '%env(PLAYGROUND_API_URL)%'
+        playground_snippets_url: '%env(PLAYGROUND_SNIPPETS_URL)%'
 when@test:
     twig:
         strict_variables: true
