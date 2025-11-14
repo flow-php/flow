@@ -1,9 +1,10 @@
-name = "turnstile-verify"
-main = "turnstile-verify.js"
+name = "snippet-upload"
+main = "snippet-upload.js"
 compatibility_date = "2024-01-01"
 
-[vars]
-# Non-sensitive environment variables go here
+# R2 Bucket binding
+[[r2_buckets]]
+binding = "SNIPPETS_BUCKET"
+bucket_name = "flow-php-playground-snippets"
+preview_bucket_name = "flow-php-playground-snippets"
 
-# Secrets should be added via: wrangler secret put TURNSTILE_SECRET_KEY
-# Or for local dev, create a .dev.vars file (which is in .gitignore)

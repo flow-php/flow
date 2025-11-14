@@ -25,20 +25,15 @@ export default class extends Controller {
         this.#resourcesLoaded = false
     }
 
-    // Public API for execution
     evaluate(code) {
         if (!this.#phpModuleLoaded) {
             this.#dispatchError('PHP module not loaded yet', null)
             return false
         }
 
-        // Clear output and execute
-        // Error reporting is configured in C code (pib_eval.c)
-        // Code is passed as-is, including <?php tag
         this.#combinedOutput = ''
 
         try {
-            // Change working directory to /workspace before execution
             try {
                 this.#phpModule.FS.chdir('/workspace')
                 this.#log('Changed working directory to /workspace')
@@ -53,10 +48,8 @@ export default class extends Controller {
                 [code]
             )
 
-            // Check if output contains PHP errors (even if execution didn't throw)
             const errorInfo = this.#parseErrorMessage(this.#combinedOutput)
             if (errorInfo) {
-                // Output contains an error, dispatch as error
                 this.#log('Parsed error info:', errorInfo)
                 this.#dispatchError(this.#combinedOutput, errorInfo)
                 return false
@@ -146,12 +139,14 @@ require '/workspace/bin/cs-fixer.php';
         return this.#phpModuleLoaded
     }
 
-    // Public API for accessing PHP module (for filesystem operations)
+    areResourcesLoaded() {
+        return this.#resourcesLoaded
+    }
+
     getModule() {
         return this.#phpModule
     }
 
-    // Public API for listing files in WASM filesystem
     listFiles(path = '/') {
         if (!this.#phpModuleLoaded) {
             this.#logError('Cannot list files: PHP module not loaded yet')
@@ -209,7 +204,6 @@ require '/workspace/bin/cs-fixer.php';
         }
     }
 
-    // Public API for reading file content from WASM filesystem
     readFile(filePath) {
         if (!this.#phpModuleLoaded) {
             this.#logError('Cannot read file: PHP module not loaded yet')
@@ -227,7 +221,7 @@ require '/workspace/bin/cs-fixer.php';
         }
     }
 
-    // Public API for uploading user files to /workspace/tmp
+    // Public API for uploading user files to /workspace/uploads
     uploadFile(filename, uint8Array) {
         if (!this.#phpModuleLoaded) {
             this.#logError('Cannot upload file: PHP module not loaded yet')
@@ -235,27 +229,15 @@ require '/workspace/bin/cs-fixer.php';
         }
 
         try {
-            const tmpDir = '/workspace/tmp'
-
-            try {
-                const pathInfo = this.#phpModule.FS.analyzePath(tmpDir)
-                if (!pathInfo.exists) {
-                    this.#log(`Creating ${tmpDir} directory`)
-                    this.#phpModule.FS.mkdir(tmpDir)
-                }
-            } catch (dirError) {
-                this.#logError(`Error checking/creating ${tmpDir}:`, dirError)
-                return false
-            }
-
-            const filePath = tmpDir + '/' + filename
-
+            const filePath = '/workspace/uploads/' + filename
+            this.#log(`Writing file to WASM FS: ${filePath} (${uint8Array.length} bytes)`)
             this.#phpModule.FS.writeFile(filePath, uint8Array)
-            this.#log(`Successfully uploaded: ${filePath} (${uint8Array.length} bytes)`)
+            this.#log(`Successfully uploaded: ${filePath}`)
 
             return true
         } catch (error) {
             this.#logError(`Error uploading file ${filename}:`, error)
+            this.#logError('Error details:', error.message, 'errno:', error.errno)
             return false
         }
     }
@@ -272,19 +254,23 @@ require '/workspace/bin/cs-fixer.php';
             return true
         }
 
-        if (!this.resourcesValue || Object.keys(this.resourcesValue).length === 0) {
-            this.#log('No resources configured to load')
-            this.#resourcesLoaded = true
-            this.#dispatchResourcesLoaded()
-            return true
-        }
-
         this.#log('Loading resources into WASM filesystem...', this.resourcesValue)
 
         try {
             // Create /workspace directory
             this.#log('Creating /workspace directory')
             this.#phpModule.FS.mkdir('/workspace')
+
+            // Create /workspace/uploads directory for user file uploads
+            this.#log('Creating /workspace/uploads directory')
+            this.#phpModule.FS.mkdir('/workspace/uploads')
+
+            if (!this.resourcesValue || Object.keys(this.resourcesValue).length === 0) {
+                this.#log('No resources configured to load')
+                this.#resourcesLoaded = true
+                this.#dispatchResourcesLoaded()
+                return true
+            }
 
             const resources = Object.entries(this.resourcesValue)
             const totalResources = resources.length

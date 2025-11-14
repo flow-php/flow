@@ -1,7 +1,7 @@
 resource "cloudflare_turnstile_widget" "flow_php" {
   account_id = cloudflare_account.account.id
   name       = "Flow PHP"
-  domains    = ["flow-php.com", "www.flow-php.com"]
+  domains    = ["flow-php.com", "www.flow-php.com", "flow-php.wip"]
   mode       = "managed"
   region     = "world"
 }

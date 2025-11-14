@@ -1,17 +1,24 @@
-resource "cloudflare_workers_script" "turnstile_verify" {
+resource "cloudflare_workers_script" "snippet_upload" {
   account_id  = cloudflare_account.account.id
-  script_name = "turnstile-verify"
-  content     = file("${path.module}/workers/turnstile-verify.js")
+  script_name = "snippet-upload"
+  content     = file("${path.module}/workers/snippet-upload.js")
 
-  bindings = [{
-    name = "TURNSTILE_SECRET_KEY"
-    type = "secret_text"
-    text = cloudflare_turnstile_widget.flow_php.secret
-  }]
+  bindings = [
+    {
+      name = "SNIPPETS_BUCKET"
+      type = "r2_bucket"
+      bucket_name = cloudflare_r2_bucket.playground_snippets.name
+    },
+    {
+      name = "TURNSTILE_SECRET_KEY"
+      type = "secret_text"
+      text = cloudflare_turnstile_widget.flow_php.secret
+    }
+  ]
 }
 
-resource "cloudflare_workers_route" "turnstile_verify" {
+resource "cloudflare_workers_route" "snippet_upload" {
   zone_id = cloudflare_zone.flow_php.id
-  pattern = "flow-php.com/api/verify-turnstile"
-  script  = cloudflare_workers_script.turnstile_verify.script_name
+  pattern = "flow-php.com/api/playground/snippets*"
+  script  = cloudflare_workers_script.snippet_upload.script_name
 }

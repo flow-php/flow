@@ -1,4 +1,6 @@
-# Copy this file to .dev.vars and fill in your actual Turnstile secret key
-# .dev.vars is gitignored and used for local development with wrangler
+# Turnstile Secret Key (not needed for local development)
+# For local development, any value works since ENVIRONMENT=development bypasses Turnstile
+TURNSTILE_SECRET_KEY=dummy
 
-TURNSTILE_SECRET_KEY=your-turnstile-secret-key-here
+# Environment flag for development mode (bypasses Turnstile verification)
+ENVIRONMENT=development

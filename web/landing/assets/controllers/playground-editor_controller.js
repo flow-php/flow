@@ -16,6 +16,7 @@ export default class extends Controller {
     }
 
     #currentPreviewFile = null
+    #uploadedDatasets = []
 
     #allowedExtensions = ['csv', 'json', 'xml', 'php', 'phar']
 
@@ -42,6 +43,19 @@ export default class extends Controller {
     onUrlLoaded(event) {
         this.#log('Code loaded from URL')
         this.#showIndicator('url')
+    }
+
+    onDatasetsLoaded(event) {
+        this.#log('Datasets loaded from R2')
+
+        // Update file browser when WASM is ready
+        const wasmController = this.#getWasmController()
+        if (wasmController && wasmController.isReady()) {
+            this.#updateFileBrowser()
+        } else {
+            // WASM not ready yet, will update when resources finish loading
+            this.#log('WASM not ready, file browser will update when WASM loads')
+        }
     }
 
     #showIndicator(source) {
@@ -85,6 +99,12 @@ export default class extends Controller {
         const wasmController = this.#getWasmController()
         if (!wasmController) {
             this.#log('WASM controller not found')
+            return
+        }
+
+        // Check if WASM is ready before listing files
+        if (!wasmController.isReady()) {
+            this.#log('WASM not ready yet, skipping file browser update')
             return
         }
 
@@ -347,12 +367,32 @@ export default class extends Controller {
             return
         }
 
+        // Check current uploaded file count
+        const currentFiles = this.#getUploadedFileCount(wasmController)
+
         let uploadedCount = 0
         let skippedCount = 0
         const invalidFiles = []
         const uploadedFiles = []
+        const fileSizeErrors = []
+        const fileCountErrors = []
 
         for (const file of files) {
+            // Check file count limit (max 3 files in /workspace/uploads/)
+            if (currentFiles + uploadedCount >= 3) {
+                fileCountErrors.push(file.name)
+                skippedCount++
+                continue
+            }
+
+            // Validate file size (max 2MB)
+            const validation = this.#validateFileUpload(file)
+            if (!validation.valid) {
+                fileSizeErrors.push(`${file.name} (${validation.error})`)
+                skippedCount++
+                continue
+            }
+
             const extension = file.name.split('.').pop().toLowerCase()
 
             if (!this.#allowedExtensions.includes(extension)) {
@@ -369,8 +409,15 @@ export default class extends Controller {
 
                 if (success) {
                     uploadedCount++
-                    uploadedFiles.push(`tmp/${file.name}`)
+                    uploadedFiles.push(`uploads/${file.name}`)
                     this.#log(`Uploaded: ${file.name}`)
+
+                    // Track uploaded dataset for sharing (Task 11)
+                    this.#uploadedDatasets.push({
+                        path: `/workspace/uploads/${file.name}`,
+                        name: file.name,
+                        size: file.size
+                    })
                 } else {
                     skippedCount++
                     this.#log(`Failed to upload: ${file.name}`)
@@ -385,6 +432,12 @@ export default class extends Controller {
         if (invalidFiles.length > 0) {
             summaryMessage += `\nInvalid files (allowed: ${this.#allowedExtensions.join(', ')}): ${invalidFiles.join(', ')}`
         }
+        if (fileSizeErrors.length > 0) {
+            summaryMessage += `\nFiles too large (max 2MB): ${fileSizeErrors.join(', ')}`
+        }
+        if (fileCountErrors.length > 0) {
+            summaryMessage += `\nMaximum 3 files allowed. Remove existing files before uploading: ${fileCountErrors.join(', ')}`
+        }
         this.#showOutput(summaryMessage)
 
         if (uploadedFiles.length > 0) {
@@ -397,6 +450,49 @@ export default class extends Controller {
 
         if (this.hasFileInputTarget) {
             this.fileInputTarget.value = ''
+        }
+    }
+
+    /**
+     * Get all uploaded datasets for sharing (Task 11)
+     * Returns all uploaded datasets (already validated - max 3 files, 2MB each)
+     * @returns {Array} - Array of dataset objects: { path, name, size }
+     */
+    getSelectedDatasets() {
+        // Return all uploaded datasets (no selection UI - share all uploaded files)
+        return this.#uploadedDatasets.slice(0, 3) // Safety: max 3
+    }
+
+    /**
+     * Validate file before uploading
+     * @param {File} file - File to validate
+     * @returns {object} - { valid: boolean, error?: string }
+     */
+    #validateFileUpload(file) {
+        // Check file size (2MB max)
+        const MAX_SIZE = 2 * 1024 * 1024 // 2MB
+        if (file.size > MAX_SIZE) {
+            return {
+                valid: false,
+                error: `${(file.size / 1024 / 1024).toFixed(2)}MB`
+            }
+        }
+
+        return { valid: true }
+    }
+
+    /**
+     * Get count of files in /workspace/uploads/
+     * @param {object} wasmController - WASM controller instance
+     * @returns {number} - Number of files currently in uploads directory
+     */
+    #getUploadedFileCount(wasmController) {
+        try {
+            const files = wasmController.listFiles('/workspace/uploads')
+            return files.filter(f => f.type === 'file').length
+        } catch (error) {
+            this.#log('Error counting uploaded files:', error)
+            return 0
         }
     }
 
