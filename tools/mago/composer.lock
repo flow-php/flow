@@ -13,12 +13,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/carthage-software/mago.git",
-                "reference": "ff6906c314fa103027ea27cbf9e27865b58c315c"
+                "reference": "4b30882a6a9159700687f40d523d50d637797172"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/carthage-software/mago/zipball/ff6906c314fa103027ea27cbf9e27865b58c315c",
-                "reference": "ff6906c314fa103027ea27cbf9e27865b58c315c",
+                "url": "https://api.github.com/repos/carthage-software/mago/zipball/4b30882a6a9159700687f40d523d50d637797172",
+                "reference": "4b30882a6a9159700687f40d523d50d637797172",
                 "shasum": ""
             },
             "require": {
@@ -57,7 +57,7 @@
             ],
             "support": {
                 "issues": "https://github.com/carthage-software/mago/issues",
-                "source": "https://github.com/carthage-software/mago/tree/main"
+                "source": "https://github.com/carthage-software/mago/tree/1.0.0-rc.2"
             },
             "funding": [
                 {
@@ -65,7 +65,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-11-09T23:04:42+00:00"
+            "time": "2025-11-14T05:37:34+00:00"
         }
     ],
     "aliases": [],
