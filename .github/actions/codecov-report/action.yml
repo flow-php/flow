@@ -49,7 +49,7 @@ runs:
         directory: ./var/phpunit/coverage/clover
 
     - name: Upload code coverage (pull request)
-      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.dependencies == 'locked' }}
       uses: codecov/codecov-action@v5
       with:
         token: ${{ inputs.token }}
@@ -57,7 +57,7 @@ runs:
         commit_parent: ${{ env.codecov_base_commit_sha }}
 
     - name: Upload test results (pull request)
-      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
+      if: ${{ github.event_name == 'pull_request' && !cancelled() && inputs.dependencies == 'locked' }}
       uses: codecov/test-results-action@v1
       with:
         token: ${{ inputs.token }}
