@@ -40,7 +40,7 @@ REGXP;
 
         /* @phpstan-ignore-next-line */
         if (\is_string($value)) {
-            return HTMLDocument::createFromString($value);
+            return HTMLDocument::createFromString($value, \LIBXML_NOERROR);
         }
 
         return $value;

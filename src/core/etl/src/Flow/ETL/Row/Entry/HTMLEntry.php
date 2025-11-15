@@ -32,7 +32,7 @@ final class HTMLEntry implements Entry
         ?Metadata $metadata = null,
     ) {
         if (\is_string($value)) {
-            $this->value = HTMLDocument::createFromString($value);
+            $this->value = HTMLDocument::createFromString($value, \LIBXML_NOERROR);
         } else {
             $this->value = $value;
         }

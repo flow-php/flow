@@ -166,6 +166,36 @@ HTML);
         self::assertEquals($entry->type(), $newEntry->type());
     }
 
+    public function test_with_non_fully_valid_html_string() : void
+    {
+        $invalidHtml = <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+    <div>foo</div>
+    <div><p><span>bar</span></span></p></div>
+</body>
+</html>
+HTML;
+
+        $validHtml = <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+    <div>foo</div>
+    <div><p><span>bar</span></p></div>
+</body>
+</html>
+HTML;
+
+        $entry = html_entry('html', $invalidHtml);
+
+        self::assertHtml($invalidHtml, $entry->toString(), false);
+        self::assertHtml($validHtml, $entry->toString(), true);
+    }
+
     public function test_with_value() : void
     {
         $entry = html_entry('html', '<!DOCTYPE html><html lang="en"><head></head><body><div>foobar</div></body></html>');
@@ -177,5 +207,17 @@ HTML);
 
         self::assertNotEquals($entry->toString(), $newEntry->toString());
         self::assertEquals($html, $newEntry->value());
+    }
+
+    private function assertHtml(string $expected, string $html, bool $equals) : void
+    {
+        $expected = \preg_replace('/\s*/', '', $expected);
+        $html = \preg_replace('/\s*/', '', $html);
+
+        if ($equals) {
+            self::assertEquals($expected, $html);
+        } else {
+            self::assertNotEquals($expected, $html);
+        }
     }
 }
