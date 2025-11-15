@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\{type_instance_of, type_list};
-use Dom\HTMLElement;
+use Dom\{CharacterData, HTMLElement};
 use Flow\ETL\{FlowContext, Row};
 
 final class DOMElementValue extends ScalarFunctionChain
 {
-    public function __construct(private readonly ScalarFunction|\DOMNode|HTMLElement $node)
+    public function __construct(private readonly ScalarFunction|\DOMNode|CharacterData|HTMLElement $node)
     {
     }
 
@@ -22,6 +22,7 @@ final class DOMElementValue extends ScalarFunctionChain
         ];
 
         if (\class_exists('\Dom\HTMLElement')) {
+            $types[] = type_instance_of(CharacterData::class);
             $types[] = type_instance_of(HTMLElement::class);
             $types[] = type_list(type_instance_of(HTMLElement::class));
         }
@@ -44,7 +45,7 @@ final class DOMElementValue extends ScalarFunctionChain
             return $node->nodeValue;
         }
 
-        if ($node instanceof HTMLElement) {
+        if ($node instanceof CharacterData || $node instanceof HTMLElement) {
             return $node->textContent;
         }
 
