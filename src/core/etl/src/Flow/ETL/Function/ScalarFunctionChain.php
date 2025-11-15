@@ -11,6 +11,7 @@ use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\Function\DOM\ElementSibling;
 use Flow\ETL\Function\StyleConverter\StringStyles as OldStringStyles;
 use Flow\ETL\Hash\{Algorithm, NativePHPHash};
 use Flow\ETL\String\StringStyles;
@@ -244,6 +245,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function domElementParent() : DOMElementParent
     {
         return new DOMElementParent($this);
+    }
+
+    public function domElementSibling(ElementSibling $sibling, bool $allowOnlyElement = false) : DOMElementSibling
+    {
+        return new DOMElementSibling($this, $sibling, $allowOnlyElement);
     }
 
     public function domElementValue() : DOMElementValue

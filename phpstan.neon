@@ -87,7 +87,7 @@ parameters:
 
     ignoreErrors:
         -
-            message: '#Dom\\(HTMLDocument|HTMLElement|Element)#i'
+            message: '#Dom\\(CharacterData|HTMLDocument|HTMLElement|Element)#i'
             identifier: class.notFound
 
 includes:
