@@ -6,13 +6,12 @@ namespace Flow\ETL\Function;
 
 use function Flow\Types\DSL\type_instance_of;
 use Dom\{CharacterData, HTMLElement};
-use Flow\ETL\{Exception\InvalidArgumentException, FlowContext, Function\DOM\ElementSibling, Row};
+use Flow\ETL\{Exception\InvalidArgumentException, FlowContext, Row};
 
-final class DOMElementSibling extends ScalarFunctionChain
+final class DOMElementNextSibling extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction|\DOMNode|CharacterData|HTMLElement $element,
-        private readonly ElementSibling $sibling,
         private readonly bool $allowOnlyElement,
     ) {
     }
@@ -40,17 +39,17 @@ final class DOMElementSibling extends ScalarFunctionChain
 
         if ($this->allowOnlyElement) {
             if (!$node instanceof \DOMElement) {
-                return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementSibling with option $allowOnlyElement requires DOMElement.'));
+                return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementNextSibling with option $allowOnlyElement requires DOMElement.'));
             }
 
             if ($node instanceof CharacterData) {
-                return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementSibling with option $allowOnlyElement requires HTMLElement.'));
+                return $context->functions()->invalidResult(new InvalidArgumentException('DOMElementNextSibling with option $allowOnlyElement requires HTMLElement.'));
             }
 
-            return $this->sibling === ElementSibling::NEXT ? $node->nextElementSibling : $node->previousElementSibling;
+            return $node->nextElementSibling;
         }
 
         /* @phpstan-ignore-next-line */
-        return $this->sibling === ElementSibling::NEXT ? $node->nextSibling : $node->previousSibling;
+        return $node->nextSibling;
     }
 }

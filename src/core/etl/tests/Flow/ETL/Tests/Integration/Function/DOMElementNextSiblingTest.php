@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use function Flow\ETL\DSL\{df, from_rows, html_element_entry, ref, row, rows, xml_element_entry};
-use Flow\ETL\Function\DOM\ElementSibling;
 use Flow\ETL\Tests\FlowTestCase;
 use PHPUnit\Framework\Attributes\RequiresPhp;
 
-final class DOMElementSiblingTest extends FlowTestCase
+final class DOMElementNextSiblingTest extends FlowTestCase
 {
     #[RequiresPhp('>= 8.4')]
     public function test_dom_element_sibling_text_value() : void
@@ -24,7 +23,7 @@ final class DOMElementSiblingTest extends FlowTestCase
             ))
             ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
             ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', ref('user_details')->domElementSibling(ElementSibling::NEXT)->domElementValue())
+            ->withEntry('user_id', ref('user_details')->domElementNextSibling()->domElementValue())
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -52,7 +51,7 @@ final class DOMElementSiblingTest extends FlowTestCase
             ))
             ->withEntry('user_details', ref('html_element')->htmlQuerySelector('section'))
             ->withEntry('user_name', ref('user_details')->htmlQuerySelector('h1')->domElementValue())
-            ->withEntry('user_id', ref('user_details')->domElementSibling(ElementSibling::NEXT, true)->domElementValue())
+            ->withEntry('user_id', ref('user_details')->domElementNextSibling(true)->domElementValue())
             ->select('user_name', 'user_id')
             ->fetch();
 
@@ -83,7 +82,7 @@ final class DOMElementSiblingTest extends FlowTestCase
                 )
             )
             ->withEntry('user_name', ref('xml_element')->domElementValue())
-            ->withEntry('user_id', ref('xml_element')->domElementSibling(ElementSibling::NEXT)->domElementValue())
+            ->withEntry('user_id', ref('xml_element')->domElementNextSibling()->domElementValue())
             ->select('user_name', 'user_id')
             ->fetch();
 
