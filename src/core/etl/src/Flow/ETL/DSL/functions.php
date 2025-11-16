@@ -1373,13 +1373,16 @@ function count(?EntryReference $function = null) : Count
 /**
  * Calls a user-defined function with the given parameters.
  *
- * @param callable|ScalarFunction $callable
- * @param array<mixed> $parameters
+ * @param array<string, mixed> $parameters
  * @param null|Type<mixed> $return_type
  */
 #[DocumentationDSL(module: Module::CORE, type: DSLType::SCALAR_FUNCTION)]
 function call(ScalarFunction|callable $callable, array $parameters = [], ?Type $return_type = null) : CallUserFunc
 {
+    if ([] !== $parameters && \array_is_list($parameters)) {
+        throw new InvalidArgumentException('call arguments cannot be a list');
+    }
+
     return new CallUserFunc($callable, $parameters, $return_type);
 }
 

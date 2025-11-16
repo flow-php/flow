@@ -17,8 +17,7 @@ final class CallUserFunc extends ScalarFunctionChain
     private $callable;
 
     /**
-     * @param callable|ScalarFunction $callable
-     * @param array<mixed> $parameters
+     * @param array<array-key, mixed> $parameters
      * @param null|Type<mixed> $returnType
      */
     public function __construct(ScalarFunction|callable $callable, private readonly array $parameters, private readonly ?Type $returnType = null)
@@ -40,13 +39,17 @@ final class CallUserFunc extends ScalarFunctionChain
             $parameters[$key] = (new Parameter($parameter))->eval($row, $context);
         }
 
-        if ($this->returnType) {
-            return new ScalarResult(
-                \call_user_func($callable, ...$parameters),
-                $this->returnType
-            );
-        }
+        try {
+            if ($this->returnType) {
+                return new ScalarResult(
+                    \call_user_func($callable, ...$parameters),
+                    $this->returnType
+                );
+            }
 
-        return \call_user_func($callable, ...$parameters);
+            return \call_user_func($callable, ...$parameters);
+        } catch (\ArgumentCountError $e) {
+            return $context->functions()->invalidResult(new InvalidArgumentException($e->getMessage(), $e->getCode(), $e));
+        }
     }
 }

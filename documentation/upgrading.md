@@ -5,6 +5,29 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.27.x to 0.28.x
+
+### 1) Enforcing string types for argument names `call()` scalar method
+
+Before:
+```php
+ref('integers')->call(lit('explode'), ['separator' => ','], refAlias: 'string', returnType: type_list(type_integer()))
+ref('integers')->call(lit('explode'), ['separator' => ','])
+ref('integers')->call(lit('explode'), [','])
+ref('integers')->call(lit('count'))
+```
+
+After:
+
+```php
+ref('integers')->call(lit('explode'), arguments: ['separator' => ','], refAlias: 'string', returnType: type_list(type_integer()))
+ref('integers')->call(lit('explode'), arguments: ['separator' => ','], refAlias: 'string')
+ref('integers')->call(lit('explode'), ['separator' => ',']) // will throw invalid argument exception
+ref('integers')->call(lit('explode'), [',']) // will throw invalid argument exception
+ref('integers')->call(lit('explode')) // will return null or error in strict mode
+ref('integers')->call(lit('count')) // will work same as before
+```
+
 ## Upgrading from 0.26.x to 0.27.x
 
 ### 1) Force `EntryFactory $entryFactory` to be required on `array_to_row` & `array_to_row(s)`

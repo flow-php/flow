@@ -152,12 +152,26 @@ abstract class ScalarFunctionChain implements ScalarFunction
     }
 
     /**
-     * @param array<array-key, mixed> $arguments
-     * @param Type<mixed> $returnType
+     * @param array<string, mixed> $arguments
+     * @param null|Type<mixed> $returnType
      */
-    public function call(ScalarFunction|callable $callable, array $arguments = [], string|int $refAlias = 0, ?Type $returnType = null) : CallUserFunc
+    public function call(ScalarFunction|callable $callable, array $arguments = [], ?string $refAlias = null, ?Type $returnType = null) : CallUserFunc
     {
-        return new CallUserFunc($callable, array_merge($arguments, [$refAlias => $this]), $returnType);
+        if ([] !== $arguments && \array_is_list($arguments)) {
+            throw new InvalidArgumentException('call arguments cannot be a list');
+        }
+
+        if ($refAlias === null && [] !== $arguments) {
+            throw new InvalidArgumentException('refAlias cannot be null when named arguments are passed');
+        }
+
+        if ($refAlias === null && [] === $arguments) {
+            $arguments = [$this];
+        } else {
+            $arguments[$refAlias] = $this;
+        }
+
+        return new CallUserFunc($callable, $arguments, $returnType);
     }
 
     public function capitalize() : Capitalize

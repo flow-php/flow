@@ -23,7 +23,7 @@ require __DIR__ . '/../../../../vendor/autoload.php';
     )
     ->withEntry(
         'integers',
-        ref('integers')->call(lit('explode'), ['separator' => ','], refAlias: 'string', returnType: type_list(type_integer()))
+        ref('integers')->call(lit('explode'), arguments: ['separator' => ','], refAlias: 'string', returnType: type_list(type_integer()))
     )
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
