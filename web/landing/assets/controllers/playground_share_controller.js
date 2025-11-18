@@ -1,20 +1,31 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static outlets = ["code-mirror-editor", "playground-editor", "wasm", "turnstile"]
+    static outlets = ["code-editor", "playground", "wasm", "turnstile"]
     static values = {
         apiUrl: String,
         snippetsUrl: String
     }
     #debug = false
+    #snippetLoaded = false
+    #boundHandleCodeChanged = null
 
     connect() {
         this.#debug = this.application.debug
         this.#log('API URL:', this.apiUrlValue)
         this.#log('Snippets URL:', this.snippetsUrlValue)
+
+        this.#boundHandleCodeChanged = this.#handleCodeChanged.bind(this)
+        this.element.addEventListener('code-changed', this.#boundHandleCodeChanged)
     }
 
-    codeMirrorEditorOutletConnected() {
+    disconnect() {
+        if (this.#boundHandleCodeChanged) {
+            this.element.removeEventListener('code-changed', this.#boundHandleCodeChanged)
+        }
+    }
+
+    codeEditorOutletConnected() {
         this.loadCodeFromUrl()
     }
 
@@ -24,7 +35,6 @@ export default class extends Controller {
     loadCodeFromUrl() {
         const query = new URLSearchParams(window.location.search)
 
-        // Check for snippet ID
         if (query.has('snippet')) {
             const snippetId = query.get('snippet')
             this.#log('Loading snippet from R2:', snippetId)
@@ -38,11 +48,9 @@ export default class extends Controller {
      */
     async loadSnippetFromR2(snippetId) {
         try {
-            // Construct R2 URL (use configured URL or fallback to production)
-            const snippetsBaseUrl = this.snippetsUrlValue || 'https://playground-snippets.flow-php.com'
+            const snippetsBaseUrl = this.snippetsUrlValue
             const baseUrl = `${snippetsBaseUrl}/snippets/${snippetId}`
 
-            // Fetch metadata first
             const metadataUrl = `${baseUrl}/snippet.json`
             this.#log('Fetching metadata from:', metadataUrl)
 
@@ -53,13 +61,11 @@ export default class extends Controller {
 
             const metadata = await metadataResponse.json()
 
-            // Check expiration (90 days - matches backend setting)
             const expiresAt = new Date(metadata.expires_at)
             if (Date.now() > expiresAt.getTime()) {
                 throw new Error('Snippet has expired')
             }
 
-            // Fetch code
             const codeUrl = `${baseUrl}/code.php`
             const codeResponse = await fetch(codeUrl)
             if (!codeResponse.ok) {
@@ -67,13 +73,8 @@ export default class extends Controller {
             }
             const code = await codeResponse.text()
 
-            // Load code into editor
-            if (this.hasCodeMirrorEditorOutlet && this.codeMirrorEditorOutlet.isReady()) {
-                this.codeMirrorEditorOutlet.setValue(code)
-            }
+            this.codeEditorOutlet.setValue(code)
 
-            // Load datasets into WASM
-            // Extract dataset files from metadata
             const datasetFiles = metadata.files
                 .filter(f => f.type === 'dataset')
 
@@ -81,10 +82,8 @@ export default class extends Controller {
                 this.#log('Loading', datasetFiles.length, 'dataset(s)')
 
                 if (this.hasWasmOutlet) {
-                    // Wait for WASM resources to be loaded (which creates /workspace/uploads)
                     if (!this.wasmOutlet.areResourcesLoaded()) {
                         this.#log('WASM resources not loaded yet, waiting...')
-                        // Wait for resources to load (check every 100ms, max 10 seconds)
                         let attempts = 0
                         while (!this.wasmOutlet.areResourcesLoaded() && attempts < 100) {
                             await new Promise(resolve => setTimeout(resolve, 100))
@@ -143,13 +142,14 @@ export default class extends Controller {
                 }
             }
 
-            // Refresh file browser after loading datasets
             if (this.hasWasmOutlet) {
                 this.dispatch('datasets-loaded', { bubbles: true })
             }
 
             this.dispatch('loaded-from-url', { bubbles: true })
             this.#showNotification('Snippet loaded successfully!', 'success')
+
+            this.#snippetLoaded = true
 
         } catch (error) {
             console.error('[ShareCode] Failed to load snippet:', error)
@@ -161,12 +161,12 @@ export default class extends Controller {
      * Share code via API
      */
     async share() {
-        if (!this.hasCodeMirrorEditorOutlet) {
+        if (!this.hasCodeEditorOutlet) {
             this.#logError('Code editor outlet not found')
             return
         }
 
-        const code = this.codeMirrorEditorOutlet.getCode()
+        const code = this.codeEditorOutlet.getCode()
 
         try {
             await this.uploadSnippetToAPI(code)
@@ -185,21 +185,15 @@ export default class extends Controller {
         this.#log('Uploading to API')
 
         try {
-            // Get Turnstile token (placeholder - Task 11 implements)
             const turnstileToken = await this.getTurnstileToken()
-
-            // Prepare FormData
             const formData = new FormData()
-
-            // Add code as Blob (Decision 3)
             const codeBlob = new Blob([code], { type: 'text/plain' })
+
             formData.append('code', codeBlob, 'code.php')
 
-            // Add datasets from WASM (Task 11 - completed)
-            if (this.hasPlaygroundEditorOutlet && this.hasWasmOutlet) {
-                // getSelectedDatasets() implemented in Task 11
-                if (typeof this.playgroundEditorOutlet.getSelectedDatasets === 'function') {
-                    const datasets = this.playgroundEditorOutlet.getSelectedDatasets()
+            if (this.hasPlaygroundOutlet && this.hasWasmOutlet) {
+                if (typeof this.playgroundOutlet.getSelectedDatasets === 'function') {
+                    const datasets = this.playgroundOutlet.getSelectedDatasets()
                     this.#log('Adding', datasets.length, 'datasets')
 
                     for (let i = 0; i < datasets.length && i < 3; i++) {
@@ -214,8 +208,7 @@ export default class extends Controller {
                 }
             }
 
-            // Upload (use configured API URL or fallback to production)
-            const apiUrl = this.apiUrlValue || '/api/playground/snippets'
+            const apiUrl = this.apiUrlValue
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -230,13 +223,13 @@ export default class extends Controller {
                 throw new Error(data.error || `HTTP ${response.status}`)
             }
 
-            // Success - construct share URL from snippet ID
             const snippetId = data.snippet_id
             const shareUrl = `${window.location.origin}${window.location.pathname}?snippet=${snippetId}`
 
             window.history.pushState({}, '', shareUrl)
 
-            // Try to copy to clipboard (may fail if document is not focused)
+            this.#snippetLoaded = true
+
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 try {
                     await navigator.clipboard.writeText(shareUrl)
@@ -276,10 +269,22 @@ export default class extends Controller {
         }
     }
 
+    /**
+     * Handle code changes - clear snippet URL when user edits code
+     */
+    #handleCodeChanged() {
+        if (this.#snippetLoaded) {
+            this.#log('Code changed, clearing snippet URL from browser')
+            const cleanUrl = `${window.location.origin}${window.location.pathname}`
+            window.history.pushState({}, '', cleanUrl)
+            this.#snippetLoaded = false
+        }
+    }
+
     #waitForEditorAndSetValue(code, attempts = 0) {
         const maxAttempts = 50
-        if (this.codeMirrorEditorOutlet.isReady()) {
-            this.codeMirrorEditorOutlet.setValue(code)
+        if (this.codeEditorOutlet.isReady()) {
+            this.codeEditorOutlet.setValue(code)
         } else if (attempts < maxAttempts) {
             setTimeout(() => {
                 this.#waitForEditorAndSetValue(code, attempts + 1)

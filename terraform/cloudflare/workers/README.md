@@ -26,7 +26,7 @@
 
 ```bash
 cd terraform/cloudflare/workers
-wrangler dev
+npx wrangler dev
 ```
 
 This starts the worker at `http://localhost:8787` with local R2 emulation.

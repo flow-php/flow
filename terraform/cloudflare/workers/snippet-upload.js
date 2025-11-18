@@ -1,3 +1,194 @@
+/**
+ * Durable Object for rate limiting snippet uploads
+ *
+ * Rate limits:
+ * - 30 uploads per hour per IP
+ * - 100 uploads per day per IP
+ * - 3,500 uploads per day globally
+ */
+export class SnippetRateLimiter {
+  #state
+  #env
+
+  constructor(state, env) {
+    this.#state = state
+    this.#env = env
+  }
+
+  async fetch(request) {
+    try {
+      const url = new URL(request.url)
+
+      if (url.pathname === '/check' && request.method === 'POST') {
+        return await this.#checkRateLimit(request)
+      }
+
+      return new Response(JSON.stringify({ error: 'Not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      console.error('[RateLimiter] Error:', error)
+      return new Response(JSON.stringify({
+        allowed: false,
+        error: 'Internal error'
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+  }
+
+  async #checkRateLimit(request) {
+    const { ipHash } = await request.json()
+
+    if (!ipHash) {
+      return this.#jsonResponse({ allowed: false, error: 'IP hash required' }, 400)
+    }
+
+    const now = Date.now()
+    const hourAgo = now - 3600000
+    const dayAgo = now - 86400000
+
+    const hourlyUploads = await this.#getUploadCount(ipHash, hourAgo)
+    const dailyUploads = await this.#getUploadCount(ipHash, dayAgo)
+    const globalDailyUploads = await this.#getGlobalUploadCount(dayAgo)
+
+    if (hourlyUploads >= 30) {
+      return this.#jsonResponse({
+        allowed: false,
+        error: 'Rate limit exceeded: maximum 30 uploads per hour',
+        retry_after: await this.#getRetryAfter(ipHash, 3600000)
+      }, 429)
+    }
+
+    if (dailyUploads >= 100) {
+      return this.#jsonResponse({
+        allowed: false,
+        error: 'Rate limit exceeded: maximum 100 uploads per day',
+        retry_after: await this.#getRetryAfter(ipHash, 86400000)
+      }, 429)
+    }
+
+    if (globalDailyUploads >= 3500) {
+      return this.#jsonResponse({
+        allowed: false,
+        error: 'Service temporarily unavailable: daily upload quota reached',
+        retry_after: this.#getNextDayReset()
+      }, 503)
+    }
+
+    await this.#recordUpload(ipHash, now)
+
+    return this.#jsonResponse({
+      allowed: true,
+      remaining: {
+        hourly: 30 - hourlyUploads - 1,
+        daily: 100 - dailyUploads - 1,
+        global: 3500 - globalDailyUploads - 1
+      }
+    })
+  }
+
+  async #getUploadCount(ipHash, sinceTimestamp) {
+    const sql = this.#state.storage.sql
+    const result = await sql.exec(
+      `SELECT COUNT(*) as count FROM uploads
+       WHERE ip_hash = ? AND timestamp > ?`,
+      ipHash,
+      sinceTimestamp
+    )
+
+    return result.toArray()[0]?.count || 0
+  }
+
+  async #getGlobalUploadCount(sinceTimestamp) {
+    const sql = this.#state.storage.sql
+    const result = await sql.exec(
+      `SELECT COUNT(*) as count FROM uploads
+       WHERE timestamp > ?`,
+      sinceTimestamp
+    )
+
+    return result.toArray()[0]?.count || 0
+  }
+
+  async #recordUpload(ipHash, timestamp) {
+    const sql = this.#state.storage.sql
+
+    await sql.exec(
+      `CREATE TABLE IF NOT EXISTS uploads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip_hash TEXT NOT NULL,
+        timestamp INTEGER NOT NULL
+      )`
+    )
+
+    await sql.exec(
+      `CREATE INDEX IF NOT EXISTS idx_ip_timestamp
+       ON uploads(ip_hash, timestamp)`
+    )
+
+    await sql.exec(
+      `CREATE INDEX IF NOT EXISTS idx_timestamp
+       ON uploads(timestamp)`
+    )
+
+    await sql.exec(
+      `INSERT INTO uploads (ip_hash, timestamp) VALUES (?, ?)`,
+      ipHash,
+      timestamp
+    )
+
+    await this.#cleanupOldRecords(timestamp - 86400000)
+  }
+
+  async #cleanupOldRecords(beforeTimestamp) {
+    const sql = this.#state.storage.sql
+    await sql.exec(
+      `DELETE FROM uploads WHERE timestamp < ?`,
+      beforeTimestamp
+    )
+  }
+
+  async #getRetryAfter(ipHash, windowMs) {
+    const sql = this.#state.storage.sql
+    const limit = windowMs === 3600000 ? 30 : 100
+    const result = await sql.exec(
+      `SELECT MIN(timestamp) as oldest FROM uploads
+       WHERE ip_hash = ?
+       ORDER BY timestamp DESC
+       LIMIT ?`,
+      ipHash,
+      limit
+    )
+
+    const oldest = result.toArray()[0]?.oldest
+    if (!oldest) {
+      return 60
+    }
+
+    const retryAfter = Math.ceil((oldest + windowMs - Date.now()) / 1000)
+    return Math.max(retryAfter, 1)
+  }
+
+  #getNextDayReset() {
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+    tomorrow.setUTCHours(0, 0, 0, 0)
+
+    return Math.ceil((tomorrow - now) / 1000)
+  }
+
+  #jsonResponse(data, status = 200) {
+    return new Response(JSON.stringify(data, null, 2), {
+      status,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     try {
@@ -10,11 +201,6 @@ export default {
 
       if (url.pathname === '/api/playground/snippets' && request.method === 'POST') {
         return await handleUpload(request, env, corsHeaders)
-      }
-
-      // Serve files from R2: /snippets/{id}/snippet.json, /snippets/{id}/code.php, /snippets/{id}/datasets/{name}
-      if (url.pathname.startsWith('/snippets/') && request.method === 'GET') {
-        return await handleGetFile(url.pathname, env, corsHeaders)
       }
 
       return jsonResponse({ success: false, error: 'Not found' }, 404, corsHeaders)
@@ -30,53 +216,6 @@ export default {
 }
 
 /**
- * Handle file retrieval from R2 (GET /snippets/...)
- * @param {string} pathname - Request pathname
- * @param {object} env - Environment bindings (R2, KV, secrets)
- * @param {object} corsHeaders - CORS headers
- */
-async function handleGetFile(pathname, env, corsHeaders) {
-  try {
-    // Remove leading slash: /snippets/abc/snippet.json -> snippets/abc/snippet.json
-    const r2Key = pathname.substring(1)
-
-    console.log(`[R2 Get] Fetching: ${r2Key}`)
-
-    const object = await env.SNIPPETS_BUCKET.get(r2Key)
-
-    if (!object) {
-      console.warn(`[R2 Get] Not found: ${r2Key}`)
-      return jsonResponse({ success: false, error: 'File not found' }, 404, corsHeaders)
-    }
-
-    console.log(`[R2 Get] Found: ${r2Key}`)
-
-    // Determine content type
-    let contentType = 'application/octet-stream'
-    if (r2Key.endsWith('.json')) {
-      contentType = 'application/json'
-    } else if (r2Key.endsWith('.php')) {
-      contentType = 'text/plain'
-    } else if (r2Key.endsWith('.csv')) {
-      contentType = 'text/csv'
-    } else if (r2Key.endsWith('.xml')) {
-      contentType = 'application/xml'
-    }
-
-    return new Response(object.body, {
-      status: 200,
-      headers: {
-        'Content-Type': contentType,
-        ...corsHeaders
-      }
-    })
-  } catch (error) {
-    console.error('[R2 Get] Error:', error)
-    return jsonResponse({ success: false, error: 'Failed to retrieve file' }, 500, corsHeaders)
-  }
-}
-
-/**
  * Handle snippet upload (POST /api/playground/snippets)
  * @param {Request} request - The request object
  * @param {object} env - Environment bindings (R2, KV, secrets)
@@ -86,8 +225,23 @@ async function handleUpload(request, env, corsHeaders) {
   console.log('[Upload] Request received')
 
   try {
-    // 1. Verify Turnstile token
-    console.log('[Upload] Step 1: Verifying Turnstile')
+    // 1. Check rate limits (Durable Object)
+    console.log('[Upload] Step 1: Checking rate limits')
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
+    const ipHash = await hashIP(ip)
+
+    const rateLimitResult = await checkRateLimit(ipHash, env.RATE_LIMITER)
+    if (!rateLimitResult.allowed) {
+      console.warn('[Upload] Rate limit exceeded for IP hash:', ipHash.substring(0, 8))
+      return jsonResponse({
+        success: false,
+        error: rateLimitResult.error,
+        retry_after: rateLimitResult.retry_after
+      }, rateLimitResult.status || 429, corsHeaders)
+    }
+
+    // 2. Verify Turnstile token
+    console.log('[Upload] Step 2: Verifying Turnstile')
     const turnstileResult = await verifyTurnstile(request, env.TURNSTILE_SECRET_KEY, env)
     if (!turnstileResult.success) {
       console.warn('[Upload] Turnstile verification failed')
@@ -97,10 +251,8 @@ async function handleUpload(request, env, corsHeaders) {
       }, 403, corsHeaders)
     }
 
-    // 2. Parse and validate upload
-    console.log('[Upload] Step 2: Validating files')
-    const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
-    const ipHash = await hashIP(ip)
+    // 3. Parse and validate upload
+    console.log('[Upload] Step 3: Validating files')
     const formData = await request.formData()
     const validation = await validateUpload(formData)
 
@@ -112,15 +264,15 @@ async function handleUpload(request, env, corsHeaders) {
       }, 400, corsHeaders)
     }
 
-    // 3. Upload to R2
-    console.log('[Upload] Step 3: Uploading to R2')
+    // 4. Upload to R2
+    console.log('[Upload] Step 4: Uploading to R2')
     const uploadResult = await uploadSnippetToR2(
       validation.files,
       ipHash,
       env.SNIPPETS_BUCKET
     )
 
-    // 4. Return success response
+    // 5. Return success response
     console.log('[Upload] Upload successful:', uploadResult.snippet_id)
     return jsonResponse({
       success: true,
@@ -141,6 +293,41 @@ async function handleUpload(request, env, corsHeaders) {
 // =============================================================================
 // Utility Functions
 // =============================================================================
+
+/**
+ * Check rate limit using Durable Object
+ * @param {string} ipHash - Hashed IP address
+ * @param {DurableObjectNamespace} rateLimiterNamespace - Rate limiter namespace
+ * @returns {Promise<object>} - { allowed: boolean, error?: string, retry_after?: number, status?: number }
+ */
+async function checkRateLimit(ipHash, rateLimiterNamespace) {
+  try {
+    const id = rateLimiterNamespace.idFromName('rate-limiter')
+    const stub = rateLimiterNamespace.get(id)
+
+    const response = await stub.fetch('https://rate-limiter/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ipHash })
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      return {
+        allowed: false,
+        error: result.error || 'Rate limit exceeded',
+        retry_after: result.retry_after,
+        status: response.status
+      }
+    }
+
+    return result
+  } catch (error) {
+    console.error('[RateLimit] Error checking rate limit:', error)
+    return { allowed: true }
+  }
+}
 
 /**
  * Verify Turnstile CAPTCHA token

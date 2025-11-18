@@ -7,7 +7,7 @@ import 'prismjs/components/prism-csv.min.js'
 
 export default class extends Controller {
     static targets = ["runButton", "formatButton", "uploadButton", "fileInput", "output", "loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "fileBrowser", "fileBrowserContent", "filePreviewContainer", "filePreviewTitle", "filePreviewContent"]
-    static outlets = ["code-mirror-editor", "playground-storage"]
+    static outlets = ["code-editor", "playground-storage"]
     static values = {
         packageIcon: String,
         linkIcon: String,
@@ -70,7 +70,7 @@ export default class extends Controller {
 
         const labels = {
             storage: 'Loaded from local storage',
-            url: 'Loaded from shared link'
+            url: 'Loaded from snippet'
         }
 
         this.storageIndicatorTarget.innerHTML = icons[source] + '<span>' + labels[source] + '</span>'
@@ -187,7 +187,7 @@ export default class extends Controller {
             } else {
                 html += `
                     <li class="file-tree-item file clickable" style="padding-left: ${indent}px"
-                        data-action="click->playground-editor#previewFile"
+                        data-action="click->playground#previewFile"
                         data-file-path="${entry.path}">
                         <img src="${this.fileIconValue}" class="icon" width="16" height="16" alt="">
                         <span>${entry.name}</span>
@@ -234,13 +234,13 @@ export default class extends Controller {
         this.#updateFileBrowser()
 
         // Highlight error in code editor if we have errorInfo
-        if (errorInfo && this.hasCodeMirrorEditorOutlet) {
+        if (errorInfo && this.hasCodeEditorOutlet) {
             this.#log('Highlighting error:', errorInfo)
-            this.codeMirrorEditorOutlet.highlightError(errorInfo)
+            this.codeEditorOutlet.highlightError(errorInfo)
         } else {
             this.#log('No errorInfo or code editor outlet not available', {
                 hasErrorInfo: !!errorInfo,
-                hasOutlet: this.hasCodeMirrorEditorOutlet
+                hasOutlet: this.hasCodeEditorOutlet
             })
         }
     }
@@ -263,16 +263,16 @@ export default class extends Controller {
         }
 
         // Get code from code-editor outlet
-        if (!this.hasCodeMirrorEditorOutlet) {
+        if (!this.hasCodeEditorOutlet) {
             this.#log('Code editor outlet not connected')
             this.#showOutput('Code editor not found')
             return
         }
 
         // Clear previous errors before running
-        this.codeMirrorEditorOutlet.clearErrors()
+        this.codeEditorOutlet.clearErrors()
 
-        const code = this.codeMirrorEditorOutlet.getCode()
+        const code = this.codeEditorOutlet.getCode()
         this.#showOutput('Running...')
 
         // Save code to local storage
@@ -299,13 +299,13 @@ export default class extends Controller {
             return
         }
 
-        if (!this.hasCodeMirrorEditorOutlet) {
+        if (!this.hasCodeEditorOutlet) {
             this.#log('Code editor outlet not connected')
             this.#showOutput('Code editor not found')
             return
         }
 
-        const code = this.codeMirrorEditorOutlet.getCode()
+        const code = this.codeEditorOutlet.getCode()
         this.#showOutput('Formatting code...')
 
         if (this.hasFormatButtonTarget) {
@@ -322,7 +322,7 @@ export default class extends Controller {
                 return
             }
 
-            this.codeMirrorEditorOutlet.setValue(formattedCode)
+            this.codeEditorOutlet.setValue(formattedCode)
             this.#showOutput('Code formatted successfully!')
 
             if (appliedFixers && appliedFixers.length > 0) {
