@@ -23,34 +23,34 @@
     'data/orders.csv': asset('wasm/data/orders.csv')
 } %}
 <div id="playground"
-     data-controller="playground-editor wasm share-code playground-storage playground-help turnstile"
+     data-controller="playground wasm playground-share playground-storage playground-help turnstile"
      data-turnstile-site-key="{{ turnstile_site_key }}"
      data-turnstile-appearance="{{ turnstile_appearance }}"
-     data-share-code-api-url-value="{{ playground_api_url }}"
-     data-share-code-snippets-url-value="{{ playground_snippets_url }}"
-     data-playground-editor-code-mirror-editor-outlet="#code-editor"
-     data-playground-editor-playground-storage-outlet="#playground"
-     data-playground-storage-code-mirror-editor-outlet="#code-editor"
-     data-share-code-code-mirror-editor-outlet="#code-editor"
-     data-share-code-playground-editor-outlet="#playground"
-     data-share-code-wasm-outlet="#playground"
-     data-share-code-turnstile-outlet="#playground"
+     data-playground-share-api-url-value="{{ playground_api_url }}"
+     data-playground-share-snippets-url-value="{{ playground_snippets_url }}"
+     data-playground-code-editor-outlet="#code-editor"
+     data-playground-playground-storage-outlet="#playground"
+     data-playground-storage-code-editor-outlet="#code-editor"
+     data-playground-share-code-editor-outlet="#code-editor"
+     data-playground-share-playground-outlet="#playground"
+     data-playground-share-wasm-outlet="#playground"
+     data-playground-share-turnstile-outlet="#playground"
      data-wasm-php-js-value="{{ asset('wasm/php.js') }}"
      data-wasm-php-wasm-value="{{ asset('wasm/php.wasm') }}"
      data-wasm-resources-value="{{ wasm_resources|json_encode }}"
-     data-playground-editor-package-icon-value="{{ asset('images/icons/package.svg') }}"
-     data-playground-editor-link-icon-value="{{ asset('images/icons/link.svg') }}"
-     data-playground-editor-folder-icon-value="{{ asset('images/icons/folder.svg') }}"
-     data-playground-editor-file-icon-value="{{ asset('images/icons/file.svg') }}"
-     data-action="wasm:ready->playground-editor#onWasmReady
-                  wasm:resources-loaded->playground-editor#onWasmResourcesLoaded
-                  wasm:progress->playground-editor#onWasmProgress
-                  wasm:output->playground-editor#onWasmOutput
-                  wasm:error->playground-editor#onWasmError
-                  playground-storage:loaded-from-storage->playground-editor#onStorageLoaded
-                  share-code:loaded-from-url->playground-editor#onUrlLoaded
-                  share-code:datasets-loaded->playground-editor#onDatasetsLoaded
-                  share-code:notification->playground-editor#onNotification">
+     data-playground-package-icon-value="{{ asset('images/icons/package.svg') }}"
+     data-playground-link-icon-value="{{ asset('images/icons/link.svg') }}"
+     data-playground-folder-icon-value="{{ asset('images/icons/folder.svg') }}"
+     data-playground-file-icon-value="{{ asset('images/icons/file.svg') }}"
+     data-action="wasm:ready->playground#onWasmReady
+                  wasm:resources-loaded->playground#onWasmResourcesLoaded
+                  wasm:progress->playground#onWasmProgress
+                  wasm:output->playground#onWasmOutput
+                  wasm:error->playground#onWasmError
+                  playground-storage:loaded-from-storage->playground#onStorageLoaded
+                  playground-share:loaded-from-url->playground#onUrlLoaded
+                  playground-share:datasets-loaded->playground#onDatasetsLoaded
+                  playground-share:notification->playground#onNotification">
     <div class="playground-header">
         <h1>Playground</h1>
         <button
@@ -121,15 +121,15 @@
     </div>
 
     <div id="loader">
-        <div data-playground-editor-target="loadingMessage"></div>
+        <div data-playground-target="loadingMessage"></div>
         <div class="loading-progress">
-            <div data-playground-editor-target="loadingBar" class="loading-bar"></div>
+            <div data-playground-target="loadingBar" class="loading-bar"></div>
         </div>
-        <div data-playground-editor-target="loadingPercent"></div>
+        <div data-playground-target="loadingPercent"></div>
     </div>
 
-    <div class="navigation" data-playground-editor-target="navigation">
-        <div class="storage-indicator" data-playground-editor-target="storageIndicator" style="display: none;"></div>
+    <div class="navigation" data-playground-target="navigation">
+        <div class="storage-indicator" data-playground-target="storageIndicator" style="display: none;"></div>
         <div class="actions">
             <button
                     data-action="click->playground-help#showTopic"
@@ -140,8 +140,8 @@
             </button>
             <button
                     data-controller="image-swap"
-                    data-playground-editor-target="runButton"
-                    data-action="click->playground-editor#run mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                    data-playground-target="runButton"
+                    data-action="click->playground#run mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Run <img src="{{ asset('images/icons/play.svg') }}"
                          alt="Run"
                          class="ml-1 inline-block"
@@ -150,8 +150,8 @@
             </button>
             <button
                     data-controller="image-swap"
-                    data-playground-editor-target="formatButton"
-                    data-action="click->playground-editor#format mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                    data-playground-target="formatButton"
+                    data-action="click->playground#format mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Format <img src="{{ asset('images/icons/code.svg') }}"
                             alt="Format"
                             class="ml-1 inline-block"
@@ -160,7 +160,7 @@
             </button>
             <button
                     data-controller="image-swap"
-                    data-action="click->share-code#share mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                    data-action="click->playground-share#share mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Share <img src="{{ asset('images/icons/share.svg') }}"
                      alt="Share"
                      class="ml-1 inline-block"
@@ -169,8 +169,8 @@
             </button>
             <button
                     data-controller="image-swap"
-                    data-playground-editor-target="uploadButton"
-                    data-action="click->playground-editor#triggerUpload mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+                    data-playground-target="uploadButton"
+                    data-action="click->playground#triggerUpload mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Upload <img src="{{ asset('images/icons/upload.svg') }}"
                             alt="Upload"
                             class="ml-1 inline-block"
@@ -178,15 +178,15 @@
                             data-hover-src="{{ asset('images/icons/upload-active.svg') }}">
             </button>
             <input type="file"
-                   data-playground-editor-target="fileInput"
-                   data-action="change->playground-editor#handleFileUpload"
+                   data-playground-target="fileInput"
+                   data-action="change->playground#handleFileUpload"
                    accept=".csv,.json,.xml,.php,.phar"
                    multiple
                    style="display: none;">
             <a href="{{ path('playground') }}"
-               data-controller="image-swap reset-confirm"
-               data-reset-confirm-playground-storage-outlet="#playground"
-               data-action="click->reset-confirm#confirmReset mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
+               data-controller="image-swap playground-reset"
+               data-playground-reset-playground-storage-outlet="#playground"
+               data-action="click->playground-reset#confirmReset mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Reset <img src="{{ asset('images/icons/refresh.svg') }}"
                            alt="Reset"
                            class="ml-1 inline-block"
@@ -195,8 +195,8 @@
             </a>
         </div>
     </div>
-    <div class="editor" data-playground-editor-target="editor">
-        <div class="file-browser" data-playground-editor-target="fileBrowser">
+    <div class="editor" data-playground-target="editor">
+        <div class="file-browser" data-playground-target="fileBrowser">
             <div class="file-browser-header">
                 Workspace
                 <button
@@ -207,12 +207,12 @@
                     <img src="{{ asset('images/icons/help.svg') }}" alt="Help" width="14" height="14">
                 </button>
             </div>
-            <div class="file-browser-content" data-playground-editor-target="fileBrowserContent">
+            <div class="file-browser-content" data-playground-target="fileBrowserContent">
                 <!-- Files will be populated by JavaScript -->
             </div>
         </div>
         <div class="code-container">
-                <textarea id="code-editor" data-controller="code-mirror-editor">
+                <textarea id="code-editor" data-controller="code-editor">
 <?php
 
 declare(strict_types=1);
@@ -235,27 +235,26 @@ data_frame()
 </textarea>
         </div>
     </div>
-    <div class="output-container" data-playground-editor-target="outputContainer">
+    <div class="output-container" data-playground-target="outputContainer">
         <h2>Output</h2>
-        <pre id="output" data-playground-editor-target="output"></pre>
+        <pre id="output" data-playground-target="output"></pre>
     </div>
-    <div class="file-preview-container" data-playground-editor-target="filePreviewContainer" style="display: none;">
+    <div class="file-preview-container" data-playground-target="filePreviewContainer" style="display: none;">
         <div class="file-preview-header">
-            <h2 data-playground-editor-target="filePreviewTitle">File Preview</h2>
+            <h2 data-playground-target="filePreviewTitle">File Preview</h2>
             <div class="file-preview-actions">
-                <button data-action="click->playground-editor#downloadPreviewFile" class="preview-action-btn" aria-label="Download file">
+                <button data-action="click->playground#downloadPreviewFile" class="preview-action-btn" aria-label="Download file">
                     <img src="{{ asset('images/icons/upload.svg') }}" alt="Download" width="16" height="16" style="transform: rotate(180deg);">
                 </button>
-                <button data-action="click->playground-editor#closeFilePreview" class="preview-close-btn" aria-label="Close preview">×</button>
+                <button data-action="click->playground#closeFilePreview" class="preview-close-btn" aria-label="Close preview">×</button>
             </div>
         </div>
-        <pre class="file-preview-content"><code data-playground-editor-target="filePreviewContent"></code></pre>
+        <pre class="file-preview-content"><code data-playground-target="filePreviewContent"></code></pre>
     </div>
 </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <!-- Cloudflare Turnstile Script -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 {% endblock %}

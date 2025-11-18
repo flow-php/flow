@@ -22,7 +22,7 @@ export default class extends Controller {
 
     #log(...args) {
         if (this.#debug) {
-            console.log('[CodeMirrorEditor]', ...args)
+            console.log('[CodeEditor]', ...args)
         }
     }
 
@@ -85,12 +85,12 @@ export default class extends Controller {
         })
 
         this.#editorReady = true
-        this.#log('CodeMirror editor initialized')
+        this.#log('Code editor initialized')
     }
 
     connect() {
         this.#debug = this.application.debug
-        this.#log('Connecting CodeMirror editor controller')
+        this.#log('Connecting Code editor controller')
         this.#initializeEditor()
     }
 

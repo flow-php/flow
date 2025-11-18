@@ -8,3 +8,14 @@ binding = "SNIPPETS_BUCKET"
 bucket_name = "flow-php-playground-snippets"
 preview_bucket_name = "flow-php-playground-snippets"
 
+# Durable Object bindings
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "SnippetRateLimiter"
+script_name = "snippet-upload"
+
+# Durable Object migrations
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SnippetRateLimiter"]
+

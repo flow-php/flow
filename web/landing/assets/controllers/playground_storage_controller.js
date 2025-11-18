@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static outlets = ['code-mirror-editor'];
+    static outlets = ['code-editor'];
 
     #storageKey = 'flow-playground-code';
     #hasUnsavedChanges = false;
@@ -13,7 +13,7 @@ export default class extends Controller {
 
     initialize() {
         this.onCodeChanged = this.onCodeChanged.bind(this);
-        this.element.addEventListener('code-mirror-editor:code-changed', this.onCodeChanged);
+        this.element.addEventListener('code-editor:code-changed', this.onCodeChanged);
     }
 
     onCodeChanged() {
@@ -22,10 +22,10 @@ export default class extends Controller {
 
     disconnect() {
         this.#removeBeforeUnloadListener();
-        this.element.removeEventListener('code-mirror-editor:code-changed', this.onCodeChanged);
+        this.element.removeEventListener('code-editor:code-changed', this.onCodeChanged);
     }
 
-    codeMirrorEditorOutletConnected() {
+    codeEditorOutletConnected() {
         const hasSharedCode = new URLSearchParams(window.location.search).has('c');
 
         if (!hasSharedCode) {
@@ -34,11 +34,11 @@ export default class extends Controller {
     }
 
     saveCode() {
-        if (!this.hasCodeMirrorEditorOutlet) {
+        if (!this.hasCodeEditorOutlet) {
             return;
         }
 
-        const code = this.codeMirrorEditorOutlet.getCode();
+        const code = this.codeEditorOutlet.getCode();
         localStorage.setItem(this.#storageKey, code);
         this.#hasUnsavedChanges = false;
     }
@@ -53,7 +53,7 @@ export default class extends Controller {
     }
 
     #loadCodeFromStorage() {
-        if (!this.hasCodeMirrorEditorOutlet) {
+        if (!this.hasCodeEditorOutlet) {
             return;
         }
 
@@ -68,8 +68,8 @@ export default class extends Controller {
     #waitForEditorAndSetValue(code, attempts = 0) {
         const maxAttempts = 50;
 
-        if (this.codeMirrorEditorOutlet.isReady()) {
-            this.codeMirrorEditorOutlet.setValue(code);
+        if (this.codeEditorOutlet.isReady()) {
+            this.codeEditorOutlet.setValue(code);
             this.#hasUnsavedChanges = false;
         } else if (attempts < maxAttempts) {
             setTimeout(() => {

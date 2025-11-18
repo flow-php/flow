@@ -6,7 +6,7 @@ locals {
   # Rate limits (in submissions)
   # Note: Cloudflare rate limiting only supports periods up to 60 seconds
   # Allowed periods: [10, 15, 20, 30, 40, 45, 60] seconds
-  max_submissions_per_minute = 5
+  max_submissions_per_minute = 2
 
   # Rate limits (in requests)
   max_requests_per_minute = local.max_submissions_per_minute * local.requests_per_submission # 25 requests
@@ -46,11 +46,6 @@ resource "cloudflare_ruleset" "playground_bot_protection" {
 }
 
 
-# WAF Rate Limiting Rule for Snippet Upload
-# Note: Temporarily commented out to resolve conflict with existing zone-level http_ratelimit ruleset
-# To fix: Either import existing ruleset or delete it manually from Cloudflare dashboard
-# Then uncomment and apply this configuration
-/*
 resource "cloudflare_ruleset" "snippet_upload_rate_limit" {
   zone_id     = cloudflare_zone.flow_php.id
   name        = "Rate limit snippet uploads"
@@ -86,11 +81,3 @@ resource "cloudflare_ruleset" "snippet_upload_rate_limit" {
     }
   ]
 }
-*/
-
-# Note: Cloudflare rate limiting in this plan only supports periods up to 60 seconds.
-# Allowed periods: [10, 15, 20, 30, 40, 45, 60] seconds.
-# For longer-term rate limiting (hourly/daily), would need:
-# - Higher Cloudflare plan with extended rate limiting features
-# - Custom implementation using Workers KV or Durable Objects
-# - Cloudflare Analytics for monitoring patterns

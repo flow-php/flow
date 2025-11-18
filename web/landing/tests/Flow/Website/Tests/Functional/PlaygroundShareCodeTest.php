@@ -10,7 +10,7 @@ final class PlaygroundShareCodeTest extends EndToEndTestCase
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-editor-target="runButton"]', 3);
+        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
 
         $this->setPlaygroundCode($client, "<?php\necho 'Share Test';");
         $client->getCrawler()->filter('button[data-action*="share-code#share"]')->click();
@@ -20,7 +20,7 @@ final class PlaygroundShareCodeTest extends EndToEndTestCase
         \parse_str(\parse_url($client->getCurrentURL(), \PHP_URL_QUERY), $params);
 
         $client->request('GET', '/playground?c=' . $params['c']);
-        $client->waitForEnabled('[data-playground-editor-target="runButton"]', 3);
+        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
 
         self::assertStringContainsString('Share Test', $this->getPlaygroundCode($client));
     }
@@ -29,7 +29,7 @@ final class PlaygroundShareCodeTest extends EndToEndTestCase
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-editor-target="runButton"]', 3);
+        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
 
         $this->setPlaygroundCode($client, "<?php\necho 'test';");
         $client->getCrawler()->filter('button[data-action*="share-code#share"]')->click();

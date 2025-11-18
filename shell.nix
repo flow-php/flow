@@ -58,7 +58,7 @@ pkgs.mkShell {
 
         # Terraform
         pkgs.terraform
-        pkgs.wrangler
+        pkgs.nodejs_24
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
     ;

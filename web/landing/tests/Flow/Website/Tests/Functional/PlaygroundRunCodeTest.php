@@ -10,7 +10,7 @@ final class PlaygroundRunCodeTest extends EndToEndTestCase
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-editor-target="runButton"]', 3);
+        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
 
         $this->setPlaygroundCode(
             $client,
@@ -22,10 +22,10 @@ df()->read(from_array([['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bo
 PHP
         );
 
-        $client->getCrawler()->filter('[data-playground-editor-target="runButton"]')->click();
-        $client->waitForElementToContain('[data-playground-editor-target="output"]', 'Alice', 5);
+        $client->getCrawler()->filter('[data-playground-target="runButton"]')->click();
+        $client->waitForElementToContain('[data-playground-target="output"]', 'Alice', 5);
 
-        self::assertStringContainsString('Alice', $client->getCrawler()->filter('[data-playground-editor-target="output"]')->text());
-        self::assertStringContainsString('Bob', $client->getCrawler()->filter('[data-playground-editor-target="output"]')->text());
+        self::assertStringContainsString('Alice', $client->getCrawler()->filter('[data-playground-target="output"]')->text());
+        self::assertStringContainsString('Bob', $client->getCrawler()->filter('[data-playground-target="output"]')->text());
     }
 }
