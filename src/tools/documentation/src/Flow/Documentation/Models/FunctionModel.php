@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\Documentation\Models;
 
 use function Flow\Types\DSL\{type_array, type_boolean, type_integer, type_optional, type_string, type_structure};
-use Cocur\Slugify\Slugify;
 use Flow\ETL\Function\ScalarFunctionChain;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 final readonly class FunctionModel
 {
@@ -75,7 +75,7 @@ final readonly class FunctionModel
         return new self(
             $relativePath,
             $reflectionFunction->getStartLine(),
-            (new Slugify())->slugify($reflectionFunction->getShortName()),
+            (new AsciiSlugger())->slug($reflectionFunction->getShortName())->toString(),
             $reflectionFunction->getShortName(),
             $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
