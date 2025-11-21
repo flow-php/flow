@@ -4247,16 +4247,16 @@
         },
         {
             "name": "fig/log-test",
-            "version": "1.2.0",
+            "version": "1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log-test.git",
-                "reference": "a6c6d97e289f6a50ae9ce34f34e8536cbeda6486"
+                "reference": "83acb6c12875ea4f349dc4fe8b7d8e239c2b3715"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log-test/zipball/a6c6d97e289f6a50ae9ce34f34e8536cbeda6486",
-                "reference": "a6c6d97e289f6a50ae9ce34f34e8536cbeda6486",
+                "url": "https://api.github.com/repos/php-fig/log-test/zipball/83acb6c12875ea4f349dc4fe8b7d8e239c2b3715",
+                "reference": "83acb6c12875ea4f349dc4fe8b7d8e239c2b3715",
                 "shasum": ""
             },
             "require": {
@@ -4290,9 +4290,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-fig/log-test/issues",
-                "source": "https://github.com/php-fig/log-test/tree/1.2.0"
+                "source": "https://github.com/php-fig/log-test/tree/1.2.1"
             },
-            "time": "2025-10-27T14:03:49+00:00"
+            "time": "2025-11-11T10:33:05+00:00"
         },
         {
             "name": "nikic/php-parser",
