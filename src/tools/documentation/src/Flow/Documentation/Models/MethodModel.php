@@ -72,12 +72,12 @@ final readonly class MethodModel
         $returnTypeReflection = $reflectionMethod->getReturnType();
         $declaringClass = $reflectionMethod->getDeclaringClass();
         $className = $declaringClass->getName();
-        $classSlug = (new AsciiSlugger())->slug($declaringClass->getShortName())->toString();
+        $classSlug = (new AsciiSlugger())->slug($declaringClass->getShortName())->lower()->toString();
 
         return new self(
             $relativePath,
             $reflectionMethod->getStartLine(),
-            (new AsciiSlugger())->slug($reflectionMethod->getShortName())->toString(),
+            (new AsciiSlugger())->slug($reflectionMethod->getShortName())->lower()->toString(),
             $reflectionMethod->getShortName(),
             $className,
             $classSlug,

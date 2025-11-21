@@ -19,6 +19,6 @@ final class SlugifyExtension extends AbstractExtension
 
     public function slugify(string $text) : string
     {
-        return (new AsciiSlugger())->slug($text)->toString();
+        return (new AsciiSlugger())->slug($text)->lower()->toString();
     }
 }
