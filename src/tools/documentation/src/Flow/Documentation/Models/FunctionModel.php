@@ -75,7 +75,7 @@ final readonly class FunctionModel
         return new self(
             $relativePath,
             $reflectionFunction->getStartLine(),
-            (new AsciiSlugger())->slug($reflectionFunction->getShortName())->toString(),
+            (new AsciiSlugger())->slug($reflectionFunction->getShortName())->lower()->toString(),
             $reflectionFunction->getShortName(),
             $reflectionFunction->getNamespaceName(),
             ParametersModel::fromFunctionReflection($reflectionFunction),
