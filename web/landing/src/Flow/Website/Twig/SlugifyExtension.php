@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Website\Twig;
 
-use Cocur\Slugify\Slugify;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
 final class SlugifyExtension extends AbstractExtension
 {
-    public function getFilters()
+    public function getFilters() : array
     {
         return [
             new TwigFilter('slugify', $this->slugify(...)),
@@ -19,6 +19,6 @@ final class SlugifyExtension extends AbstractExtension
 
     public function slugify(string $text) : string
     {
-        return (new Slugify())->slugify($text);
+        return (new AsciiSlugger())->slug($text)->toString();
     }
 }
