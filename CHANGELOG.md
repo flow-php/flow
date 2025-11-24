@@ -1,11 +1,14 @@
-## [Unreleased] - 2025-11-21
+## [Unreleased] - 2025-11-24
 
 ### Added
+- [#2023](https://github.com/flow-php/flow/pull/2023) - **playground rate limiting based on durable objects** - [@norberttech](https://github.com/norberttech)
 - [#2013](https://github.com/flow-php/flow/pull/2013) - **Add a new `DOMPreviousElementSibling`** - [@stloyd](https://github.com/stloyd)
 - [#2013](https://github.com/flow-php/flow/pull/2013) - **Add a new `DOMNextElementSibling`** - [@stloyd](https://github.com/stloyd)
 - [#2005](https://github.com/flow-php/flow/pull/2005) - **Terraform configuration for cloudflare** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2023](https://github.com/flow-php/flow/pull/2023) - **code snippets are now uploaded to R2** - [@norberttech](https://github.com/norberttech)
+- [#2023](https://github.com/flow-php/flow/pull/2023) - **refactoring entire playground architecture - details in docs** - [@norberttech](https://github.com/norberttech)
 - [#2019](https://github.com/flow-php/flow/pull/2019) - **Replace "cocur/slugify" with Symfony String on website** - [@stloyd](https://github.com/stloyd)
 - [#1997](https://github.com/flow-php/flow/pull/1997) - **Update Homebrew TAP formula: flow-php to version: 0.27.0** - [@norberttech](https://github.com/norberttech)
 
