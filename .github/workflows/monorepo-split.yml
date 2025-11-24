@@ -87,7 +87,7 @@ jobs:
             split_repository: 'homebrew-flow'
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # no tag
       -
