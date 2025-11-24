@@ -1,4 +1,4 @@
-## [Unreleased] - 2025-11-24
+## [0.28.0] - 2025-11-24
 
 ### Added
 - [#2023](https://github.com/flow-php/flow/pull/2023) - **playground rate limiting based on durable objects** - [@norberttech](https://github.com/norberttech)
