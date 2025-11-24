@@ -4,6 +4,8 @@ resource "cloudflare_workers_script" "snippet_upload" {
   content     = file("${path.module}/workers/snippet-upload.js")
   main_module = "snippet-upload.js"
 
+  compatibility_date = "2024-01-01"
+
   bindings = [
     {
       name = "SNIPPETS_BUCKET"
@@ -30,6 +32,6 @@ resource "cloudflare_workers_script" "snippet_upload" {
 
 resource "cloudflare_workers_route" "snippet_upload" {
   zone_id = cloudflare_zone.flow_php.id
-  pattern = "flow-php.com/api/playground/snippets*"
+  pattern = "https://flow-php.com/api/playground/snippets*"
   script  = cloudflare_workers_script.snippet_upload.script_name
 }

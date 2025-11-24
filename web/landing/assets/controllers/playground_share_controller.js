@@ -381,6 +381,12 @@ export default class extends Controller {
 
             for (let i = 0; i < datasets.length && i < 3; i++) {
                 const dataset = datasets[i]
+
+                if (!dataset.name || dataset.name.trim().length === 0) {
+                    this.#logError('Skipping dataset with empty name:', dataset)
+                    continue
+                }
+
                 const result = await this.wasmOutlet.readFile(dataset.path)
                 if (result.success) {
                     const blob = new Blob([result.content], { type: 'application/octet-stream' })
