@@ -44,9 +44,46 @@ jobs:
           cache-key-suffix: "-website"
           composer-file: "web/landing/composer.lock"
 
+      - name: "Setup Node.js"
+        uses: "actions/setup-node@v4"
+        with:
+          node-version: "20"
+
+      - name: "Create Wrangler dev.vars"
+        run: |
+          cat > .dev.vars << EOF
+          TURNSTILE_SECRET_KEY=dummy
+          TURNSTILE_MODE=bypass
+          ENABLE_R2_PROXY=true
+          EOF
+        working-directory: "terraform/cloudflare/workers"
+
+      - name: "Start Wrangler in background"
+        run: |
+          npx wrangler@latest dev --port 8787 > wrangler.log 2>&1 &
+          echo $! > wrangler.pid
+          # Wait for wrangler to be ready
+          timeout 30 bash -c 'until curl -s http://localhost:8787 > /dev/null; do sleep 1; done'
+        working-directory: "terraform/cloudflare/workers"
+
       - name: "Test"
         run: "composer test"
         working-directory: "web/landing"
+        env:
+          PLAYGROUND_API_URL: "http://localhost:8787/api/playground/snippets"
+          PLAYGROUND_SNIPPETS_URL: "http://localhost:8787"
+
+      - name: "Stop Wrangler"
+        if: always()
+        run: |
+          if [ -f wrangler.pid ]; then
+            kill $(cat wrangler.pid) || true
+          fi
+          if [ -f wrangler.log ]; then
+            echo "=== Wrangler Logs ==="
+            cat wrangler.log
+          fi
+        working-directory: "terraform/cloudflare/workers"
 
       - name: "Test Build"
         run: "composer build"

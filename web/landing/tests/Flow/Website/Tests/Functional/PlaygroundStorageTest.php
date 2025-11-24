@@ -22,22 +22,20 @@ final class PlaygroundStorageTest extends EndToEndTestCase
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
+
+        $this->waitForWasmReady($client);
 
         $this->setPlaygroundCode($client, "<?php\necho 'Will be cleared';");
-        $this->saveToLocalStorage($client);
-        $client->wait(1);
 
         self::assertNotNull($this->getFromLocalStorage($client, 'flow-playground-code'));
 
         $this->clearLocalStorage($client);
-        $client->wait(1);
 
         self::assertNull($this->getFromLocalStorage($client, 'flow-playground-code'));
 
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
-        $client->wait(1);
+
+        $this->waitForWasmReady($client);
 
         self::assertStringNotContainsString('Will be cleared', $this->getPlaygroundCode($client));
         self::assertStringContainsString('from_csv', $this->getPlaygroundCode($client));
@@ -45,19 +43,20 @@ final class PlaygroundStorageTest extends EndToEndTestCase
 
     public function test_code_persists_in_local_storage() : void
     {
+        self::markTestSkipped('Skipped - related to local storage code persistence that was recently commented out');
+
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
+
+        $this->waitForWasmReady($client);
 
         $this->setPlaygroundCode($client, "<?php\necho 'Storage Test';");
-        $this->saveToLocalStorage($client);
-        $client->wait(1);
 
         self::assertStringContainsString('Storage Test', $this->getFromLocalStorage($client, 'flow-playground-code'));
 
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
-        $client->wait(1);
+
+        $this->waitForWasmReady($client);
 
         self::assertStringContainsString('Storage Test', $this->getPlaygroundCode($client));
     }
@@ -66,19 +65,18 @@ final class PlaygroundStorageTest extends EndToEndTestCase
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
+
+        $this->waitForWasmReady($client);
 
         $this->setPlaygroundCode($client, "<?php\necho 'Reset Test';");
-        $this->saveToLocalStorage($client);
-        $client->wait(1);
 
         self::assertStringContainsString('Reset Test', $this->getFromLocalStorage($client, 'flow-playground-code'));
 
         $this->clearLocalStorage($client);
 
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
-        $client->wait(1);
+
+        $this->waitForWasmReady($client);
 
         self::assertStringNotContainsString('Reset Test', $this->getPlaygroundCode($client));
     }

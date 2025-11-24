@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
+import { createFingerprint } from "../services/snippet-fingerprint.js"
 
 export default class extends Controller {
-    static outlets = ["code-editor", "playground", "wasm", "turnstile"]
+    static outlets = ["code-editor", "wasm", "turnstile", "playground-upload"]
     static values = {
         apiUrl: String,
         snippetsUrl: String
@@ -9,6 +10,9 @@ export default class extends Controller {
     #debug = false
     #snippetLoaded = false
     #boundHandleCodeChanged = null
+    #wasmResourcesLoaded = false
+    #pendingSnippetLoad = false
+    #defaultFingerprint = null
 
     connect() {
         this.#debug = this.application.debug
@@ -16,17 +20,86 @@ export default class extends Controller {
         this.#log('Snippets URL:', this.snippetsUrlValue)
 
         this.#boundHandleCodeChanged = this.#handleCodeChanged.bind(this)
-        this.element.addEventListener('code-changed', this.#boundHandleCodeChanged)
+        this.element.addEventListener('code-editor:code-changed', this.#boundHandleCodeChanged)
     }
 
     disconnect() {
         if (this.#boundHandleCodeChanged) {
-            this.element.removeEventListener('code-changed', this.#boundHandleCodeChanged)
+            this.element.removeEventListener('code-editor:code-changed', this.#boundHandleCodeChanged)
         }
     }
 
-    codeEditorOutletConnected() {
-        this.loadCodeFromUrl()
+    async onWasmResourcesLoaded() {
+        this.#log('WASM resources loaded in share controller')
+        this.#wasmResourcesLoaded = true
+
+        this.#createDefaultFingerprint()
+
+        if (this.#pendingSnippetLoad) {
+            this.#log('Loading pending snippet')
+            this.loadCodeFromUrl()
+        }
+    }
+
+    async #createDefaultFingerprint() {
+        try {
+            const result = await this.wasmOutlet.readFile('/workspace/code.php')
+            if (result.success) {
+                let defaultCode
+                if (typeof result.content === 'string') {
+                    defaultCode = result.content
+                } else if (result.content instanceof Uint8Array) {
+                    defaultCode = new TextDecoder().decode(result.content)
+                } else if (result.content && result.content.buffer) {
+                    defaultCode = new TextDecoder().decode(result.content.buffer)
+                } else {
+                    this.#logError('Unexpected content type from readFile:', typeof result.content)
+                    return
+                }
+                this.#defaultFingerprint = await createFingerprint(defaultCode, [])
+                this.#log('Default code fingerprint:', this.#defaultFingerprint)
+            }
+        } catch (error) {
+            this.#logError('Failed to create default fingerprint:', error)
+        }
+    }
+
+    async #checkSnippetExistsInR2(snippetId) {
+        try {
+            const snippetsBaseUrl = this.snippetsUrlValue
+            const metadataUrl = `${snippetsBaseUrl}/snippets/${snippetId}/snippet.json`
+
+            this.#log('Checking if snippet exists in R2:', metadataUrl)
+
+            const response = await fetch(metadataUrl, { method: 'HEAD' })
+
+            if (response.ok) {
+                this.#log('Snippet exists in R2')
+                return true
+            }
+
+            this.#log('Snippet does not exist in R2')
+            return false
+        } catch (error) {
+            this.#logError('Failed to check R2:', error)
+            return false
+        }
+    }
+
+    wasmOutletConnected() {
+        const query = new URLSearchParams(window.location.search)
+        const hasSnippet = query.has('snippet')
+
+        if (!hasSnippet) {
+            return
+        }
+
+        if (this.#wasmResourcesLoaded) {
+            this.loadCodeFromUrl()
+        } else {
+            this.#log('WASM not ready yet, deferring snippet load')
+            this.#pendingSnippetLoad = true
+        }
     }
 
     /**
@@ -38,7 +111,8 @@ export default class extends Controller {
         if (query.has('snippet')) {
             const snippetId = query.get('snippet')
             this.#log('Loading snippet from R2:', snippetId)
-            this.loadSnippetFromR2(snippetId)
+            this.#pendingSnippetLoad = false
+            this.#loadSnippetFromR2(snippetId)
         }
     }
 
@@ -46,7 +120,7 @@ export default class extends Controller {
      * Load snippet directly from R2 by ID
      * No API call needed - fetch directly from public R2 bucket
      */
-    async loadSnippetFromR2(snippetId) {
+    async #loadSnippetFromR2(snippetId) {
         try {
             const snippetsBaseUrl = this.snippetsUrlValue
             const baseUrl = `${snippetsBaseUrl}/snippets/${snippetId}`
@@ -73,7 +147,9 @@ export default class extends Controller {
             }
             const code = await codeResponse.text()
 
-            this.codeEditorOutlet.setValue(code)
+            this.codeEditorOutlet.setCode(code)
+
+            await this.wasmOutlet.writeFile('/workspace/code.php', code)
 
             const datasetFiles = metadata.files
                 .filter(f => f.type === 'dataset')
@@ -102,7 +178,6 @@ export default class extends Controller {
 
                     for (const datasetFile of datasetFiles) {
                         try {
-                            // Fetch dataset from R2
                             const datasetUrl = `${baseUrl}/datasets/${datasetFile.name}`
                             this.#log('Fetching dataset:', datasetUrl)
 
@@ -114,16 +189,18 @@ export default class extends Controller {
                             const arrayBuffer = await response.arrayBuffer()
                             const uint8Array = new Uint8Array(arrayBuffer)
 
-                            // Upload to WASM filesystem
                             this.#log('Uploading to WASM:', datasetFile.name, `(${uint8Array.length} bytes)`)
-                            const success = this.wasmOutlet.uploadFile(datasetFile.name, uint8Array)
+                            const result = await this.wasmOutlet.writeFile(
+                                `/workspace/uploads/${datasetFile.name}`,
+                                uint8Array
+                            )
 
-                            if (success) {
+                            if (result.success) {
                                 this.#log('Successfully loaded dataset:', datasetFile.name)
                                 loaded++
                             } else {
-                                this.#logError('uploadFile returned false for:', datasetFile.name)
-                                throw new Error('Failed to upload to WASM - uploadFile returned false')
+                                this.#logError('writeFile returned false for:', datasetFile.name)
+                                throw new Error('Failed to upload to WASM - writeFile returned false')
                             }
                         } catch (error) {
                             this.#logError('Failed to load dataset:', datasetFile.name, error)
@@ -142,10 +219,7 @@ export default class extends Controller {
                 }
             }
 
-            if (this.hasWasmOutlet) {
-                this.dispatch('datasets-loaded', { bubbles: true })
-            }
-
+            this.dispatch('datasets-loaded', { bubbles: true })
             this.dispatch('loaded-from-url', { bubbles: true })
             this.#showNotification('Snippet loaded successfully!', 'success')
 
@@ -161,19 +235,63 @@ export default class extends Controller {
      * Share code via API
      */
     async share() {
-        if (!this.hasCodeEditorOutlet) {
-            this.#logError('Code editor outlet not found')
-            return
-        }
+        await Promise.all([
+            this.codeEditorOutlet.onLoad(),
+            this.wasmOutlet.onLoad(),
+            this.turnstileOutlet.onLoad()
+        ])
 
         const code = this.codeEditorOutlet.getCode()
 
+        await this.wasmOutlet.writeFile('/workspace/code.php', code)
+
         try {
-            await this.uploadSnippetToAPI(code)
+            const files = await this.#collectUploadedFiles()
+            const fileBlobs = files.map(f => f.blob)
+            const fingerprint = await createFingerprint(code, fileBlobs)
+
+            this.#log('Snippet fingerprint:', fingerprint)
+
+            if (this.#defaultFingerprint && fingerprint === this.#defaultFingerprint) {
+                this.#log('Code matches default, not uploading')
+                this.#showNotification('You are trying to share default code. Please modify the code first.', 'info')
+                return
+            }
+
+            const snippetExists = await this.#checkSnippetExistsInR2(fingerprint)
+            if (snippetExists) {
+                this.#log('Snippet already exists in R2, skipping upload')
+                const shareUrl = `${window.location.origin}${window.location.pathname}?snippet=${fingerprint}`
+
+                const currentUrl = new URL(window.location.href)
+                const currentSnippetId = currentUrl.searchParams.get('snippet')
+
+                if (currentSnippetId !== fingerprint) {
+                    window.history.pushState({}, '', shareUrl)
+                    this.#snippetLoaded = true
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        await navigator.clipboard.writeText(shareUrl)
+                        this.#showNotification('Snippet already exists! Link copied to clipboard.', 'success', shareUrl)
+                    } catch (clipboardError) {
+                        this.#log('Clipboard write failed:', clipboardError)
+                        this.#showNotification(`Snippet already exists: ${shareUrl}`, 'success', shareUrl)
+                    }
+                } else {
+                    prompt('Copy this link:', shareUrl)
+                }
+                return
+            }
+
+            await this.#uploadSnippetToAPI(code, fingerprint, files)
             this.#log()
 
         } catch (error) {
-            this.#logError('[ShareCode] API upload failed:', error)
+            console.error('[ShareCode] Share failed:', error)
+            console.error('[ShareCode] Error stack:', error.stack)
+            this.#logError('[ShareCode] Share failed:', error)
             this.#showNotification(`Failed to share: ${error.message}`, 'error')
         }
     }
@@ -181,34 +299,26 @@ export default class extends Controller {
     /**
      * Upload snippet to API
      */
-    async uploadSnippetToAPI(code) {
-        this.#log('Uploading to API')
+    async #uploadSnippetToAPI(code, snippetId, files) {
+        this.#log('Uploading to API with snippet ID:', snippetId)
 
         try {
-            const turnstileToken = await this.getTurnstileToken()
+            const turnstileToken = await this.#getTurnstileToken()
             const formData = new FormData()
             const codeBlob = new Blob([code], { type: 'text/plain' })
 
+            formData.append('snippet_id', snippetId)
             formData.append('code', codeBlob, 'code.php')
 
-            if (this.hasPlaygroundOutlet && this.hasWasmOutlet) {
-                if (typeof this.playgroundOutlet.getSelectedDatasets === 'function') {
-                    const datasets = this.playgroundOutlet.getSelectedDatasets()
-                    this.#log('Adding', datasets.length, 'datasets')
-
-                    for (let i = 0; i < datasets.length && i < 3; i++) {
-                        const dataset = datasets[i]
-                        // Read file from WASM
-                        const content = this.wasmOutlet.readFile(dataset.path)
-                        if (content) {
-                            const blob = new Blob([content], { type: 'application/octet-stream' })
-                            formData.append(`dataset_${i + 1}`, blob, dataset.name)
-                        }
-                    }
-                }
+            this.#log('Adding', files.length, 'datasets')
+            for (let i = 0; i < files.length && i < 3; i++) {
+                const file = files[i]
+                formData.append(`dataset_${i + 1}`, file.blob, file.name)
             }
 
             const apiUrl = this.apiUrlValue
+            this.#log('Sending request to:', apiUrl)
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -217,18 +327,24 @@ export default class extends Controller {
                 body: formData
             })
 
+            this.#log('Response status:', response.status)
             const data = await response.json()
+            this.#log('Response data:', data)
 
             if (!response.ok || !data.success) {
+                this.#logError('API error response:', data)
                 throw new Error(data.error || `HTTP ${response.status}`)
             }
 
-            const snippetId = data.snippet_id
             const shareUrl = `${window.location.origin}${window.location.pathname}?snippet=${snippetId}`
 
-            window.history.pushState({}, '', shareUrl)
+            const currentUrl = new URL(window.location.href)
+            const currentSnippetId = currentUrl.searchParams.get('snippet')
 
-            this.#snippetLoaded = true
+            if (currentSnippetId !== snippetId) {
+                window.history.pushState({}, '', shareUrl)
+                this.#snippetLoaded = true
+            }
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 try {
@@ -251,9 +367,9 @@ export default class extends Controller {
     }
 
     /**
-     * Get Turnstile token (Task 12 - completed)
+     * Get Turnstile token
      */
-    async getTurnstileToken() {
+    async #getTurnstileToken() {
         if (!this.hasTurnstileOutlet) {
             this.#logError('Turnstile outlet not available')
             throw new Error('Turnstile not available')
@@ -281,15 +397,23 @@ export default class extends Controller {
         }
     }
 
-    #waitForEditorAndSetValue(code, attempts = 0) {
-        const maxAttempts = 50
-        if (this.codeEditorOutlet.isReady()) {
-            this.codeEditorOutlet.setValue(code)
-        } else if (attempts < maxAttempts) {
-            setTimeout(() => {
-                this.#waitForEditorAndSetValue(code, attempts + 1)
-            }, 100)
+    async #collectUploadedFiles() {
+        const files = []
+
+        if (this.hasPlaygroundUploadOutlet) {
+            const datasets = await this.playgroundUploadOutlet.listFiles()
+
+            for (let i = 0; i < datasets.length && i < 3; i++) {
+                const dataset = datasets[i]
+                const result = await this.wasmOutlet.readFile(dataset.path)
+                if (result.success) {
+                    const blob = new Blob([result.content], { type: 'application/octet-stream' })
+                    files.push({ name: dataset.name, blob })
+                }
+            }
         }
+
+        return files
     }
 
     #showNotification(message, type = 'info', link = null) {

@@ -98,6 +98,23 @@ export default class extends Controller {
         return this.#editorReady && this.#editor !== null
     }
 
+    isLoaded() {
+        return this.#editorReady && this.#editor !== null
+    }
+
+    async onLoad() {
+        if (this.isLoaded()) return Promise.resolve()
+
+        return new Promise(resolve => {
+            const check = setInterval(() => {
+                if (this.isLoaded()) {
+                    clearInterval(check)
+                    resolve()
+                }
+            }, 50)
+        })
+    }
+
     disconnect() {
         if (this.#editor) {
             this.#editor.destroy()
@@ -109,11 +126,11 @@ export default class extends Controller {
         return this.#editor ? this.#editor.state.doc.toString() : ''
     }
 
-    setValue(code) {
-        this.#log('setValue called with code length:', code?.length)
+    setCode(code) {
+        this.#log('setCode called with code length:', code?.length)
 
         if (this.#editor) {
-            this.#log('Setting value immediately')
+            this.#log('Setting code immediately')
             this.#editor.dispatch({
                 changes: {
                     from: 0,
@@ -122,6 +139,10 @@ export default class extends Controller {
                 }
             })
         }
+    }
+
+    setValue(code) {
+        this.setCode(code)
     }
 
     highlightError(errorInfo) {

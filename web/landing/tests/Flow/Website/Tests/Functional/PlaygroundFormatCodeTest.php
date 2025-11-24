@@ -10,12 +10,13 @@ final class PlaygroundFormatCodeTest extends EndToEndTestCase
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="formatButton"]', 3);
+
+        $this->waitForWasmReady($client);
 
         $this->setPlaygroundCode($client, "<?php\ndf()->read(from_array([['id'=>1,'name'=>'Test']]))->run();");
-        $client->waitForVisibility('[data-playground-target="formatButton"]', 3);
-        $client->getCrawler()->filter('[data-playground-target="formatButton"]')->click();
-        $client->wait(2);
+
+        $client->executeScript('Array.from(document.querySelectorAll(\'button\')).find(b => b.textContent.includes(\'Format\')).click();');
+        $client->waitForElementToContain('[data-playground-output-target="container"]', 'formatted', 10);
 
         self::assertStringContainsString("'id' => 1", $this->getPlaygroundCode($client));
         self::assertStringNotContainsString("'id'=>1", $this->getPlaygroundCode($client));

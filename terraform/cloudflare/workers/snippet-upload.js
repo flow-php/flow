@@ -1,3 +1,27 @@
+// =============================================================================
+// Constants
+// =============================================================================
+
+const RATE_LIMITS = {
+  HOURLY_PER_IP: 30,
+  DAILY_PER_IP: 100,
+  DAILY_GLOBAL: 3500,
+  HOUR_MS: 3600000,
+  DAY_MS: 86400000
+}
+
+const FILE_LIMITS = {
+  CODE_MAX_SIZE: 1048576,      // 1MB
+  DATASET_MAX_SIZE: 2097152,   // 2MB
+  TOTAL_MAX_SIZE: 7340032,     // 7MB
+  MAX_DATASETS: 3,
+  SNIPPET_EXPIRY_DAYS: 90
+}
+
+const REQUEST_LIMITS = {
+  MAX_BODY_SIZE: 10485760      // 10MB
+}
+
 /**
  * Durable Object for rate limiting snippet uploads
  *
@@ -46,31 +70,33 @@ export class SnippetRateLimiter {
       return this.#jsonResponse({ allowed: false, error: 'IP hash required' }, 400)
     }
 
+    await this.#ensureSchema()
+
     const now = Date.now()
-    const hourAgo = now - 3600000
-    const dayAgo = now - 86400000
+    const hourAgo = now - RATE_LIMITS.HOUR_MS
+    const dayAgo = now - RATE_LIMITS.DAY_MS
 
     const hourlyUploads = await this.#getUploadCount(ipHash, hourAgo)
     const dailyUploads = await this.#getUploadCount(ipHash, dayAgo)
     const globalDailyUploads = await this.#getGlobalUploadCount(dayAgo)
 
-    if (hourlyUploads >= 30) {
+    if (hourlyUploads >= RATE_LIMITS.HOURLY_PER_IP) {
       return this.#jsonResponse({
         allowed: false,
-        error: 'Rate limit exceeded: maximum 30 uploads per hour',
-        retry_after: await this.#getRetryAfter(ipHash, 3600000)
+        error: `Rate limit exceeded: maximum ${RATE_LIMITS.HOURLY_PER_IP} uploads per hour`,
+        retry_after: await this.#getRetryAfter(ipHash, RATE_LIMITS.HOUR_MS)
       }, 429)
     }
 
-    if (dailyUploads >= 100) {
+    if (dailyUploads >= RATE_LIMITS.DAILY_PER_IP) {
       return this.#jsonResponse({
         allowed: false,
-        error: 'Rate limit exceeded: maximum 100 uploads per day',
-        retry_after: await this.#getRetryAfter(ipHash, 86400000)
+        error: `Rate limit exceeded: maximum ${RATE_LIMITS.DAILY_PER_IP} uploads per day`,
+        retry_after: await this.#getRetryAfter(ipHash, RATE_LIMITS.DAY_MS)
       }, 429)
     }
 
-    if (globalDailyUploads >= 3500) {
+    if (globalDailyUploads >= RATE_LIMITS.DAILY_GLOBAL) {
       return this.#jsonResponse({
         allowed: false,
         error: 'Service temporarily unavailable: daily upload quota reached',
@@ -83,9 +109,9 @@ export class SnippetRateLimiter {
     return this.#jsonResponse({
       allowed: true,
       remaining: {
-        hourly: 30 - hourlyUploads - 1,
-        daily: 100 - dailyUploads - 1,
-        global: 3500 - globalDailyUploads - 1
+        hourly: RATE_LIMITS.HOURLY_PER_IP - hourlyUploads - 1,
+        daily: RATE_LIMITS.DAILY_PER_IP - dailyUploads - 1,
+        global: RATE_LIMITS.DAILY_GLOBAL - globalDailyUploads - 1
       }
     })
   }
@@ -113,7 +139,7 @@ export class SnippetRateLimiter {
     return result.toArray()[0]?.count || 0
   }
 
-  async #recordUpload(ipHash, timestamp) {
+  async #ensureSchema() {
     const sql = this.#state.storage.sql
 
     await sql.exec(
@@ -133,6 +159,10 @@ export class SnippetRateLimiter {
       `CREATE INDEX IF NOT EXISTS idx_timestamp
        ON uploads(timestamp)`
     )
+  }
+
+  async #recordUpload(ipHash, timestamp) {
+    const sql = this.#state.storage.sql
 
     await sql.exec(
       `INSERT INTO uploads (ip_hash, timestamp) VALUES (?, ?)`,
@@ -140,7 +170,7 @@ export class SnippetRateLimiter {
       timestamp
     )
 
-    await this.#cleanupOldRecords(timestamp - 86400000)
+    await this.#cleanupOldRecords(timestamp - RATE_LIMITS.DAY_MS)
   }
 
   async #cleanupOldRecords(beforeTimestamp) {
@@ -153,7 +183,7 @@ export class SnippetRateLimiter {
 
   async #getRetryAfter(ipHash, windowMs) {
     const sql = this.#state.storage.sql
-    const limit = windowMs === 3600000 ? 30 : 100
+    const limit = windowMs === RATE_LIMITS.HOUR_MS ? RATE_LIMITS.HOURLY_PER_IP : RATE_LIMITS.DAILY_PER_IP
     const result = await sql.exec(
       `SELECT MIN(timestamp) as oldest FROM uploads
        WHERE ip_hash = ?
@@ -193,7 +223,7 @@ export default {
   async fetch(request, env, ctx) {
     try {
       const url = new URL(request.url)
-      const corsHeaders = getCorsHeaders(request)
+      const corsHeaders = getCorsHeaders(request, env)
 
       if (request.method === 'OPTIONS') {
         return handleCors(corsHeaders)
@@ -203,13 +233,25 @@ export default {
         return await handleUpload(request, env, corsHeaders)
       }
 
+      if (url.pathname.startsWith('/snippets/') && request.method === 'GET') {
+        // Only serve files via worker in local dev (for testing with emulated R2)
+        // In production, files are served directly from public R2 domain
+        if (env.ENABLE_R2_PROXY === 'true') {
+          return await handleGetSnippet(url.pathname, env, corsHeaders)
+        }
+        return jsonResponse({
+          success: false,
+          error: 'Files are served from public R2 domain in production'
+        }, 404, corsHeaders)
+      }
+
       return jsonResponse({ success: false, error: 'Not found' }, 404, corsHeaders)
     } catch (error) {
       console.error('Worker error:', error)
       return jsonResponse(
         { success: false, error: 'Internal server error' },
         500,
-        getCorsHeaders(request)
+        getCorsHeaders(request, env)
       )
     }
   }
@@ -230,7 +272,7 @@ async function handleUpload(request, env, corsHeaders) {
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
     const ipHash = await hashIP(ip)
 
-    const rateLimitResult = await checkRateLimit(ipHash, env.RATE_LIMITER)
+    const rateLimitResult = await checkRateLimit(ipHash, env.RATE_LIMITER, env)
     if (!rateLimitResult.allowed) {
       console.warn('[Upload] Rate limit exceeded for IP hash:', ipHash.substring(0, 8))
       return jsonResponse({
@@ -254,6 +296,23 @@ async function handleUpload(request, env, corsHeaders) {
     // 3. Parse and validate upload
     console.log('[Upload] Step 3: Validating files')
     const formData = await request.formData()
+
+    const snippetId = formData.get('snippet_id')
+    if (!snippetId) {
+      return jsonResponse({
+        success: false,
+        error: 'snippet_id is required'
+      }, 400, corsHeaders)
+    }
+
+    const snippetIdValidation = validateSnippetId(snippetId)
+    if (!snippetIdValidation.valid) {
+      return jsonResponse({
+        success: false,
+        error: snippetIdValidation.error
+      }, 400, corsHeaders)
+    }
+
     const validation = await validateUpload(formData)
 
     if (!validation.valid) {
@@ -265,21 +324,24 @@ async function handleUpload(request, env, corsHeaders) {
     }
 
     // 4. Upload to R2
-    console.log('[Upload] Step 4: Uploading to R2')
+    console.log('[Upload] Step 4: Uploading to R2 with snippet ID:', snippetId)
     const uploadResult = await uploadSnippetToR2(
+      snippetId,
       validation.files,
       ipHash,
       env.SNIPPETS_BUCKET
     )
 
     // 5. Return success response
-    console.log('[Upload] Upload successful:', uploadResult.snippet_id)
+    console.log('[Upload] Upload successful:', uploadResult.snippet_id, 'message:', uploadResult.message)
     return jsonResponse({
       success: true,
       snippet_id: uploadResult.snippet_id,
+      message: uploadResult.message,
       url: uploadResult.url,
-      expires_at: uploadResult.expires_at
-    }, 201, corsHeaders)
+      expires_at: uploadResult.expires_at,
+      created_at: uploadResult.created_at
+    }, uploadResult.message === 'exists' ? 200 : 201, corsHeaders)
 
   } catch (error) {
     console.error('[Upload] Error:', error)
@@ -298,9 +360,19 @@ async function handleUpload(request, env, corsHeaders) {
  * Check rate limit using Durable Object
  * @param {string} ipHash - Hashed IP address
  * @param {DurableObjectNamespace} rateLimiterNamespace - Rate limiter namespace
+ * @param {object} env - Environment bindings (for checking RATE_LIMITER_MODE)
  * @returns {Promise<object>} - { allowed: boolean, error?: string, retry_after?: number, status?: number }
  */
-async function checkRateLimit(ipHash, rateLimiterNamespace) {
+async function checkRateLimit(ipHash, rateLimiterNamespace, env) {
+  const mode = env?.RATE_LIMITER_MODE || 'enforce'
+
+  // Mode: bypass - completely skip rate limiting (for testing)
+  if (mode === 'bypass') {
+    console.log('[RateLimit] Mode: bypass - skipping rate limit check')
+    return { allowed: true }
+  }
+
+  // Mode: enforce - full production rate limiting
   try {
     const id = rateLimiterNamespace.idFromName('rate-limiter')
     const stub = rateLimiterNamespace.get(id)
@@ -325,7 +397,12 @@ async function checkRateLimit(ipHash, rateLimiterNamespace) {
     return result
   } catch (error) {
     console.error('[RateLimit] Error checking rate limit:', error)
-    return { allowed: true }
+    // Fail closed for security - deny on error
+    return {
+      allowed: false,
+      error: 'Rate limiting service temporarily unavailable',
+      status: 503
+    }
   }
 }
 
@@ -410,27 +487,58 @@ async function verifyTurnstile(request, secretKey, env) {
 }
 
 /**
- * Inline nanoid implementation using Web Crypto API
- * Generates URL-safe random IDs (default 21 characters)
- * No external dependencies needed - uses Cloudflare Workers' crypto API
+ * Validate snippet ID (SHA-256 fingerprint)
+ * @param {string} snippetId - Snippet ID
+ * @returns {object} - { valid: boolean, error?: string }
  */
-const urlAlphabet = 'useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict'
-
-const nanoid = (size = 21) => {
-  let id = ''
-  const bytes = crypto.getRandomValues(new Uint8Array(size))
-  while (size--) {
-    id += urlAlphabet[bytes[size] & 63]
+function validateSnippetId(snippetId) {
+  if (!snippetId || typeof snippetId !== 'string') {
+    return { valid: false, error: 'Snippet ID is required' }
   }
-  return id
+
+  if (snippetId.length !== 64) {
+    return { valid: false, error: 'Snippet ID must be 64 characters (SHA-256 hex)' }
+  }
+
+  const hexPattern = /^[0-9a-f]{64}$/
+  if (!hexPattern.test(snippetId)) {
+    return { valid: false, error: 'Snippet ID must be a valid SHA-256 hex string (lowercase)' }
+  }
+
+  return { valid: true }
 }
 
 /**
- * Generate snippet ID using nanoid
- * @returns {string} - Snippet ID (21 character nanoid)
+ * Validate filename for security (no sanitization - reject invalid names)
+ * @param {string} filename - File name
+ * @returns {object} - { valid: boolean, error?: string }
  */
-function generateSnippetId() {
-  return nanoid()
+function validateFilename(filename) {
+  if (!filename || filename.length === 0) {
+    return { valid: false, error: 'Filename cannot be empty' }
+  }
+
+  if (filename.length > 255) {
+    return { valid: false, error: 'Filename too long (max 255 characters)' }
+  }
+
+  // Check for path traversal attempts
+  if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    return { valid: false, error: 'Filename cannot contain path separators or parent directory references' }
+  }
+
+  // Only allow safe characters: alphanumeric, dash, underscore, dot, parentheses, spaces
+  const safePattern = /^[a-zA-Z0-9._\-() ]+$/
+  if (!safePattern.test(filename)) {
+    return { valid: false, error: 'Filename contains invalid characters. Only letters, numbers, spaces, dash, underscore, dot, and parentheses are allowed' }
+  }
+
+  // Must have an extension
+  if (!filename.includes('.')) {
+    return { valid: false, error: 'Filename must have an extension' }
+  }
+
+  return { valid: true }
 }
 
 /**
@@ -440,6 +548,12 @@ function generateSnippetId() {
  * @returns {object} - { valid: boolean, error?: string }
  */
 function validateFileType(filename, allowedType) {
+  // Validate filename first
+  const filenameCheck = validateFilename(filename)
+  if (!filenameCheck.valid) {
+    return filenameCheck
+  }
+
   const ext = filename.split('.').pop().toLowerCase()
 
   if (allowedType === 'code') {
@@ -462,11 +576,11 @@ function validateFileType(filename, allowedType) {
  * @returns {object} - { valid: boolean, error?: string }
  */
 function validateFileSize(size, fileType) {
-  const maxSize = fileType === 'code' ? 1048576 : 2097152 // 1MB or 2MB
+  const maxSize = fileType === 'code' ? FILE_LIMITS.CODE_MAX_SIZE : FILE_LIMITS.DATASET_MAX_SIZE
   const maxSizeMB = fileType === 'code' ? '1MB' : '2MB'
 
   if (size > maxSize) {
-    const sizeMB = (size / 1048576).toFixed(2)
+    const sizeMB = (size / FILE_LIMITS.CODE_MAX_SIZE).toFixed(2)
     return {
       valid: false,
       error: `${fileType} file too large: ${sizeMB}MB (max ${maxSizeMB})`
@@ -505,7 +619,7 @@ async function validateUpload(formData) {
   totalSize += codeFile.size
 
   // Check datasets
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= FILE_LIMITS.MAX_DATASETS; i++) {
     const dataset = formData.get(`dataset_${i}`)
     if (dataset) {
       // Validate type
@@ -526,8 +640,8 @@ async function validateUpload(formData) {
   }
 
   // Validate total size (7MB)
-  if (totalSize > 7340032) {
-    const totalMB = (totalSize / 1048576).toFixed(2)
+  if (totalSize > FILE_LIMITS.TOTAL_MAX_SIZE) {
+    const totalMB = (totalSize / FILE_LIMITS.CODE_MAX_SIZE).toFixed(2)
     return {
       valid: false,
       error: `Total upload size ${totalMB}MB exceeds 7MB limit`
@@ -565,23 +679,41 @@ async function hashIP(ip) {
 
 /**
  * Upload snippet to R2
+ * @param {string} snippetId - Client-provided snippet ID (SHA-256 fingerprint)
  * @param {object} validatedFiles - { code: File, datasets: File[] }
  * @param {string} ipHash - Hashed IP
  * @param {R2Bucket} bucket - R2 bucket binding
  * @returns {Promise<object>} - Snippet info
  */
-async function uploadSnippetToR2(validatedFiles, ipHash, bucket) {
-  // Generate ID
-  const snippetId = generateSnippetId()
+async function uploadSnippetToR2(snippetId, validatedFiles, ipHash, bucket) {
   const basePath = `snippets/${snippetId}`
+  const metadataKey = `${basePath}/snippet.json`
 
-  console.log(`[R2 Upload] Uploading to ${basePath}`)
+  console.log(`[R2 Upload] Checking if snippet exists: ${snippetId}`)
 
-  // Timestamps
+  const existingMetadata = await bucket.head(metadataKey)
+
+  if (existingMetadata) {
+    console.log(`[R2 Upload] Snippet already exists: ${snippetId}`)
+
+    const existingObject = await bucket.get(metadataKey)
+    const existingData = await existingObject.json()
+
+    return {
+      snippet_id: snippetId,
+      message: 'exists',
+      url: `https://flow-php.com/playground?snippet=${snippetId}`,
+      expires_at: existingData.expires_at,
+      created_at: existingData.created_at,
+      files_uploaded: existingData.files.length
+    }
+  }
+
+  console.log(`[R2 Upload] Uploading new snippet to ${basePath}`)
+
   const createdAt = new Date().toISOString()
-  const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
+  const expiresAt = new Date(Date.now() + FILE_LIMITS.SNIPPET_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString()
 
-  // Upload code file
   const codeStream = validatedFiles.code.stream()
   await bucket.put(`${basePath}/code.php`, codeStream, {
     httpMetadata: {
@@ -597,7 +729,6 @@ async function uploadSnippetToR2(validatedFiles, ipHash, bucket) {
 
   let totalSize = validatedFiles.code.size
 
-  // Upload datasets to datasets/ subfolder
   for (const dataset of validatedFiles.datasets) {
     const datasetStream = dataset.stream()
     await bucket.put(`${basePath}/datasets/${dataset.name}`, datasetStream, {
@@ -615,7 +746,6 @@ async function uploadSnippetToR2(validatedFiles, ipHash, bucket) {
     totalSize += dataset.size
   }
 
-  // Create metadata
   const metadata = {
     snippet_id: snippetId,
     created_at: createdAt,
@@ -625,9 +755,8 @@ async function uploadSnippetToR2(validatedFiles, ipHash, bucket) {
     ip_hash: ipHash
   }
 
-  // Upload metadata as snippet.json
   await bucket.put(
-    `${basePath}/snippet.json`,
+    metadataKey,
     JSON.stringify(metadata, null, 2),
     {
       httpMetadata: {
@@ -636,13 +765,70 @@ async function uploadSnippetToR2(validatedFiles, ipHash, bucket) {
     }
   )
 
-  console.log(`[R2 Upload] Successfully uploaded snippet ${snippetId}`)
+  console.log(`[R2 Upload] Successfully uploaded new snippet ${snippetId}`)
 
   return {
     snippet_id: snippetId,
+    message: 'created',
     url: `https://flow-php.com/playground?snippet=${snippetId}`,
     expires_at: expiresAt,
+    created_at: createdAt,
     files_uploaded: files.length
+  }
+}
+
+/**
+ * Handle GET request to serve snippet files from R2
+ * For local development only - production uses public R2 URLs
+ * @param {string} pathname - URL pathname like /snippets/{id}/snippet.json
+ * @param {object} env - Environment bindings
+ * @param {object} corsHeaders - CORS headers
+ */
+async function handleGetSnippet(pathname, env, corsHeaders) {
+  try {
+    // Parse path: /snippets/{id}/{file}
+    const pathParts = pathname.split('/').filter(p => p)
+
+    if (pathParts.length < 3 || pathParts[0] !== 'snippets') {
+      return jsonResponse({ error: 'Invalid path' }, 404, corsHeaders)
+    }
+
+    const snippetId = pathParts[1]
+    const fileName = pathParts.slice(2).join('/')
+
+    // Construct R2 key
+    const r2Key = `snippets/${snippetId}/${fileName}`
+
+    // Fetch from R2
+    const object = await env.SNIPPETS_BUCKET.get(r2Key)
+
+    if (!object) {
+      return jsonResponse({ error: 'File not found' }, 404, corsHeaders)
+    }
+
+    // Determine content type
+    let contentType = 'application/octet-stream'
+    if (fileName.endsWith('.json')) {
+      contentType = 'application/json'
+    } else if (fileName.endsWith('.php')) {
+      contentType = 'text/plain; charset=utf-8'
+    } else if (fileName.endsWith('.csv')) {
+      contentType = 'text/csv'
+    } else if (fileName.endsWith('.xml')) {
+      contentType = 'application/xml'
+    }
+
+    return new Response(object.body, {
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=86400, immutable',
+        'X-Content-Type-Options': 'nosniff',
+        ...corsHeaders
+      }
+    })
+  } catch (error) {
+    console.error('[GetSnippet] Error:', error)
+    return jsonResponse({ error: 'Internal error' }, 500, corsHeaders)
   }
 }
 
@@ -653,18 +839,37 @@ async function uploadSnippetToR2(validatedFiles, ipHash, bucket) {
 /**
  * Get CORS headers
  * Allows both production (flow-php.com) and local development (flow-php.wip) domains
+ * In bypass mode (for testing), allows localhost origins
  */
-function getCorsHeaders(request) {
+function getCorsHeaders(request, env) {
+  // In bypass/mock mode, allow any origin for testing
+  if (env?.TURNSTILE_MODE === 'bypass' || env?.TURNSTILE_MODE === 'mock') {
+    const origin = request?.headers?.get('Origin') || '*'
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, CF-Turnstile-Response',
+      'Access-Control-Max-Age': '86400'
+    }
+  }
+
   const origin = request?.headers?.get('Origin') || ''
-  const allowedOrigins = ['https://flow-php.com', 'https://www.flow-php.com', 'https://flow-php.wip']
+
+  // Define allowed origins
+  const allowedOrigins = [
+    'https://flow-php.com',
+    'https://www.flow-php.com',
+    'https://flow-php.wip'
+  ]
 
   const allowOrigin = allowedOrigins.includes(origin) ? origin : 'https://flow-php.com'
 
   return {
     'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, CF-Turnstile-Response',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin'
   }
 }
 
