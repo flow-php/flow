@@ -20,7 +20,7 @@ export default class extends Controller {
     }
 
     onNotification(event) {
-        const { message, type, link } = event.detail
+        const { message, type } = event.detail
         if (this.hasPlaygroundOutputOutlet) {
             this.playgroundOutputOutlet.show({ content: message, type })
         }

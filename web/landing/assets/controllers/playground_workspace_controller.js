@@ -59,7 +59,6 @@ export default class extends Controller {
         this.#renderTree(tree)
 
         const fileCount = workspaceFiles.filter(f => f.type === 'file').length
-        const folderCount = workspaceFiles.filter(f => f.type === 'directory').length
 
         this.dispatch('refreshed', { detail: { fileCount }, bubbles: true })
     }
@@ -78,32 +77,6 @@ export default class extends Controller {
         return new Promise(resolve => {
             this.element.addEventListener('workspace:tree-rendered', resolve, { once: true })
         })
-    }
-
-    async #handleFileClick(event) {
-        const filePath = event.currentTarget.dataset.filePath
-
-        if (!filePath) {
-            return
-        }
-
-        await this.playgroundOutlet.onLoad()
-
-        const fullPath = `${this.rootPathValue}${filePath}`
-        const result = await this.wasmOutlet.readFile(fullPath)
-
-        if (!result.success || !result.content) {
-            return
-        }
-
-        const decoder = new TextDecoder()
-        const content = decoder.decode(result.content)
-
-        await this.codeEditorOutlet.setCode(content)
-        this.#selectedFile = filePath
-        this.#updateSelectedState()
-
-        this.dispatch('file-selected', { detail: { path: filePath, content }, bubbles: true })
     }
 
     #renderTree(tree) {
