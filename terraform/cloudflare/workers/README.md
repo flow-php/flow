@@ -14,13 +14,20 @@
    ```bash
    TURNSTILE_SECRET_KEY=dummy
    TURNSTILE_MODE=bypass
+   ENABLE_R2_PROXY=true
    ```
 
-   **Turnstile Modes**:
+   **Environment Variables**:
+
+   **TURNSTILE_MODE**:
    - `bypass` - Skip verification entirely (fastest, no widget interaction)
    - `mock` - Accept any token without API call (test full widget flow)
    - `mock-fail` - Reject any token (test error handling)
    - `verify` - Full production verification (requires real secret key)
+
+   **ENABLE_R2_PROXY**:
+   - `true` - Worker serves files from emulated R2 (required for local dev)
+   - `false/unset` - Disabled (production uses public R2 domain)
 
 ### Start Local Worker
 

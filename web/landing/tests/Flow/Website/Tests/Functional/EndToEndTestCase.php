@@ -22,7 +22,7 @@ abstract class EndToEndTestCase extends PantherTestCase
 
     protected function clearLocalStorage(Client $client) : void
     {
-        $client->executeScript('window.Stimulus.getControllerForElementAndIdentifier(document.getElementById("playground"), "playground-storage").clearStorage();');
+        $client->executeScript('window.Stimulus.getControllerForElementAndIdentifier(document.getElementById("playground"), "playground-storage").clearCode();');
     }
 
     protected function createTempFile(string $filename, string $content) : string
@@ -51,24 +51,51 @@ abstract class EndToEndTestCase extends PantherTestCase
     {
         return $client->executeScript(
             'const textarea = document.getElementById("code-editor");
-             const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-mirror-editor");
+             const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor");
              return controller.getCode();'
         );
-    }
-
-    protected function saveToLocalStorage(Client $client) : void
-    {
-        $client->executeScript('window.Stimulus.getControllerForElementAndIdentifier(document.getElementById("playground"), "playground-storage").saveCode();');
     }
 
     protected function setPlaygroundCode(Client $client, string $code) : void
     {
         $client->executeScript(\sprintf(
             'const textarea = document.getElementById("code-editor");
-             const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-mirror-editor");
-             controller.setValue(%s);',
+             const controller = window.Stimulus.getControllerForElementAndIdentifier(textarea, "code-editor");
+             controller.setCode(%s);
+             // Manually save to localStorage for tests (bypass debounce)
+             const playground = document.getElementById("playground");
+             const storage = window.Stimulus.getControllerForElementAndIdentifier(playground, "playground-storage");
+             if (storage) {
+                 localStorage.setItem(storage.storageKeyValue || "flow-playground-code", %s);
+             }',
+            \json_encode($code),
             \json_encode($code)
         ));
+    }
+
+    protected function waitForWasmReady(Client $client, int $timeout = 30) : void
+    {
+        $startTime = \time();
+
+        while (\time() - $startTime < $timeout) {
+            $isReady = $client->executeScript(
+                'const playground = document.getElementById("playground");
+                if (!playground) return false;
+                const wasm = window.Stimulus.getControllerForElementAndIdentifier(playground, "wasm");
+                return wasm && wasm.isLoaded() && wasm.areResourcesLoaded();'
+            );
+
+            if ($isReady === true) {
+                // Give a small delay to ensure all event handlers have completed
+                $client->wait(0.5);
+
+                return;
+            }
+
+            $client->wait(0.5);
+        }
+
+        throw new \Exception('WASM did not initialize within ' . $timeout . ' seconds');
     }
 
     protected static function createE2EClient(array $options = []) : Client

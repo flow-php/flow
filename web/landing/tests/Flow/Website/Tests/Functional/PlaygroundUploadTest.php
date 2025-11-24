@@ -10,28 +10,31 @@ final class PlaygroundUploadTest extends EndToEndTestCase
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
 
-        $client->getCrawler()->filter('[data-playground-target="fileInput"]')->sendKeys($this->createTempFile('data.csv', "id,value\n1,100"));
-        $client->wait(1);
-        $client->getCrawler()->filter('[data-playground-target="fileInput"]')->sendKeys($this->createTempFile('data.json', '{"id": 1, "value": 100}'));
-        $client->wait(2);
+        $this->waitForWasmReady($client);
 
-        self::assertStringContainsString('data.csv', $client->getCrawler()->filter('[data-playground-target="fileBrowserContent"]')->text());
-        self::assertStringContainsString('data.json', $client->getCrawler()->filter('[data-playground-target="fileBrowserContent"]')->text());
+        $client->getCrawler()->filter('[data-playground-upload-target="fileInput"]')->sendKeys($this->createTempFile('data.csv', "id,value\n1,100"));
+        $client->waitForElementToContain('[data-playground-workspace-target="tree"]', 'data.csv', 5);
+
+        $client->getCrawler()->filter('[data-playground-upload-target="fileInput"]')->sendKeys($this->createTempFile('data.json', '{"id": 1, "value": 100}'));
+        $client->waitForElementToContain('[data-playground-workspace-target="tree"]', 'data.json', 5);
+
+        self::assertStringContainsString('data.csv', $client->getCrawler()->filter('[data-playground-workspace-target="tree"]')->text());
+        self::assertStringContainsString('data.json', $client->getCrawler()->filter('[data-playground-workspace-target="tree"]')->text());
     }
 
     public function test_upload_single_file() : void
     {
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
-        $client->waitForEnabled('[data-playground-target="runButton"]', 3);
 
-        $client->getCrawler()->filter('[data-playground-target="fileInput"]')->sendKeys(
+        $this->waitForWasmReady($client);
+
+        $client->getCrawler()->filter('[data-playground-upload-target="fileInput"]')->sendKeys(
             $this->createTempFile('test.csv', "id,name\n1,Alice\n2,Bob")
         );
-        $client->wait(2);
+        $client->waitForElementToContain('[data-playground-workspace-target="tree"]', 'test.csv', 5);
 
-        self::assertStringContainsString('test.csv', $client->getCrawler()->filter('[data-playground-target="fileBrowserContent"]')->text());
+        self::assertStringContainsString('test.csv', $client->getCrawler()->filter('[data-playground-workspace-target="tree"]')->text());
     }
 }

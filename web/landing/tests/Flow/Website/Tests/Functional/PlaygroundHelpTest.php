@@ -11,28 +11,30 @@ final class PlaygroundHelpTest extends EndToEndTestCase
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
 
+        $client->waitForVisibility('[data-help-topic="help-about"]', 5);
+
         self::assertEquals('none', $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'));
 
         $client->getCrawler()->filter('[data-help-topic="help-about"]')->click();
-        $client->wait(1);
+        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
 
         self::assertNotEquals('none', $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'));
         self::assertStringContainsString('Flow PHP Playground', $client->getCrawler()->filter('#help-about')->text());
 
-        $client->getCrawler()->filter('[data-action="click->playground-help#close"]')->click();
-        $client->wait(1);
+        $client->executeScript('document.querySelector(\'[data-action="click->playground-help#close"]\').click();');
+        $client->waitForInvisibility('[data-playground-help-target="helpSection"]', 3);
 
         $client->executeScript('document.querySelector(\'[data-help-topic="help-navigation"]\').click();');
-        $client->wait(1);
+        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
 
         self::assertNotEquals('none', $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'));
         self::assertStringContainsString('Action Buttons', $client->getCrawler()->filter('#help-navigation')->text());
 
-        $client->getCrawler()->filter('[data-action="click->playground-help#close"]')->click();
-        $client->wait(1);
+        $client->executeScript('document.querySelector(\'[data-action="click->playground-help#close"]\').click();');
+        $client->waitForInvisibility('[data-playground-help-target="helpSection"]', 3);
 
         $client->executeScript('document.querySelector(\'[data-help-topic="help-workspace"]\').click();');
-        $client->wait(1);
+        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
 
         self::assertNotEquals('none', $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'));
         self::assertStringContainsString('Workspace', $client->getCrawler()->filter('#help-workspace')->text());
@@ -43,13 +45,15 @@ final class PlaygroundHelpTest extends EndToEndTestCase
         $client = self::createE2EClient();
         $client->request('GET', '/playground');
 
+        $client->waitForVisibility('[data-help-topic="help-about"]', 5);
+
         $client->getCrawler()->filter('[data-help-topic="help-about"]')->click();
-        $client->wait(1);
+        $client->waitForVisibility('[data-playground-help-target="helpSection"]', 3);
 
         self::assertNotEquals('none', $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'));
 
-        $client->getCrawler()->filter('[data-action="click->playground-help#close"]')->click();
-        $client->wait(1);
+        $client->executeScript('document.querySelector(\'[data-action="click->playground-help#close"]\').click();');
+        $client->waitForInvisibility('[data-playground-help-target="helpSection"]', 3);
 
         self::assertEquals('none', $client->getCrawler()->filter('[data-playground-help-target="helpSection"]')->getCssValue('display'));
     }

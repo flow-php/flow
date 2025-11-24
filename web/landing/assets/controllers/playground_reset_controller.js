@@ -8,7 +8,7 @@ export default class extends Controller {
             event.preventDefault()
         } else {
             if (this.hasPlaygroundStorageOutlet) {
-                this.playgroundStorageOutlet.clearStorage()
+                this.playgroundStorageOutlet.clearCode()
             }
         }
     }

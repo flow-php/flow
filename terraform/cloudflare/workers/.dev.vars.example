@@ -8,3 +8,13 @@ TURNSTILE_SECRET_KEY=dummy
 # - mock-fail: Reject any token (test error handling and failure scenarios)
 # - verify: Full production verification with Cloudflare API (default if not set)
 TURNSTILE_MODE=bypass
+
+# Rate limiter mode:
+# - bypass: Skip rate limiting entirely (for testing)
+# - enforce: Full rate limiting enabled (default if not set, used in production)
+RATE_LIMITER_MODE=bypass
+
+# Enable R2 proxy for local development
+# - true: Worker serves files from emulated R2 (required for local dev)
+# - false/unset: Files served from public R2 domain (production)
+ENABLE_R2_PROXY=true
