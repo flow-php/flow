@@ -187,6 +187,8 @@ jobs:
         env:
           SCHEME: https
           DOMAIN: flow-php.com
+          PLAYGROUND_API_URL: https://flow-php.com/api/playground/snippets
+          PLAYGROUND_SNIPPETS_URL: https://playground-snippets.flow-php.com
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           UMAMI_ID: '${{ vars.UMAMI_ID }}'
           FLOW_VERSION: ${{ steps.flow_version.outputs.tag }}
