@@ -102,9 +102,6 @@ export default class extends Controller {
         }
     }
 
-    /**
-     * Load code from URL - check for ?snippet= parameter
-     */
     loadCodeFromUrl() {
         const query = new URLSearchParams(window.location.search)
 
@@ -116,10 +113,6 @@ export default class extends Controller {
         }
     }
 
-    /**
-     * Load snippet directly from R2 by ID
-     * No API call needed - fetch directly from public R2 bucket
-     */
     async #loadSnippetFromR2(snippetId) {
         try {
             const snippetsBaseUrl = this.snippetsUrlValue
@@ -231,9 +224,6 @@ export default class extends Controller {
         }
     }
 
-    /**
-     * Share code via API
-     */
     async share() {
         await Promise.all([
             this.codeEditorOutlet.onLoad(),
@@ -286,8 +276,6 @@ export default class extends Controller {
             }
 
             await this.#uploadSnippetToAPI(code, fingerprint, files)
-            this.#log()
-
         } catch (error) {
             console.error('[ShareCode] Share failed:', error)
             console.error('[ShareCode] Error stack:', error.stack)
@@ -296,9 +284,6 @@ export default class extends Controller {
         }
     }
 
-    /**
-     * Upload snippet to API
-     */
     async #uploadSnippetToAPI(code, snippetId, files) {
         this.#log('Uploading to API with snippet ID:', snippetId)
 
@@ -357,18 +342,12 @@ export default class extends Controller {
             } else {
                 prompt('Copy this link:', shareUrl)
             }
-
-            return { success: true }
-
         } catch (error) {
             console.error('[ShareCode] Upload error:', error)
             throw error
         }
     }
 
-    /**
-     * Get Turnstile token
-     */
     async #getTurnstileToken() {
         if (!this.hasTurnstileOutlet) {
             this.#logError('Turnstile outlet not available')
@@ -385,9 +364,6 @@ export default class extends Controller {
         }
     }
 
-    /**
-     * Handle code changes - clear snippet URL when user edits code
-     */
     #handleCodeChanged() {
         if (this.#snippetLoaded) {
             this.#log('Code changed, clearing snippet URL from browser')
