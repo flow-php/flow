@@ -55,6 +55,7 @@ jobs:
           TURNSTILE_SECRET_KEY=dummy
           TURNSTILE_MODE=bypass
           ENABLE_R2_PROXY=true
+          RATE_LIMITER_MODE=bypass
           EOF
         working-directory: "terraform/cloudflare/workers"
 
