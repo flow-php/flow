@@ -1,3 +1,8 @@
+## [Unreleased] - 2025-11-24
+
+### Fixed
+- [2b962c](https://github.com/flow-php/flow/commit/2b962c9ea30908533e9f4bf253c9d795bab4626f) - **playground production env vars** - [@norberttech](https://github.com/norberttech)
+
 ## [0.28.0] - 2025-11-24
 
 ### Added
