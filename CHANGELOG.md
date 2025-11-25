@@ -1,5 +1,8 @@
 ## [Unreleased] - 2025-11-24
 
+### Changed
+- [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
+
 ### Fixed
 - [af1eda](https://github.com/flow-php/flow/commit/af1edace15276ea4971a068545cc3de1ec51d119) - **cloudflare worker compatibility date** - [@norberttech](https://github.com/norberttech)
 - [2b962c](https://github.com/flow-php/flow/commit/2b962c9ea30908533e9f4bf253c9d795bab4626f) - **playground production env vars** - [@norberttech](https://github.com/norberttech)
