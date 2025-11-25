@@ -324,15 +324,23 @@ code {
             }
 
             button {
-                @apply mr-4;
+                @apply mr-4 transition-opacity;
+            }
+
+            button:disabled {
+                @apply opacity-50 cursor-not-allowed;
             }
 
             a {
-                @apply mr-4 no-underline text-white;
+                @apply mr-4 no-underline text-white transition-opacity;
             }
 
             a:hover {
                 @apply no-underline;
+            }
+
+            a.disabled {
+                @apply opacity-50 cursor-not-allowed pointer-events-none;
             }
         }
     }
@@ -453,5 +461,21 @@ code {
     .loading-bar {
         @apply h-1 bg-blue-600 transition-all duration-300 ease-out;
         width: 0;
+    }
+
+    .action-spinner {
+        @apply inline-flex items-center mr-4;
+
+        &.hidden {
+            display: none;
+        }
+
+        svg {
+            @apply text-cyan-400;
+        }
+    }
+
+    .file-tree.disabled {
+        @apply pointer-events-none opacity-50;
     }
 }

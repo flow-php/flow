@@ -4,6 +4,10 @@ resource "cloudflare_workers_script" "snippet_upload" {
   content     = file("${path.module}/workers/snippet-upload.js")
   main_module = "snippet-upload.js"
 
+  lifecycle {
+    ignore_changes = all
+  }
+
   compatibility_date = "2024-01-01"
 
   bindings = [

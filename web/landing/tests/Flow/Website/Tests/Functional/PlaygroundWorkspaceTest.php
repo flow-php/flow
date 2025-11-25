@@ -42,7 +42,7 @@ echo 'File created';
 PHP
         );
 
-        $client->executeScript('Array.from(document.querySelectorAll(\'button\')).find(b => b.textContent.includes(\'Run\')).click();');
+        $client->executeScript('document.getElementById("action-run").click();');
         $client->waitForElementToContain('[data-playground-output-target="container"]', 'File created', 5);
 
         // Manually refresh workspace tree after PHP code creates files

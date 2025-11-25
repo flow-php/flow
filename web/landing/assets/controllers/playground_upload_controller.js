@@ -45,12 +45,18 @@ export default class extends Controller {
     }
 
     async handleFileUpload(event) {
-        const files = Array.from(event.target.files)
-        for (const file of files) {
-            await this.uploadFile(file)
-        }
-        if (this.hasFileInputTarget) {
-            this.fileInputTarget.value = ''
+        this.dispatch('action-started', { bubbles: true })
+
+        try {
+            const files = Array.from(event.target.files)
+            for (const file of files) {
+                await this.uploadFile(file)
+            }
+            if (this.hasFileInputTarget) {
+                this.fileInputTarget.value = ''
+            }
+        } finally {
+            this.dispatch('action-finished', { bubbles: true })
         }
     }
 

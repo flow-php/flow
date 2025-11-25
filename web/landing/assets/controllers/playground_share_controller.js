@@ -225,17 +225,19 @@ export default class extends Controller {
     }
 
     async share() {
-        await Promise.all([
-            this.codeEditorOutlet.onLoad(),
-            this.wasmOutlet.onLoad(),
-            this.turnstileOutlet.onLoad()
-        ])
-
-        const code = this.codeEditorOutlet.getCode()
-
-        await this.wasmOutlet.writeFile('/workspace/code.php', code)
+        this.dispatch('action-started', { bubbles: true })
 
         try {
+            await Promise.all([
+                this.codeEditorOutlet.onLoad(),
+                this.wasmOutlet.onLoad(),
+                this.turnstileOutlet.onLoad()
+            ])
+
+            const code = this.codeEditorOutlet.getCode()
+
+            await this.wasmOutlet.writeFile('/workspace/code.php', code)
+
             const files = await this.#collectUploadedFiles()
             const fileBlobs = files.map(f => f.blob)
             const fingerprint = await createFingerprint(code, fileBlobs)
@@ -281,6 +283,8 @@ export default class extends Controller {
             console.error('[ShareCode] Error stack:', error.stack)
             this.#logError('[ShareCode] Share failed:', error)
             this.#showNotification(`Failed to share: ${error.message}`, 'error')
+        } finally {
+            this.dispatch('action-finished', { bubbles: true })
         }
     }
 

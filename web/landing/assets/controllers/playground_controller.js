@@ -7,7 +7,7 @@ import 'prismjs/components/prism-csv.min.js'
 
 export default class extends Controller {
     static outlets = ["wasm", "code-editor", "turnstile", "playground-output"]
-    static targets = ["loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "filePreviewContainer", "filePreviewTitle", "filePreviewContent"]
+    static targets = ["loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "filePreviewContainer", "filePreviewTitle", "filePreviewContent", "actionSpinner"]
     static values = {
         packageIcon: String,
         linkIcon: String
@@ -23,6 +23,28 @@ export default class extends Controller {
         const { message, type } = event.detail
         if (this.hasPlaygroundOutputOutlet) {
             this.playgroundOutputOutlet.show({ content: message, type })
+        }
+    }
+
+    onActionStarted() {
+        document.querySelectorAll('#action-run, #action-format, #action-share, #action-upload').forEach(btn => btn.disabled = true)
+        const resetLink = document.getElementById('action-reset')
+        if (resetLink) {
+            resetLink.classList.add('disabled')
+        }
+        if (this.hasActionSpinnerTarget) {
+            this.actionSpinnerTarget.classList.remove('hidden')
+        }
+    }
+
+    onActionFinished() {
+        document.querySelectorAll('#action-run, #action-format, #action-share, #action-upload').forEach(btn => btn.disabled = false)
+        const resetLink = document.getElementById('action-reset')
+        if (resetLink) {
+            resetLink.classList.remove('disabled')
+        }
+        if (this.hasActionSpinnerTarget) {
+            this.actionSpinnerTarget.classList.add('hidden')
         }
     }
 

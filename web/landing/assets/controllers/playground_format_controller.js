@@ -4,36 +4,39 @@ export default class extends Controller {
     static outlets = ["code-editor", "wasm", "playground-output"]
 
     async format() {
-        await Promise.all([
-            this.codeEditorOutlet.onLoad(),
-            this.wasmOutlet.onLoad()
-        ])
+        this.dispatch('action-started', { bubbles: true })
 
-        const code = this.codeEditorOutlet.getCode()
+        try {
+            await Promise.all([
+                this.codeEditorOutlet.onLoad(),
+                this.wasmOutlet.onLoad()
+            ])
 
-        await this.wasmOutlet.writeFile('/workspace/code.php', code)
+            const code = this.codeEditorOutlet.getCode()
 
-        this.playgroundOutputOutlet.show({ content: 'Formatting code...', type: 'info' })
-        this.element.querySelectorAll('button').forEach(btn => btn.disabled = true)
+            await this.wasmOutlet.writeFile('/workspace/code.php', code)
 
-        const result = await this.wasmOutlet.format(code)
+            this.playgroundOutputOutlet.show({ content: 'Formatting code...', type: 'info' })
 
-        this.element.querySelectorAll('button').forEach(btn => btn.disabled = false)
+            const result = await this.wasmOutlet.format(code)
 
-        if (result.success) {
-            this.codeEditorOutlet.setCode(result.code)
-            this.playgroundOutputOutlet.show({ content: 'Code formatted successfully!', type: 'success' })
+            if (result.success) {
+                this.codeEditorOutlet.setCode(result.code)
+                this.playgroundOutputOutlet.show({ content: 'Code formatted successfully!', type: 'success' })
 
-            if (result.fixers && result.fixers.length > 0) {
-                this.playgroundOutputOutlet.append({
-                    content: `Applied fixers: ${result.fixers.join(', ')}`,
-                    type: 'info'
-                })
+                if (result.fixers && result.fixers.length > 0) {
+                    this.playgroundOutputOutlet.append({
+                        content: `Applied fixers: ${result.fixers.join(', ')}`,
+                        type: 'info'
+                    })
+                }
+            } else {
+                this.playgroundOutputOutlet.show({ content: `Format error: ${result.error}`, type: 'error' })
             }
-        } else {
-            this.playgroundOutputOutlet.show({ content: `Format error: ${result.error}`, type: 'error' })
-        }
 
-        this.dispatch('formatted', { detail: { success: result.success }, bubbles: true })
+            this.dispatch('formatted', { detail: { success: result.success }, bubbles: true })
+        } finally {
+            this.dispatch('action-finished', { bubbles: true })
+        }
     }
 }

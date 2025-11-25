@@ -23,7 +23,7 @@ df()->read(from_array([['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bo
 PHP
         );
 
-        $client->executeScript('Array.from(document.querySelectorAll(\'button\')).find(b => b.textContent.includes(\'Run\')).click();');
+        $client->executeScript('document.getElementById("action-run").click();');
 
         $client->waitForElementToContain('[data-playground-output-target="container"]', 'Alice', 10);
 

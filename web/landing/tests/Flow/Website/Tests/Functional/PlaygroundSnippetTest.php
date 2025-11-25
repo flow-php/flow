@@ -15,7 +15,6 @@ final class PlaygroundSnippetTest extends EndToEndTestCase
 
         $this->waitForWasmReady($client);
 
-        // Wait for storage controller to finish loading (or skip if no stored code)
         $client->wait(1);
 
         $testCode = <<<'PHP'
@@ -27,33 +26,26 @@ PHP;
 
         $this->setPlaygroundCode($client, $testCode);
 
-        // Click Share button
-        $client->executeScript('Array.from(document.querySelectorAll(\'button\')).find(b => b.textContent.includes(\'Share\')).click();');
+        $client->executeScript('document.getElementById("action-share").click();');
 
-        // Wait for share success message
         $client->waitForElementToContain('[data-playground-output-target="container"]', 'Share link', 15);
 
-        // Extract snippet URL from browser URL bar (share controller updates window.history)
         $currentUrl = $client->getCurrentURL();
 
         self::assertStringContainsString('/playground?snippet=', $currentUrl, 'URL should contain snippet parameter');
 
-        // Extract snippet ID from current URL
         $parsedUrl = \parse_url($currentUrl);
         \parse_str($parsedUrl['query'] ?? '', $queryParams);
         $snippetId = $queryParams['snippet'] ?? null;
 
         self::assertNotNull($snippetId, 'Snippet ID should be extracted from URL');
 
-        // Navigate to snippet URL to test loading
         $client->request('GET', '/playground?snippet=' . $snippetId);
 
         $this->waitForWasmReady($client);
 
-        // Wait for snippet to load
         $client->waitForElementToContain('[data-playground-output-target="container"]', 'Snippet loaded successfully', 10);
 
-        // Verify code is loaded
         $loadedCode = $this->getPlaygroundCode($client);
         self::assertStringContainsString('Snippet Test', $loadedCode);
         self::assertStringContainsString('from_array', $loadedCode);
@@ -66,7 +58,6 @@ PHP;
 
         $this->waitForWasmReady($client);
 
-        // Should show error message from share controller
         $client->waitForElementToContain('[data-playground-output-target="container"]', 'Failed to load snippet', 10);
 
         $output = $client->getCrawler()->filter('[data-playground-output-target="container"]')->text();
@@ -80,16 +71,12 @@ PHP;
 
         $this->waitForWasmReady($client);
 
-        // Clear the editor to have empty code
         $this->setPlaygroundCode($client, '');
 
-        // Click Share button
-        $client->executeScript('Array.from(document.querySelectorAll(\'button\')).find(b => b.textContent.includes(\'Share\')).click();');
+        $client->executeScript('document.getElementById("action-share").click();');
 
-        // Should show error or do nothing with empty code
         $client->wait(2);
 
-        // Verify URL hasn't changed (no snippet created)
         $currentUrl = $client->getCurrentURL();
         self::assertStringNotContainsString('snippet=', $currentUrl, 'Empty code should not create snippet');
     }

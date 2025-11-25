@@ -4,43 +4,45 @@ export default class extends Controller {
     static outlets = ["code-editor", "wasm", "playground-output"]
 
     async run() {
-        await Promise.all([
-            this.codeEditorOutlet.onLoad(),
-            this.wasmOutlet.onLoad()
-        ])
+        this.dispatch('action-started', { bubbles: true })
 
-        const code = this.codeEditorOutlet.getCode()
+        try {
+            await Promise.all([
+                this.codeEditorOutlet.onLoad(),
+                this.wasmOutlet.onLoad()
+            ])
 
-        await this.wasmOutlet.writeFile('/workspace/code.php', code)
+            const code = this.codeEditorOutlet.getCode()
 
-        this.codeEditorOutlet.clearErrors()
-        this.playgroundOutputOutlet.clear()
-        this.playgroundOutputOutlet.show({ content: 'Running...', type: 'info' })
+            await this.wasmOutlet.writeFile('/workspace/code.php', code)
 
-        this.element.querySelectorAll('button').forEach(btn => btn.disabled = true)
+            this.codeEditorOutlet.clearErrors()
+            this.playgroundOutputOutlet.clear()
+            this.playgroundOutputOutlet.show({ content: 'Running...', type: 'info' })
 
-        const result = await this.wasmOutlet.run(code)
+            const result = await this.wasmOutlet.run(code)
 
-        this.element.querySelectorAll('button').forEach(btn => btn.disabled = false)
+            if (result.success) {
+                this.playgroundOutputOutlet.show({ content: "\n" + result.output, type: 'success' })
+            } else {
+                this.playgroundOutputOutlet.show({ content: result.error.message, type: 'error' })
 
-        if (result.success) {
-            this.playgroundOutputOutlet.show({ content: "\n" + result.output, type: 'success' })
-        } else {
-            this.playgroundOutputOutlet.show({ content: result.error.message, type: 'error' })
-
-            if (result.error.line) {
-                this.codeEditorOutlet.highlightError({
-                    line: result.error.line,
-                    type: result.error.type,
-                    message: result.error.message,
-                    column: result.error.column
-                })
+                if (result.error.line) {
+                    this.codeEditorOutlet.highlightError({
+                        line: result.error.line,
+                        type: result.error.type,
+                        message: result.error.message,
+                        column: result.error.column
+                    })
+                }
             }
-        }
 
-        this.dispatch('executed', {
-            detail: { success: result.success, executionTime: result.executionTime },
-            bubbles: true
-        })
+            this.dispatch('executed', {
+                detail: { success: result.success, executionTime: result.executionTime },
+                bubbles: true
+            })
+        } finally {
+            this.dispatch('action-finished', { bubbles: true })
+        }
     }
 }
