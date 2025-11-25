@@ -1,9 +1,15 @@
 ## [Unreleased] - 2025-11-25
 
+### Added
+- [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
+- [#2027](https://github.com/flow-php/flow/pull/2027) - **all actions will now trigger an event that other actions are going to listen to** - [@norberttech](https://github.com/norberttech)
+- [#2027](https://github.com/flow-php/flow/pull/2027) - **playground will display spinner while action is executed** - [@norberttech](https://github.com/norberttech)
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2027](https://github.com/flow-php/flow/pull/2027) - **restored flow-php.wip in turnstile captcha config** - [@norberttech](https://github.com/norberttech)
 - [af1eda](https://github.com/flow-php/flow/commit/af1edace15276ea4971a068545cc3de1ec51d119) - **cloudflare worker compatibility date** - [@norberttech](https://github.com/norberttech)
 - [2b962c](https://github.com/flow-php/flow/commit/2b962c9ea30908533e9f4bf253c9d795bab4626f) - **playground production env vars** - [@norberttech](https://github.com/norberttech)
 
