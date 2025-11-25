@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{data_frame, from_array, ref, to_memory};
+use function Flow\ETL\DSL\{data_frame, execution_strict, from_array, ref, to_memory};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Function\ExecutionMode;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\FlowTestCase;
 
@@ -80,7 +79,7 @@ final class ExecutionModeTest extends FlowTestCase
                     ['id' => 3, 'name' => 'Jane'],
                 ])
             )
-            ->mode(ExecutionMode::STRICT)
+            ->mode(execution_strict())
             ->withEntry('starts_with_j', ref('name')->startsWith('J'))
             ->fetch();
     }
@@ -96,7 +95,7 @@ final class ExecutionModeTest extends FlowTestCase
                     ['value' => null],
                 ])
             )
-            ->mode(ExecutionMode::STRICT)
+            ->mode(execution_strict())
             ->withEntry('value_int', ref('value')->cast('int'))
             ->fetch();
     }
@@ -113,7 +112,7 @@ final class ExecutionModeTest extends FlowTestCase
                     ['text' => null],
                 ])
             )
-            ->mode(ExecutionMode::STRICT)
+            ->mode(execution_strict())
             ->withEntry('pos', ref('text')->indexOf('world'))
             ->fetch();
     }
@@ -130,7 +129,7 @@ final class ExecutionModeTest extends FlowTestCase
                     ['json' => null],
                 ])
             )
-            ->mode(ExecutionMode::STRICT)
+            ->mode(execution_strict())
             ->withEntry('decoded', ref('json')->jsonDecode())
             ->fetch();
     }
