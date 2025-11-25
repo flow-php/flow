@@ -41,26 +41,6 @@ final class PlaygroundStorageTest extends EndToEndTestCase
         self::assertStringContainsString('from_csv', $this->getPlaygroundCode($client));
     }
 
-    public function test_code_persists_in_local_storage() : void
-    {
-        self::markTestSkipped('Skipped - related to local storage code persistence that was recently commented out');
-
-        $client = self::createE2EClient();
-        $client->request('GET', '/playground');
-
-        $this->waitForWasmReady($client);
-
-        $this->setPlaygroundCode($client, "<?php\necho 'Storage Test';");
-
-        self::assertStringContainsString('Storage Test', $this->getFromLocalStorage($client, 'flow-playground-code'));
-
-        $client->request('GET', '/playground');
-
-        $this->waitForWasmReady($client);
-
-        self::assertStringContainsString('Storage Test', $this->getPlaygroundCode($client));
-    }
-
     public function test_reset_button_clears_storage() : void
     {
         $client = self::createE2EClient();

@@ -33,6 +33,18 @@ export default class extends Controller {
         }
     }
 
+    onActionStarted() {
+        if (this.hasTreeTarget) {
+            this.treeTarget.classList.add('disabled')
+        }
+    }
+
+    onActionFinished() {
+        if (this.hasTreeTarget) {
+            this.treeTarget.classList.remove('disabled')
+        }
+    }
+
     async refreshTree() {
         await this.playgroundOutlet.onLoad()
 

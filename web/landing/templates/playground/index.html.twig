@@ -71,7 +71,23 @@
                   playground-storage:loaded-from-storage->playground#onStorageLoaded
                   playground-share:loaded-from-url->playground#onUrlLoaded
                   playground-share:datasets-loaded->playground#onDatasetsLoaded
-                  playground-share:notification->playground#onNotification">
+                  playground-share:notification->playground#onNotification
+                  playground-run:action-started->playground#onActionStarted
+                  playground-run:action-finished->playground#onActionFinished
+                  playground-format:action-started->playground#onActionStarted
+                  playground-format:action-finished->playground#onActionFinished
+                  playground-share:action-started->playground#onActionStarted
+                  playground-share:action-finished->playground#onActionFinished
+                  playground-upload:action-started->playground#onActionStarted
+                  playground-upload:action-finished->playground#onActionFinished
+                  playground-run:action-started->playground-workspace#onActionStarted
+                  playground-run:action-finished->playground-workspace#onActionFinished
+                  playground-format:action-started->playground-workspace#onActionStarted
+                  playground-format:action-finished->playground-workspace#onActionFinished
+                  playground-share:action-started->playground-workspace#onActionStarted
+                  playground-share:action-finished->playground-workspace#onActionFinished
+                  playground-upload:action-started->playground-workspace#onActionStarted
+                  playground-upload:action-finished->playground-workspace#onActionFinished">
     <div class="playground-header">
         <h1>Playground</h1>
         <button
@@ -152,6 +168,12 @@
     <div class="navigation" data-playground-target="navigation">
         <div class="storage-indicator" data-playground-target="storageIndicator" style="display: none;"></div>
         <div class="actions">
+            <span id="action-spinner" class="action-spinner hidden" data-playground-target="actionSpinner">
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </span>
             <button
                     data-action="click->playground-help#showTopic"
                     data-help-topic="help-navigation"
@@ -160,6 +182,7 @@
                 <img src="{{ asset('images/icons/help.svg') }}" alt="Help" width="18" height="18">
             </button>
             <button
+                    id="action-run"
                     data-controller="image-swap"
                     data-action="click->playground-run#run mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Run <img src="{{ asset('images/icons/play.svg') }}"
@@ -169,6 +192,7 @@
                          data-hover-src="{{ asset('images/icons/play-active.svg') }}">
             </button>
             <button
+                    id="action-format"
                     data-controller="image-swap"
                     data-action="click->playground-format#format mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Format <img src="{{ asset('images/icons/code.svg') }}"
@@ -178,6 +202,7 @@
                             data-hover-src="{{ asset('images/icons/code-active.svg') }}">
             </button>
             <button
+                    id="action-share"
                     data-controller="image-swap"
                     data-action="click->playground-share#share mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Share <img src="{{ asset('images/icons/share.svg') }}"
@@ -187,6 +212,7 @@
                      data-hover-src="{{ asset('images/icons/share-active.svg') }}">
             </button>
             <button
+                    id="action-upload"
                     data-controller="image-swap"
                     data-action="click->playground-upload#triggerUpload mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">
                 Upload <img src="{{ asset('images/icons/upload.svg') }}"
@@ -202,6 +228,7 @@
                    multiple
                    style="display: none;">
             <a href="{{ path('playground') }}"
+               id="action-reset"
                data-controller="image-swap playground-reset"
                data-playground-reset-playground-storage-outlet="#playground"
                data-action="click->playground-reset#confirmReset mouseenter->image-swap#mouseEnter mouseleave->image-swap#mouseLeave">

@@ -15,7 +15,7 @@ final class PlaygroundFormatCodeTest extends EndToEndTestCase
 
         $this->setPlaygroundCode($client, "<?php\ndf()->read(from_array([['id'=>1,'name'=>'Test']]))->run();");
 
-        $client->executeScript('Array.from(document.querySelectorAll(\'button\')).find(b => b.textContent.includes(\'Format\')).click();');
+        $client->executeScript('document.getElementById("action-format").click();');
         $client->waitForElementToContain('[data-playground-output-target="container"]', 'formatted', 10);
 
         self::assertStringContainsString("'id' => 1", $this->getPlaygroundCode($client));
