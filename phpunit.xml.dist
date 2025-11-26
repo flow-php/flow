@@ -180,6 +180,7 @@
     </include>
     <exclude>
       <directory suffix=".php">src/lib/parquet/src/Flow/Parquet/Thrift</directory>
+      <directory suffix=".php">src/lib/pg-query/src/Flow/PgQuery/Protobuf</directory>
       <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
     </exclude>
   </source>
