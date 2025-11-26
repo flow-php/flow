@@ -35,7 +35,7 @@ final class Parser
         try {
             $json = pg_query_parse($sql);
         } catch (\RuntimeException $e) {
-            throw new ParserException($e->getMessage());
+            throw new ParserException($e->getMessage(), $e->getCode() ?: null);
         }
 
         $result = new ParseResult();

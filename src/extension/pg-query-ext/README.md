@@ -81,8 +81,8 @@ make install
 From the Flow PHP monorepo root:
 
 ```bash
-# Enter Nix shell with build tools
-nix-shell --arg with-pg-query-build-tools true
+# Enter Nix shell with pg_query extension loaded and build tools available
+nix-shell --arg with-pg-query-ext true
 
 # Navigate to extension directory
 cd src/extension/pg-query-ext
