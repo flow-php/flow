@@ -87,10 +87,8 @@ jobs:
           pie --version
 
       - name: Install extension via PIE
-        working-directory: src/extension/pg-query-ext
         run: |
-          pie build .
-          sudo pie install .
+          sudo pie install flow-php/pg-query-ext
 
       - name: Verify extension is loaded
         run: |
