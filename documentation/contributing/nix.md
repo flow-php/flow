@@ -122,21 +122,28 @@ To include Terraform and Node.js for infrastructure development:
 nix-shell --arg with-terraform true
 ```
 
-### pg-query-ext Build Tools
+### pg-query-ext Extension
 
-To include C development tools required for building the `pg-query-ext` PHP extension
-(gcc, make, automake, libtool, protobuf-c, phpize, etc.):
-
-```shell
-nix-shell --arg with-pg-query-build-tools true
-```
-
-After entering the shell, navigate to `src/extension/pg-query-ext` and run:
+To include the `pg-query-ext` PHP extension (PostgreSQL SQL parser):
 
 ```shell
-make build
-make test
+nix-shell --arg with-pg-query-ext true
 ```
+
+The extension is built from local source (`src/extension/pg-query-ext/ext`) and automatically loaded by PHP:
+
+```shell
+php -m | grep pg_query
+./tools/phpunit/vendor/bin/phpunit --testsuite=lib-pg-query-unit
+```
+
+This also includes C development tools for extension development. To rebuild after modifying C source code:
+
+```shell
+cd src/extension/pg-query-ext && make rebuild
+```
+
+Note: Re-entering nix-shell will also rebuild the extension if sources changed.
 
 ### Combining Multiple Options
 

@@ -16,7 +16,7 @@ in
     with-blackfire ? false,
     with-xdebug ? false,
     with-pcov ? !with-blackfire,
-    with-pg-query-build-tools ? false,
+    with-pg-query-ext ? false,
     with-terraform ? false,
     with-wasm ? false,
 }:
@@ -35,10 +35,11 @@ let
     php-snappy = pkgs.callPackage ./.nix/pkgs/php-snappy/package.nix { php = base-php; };
     php-lz4 = pkgs.callPackage ./.nix/pkgs/php-lz4/package.nix { php = base-php; };
     php-zstd = pkgs.callPackage ./.nix/pkgs/php-zstd/package.nix { php = base-php; };
+    php-pg-query-ext = pkgs.callPackage ./.nix/pkgs/php-pg-query-ext/package.nix { php = base-php; };
 
     php = pkgs.callPackage ./.nix/pkgs/flow-php/package.nix {
         php = base-php;
-        inherit php-snappy php-lz4 php-brotli php-zstd with-pcov with-xdebug with-blackfire;
+        inherit php-snappy php-lz4 php-brotli php-zstd php-pg-query-ext with-pcov with-xdebug with-blackfire with-pg-query-ext;
     };
 in
 pkgs.mkShell {
@@ -66,8 +67,8 @@ pkgs.mkShell {
             pkgs.terraform
             pkgs.nodejs_24
         ]
-        ++ pkgs.lib.optionals with-pg-query-build-tools [
-            # C development tools for pg-query-ext extension building
+        ++ pkgs.lib.optionals with-pg-query-ext [
+            # C development tools for pg-query-ext extension development
             pkgs.gcc
             pkgs.gnumake
             pkgs.autoconf
@@ -75,6 +76,7 @@ pkgs.mkShell {
             pkgs.libtool
             pkgs.protobuf
             pkgs.protobufc
+            pkgs.git
             php.unwrapped.dev
         ]
     ;
@@ -86,8 +88,8 @@ pkgs.mkShell {
         export STARSHIP_CONFIG="$PWD/.nix/shell/starship.toml.dist"
     fi
 
-    ${pkgs.lib.optionalString with-pg-query-build-tools ''
-    # Setup for pg-query-ext extension compilation
+    ${pkgs.lib.optionalString with-pg-query-ext ''
+    # Setup for pg-query-ext extension development
     export PHP_CONFIG="${php}/bin/php-config"
     export PHPIZE="${php.unwrapped.dev}/bin/phpize"
     ''}
