@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-11-26
 
 ### Added
+- [#2036](https://github.com/flow-php/flow/pull/2036) - **test pg-query-ext installation through pie on ci/cd** - [@norberttech](https://github.com/norberttech)
 - [#2033](https://github.com/flow-php/flow/pull/2033) - **pg_query php extension** - [@norberttech](https://github.com/norberttech)
 - [#2033](https://github.com/flow-php/flow/pull/2033) - **flow-php/pg-query library that uses pg_query extension** - [@norberttech](https://github.com/norberttech)
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
