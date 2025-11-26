@@ -55,6 +55,32 @@ final class ParserTest extends TestCase
         self::assertStringContainsString('$2', $normalized);
     }
 
+    public function test_parse_exception_contains_cursor_position() : void
+    {
+        $parser = new Parser();
+
+        try {
+            $parser->parse('SELECT * FROM');
+        } catch (\Flow\PgQuery\Exception\ParserException $e) {
+            self::assertNotNull($e->cursorPosition);
+            self::assertGreaterThan(0, $e->cursorPosition);
+
+            return;
+        }
+
+        self::fail('Expected ParserException was not thrown');
+    }
+
+    public function test_parse_invalid_sql_throws_exception() : void
+    {
+        $parser = new Parser();
+
+        $this->expectException(\Flow\PgQuery\Exception\ParserException::class);
+        $this->expectExceptionMessage('syntax error');
+
+        $parser->parse('SELECT FROM WHERE');
+    }
+
     public function test_parse_multiple_statements() : void
     {
         $parser = new Parser();

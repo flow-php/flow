@@ -35,19 +35,11 @@ jobs:
           brew install autoconf automake libtool protobuf protobuf-c
 
       - name: Build libpg_query and extension
-        working-directory: src/extension/pg-query-parser
+        working-directory: src/extension/pg-query-ext
         run: |
           make clean || true
           make build
 
       - name: Run extension tests
-        working-directory: src/extension/pg-query-parser
+        working-directory: src/extension/pg-query-ext
         run: make test
-
-      - name: Install composer dependencies
-        working-directory: src/extension/pg-query-parser
-        run: composer install --no-interaction
-
-      - name: Run PHP tests
-        working-directory: src/extension/pg-query-parser
-        run: php -d extension=./ext/modules/pg_query.so vendor/bin/phpunit
