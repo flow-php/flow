@@ -1,0 +1,13 @@
+# Exclude development files from distribution archives
+/.github export-ignore
+/tests export-ignore
+/vendor export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+
+# Ensure consistent line endings
+*.php text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.m4 text eol=lf
+*.stub.php text eol=lf

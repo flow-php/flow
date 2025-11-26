@@ -1,0 +1,40 @@
+{
+    "name": "flow-php/pg-query-ext",
+    "type": "php-ext",
+    "description": "PostgreSQL query parser PHP extension using libpg_query",
+    "keywords": ["postgresql", "parser", "sql", "ast", "extension", "libpg_query"],
+    "license": "MIT",
+    "require": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+    },
+    "scripts": {
+        "build": "make build",
+        "test:ext": "make test TESTS=\"../tests/phpt\""
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-1.x": "1.x-dev"
+        }
+    },
+    "php-ext": {
+        "extension-name": "pg_query",
+        "build-path": "ext",
+        "configure-options": [
+            {
+                "name": "with-pg-query",
+                "needs-value": false,
+                "description": "Path to libpg_query installation (optional - will auto-download if not found)"
+            },
+            {
+                "name": "with-pg-version",
+                "needs-value": true,
+                "description": "PostgreSQL grammar version: 15, 16, or 17 (default: 17)"
+            }
+        ],
+        "support-zts": true,
+        "support-nts": true
+    }
+}

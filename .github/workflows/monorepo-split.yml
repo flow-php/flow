@@ -86,6 +86,9 @@ jobs:
           - local_path: 'src/tools/homebrew'
             split_repository: 'homebrew-flow'
 
+          - local_path: 'src/extension/pg-query-ext'
+            split_repository: 'pg-query-ext'
+
     steps:
       - uses: actions/checkout@v5
 
