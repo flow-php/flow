@@ -2,6 +2,9 @@ name: PG Query Extension
 
 on:
   workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 jobs:
   build:
@@ -16,12 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Setup PHP Environment
+        uses: ./.github/actions/setup-php-env
         with:
           php-version: ${{ matrix.php }}
-          tools: phpize, php-config
-          extensions: json
+          dependencies: locked
+          coverage: pcov
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, protobuf'
+          tools: 'composer:v2, phpize, php-config'
 
       - name: Install build dependencies (Linux)
         if: runner.os == 'Linux'
@@ -43,3 +48,20 @@ jobs:
       - name: Run extension tests
         working-directory: src/extension/pg-query-ext
         run: make test
+
+      - name: Install extension
+        working-directory: src/extension/pg-query-ext
+        run: |
+          sudo make install
+          php -m | grep pg_query
+
+      - name: Run pg-query library tests
+        run: composer test:lib:pg-query
+
+      - name: Upload to Codecov
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: ./.github/actions/codecov-report
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          php-version: ${{ matrix.php }}
+          dependencies: locked
