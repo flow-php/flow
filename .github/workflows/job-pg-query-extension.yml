@@ -82,13 +82,15 @@ jobs:
 
       - name: Install PIE
         run: |
-          composer global require php/pie
+          curl -L -o /usr/local/bin/pie https://github.com/php/pie/releases/latest/download/pie.phar
+          chmod +x /usr/local/bin/pie
+          pie --version
 
       - name: Install extension via PIE
         working-directory: src/extension/pg-query-ext
         run: |
-          ~/.composer/vendor/bin/pie build .
-          sudo ~/.composer/vendor/bin/pie install .
+          pie build .
+          sudo pie install .
 
       - name: Verify extension is loaded
         run: |
