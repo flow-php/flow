@@ -22,6 +22,7 @@ let
             (php-lz4.override { inherit php; })
             (php-snappy.override { inherit php; })
             (php-zstd.override { inherit php; })
+            protobuf
             xmlreader
             xmlwriter
             zlib
