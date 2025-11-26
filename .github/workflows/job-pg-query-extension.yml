@@ -59,3 +59,37 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           php-version: ${{ matrix.php }}
           dependencies: locked
+
+  pie-install-test:
+    name: Test PIE Installation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup PHP Environment
+        uses: ./.github/actions/setup-php-env
+        with:
+          php-version: '8.2'
+          dependencies: locked
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
+          tools: 'composer:v2, phpize, php-config'
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
+
+      - name: Install PIE
+        run: |
+          composer global require php/pie
+
+      - name: Install extension via PIE
+        working-directory: src/extension/pg-query-ext
+        run: |
+          ~/.composer/vendor/bin/pie build .
+          sudo ~/.composer/vendor/bin/pie install .
+
+      - name: Verify extension is loaded
+        run: |
+          php -m | grep pg_query
