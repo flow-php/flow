@@ -16,6 +16,9 @@ in
     with-blackfire ? false,
     with-xdebug ? false,
     with-pcov ? !with-blackfire,
+    with-pg-query-build-tools ? false,
+    with-terraform ? false,
+    with-wasm ? false,
 }:
 
 let
@@ -46,21 +49,34 @@ pkgs.mkShell {
         pkgs.figlet
         pkgs.symfony-cli
         pkgs.act
-
-        # WASM
-        pkgs.emscripten
-        pkgs.autoconf
-        pkgs.wget
-        pkgs.gnutar
-        pkgs.xz
-        pkgs.libxml2
-        pkgs.pkg-config
-
-        # Terraform
-        pkgs.terraform
-        pkgs.nodejs_24
     ]
         ++ pkgs.lib.optional with-blackfire pkgs.blackfire
+        ++ pkgs.lib.optionals with-wasm [
+            # WASM build tools
+            pkgs.emscripten
+            pkgs.autoconf
+            pkgs.wget
+            pkgs.gnutar
+            pkgs.xz
+            pkgs.libxml2
+            pkgs.pkg-config
+        ]
+        ++ pkgs.lib.optionals with-terraform [
+            # Terraform
+            pkgs.terraform
+            pkgs.nodejs_24
+        ]
+        ++ pkgs.lib.optionals with-pg-query-build-tools [
+            # C development tools for pg-query-ext extension building
+            pkgs.gcc
+            pkgs.gnumake
+            pkgs.autoconf
+            pkgs.automake
+            pkgs.libtool
+            pkgs.protobuf
+            pkgs.protobufc
+            php.unwrapped.dev
+        ]
     ;
 
     shellHook = ''
@@ -69,6 +85,12 @@ pkgs.mkShell {
     else
         export STARSHIP_CONFIG="$PWD/.nix/shell/starship.toml.dist"
     fi
+
+    ${pkgs.lib.optionalString with-pg-query-build-tools ''
+    # Setup for pg-query-ext extension compilation
+    export PHP_CONFIG="${php}/bin/php-config"
+    export PHPIZE="${php.unwrapped.dev}/bin/phpize"
+    ''}
 
     eval "$(${pkgs.starship}/bin/starship init bash)"
 

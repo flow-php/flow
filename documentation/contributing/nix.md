@@ -96,10 +96,55 @@ nix-shell --arg php-version 8.3
 ```
 
 > In general, it's not recommended to change the PHP version, as development should always
-> be done on the lowest supported PHP version. 
+> be done on the lowest supported PHP version.
 >
 > This feature is mostly for testing new integrations
 > or lowest/highest versions of dependencies.
+
+## Optional Tool Groups
+
+The nix shell supports optional tool groups that can be enabled when needed.
+This keeps the default shell lightweight while allowing access to specialized tools.
+
+### WASM Build Tools
+
+To include tools for building WebAssembly (emscripten, autoconf, wget, etc.):
+
+```shell
+nix-shell --arg with-wasm true
+```
+
+### Terraform
+
+To include Terraform and Node.js for infrastructure development:
+
+```shell
+nix-shell --arg with-terraform true
+```
+
+### pg-query-ext Build Tools
+
+To include C development tools required for building the `pg-query-ext` PHP extension
+(gcc, make, automake, libtool, protobuf-c, phpize, etc.):
+
+```shell
+nix-shell --arg with-pg-query-build-tools true
+```
+
+After entering the shell, navigate to `src/extension/pg-query-ext` and run:
+
+```shell
+make build
+make test
+```
+
+### Combining Multiple Options
+
+You can combine multiple arguments:
+
+```shell
+nix-shell --arg with-terraform true --arg with-wasm true
+```
 
 ## Local Webserver
 
