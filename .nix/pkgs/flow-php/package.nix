@@ -4,9 +4,11 @@
     php-lz4,
     php-brotli,
     php-zstd,
+    php-pg-query-ext,
     with-pcov ? true,
     with-xdebug ? false,
-    with-blackfire ? false
+    with-blackfire ? false,
+    with-pg-query-ext ? false
 }:
 
 let
@@ -30,6 +32,7 @@ let
         ++ (if with-xdebug then [xdebug] else [])
         ++ (if with-pcov then [pcov] else [])
         ++ (if with-blackfire then [blackfire] else [])
+        ++ (if with-pg-query-ext then [(php-pg-query-ext.override { inherit php; })] else [])
     );
 in
 flowPHP.buildEnv {
