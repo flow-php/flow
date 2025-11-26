@@ -9,11 +9,10 @@ on:
 jobs:
   build:
     name: Build and Test Extension
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
         php: ['8.2', '8.3', '8.4']
 
     steps:
@@ -28,19 +27,10 @@ jobs:
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, protobuf'
           tools: 'composer:v2, phpize, php-config'
 
-      - name: Install build dependencies (Linux)
-        if: runner.os == 'Linux'
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev
-
-      - name: Install build dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install autoconf automake libtool protobuf protobuf-c
-          echo "LDFLAGS=-L$(brew --prefix protobuf-c)/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I$(brew --prefix protobuf-c)/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix protobuf-c)/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Build libpg_query and extension
         working-directory: src/extension/pg-query-ext
@@ -64,7 +54,6 @@ jobs:
         run: composer test:lib:pg-query
 
       - name: Upload to Codecov
-        if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: ./.github/actions/codecov-report
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
