@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit;
 
-use Flow\PgQuery\Parser;
-use Flow\PgQuery\Protobuf\AST\ParseResult;
+use Flow\PgQuery\{ParsedQuery, Parser};
 use PHPUnit\Framework\TestCase;
 
 final class ParserTest extends TestCase
@@ -55,6 +54,16 @@ final class ParserTest extends TestCase
         self::assertStringContainsString('$2', $normalized);
     }
 
+    public function test_normalize_with_named_parameters() : void
+    {
+        $parser = new Parser();
+        $normalized = $parser->normalize('SELECT * FROM users WHERE id = :id AND name = :name');
+
+        self::assertIsString($normalized);
+        self::assertStringContainsString('$1', $normalized);
+        self::assertStringContainsString('$2', $normalized);
+    }
+
     public function test_parse_invalid_sql_throws_exception() : void
     {
         $parser = new Parser();
@@ -70,8 +79,8 @@ final class ParserTest extends TestCase
         $parser = new Parser();
         $result = $parser->parse('SELECT 1; SELECT 2');
 
-        self::assertInstanceOf(ParseResult::class, $result);
-        self::assertCount(2, $result->getStmts());
+        self::assertInstanceOf(ParsedQuery::class, $result);
+        self::assertCount(2, $result->raw()->getStmts());
     }
 
     public function test_parse_select_with_columns() : void
@@ -79,8 +88,8 @@ final class ParserTest extends TestCase
         $parser = new Parser();
         $result = $parser->parse('SELECT id, name FROM users');
 
-        self::assertInstanceOf(ParseResult::class, $result);
-        self::assertCount(1, $result->getStmts());
+        self::assertInstanceOf(ParsedQuery::class, $result);
+        self::assertCount(1, $result->raw()->getStmts());
     }
 
     public function test_parse_select_with_where() : void
@@ -88,8 +97,8 @@ final class ParserTest extends TestCase
         $parser = new Parser();
         $result = $parser->parse('SELECT * FROM users WHERE active = true');
 
-        self::assertInstanceOf(ParseResult::class, $result);
-        self::assertCount(1, $result->getStmts());
+        self::assertInstanceOf(ParsedQuery::class, $result);
+        self::assertCount(1, $result->raw()->getStmts());
     }
 
     public function test_parse_simple_select() : void
@@ -97,8 +106,8 @@ final class ParserTest extends TestCase
         $parser = new Parser();
         $result = $parser->parse('SELECT 1');
 
-        self::assertInstanceOf(ParseResult::class, $result);
-        self::assertCount(1, $result->getStmts());
+        self::assertInstanceOf(ParsedQuery::class, $result);
+        self::assertCount(1, $result->raw()->getStmts());
     }
 
     public function test_split() : void

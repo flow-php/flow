@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\DSL;
 
-use Flow\PgQuery\Parser;
-use Flow\PgQuery\Protobuf\AST\ParseResult;
+use Flow\PgQuery\{ParsedQuery, Parser};
 
 function pg_parser() : Parser
 {
     return new Parser();
 }
 
-function pg_parse(string $sql) : ParseResult
+function pg_parse(string $sql) : ParsedQuery
 {
     return (new Parser())->parse($sql);
 }

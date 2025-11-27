@@ -25,12 +25,12 @@ final class Parser
 
     public function normalize(string $sql) : ?string
     {
-        $result = pg_query_normalize($sql);
+        $result = pg_query_normalize((new NamedParameterNormalizer())->normalize($sql));
 
         return $result === false ? null : $result;
     }
 
-    public function parse(string $sql) : ParseResult
+    public function parse(string $sql) : ParsedQuery
     {
         try {
             $json = pg_query_parse($sql);
@@ -41,7 +41,7 @@ final class Parser
         $result = new ParseResult();
         $result->mergeFromJsonString($json);
 
-        return $result;
+        return new ParsedQuery($result);
     }
 
     /**
