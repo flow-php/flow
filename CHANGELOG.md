@@ -15,6 +15,7 @@
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [319a3b](https://github.com/flow-php/flow/commit/319a3bafb96a2f141ccad873712fd348a6d15aa3) - **uploading code coverage to codecov during baseline gh actions workflow** - [@norberttech](https://github.com/norberttech)
 - [60bde5](https://github.com/flow-php/flow/commit/60bde55647b003fafce16d987257b7a948c8c986) - **updated version of flow.phar available in playground** - [@norberttech](https://github.com/norberttech)
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **restored flow-php.wip in turnstile captcha config** - [@norberttech](https://github.com/norberttech)
 - [af1eda](https://github.com/flow-php/flow/commit/af1edace15276ea4971a068545cc3de1ec51d119) - **cloudflare worker compatibility date** - [@norberttech](https://github.com/norberttech)
