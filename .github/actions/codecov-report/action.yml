@@ -84,6 +84,7 @@ runs:
       with:
         name: codecov-base-commit-sha-${{ env.codecov_branch_name }}
         path: codecov-base-commit-sha-${{ env.codecov_branch_name }}.txt
+        overwrite: true
 
     - name: Add SHA to step summary
       if: ${{ github.event_name == 'push' && inputs.php-version == '8.2' && inputs.dependencies == 'locked' }}
