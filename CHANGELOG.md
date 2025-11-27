@@ -1,6 +1,9 @@
-## [Unreleased] - 2025-11-26
+## [Unreleased] - 2025-11-27
 
 ### Added
+- [#2038](https://github.com/flow-php/flow/pull/2038) - **QueryResult wrapper over protobuf ParseResult** - [@norberttech](https://github.com/norberttech)
+- [#2038](https://github.com/flow-php/flow/pull/2038) - **NamedParameterNormalizer that normalizes also named parameters like :param** - [@norberttech](https://github.com/norberttech)
+- [#2038](https://github.com/flow-php/flow/pull/2038) - **Simple wrappers over most popular AST Nodes** - [@norberttech](https://github.com/norberttech)
 - [#2036](https://github.com/flow-php/flow/pull/2036) - **test pg-query-ext installation through pie on ci/cd** - [@norberttech](https://github.com/norberttech)
 - [#2033](https://github.com/flow-php/flow/pull/2033) - **pg_query php extension** - [@norberttech](https://github.com/norberttech)
 - [#2033](https://github.com/flow-php/flow/pull/2033) - **flow-php/pg-query library that uses pg_query extension** - [@norberttech](https://github.com/norberttech)
