@@ -1,6 +1,7 @@
 ## [Unreleased] - 2025-11-28
 
 ### Added
+- [#2042](https://github.com/flow-php/flow/pull/2042) - **deparse method with formatting options to PGQuery parser** - [@norberttech](https://github.com/norberttech)
 - [#2039](https://github.com/flow-php/flow/pull/2039) - **excel adapter to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#2039](https://github.com/flow-php/flow/pull/2039) - **chartjs adapter to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#2039](https://github.com/flow-php/flow/pull/2039) - **openapi specification bridge to flow.phar** - [@norberttech](https://github.com/norberttech)
