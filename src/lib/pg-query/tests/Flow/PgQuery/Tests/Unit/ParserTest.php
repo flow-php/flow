@@ -16,6 +16,83 @@ final class ParserTest extends TestCase
         }
     }
 
+    public function test_deparse_complex_query() : void
+    {
+        if (!\function_exists('pg_query_deparse')) {
+            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $sql = 'SELECT u.id, u.name, COUNT(*) AS total FROM users u JOIN orders o ON u.id = o.user_id WHERE u.active = true GROUP BY u.id, u.name ORDER BY total DESC LIMIT 10';
+        $parsed = $parser->parse($sql);
+
+        $deparsed = $parsed->deparse();
+
+        self::assertNotEmpty($deparsed);
+
+        $reparsed = $parser->parse($deparsed);
+        $redeparsed = $reparsed->deparse();
+        self::assertSame($deparsed, $redeparsed);
+    }
+
+    public function test_deparse_round_trip() : void
+    {
+        if (!\function_exists('pg_query_deparse')) {
+            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $parsed = $parser->parse('SELECT id FROM users WHERE name = \'john\'');
+        $deparsed = $parsed->deparse();
+
+        $reparsed = $parser->parse($deparsed);
+        $redeparsed = $reparsed->deparse();
+
+        self::assertSame($deparsed, $redeparsed);
+    }
+
+    public function test_deparse_select_with_columns() : void
+    {
+        if (!\function_exists('pg_query_deparse')) {
+            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $parsed = $parser->parse('SELECT id, name FROM users');
+
+        $deparsed = $parsed->deparse();
+
+        self::assertSame('SELECT id, name FROM users', $deparsed);
+    }
+
+    public function test_deparse_select_with_where() : void
+    {
+        if (!\function_exists('pg_query_deparse')) {
+            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $parsed = $parser->parse('SELECT * FROM users WHERE active = true');
+
+        $deparsed = $parsed->deparse();
+
+        self::assertSame('SELECT * FROM users WHERE active = true', $deparsed);
+    }
+
+    public function test_deparse_simple_select() : void
+    {
+        if (!\function_exists('pg_query_deparse')) {
+            self::markTestSkipped('pg_query_deparse function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $parsed = $parser->parse('SELECT 1');
+
+        $deparsed = $parsed->deparse();
+
+        self::assertSame('SELECT 1', $deparsed);
+    }
+
     public function test_fingerprint() : void
     {
         $parser = new Parser();

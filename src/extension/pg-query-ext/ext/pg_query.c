@@ -109,6 +109,46 @@ PHP_FUNCTION(pg_query_parse)
     RETURN_STR(json);
 }
 
+PHP_FUNCTION(pg_query_parse_protobuf)
+{
+    char *sql;
+    size_t sql_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STRING(sql, sql_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    PgQueryProtobufParseResult result = pg_query_parse_protobuf(sql);
+
+    if (result.error) {
+        char error_msg[1024];
+        int cursor_pos = result.error->cursorpos;
+
+        if (result.error->message) {
+            strncpy(error_msg, result.error->message, sizeof(error_msg) - 1);
+            error_msg[sizeof(error_msg) - 1] = '\0';
+        } else {
+            strcpy(error_msg, "Unknown parse error");
+        }
+
+        pg_query_free_protobuf_parse_result(result);
+
+        zend_throw_exception_ex(spl_ce_RuntimeException, cursor_pos, "%s", error_msg);
+        RETURN_THROWS();
+    }
+
+    zend_string *protobuf_data = NULL;
+    if (result.parse_tree.len > 0 && result.parse_tree.data != NULL) {
+        protobuf_data = zend_string_init(result.parse_tree.data, result.parse_tree.len, 0);
+    } else {
+        protobuf_data = zend_string_init("", 0, 0);
+    }
+
+    pg_query_free_protobuf_parse_result(result);
+
+    RETURN_STR(protobuf_data);
+}
+
 PHP_FUNCTION(pg_query_fingerprint)
 {
     char *sql;
@@ -270,4 +310,41 @@ PHP_FUNCTION(pg_query_scan)
     pg_query_free_scan_result(result);
 
     RETURN_STR(protobuf_data);
+}
+
+PHP_FUNCTION(pg_query_deparse)
+{
+    char *protobuf;
+    size_t protobuf_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STRING(protobuf, protobuf_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    PgQueryProtobuf pbuf;
+    pbuf.data = protobuf;
+    pbuf.len = protobuf_len;
+
+    PgQueryDeparseResult result = pg_query_deparse_protobuf(pbuf);
+
+    if (result.error) {
+        char error_msg[1024];
+
+        if (result.error->message) {
+            strncpy(error_msg, result.error->message, sizeof(error_msg) - 1);
+            error_msg[sizeof(error_msg) - 1] = '\0';
+        } else {
+            strcpy(error_msg, "Deparse error");
+        }
+
+        pg_query_free_deparse_result(result);
+
+        zend_throw_exception(spl_ce_RuntimeException, error_msg, 0);
+        RETURN_THROWS();
+    }
+
+    zend_string *sql = zend_string_init(result.query, strlen(result.query), 0);
+    pg_query_free_deparse_result(result);
+
+    RETURN_STR(sql);
 }
