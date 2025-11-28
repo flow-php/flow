@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\DSL;
 
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
-use Flow\PgQuery\{ParsedQuery, Parser};
+use Flow\PgQuery\{DeparseOptions, ParsedQuery, Parser};
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pg_parser() : Parser
@@ -62,17 +62,42 @@ function pg_split(string $sql) : array
 }
 
 /**
+ * Create DeparseOptions for configuring SQL formatting.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_deparse_options() : DeparseOptions
+{
+    return DeparseOptions::new();
+}
+
+/**
  * Convert a ParsedQuery AST back to SQL string.
  *
- * This function serializes the AST to protobuf binary format and uses
- * libpg_query's deparser to reconstruct the SQL query.
+ * When called without options, returns the SQL as a simple string.
+ * When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).
  *
  * @throws \RuntimeException if deparsing fails
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_deparse(ParsedQuery $query) : string
+function pg_deparse(ParsedQuery $query, ?DeparseOptions $options = null) : string
 {
-    return $query->deparse();
+    return $query->deparse($options);
+}
+
+/**
+ * Parse and format SQL query with pretty printing.
+ *
+ * This is a convenience function that parses SQL and returns it formatted.
+ *
+ * @param string $sql The SQL query to format
+ * @param null|DeparseOptions $options Formatting options (defaults to pretty-print enabled)
+ *
+ * @throws \RuntimeException if parsing or deparsing fails
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_format(string $sql, ?DeparseOptions $options = null) : string
+{
+    return (new Parser())->parse($sql)->deparse($options ?? DeparseOptions::new());
 }
 
 /**

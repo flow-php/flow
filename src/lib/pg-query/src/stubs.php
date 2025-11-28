@@ -116,6 +116,31 @@ if (!\function_exists('pg_query_parse')) {
     }
 
     /**
+     * Deparse a protobuf-serialized parse tree back to SQL with formatting options.
+     *
+     * @param string $protobuf The protobuf-serialized parse tree (from ParseResult::serializeToString())
+     * @param bool $pretty_print Enable pretty printing with indentation and line breaks
+     * @param int $indent_size Number of spaces per indentation level (default: 4)
+     * @param int $max_line_length Maximum line length before wrapping (default: 80)
+     * @param bool $trailing_newline Add a trailing newline at the end (default: false)
+     * @param bool $commas_start_of_line Place commas at the start of lines (default: false)
+     *
+     * @throws \RuntimeException on deparse error
+     *
+     * @return string The formatted SQL query string
+     */
+    function pg_query_deparse_opts(
+        string $protobuf,
+        bool $pretty_print = false,
+        int $indent_size = 4,
+        int $max_line_length = 80,
+        bool $trailing_newline = false,
+        bool $commas_start_of_line = false,
+    ) : string {
+        throw new \RuntimeException('pg_query extension is not loaded');
+    }
+
+    /**
      * Generate a summary of parsed queries in protobuf format.
      *
      * Useful for query monitoring and logging without full AST overhead.

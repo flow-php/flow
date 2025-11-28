@@ -47,14 +47,25 @@ final readonly class ParsedQuery
     /**
      * Convert the parsed AST back to SQL string.
      *
-     * This method serializes the AST to protobuf binary format and uses
-     * libpg_query's deparser to reconstruct the SQL query.
+     * When called without options, returns the SQL as a simple string.
+     * When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).
      *
      * @throws \RuntimeException if deparsing fails
      */
-    public function deparse() : string
+    public function deparse(?DeparseOptions $options = null) : string
     {
-        return \pg_query_deparse($this->parseResult->serializeToString());
+        if ($options === null) {
+            return \pg_query_deparse($this->parseResult->serializeToString());
+        }
+
+        return \pg_query_deparse_opts(
+            $this->parseResult->serializeToString(),
+            $options->hasPrettyPrint(),
+            $options->getIndentSize(),
+            $options->getMaxLineLength(),
+            $options->hasTrailingNewline(),
+            $options->commasAtStartOfLine()
+        );
     }
 
     /**
