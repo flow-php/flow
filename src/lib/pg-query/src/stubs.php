@@ -114,4 +114,35 @@ if (!\function_exists('pg_query_parse')) {
     {
         throw new \RuntimeException('pg_query extension is not loaded');
     }
+
+    /**
+     * Generate a summary of parsed queries in protobuf format.
+     *
+     * Useful for query monitoring and logging without full AST overhead.
+     *
+     * @param string $sql The SQL query to summarize
+     * @param int $options Parser options (PG_QUERY_PARSE_* constants)
+     * @param int $truncate_limit Maximum length for truncated values (0 = no truncation)
+     *
+     * @throws \RuntimeException on parse error
+     *
+     * @return string Protobuf-encoded summary
+     */
+    function pg_query_summary(string $sql, int $options = 0, int $truncate_limit = 0) : string
+    {
+        throw new \RuntimeException('pg_query extension is not loaded');
+    }
+
+    /* Parse mode constants */
+    \define('PG_QUERY_PARSE_DEFAULT', 0);
+    \define('PG_QUERY_PARSE_TYPE_NAME', 1);
+    \define('PG_QUERY_PARSE_PLPGSQL_EXPR', 2);
+    \define('PG_QUERY_PARSE_PLPGSQL_ASSIGN1', 4);
+    \define('PG_QUERY_PARSE_PLPGSQL_ASSIGN2', 8);
+    \define('PG_QUERY_PARSE_PLPGSQL_ASSIGN3', 16);
+
+    /* GUC option flags */
+    \define('PG_QUERY_PARSE_OPTS_DISABLE_BACKSLASH_QUOTE', 32);
+    \define('PG_QUERY_PARSE_OPTS_DISABLE_STANDARD_CONFORMING_STRINGS', 64);
+    \define('PG_QUERY_PARSE_OPTS_DISABLE_ESCAPE_STRING_WARNING', 128);
 }

@@ -9,13 +9,13 @@
 let
   libpg_query = stdenv.mkDerivation {
     pname = "libpg_query";
-    version = "17-6.1.0";
+    version = "17-latest";
 
     src = fetchFromGitHub {
       owner = "pganalyze";
       repo = "libpg_query";
-      rev = "17-6.1.0";
-      hash = "sha256-UXba2WYyIO7RcFcNZeLL+Q9CwlloMZ5oFfHfL7+j4dU=";
+      rev = "03e2f436c999a1d22dbce439573e8cfabced5720"; # 17-latest branch as of 2025-11-28
+      hash = "sha256-0fnQF4KSIVpNqxzdvS0UtHnqUmLXgBKI/XRZjNrYLSo=";
     };
 
     buildPhase = ''
@@ -25,7 +25,7 @@ let
     installPhase = ''
       mkdir -p $out/lib $out/include
       cp libpg_query.a $out/lib/
-      cp pg_query.h $out/include/
+      cp pg_query.h postgres_deparse.h $out/include/
     '';
   };
 

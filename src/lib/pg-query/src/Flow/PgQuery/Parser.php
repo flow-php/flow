@@ -58,4 +58,13 @@ final class Parser
     {
         return pg_query_split($sql);
     }
+
+    public function summary(string $sql, int $options = 0, int $truncateLimit = 0) : string
+    {
+        try {
+            return pg_query_summary($sql, $options, $truncateLimit);
+        } catch (\RuntimeException $e) {
+            throw new ParserException($e->getMessage());
+        }
+    }
 }

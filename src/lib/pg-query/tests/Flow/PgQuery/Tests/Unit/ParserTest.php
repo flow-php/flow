@@ -234,4 +234,178 @@ final class ParserTest extends TestCase
         self::assertCount(1, $statements);
         self::assertSame('SELECT 1', $statements[0]);
     }
+
+    public function test_summary_returns_protobuf_for_select() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary('SELECT * FROM users WHERE id = 1');
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+        self::assertGreaterThan(0, \strlen($summary));
+    }
+
+    public function test_summary_returns_protobuf_for_insert() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary("INSERT INTO users (name, email) VALUES ('john', 'john@example.com')");
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_returns_protobuf_for_update() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary("UPDATE users SET name = 'jane' WHERE id = 1");
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_returns_protobuf_for_delete() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary('DELETE FROM users WHERE id = 1');
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_returns_protobuf_for_join_query() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary('SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id');
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_returns_protobuf_for_subquery() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary('SELECT * FROM users WHERE id IN (SELECT user_id FROM orders)');
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_returns_protobuf_for_cte() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary('WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users');
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_returns_protobuf_for_ddl() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary('CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255))');
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_with_parse_options() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summary = $parser->summary('SELECT 1', PG_QUERY_PARSE_DEFAULT);
+
+        self::assertIsString($summary);
+        self::assertNotEmpty($summary);
+    }
+
+    public function test_summary_with_truncation_returns_different_result() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $longQuery = "SELECT * FROM users WHERE name = 'this is a very long string that should be truncated in the summary output'";
+
+        $summaryWithoutTruncation = $parser->summary($longQuery, 0, 0);
+        $summaryWithTruncation = $parser->summary($longQuery, 0, 20);
+
+        self::assertIsString($summaryWithTruncation);
+        self::assertNotEmpty($summaryWithTruncation);
+        self::assertNotSame($summaryWithoutTruncation, $summaryWithTruncation);
+    }
+
+    public function test_summary_different_queries_produce_different_results() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $summarySelect = $parser->summary('SELECT * FROM users');
+        $summaryInsert = $parser->summary("INSERT INTO users (name) VALUES ('john')");
+
+        self::assertNotSame($summarySelect, $summaryInsert);
+    }
+
+    public function test_summary_invalid_sql_throws_parser_exception() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+
+        $this->expectException(\Flow\PgQuery\Exception\ParserException::class);
+
+        $parser->summary('SELECT FROM WHERE');
+    }
+
+    public function test_summary_empty_query_throws_parser_exception() : void
+    {
+        if (!\function_exists('pg_query_summary')) {
+            self::markTestSkipped('pg_query_summary function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+
+        $this->expectException(\Flow\PgQuery\Exception\ParserException::class);
+
+        $parser->summary('');
+    }
 }
