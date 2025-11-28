@@ -35,9 +35,9 @@ jobs:
         uses: "actions/cache@v4"
         with:
           path: "var/infection/cache"
-          key: "php-${{ matrix.php-version }}-cache-infection-${{ hashFiles('infection.json', 'tools/infection/phpunit.xml', 'composer.lock') }}"
+          key: "php-${{ matrix.php-version }}-infection-cache-${{ hashFiles('infection.json', 'tools/infection/phpunit.xml', 'composer.lock') }}"
           restore-keys: |
-            php-${{ matrix.php-version }}-cache-infection-
+            php-${{ matrix.php-version }}-infection-cache-
 
       - name: "Mutation Tests"
         run: |
