@@ -17,6 +17,7 @@
 #include "ext/standard/info.h"
 #include "php_pg_query.h"
 #include "pg_query.h"
+#include "postgres_deparse.h"
 #include "zend_exceptions.h"
 #include "ext/spl/spl_exceptions.h"
 
@@ -384,6 +385,63 @@ PHP_FUNCTION(pg_query_deparse)
     pg_query_free_deparse_result(result);
 
     RETURN_STR(sql);
+}
+
+PHP_FUNCTION(pg_query_deparse_opts)
+{
+    char *protobuf;
+    size_t protobuf_len;
+    bool pretty_print = false;
+    zend_long indent_size = 4;
+    zend_long max_line_length = 80;
+    bool trailing_newline = false;
+    bool commas_start_of_line = false;
+
+    ZEND_PARSE_PARAMETERS_START(1, 6)
+        Z_PARAM_STRING(protobuf, protobuf_len)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_BOOL(pretty_print)
+        Z_PARAM_LONG(indent_size)
+        Z_PARAM_LONG(max_line_length)
+        Z_PARAM_BOOL(trailing_newline)
+        Z_PARAM_BOOL(commas_start_of_line)
+    ZEND_PARSE_PARAMETERS_END();
+
+    PgQueryProtobuf pbuf;
+    pbuf.data = protobuf;
+    pbuf.len = protobuf_len;
+
+    struct PostgresDeparseOpts opts = {0};
+    opts.comments = NULL;
+    opts.comment_count = 0;
+    opts.pretty_print = pretty_print;
+    opts.indent_size = (int)indent_size;
+    opts.max_line_length = (int)max_line_length;
+    opts.trailing_newline = trailing_newline;
+    opts.commas_start_of_line = commas_start_of_line;
+
+    PgQueryDeparseResult result = pg_query_deparse_protobuf_opts(pbuf, opts);
+
+    if (result.error) {
+        char error_msg[1024];
+
+        if (result.error->message) {
+            strncpy(error_msg, result.error->message, sizeof(error_msg) - 1);
+            error_msg[sizeof(error_msg) - 1] = '\0';
+        } else {
+            strcpy(error_msg, "Deparse error");
+        }
+
+        pg_query_free_deparse_result(result);
+
+        zend_throw_exception(spl_ce_RuntimeException, error_msg, 0);
+        RETURN_THROWS();
+    }
+
+    zend_string *formatted_sql = zend_string_init(result.query, strlen(result.query), 0);
+    pg_query_free_deparse_result(result);
+
+    RETURN_STR(formatted_sql);
 }
 
 PHP_FUNCTION(pg_query_summary)
