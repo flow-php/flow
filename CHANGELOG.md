@@ -16,6 +16,7 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2040](https://github.com/flow-php/flow/pull/2040) - **cast thrift encoded values to ints to preven issues with 32 systems** - [@norberttech](https://github.com/norberttech)
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **all actions will now trigger an event that other actions are going to listen to** - [@norberttech](https://github.com/norberttech)
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground will display spinner while action is executed** - [@norberttech](https://github.com/norberttech)
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
