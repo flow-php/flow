@@ -16,6 +16,7 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [d70698](https://github.com/flow-php/flow/commit/d70698e0b463ef9f2e8e391e9752828ed8019ec1) - **chore: added documentation for building wasm** - [@norberttech](https://github.com/norberttech)
 - [#2040](https://github.com/flow-php/flow/pull/2040) - **cast thrift encoded values to ints to preven issues with 32 systems** - [@norberttech](https://github.com/norberttech)
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **all actions will now trigger an event that other actions are going to listen to** - [@norberttech](https://github.com/norberttech)
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground will display spinner while action is executed** - [@norberttech](https://github.com/norberttech)
