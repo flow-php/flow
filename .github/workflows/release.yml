@@ -26,9 +26,10 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           dependencies: "locked"
           coverage: "none"
-          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pg_query-https://github.com/flow-php/pg-query-ext@1.x'
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib'
           cache-key-suffix: "-locked-phar"
-          apt-packages: "libprotobuf-c-dev"
+          apt-packages: "build-essential autoconf automake libtool protobuf-compiler libprotobuf-c-dev"
+          pie-extensions: "flow-php/pg-query-ext:1.x-dev"
 
       - name: "Build PHAR file"
         run: "composer build:phar"

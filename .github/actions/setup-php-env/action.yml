@@ -47,6 +47,10 @@ inputs:
     description: 'Additional apt packages to install before PHP setup (e.g., libprotobuf-c-dev for pg_query extension)'
     required: false
     default: ''
+  pie-extensions:
+    description: 'Space-separated list of PHP extensions to install via PIE (e.g., "flow-php/pg-query-ext:1.x-dev")'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -65,6 +69,23 @@ runs:
         extensions: ${{ inputs.extensions }}
         coverage: ${{ inputs.coverage != '' && inputs.coverage || null }}
       env: ${{ inputs.php-env != '' && fromJSON(inputs.php-env) || fromJSON('{}') }}
+
+    - name: "Install PIE"
+      if: ${{ inputs.pie-extensions != '' }}
+      shell: bash
+      run: |
+        curl -L -o /usr/local/bin/pie https://github.com/php/pie/releases/latest/download/pie.phar
+        chmod +x /usr/local/bin/pie
+        pie --version
+
+    - name: "Install PIE extensions"
+      if: ${{ inputs.pie-extensions != '' }}
+      shell: bash
+      run: |
+        for ext in ${{ inputs.pie-extensions }}; do
+          echo "Installing extension: $ext"
+          sudo pie install "$ext"
+        done
 
     - name: "Get Composer Cache Directory"
       id: composer-cache
