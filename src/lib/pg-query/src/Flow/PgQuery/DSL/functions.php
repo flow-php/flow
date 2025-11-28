@@ -41,6 +41,16 @@ function pg_normalize(string $sql) : ?string
 }
 
 /**
+ * Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).
+ * This handles DDL statements differently from pg_normalize() which is optimized for DML.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_normalize_utility(string $sql) : ?string
+{
+    return (new Parser())->normalizeUtility($sql);
+}
+
+/**
  * Split string with multiple SQL statements into array of individual statements.
  *
  * @return array<string>

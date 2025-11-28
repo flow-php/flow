@@ -30,6 +30,13 @@ final class Parser
         return $result === false ? null : $result;
     }
 
+    public function normalizeUtility(string $sql) : ?string
+    {
+        $result = pg_query_normalize_utility($sql);
+
+        return $result === false ? null : $result;
+    }
+
     public function parse(string $sql) : ParsedQuery
     {
         try {

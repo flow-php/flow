@@ -195,6 +195,29 @@ PHP_FUNCTION(pg_query_normalize)
     RETURN_STR(normalized);
 }
 
+PHP_FUNCTION(pg_query_normalize_utility)
+{
+    char *sql;
+    size_t sql_len;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STRING(sql, sql_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    PgQueryNormalizeResult result = pg_query_normalize_utility(sql);
+
+    if (result.error) {
+        pg_query_free_normalize_result(result);
+        RETURN_FALSE;
+    }
+
+    zend_string *normalized = zend_string_init(result.normalized_query,
+                                              strlen(result.normalized_query), 0);
+    pg_query_free_normalize_result(result);
+
+    RETURN_STR(normalized);
+}
+
 PHP_FUNCTION(pg_query_parse_plpgsql)
 {
     char *sql;
