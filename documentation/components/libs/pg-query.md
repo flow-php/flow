@@ -68,9 +68,15 @@ $normalized = $parser->normalize("SELECT * FROM users WHERE name = 'John'");
 $normalized = $parser->normalize('SELECT * FROM users WHERE id = :id');
 // Returns: SELECT * FROM users WHERE id = $1
 
+// Normalize utility/DDL statements
+$normalized = $parser->normalizeUtility('CREATE TABLE users (id INT, name VARCHAR(255))');
+
 // Split multiple statements
 $statements = $parser->split('SELECT 1; SELECT 2;');
 // Returns: ['SELECT 1', ' SELECT 2']
+
+// Generate query summary (protobuf format, useful for logging)
+$summary = $parser->summary('SELECT * FROM users WHERE id = 1');
 ```
 
 ## DSL Functions
@@ -78,13 +84,37 @@ $statements = $parser->split('SELECT 1; SELECT 2;');
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{pg_parse, pg_parser, pg_fingerprint, pg_normalize, pg_split};
+use function Flow\PgQuery\DSL\{
+    pg_parse,
+    pg_parser,
+    pg_fingerprint,
+    pg_normalize,
+    pg_normalize_utility,
+    pg_split,
+    pg_deparse,
+    pg_deparse_options,
+    pg_format,
+    pg_summary
+};
 
 $query = pg_parse('SELECT * FROM users');
 $parser = pg_parser();
 $fingerprint = pg_fingerprint('SELECT * FROM users WHERE id = 1');
 $normalized = pg_normalize('SELECT * FROM users WHERE id = 1');
+$normalizedDdl = pg_normalize_utility('CREATE TABLE users (id INT)');
 $statements = pg_split('SELECT 1; SELECT 2;');
+$summary = pg_summary('SELECT * FROM users');
+
+// Deparse (convert AST back to SQL)
+$sql = pg_deparse($query);  // Simple output
+$sql = pg_deparse($query, pg_deparse_options()->indentSize(2));  // Pretty printed
+
+// Format SQL (parse + deparse with pretty printing)
+$formatted = pg_format('SELECT id,name FROM users WHERE active=true');
+// Returns:
+// SELECT id, name
+// FROM users
+// WHERE active = true
 ```
 
 ## ParsedQuery Methods
@@ -94,8 +124,54 @@ $statements = pg_split('SELECT 1; SELECT 2;');
 | `tables()` | Get all tables referenced in the query | `array<Table>` |
 | `columns(?string $tableName)` | Get columns, optionally filtered by table/alias | `array<Column>` |
 | `functions()` | Get all function calls | `array<FunctionCall>` |
+| `deparse(?DeparseOptions $options)` | Convert AST back to SQL string | `string` |
 | `traverse(NodeVisitor ...$visitors)` | Traverse AST with custom visitors | `void` |
 | `raw()` | Access underlying protobuf ParseResult | `ParseResult` |
+
+## Deparsing (AST to SQL)
+
+Convert a parsed query back to SQL, optionally with pretty-printing:
+
+```php
+<?php
+
+use Flow\PgQuery\{DeparseOptions, Parser};
+
+$parser = new Parser();
+$query = $parser->parse('SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id WHERE u.active = true');
+
+// Simple deparse (compact output)
+$sql = $query->deparse();
+// Returns: SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id WHERE u.active = true
+
+// Pretty-printed output
+$sql = $query->deparse(DeparseOptions::new());
+// Returns:
+// SELECT u.id, u.name
+// FROM
+//     users u
+//     JOIN orders o ON u.id = o.user_id
+// WHERE u.active = true
+
+// Custom formatting options
+$sql = $query->deparse(
+    DeparseOptions::new()
+        ->indentSize(2)           // 2 spaces per indent level
+        ->maxLineLength(60)       // Wrap at 60 characters
+        ->trailingNewline()       // Add newline at end
+        ->commasStartOfLine()     // Place commas at line start
+);
+```
+
+### DeparseOptions
+
+| Method | Description | Default |
+|--------|-------------|---------|
+| `prettyPrint(bool)` | Enable/disable pretty printing | `true` |
+| `indentSize(int)` | Spaces per indentation level | `4` |
+| `maxLineLength(int)` | Maximum line length before wrapping | `80` |
+| `trailingNewline(bool)` | Add trailing newline at end | `false` |
+| `commasStartOfLine(bool)` | Place commas at start of lines | `false` |
 
 ## Custom AST Traversal
 
