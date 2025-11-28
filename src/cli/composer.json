@@ -27,17 +27,7 @@
         "optimize-autoloader": true,
         "sort-packages": true
     },
-    "extra": {
-      "google/apiclient-services": [
-        "Sheets"
-      ]
-    },
-  "scripts": {
-    "pre-autoload-dump": [
-      "Google\\Task\\Composer::cleanup"
-    ]
-  },
-  "license": "MIT",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Flow\\": [
