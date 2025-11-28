@@ -24,8 +24,8 @@ final readonly class Metadata
         return new self(
             Schema::fromThrift($thrift->schema),
             RowGroups::fromThrift($thrift->row_groups, $options),
-            $thrift->num_rows,
-            $thrift->version,
+            (int) $thrift->num_rows,
+            (int) $thrift->version,
             $thrift->created_by
         );
     }

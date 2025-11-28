@@ -46,15 +46,15 @@ final readonly class ColumnChunk
         return new self(
             PhysicalType::from($thrift->meta_data->type),
             Compressions::from($thrift->meta_data->codec),
-            $thrift->meta_data->num_values,
-            $thrift->file_offset,
+            (int) $thrift->meta_data->num_values,
+            (int) $thrift->file_offset,
             $thrift->meta_data->path_in_schema,
             \array_map(static fn ($encoding) => Encodings::from($encoding), $thrift->meta_data->encodings),
-            $thrift->meta_data->total_compressed_size,
-            $thrift->meta_data->total_uncompressed_size,
-            $thrift->meta_data->dictionary_page_offset,
-            $thrift->meta_data->data_page_offset,
-            $thrift->meta_data->index_page_offset,
+            (int) $thrift->meta_data->total_compressed_size,
+            (int) $thrift->meta_data->total_uncompressed_size,
+            $thrift->meta_data->dictionary_page_offset !== null ? (int) $thrift->meta_data->dictionary_page_offset : null,
+            $thrift->meta_data->data_page_offset !== null ? (int) $thrift->meta_data->data_page_offset : null,
+            $thrift->meta_data->index_page_offset !== null ? (int) $thrift->meta_data->index_page_offset : null,
             $thrift->meta_data->statistics ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
             $options
         );

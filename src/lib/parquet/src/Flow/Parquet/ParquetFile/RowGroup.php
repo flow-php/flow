@@ -25,7 +25,7 @@ final class RowGroup
     {
         return new self(
             \array_map(static fn (\Flow\Parquet\ThriftModel\ColumnChunk $columnChunk) => ColumnChunk::fromThrift($columnChunk, $options), $thrift->columns),
-            $thrift->num_rows
+            (int) $thrift->num_rows
         );
     }
 

@@ -17,8 +17,8 @@ final readonly class Decimal
     public static function fromThrift(DecimalType $thrift) : self
     {
         return new self(
-            $thrift->scale,
-            $thrift->precision
+            (int) $thrift->scale,
+            (int) $thrift->precision
         );
     }
 

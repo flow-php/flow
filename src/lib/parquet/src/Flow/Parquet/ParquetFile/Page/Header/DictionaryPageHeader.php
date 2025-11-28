@@ -18,7 +18,7 @@ final readonly class DictionaryPageHeader
     {
         return new self(
             Encodings::from($thrift->encoding),
-            $thrift->num_values
+            (int) $thrift->num_values
         );
     }
 

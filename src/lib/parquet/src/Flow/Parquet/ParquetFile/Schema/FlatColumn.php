@@ -95,9 +95,9 @@ final class FlatColumn implements Column
             $thrift->converted_type === null ? null : ConvertedType::from($thrift->converted_type),
             $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType),
             $thrift->repetition_type === null ? null : Repetition::from($thrift->repetition_type),
-            $thrift->precision,
-            $thrift->scale,
-            $thrift->type_length,
+            $thrift->precision !== null ? (int) $thrift->precision : null,
+            $thrift->scale !== null ? (int) $thrift->scale : null,
+            $thrift->type_length !== null ? (int) $thrift->type_length : null,
         );
     }
 
