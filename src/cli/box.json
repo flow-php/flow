@@ -13,6 +13,7 @@
     "dotenv",
     "var-exporter"
   ],
+  "check-requirements": false,
   "compression": "GZ",
   "directories": [
     "src",
@@ -20,7 +21,5 @@
   ],
   "exclude-dev-files": false,
   "git-version": "git_version",
-  "main": "flow",
-  "metadata": "FlowVersion::getVersion",
   "output": "./../../build/flow.phar"
 }

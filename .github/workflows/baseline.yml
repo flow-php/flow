@@ -39,7 +39,8 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           dependencies: "locked"
           coverage: "none"
-          cache-key-suffix: "-locked"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pg_query-https://github.com/flow-php/pg-query-ext@1.x'
+          cache-key-suffix: "-locked-phar"
 
       - name: "Build PHAR file"
         run: "composer build:phar"
@@ -173,10 +174,14 @@ jobs:
         with:
           php-version: "${{ matrix.php-version }}"
           dependencies: "locked"
-          cache-key-suffix: "-website"
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pg_query-https://github.com/flow-php/pg-query-ext@1.x'
+          cache-key-suffix: "-website-phar"
 
       - name: "Generate documentation"
         run: "composer build:docs"
+
+      - name: "Build latest version Flow Phar for playground"
+        run: "composer build:phar"
 
       - name: "Install Landing dependencies"
         run: "composer install --no-interaction --no-progress "

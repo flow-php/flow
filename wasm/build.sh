@@ -81,10 +81,21 @@ PG_QUERY_EXT_DST="$PHP_PATH/ext/pg_query"
 rm -rf "$PG_QUERY_EXT_DST"
 cp -r "$PG_QUERY_EXT_SRC" "$PG_QUERY_EXT_DST"
 
+echo "Add snappy extension"
+SNAPPY_EXT_DIR=php-ext-snappy
+if [ ! -d "$SNAPPY_EXT_DIR" ]; then
+    git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git "$SNAPPY_EXT_DIR"
+fi
+
+SNAPPY_EXT_DST="$PHP_PATH/ext/snappy"
+rm -rf "$SNAPPY_EXT_DST"
+cp -r "$SNAPPY_EXT_DIR" "$SNAPPY_EXT_DST"
+
 echo "Configure PHP"
 
 # Use -Oz for size optimization instead of -O3 for speed
 export CFLAGS="-Oz -flto -fPIC -g0 -DZEND_MM_ERROR=0 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -sUSE_ZLIB=1"
+export CXXFLAGS="-Oz -flto -fPIC -g0 -std=c++11 -sUSE_ZLIB=1"
 export LDFLAGS="-L$LIBXML2_INSTALL_DIR/lib -L$LIBPG_QUERY_INSTALL_DIR -sUSE_ZLIB=1"
 
 cd $PHP_PATH
@@ -131,7 +142,8 @@ emconfigure ./configure \
   --enable-xmlreader \
   --enable-xmlwriter \
   --enable-pg-query \
-  --with-pg-query=$LIBPG_QUERY_INSTALL_DIR
+  --with-pg-query=$LIBPG_QUERY_INSTALL_DIR \
+  --enable-snappy
 
 if [ $? -ne 0 ]; then
     echo "emconfigure failed. Content of config.log:"

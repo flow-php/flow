@@ -18,13 +18,26 @@
         "flow-php/etl-adapter-json": "self.version",
         "flow-php/etl-adapter-text": "self.version",
         "flow-php/etl-adapter-xml": "self.version",
-        "flow-php/parquet-viewer": "self.version"
+        "flow-php/etl-adapter-excel": "self.version",
+        "flow-php/etl-adapter-chartjs": "self.version",
+        "flow-php/openapi-specification-bridge": "self.version",
+        "flow-php/pg-query": "1.x-dev"
     },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
     },
-    "license": "MIT",
+    "extra": {
+      "google/apiclient-services": [
+        "Sheets"
+      ]
+    },
+  "scripts": {
+    "pre-autoload-dump": [
+      "Google\\Task\\Composer::cleanup"
+    ]
+  },
+  "license": "MIT",
     "autoload": {
         "psr-4": {
             "Flow\\": [

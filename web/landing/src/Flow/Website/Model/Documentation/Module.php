@@ -25,6 +25,7 @@ enum Module : string
     case TEXT = 'Text';
     case TYPES = 'Types';
     case XML = 'XML';
+    case PG_QUERY = 'PG_QUERY';
 
     public static function fromName(string $name) : self
     {
@@ -53,6 +54,7 @@ enum Module : string
             self::AZURE_SDK => 15,
             self::HTTP => 16,
             self::EXCEL => 17,
+            self::PG_QUERY => 18,
             default => 99,
         };
     }
