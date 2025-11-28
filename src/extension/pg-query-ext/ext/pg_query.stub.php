@@ -104,3 +104,20 @@ function pg_query_scan(string $sql) : string
 function pg_query_deparse(string $protobuf) : string
 {
 }
+
+/**
+ * Generate a summary of parsed queries in protobuf format.
+ *
+ * Useful for query monitoring and logging without full AST overhead.
+ *
+ * @param string $sql The SQL query to summarize
+ * @param int $options Parser options (PG_QUERY_PARSE_* constants)
+ * @param int $truncate_limit Maximum length for truncated values (0 = no truncation)
+ *
+ * @throws RuntimeException on parse error
+ *
+ * @return string Protobuf-encoded summary
+ */
+function pg_query_summary(string $sql, int $options = 0, int $truncate_limit = 0) : string
+{
+}

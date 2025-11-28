@@ -45,6 +45,20 @@ ZEND_GET_MODULE(pg_query)
 PHP_MINIT_FUNCTION(pg_query)
 {
     pg_query_init();
+
+    /* Parse mode constants */
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_DEFAULT", 0, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_TYPE_NAME", 1 << 0, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_PLPGSQL_EXPR", 1 << 1, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_PLPGSQL_ASSIGN1", 1 << 2, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_PLPGSQL_ASSIGN2", 1 << 3, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_PLPGSQL_ASSIGN3", 1 << 4, CONST_CS | CONST_PERSISTENT);
+
+    /* GUC option flags */
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_OPTS_DISABLE_BACKSLASH_QUOTE", 1 << 5, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_OPTS_DISABLE_STANDARD_CONFORMING_STRINGS", 1 << 6, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("PG_QUERY_PARSE_OPTS_DISABLE_ESCAPE_STRING_WARNING", 1 << 7, CONST_CS | CONST_PERSISTENT);
+
     return SUCCESS;
 }
 
@@ -370,4 +384,49 @@ PHP_FUNCTION(pg_query_deparse)
     pg_query_free_deparse_result(result);
 
     RETURN_STR(sql);
+}
+
+PHP_FUNCTION(pg_query_summary)
+{
+    char *sql;
+    size_t sql_len;
+    zend_long options = 0;
+    zend_long truncate_limit = 0;
+
+    ZEND_PARSE_PARAMETERS_START(1, 3)
+        Z_PARAM_STRING(sql, sql_len)
+        Z_PARAM_OPTIONAL
+        Z_PARAM_LONG(options)
+        Z_PARAM_LONG(truncate_limit)
+    ZEND_PARSE_PARAMETERS_END();
+
+    PgQuerySummaryParseResult result = pg_query_summary(sql, (int)options, (int)truncate_limit);
+
+    if (result.error) {
+        char error_msg[1024];
+        int cursor_pos = result.error->cursorpos;
+
+        if (result.error->message) {
+            strncpy(error_msg, result.error->message, sizeof(error_msg) - 1);
+            error_msg[sizeof(error_msg) - 1] = '\0';
+        } else {
+            strcpy(error_msg, "Summary parse error");
+        }
+
+        pg_query_free_summary_parse_result(result);
+
+        zend_throw_exception_ex(spl_ce_RuntimeException, cursor_pos, "%s", error_msg);
+        RETURN_THROWS();
+    }
+
+    zend_string *protobuf_data = NULL;
+    if (result.summary.len > 0 && result.summary.data != NULL) {
+        protobuf_data = zend_string_init(result.summary.data, result.summary.len, 0);
+    } else {
+        protobuf_data = zend_string_init("", 0, 0);
+    }
+
+    pg_query_free_summary_parse_result(result);
+
+    RETURN_STR(protobuf_data);
 }

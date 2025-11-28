@@ -20,7 +20,7 @@ if test "$PHP_PG_QUERY" != "no"; then
       LIBPG_QUERY_VERSION="16-5.2.0"
       ;;
     17|yes|"")
-      LIBPG_QUERY_VERSION="17-6.1.0"
+      LIBPG_QUERY_VERSION="17-latest"
       PHP_PG_VERSION="17"
       ;;
     *)

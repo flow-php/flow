@@ -74,3 +74,13 @@ function pg_deparse(ParsedQuery $query) : string
 {
     return $query->deparse();
 }
+
+/**
+ * Generate a summary of parsed queries in protobuf format.
+ * Useful for query monitoring and logging without full AST overhead.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_summary(string $sql, int $options = 0, int $truncateLimit = 0) : string
+{
+    return (new Parser())->summary($sql, $options, $truncateLimit);
+}
