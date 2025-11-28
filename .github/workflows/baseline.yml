@@ -41,6 +41,7 @@ jobs:
           coverage: "none"
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pg_query-https://github.com/flow-php/pg-query-ext@1.x'
           cache-key-suffix: "-locked-phar"
+          apt-packages: "libprotobuf-c-dev"
 
       - name: "Build PHAR file"
         run: "composer build:phar"
@@ -176,6 +177,7 @@ jobs:
           dependencies: "locked"
           extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pg_query-https://github.com/flow-php/pg-query-ext@1.x'
           cache-key-suffix: "-website-phar"
+          apt-packages: "libprotobuf-c-dev"
 
       - name: "Generate documentation"
         run: "composer build:docs"
