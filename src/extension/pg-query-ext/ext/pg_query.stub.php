@@ -18,6 +18,20 @@ function pg_query_parse(string $sql) : string
 }
 
 /**
+ * Parse PostgreSQL SQL and return protobuf-serialized AST.
+ *
+ * This is more efficient than pg_query_parse() when working with protobuf objects,
+ * as it skips the JSON serialization step.
+ *
+ * @throws RuntimeException on parse error
+ *
+ * @return string Protobuf-serialized parse tree
+ */
+function pg_query_parse_protobuf(string $sql) : string
+{
+}
+
+/**
  * Generate fingerprint for SQL query.
  *
  * @return false|string Returns fingerprint string or FALSE on error
@@ -63,5 +77,18 @@ function pg_query_split(string $sql) : array
  * @return string Protobuf-encoded scan result
  */
 function pg_query_scan(string $sql) : string
+{
+}
+
+/**
+ * Deparse a protobuf-serialized parse tree back to SQL.
+ *
+ * @param string $protobuf The protobuf-serialized parse tree (from ParseResult::serializeToString())
+ *
+ * @throws RuntimeException on deparse error
+ *
+ * @return string The SQL query string
+ */
+function pg_query_deparse(string $protobuf) : string
 {
 }

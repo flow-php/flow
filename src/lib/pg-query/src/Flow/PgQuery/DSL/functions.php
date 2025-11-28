@@ -50,3 +50,17 @@ function pg_split(string $sql) : array
 {
     return (new Parser())->split($sql);
 }
+
+/**
+ * Convert a ParsedQuery AST back to SQL string.
+ *
+ * This function serializes the AST to protobuf binary format and uses
+ * libpg_query's deparser to reconstruct the SQL query.
+ *
+ * @throws \RuntimeException if deparsing fails
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_deparse(ParsedQuery $query) : string
+{
+    return $query->deparse();
+}

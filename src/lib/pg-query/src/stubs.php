@@ -72,4 +72,33 @@ if (!\function_exists('pg_query_parse')) {
     {
         throw new \RuntimeException('pg_query extension is not loaded');
     }
+
+    /**
+     * Parse PostgreSQL SQL and return protobuf-serialized AST.
+     *
+     * This is more efficient than pg_query_parse() when working with protobuf objects,
+     * as it skips the JSON serialization step.
+     *
+     * @throws \RuntimeException on parse error
+     *
+     * @return string Protobuf-serialized parse tree
+     */
+    function pg_query_parse_protobuf(string $sql) : string
+    {
+        throw new \RuntimeException('pg_query extension is not loaded');
+    }
+
+    /**
+     * Deparse a protobuf-serialized parse tree back to SQL.
+     *
+     * @param string $protobuf The protobuf-serialized parse tree (from ParseResult::serializeToString())
+     *
+     * @throws \RuntimeException on deparse error
+     *
+     * @return string The SQL query string
+     */
+    function pg_query_deparse(string $protobuf) : string
+    {
+        throw new \RuntimeException('pg_query extension is not loaded');
+    }
 }
