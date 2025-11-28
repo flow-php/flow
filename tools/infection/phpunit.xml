@@ -22,12 +22,12 @@
   <source>
     <include>
         <directory suffix=".php">../../src/core/etl/src</directory>
-        <directory suffix=".php">../../src/core/lib/array-dot</directory>
-        <directory suffix=".php">../../src/core/lib/dremel</directory>
-        <directory suffix=".php">../../src/core/lib/types</directory>
-        <directory suffix=".php">../../src/core/lib/doctrine-dbal-bulk</directory>
-        <directory suffix=".php">../../src/core/lib/filesystem</directory>
-        <directory suffix=".php">../../src/core/lib/parquet</directory>
+        <directory suffix=".php">../../src/lib/array-dot/src</directory>
+        <directory suffix=".php">../../src/lib/dremel/src</directory>
+        <directory suffix=".php">../../src/lib/types/src</directory>
+        <directory suffix=".php">../../src/lib/doctrine-dbal-bulk/src</directory>
+        <directory suffix=".php">../../src/lib/filesystem/src</directory>
+        <directory suffix=".php">../../src/lib/parquet/src</directory>
     </include>
     <exclude>
       <directory suffix=".php">../../src/lib/parquet/src/Flow/Parquet/Thrift</directory>
