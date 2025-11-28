@@ -48,7 +48,7 @@ if [ ! -d "$LIBXML2_DIR" ]; then
 fi
 
 echo "Build libpg_query for WebAssembly"
-LIBPG_QUERY_VERSION=17-6.1.0
+LIBPG_QUERY_VERSION=17-latest
 LIBPG_QUERY_DIR=libpg_query
 LIBPG_QUERY_INSTALL_DIR="$PROJECT_ROOT/$LIBPG_QUERY_DIR"
 
@@ -94,7 +94,7 @@ cp -r "$SNAPPY_EXT_DIR" "$SNAPPY_EXT_DST"
 echo "Configure PHP"
 
 # Use -Oz for size optimization instead of -O3 for speed
-export CFLAGS="-Oz -flto -fPIC -g0 -DZEND_MM_ERROR=0 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -sUSE_ZLIB=1"
+export CFLAGS="-Oz -flto -fPIC -g0 -DZEND_MM_ERROR=0 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -I$LIBPG_QUERY_INSTALL_DIR/src -sUSE_ZLIB=1"
 export CXXFLAGS="-Oz -flto -fPIC -g0 -std=c++11 -sUSE_ZLIB=1"
 export LDFLAGS="-L$LIBXML2_INSTALL_DIR/lib -L$LIBPG_QUERY_INSTALL_DIR -sUSE_ZLIB=1"
 
