@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\DSL;
 
+use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\ETL\Attribute\DocumentationDSL;
-use Flow\ETL\Attribute\Module;
-use Flow\ETL\Attribute\Type as DSLType;
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pg_parser() : Parser
@@ -34,7 +32,7 @@ function pg_fingerprint(string $sql) : ?string
 /**
  * Normalize SQL query by replacing literal values and named parameters with positional parameters.
  * WHERE id = :id will be changed into WHERE id = $1
- * WHERE id = 1 will be changed into WHERE id = $1
+ * WHERE id = 1 will be changed into WHERE id = $1.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pg_normalize(string $sql) : ?string

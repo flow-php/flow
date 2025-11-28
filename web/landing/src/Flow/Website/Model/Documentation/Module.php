@@ -21,11 +21,11 @@ enum Module : string
     case JSON = 'JSON';
     case MEILI_SEARCH = 'Meili Search';
     case PARQUET = 'Parquet';
+    case PG_QUERY = 'PG_QUERY';
     case S3_FILESYSTEM = 'S3 Filesystem';
     case TEXT = 'Text';
     case TYPES = 'Types';
     case XML = 'XML';
-    case PG_QUERY = 'PG_QUERY';
 
     public static function fromName(string $name) : self
     {

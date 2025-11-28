@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 350
+ * Total functions: 355
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -3298,6 +3298,90 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\Filesystem\\DSL\\path_stdout(" + "$" + "{" + "1:options" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_fingerprint",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_fingerprint</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Returns a fingerprint of the given SQL query.<br>Literal values are normalized so they won\'t affect the fingerprint.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_fingerprint(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_normalize",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_normalize</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Normalize SQL query by replacing literal values and named parameters with positional parameters.<br>WHERE id = :id will be changed into WHERE id = $1<br>WHERE id = 1 will be changed into WHERE id = $1
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_normalize(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_parse",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_parse</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">ParsedQuery</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_parse(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_parser",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_parser</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Parser</span>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_parser()"),
+        boost: 10
+    },        {
+        label: "pg_split",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_split</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">array</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Split string with multiple SQL statements into array of individual statements.<br>@return array<string>
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_split(" + "$" + "{" + "1:sql" + "}" + ")"),
         boost: 10
     },        {
         label: "pie_chart",
