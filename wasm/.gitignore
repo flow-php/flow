@@ -4,6 +4,7 @@
 *.phar.br
 manifest.json
 /libxml2-*
+/libpg_query
 
 # Build logs
 *.log

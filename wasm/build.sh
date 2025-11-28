@@ -47,6 +47,25 @@ if [ ! -d "$LIBXML2_DIR" ]; then
     cd $PROJECT_ROOT
 fi
 
+echo "Build libpg_query for WebAssembly"
+LIBPG_QUERY_VERSION=17-6.1.0
+LIBPG_QUERY_DIR=libpg_query
+LIBPG_QUERY_INSTALL_DIR="$PROJECT_ROOT/$LIBPG_QUERY_DIR"
+
+if [ ! -d "$LIBPG_QUERY_DIR" ]; then
+    git clone --depth=1 --branch=$LIBPG_QUERY_VERSION \
+        https://github.com/pganalyze/libpg_query.git "$LIBPG_QUERY_DIR"
+    cd $LIBPG_QUERY_DIR
+
+    # Build with Emscripten - override CC and AR
+    # The Makefile does AR := $(AR) rs, but command-line AR overrides this
+    # So we must include the 'rs' flags ourselves. However, LLVM ar doesn't support 'g',
+    # and the Makefile @ suppresses the echo, so we pass 'rcs' which is compatible.
+    emmake make build -j$(nproc) CC=emcc AR="emar rcs"
+
+    cd $PROJECT_ROOT
+fi
+
 echo "Download and extract PHP if needed"
 if [ ! -d "$PHP_PATH" ]; then
     if [ ! -e $PHP_PATH.tar.xz ]; then
@@ -55,10 +74,18 @@ if [ ! -d "$PHP_PATH" ]; then
     tar xf $PHP_PATH.tar.xz
 fi
 
+echo "Add pg_query extension"
+PG_QUERY_EXT_SRC="$PROJECT_ROOT/../src/extension/pg-query-ext/ext"
+PG_QUERY_EXT_DST="$PHP_PATH/ext/pg_query"
+
+rm -rf "$PG_QUERY_EXT_DST"
+cp -r "$PG_QUERY_EXT_SRC" "$PG_QUERY_EXT_DST"
+
 echo "Configure PHP"
 
-export CFLAGS="-O3 -flto -fPIC -DZEND_MM_ERROR=0 -I$LIBXML2_INSTALL_DIR/include/libxml2 -sUSE_ZLIB=1"
-export LDFLAGS="-L$LIBXML2_INSTALL_DIR/lib -sUSE_ZLIB=1"
+# Use -Oz for size optimization instead of -O3 for speed
+export CFLAGS="-Oz -flto -fPIC -g0 -DZEND_MM_ERROR=0 -I$LIBXML2_INSTALL_DIR/include/libxml2 -I$LIBPG_QUERY_INSTALL_DIR -sUSE_ZLIB=1"
+export LDFLAGS="-L$LIBXML2_INSTALL_DIR/lib -L$LIBPG_QUERY_INSTALL_DIR -sUSE_ZLIB=1"
 
 cd $PHP_PATH
 
@@ -102,7 +129,9 @@ emconfigure ./configure \
   --enable-xml \
   --enable-dom \
   --enable-xmlreader \
-  --enable-xmlwriter
+  --enable-xmlwriter \
+  --enable-pg-query \
+  --with-pg-query=$LIBPG_QUERY_INSTALL_DIR
 
 if [ $? -ne 0 ]; then
     echo "emconfigure failed. Content of config.log:"
@@ -148,7 +177,7 @@ emcc $CFLAGS $LDFLAGS \
   -s ASYNCIFY=1 \
   -s STACK_OVERFLOW_CHECK=0 \
   -s SAFE_HEAP=0 \
-  libs/libphp.a pib_eval.o $LIBXML2_INSTALL_DIR/lib/libxml2.a -o out/php.js
+  libs/libphp.a pib_eval.o $LIBXML2_INSTALL_DIR/lib/libxml2.a $LIBPG_QUERY_INSTALL_DIR/libpg_query.a -o out/php.js
 
 echo "Copy outputs to web/landing/assets/wasm"
 OUTPUT_DIR="$PROJECT_ROOT/../web/landing/assets/wasm"
