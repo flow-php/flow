@@ -21,6 +21,9 @@
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [231bb7](https://github.com/flow-php/flow/commit/231bb7e3dc48ed6176b8a01a2ee8fda5e3702e64) - **added missing dependency to flow.phar** - [@norberttech](https://github.com/norberttech)
+- [d28ae8](https://github.com/flow-php/flow/commit/d28ae8812de8d76c9a278d33b710732c172b4902) - **install pg-query-ext through pie on github actions** - [@norberttech](https://github.com/norberttech)
+- [c810fa](https://github.com/flow-php/flow/commit/c810fa28c811b28f63eb006efa9dfa21bfca57bd) - **building pg_query extension on baseline workflow** - [@norberttech](https://github.com/norberttech)
 - [#2039](https://github.com/flow-php/flow/pull/2039) - **deprecation notices from box while building phar** - [@norberttech](https://github.com/norberttech)
 - [319a3b](https://github.com/flow-php/flow/commit/319a3bafb96a2f141ccad873712fd348a6d15aa3) - **uploading code coverage to codecov during baseline gh actions workflow** - [@norberttech](https://github.com/norberttech)
 - [60bde5](https://github.com/flow-php/flow/commit/60bde55647b003fafce16d987257b7a948c8c986) - **updated version of flow.phar available in playground** - [@norberttech](https://github.com/norberttech)
