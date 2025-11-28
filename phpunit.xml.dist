@@ -8,180 +8,187 @@
         displayDetailsOnTestsThatTriggerErrors="true"
         cacheDirectory="var/phpunit/cache"
 >
-  <php>
-    <env name="AZURITE_HOST" value="localhost"/>
-    <env name="AZURITE_BLOB_PORT" value="10000"/>
-    <env name="AZURITE_ACCOUNT_NAME" value="flowphpaccount01"/>
-    <env name="AZURITE_ACCOUNT_KEY" value="flowphpkey01"/>
-    <env name="S3_ENDPOINT" value="http://localhost:4566"/>
-    <env name="S3_REGION" value="us-east-1"/>
-    <env name="S3_ACCESS_KEY_ID" value="test"/>
-    <env name="S3_SECRET_ACCESS_KEY" value="test"/>
-    <env name="S3_BUCKET" value="flowphpbucket01"/>
-    <env name="REDIS_HOST" value="localhost"/>
-    <env name="REDIS_PORT" value="6379"/>
-    <env name="PGSQL_DATABASE_URL" value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>
-    <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
-    <env name="SQLITE_DATABASE_PATH" value="./var/db/sqlite/test.db"/>
-    <env name="ELASTICSEARCH_URL" value="localhost:9200"/>
-    <env name="MEILISEARCH_URL" value="http://localhost:7700"/>
-    <env name="MEILISEARCH_API_KEY" value="masterKey"/>
-    <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
-    <env name="FLOW_PARQUET_TESTS_DEBUG" value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
-  </php>
-  <testsuites>
-    <testsuite name="etl-unit">
-      <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
-      <directory>src/core/etl/tests/Flow/ArrayComparison/Tests/Unit</directory>
-      <directory>src/core/etl/tests/Flow/Serializer/Tests/Unit</directory>
-      <directory>src/core/etl/tests/Flow/Calculator/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="etl-integration">
-      <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="cli-unit">
-      <directory>src/cli/tests/Flow/CLI/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="cli-integration">
-      <directory>src/cli/tests/Flow/CLI/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="lib-array-dot-unit">
-      <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="lib-azure-sdk-unit">
-      <directory>src/lib/azure-sdk/tests/Flow/Azure/SDK/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="lib-doctrine-dbal-bulk-unit">
-      <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="lib-doctrine-dbal-bulk-integration">
-      <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="lib-filesystem-unit">
-      <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="lib-filesystem-integration">
-      <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="lib-parquet-unit">
-      <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="lib-parquet-integration">
-      <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="lib-parquet-viewer-integration">
-      <directory>src/lib/parquet-viewer/tests/Flow/ParquetViewer/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="lib-snappy-integration">
-      <directory>src/lib/snappy/tests/Flow/Snappy/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="lib-types-unit">
-      <directory>src/lib/types/tests/Flow/Types/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="bridge-filesystem-azure-unit">
-      <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="bridge-filesystem-azure-integration">
-      <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="bridge-filesystem-async-aws-integration">
-      <directory>src/bridge/filesystem/async-aws/tests/Flow/Filesystem/Bridge/AsyncAWS/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="bridge-monolog-http-unit">
-      <directory>src/bridge/monolog/http/tests/Flow/Bridge/Monolog/Http/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="bridge-openapi-specification-unit">
-      <directory>src/bridge/openapi/specification/tests/Flow/Bridge/OpenAPI/Specification/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="bridge-symfony-http-foundation-unit">
-      <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="bridge-symfony-http-foundation-integration">
-      <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-chartjs-unit">
-      <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-chartjs-integration">
-      <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-csv-unit">
-      <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-csv-integration">
-      <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-doctrine-unit">
-      <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-doctrine-integration">
-      <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-elasticsearch-unit">
-      <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-elasticsearch-integration">
-      <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-excel-unit">
-      <directory>src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-excel-integration">
-      <directory>src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-google-sheet-unit">
-      <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-google-sheet-integration">
-      <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-http-unit">
-      <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-http-integration">
-      <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-json-unit">
-      <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-json-integration">
-      <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-logger-unit">
-      <directory>src/adapter/etl-adapter-logger/tests/Flow/ETL/Adapter/Logger/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-meilisearch-integration">
-      <directory>src/adapter/etl-adapter-meilisearch/tests/Flow/ETL/Adapter/Meilisearch/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-parquet-unit">
-      <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-parquet-integration">
-      <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-text-integration">
-      <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="adapter-xml-unit">
-      <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Unit</directory>
-    </testsuite>
-    <testsuite name="adapter-xml-integration">
-      <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
-    </testsuite>
-  </testsuites>
-  <source>
-    <include>
-      <directory suffix=".php">src/adapter/**/src</directory>
-      <directory suffix=".php">src/bridge/**/**/src</directory>
-      <directory suffix=".php">src/core/**/src</directory>
-      <directory suffix=".php">src/cli/src</directory>
-      <directory suffix=".php">src/lib/**/src</directory>
-      <directory suffix=".php">src/tools/**/src</directory>
-    </include>
-    <exclude>
-      <directory suffix=".php">src/lib/parquet/src/Flow/Parquet/Thrift</directory>
-      <directory suffix=".php">src/lib/pg-query/src/Flow/PgQuery/Protobuf</directory>
-      <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
-    </exclude>
-  </source>
+    <php>
+        <env name="AZURITE_HOST" value="localhost"/>
+        <env name="AZURITE_BLOB_PORT" value="10000"/>
+        <env name="AZURITE_ACCOUNT_NAME" value="flowphpaccount01"/>
+        <env name="AZURITE_ACCOUNT_KEY" value="flowphpkey01"/>
+        <env name="S3_ENDPOINT" value="http://localhost:4566"/>
+        <env name="S3_REGION" value="us-east-1"/>
+        <env name="S3_ACCESS_KEY_ID" value="test"/>
+        <env name="S3_SECRET_ACCESS_KEY" value="test"/>
+        <env name="S3_BUCKET" value="flowphpbucket01"/>
+        <env name="REDIS_HOST" value="localhost"/>
+        <env name="REDIS_PORT" value="6379"/>
+        <env name="PGSQL_DATABASE_URL"
+             value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>
+        <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
+        <env name="SQLITE_DATABASE_PATH" value="./var/db/sqlite/test.db"/>
+        <env name="ELASTICSEARCH_URL" value="localhost:9200"/>
+        <env name="MEILISEARCH_URL" value="http://localhost:7700"/>
+        <env name="MEILISEARCH_API_KEY" value="masterKey"/>
+        <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
+        <env name="FLOW_PARQUET_TESTS_DEBUG"
+             value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
+    </php>
+    <testsuites>
+        <testsuite name="etl-unit">
+            <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
+            <directory>src/core/etl/tests/Flow/ArrayComparison/Tests/Unit</directory>
+            <directory>src/core/etl/tests/Flow/Serializer/Tests/Unit</directory>
+            <directory>src/core/etl/tests/Flow/Calculator/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="etl-integration">
+            <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="cli-unit">
+            <directory>src/cli/tests/Flow/CLI/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="cli-integration">
+            <directory>src/cli/tests/Flow/CLI/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="lib-array-dot-unit">
+            <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-azure-sdk-unit">
+            <directory>src/lib/azure-sdk/tests/Flow/Azure/SDK/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-doctrine-dbal-bulk-unit">
+            <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-doctrine-dbal-bulk-integration">
+            <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="lib-filesystem-unit">
+            <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-filesystem-integration">
+            <directory>src/lib/filesystem/tests/Flow/Filesystem/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="lib-parquet-unit">
+            <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-parquet-integration">
+            <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="lib-parquet-viewer-integration">
+            <directory>src/lib/parquet-viewer/tests/Flow/ParquetViewer/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="lib-snappy-integration">
+            <directory>src/lib/snappy/tests/Flow/Snappy/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="lib-types-unit">
+            <directory>src/lib/types/tests/Flow/Types/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-filesystem-azure-unit">
+            <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-filesystem-azure-integration">
+            <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="bridge-filesystem-async-aws-integration">
+            <directory>src/bridge/filesystem/async-aws/tests/Flow/Filesystem/Bridge/AsyncAWS/Tests/Integration
+            </directory>
+        </testsuite>
+        <testsuite name="bridge-monolog-http-unit">
+            <directory>src/bridge/monolog/http/tests/Flow/Bridge/Monolog/Http/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-openapi-specification-unit">
+            <directory>src/bridge/openapi/specification/tests/Flow/Bridge/OpenAPI/Specification/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-http-foundation-unit">
+            <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Unit
+            </directory>
+        </testsuite>
+        <testsuite name="bridge-symfony-http-foundation-integration">
+            <directory>src/bridge/symfony/http-foundation/tests/Flow/Bridge/Symfony/HttpFoundation/Tests/Integration
+            </directory>
+        </testsuite>
+        <testsuite name="adapter-chartjs-unit">
+            <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-chartjs-integration">
+            <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-csv-unit">
+            <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-csv-integration">
+            <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-doctrine-unit">
+            <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-doctrine-integration">
+            <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-elasticsearch-unit">
+            <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-elasticsearch-integration">
+            <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Integration
+            </directory>
+        </testsuite>
+        <testsuite name="adapter-excel-unit">
+            <directory>src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-excel-integration">
+            <directory>src/adapter/etl-adapter-excel/tests/Flow/ETL/Adapter/Excel/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-google-sheet-unit">
+            <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-google-sheet-integration">
+            <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Integration
+            </directory>
+        </testsuite>
+        <testsuite name="adapter-http-unit">
+            <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-http-integration">
+            <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-json-unit">
+            <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-json-integration">
+            <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-logger-unit">
+            <directory>src/adapter/etl-adapter-logger/tests/Flow/ETL/Adapter/Logger/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-meilisearch-integration">
+            <directory>src/adapter/etl-adapter-meilisearch/tests/Flow/ETL/Adapter/Meilisearch/Tests/Integration
+            </directory>
+        </testsuite>
+        <testsuite name="adapter-parquet-unit">
+            <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-parquet-integration">
+            <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-text-integration">
+            <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
+        </testsuite>
+        <testsuite name="adapter-xml-unit">
+            <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="adapter-xml-integration">
+            <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">src/adapter/**/src</directory>
+            <directory suffix=".php">src/bridge/**/**/src</directory>
+            <directory suffix=".php">src/core/**/src</directory>
+            <directory suffix=".php">src/cli/src</directory>
+            <directory suffix=".php">src/lib/**/src</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">src/lib/parquet/src/Flow/Parquet/Thrift</directory>
+            <directory suffix=".php">src/lib/pg-query/src/Flow/PgQuery/Protobuf</directory>
+            <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
+        </exclude>
+    </source>
 </phpunit>

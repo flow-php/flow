@@ -303,7 +303,7 @@ class CompactProtocol
         $xorer = 0;
 
         if ($lo & 1) {
-            $xorer = 0xFFFFFFFF;
+            $xorer = (int) 0xFFFFFFFF;
         }
         $lo = ($lo >> 1) & 0x7FFFFFFF;
         $lo |= (($hi & 1) << 31);
@@ -311,7 +311,7 @@ class CompactProtocol
         $lo ^= $xorer;
 
         // Now put $hi and $lo back together
-        $isNeg = $hi < 0 || $hi & 0x80000000;
+        $isNeg = $hi < 0 || $hi & (int) 0x80000000;
 
         // Check for a negative
         if ($isNeg) {
@@ -330,12 +330,12 @@ class CompactProtocol
         // explicitly below
         if ($hi & (int) 0x80000000) {
             $hi &= (int) 0x7FFFFFFF;
-            $hi += 0x80000000;
+            $hi += (int) 0x80000000;
         }
 
         if ($lo & (int) 0x80000000) {
             $lo &= (int) 0x7FFFFFFF;
-            $lo += 0x80000000;
+            $lo += (int) 0x80000000;
         }
 
         // Create as negative value first, since we can store -2^63 but not 2^63
@@ -704,13 +704,13 @@ class CompactProtocol
             $xorer = 0;
 
             if ($neg) {
-                $xorer = 0xFFFFFFFF;
+                $xorer = (int) 0xFFFFFFFF;
             }
             $lowbit = ($lo >> 31) & 1;
             $hi = ($hi << 1) | $lowbit;
             $lo <<= 1;
-            $lo = ($lo ^ $xorer) & 0xFFFFFFFF;
-            $hi = ($hi ^ $xorer) & 0xFFFFFFFF;
+            $lo = ($lo ^ $xorer) & (int) 0xFFFFFFFF;
+            $hi = ($hi ^ $xorer) & (int) 0xFFFFFFFF;
 
             // now write out the varint, ensuring we shift both hi and lo
             $out = '';

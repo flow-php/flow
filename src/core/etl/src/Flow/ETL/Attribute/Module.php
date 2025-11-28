@@ -26,4 +26,5 @@ enum Module : string
     case TEXT = 'TEXT';
     case TYPES = 'TYPES';
     case XML = 'XML';
+    case PG_QUERY = 'PG_QUERY';
 }

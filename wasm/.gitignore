@@ -5,6 +5,7 @@
 manifest.json
 /libxml2-*
 /libpg_query
+/php-ext-snappy
 
 # Build logs
 *.log

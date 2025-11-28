@@ -27,6 +27,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
+          extensions: ':psr, bcmath, dom, hash, json, mbstring, xml, xmlwriter, xmlreader, zlib, pg_query-https://github.com/flow-php/pg-query-ext@1.x'
 
       - name: "Get Composer Cache Directory"
         id: composer-cache
