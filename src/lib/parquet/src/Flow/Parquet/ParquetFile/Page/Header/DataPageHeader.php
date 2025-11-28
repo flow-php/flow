@@ -22,7 +22,7 @@ final readonly class DataPageHeader
             Encodings::from($thrift->encoding),
             Encodings::from($thrift->repetition_level_encoding),
             Encodings::from($thrift->definition_level_encoding),
-            $thrift->num_values
+            (int) $thrift->num_values
         );
     }
 

@@ -25,12 +25,12 @@ final readonly class DataPageHeaderV2
     public static function fromThrift(\Flow\Parquet\ThriftModel\DataPageHeaderV2 $thrift, Options $options) : self
     {
         return new self(
-            $thrift->num_values,
-            $thrift->num_nulls,
-            $thrift->num_rows,
+            (int) $thrift->num_values,
+            (int) $thrift->num_nulls,
+            (int) $thrift->num_rows,
             Encodings::from($thrift->encoding),
-            $thrift->definition_levels_byte_length,
-            $thrift->repetition_levels_byte_length,
+            (int) $thrift->definition_levels_byte_length,
+            (int) $thrift->repetition_levels_byte_length,
             /** @phpstan-ignore-next-line */
             $thrift->is_compressed ?? null,
             $thrift->statistics ? Statistics::fromThrift($thrift->statistics) : null,

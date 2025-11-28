@@ -24,8 +24,8 @@ final readonly class PageHeader
     {
         return new self(
             Type::from($thrift->type),
-            $thrift->compressed_page_size,
-            $thrift->uncompressed_page_size,
+            (int) $thrift->compressed_page_size,
+            (int) $thrift->uncompressed_page_size,
             $thrift->data_page_header !== null ? DataPageHeader::fromThrift($thrift->data_page_header) : null,
             $thrift->data_page_header_v2 !== null ? DataPageHeaderV2::fromThrift($thrift->data_page_header_v2, $options) : null,
             $thrift->dictionary_page_header !== null ? DictionaryPageHeader::fromThrift($thrift->dictionary_page_header) : null

@@ -24,8 +24,8 @@ final readonly class Statistics
         return new self(
             $thrift->max,
             $thrift->min,
-            $thrift->null_count,
-            $thrift->distinct_count,
+            $thrift->null_count !== null ? (int) $thrift->null_count : null,
+            $thrift->distinct_count !== null ? (int) $thrift->distinct_count : null,
             $thrift->max_value,
             $thrift->min_value,
             $thrift->is_max_value_exact,
