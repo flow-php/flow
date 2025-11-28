@@ -50,6 +50,18 @@ function pg_query_normalize(string $sql) : string|false
 }
 
 /**
+ * Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).
+ *
+ * This function handles DDL/utility statements differently from pg_query_normalize()
+ * which is optimized for DML statements.
+ *
+ * @return false|string Returns normalized query or FALSE on error
+ */
+function pg_query_normalize_utility(string $sql) : string|false
+{
+}
+
+/**
  * Parse PL/pgSQL function.
  *
  * @throws RuntimeException on parse error

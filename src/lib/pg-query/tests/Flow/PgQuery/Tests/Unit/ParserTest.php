@@ -131,6 +131,35 @@ final class ParserTest extends TestCase
         self::assertStringContainsString('$2', $normalized);
     }
 
+    public function test_normalize_utility() : void
+    {
+        if (!\function_exists('pg_query_normalize_utility')) {
+            self::markTestSkipped('pg_query_normalize_utility function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $normalized = $parser->normalizeUtility('CREATE TABLE users (id INT, name VARCHAR(255))');
+
+        self::assertIsString($normalized);
+        self::assertStringContainsString('CREATE TABLE', $normalized);
+        self::assertStringContainsString('users', $normalized);
+    }
+
+    public function test_normalize_utility_preserves_ddl_structure() : void
+    {
+        if (!\function_exists('pg_query_normalize_utility')) {
+            self::markTestSkipped('pg_query_normalize_utility function not available. Rebuild the pg_query extension.');
+        }
+
+        $parser = new Parser();
+        $normalized = $parser->normalizeUtility('ALTER TABLE users ADD COLUMN email VARCHAR(255)');
+
+        self::assertIsString($normalized);
+        self::assertStringContainsString('ALTER TABLE', $normalized);
+        self::assertStringContainsString('users', $normalized);
+        self::assertStringContainsString('email', $normalized);
+    }
+
     public function test_normalize_with_named_parameters() : void
     {
         $parser = new Parser();

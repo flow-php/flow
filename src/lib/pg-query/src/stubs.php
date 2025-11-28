@@ -40,6 +40,19 @@ if (!\function_exists('pg_query_parse')) {
     }
 
     /**
+     * Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).
+     *
+     * This function handles DDL/utility statements differently from pg_query_normalize()
+     * which is optimized for DML statements.
+     *
+     * @return false|string Returns normalized query or FALSE on error
+     */
+    function pg_query_normalize_utility(string $sql) : string|false
+    {
+        throw new \RuntimeException('pg_query extension is not loaded');
+    }
+
+    /**
      * Parse PL/pgSQL function.
      *
      * @throws \RuntimeException on parse error
