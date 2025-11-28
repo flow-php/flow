@@ -127,8 +127,10 @@ if test "$PHP_PG_QUERY" != "no"; then
     AC_MSG_ERROR([libpg_query.a not found in $PG_QUERY_LIB_DIR])
   fi
 
-  dnl Add protobuf-c dependency
-  PHP_ADD_LIBRARY(protobuf-c,, PG_QUERY_SHARED_LIBADD)
+  dnl protobuf-c is bundled in libpg_query.a for static builds
+  if test "$ext_shared" = "yes"; then
+    PHP_ADD_LIBRARY(protobuf-c,, PG_QUERY_SHARED_LIBADD)
+  fi
 
   PHP_SUBST(PG_QUERY_SHARED_LIBADD)
 
