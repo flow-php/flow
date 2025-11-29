@@ -1,19 +1,12 @@
 import { Controller } from "@hotwired/stimulus"
-import Prism from 'prismjs'
-import 'prismjs/components/prism-markup-templating.min.js'
-import 'prismjs/components/prism-php.min.js'
-import 'prismjs/components/prism-json.min.js'
-import 'prismjs/components/prism-csv.min.js'
 
 export default class extends Controller {
     static outlets = ["wasm", "code-editor", "turnstile", "playground-output"]
-    static targets = ["loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "filePreviewContainer", "filePreviewTitle", "filePreviewContent", "actionSpinner"]
+    static targets = ["loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "actionSpinner"]
     static values = {
         packageIcon: String,
         linkIcon: String
     }
-
-    #currentPreviewFile = null
 
     connect() {
         this.#log('Connecting playground controller')
@@ -140,118 +133,6 @@ export default class extends Controller {
         if (this.hasPlaygroundOutputOutlet) promises.push(this.playgroundOutputOutlet.onLoad())
 
         await Promise.all(promises)
-    }
-
-    async previewFile(event) {
-        const filePath = event.currentTarget.dataset.filePath
-        if (!filePath) {
-            this.#log('No file path found')
-            return
-        }
-
-        if (!this.hasWasmOutlet) {
-            this.#log('WASM outlet not found')
-            return
-        }
-
-        try {
-            const fullPath = `/workspace${filePath}`
-            this.#log('Reading file:', fullPath)
-
-            const result = await this.wasmOutlet.readFile(fullPath)
-
-            if (!result.success || !result.content) {
-                if (this.hasPlaygroundOutputOutlet) {
-                    this.playgroundOutputOutlet.show({ content: `Failed to read file: ${filePath}`, type: 'error' })
-                }
-                return
-            }
-
-            const content = result.content
-
-            this.#currentPreviewFile = { path: filePath, content: content }
-
-            if (this.hasFilePreviewTitleTarget) {
-                this.filePreviewTitleTarget.textContent = `File Preview: ${filePath}`
-            }
-
-            if (this.hasFilePreviewContentTarget) {
-                const extension = filePath.split('.').pop().toLowerCase()
-                const languageMap = {
-                    'php': 'php',
-                    'json': 'json',
-                    'csv': 'csv',
-                    'xml': 'markup',
-                    'phar': 'php'
-                }
-
-                const language = languageMap[extension] || 'none'
-
-                this.filePreviewContentTarget.textContent = content
-                this.filePreviewContentTarget.className = `language-${language}`
-
-                Prism.highlightElement(this.filePreviewContentTarget)
-            }
-
-            if (this.hasFilePreviewContainerTarget) {
-                this.filePreviewContainerTarget.style.display = 'block'
-                this.filePreviewContainerTarget.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-
-            this.#log('File preview loaded:', filePath)
-        } catch (error) {
-            this.#log('Error reading file:', error)
-            if (this.hasPlaygroundOutputOutlet) {
-                this.playgroundOutputOutlet.show({ content: `Error reading file: ${error.message}`, type: 'error' })
-            }
-        }
-    }
-
-    closeFilePreview(event) {
-        if (event) {
-            event.preventDefault()
-        }
-
-        if (this.hasFilePreviewContainerTarget) {
-            this.filePreviewContainerTarget.style.display = 'none'
-        }
-
-        this.#currentPreviewFile = null
-    }
-
-    downloadPreviewFile(event) {
-        if (event) {
-            event.preventDefault()
-        }
-
-        if (!this.#currentPreviewFile) {
-            this.#log('No file to download')
-            return
-        }
-
-        try {
-            const { path, content } = this.#currentPreviewFile
-            const fileName = path.split('/').pop()
-
-            const blob = new Blob([content], { type: 'text/plain' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = fileName
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-
-            if (this.hasPlaygroundOutputOutlet) {
-                this.playgroundOutputOutlet.show({ content: `Downloaded: ${fileName}`, type: 'success' })
-            }
-        } catch (error) {
-            this.#log('Error downloading file:', error)
-            if (this.hasPlaygroundOutputOutlet) {
-                this.playgroundOutputOutlet.show({ content: `Error downloading file: ${error.message}`, type: 'error' })
-            }
-        }
     }
 
     #showContentAfterLoading() {

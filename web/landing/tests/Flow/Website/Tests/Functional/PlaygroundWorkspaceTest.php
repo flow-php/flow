@@ -19,11 +19,12 @@ final class PlaygroundWorkspaceTest extends EndToEndTestCase
         $client->waitForElementToContain('[data-playground-workspace-target="tree"]', 'preview-test.csv', 5);
 
         $client->getCrawler()->filter('.file-tree-item.file[data-file-path*="preview-test.csv"]')->click();
-        $client->waitForVisibility('[data-playground-target="filePreviewContainer"]', 3);
+        $client->waitForVisibility('[data-playground-tabs-target="previewTab"]', 3);
 
-        self::assertNotEquals('none', $client->getCrawler()->filter('[data-playground-target="filePreviewContainer"]')->getCssValue('display'));
-        self::assertStringContainsString('Alice', $client->getCrawler()->filter('[data-playground-target="filePreviewContent"]')->text());
-        self::assertStringContainsString('Bob', $client->getCrawler()->filter('[data-playground-target="filePreviewContent"]')->text());
+        self::assertNotEquals('none', $client->getCrawler()->filter('[data-playground-tabs-target="previewTab"]')->getCssValue('display'));
+        self::assertStringContainsString('preview-test.csv', $client->getCrawler()->filter('[data-playground-tabs-target="previewTabName"]')->text());
+        self::assertStringContainsString('Alice', $client->getCrawler()->filter('[data-playground-tabs-target="previewPanel"]')->text());
+        self::assertStringContainsString('Bob', $client->getCrawler()->filter('[data-playground-tabs-target="previewPanel"]')->text());
     }
 
     public function test_file_browser_updates_after_code_creates_files() : void
