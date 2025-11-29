@@ -169,7 +169,7 @@ export default class extends Controller {
             } else {
                 html += `
                     <li class="file-tree-item file clickable" style="padding-left: ${indent}px"
-                        data-action="click->playground#previewFile"
+                        data-action="click->playground-tabs#openFile"
                         data-file-path="${entry.path}">
                         <img src="${this.fileIconValue}" class="icon" width="16" height="16" alt="">
                         <span>${entry.name}</span>

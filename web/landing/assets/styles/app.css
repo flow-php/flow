@@ -406,8 +406,38 @@ code {
 
         div.code-container {
             @apply
-                rounded overflow-auto shadow-2xl shadow-gray rounded border-gray border-2
-                col-span-10;
+                rounded overflow-hidden shadow-2xl shadow-gray rounded border-gray border-2
+                col-span-10 flex flex-col;
+
+            .tab-bar {
+                @apply flex items-center border-b border-gray bg-stone-900 px-2;
+
+                .tab {
+                    @apply flex items-center gap-2 px-4 py-2 text-sm text-stone-400 border-b-2 border-transparent
+                        cursor-pointer hover:text-white transition-colors -mb-[2px];
+
+                    &.active {
+                        @apply text-white border-cyan-400;
+                    }
+
+                    .tab-close {
+                        @apply ml-1 text-stone-500 hover:text-white text-lg leading-none;
+                    }
+                }
+
+                .tab-action {
+                    @apply ml-auto p-2 text-stone-400 hover:text-white cursor-pointer
+                        transition-colors border-0 bg-transparent;
+                }
+            }
+
+            .editor-panel {
+                @apply flex-1 overflow-auto;
+
+                .cm-editor {
+                    height: 100%;
+                }
+            }
         }
     }
 
@@ -471,42 +501,6 @@ code {
 
         .output-default {
             @apply text-stone-300;
-        }
-    }
-
-    .file-preview-container {
-        @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
-            mt-4 min-h-[200px] max-h-[500px];
-
-        .file-preview-header {
-            @apply flex justify-between items-center mb-4 pb-3 border-b border-gray;
-
-            h2 {
-                @apply text-xl font-bold mb-0;
-            }
-
-            .file-preview-actions {
-                @apply flex gap-2;
-
-                .preview-action-btn {
-                    @apply cursor-pointer border-0 bg-stone-800 hover:bg-stone-700 p-2 rounded
-                        transition-colors;
-                }
-
-                .preview-close-btn {
-                    @apply w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 text-white text-2xl
-                        flex items-center justify-center cursor-pointer border-0 transition-colors leading-none;
-                }
-            }
-        }
-
-        .file-preview-content {
-            @apply rounded p-4 overflow-auto border-gray border-2 relative shadow-2xl shadow-gray;
-            margin: 0;
-
-            code {
-                @apply !p-0 !bg-transparent;
-            }
         }
     }
 

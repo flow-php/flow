@@ -152,4 +152,16 @@ return [
     '@codemirror/theme-one-dark' => [
         'version' => '6.1.3',
     ],
+    '@codemirror/lang-json' => [
+        'version' => '6.0.1',
+    ],
+    '@lezer/json' => [
+        'version' => '1.0.3',
+    ],
+    '@codemirror/lang-xml' => [
+        'version' => '6.1.0',
+    ],
+    '@lezer/xml' => [
+        'version' => '1.0.6',
+    ],
 ];

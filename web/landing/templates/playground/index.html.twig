@@ -241,7 +241,10 @@
             </a>
         </div>
     </div>
-    <div class="editor" data-playground-target="editor">
+    <div class="editor" data-playground-target="editor"
+         data-controller="playground-tabs"
+         data-playground-tabs-wasm-outlet="#playground"
+         data-playground-tabs-code-editor-outlet="#code-editor">
         <div class="file-browser">
             <div class="file-browser-header">
                 Workspace
@@ -258,27 +261,41 @@
             </div>
         </div>
         <div class="code-container">
+            <div class="tab-bar" data-playground-tabs-target="tabBar">
+                <button class="tab active"
+                        data-playground-tabs-target="codeTab"
+                        data-action="click->playground-tabs#switchToCode">
+                    <img src="{{ asset('images/icons/file.svg') }}" alt="" width="14" height="14">
+                    <span>code.php</span>
+                </button>
+                <button class="tab"
+                        data-playground-tabs-target="previewTab"
+                        data-action="click->playground-tabs#switchToPreview"
+                        style="display: none;">
+                    <img src="{{ asset('images/icons/file.svg') }}" alt="" width="14" height="14">
+                    <span data-playground-tabs-target="previewTabName"></span>
+                    <span class="tab-close" data-action="click->playground-tabs#closePreview">&times;</span>
+                </button>
+                <button class="tab-action"
+                        data-action="click->playground-tabs#downloadPreviewFile"
+                        data-playground-tabs-target="downloadBtn"
+                        style="display: none;"
+                        aria-label="Download file">
+                    <img src="{{ asset('images/icons/upload.svg') }}" alt="Download" width="14" height="14" style="transform: rotate(180deg);">
+                </button>
+            </div>
+            <div class="editor-panel" data-playground-tabs-target="codePanel">
                 <textarea id="code-editor" data-controller="code-editor">
 <?php
 // Code will be loaded from /workspace/code.php after WASM initialization
 </textarea>
+            </div>
+            <div class="editor-panel" data-playground-tabs-target="previewPanel" style="display: none;"></div>
         </div>
     </div>
     <div class="output-container" data-playground-target="outputContainer">
         <h2>Output</h2>
         <pre id="output" data-playground-output-target="container"></pre>
-    </div>
-    <div class="file-preview-container" data-playground-target="filePreviewContainer" style="display: none;">
-        <div class="file-preview-header">
-            <h2 data-playground-target="filePreviewTitle">File Preview</h2>
-            <div class="file-preview-actions">
-                <button data-action="click->playground#downloadPreviewFile" class="preview-action-btn" aria-label="Download file">
-                    <img src="{{ asset('images/icons/upload.svg') }}" alt="Download" width="16" height="16" style="transform: rotate(180deg);">
-                </button>
-                <button data-action="click->playground#closeFilePreview" class="preview-close-btn" aria-label="Close preview">×</button>
-            </div>
-        </div>
-        <pre class="file-preview-content"><code data-playground-target="filePreviewContent"></code></pre>
     </div>
 </div>
 {% endblock %}
