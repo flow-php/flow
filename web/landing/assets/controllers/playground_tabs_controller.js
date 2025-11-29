@@ -60,6 +60,11 @@ export default class extends Controller {
             return
         }
 
+        if (filePath === '/code.php') {
+            this.switchToCode()
+            return
+        }
+
         if (!this.hasWasmOutlet) {
             this.#log('WASM outlet not found')
             return
@@ -100,6 +105,17 @@ export default class extends Controller {
         this.previewFileValue = ''
         this.activeTabValue = 'code'
         this.#updateTabUI()
+    }
+
+    openFileFromDropdown(event) {
+        const filePath = event.target.value
+        if (!filePath) {
+            return
+        }
+
+        event.target.value = ''
+
+        this.openFile({ currentTarget: { dataset: { filePath } } })
     }
 
     downloadPreviewFile(event) {

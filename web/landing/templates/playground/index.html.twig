@@ -62,6 +62,7 @@
      data-playground-storage-code-editor-outlet="#code-editor"
      data-playground-storage-wasm-outlet="#playground"
      data-playground-reset-playground-storage-outlet="#playground"
+     data-playground-playground-tabs-outlet="#playground-editor"
      data-action="wasm:initialized->playground#onWasmInitialized
                   wasm:initialized->playground-workspace#refreshTree
                   wasm:initialized->playground-share#onWasmResourcesLoaded
@@ -241,10 +242,28 @@
             </a>
         </div>
     </div>
-    <div class="editor" data-playground-target="editor"
+    <div id="playground-editor" class="editor" data-playground-target="editor"
          data-controller="playground-tabs"
          data-playground-tabs-wasm-outlet="#playground"
          data-playground-tabs-code-editor-outlet="#code-editor">
+        <div class="file-browser-mobile">
+            <label for="file-select" class="file-browser-label">
+                Workspace
+                <button
+                        data-action="click->playground-help#showTopic"
+                        data-help-topic="help-workspace"
+                        class="help-trigger-workspace"
+                        aria-label="What is the Workspace?">
+                    <img src="{{ asset('images/icons/help.svg') }}" alt="Help" width="14" height="14">
+                </button>
+            </label>
+            <select id="file-select"
+                    class="file-select"
+                    data-playground-workspace-target="dropdown"
+                    data-action="change->playground-tabs#openFileFromDropdown">
+                <option value="">Select a file...</option>
+            </select>
+        </div>
         <div class="file-browser">
             <div class="file-browser-header">
                 Workspace

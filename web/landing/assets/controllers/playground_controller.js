@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-    static outlets = ["wasm", "code-editor", "turnstile", "playground-output"]
+    static outlets = ["wasm", "code-editor", "turnstile", "playground-output", "playground-tabs"]
     static targets = ["loadingMessage", "loadingBar", "loadingPercent", "navigation", "editor", "outputContainer", "storageIndicator", "actionSpinner"]
     static values = {
         packageIcon: String,
@@ -20,6 +20,9 @@ export default class extends Controller {
     }
 
     onActionStarted() {
+        if (this.hasPlaygroundTabsOutlet) {
+            this.playgroundTabsOutlet.switchToCode()
+        }
         document.querySelectorAll('#action-run, #action-format, #action-share, #action-upload').forEach(btn => btn.disabled = true)
         const resetLink = document.getElementById('action-reset')
         if (resetLink) {
