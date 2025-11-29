@@ -349,9 +349,39 @@ code {
         @apply grid gap-6 grid-cols-1 lg:grid-cols-12 mb-6;
         display: none; /* Hidden by default, shown by Stimulus */
 
+        div.file-browser-mobile {
+            @apply grid grid-cols-[auto_1fr] items-center gap-4;
+
+            @screen lg {
+                display: none;
+            }
+
+            .file-browser-label {
+                @apply text-sm font-bold text-stone-400 uppercase whitespace-nowrap;
+
+                .help-trigger-workspace {
+                    @apply cursor-pointer border-0 bg-transparent p-0 ml-2 transition-opacity hover:opacity-70 inline-block align-middle;
+                }
+            }
+
+            .file-select {
+                @apply bg-stone-800 text-white border border-gray rounded px-3 py-2 text-base
+                    focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent;
+
+                option {
+                    @apply text-base py-2;
+                }
+            }
+        }
+
         div.file-browser {
             @apply rounded p-4 overflow-auto shadow-2xl shadow-gray border-gray border-2
                 lg:col-span-2 bg-transparent;
+            display: none;
+
+            @screen lg {
+                display: block;
+            }
 
             .file-browser-header {
                 @apply text-sm font-bold mb-3 text-stone-400 uppercase;

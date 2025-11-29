@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
     static outlets = ["wasm", "code-editor", "playground"]
-    static targets = ["tree", "emptyState"]
+    static targets = ["tree", "dropdown", "emptyState"]
     static values = {
         rootPath: { type: String, default: '/workspace' },
         folderIcon: String,
@@ -104,6 +104,7 @@ export default class extends Controller {
         }
 
         this.treeTarget.innerHTML = this.#renderFileTree(tree)
+        this.#populateDropdown(tree)
         this.#treeRendered = true
 
         if (this.hasEmptyStateTarget) {
@@ -238,5 +239,43 @@ export default class extends Controller {
         }
 
         return count
+    }
+
+    #populateDropdown(tree) {
+        if (!this.hasDropdownTarget) {
+            return
+        }
+
+        const files = this.#collectFiles(tree)
+
+        this.dropdownTarget.innerHTML = '<option value="">Select a file...</option>'
+        this.dropdownTarget.innerHTML += '<option value="/code.php">code.php</option>'
+
+        for (const file of files) {
+            const option = document.createElement('option')
+            option.value = file.path
+            option.textContent = file.path
+            this.dropdownTarget.appendChild(option)
+        }
+    }
+
+    #collectFiles(tree, prefix = '') {
+        const files = []
+
+        const entries = Object.values(tree).sort((a, b) => {
+            if (a.type === 'directory' && b.type !== 'directory') return -1
+            if (a.type !== 'directory' && b.type === 'directory') return 1
+            return a.name.localeCompare(b.name)
+        })
+
+        for (const entry of entries) {
+            if (entry.type === 'directory' && entry.children) {
+                files.push(...this.#collectFiles(entry.children, `${prefix}/${entry.name}`))
+            } else if (entry.type === 'file') {
+                files.push({ path: entry.path, name: entry.name })
+            }
+        }
+
+        return files
     }
 }
