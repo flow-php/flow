@@ -420,6 +420,58 @@ code {
         pre {
             @apply w-full h-full resize-none outline-none p-4;
         }
+
+        .output-message {
+            @apply py-1 font-mono text-sm;
+
+            .output-timestamp {
+                @apply text-stone-500 mr-2;
+            }
+
+            .output-prefix {
+                @apply font-bold mr-2;
+            }
+
+            .output-content {
+                @apply whitespace-pre pr-4;
+            }
+        }
+
+        .output-info {
+            @apply text-cyan-400;
+
+            .output-prefix {
+                @apply text-cyan-500;
+            }
+        }
+
+        .output-success {
+            @apply text-white;
+
+            .output-prefix {
+                @apply text-green-500;
+            }
+        }
+
+        .output-warning {
+            @apply text-yellow-400;
+
+            .output-prefix {
+                @apply text-yellow-500;
+            }
+        }
+
+        .output-error {
+            @apply text-red-400;
+
+            .output-prefix {
+                @apply text-red-500;
+            }
+        }
+
+        .output-default {
+            @apply text-stone-300;
+        }
     }
 
     .file-preview-container {
