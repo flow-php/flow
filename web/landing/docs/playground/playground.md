@@ -7,6 +7,7 @@ Main orchestrator and event hub for the playground.
 - `code-editor` - Code editor
 - `turnstile` - CAPTCHA widget
 - `playground-output` - Output display
+- `playground-tabs` - Tab navigation between code editor and file preview
 
 ## Public Methods
 
@@ -22,17 +23,11 @@ Displays loading progress with message and percentage.
 ### `hideLoading(): void`
 Hides loading indicators and shows main UI.
 
-### `previewFile(event: Event): Promise<void>`
-Preview file from workspace. Reads file via WASM, applies syntax highlighting with Prism, and displays in preview panel.
+### `onActionStarted(): void`
+Called when any action button is pressed. Disables action buttons, shows spinner, and switches to code tab.
 
-**Parameters:**
-- `event.currentTarget.dataset.filePath` - Path relative to `/workspace/`
-
-### `closeFilePreview(event?: Event): void`
-Closes the file preview panel.
-
-### `downloadPreviewFile(event?: Event): void`
-Downloads currently previewed file to user's computer.
+### `onActionFinished(): void`
+Called when action completes. Re-enables action buttons and hides spinner.
 
 ## Events Listened
 

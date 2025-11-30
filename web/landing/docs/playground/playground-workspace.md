@@ -7,6 +7,11 @@ Display and navigate the WASM virtual filesystem.
 - `code-editor` - Code editor
 - `playground` - Main playground controller
 
+## Targets
+- `tree` - Container for the file tree (desktop view)
+- `dropdown` - Select element for file selection (mobile view)
+- `emptyState` - Empty state message when no files
+
 ## Public Methods
 
 ### `refreshTree(): Promise<void>`
@@ -60,11 +65,6 @@ Returns promise that resolves when tree is rendered for first time.
 **Payload:** `{ fileCount: number }`
 **Bubbles:** Yes
 
-### `playground-workspace:file-selected`
-**Trigger:** User clicks file in tree
-**Payload:** `{ path: string, content: string }`
-**Bubbles:** Yes
-
 ## Value Configuration
 
 - `rootPath` - Root directory to display (default: `/workspace`)
@@ -75,8 +75,9 @@ Returns promise that resolves when tree is rendered for first time.
 
 - Files sorted alphabetically
 - Folders displayed before files
-- Clicking file previews it via `playground#previewFile()`
-- Tree auto-refreshes on filesystem changes
+- Clicking file in tree opens it via `playground-tabs#openFile()`
+- Selecting file in dropdown (mobile) opens it via `playground-tabs#openFileFromDropdown()`
+- Tree and dropdown auto-refresh on filesystem changes
 - Shows empty state when no files present
 
 ## File: `playground_workspace_controller.js`
