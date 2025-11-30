@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-11-28
+## [Unreleased] - 2025-11-30
 
 ### Added
+- [#2043](https://github.com/flow-php/flow/pull/2043) - **open playground files preview in tabs** - [@norberttech](https://github.com/norberttech)
 - [#2042](https://github.com/flow-php/flow/pull/2042) - **deparse method with formatting options to PGQuery parser** - [@norberttech](https://github.com/norberttech)
 - [#2039](https://github.com/flow-php/flow/pull/2039) - **excel adapter to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#2039](https://github.com/flow-php/flow/pull/2039) - **chartjs adapter to flow.phar** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +25,7 @@
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2043](https://github.com/flow-php/flow/pull/2043) - **added missing styles for output in playground** - [@norberttech](https://github.com/norberttech)
 - [231bb7](https://github.com/flow-php/flow/commit/231bb7e3dc48ed6176b8a01a2ee8fda5e3702e64) - **added missing dependency to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [d28ae8](https://github.com/flow-php/flow/commit/d28ae8812de8d76c9a278d33b710732c172b4902) - **install pg-query-ext through pie on github actions** - [@norberttech](https://github.com/norberttech)
 - [c810fa](https://github.com/flow-php/flow/commit/c810fa28c811b28f63eb006efa9dfa21bfca57bd) - **building pg_query extension on baseline workflow** - [@norberttech](https://github.com/norberttech)
