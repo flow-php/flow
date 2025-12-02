@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit\AST;
 
-use Flow\PgQuery\AST\{NodeVisitor, Traverser};
+use Flow\PgQuery\AST\{ModificationContext, NodeModifier, NodeVisitor, Traverser};
 use Flow\PgQuery\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
-use Flow\PgQuery\Protobuf\AST\{ColumnRef, ParseResult, SelectStmt};
+use Flow\PgQuery\Protobuf\AST\{ColumnRef, Node, ParseResult, SelectStmt};
 use PHPUnit\Framework\TestCase;
 
 final class TraverserTest extends TestCase
@@ -153,6 +153,218 @@ final class TraverserTest extends TestCase
 
         $funcname = $collector->getFuncCalls()[0]->getFuncname();
         self::assertCount(2, $funcname);
+    }
+
+    public function test_modifier_can_mutate_node_in_place() : void
+    {
+        $modifier = new class implements NodeModifier {
+            public static function nodeClass() : string
+            {
+                return SelectStmt::class;
+            }
+
+            public function modify(object $node, ModificationContext $context) : int|object|null
+            {
+                /** @var SelectStmt $node */
+                if ($context->isTopLevel()) {
+                    $integer = new \Flow\PgQuery\Protobuf\AST\Integer();
+                    $integer->setIval(10);
+
+                    $aConst = new \Flow\PgQuery\Protobuf\AST\A_Const();
+                    /** @phpstan-ignore argument.type */
+                    $aConst->setIval($integer);
+
+                    $limitNode = new Node();
+                    $limitNode->setAConst($aConst);
+
+                    $node->setLimitOption(\Flow\PgQuery\Protobuf\AST\LimitOption::LIMIT_OPTION_COUNT);
+                    $node->setLimitCount($limitNode);
+                }
+
+                return null;
+            }
+        };
+
+        $traverser = new Traverser($modifier);
+        $result = $this->parseQuery('SELECT * FROM users');
+        $traverser->traverse($result);
+
+        $deparsed = \pg_query_deparse($result->serializeToString());
+
+        self::assertStringContainsString('LIMIT 10', $deparsed);
+    }
+
+    public function test_modifier_can_skip_children() : void
+    {
+        $modifyCount = 0;
+
+        $modifier = new class($modifyCount) implements NodeModifier {
+            private int $count;
+
+            public function __construct(int &$count)
+            {
+                $this->count = &$count;
+            }
+
+            public static function nodeClass() : string
+            {
+                return SelectStmt::class;
+            }
+
+            public function modify(object $node, ModificationContext $context) : int
+            {
+                $this->count++;
+
+                return NodeModifier::DONT_TRAVERSE_CHILDREN;
+            }
+        };
+
+        $traverser = new Traverser($modifier);
+        $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
+        $traverser->traverse($result);
+
+        self::assertSame(1, $modifyCount);
+    }
+
+    public function test_modifier_can_stop_traversal() : void
+    {
+        $modifyCount = 0;
+
+        $modifier = new class($modifyCount) implements NodeModifier {
+            private int $count;
+
+            public function __construct(int &$count)
+            {
+                $this->count = &$count;
+            }
+
+            public static function nodeClass() : string
+            {
+                return SelectStmt::class;
+            }
+
+            public function modify(object $node, ModificationContext $context) : int
+            {
+                $this->count++;
+
+                return NodeModifier::STOP_TRAVERSAL;
+            }
+        };
+
+        $traverser = new Traverser($modifier);
+        $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
+        $traverser->traverse($result);
+
+        self::assertSame(1, $modifyCount);
+    }
+
+    public function test_modifier_is_top_level_check() : void
+    {
+        /** @var array<bool> $topLevelResults */
+        $topLevelResults = [];
+
+        $modifier = new class($topLevelResults) implements NodeModifier {
+            /**
+             * @param array<bool> $results
+             *
+             * @phpstan-ignore property.onlyWritten (accessed via reference)
+             */
+            public function __construct(private array &$results)
+            {
+            }
+
+            public static function nodeClass() : string
+            {
+                return SelectStmt::class;
+            }
+
+            public function modify(object $node, ModificationContext $context) : null
+            {
+                $this->results[] = $context->isTopLevel();
+
+                return null;
+            }
+        };
+
+        $traverser = new Traverser($modifier);
+        $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
+        $traverser->traverse($result);
+
+        self::assertContains(true, $topLevelResults);
+        self::assertContains(false, $topLevelResults);
+    }
+
+    public function test_modifier_receives_context_with_nested_depth() : void
+    {
+        /** @var array<int> $depths */
+        $depths = [];
+
+        $modifier = new class($depths) implements NodeModifier {
+            /**
+             * @param array<int> $depths
+             *
+             * @phpstan-ignore property.onlyWritten (accessed via reference)
+             */
+            public function __construct(private array &$depths)
+            {
+            }
+
+            public static function nodeClass() : string
+            {
+                return SelectStmt::class;
+            }
+
+            public function modify(object $node, ModificationContext $context) : null
+            {
+                $this->depths[] = $context->depth();
+
+                return null;
+            }
+        };
+
+        $traverser = new Traverser($modifier);
+        $result = $this->parseQuery('SELECT * FROM (SELECT id FROM users) sub');
+        $traverser->traverse($result);
+
+        self::assertCount(2, $depths);
+        self::assertSame(1, $depths[0]);
+        self::assertGreaterThan(1, $depths[1]);
+    }
+
+    public function test_modifier_receives_context_with_top_level_depth() : void
+    {
+        /** @var array<int> $depths */
+        $depths = [];
+
+        $modifier = new class($depths) implements NodeModifier {
+            /**
+             * @param array<int> $depths
+             *
+             * @phpstan-ignore property.onlyWritten (accessed via reference)
+             */
+            public function __construct(private array &$depths)
+            {
+            }
+
+            public static function nodeClass() : string
+            {
+                return SelectStmt::class;
+            }
+
+            public function modify(object $node, ModificationContext $context) : null
+            {
+                $this->depths[] = $context->depth();
+
+                return null;
+            }
+        };
+
+        $traverser = new Traverser($modifier);
+        $result = $this->parseQuery('SELECT * FROM users');
+        $traverser->traverse($result);
+
+        self::assertContains(1, $depths);
+        self::assertTrue($depths[0] === 1);
     }
 
     public function test_multiple_visitors() : void
@@ -316,6 +528,29 @@ final class TraverserTest extends TestCase
         $traverser->traverse($result);
 
         self::assertSame(2, $visitor->nodeCount);
+    }
+
+    public function test_traverser_accepts_both_visitors_and_modifiers() : void
+    {
+        $collector = new ColumnRefCollector();
+
+        $modifier = new class implements NodeModifier {
+            public static function nodeClass() : string
+            {
+                return SelectStmt::class;
+            }
+
+            public function modify(object $node, ModificationContext $context) : int|object|null
+            {
+                return null;
+            }
+        };
+
+        $traverser = new Traverser($collector, $modifier);
+        $result = $this->parseQuery('SELECT id, name FROM users');
+        $traverser->traverse($result);
+
+        self::assertCount(2, $collector->getColumnRefs());
     }
 
     public function test_traverser_without_visitors() : void
