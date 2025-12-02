@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 Partitioning divides data into logical groups based on column values, enabling more efficient processing of large datasets and reducing memory usage.
 
 ## Basic Partitioning

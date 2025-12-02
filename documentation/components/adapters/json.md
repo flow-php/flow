@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/json)
 - [📁Files](/documentation/api/adapter/json/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter JSON is a meticulously engineered library aimed at facilitating seamless interactions with JSON data
 within your ETL (Extract, Transform, Load) workflows. This adapter is paramount for developers seeking to effortlessly
 extract from or load data into JSON formats, ensuring a fluid and reliable data transformation experience. By utilizing

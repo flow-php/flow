@@ -1,5 +1,7 @@
 # Architecture Decision Record
 
+[TOC]
+
 # What are ADRs?
 Architecture Decision Records (ADRs) are structured documents that capture significant architectural decisions made during the development of this project. 
 

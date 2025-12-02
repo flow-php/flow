@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/text)
 - [📁Files](/documentation/api/adapter/text/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter Text is a meticulously crafted library dedicated to enabling seamless handling of text data within
 your ETL (Extract, Transform, Load) workflows. This adapter is pivotal for developers seeking to effortlessly extract
 from or load data into text formats, ensuring a fluid and dependable data transformation experience. By employing the

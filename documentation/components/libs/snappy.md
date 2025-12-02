@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/lib/snappy)
 - [📁Files](/documentation/api/lib/snappy/indices/files.html)
 
+[TOC]
+
 Pure PHP implementation of Google [Snappy](https://github.com/google/snappy) compression algorithm.
 
 This library is a port of javascript [snappyjs](https://github.com/zhipeng-jia/snappyjs).

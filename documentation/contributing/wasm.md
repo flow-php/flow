@@ -1,5 +1,7 @@
 # WASM Build
 
+[TOC]
+
 This document describes how to build PHP to WebAssembly (WASM) for use in the Flow PHP Interactive Playground.
 
 ## Overview

@@ -13,6 +13,7 @@ use League\CommonMark\Extension\FrontMatter\FrontMatterExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\Extension\Mention\MentionExtension;
 use League\CommonMark\Extension\Table\TableExtension;
+use League\CommonMark\Extension\TableOfContents\TableOfContentsExtension;
 use Symfony\Component\Asset\Packages;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
@@ -49,12 +50,22 @@ final readonly class LeagueCommonMarkConverterFactory
                 'title' => 'Permalink',
                 'symbol' => '#',
             ],
+            'table_of_contents' => [
+                'html_class' => 'table-of-contents',
+                'position' => 'placeholder',
+                'placeholder' => '[TOC]',
+                'style' => 'bullet',
+                'min_heading_level' => 2,
+                'max_heading_level' => 4,
+                'normalize' => 'relative',
+            ],
         ];
 
         $converter = new CommonMarkConverter($config);
 
         $converter->getEnvironment()
             ->addExtension(new HeadingPermalinkExtension())
+            ->addExtension(new TableOfContentsExtension())
             ->addExtension(new ExternalLinkExtension())
             ->addExtension(new FrontMatterExtension())
             ->addExtension(new MentionExtension())

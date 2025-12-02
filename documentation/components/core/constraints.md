@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 Data constraints allow you to apply business rules and data integrity checks to ensure data quality during processing. When a constraint is violated, a `ConstraintViolationException` is thrown with details about the violating row.
 
 ## Unique Constraints

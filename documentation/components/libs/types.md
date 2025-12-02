@@ -1,5 +1,7 @@
 # Types
 
+[TOC]
+
 Flow Types is a small library that provides a set of type classes for PHP. 
 It's designed to work together with static analysis tools like PHPStan and Psalm. 
 

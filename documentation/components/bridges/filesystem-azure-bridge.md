@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/bridge/filesystem/azure)
 - [📁Files](/documentation/api/bridge/filesystem/azure/indices/files.html)
 
+[TOC]
+
 The Filesystem Azure Bridge is a bridge that allows you to use the Azure Blob Storage as a filesystem in your application.
 
 ## Installation

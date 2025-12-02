@@ -1,5 +1,7 @@
 # [Decision Title]
 
+[TOC]
+
 Proposed by: @author_github_username
 Date: YYYY-MM-DD
 

@@ -1,5 +1,7 @@
 # Upgrade Guide
 
+[TOC]
+
 This document provides guidelines for upgrading between versions of Flow PHP.
 Please follow the instructions for your specific version to ensure a smooth upgrade process.
 

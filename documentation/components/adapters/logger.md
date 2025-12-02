@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/logger)
 - [📁Files](/documentation/api/adapter/logger/indices/files.html)
 
+[TOC]
+
 ETL Adapter that provides PSR Logger support for ETL.
 
 ## Installation

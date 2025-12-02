@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/csv)
 - [📁Files](/documentation/api/adapter/csv/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter CSV is a proficient library crafted to enable seamless interaction with CSV data within your ETL (
 Extract, Transform, Load) workflows. This adapter is indispensable for developers aiming to effortlessly extract from or
 load data into CSV formats, ensuring a smooth and reliable data transformation journey. By employing the Adapter CSV

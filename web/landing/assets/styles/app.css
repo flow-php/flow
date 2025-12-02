@@ -111,6 +111,31 @@ code {
     @apply text-orange-100;
 }
 
+#blog-post .table-of-contents {
+    @apply rounded p-4 mt-4 mb-6 border-gray border-2 shadow-2xl shadow-gray list-none;
+}
+
+#blog-post .table-of-contents::before {
+    content: "Table of Contents";
+    @apply block font-bold text-lg mb-2;
+}
+
+#blog-post .table-of-contents li {
+    @apply mb-1 list-none;
+}
+
+#blog-post .table-of-contents ul {
+    @apply list-none pl-4;
+}
+
+#blog-post .table-of-contents a {
+    @apply no-underline hover:underline;
+}
+
+#blog-post .table-of-contents:not(:has(li:nth-child(2))) {
+    display: none;
+}
+
 #example-description h1 {
     @apply font-bold text-2xl;
 }
@@ -210,6 +235,31 @@ code {
 
 #documentation-page blockquote {
     @apply border-l-4 border-orange-100 p-2 bg-blue-300 mb-3;
+}
+
+#documentation-page .table-of-contents {
+    @apply rounded p-4 mt-4 mb-6 border-gray border-2 shadow-2xl shadow-gray list-none;
+}
+
+#documentation-page .table-of-contents::before {
+    content: "Table of Contents";
+    @apply block font-bold text-lg mb-2;
+}
+
+#documentation-page .table-of-contents li {
+    @apply mb-1 list-none;
+}
+
+#documentation-page .table-of-contents ul {
+    @apply list-none pl-4;
+}
+
+#documentation-page .table-of-contents a {
+    @apply no-underline hover:underline;
+}
+
+#documentation-page .table-of-contents:not(:has(li:nth-child(2))) {
+    display: none;
 }
 
 .mermaid-wrapper {

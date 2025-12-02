@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 Window functions are a special type of function that perform calculations on a set of rows that are related to the current row. 
 Unlike regular aggregate functions, use of a window function does not cause rows to become grouped into a single output row — the rows retain their separate identities. 
 Behind the scenes, the window function is able to access more than just the current row of the query result.

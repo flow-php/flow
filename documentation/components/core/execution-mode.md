@@ -1,5 +1,7 @@
 # Execution Mode
 
+[TOC]
+
 Flow DataFrame supports two execution modes that control how scalar functions handle validation errors:
 
 - **LENIENT** (default): Validation errors are ignored, processing continues with fallback values (null, false, [], '')

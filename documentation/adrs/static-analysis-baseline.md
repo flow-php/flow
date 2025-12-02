@@ -1,5 +1,7 @@
 # Static Analysis Baseline
 
+[TOC]
+
 Proposed by: @norberttech
 Date: 2025-01-07
 

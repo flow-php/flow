@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 Pivot operations transform data from a long format to a wide format by rotating column values into column headers. This
 is commonly used for creating cross-tabular reports and summary tables.
 

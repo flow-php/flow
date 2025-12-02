@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 DataFrame provides several methods for manipulating data structures and values within your datasets. These operations
 allow you to add, modify, cast, and clean data efficiently.
 

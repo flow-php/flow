@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/group-by.md)
 
+[TOC]
+
 Each group created by `groupBy` function can be aggregated using one of the aggregation functions.
 
 ## Aggregation functions

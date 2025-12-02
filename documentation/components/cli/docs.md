@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/cli)
 - [📁Files](/documentation/api/cli/indices/files.html)
 
+[TOC]
+
 ## Installation
 
 ```shell

@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/lib/doctrine-dbal-bulk)
 - [📁Files](/documentation/api/lib/doctrine-dbal-bulk/indices/files.html)
 
+[TOC]
+
 Flow PHP's Doctrine DBAL Bulk is a specialized library crafted for optimizing bulk operations in your data workflows.
 This library is a prime choice for handling bulk data tasks with the Doctrine Database Abstraction Layer (DBAL),
 augmenting the performance and efficiency of data insertion and manipulation tasks. The Doctrine DBAL Bulk library

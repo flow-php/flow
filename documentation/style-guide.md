@@ -1,5 +1,7 @@
 # Flow PHP - Style Guide
 
+[TOC]
+
 <img src="assets/img/flow_php_banner_02_2022.png" alt="Flow PHP - banner"/>
 
 ### Fonts
