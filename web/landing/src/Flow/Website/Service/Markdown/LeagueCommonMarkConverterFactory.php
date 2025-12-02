@@ -43,7 +43,8 @@ final readonly class LeagueCommonMarkConverterFactory
             ],
             'heading_permalink' => [
                 'html_class' => 'mr-2',
-                'id_prefix' => 'flow-php',
+                'id_prefix' => '',
+                'fragment_prefix' => '',
                 'insert' => 'before',
                 'title' => 'Permalink',
                 'symbol' => '#',
