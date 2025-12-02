@@ -96,7 +96,11 @@ use function Flow\PgQuery\DSL\{
     pg_deparse,
     pg_deparse_options,
     pg_format,
-    pg_summary
+    pg_summary,
+    pg_to_paginated_query,
+    pg_to_count_query,
+    pg_to_keyset_query,
+    pg_keyset_column
 };
 
 $query = pg_parse('SELECT * FROM users');
@@ -127,7 +131,7 @@ $formatted = pg_format('SELECT id,name FROM users WHERE active=true');
 | `columns(?string $tableName)` | Get columns, optionally filtered by table/alias | `array<Column>` |
 | `functions()` | Get all function calls | `array<FunctionCall>` |
 | `deparse(?DeparseOptions $options)` | Convert AST back to SQL string | `string` |
-| `traverse(NodeVisitor ...$visitors)` | Traverse AST with custom visitors | `void` |
+| `traverse(NodeVisitor|NodeModifier ...)` | Traverse AST with visitors/modifiers | `$this` |
 | `raw()` | Access underlying protobuf ParseResult | `ParseResult` |
 
 ## Deparsing (AST to SQL)
@@ -242,6 +246,158 @@ Visitors declare which node type they handle via `nodeClass()`. Return values:
 - `ColumnRefCollector` - collects all `ColumnRef` nodes
 - `FuncCallCollector` - collects all `FuncCall` nodes
 - `RangeVarCollector` - collects all `RangeVar` nodes
+
+## Query Modification
+
+Beyond reading the AST, you can modify queries programmatically using modifiers. The library includes pagination modifiers as the primary use case.
+
+### Offset-Based Pagination
+
+Add LIMIT/OFFSET pagination to any SELECT query:
+
+```php
+<?php
+
+use function Flow\PgQuery\DSL\pg_to_paginated_query;
+
+$sql = 'SELECT * FROM users ORDER BY created_at DESC';
+
+$page1 = pg_to_paginated_query($sql, limit: 25, offset: 0);
+// SELECT * FROM users ORDER BY created_at DESC LIMIT 25
+
+$page2 = pg_to_paginated_query($sql, limit: 25, offset: 25);
+// SELECT * FROM users ORDER BY created_at DESC LIMIT 25 OFFSET 25
+```
+
+Works with complex queries including JOINs, CTEs, subqueries, and UNION:
+
+```php
+<?php
+
+use function Flow\PgQuery\DSL\pg_to_paginated_query;
+
+$sql = <<<'SQL'
+    WITH active_users AS (
+        SELECT id, name FROM users WHERE status = 'active'
+    )
+    SELECT au.*, COUNT(o.id) as order_count
+    FROM active_users au
+    LEFT JOIN orders o ON au.id = o.user_id
+    GROUP BY au.id, au.name
+    ORDER BY order_count DESC
+    SQL;
+
+$paginated = pg_to_paginated_query($sql, limit: 10, offset: 0);
+```
+
+### Count Query Generation
+
+Generate COUNT queries for pagination UIs ("Page 1 of 10"):
+
+```php
+<?php
+
+use function Flow\PgQuery\DSL\{pg_to_count_query, pg_to_paginated_query};
+
+$sql = 'SELECT * FROM products WHERE active = true ORDER BY name';
+
+$countQuery = pg_to_count_query($sql);
+// SELECT count(*) FROM (SELECT * FROM products WHERE active = true) _count_subq
+
+$page1 = pg_to_paginated_query($sql, limit: 20, offset: 0);
+```
+
+The COUNT modifier automatically removes ORDER BY (optimization) and wraps the query in a subquery.
+
+### Keyset (Cursor) Pagination
+
+For large datasets, keyset pagination is more efficient than OFFSET. It uses indexed WHERE conditions instead of scanning and skipping rows:
+
+```php
+<?php
+
+use Flow\PgQuery\AST\Transformers\SortOrder;
+
+use function Flow\PgQuery\DSL\{pg_to_keyset_query, pg_keyset_column};
+
+$sql = 'SELECT * FROM audit_log ORDER BY created_at DESC, id DESC';
+
+$columns = [
+    pg_keyset_column('created_at', SortOrder::DESC),
+    pg_keyset_column('id', SortOrder::DESC),
+];
+
+$page1 = pg_to_keyset_query($sql, limit: 100, columns: $columns, cursor: null);
+// SELECT * FROM audit_log ORDER BY created_at DESC, id DESC LIMIT 100
+
+$page2 = pg_to_keyset_query($sql, limit: 100, columns: $columns, cursor: ['2025-01-15 14:30:00', 1000]);
+// SELECT * FROM audit_log WHERE created_at < $1 OR (created_at = $1 AND id < $2) ORDER BY created_at DESC, id DESC LIMIT 100
+```
+
+The cursor values come from the last row of the previous page. Keyset pagination:
+- Uses O(log n) index lookups instead of O(n) row scanning
+- Handles mixed ASC/DESC sort orders correctly
+- Works with existing WHERE conditions (combined with AND)
+
+### Custom Modifiers
+
+Create custom modifiers by implementing the `NodeModifier` interface:
+
+```php
+<?php
+
+use Flow\PgQuery\AST\{ModificationContext, NodeModifier};
+use Flow\PgQuery\Protobuf\AST\SelectStmt;
+
+use function Flow\PgQuery\DSL\pg_parse;
+
+final readonly class AddDistinctModifier implements NodeModifier
+{
+    public static function nodeClass(): string
+    {
+        return SelectStmt::class;
+    }
+
+    public function modify(object $node, ModificationContext $context): int|object|null
+    {
+        if (!$context->isTopLevel()) {
+            return null;
+        }
+
+        $node->setDistinctClause([new \Flow\PgQuery\Protobuf\AST\Node()]);
+
+        return null;
+    }
+}
+
+$query = pg_parse('SELECT id, name FROM users');
+$query->traverse(new AddDistinctModifier());
+echo $query->deparse(); // SELECT DISTINCT id, name FROM users
+```
+
+### NodeModifier Interface
+
+```php
+interface NodeModifier
+{
+    /** @return class-string */
+    public static function nodeClass(): string;
+
+    public function modify(object $node, ModificationContext $context): int|object|null;
+}
+```
+
+The `ModificationContext` provides:
+- `$context->depth` - current traversal depth
+- `$context->ancestors` - array of parent nodes
+- `$context->getParent()` - immediate parent node
+- `$context->isTopLevel()` - whether this is the top-level statement
+
+Return values:
+- `null` - continue traversal
+- `Traverser::DONT_TRAVERSE_CHILDREN` - skip children
+- `Traverser::STOP_TRAVERSAL` - stop entire traversal
+- `object` - replace current node with returned object
 
 ## Raw AST Access
 
