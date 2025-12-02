@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/google-sheet)
 - [📁Files](/documentation/api/adapter/google-sheet/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter Google Sheet is a comprehensive library engineered to enable smooth interactions with Google Sheets
 within your ETL (Extract, Transform, Load) workflows. This adapter is indispensable for developers looking to seamlessly
 extract from or load data into Google Sheets, ensuring a coherent and reliable data transformation journey. By

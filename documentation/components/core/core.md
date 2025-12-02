@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/core)
 - [📁Files](/documentation/api/core/indices/files.html)
 
+[TOC]
+
 A Data Frame is the core component of Flow PHP's ETL framework. It represents a structured collection of tabular data that can be processed, transformed, and loaded efficiently. Think of it as a programmable spreadsheet that can handle large datasets with minimal memory footprint.
 
 ## Key Features

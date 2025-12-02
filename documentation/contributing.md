@@ -1,5 +1,7 @@
 # Contributing
 
+[TOC]
+
 Below graph explains the process of contributing to Flow.  
 
 ```mermaid

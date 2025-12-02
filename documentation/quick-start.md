@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](installation.md)
 
+[TOC]
+
 At this point, you should have a working installation of Flow ETL. If you don't, please go back to the [Installation](installation.md) section.
 
 Let's take a look at a simple example of how to use Flow ETL to read a CSV file, transform it and write it to another CSV file.

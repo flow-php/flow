@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/doctrine)
 - [📁Files](/documentation/api/adapter/doctrin/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter Doctrine is an adept library designed to seamlessly integrate Doctrine ORM within your ETL (Extract,
 Transform, Load) workflows. This adapter is crucial for developers seeking to effortlessly interact with databases using
 Doctrine ORM, ensuring a streamlined and reliable data transformation process. By harnessing the Adapter Doctrine

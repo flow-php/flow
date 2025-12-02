@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/bridge/openapi/specification)
 - [📁Files](/documentation/api/bridge/openapi/specification/indices/files.html)
 
+[TOC]
+
 This package provides bidirectional conversion between Flow PHP schemas and OpenAPI 3.0 specifications. 
 It enables you to generate OpenAPI documentation from Flow schemas and vice versa, facilitating API-first development and documentation workflows.
 

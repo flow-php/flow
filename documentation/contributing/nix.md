@@ -1,5 +1,7 @@
 # Nix - Development Environment
 
+[TOC]
+
 Nix is probably the easiest way of setting up the development environment.
 
 Before you start please make sure you have Nix installed. 

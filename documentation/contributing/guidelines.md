@@ -1,5 +1,7 @@
 # Project Documentation
 
+[TOC]
+
 The project includes several levels of documentation, including:
 
 - Markdown files in the `documentation` directory

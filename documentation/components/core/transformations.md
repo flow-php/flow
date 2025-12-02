@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 ## Introduction
 
 Transformations are a powerful abstraction in Flow PHP that allow you to modify DataFrames in a composable and reusable

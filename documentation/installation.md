@@ -9,6 +9,8 @@ seo_description: >
 
 - [⬅️️ Back](introduction.md)
 
+[TOC]
+
 ## Installation Methods
 
 - [Docker](installation/docker.md)

@@ -3,6 +3,8 @@
 - [⬅️ Back](core.md)
 - [📚 API Reference](/documentation/api/core)
 
+[TOC]
+
 The Flow ETL framework provides robust retry mechanisms to handle transient failures during data loading operations.
 This is essential for building resilient data pipelines that can recover from temporary network issues, database
 connection problems, or resource availability conflicts.

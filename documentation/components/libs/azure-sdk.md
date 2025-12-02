@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/lib/azure-sdk)
 - [📁Files](/documentation/api/lib/azure-sdk/indices/files.html)
 
+[TOC]
+
 Simple, lightweight, dependency-free and efficient Azure SDK for PHP.
 
 ## Installation

@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/xml)
 - [📁Files](/documentation/api/adapter/xml/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter XML is a dedicated library engineered to facilitate seamless interactions with XML data within your
 ETL (Extract, Transform, Load) processes. This adapter empowers developers to effortlessly extract from and load data
 into XML formats, ensuring a smooth and reliable data transformation journey. By harnessing the Adapter XML library,

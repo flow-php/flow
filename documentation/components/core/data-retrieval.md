@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 DataFrame provides several methods for retrieving processed data. These methods are trigger operations that execute the
 entire pipeline.
 

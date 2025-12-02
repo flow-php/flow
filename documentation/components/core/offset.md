@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 The offset operation skips a specified number of rows from the beginning of the dataset, commonly used for pagination
 and data sampling.
 

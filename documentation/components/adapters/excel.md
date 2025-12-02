@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/excel)
 - [📁Files](/documentation/api/adapter/excel/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter Excel is a comprehensive library engineered to enable smooth interactions with Excel
 within your ETL (Extract, Transform, Load) workflows. This adapter is indispensable for developers looking to seamlessly
 extract from or load data into Excel, ensuring a coherent and reliable data transformation journey. By

@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 ## Select
 
 To quickly select only relevant entries use Rows `DataFrame::select`

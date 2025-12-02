@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 
+[TOC]
+
 PostgreSQL Query Parser library provides strongly-typed AST (Abstract Syntax Tree) parsing for PostgreSQL SQL queries using the [libpg_query](https://github.com/pganalyze/libpg_query) library through a PHP extension.
 
 ## Requirements

@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/chartjs)
 - [📁Files](/documentation/api/adapter/chartjs/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter ChartJS is a meticulously designed library intended to seamlessly integrate ChartJS within your ETL (
 Extract, Transform, Load) workflows. This adapter is pivotal for developers seeking to effortlessly render and interact
 with charts, ensuring a visually engaging and insightful data transformation journey. By utilizing the Adapter ChartJS

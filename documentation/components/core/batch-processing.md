@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 Batch processing controls how data flows through the DataFrame pipeline, affecting memory usage and performance.
 
 ## Batch Size Control

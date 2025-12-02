@@ -1,5 +1,7 @@
 # Types - Architecture
 
+[TOC]
+
 Types is a small library designed to ensure type consistency at runtime.  
 The concept is that wherever the system receives input data, one of three operations can be performed:
 

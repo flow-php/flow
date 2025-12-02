@@ -1,5 +1,7 @@
 # Examples
 
+[TOC]
+
 This document provides comprehensive guidance for working with Flow PHP examples, including how to add new examples,
 update existing ones, and run them effectively.
 

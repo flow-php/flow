@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/adapter/meilisearch)
 - [📁Files](/documentation/api/adapter/meilisearch/indices/files.html)
 
+[TOC]
+
 Flow PHP's Adapter MeiliSearch is a refined library designed to seamlessly integrate MeiliSearch capabilities within
 your ETL (Extract, Transform, Load) workflows. This adapter is essential for developers seeking to effortlessly interact
 with MeiliSearch, a powerful, fast, and open-source search engine, thereby enhancing the search and indexing

@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/introduction.md)
 
+[TOC]
+
 A compiled PHP extension for PostgreSQL query parsing using [libpg_query](https://github.com/pganalyze/libpg_query).
 
 This extension provides low-level functions for parsing PostgreSQL SQL queries. For a higher-level, object-oriented interface with strongly-typed AST nodes, see the [pg-query library](/documentation/components/libs/pg-query.md).

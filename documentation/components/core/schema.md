@@ -2,6 +2,8 @@
 
 - [⬅️️ Back](/documentation/components/core/core.md)
 
+[TOC]
+
 Schema defines the structure and validation rules for DataFrame data. It provides type safety, data validation, and
 metadata management for your data processing pipelines.
 

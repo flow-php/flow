@@ -4,6 +4,8 @@
 - [📚API Reference](/documentation/api/bridge/symfony/http-foundation)
 - [📁Files](/documentation/api/bridge/symfony/http-foundation/indices/files.html)
 
+[TOC]
+
 Http Foundation Bridge provides seamless integration between Symfony Http Foundation and Flow PHP.
 
 `FlowStreamedResponse` is a Symfony Streamed Response that can:
