@@ -21,7 +21,10 @@ use Flow\PgQuery\Protobuf\AST\{
 };
 
 /**
- * Modifies SELECT queries to add or modify LIMIT/OFFSET pagination.
+ * Modifies SELECT queries to add LIMIT/OFFSET pagination.
+ *
+ * Always overrides any existing LIMIT/OFFSET clauses.
+ * Validates that OFFSET requires ORDER BY (strict mode).
  *
  * For set operations (UNION/INTERSECT/EXCEPT), the query is wrapped in a
  * subquery to ensure correct semantics:
@@ -46,15 +49,17 @@ final readonly class PaginationModifier implements NodeModifier
             return null;
         }
 
+        if ($this->config->offset > 0 && !$this->hasOrderBy($node)) {
+            throw new PaginationException(
+                'OFFSET without ORDER BY produces non-deterministic results'
+            );
+        }
+
         if ($this->isSetOperation($node)) {
             return $this->wrapSetOperationWithPagination($node);
         }
 
-        if ($this->hasExistingLimit($node)) {
-            $this->handleExistingLimit($node);
-        } else {
-            $this->applyPagination($node);
-        }
+        $this->applyPagination($node);
 
         return NodeModifier::DONT_TRAVERSE_CHILDREN;
     }
@@ -66,21 +71,9 @@ final readonly class PaginationModifier implements NodeModifier
 
         if ($this->config->offset > 0) {
             $stmt->setLimitOffset($this->createIntegerNode($this->config->offset));
+        } else {
+            $stmt->clearLimitOffset();
         }
-    }
-
-    private function combineWithExisting(SelectStmt $stmt) : void
-    {
-        $existingLimit = $this->extractIntegerValue($stmt->getLimitCount());
-        $existingOffset = $stmt->getLimitOffset() !== null
-            ? $this->extractIntegerValue($stmt->getLimitOffset())
-            : 0;
-
-        $newLimit = \min($existingLimit, $this->config->limit);
-        $newOffset = $existingOffset + $this->config->offset;
-
-        $stmt->setLimitCount($this->createIntegerNode($newLimit));
-        $stmt->setLimitOffset($this->createIntegerNode($newOffset));
     }
 
     private function createIntegerNode(int $value) : Node
@@ -98,39 +91,11 @@ final readonly class PaginationModifier implements NodeModifier
         return $node;
     }
 
-    private function extractIntegerValue(?Node $node) : int
+    private function hasOrderBy(SelectStmt $stmt) : bool
     {
-        if ($node === null) {
-            return 0;
-        }
+        $sortClause = $stmt->getSortClause();
 
-        $aConst = $node->getAConst();
-
-        if ($aConst === null) {
-            return 0;
-        }
-
-        /** @var null|int $ival (protobuf PHPDoc says int but actually returns Integer) */
-        $ival = $aConst->getIval();
-
-        return $ival ?? 0;
-    }
-
-    private function handleExistingLimit(SelectStmt $stmt) : void
-    {
-        match ($this->config->existingLimitBehavior) {
-            ExistingLimitBehavior::OVERRIDE => $this->applyPagination($stmt),
-            ExistingLimitBehavior::SKIP_IF_EXISTS => null,
-            ExistingLimitBehavior::COMBINE_MINIMUM => $this->combineWithExisting($stmt),
-            ExistingLimitBehavior::ERROR_IF_EXISTS => throw new PaginationException(
-                'Query already contains LIMIT clause'
-            ),
-        };
-    }
-
-    private function hasExistingLimit(SelectStmt $stmt) : bool
-    {
-        return $stmt->getLimitCount() !== null;
+        return $sortClause !== null && \count($sortClause) > 0;
     }
 
     private function isSetOperation(SelectStmt $stmt) : bool
