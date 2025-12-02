@@ -428,7 +428,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary('WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users');
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -441,7 +440,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary('CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255))');
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -454,7 +452,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary('DELETE FROM users WHERE id = 1');
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -467,7 +464,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary("INSERT INTO users (name, email) VALUES ('john', 'john@example.com')");
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -480,7 +476,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary('SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id');
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -493,7 +488,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary('SELECT * FROM users WHERE id = 1');
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
         self::assertGreaterThan(0, \strlen($summary));
     }
@@ -507,7 +501,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary('SELECT * FROM users WHERE id IN (SELECT user_id FROM orders)');
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -520,7 +513,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary("UPDATE users SET name = 'jane' WHERE id = 1");
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -533,7 +525,6 @@ SQL;
         $parser = new Parser();
         $summary = $parser->summary('SELECT 1', PG_QUERY_PARSE_DEFAULT);
 
-        self::assertIsString($summary);
         self::assertNotEmpty($summary);
     }
 
@@ -549,7 +540,6 @@ SQL;
         $summaryWithoutTruncation = $parser->summary($longQuery, 0, 0);
         $summaryWithTruncation = $parser->summary($longQuery, 0, 20);
 
-        self::assertIsString($summaryWithTruncation);
         self::assertNotEmpty($summaryWithTruncation);
         self::assertNotSame($summaryWithoutTruncation, $summaryWithTruncation);
     }

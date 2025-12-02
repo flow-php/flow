@@ -9,11 +9,22 @@ use Flow\PgQuery\Protobuf\AST\{Node, ParseResult};
 /**
  * AST Traverser for PostgreSQL parse trees.
  *
- * Traverses the AST and calls registered visitors for specific node types.
- * Visitors only receive nodes of the type they are registered for.
+ * Traverses the AST and calls registered visitors and modifiers for specific node types.
+ * Visitors receive nodes for read-only operations (collection, analysis).
+ * Modifiers receive nodes with context for mutation operations.
  */
 final class Traverser
 {
+    /** @var array<object> */
+    private array $ancestorStack = [];
+
+    private int $currentDepth = 0;
+
+    /**
+     * @var array<class-string, array<NodeModifier>>
+     */
+    private readonly array $modifiers;
+
     private bool $stopTraversal = false;
 
     /**
@@ -21,16 +32,25 @@ final class Traverser
      */
     private readonly array $visitors;
 
-    public function __construct(NodeVisitor ...$visitors)
+    public function __construct(NodeVisitor|NodeModifier ...$handlers)
     {
-        $indexed = [];
+        $visitors = [];
+        $modifiers = [];
 
-        foreach ($visitors as $visitor) {
-            $nodeClass = $visitor::nodeClass();
-            $indexed[$nodeClass][] = $visitor;
+        foreach ($handlers as $handler) {
+            $nodeClass = $handler::nodeClass();
+
+            if ($handler instanceof NodeModifier) {
+                $modifiers[$nodeClass][] = $handler;
+            }
+
+            if ($handler instanceof NodeVisitor) {
+                $visitors[$nodeClass][] = $handler;
+            }
         }
 
-        $this->visitors = $indexed;
+        $this->visitors = $visitors;
+        $this->modifiers = $modifiers;
     }
 
     /**
@@ -39,12 +59,24 @@ final class Traverser
     public function traverse(ParseResult $parseResult) : void
     {
         $this->stopTraversal = false;
+        $this->ancestorStack = [];
+        $this->currentDepth = 0;
 
         foreach ($parseResult->getStmts() as $rawStmt) {
+            $this->currentDepth = 1;
             $stmt = $rawStmt->getStmt();
 
-            if ($stmt !== null && !$this->traverseNode($stmt)) {
-                return;
+            if ($stmt !== null) {
+                $replacement = $this->traverseNode($stmt);
+
+                if ($replacement instanceof Node) {
+                    $rawStmt->setStmt($replacement);
+                }
+
+                /** @phpstan-ignore if.alwaysFalse (stopTraversal can be modified by traverseNode) */
+                if ($this->stopTraversal) {
+                    return;
+                }
             }
         }
     }
@@ -157,18 +189,41 @@ final class Traverser
         return $nodes;
     }
 
-    private function traverseNode(Node $node) : bool
+    private function traverseNode(Node $node) : ?Node
     {
         if ($this->stopTraversal) {
-            return false;
+            return null;
         }
 
         $traverseChildren = true;
+        $replacement = null;
 
         $innerNodes = $this->extractInnerNodes($node);
+        $context = new ModificationContext($this->ancestorStack, $this->currentDepth);
 
         foreach ($innerNodes as $innerNode) {
             $nodeClass = $innerNode::class;
+
+            if (isset($this->modifiers[$nodeClass])) {
+                foreach ($this->modifiers[$nodeClass] as $modifier) {
+                    $result = $modifier->modify($innerNode, $context);
+
+                    if ($result === NodeModifier::STOP_TRAVERSAL) {
+                        $this->stopTraversal = true;
+
+                        return null;
+                    }
+
+                    if ($result === NodeModifier::DONT_TRAVERSE_CHILDREN) {
+                        $traverseChildren = false;
+                    }
+
+                    if ($result instanceof Node) {
+                        $replacement = $result;
+                        $traverseChildren = false;
+                    }
+                }
+            }
 
             if (isset($this->visitors[$nodeClass])) {
                 foreach ($this->visitors[$nodeClass] as $visitor) {
@@ -177,7 +232,7 @@ final class Traverser
                     if ($result === NodeVisitor::STOP_TRAVERSAL) {
                         $this->stopTraversal = true;
 
-                        return false;
+                        return null;
                     }
 
                     if ($result === NodeVisitor::DONT_TRAVERSE_CHILDREN) {
@@ -188,7 +243,11 @@ final class Traverser
         }
 
         if ($traverseChildren) {
+            $this->ancestorStack[] = $node;
+            $this->currentDepth++;
             $this->traverseNodeChildren($node);
+            \array_pop($this->ancestorStack);
+            $this->currentDepth--;
         }
 
         foreach ($innerNodes as $innerNode) {
@@ -201,13 +260,13 @@ final class Traverser
                     if ($result === NodeVisitor::STOP_TRAVERSAL) {
                         $this->stopTraversal = true;
 
-                        return false;
+                        return null;
                     }
                 }
             }
         }
 
-        return true;
+        return $replacement;
     }
 
     private function traverseNodeChildren(Node $node) : void

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery;
 
+use Flow\PgQuery\AST\{NodeModifier, NodeVisitor, Traverser};
 use Flow\PgQuery\AST\Nodes\{Column, FunctionCall, Table};
-use Flow\PgQuery\AST\{NodeVisitor, Traverser};
 use Flow\PgQuery\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
 use Flow\PgQuery\Protobuf\AST\ParseResult;
 
@@ -121,9 +121,17 @@ final readonly class ParsedQuery
         return $tables;
     }
 
-    public function traverse(NodeVisitor ...$visitors) : void
+    /**
+     * Traverse the AST with visitors and/or modifiers.
+     *
+     * Visitors collect information (read-only), modifiers mutate nodes.
+     * Returns $this to allow method chaining.
+     */
+    public function traverse(NodeVisitor|NodeModifier ...$handlers) : self
     {
-        $traverser = new Traverser(...$visitors);
+        $traverser = new Traverser(...$handlers);
         $traverser->traverse($this->parseResult);
+
+        return $this;
     }
 }
