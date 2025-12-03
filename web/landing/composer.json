@@ -88,6 +88,11 @@
         "build:tailwind": [
             "bin/console tailwind:build"
         ],
+        "build:playground:completers": [
+            "bin/console app:generate:data-frame-completer",
+            "bin/console app:generate:dsl-completer",
+            "bin/console app:generate:flow-completer"
+        ],
         "build": [
             "rm -rf public/assets",
             "rm -rf build",
