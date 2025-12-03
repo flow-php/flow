@@ -7,6 +7,7 @@ namespace Flow\PgQuery\DSL;
 use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\PgQuery\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
 use Flow\PgQuery\{DeparseOptions, ParsedQuery, Parser};
+use Flow\PgQuery\Extractors\{Columns, Functions, Tables};
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pg_parser() : Parser
@@ -246,4 +247,31 @@ function pg_keyset_pagination_config(int $limit, array $columns, ?array $cursor 
 function pg_keyset_pagination(int $limit, array $columns, ?array $cursor = null) : KeysetPaginationModifier
 {
     return new KeysetPaginationModifier(new KeysetPaginationConfig($limit, $columns, $cursor));
+}
+
+/**
+ * Extract columns from a parsed SQL query.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_query_columns(ParsedQuery $query) : Columns
+{
+    return new Columns($query);
+}
+
+/**
+ * Extract tables from a parsed SQL query.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_query_tables(ParsedQuery $query) : Tables
+{
+    return new Tables($query);
+}
+
+/**
+ * Extract functions from a parsed SQL query.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_query_functions(ParsedQuery $query) : Functions
+{
+    return new Functions($query);
 }

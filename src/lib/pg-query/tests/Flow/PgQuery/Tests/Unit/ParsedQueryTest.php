@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit;
 
+use function Flow\PgQuery\DSL\{pg_query_columns, pg_query_functions, pg_query_tables};
 use Flow\PgQuery\AST\Nodes\{Column, FunctionCall, Table};
 use Flow\PgQuery\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
 use Flow\PgQuery\Parser;
@@ -27,8 +28,8 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT u.id, o.order_date FROM users u JOIN orders o ON u.id = o.user_id');
 
-        $userColumns = $result->columns('u');
-        $orderColumns = $result->columns('o');
+        $userColumns = pg_query_columns($result)->forTable('u');
+        $orderColumns = pg_query_columns($result)->forTable('o');
 
         self::assertCount(2, $userColumns);
         $userColumnNames = \array_map(fn (Column $c) => $c->name(), $userColumns);
@@ -44,7 +45,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT id, name FROM users');
 
-        $columns = $result->columns();
+        $columns = pg_query_columns($result)->all();
 
         self::assertCount(2, $columns);
 
@@ -57,7 +58,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT 1 FROM users WHERE active = true AND name LIKE \'%john%\'');
 
-        $columns = $result->columns();
+        $columns = pg_query_columns($result)->all();
 
         $columnNames = \array_map(fn (Column $c) => $c->name(), $columns);
         self::assertContains('active', $columnNames);
@@ -68,7 +69,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT * FROM users');
 
-        $columns = $result->columns();
+        $columns = pg_query_columns($result)->all();
 
         self::assertCount(1, $columns);
         self::assertSame('*', $columns[0]->name());
@@ -79,7 +80,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT u.* FROM users u');
 
-        $columns = $result->columns();
+        $columns = pg_query_columns($result)->all();
 
         self::assertCount(1, $columns);
         self::assertSame('*', $columns[0]->name());
@@ -90,7 +91,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT u.id, u.name FROM users u');
 
-        $columns = $result->columns();
+        $columns = pg_query_columns($result)->all();
 
         self::assertCount(2, $columns);
 
@@ -103,7 +104,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT COUNT(*), SUM(amount) FROM orders');
 
-        $functions = $result->functions();
+        $functions = pg_query_functions($result)->all();
 
         self::assertCount(2, $functions);
 
@@ -116,7 +117,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT UPPER(CONCAT(first_name, last_name)) FROM users');
 
-        $functions = $result->functions();
+        $functions = pg_query_functions($result)->all();
 
         self::assertCount(2, $functions);
 
@@ -129,7 +130,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT pg_catalog.now()');
 
-        $functions = $result->functions();
+        $functions = pg_query_functions($result)->all();
 
         self::assertCount(1, $functions);
         self::assertSame('now', $functions[0]->name());
@@ -147,7 +148,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(2, $tables);
 
@@ -160,7 +161,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('DELETE FROM users WHERE id = 1');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(1, $tables);
         self::assertSame('users', $tables[0]->name());
@@ -170,7 +171,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('INSERT INTO users (name) VALUES (\'john\')');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(1, $tables);
         self::assertSame('users', $tables[0]->name());
@@ -180,7 +181,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT * FROM users u JOIN orders o ON u.id = o.user_id');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(2, $tables);
 
@@ -193,7 +194,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT * FROM users');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(1, $tables);
         self::assertInstanceOf(Table::class, $tables[0]);
@@ -206,7 +207,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT * FROM (SELECT * FROM orders) AS sub');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(1, $tables);
         self::assertSame('orders', $tables[0]->name());
@@ -216,7 +217,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('UPDATE users SET name = \'john\' WHERE id = 1');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(1, $tables);
         self::assertSame('users', $tables[0]->name());
@@ -226,7 +227,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT * FROM users AS u');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(1, $tables);
         self::assertSame('users', $tables[0]->name());
@@ -237,7 +238,7 @@ final class ParsedQueryTest extends TestCase
     {
         $result = $this->parser->parse('SELECT * FROM public.users');
 
-        $tables = $result->tables();
+        $tables = pg_query_tables($result)->all();
 
         self::assertCount(1, $tables);
         self::assertSame('users', $tables[0]->name());

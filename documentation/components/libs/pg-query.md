@@ -21,27 +21,27 @@ composer require flow-php/pg-query:~--FLOW_PHP_VERSION--
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\pg_parse;
+use function Flow\PgQuery\DSL\{pg_parse, pg_query_tables, pg_query_columns, pg_query_functions};
 
 $query = pg_parse('SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id');
 
 // Get all tables
-foreach ($query->tables() as $table) {
+foreach (pg_query_tables($query)->all() as $table) {
     echo $table->name();  // 'users', 'orders'
     echo $table->alias(); // 'u', 'o'
 }
 
 // Get all columns
-foreach ($query->columns() as $column) {
+foreach (pg_query_columns($query)->all() as $column) {
     echo $column->name();  // 'id', 'name', 'id', 'user_id'
     echo $column->table(); // 'u', 'u', 'u', 'o'
 }
 
 // Get columns for specific table
-$userColumns = $query->columns('u');
+$userColumns = pg_query_columns($query)->forTable('u');
 
 // Get all function calls
-foreach ($query->functions() as $func) {
+foreach (pg_query_functions($query)->all() as $func) {
     echo $func->name();   // function name
     echo $func->schema(); // schema if qualified (e.g., 'pg_catalog')
 }
@@ -97,6 +97,9 @@ use function Flow\PgQuery\DSL\{
     pg_deparse_options,
     pg_format,
     pg_summary,
+    pg_query_columns,
+    pg_query_tables,
+    pg_query_functions,
     pg_to_paginated_query,
     pg_to_count_query,
     pg_to_keyset_query,
@@ -110,6 +113,11 @@ $normalized = pg_normalize('SELECT * FROM users WHERE id = 1');
 $normalizedDdl = pg_normalize_utility('CREATE TABLE users (id INT)');
 $statements = pg_split('SELECT 1; SELECT 2;');
 $summary = pg_summary('SELECT * FROM users');
+
+// Extract columns, tables, and functions
+$columns = pg_query_columns($query)->all();
+$tables = pg_query_tables($query)->all();
+$functions = pg_query_functions(pg_parse('SELECT COUNT(*) FROM users'))->all();
 
 // Deparse (convert AST back to SQL)
 $sql = pg_deparse($query);  // Simple output
@@ -127,12 +135,29 @@ $formatted = pg_format('SELECT id,name FROM users WHERE active=true');
 
 | Method | Description | Returns |
 |--------|-------------|---------|
-| `tables()` | Get all tables referenced in the query | `array<Table>` |
-| `columns(?string $tableName)` | Get columns, optionally filtered by table/alias | `array<Column>` |
-| `functions()` | Get all function calls | `array<FunctionCall>` |
 | `deparse(?DeparseOptions $options)` | Convert AST back to SQL string | `string` |
 | `traverse(NodeVisitor|NodeModifier ...)` | Traverse AST with visitors/modifiers | `$this` |
 | `raw()` | Access underlying protobuf ParseResult | `ParseResult` |
+
+## Extractor Functions
+
+| Function | Description | Returns |
+|----------|-------------|---------|
+| `pg_query_tables($query)` | Extract tables from the query | `Tables` |
+| `pg_query_columns($query)` | Extract columns from the query | `Columns` |
+| `pg_query_functions($query)` | Extract function calls from the query | `Functions` |
+
+### Extractor Methods
+
+**Columns** extractor:
+- `all()` - Get all columns
+- `forTable(string $tableName)` - Get columns filtered by table/alias
+
+**Tables** extractor:
+- `all()` - Get all tables
+
+**Functions** extractor:
+- `all()` - Get all function calls
 
 ## Deparsing (AST to SQL)
 
