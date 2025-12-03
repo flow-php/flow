@@ -47,117 +47,44 @@ foreach (pg_query_functions($query)->all() as $func) {
 }
 ```
 
-## Parser Class
-
-```php
-<?php
-
-use Flow\PgQuery\Parser;
-
-$parser = new Parser();
-
-// Parse SQL into ParsedQuery
-$query = $parser->parse('SELECT * FROM users WHERE id = 1');
-
-// Generate fingerprint (same for structurally equivalent queries)
-$fingerprint = $parser->fingerprint('SELECT * FROM users WHERE id = 1');
-
-// Normalize query (replace literals with positional parameters)
-$normalized = $parser->normalize("SELECT * FROM users WHERE name = 'John'");
-// Returns: SELECT * FROM users WHERE name = $1
-
-// Normalize also handles Doctrine-style named parameters
-$normalized = $parser->normalize('SELECT * FROM users WHERE id = :id');
-// Returns: SELECT * FROM users WHERE id = $1
-
-// Normalize utility/DDL statements
-$normalized = $parser->normalizeUtility('CREATE TABLE users (id INT, name VARCHAR(255))');
-
-// Split multiple statements
-$statements = $parser->split('SELECT 1; SELECT 2;');
-// Returns: ['SELECT 1', ' SELECT 2']
-
-// Generate query summary (protobuf format, useful for logging)
-$summary = $parser->summary('SELECT * FROM users WHERE id = 1');
-```
-
-## DSL Functions
+## Parsing and Utilities
 
 ```php
 <?php
 
 use function Flow\PgQuery\DSL\{
     pg_parse,
-    pg_parser,
     pg_fingerprint,
     pg_normalize,
     pg_normalize_utility,
     pg_split,
-    pg_deparse,
-    pg_deparse_options,
-    pg_format,
-    pg_summary,
-    pg_query_columns,
-    pg_query_tables,
-    pg_query_functions,
-    pg_to_paginated_query,
-    pg_to_count_query,
-    pg_to_keyset_query,
-    pg_keyset_column
+    pg_summary
 };
 
-$query = pg_parse('SELECT * FROM users');
-$parser = pg_parser();
+// Parse SQL into ParsedQuery
+$query = pg_parse('SELECT * FROM users WHERE id = 1');
+
+// Generate fingerprint (same for structurally equivalent queries)
 $fingerprint = pg_fingerprint('SELECT * FROM users WHERE id = 1');
-$normalized = pg_normalize('SELECT * FROM users WHERE id = 1');
-$normalizedDdl = pg_normalize_utility('CREATE TABLE users (id INT)');
+
+// Normalize query (replace literals with positional parameters)
+$normalized = pg_normalize("SELECT * FROM users WHERE name = 'John'");
+// Returns: SELECT * FROM users WHERE name = $1
+
+// Normalize also handles Doctrine-style named parameters
+$normalized = pg_normalize('SELECT * FROM users WHERE id = :id');
+// Returns: SELECT * FROM users WHERE id = $1
+
+// Normalize utility/DDL statements
+$normalized = pg_normalize_utility('CREATE TABLE users (id INT, name VARCHAR(255))');
+
+// Split multiple statements
 $statements = pg_split('SELECT 1; SELECT 2;');
-$summary = pg_summary('SELECT * FROM users');
+// Returns: ['SELECT 1', ' SELECT 2']
 
-// Extract columns, tables, and functions
-$columns = pg_query_columns($query)->all();
-$tables = pg_query_tables($query)->all();
-$functions = pg_query_functions(pg_parse('SELECT COUNT(*) FROM users'))->all();
-
-// Deparse (convert AST back to SQL)
-$sql = pg_deparse($query);  // Simple output
-$sql = pg_deparse($query, pg_deparse_options()->indentSize(2));  // Pretty printed
-
-// Format SQL (parse + deparse with pretty printing)
-$formatted = pg_format('SELECT id,name FROM users WHERE active=true');
-// Returns:
-// SELECT id, name
-// FROM users
-// WHERE active = true
+// Generate query summary (protobuf format, useful for logging)
+$summary = pg_summary('SELECT * FROM users WHERE id = 1');
 ```
-
-## ParsedQuery Methods
-
-| Method | Description | Returns |
-|--------|-------------|---------|
-| `deparse(?DeparseOptions $options)` | Convert AST back to SQL string | `string` |
-| `traverse(NodeVisitor|NodeModifier ...)` | Traverse AST with visitors/modifiers | `$this` |
-| `raw()` | Access underlying protobuf ParseResult | `ParseResult` |
-
-## Extractor Functions
-
-| Function | Description | Returns |
-|----------|-------------|---------|
-| `pg_query_tables($query)` | Extract tables from the query | `Tables` |
-| `pg_query_columns($query)` | Extract columns from the query | `Columns` |
-| `pg_query_functions($query)` | Extract function calls from the query | `Functions` |
-
-### Extractor Methods
-
-**Columns** extractor:
-- `all()` - Get all columns
-- `forTable(string $tableName)` - Get columns filtered by table/alias
-
-**Tables** extractor:
-- `all()` - Get all tables
-
-**Functions** extractor:
-- `all()` - Get all function calls
 
 ## Deparsing (AST to SQL)
 
@@ -166,17 +93,16 @@ Convert a parsed query back to SQL, optionally with pretty-printing:
 ```php
 <?php
 
-use Flow\PgQuery\{DeparseOptions, Parser};
+use function Flow\PgQuery\DSL\{pg_parse, pg_deparse, pg_deparse_options, pg_format};
 
-$parser = new Parser();
-$query = $parser->parse('SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id WHERE u.active = true');
+$query = pg_parse('SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id WHERE u.active = true');
 
 // Simple deparse (compact output)
-$sql = $query->deparse();
+$sql = pg_deparse($query);
 // Returns: SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id WHERE u.active = true
 
 // Pretty-printed output
-$sql = $query->deparse(DeparseOptions::new());
+$sql = pg_deparse($query, pg_deparse_options());
 // Returns:
 // SELECT u.id, u.name
 // FROM
@@ -185,13 +111,15 @@ $sql = $query->deparse(DeparseOptions::new());
 // WHERE u.active = true
 
 // Custom formatting options
-$sql = $query->deparse(
-    DeparseOptions::new()
-        ->indentSize(2)           // 2 spaces per indent level
-        ->maxLineLength(60)       // Wrap at 60 characters
-        ->trailingNewline()       // Add newline at end
-        ->commasStartOfLine()     // Place commas at line start
+$sql = pg_deparse($query, pg_deparse_options()
+    ->indentSize(2)           // 2 spaces per indent level
+    ->maxLineLength(60)       // Wrap at 60 characters
+    ->trailingNewline()       // Add newline at end
+    ->commasStartOfLine()     // Place commas at line start
 );
+
+// Shorthand: parse and format in one step
+$formatted = pg_format('SELECT id,name FROM users WHERE active=true');
 ```
 
 ### DeparseOptions
@@ -364,6 +292,47 @@ The cursor values come from the last row of the previous page. Keyset pagination
 - Handles mixed ASC/DESC sort orders correctly
 - Works with existing WHERE conditions (combined with AND)
 
+### Using Modifiers Directly
+
+For more control, you can use modifier objects directly with `traverse()`:
+
+```php
+<?php
+
+use Flow\PgQuery\AST\Transformers\SortOrder;
+
+use function Flow\PgQuery\DSL\{
+    pg_parse,
+    pg_pagination,
+    pg_count_modifier,
+    pg_keyset_pagination,
+    pg_keyset_column
+};
+
+// Offset pagination modifier
+$query = pg_parse('SELECT * FROM users ORDER BY id');
+$query->traverse(pg_pagination(limit: 10, offset: 20));
+echo $query->deparse(); // SELECT * FROM users ORDER BY id LIMIT 10 OFFSET 20
+
+// Count modifier
+$query = pg_parse('SELECT * FROM users WHERE active = true ORDER BY name');
+$query->traverse(pg_count_modifier());
+echo $query->deparse(); // SELECT count(*) FROM (SELECT * FROM users WHERE active = true) _count_subq
+
+// Keyset pagination modifier
+$query = pg_parse('SELECT * FROM users ORDER BY created_at, id');
+$query->traverse(pg_keyset_pagination(
+    limit: 10,
+    columns: [
+        pg_keyset_column('created_at', SortOrder::ASC),
+        pg_keyset_column('id', SortOrder::ASC),
+    ],
+    cursor: ['2025-01-15', 42]
+));
+echo $query->deparse();
+// SELECT * FROM users WHERE created_at > $1 OR (created_at = $1 AND id > $2) ORDER BY created_at, id LIMIT 10
+```
+
 ### Custom Modifiers
 
 Create custom modifiers by implementing the `NodeModifier` interface:
@@ -374,7 +343,7 @@ Create custom modifiers by implementing the `NodeModifier` interface:
 use Flow\PgQuery\AST\{ModificationContext, NodeModifier};
 use Flow\PgQuery\Protobuf\AST\SelectStmt;
 
-use function Flow\PgQuery\DSL\pg_parse;
+use function Flow\PgQuery\DSL\{pg_parse, pg_deparse};
 
 final readonly class AddDistinctModifier implements NodeModifier
 {
@@ -397,7 +366,7 @@ final readonly class AddDistinctModifier implements NodeModifier
 
 $query = pg_parse('SELECT id, name FROM users');
 $query->traverse(new AddDistinctModifier());
-echo $query->deparse(); // SELECT DISTINCT id, name FROM users
+echo pg_deparse($query); // SELECT DISTINCT id, name FROM users
 ```
 
 ### NodeModifier Interface
@@ -454,19 +423,25 @@ foreach ($query->raw()->getStmts() as $stmt) {
 ```php
 <?php
 
-use Flow\PgQuery\Parser;
-use Flow\PgQuery\Exception\{ParserException, ExtensionNotLoadedException};
+use Flow\PgQuery\Exception\{ParserException, ExtensionNotLoadedException, PaginationException};
+
+use function Flow\PgQuery\DSL\{pg_parse, pg_pagination};
 
 try {
-    $parser = new Parser();
+    $query = pg_parse('INVALID SQL');
 } catch (ExtensionNotLoadedException $e) {
     // pg_query extension is not loaded
+} catch (ParserException $e) {
+    echo "Parse error: " . $e->getMessage();
 }
 
 try {
-    $parser->parse('INVALID SQL');
-} catch (ParserException $e) {
-    echo "Parse error: " . $e->getMessage();
+    // OFFSET without ORDER BY throws exception
+    $query = pg_parse('SELECT * FROM users');
+    $query->traverse(pg_pagination(10, 5));
+} catch (PaginationException $e) {
+    echo "Pagination error: " . $e->getMessage();
+    // "OFFSET without ORDER BY produces non-deterministic results"
 }
 ```
 

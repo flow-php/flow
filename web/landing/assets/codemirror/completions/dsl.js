@@ -1,7 +1,7 @@
 /**
  * CodeMirror Completer for Flow PHP DSL Functions
  *
- * Total functions: 355
+ * Total functions: 372
  *
  * This completer provides autocompletion for all Flow PHP DSL functions:
  * - Extractors (flow-extractors)
@@ -3300,6 +3300,60 @@ const dslFunctions = [
         apply: snippet("\\Flow\\Filesystem\\DSL\\path_stdout(" + "$" + "{" + "1:options" + "}" + ")"),
         boost: 10
     },        {
+        label: "pg_count_modifier",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_count_modifier</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">CountModifier</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a CountModifier that transforms a SELECT query into a COUNT query.<br>The original query is wrapped in: SELECT COUNT(*) FROM (...) AS _count_subq<br>ORDER BY and LIMIT/OFFSET are removed from the inner query.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_count_modifier()"),
+        boost: 10
+    },        {
+        label: "pg_deparse",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_deparse</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DeparseOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Convert a ParsedQuery AST back to SQL string.<br>When called without options, returns the SQL as a simple string.<br>When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).<br>@throws \\RuntimeException if deparsing fails
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_deparse(" + "$" + "{" + "1:query" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_deparse_options",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_deparse_options</span><span class=\"fn-operator\">(</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">DeparseOptions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create DeparseOptions for configuring SQL formatting.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_deparse_options()"),
+        boost: 10
+    },        {
         label: "pg_fingerprint",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3318,6 +3372,78 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PgQuery\\DSL\\pg_fingerprint(" + "$" + "{" + "1:sql" + "}" + ")"),
         boost: 10
     },        {
+        label: "pg_format",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_format</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">DeparseOptions</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Parse and format SQL query with pretty printing.<br>This is a convenience function that parses SQL and returns it formatted.<br>@param string $sql The SQL query to format<br>@param null|DeparseOptions $options Formatting options (defaults to pretty-print enabled)<br>@throws \\RuntimeException if parsing or deparsing fails
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_format(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:options" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_keyset_column",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_keyset_column</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$column</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">SortOrder</span> <span class=\"fn-param\">$order</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">Flow\\PgQuery\\AST\\Transformers\\SortOrder::...</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeysetColumn</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a KeysetColumn for keyset pagination.<br>@param string $column Column name (can include table alias like \"u.id\")<br>@param SortOrder $order Sort order (ASC or DESC)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_keyset_column(" + "$" + "{" + "1:column" + "}" + ", " + "$" + "{" + "2:order" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_keyset_pagination",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_keyset_pagination</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$cursor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeysetPaginationModifier</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a KeysetPaginationModifier for cursor-based pagination.<br>Keyset pagination is more efficient than OFFSET for large datasets because it uses<br>indexed WHERE conditions instead of scanning and skipping rows.<br>@param int $limit Maximum number of rows to return<br>@param list<KeysetColumn> $columns Columns to use for keyset pagination (must match ORDER BY)<br>@param null|list<null|bool|float|int|string> $cursor Cursor values from the last row of previous page (null for first page)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_keyset_pagination(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:cursor" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_keyset_pagination_config",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_keyset_pagination_config</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$cursor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">KeysetPaginationConfig</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a KeysetPaginationConfig for cursor-based pagination.<br>@param int $limit Maximum number of rows to return<br>@param list<KeysetColumn> $columns Columns to use for keyset pagination (must match ORDER BY)<br>@param null|list<null|bool|float|int|string> $cursor Cursor values from the last row of previous page (null for first page)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_keyset_pagination_config(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:columns" + "}" + ", " + "$" + "{" + "3:cursor" + "}" + ")"),
+        boost: 10
+    },        {
         label: "pg_normalize",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3328,12 +3454,66 @@ const dslFunctions = [
                     <span class=\"fn-name\">pg_normalize</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
                 </div>
                                 <div style="color: #8b949e; font-size: 13px;">
-                    Normalize SQL query by replacing literal values and named parameters with positional parameters.<br>WHERE id = :id will be changed into WHERE id = $1<br>WHERE id = 1 will be changed into WHERE id = $1
+                    Normalize SQL query by replacing literal values and named parameters with positional parameters.<br>WHERE id = :id will be changed into WHERE id = $1<br>WHERE id = 1 will be changed into WHERE id = $1.
                 </div>
                             `
             return div
         },
         apply: snippet("\\Flow\\PgQuery\\DSL\\pg_normalize(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_normalize_utility",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_normalize_utility</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).<br>This handles DDL statements differently from pg_normalize() which is optimized for DML.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_normalize_utility(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_pagination",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_pagination</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PaginationModifier</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PaginationModifier for offset-based pagination.<br>Applies LIMIT and OFFSET to the query. OFFSET without ORDER BY will throw an exception.<br>@param int $limit Maximum number of rows to return<br>@param int $offset Number of rows to skip (requires ORDER BY in query)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_pagination(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:offset" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_pagination_config",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_pagination_config</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">PaginationConfig</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Create a PaginationConfig for offset-based pagination.<br>@param int $limit Maximum number of rows to return<br>@param int $offset Number of rows to skip (requires ORDER BY in query)
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_pagination_config(" + "$" + "{" + "1:limit" + "}" + ", " + "$" + "{" + "2:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "pg_parse",
@@ -3366,6 +3546,60 @@ const dslFunctions = [
         apply: snippet("\\Flow\\PgQuery\\DSL\\pg_parser()"),
         boost: 10
     },        {
+        label: "pg_query_columns",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_query_columns</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Columns</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Extract columns from a parsed SQL query.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_query_columns(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_query_functions",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_query_functions</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Functions</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Extract functions from a parsed SQL query.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_query_functions(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_query_tables",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_query_tables</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">ParsedQuery</span> <span class=\"fn-param\">$query</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">Tables</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Extract tables from a parsed SQL query.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_query_tables(" + "$" + "{" + "1:query" + "}" + ")"),
+        boost: 10
+    },        {
         label: "pg_split",
         type: "function",
         detail: "flow\u002Ddsl\u002Dhelpers",
@@ -3382,6 +3616,78 @@ const dslFunctions = [
             return div
         },
         apply: snippet("\\Flow\\PgQuery\\DSL\\pg_split(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_summary",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_summary</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$options</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$truncateLimit</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Generate a summary of parsed queries in protobuf format.<br>Useful for query monitoring and logging without full AST overhead.
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_summary(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:options" + "}" + ", " + "$" + "{" + "3:truncateLimit" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_to_count_query",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_to_count_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Transform a SQL query into a COUNT query for pagination.<br>Wraps the query in: SELECT COUNT(*) FROM (...) AS _count_subq<br>Removes ORDER BY and LIMIT/OFFSET from the inner query.<br>@param string $sql The SQL query to transform<br>@return string The COUNT query
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_to_count_query(" + "$" + "{" + "1:sql" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_to_keyset_query",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_to_keyset_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$columns</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">array</span> <span class=\"fn-param\">$cursor</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">null</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Transform a SQL query into a keyset (cursor-based) paginated query.<br>More efficient than OFFSET for large datasets - uses indexed WHERE conditions.<br>@param string $sql The SQL query to paginate (must have ORDER BY)<br>@param int $limit Maximum number of rows to return<br>@param list<KeysetColumn> $columns Columns for keyset pagination (must match ORDER BY)<br>@param null|list<null|bool|float|int|string> $cursor Values from last row of previous page (null for first page)<br>@return string The paginated SQL query
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_to_keyset_query(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ", " + "$" + "{" + "3:columns" + "}" + ", " + "$" + "{" + "4:cursor" + "}" + ")"),
+        boost: 10
+    },        {
+        label: "pg_to_paginated_query",
+        type: "function",
+        detail: "flow\u002Ddsl\u002Dhelpers",
+        info: () => {
+            const div = document.createElement("div")
+            div.innerHTML = `
+                <div style="font-family: 'Fira Code', 'JetBrains Mono', monospace; margin-bottom: 8px;">
+                    <span class=\"fn-name\">pg_to_paginated_query</span><span class=\"fn-operator\">(</span><span class=\"fn-type\">string</span> <span class=\"fn-param\">$sql</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$limit</span><span class=\"fn-operator\">,</span> <span class=\"fn-type\">int</span> <span class=\"fn-param\">$offset</span> <span class=\"fn-operator\">=</span> <span class=\"fn-default\">0</span><span class=\"fn-operator\">)</span> <span class=\"fn-operator\">:</span> <span class=\"fn-return\">string</span>
+                </div>
+                                <div style="color: #8b949e; font-size: 13px;">
+                    Transform a SQL query into a paginated query with LIMIT and OFFSET.<br>@param string $sql The SQL query to paginate<br>@param int $limit Maximum number of rows to return<br>@param int $offset Number of rows to skip (requires ORDER BY in query)<br>@return string The paginated SQL query
+                </div>
+                            `
+            return div
+        },
+        apply: snippet("\\Flow\\PgQuery\\DSL\\pg_to_paginated_query(" + "$" + "{" + "1:sql" + "}" + ", " + "$" + "{" + "2:limit" + "}" + ", " + "$" + "{" + "3:offset" + "}" + ")"),
         boost: 10
     },        {
         label: "pie_chart",

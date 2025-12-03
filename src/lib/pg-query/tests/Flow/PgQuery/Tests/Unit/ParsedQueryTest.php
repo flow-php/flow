@@ -4,29 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit;
 
-use function Flow\PgQuery\DSL\{pg_query_columns, pg_query_functions, pg_query_tables};
+use function Flow\PgQuery\DSL\{pg_parse, pg_query_columns, pg_query_functions, pg_query_tables};
 use Flow\PgQuery\AST\Nodes\{Column, FunctionCall, Table};
 use Flow\PgQuery\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
-use Flow\PgQuery\Parser;
 use Flow\PgQuery\Protobuf\AST\ParseResult;
 use PHPUnit\Framework\TestCase;
 
 final class ParsedQueryTest extends TestCase
 {
-    private Parser $parser;
-
     protected function setUp() : void
     {
         if (!\extension_loaded('pg_query')) {
             self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
         }
-
-        $this->parser = new Parser();
     }
 
     public function test_columns_filtered_by_table() : void
     {
-        $result = $this->parser->parse('SELECT u.id, o.order_date FROM users u JOIN orders o ON u.id = o.user_id');
+        $result = pg_parse('SELECT u.id, o.order_date FROM users u JOIN orders o ON u.id = o.user_id');
 
         $userColumns = pg_query_columns($result)->forTable('u');
         $orderColumns = pg_query_columns($result)->forTable('o');
@@ -43,7 +38,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_columns_from_select() : void
     {
-        $result = $this->parser->parse('SELECT id, name FROM users');
+        $result = pg_parse('SELECT id, name FROM users');
 
         $columns = pg_query_columns($result)->all();
 
@@ -56,7 +51,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_columns_from_where_clause() : void
     {
-        $result = $this->parser->parse('SELECT 1 FROM users WHERE active = true AND name LIKE \'%john%\'');
+        $result = pg_parse('SELECT 1 FROM users WHERE active = true AND name LIKE \'%john%\'');
 
         $columns = pg_query_columns($result)->all();
 
@@ -67,7 +62,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_columns_with_star() : void
     {
-        $result = $this->parser->parse('SELECT * FROM users');
+        $result = pg_parse('SELECT * FROM users');
 
         $columns = pg_query_columns($result)->all();
 
@@ -78,7 +73,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_columns_with_table_qualified_star() : void
     {
-        $result = $this->parser->parse('SELECT u.* FROM users u');
+        $result = pg_parse('SELECT u.* FROM users u');
 
         $columns = pg_query_columns($result)->all();
 
@@ -89,7 +84,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_columns_with_table_qualifier() : void
     {
-        $result = $this->parser->parse('SELECT u.id, u.name FROM users u');
+        $result = pg_parse('SELECT u.id, u.name FROM users u');
 
         $columns = pg_query_columns($result)->all();
 
@@ -102,7 +97,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_functions_from_select() : void
     {
-        $result = $this->parser->parse('SELECT COUNT(*), SUM(amount) FROM orders');
+        $result = pg_parse('SELECT COUNT(*), SUM(amount) FROM orders');
 
         $functions = pg_query_functions($result)->all();
 
@@ -115,7 +110,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_functions_nested() : void
     {
-        $result = $this->parser->parse('SELECT UPPER(CONCAT(first_name, last_name)) FROM users');
+        $result = pg_parse('SELECT UPPER(CONCAT(first_name, last_name)) FROM users');
 
         $functions = pg_query_functions($result)->all();
 
@@ -128,7 +123,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_functions_with_schema() : void
     {
-        $result = $this->parser->parse('SELECT pg_catalog.now()');
+        $result = pg_parse('SELECT pg_catalog.now()');
 
         $functions = pg_query_functions($result)->all();
 
@@ -139,14 +134,14 @@ final class ParsedQueryTest extends TestCase
 
     public function test_raw_returns_parse_result() : void
     {
-        $result = $this->parser->parse('SELECT 1');
+        $result = pg_parse('SELECT 1');
 
         self::assertInstanceOf(ParseResult::class, $result->raw());
     }
 
     public function test_tables_from_cte() : void
     {
-        $result = $this->parser->parse('WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users');
+        $result = pg_parse('WITH active_users AS (SELECT * FROM users WHERE active = true) SELECT * FROM active_users');
 
         $tables = pg_query_tables($result)->all();
 
@@ -159,7 +154,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_from_delete() : void
     {
-        $result = $this->parser->parse('DELETE FROM users WHERE id = 1');
+        $result = pg_parse('DELETE FROM users WHERE id = 1');
 
         $tables = pg_query_tables($result)->all();
 
@@ -169,7 +164,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_from_insert() : void
     {
-        $result = $this->parser->parse('INSERT INTO users (name) VALUES (\'john\')');
+        $result = pg_parse('INSERT INTO users (name) VALUES (\'john\')');
 
         $tables = pg_query_tables($result)->all();
 
@@ -179,7 +174,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_from_join() : void
     {
-        $result = $this->parser->parse('SELECT * FROM users u JOIN orders o ON u.id = o.user_id');
+        $result = pg_parse('SELECT * FROM users u JOIN orders o ON u.id = o.user_id');
 
         $tables = pg_query_tables($result)->all();
 
@@ -192,7 +187,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_from_simple_select() : void
     {
-        $result = $this->parser->parse('SELECT * FROM users');
+        $result = pg_parse('SELECT * FROM users');
 
         $tables = pg_query_tables($result)->all();
 
@@ -205,7 +200,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_from_subquery() : void
     {
-        $result = $this->parser->parse('SELECT * FROM (SELECT * FROM orders) AS sub');
+        $result = pg_parse('SELECT * FROM (SELECT * FROM orders) AS sub');
 
         $tables = pg_query_tables($result)->all();
 
@@ -215,7 +210,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_from_update() : void
     {
-        $result = $this->parser->parse('UPDATE users SET name = \'john\' WHERE id = 1');
+        $result = pg_parse('UPDATE users SET name = \'john\' WHERE id = 1');
 
         $tables = pg_query_tables($result)->all();
 
@@ -225,7 +220,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_with_alias() : void
     {
-        $result = $this->parser->parse('SELECT * FROM users AS u');
+        $result = pg_parse('SELECT * FROM users AS u');
 
         $tables = pg_query_tables($result)->all();
 
@@ -236,7 +231,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_tables_with_schema() : void
     {
-        $result = $this->parser->parse('SELECT * FROM public.users');
+        $result = pg_parse('SELECT * FROM public.users');
 
         $tables = pg_query_tables($result)->all();
 
@@ -247,7 +242,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_traverse_with_multiple_visitors() : void
     {
-        $result = $this->parser->parse('SELECT COUNT(id), name FROM users WHERE active = true');
+        $result = pg_parse('SELECT COUNT(id), name FROM users WHERE active = true');
 
         $columnCollector = new ColumnRefCollector();
         $funcCollector = new FuncCallCollector();
@@ -262,7 +257,7 @@ final class ParsedQueryTest extends TestCase
 
     public function test_traverse_with_single_visitor() : void
     {
-        $result = $this->parser->parse('SELECT id, name FROM users');
+        $result = pg_parse('SELECT id, name FROM users');
 
         $collector = new ColumnRefCollector();
         $result->traverse($collector);
