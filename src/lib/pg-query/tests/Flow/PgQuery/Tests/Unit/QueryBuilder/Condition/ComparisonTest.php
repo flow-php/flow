@@ -1,0 +1,235 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\PgQuery\Tests\Unit\QueryBuilder\Condition;
+
+use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, Node};
+use Flow\PgQuery\QueryBuilder\Condition\{AndCondition, Comparison, ComparisonOperator, NotCondition, OrCondition};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
+use Flow\PgQuery\QueryBuilder\Expression\{Column, Literal};
+use PHPUnit\Framework\TestCase;
+
+final class ComparisonTest extends TestCase
+{
+    protected function setUp() : void
+    {
+        if (!\extension_loaded('pg_query')) {
+            self::markTestSkipped('pg_query extension is not loaded. For local development use `nix-shell --arg with-pg-query-ext true` to enable it in the shell.');
+        }
+    }
+
+    public function test_and_returns_and_condition() : void
+    {
+        $cond1 = new Comparison(Column::name('x'), ComparisonOperator::EQ, Literal::int(1));
+        $cond2 = new Comparison(Column::name('y'), ComparisonOperator::GT, Literal::int(2));
+
+        $and = $cond1->and($cond2);
+
+        self::assertInstanceOf(AndCondition::class, $and);
+    }
+
+    public function test_comparison_eq_to_ast() : void
+    {
+        $comparison = new Comparison(
+            Column::name('status'),
+            ComparisonOperator::EQ,
+            Literal::string('active')
+        );
+
+        $ast = $comparison->toAst();
+
+        self::assertInstanceOf(Node::class, $ast);
+        self::assertTrue($ast->hasAExpr());
+
+        $aExpr = $ast->getAExpr();
+        self::assertNotNull($aExpr);
+        self::assertSame(A_Expr_Kind::AEXPR_OP, $aExpr->getKind());
+
+        $name = $aExpr->getName();
+        self::assertNotNull($name);
+        self::assertCount(1, $name);
+
+        $operatorNode = $name->offsetGet(0);
+        $operatorString = $operatorNode->getString();
+        self::assertNotNull($operatorString);
+        self::assertSame('=', $operatorString->getSval());
+    }
+
+    public function test_comparison_gt_to_ast() : void
+    {
+        $comparison = new Comparison(
+            Column::name('age'),
+            ComparisonOperator::GT,
+            Literal::int(18)
+        );
+
+        $ast = $comparison->toAst();
+
+        self::assertTrue($ast->hasAExpr());
+
+        $aExpr = $ast->getAExpr();
+        self::assertNotNull($aExpr);
+        $name = $aExpr->getName();
+        self::assertNotNull($name);
+        $operatorNode = $name->offsetGet(0);
+        $operatorString = $operatorNode->getString();
+        self::assertNotNull($operatorString);
+        self::assertSame('>', $operatorString->getSval());
+    }
+
+    public function test_comparison_gte_to_ast() : void
+    {
+        $comparison = new Comparison(
+            Column::name('score'),
+            ComparisonOperator::GTE,
+            Literal::int(100)
+        );
+
+        $ast = $comparison->toAst();
+
+        self::assertTrue($ast->hasAExpr());
+
+        $aExpr = $ast->getAExpr();
+        self::assertNotNull($aExpr);
+        $name = $aExpr->getName();
+        self::assertNotNull($name);
+        $operatorNode = $name->offsetGet(0);
+        $operatorString = $operatorNode->getString();
+        self::assertNotNull($operatorString);
+        self::assertSame('>=', $operatorString->getSval());
+    }
+
+    public function test_comparison_lt_to_ast() : void
+    {
+        $comparison = new Comparison(
+            Column::name('price'),
+            ComparisonOperator::LT,
+            Literal::float(99.99)
+        );
+
+        $ast = $comparison->toAst();
+
+        self::assertTrue($ast->hasAExpr());
+
+        $aExpr = $ast->getAExpr();
+        self::assertNotNull($aExpr);
+        $name = $aExpr->getName();
+        self::assertNotNull($name);
+        $operatorNode = $name->offsetGet(0);
+        $operatorString = $operatorNode->getString();
+        self::assertNotNull($operatorString);
+        self::assertSame('<', $operatorString->getSval());
+    }
+
+    public function test_comparison_lte_to_ast() : void
+    {
+        $comparison = new Comparison(
+            Column::name('quantity'),
+            ComparisonOperator::LTE,
+            Literal::int(10)
+        );
+
+        $ast = $comparison->toAst();
+
+        self::assertTrue($ast->hasAExpr());
+
+        $aExpr = $ast->getAExpr();
+        self::assertNotNull($aExpr);
+        $name = $aExpr->getName();
+        self::assertNotNull($name);
+        $operatorNode = $name->offsetGet(0);
+        $operatorString = $operatorNode->getString();
+        self::assertNotNull($operatorString);
+        self::assertSame('<=', $operatorString->getSval());
+    }
+
+    public function test_comparison_neq_to_ast() : void
+    {
+        $comparison = new Comparison(
+            Column::name('status'),
+            ComparisonOperator::NEQ,
+            Literal::string('deleted')
+        );
+
+        $ast = $comparison->toAst();
+
+        self::assertTrue($ast->hasAExpr());
+
+        $aExpr = $ast->getAExpr();
+        self::assertNotNull($aExpr);
+        $name = $aExpr->getName();
+        self::assertNotNull($name);
+        $operatorNode = $name->offsetGet(0);
+        $operatorString = $operatorNode->getString();
+        self::assertNotNull($operatorString);
+        self::assertSame('<>', $operatorString->getSval());
+    }
+
+    public function test_from_ast_reconstructs_comparison() : void
+    {
+        $original = new Comparison(
+            Column::name('id'),
+            ComparisonOperator::EQ,
+            Literal::int(42)
+        );
+
+        $ast = $original->toAst();
+        $reconstructed = Comparison::fromAst($ast);
+
+        self::assertInstanceOf(Comparison::class, $reconstructed);
+
+        $reconstructedAst = $reconstructed->toAst();
+        self::assertTrue($reconstructedAst->hasAExpr());
+
+        $aExpr = $reconstructedAst->getAExpr();
+        self::assertNotNull($aExpr);
+        self::assertSame(A_Expr_Kind::AEXPR_OP, $aExpr->getKind());
+    }
+
+    public function test_from_ast_throws_on_non_a_expr() : void
+    {
+        $this->expectException(InvalidAstException::class);
+        $this->expectExceptionMessage('Expected A_Expr node, got unknown');
+
+        $node = new Node();
+        Comparison::fromAst($node);
+    }
+
+    public function test_from_ast_throws_on_wrong_kind() : void
+    {
+        $this->expectException(InvalidAstException::class);
+        $this->expectExceptionMessage('Expected AEXPR_OP for Comparison');
+
+        $aExpr = new A_Expr();
+        $aExpr->setKind(A_Expr_Kind::AEXPR_IN);
+
+        $node = new Node();
+        $node->setAExpr($aExpr);
+
+        Comparison::fromAst($node);
+    }
+
+    public function test_not_returns_not_condition() : void
+    {
+        $comparison = new Comparison(
+            Column::name('active'),
+            ComparisonOperator::EQ,
+            Literal::bool(true)
+        );
+
+        $not = $comparison->not();
+
+        self::assertInstanceOf(NotCondition::class, $not);
+    }
+
+    public function test_or_returns_or_condition() : void
+    {
+        $cond1 = new Comparison(Column::name('x'), ComparisonOperator::EQ, Literal::int(1));
+        $cond2 = new Comparison(Column::name('y'), ComparisonOperator::EQ, Literal::int(2));
+
+        $or = $cond1->or($cond2);
+
+        self::assertInstanceOf(OrCondition::class, $or);
+    }
+}
