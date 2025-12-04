@@ -10,6 +10,7 @@ use Flow\ETL\Cache\Implementation\FilesystemCache;
 
 final class FilesystemCacheTestSuite extends CacheBaseTestSuite
 {
+    #[\Override]
     protected function cache() : Cache
     {
         return new FilesystemCache(

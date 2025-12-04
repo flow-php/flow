@@ -8,11 +8,13 @@ use Flow\ETL\{ErrorHandler, Rows};
 
 final class ThrowError implements ErrorHandler
 {
+    #[\Override]
     public function skipRows(\Throwable $error, Rows $rows) : bool
     {
         return false;
     }
 
+    #[\Override]
     public function throw(\Throwable $error, Rows $rows) : bool
     {
         return true;

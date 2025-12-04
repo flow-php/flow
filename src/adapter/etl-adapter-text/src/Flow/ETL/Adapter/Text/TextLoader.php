@@ -22,16 +22,19 @@ final class TextLoader implements Closure, FileLoader, Loader
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::TEXT);
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
         $context->streams()->closeStreams($this->path);
     }
 
+    #[\Override]
     public function destination() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         if ($rows->partitions()->count()) {

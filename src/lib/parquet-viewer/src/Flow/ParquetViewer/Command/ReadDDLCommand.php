@@ -16,12 +16,14 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'read:ddl', description: 'Read DDL from parquet file')]
 final class ReadDDLCommand extends Command
 {
+    #[\Override]
     protected function configure() : void
     {
         $this
             ->addArgument('file', InputArgument::REQUIRED, 'path to parquet file');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);

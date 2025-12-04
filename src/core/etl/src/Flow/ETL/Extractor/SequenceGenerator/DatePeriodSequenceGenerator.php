@@ -13,6 +13,7 @@ final readonly class DatePeriodSequenceGenerator implements SequenceGenerator
     {
     }
 
+    #[\Override]
     public function generate() : \Generator
     {
         foreach ($this->period->getIterator() as $item) {

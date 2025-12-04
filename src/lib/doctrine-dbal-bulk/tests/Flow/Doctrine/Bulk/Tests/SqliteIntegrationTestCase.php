@@ -12,6 +12,7 @@ use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
 
 abstract class SqliteIntegrationTestCase extends IntegrationTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         $path = type_string()->assert(\getenv('SQLITE_DATABASE_PATH'));

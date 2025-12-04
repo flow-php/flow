@@ -71,6 +71,7 @@ final readonly class IntersectionType implements Type
     /**
      * @return TLeft&TRight
      */
+    #[\Override]
     public function assert(mixed $value) : mixed
     {
         if (!$this->isValid($value)) {
@@ -80,6 +81,7 @@ final readonly class IntersectionType implements Type
         return $value;
     }
 
+    #[\Override]
     public function cast(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
@@ -107,6 +109,7 @@ final readonly class IntersectionType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return $this->left->isValid($value) && $this->right->isValid($value);
@@ -115,6 +118,7 @@ final readonly class IntersectionType implements Type
     /**
      * @return array{type: 'intersection', left: array<string, mixed>, right: array<string, mixed>}
      */
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -124,6 +128,7 @@ final readonly class IntersectionType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         $stringTypes = [];

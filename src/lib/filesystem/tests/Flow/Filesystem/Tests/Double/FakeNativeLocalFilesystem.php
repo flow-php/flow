@@ -14,6 +14,7 @@ use Webmozart\Glob\Glob;
 
 final class FakeNativeLocalFilesystem implements Filesystem
 {
+    #[\Override]
     public function appendTo(Path $path) : DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {
@@ -35,11 +36,13 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return NativeLocalDestinationStream::openAppend($path);
     }
 
+    #[\Override]
     public function getSystemTmpDir() : Path
     {
         return \Flow\Filesystem\DSL\path(\sys_get_temp_dir());
     }
 
+    #[\Override]
     public function list(Path $path, Filter $pathFilter = new OnlyFiles()) : \Generator
     {
         $this->protocol()->validateScheme($path);
@@ -62,6 +65,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         }
     }
 
+    #[\Override]
     public function mv(Path $from, Path $to) : bool
     {
         $this->protocol()->validateScheme($from);
@@ -78,11 +82,13 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return true;
     }
 
+    #[\Override]
     public function protocol() : Protocol
     {
         return new Protocol('fake');
     }
 
+    #[\Override]
     public function readFrom(Path $path) : SourceStream
     {
         $this->protocol()->validateScheme($path);
@@ -100,6 +106,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return NativeLocalSourceStream::open($path);
     }
 
+    #[\Override]
     public function rm(Path $path) : bool
     {
         $this->protocol()->validateScheme($path);
@@ -133,6 +140,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return (bool) $deletedCount;
     }
 
+    #[\Override]
     public function status(Path $path) : ?FileStatus
     {
         $this->protocol()->validateScheme($path);
@@ -153,6 +161,7 @@ final class FakeNativeLocalFilesystem implements Filesystem
         return null;
     }
 
+    #[\Override]
     public function writeTo(Path $path) : DestinationStream
     {
         if ($path->isEqual($this->getSystemTmpDir())) {

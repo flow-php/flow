@@ -23,6 +23,7 @@ final class RegexMatch extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?bool
     {
         $pattern = (new Parameter($this->pattern))->asString($row, $context);

@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 abstract class NativeLocalFilesystemTestCase extends TestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         $fs = new NativeLocalFilesystem();

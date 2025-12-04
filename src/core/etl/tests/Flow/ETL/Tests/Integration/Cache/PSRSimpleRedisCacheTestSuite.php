@@ -11,6 +11,7 @@ use Symfony\Component\Cache\Psr16Cache;
 
 final class PSRSimpleRedisCacheTestSuite extends CacheBaseTestSuite
 {
+    #[\Override]
     protected function cache() : Cache
     {
         return new PSRSimpleCache(new Psr16Cache(new RedisAdapter(

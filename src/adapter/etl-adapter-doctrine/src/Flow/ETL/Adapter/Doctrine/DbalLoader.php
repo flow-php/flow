@@ -63,6 +63,7 @@ final class DbalLoader implements Loader
         return $loader;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $normalizedData = (new RowsNormalizer())->normalize($rows->sortEntries());

@@ -16,6 +16,7 @@ final class DenseRank implements WindowFunction
         $this->window = null;
     }
 
+    #[\Override]
     public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $rank = 1;
@@ -49,6 +50,7 @@ final class DenseRank implements WindowFunction
         return $rank;
     }
 
+    #[\Override]
     public function over(Window $window) : WindowFunction
     {
         $this->window = $window;
@@ -56,11 +58,13 @@ final class DenseRank implements WindowFunction
         return $this;
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'dens_rank()';
     }
 
+    #[\Override]
     public function window() : Window
     {
         if ($this->window === null) {

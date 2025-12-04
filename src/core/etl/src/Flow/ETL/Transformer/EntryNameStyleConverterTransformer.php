@@ -25,6 +25,7 @@ final readonly class EntryNameStyleConverterTransformer implements Transformer
         }
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $rowTransformer = function (Row $row) : Row {

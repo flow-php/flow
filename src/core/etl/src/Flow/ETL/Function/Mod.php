@@ -16,6 +16,7 @@ final class Mod extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?int
     {
         $leftValue = (new Parameter($this->left))->asInt($row, $context);

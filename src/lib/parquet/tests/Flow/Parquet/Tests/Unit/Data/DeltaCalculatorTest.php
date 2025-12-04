@@ -11,6 +11,7 @@ final class DeltaCalculatorTest extends TestCase
 {
     private DeltaCalculator $calculator;
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->calculator = new DeltaCalculator();

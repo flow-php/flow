@@ -41,6 +41,7 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
         $this->hashAlgorithm = new NativePHPHash();
     }
 
+    #[\Override]
     public function add(Loader|Transformer $pipe) : Pipeline
     {
         $this->pipeline->add($pipe);
@@ -48,6 +49,7 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
         return $this;
     }
 
+    #[\Override]
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
@@ -56,11 +58,13 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
     /**
      * @return array<Pipeline>
      */
+    #[\Override]
     public function pipelines() : array
     {
         return [$this->pipeline];
     }
 
+    #[\Override]
     public function pipes() : Pipes
     {
         return $this->pipeline->pipes();
@@ -69,6 +73,7 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
     /**
      * @return \Generator<int, Rows>
      */
+    #[\Override]
     public function process(FlowContext $context) : \Generator
     {
         /**
@@ -107,6 +112,7 @@ final readonly class PartitioningPipeline implements OverridingPipeline, Pipelin
         )->extract($context);
     }
 
+    #[\Override]
     public function source() : Extractor
     {
         return $this->pipeline->source();

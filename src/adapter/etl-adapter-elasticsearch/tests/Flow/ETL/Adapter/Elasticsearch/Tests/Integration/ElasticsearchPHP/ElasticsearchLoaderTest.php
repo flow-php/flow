@@ -15,6 +15,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
 {
     public const INDEX_NAME = 'etl-test-index';
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();
@@ -22,6 +23,7 @@ final class ElasticsearchLoaderTest extends ElasticsearchTestCase
         $this->elasticsearchContext->createIndex(self::INDEX_NAME);
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         $this->elasticsearchContext->deleteIndex(self::INDEX_NAME);

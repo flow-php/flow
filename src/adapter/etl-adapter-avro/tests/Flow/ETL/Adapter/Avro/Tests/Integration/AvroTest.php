@@ -12,6 +12,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class AvroTest extends FlowTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         self::markTestSkipped('Avro integration was abandoned due to lack of availability of good Avro libraries.');

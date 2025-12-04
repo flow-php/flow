@@ -16,6 +16,7 @@ final class JsonDecode extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $value = (new Parameter($this->value))->as($row, $context, type_string(), type_array());
@@ -30,7 +31,7 @@ final class JsonDecode extends ScalarFunctionChain
         }
 
         try {
-            return \json_decode(\is_scalar($value) ? (string) $value : '', true, 512, $flags);
+            return \json_decode(\is_scalar($value) ?  $value : '', true, 512, $flags);
         } catch (\JsonException $e) {
             $context->functions()->invalidResult(new InvalidArgumentException('JsonDecode error: ' . $e->getMessage()));
 

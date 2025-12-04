@@ -12,6 +12,7 @@ use Ramsey\Uuid\Uuid;
 
 final class UuidTest extends FlowTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         if (!\class_exists(Uuid::class) && !\class_exists(\Symfony\Component\Uid\Uuid::class)) {

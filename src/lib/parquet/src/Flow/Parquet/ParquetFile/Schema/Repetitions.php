@@ -47,11 +47,13 @@ final class Repetitions implements \Countable, \Stringable
         $this->repeatedCount = $repeatedCount;
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->id;
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->repetitions);

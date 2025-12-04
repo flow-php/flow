@@ -19,6 +19,7 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
     ) {
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
         if ($this->loader instanceof Closure) {
@@ -26,6 +27,7 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
         }
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $rows = (new ScalarFunctionFilterTransformer($this->condition))->transform($rows, $context);
@@ -43,6 +45,7 @@ final class BranchingLoader implements Closure, Loader, OverridingLoader
         );
     }
 
+    #[\Override]
     public function loaders() : array
     {
         return [

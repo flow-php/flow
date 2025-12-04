@@ -11,21 +11,25 @@ use Flow\Types\Type;
  */
 final class MixedType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : mixed
     {
         return $value;
     }
 
+    #[\Override]
     public function cast(mixed $value) : mixed
     {
         return $value;
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return true;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -33,6 +37,7 @@ final class MixedType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'mixed';

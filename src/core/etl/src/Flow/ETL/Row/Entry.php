@@ -12,6 +12,7 @@ use Flow\Types\Type;
  */
 interface Entry extends \Stringable
 {
+    #[\Override]
     public function __toString() : string;
 
     /**

@@ -37,6 +37,7 @@ final class LineChart implements Chart
     ) {
     }
 
+    #[\Override]
     public function collect(Rows $rows) : void
     {
         foreach ($rows as $row) {
@@ -59,6 +60,7 @@ final class LineChart implements Chart
     /**
      * @return array<array-key, mixed>
      */
+    #[\Override]
     public function data() : array
     {
         $data = [
@@ -87,6 +89,7 @@ final class LineChart implements Chart
     /**
      * @param array<array-key, mixed> $options
      */
+    #[\Override]
     public function setDatasetOptions(Reference $dataset, array $options) : self
     {
         $this->datasetOptions[$dataset->name()] = $options;
@@ -97,6 +100,7 @@ final class LineChart implements Chart
     /**
      * @param array<array-key, mixed> $options
      */
+    #[\Override]
     public function setOptions(array $options) : self
     {
         $this->options = $options;

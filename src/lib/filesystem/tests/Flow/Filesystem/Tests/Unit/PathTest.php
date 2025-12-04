@@ -69,6 +69,7 @@ final class PathTest extends TestCase
         yield '/nested/partition=[one]/*.csv' => ['file://nested', '/nested/partition=[one]/*.csv'];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         if (!\file_exists(__DIR__ . '/var')) {

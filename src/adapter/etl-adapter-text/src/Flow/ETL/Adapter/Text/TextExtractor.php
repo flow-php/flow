@@ -20,6 +20,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         $this->resetLimit();
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -48,6 +49,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

@@ -26,6 +26,7 @@ final class StringTypeNarrower implements TypeNarrower
     /**
      * @return Type<mixed>
      */
+    #[\Override]
     public function narrow(mixed $value) : Type
     {
         if (!\is_string($value)) {
@@ -248,7 +249,7 @@ final class StringTypeNarrower implements TypeNarrower
                 $doc = new \DOMDocument();
                 $result = @$doc->loadXML($value);
 
-                return (bool) $result;
+                return  $result;
             } catch (\Exception) {
                 return false;
             } finally {

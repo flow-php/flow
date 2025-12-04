@@ -21,6 +21,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
         );
 
         $right = new class implements DataFrameFactory {
+            #[\Override]
             public function from(Rows $rows) : DataFrame
             {
                 return data_frame()->process(
@@ -52,6 +53,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
             row(int_entry('id', 3), str_entry('country', 'FR')),
         );
         $right = new class implements DataFrameFactory {
+            #[\Override]
             public function from(Rows $rows) : DataFrame
             {
                 return data_frame()->process(
@@ -84,6 +86,7 @@ final class JoinEachRowsTransformerTest extends FlowTestCase
             row(int_entry('id', 3), str_entry('country', 'FR')),
         );
         $right = new class implements DataFrameFactory {
+            #[\Override]
             public function from(Rows $rows) : DataFrame
             {
                 return data_frame()->process(

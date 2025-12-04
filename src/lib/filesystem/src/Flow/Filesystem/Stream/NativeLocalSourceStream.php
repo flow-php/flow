@@ -37,6 +37,7 @@ final class NativeLocalSourceStream implements SourceStream
         return new self($path, $resource);
     }
 
+    #[\Override]
     public function close() : void
     {
         if (!\is_resource($this->handle)) {
@@ -49,6 +50,7 @@ final class NativeLocalSourceStream implements SourceStream
         $this->handle = null;
     }
 
+    #[\Override]
     public function content() : string
     {
         if (!$this->isOpen()) {
@@ -66,6 +68,7 @@ final class NativeLocalSourceStream implements SourceStream
         return $content;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return \is_resource($this->handle);
@@ -76,6 +79,7 @@ final class NativeLocalSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
+    #[\Override]
     public function iterate(int $length = 1) : \Generator
     {
         if (!$this->isOpen()) {
@@ -95,11 +99,13 @@ final class NativeLocalSourceStream implements SourceStream
         }
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function read(int $length, int $offset) : string
     {
         if (!$this->isOpen()) {
@@ -118,6 +124,7 @@ final class NativeLocalSourceStream implements SourceStream
      *
      * @return \Generator<string>
      */
+    #[\Override]
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
         if (!$this->isOpen()) {
@@ -137,6 +144,7 @@ final class NativeLocalSourceStream implements SourceStream
         }
     }
 
+    #[\Override]
     public function size() : int
     {
         $size = \filesize($this->path->path());

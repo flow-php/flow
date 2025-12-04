@@ -38,6 +38,7 @@ final class ExternalSort implements SortingAlgorithm
         }
     }
 
+    #[\Override]
     public function sortBy(Pipeline $pipeline, FlowContext $context, References $refs) : Extractor
     {
         $sortedBuckets = [];

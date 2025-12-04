@@ -13,6 +13,7 @@ final readonly class AzuriteURLFactory implements URLFactory
     {
     }
 
+    #[\Override]
     public function create(Configuration $configuration, ?string $path = null, array $queryParameters = []) : string
     {
         return \sprintf(

@@ -77,6 +77,7 @@ final class ZigZagTest extends TestCase
         ];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->zigzag = new ZigZag();

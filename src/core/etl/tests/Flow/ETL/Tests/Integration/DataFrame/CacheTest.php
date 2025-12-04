@@ -25,6 +25,7 @@ final class CacheTest extends FlowIntegrationTestCase
                 $this->extractor = new FakeExtractor($rowsets);
             }
 
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 $this->extractions++;

@@ -18,6 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'read:data', description: 'Read data from parquet file')]
 final class ReadDataCommand extends Command
 {
+    #[\Override]
     protected function configure() : void
     {
         $this
@@ -28,6 +29,7 @@ final class ReadDataCommand extends Command
             ->addOption('truncate', 't', InputOption::VALUE_OPTIONAL, 'Truncate values in cells to given length, use empty to not truncate the output', 20);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);

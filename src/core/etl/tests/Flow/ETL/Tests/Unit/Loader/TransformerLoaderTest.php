@@ -50,6 +50,7 @@ final class TransformerLoaderTest extends FlowTestCase
         \assert($closure_loader instanceof Loader);
         $transformer = to_transformation(
             new class implements Transformation {
+                #[\Override]
                 public function transform(DataFrame $data_frame) : DataFrame
                 {
                     return $data_frame;
@@ -89,6 +90,7 @@ final class TransformerLoaderTest extends FlowTestCase
             ->write(
                 to_transformation(
                     new class implements Transformation {
+                        #[\Override]
                         public function transform(DataFrame $dataFrame) : DataFrame
                         {
                             return $dataFrame->withEntry('id_string', ref('id')->cast(type_string()));

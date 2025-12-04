@@ -20,6 +20,7 @@ final class StringAggregate implements AggregatingFunction
     {
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         $stringValue = $row->valueOf($this->ref->to());
@@ -32,6 +33,7 @@ final class StringAggregate implements AggregatingFunction
     /**
      * @return Row\Entry<?string>
      */
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {

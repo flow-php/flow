@@ -21,6 +21,7 @@ final class UniqueConstraint implements Constraint
         $this->storage = new InMemoryStorage();
     }
 
+    #[\Override]
     public function isSatisfiedBy(Row $row) : bool
     {
         $key = $row->keep(...$this->reference)->hash();
@@ -34,6 +35,7 @@ final class UniqueConstraint implements Constraint
         return true;
     }
 
+    #[\Override]
     public function toString() : string
     {
         return sprintf(
@@ -42,6 +44,7 @@ final class UniqueConstraint implements Constraint
         );
     }
 
+    #[\Override]
     public function violation(Row $row) : string
     {
         $violations = [];

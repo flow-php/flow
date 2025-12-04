@@ -22,6 +22,7 @@ final readonly class ChainExtractor implements Extractor, OverridingExtractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->extractors as $extractor) {
@@ -35,6 +36,7 @@ final readonly class ChainExtractor implements Extractor, OverridingExtractor
         }
     }
 
+    #[\Override]
     public function extractors() : array
     {
         return $this->extractors;

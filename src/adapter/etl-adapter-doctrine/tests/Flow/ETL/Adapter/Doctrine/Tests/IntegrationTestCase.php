@@ -19,6 +19,7 @@ abstract class IntegrationTestCase extends FlowTestCase
 
     protected DatabaseContext $sqliteDatabaseContext;
 
+    #[\Override]
     protected function setUp() : void
     {
         $insertQueryCounter = new InsertQueryCounter();
@@ -55,6 +56,7 @@ abstract class IntegrationTestCase extends FlowTestCase
         );
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         $this->pgsqlDatabaseContext->dropAllTables();

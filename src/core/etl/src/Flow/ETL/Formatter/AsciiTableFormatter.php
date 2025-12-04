@@ -9,6 +9,7 @@ use Flow\ETL\{Formatter, Rows};
 
 final class AsciiTableFormatter implements Formatter
 {
+    #[\Override]
     public function format(Rows $rows, int|bool $truncate = 20) : string
     {
         if ($rows->count() === 0) {

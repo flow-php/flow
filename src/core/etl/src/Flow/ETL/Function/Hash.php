@@ -15,6 +15,7 @@ final class Hash extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $value = (new Parameter($this->value))->eval($row, $context);

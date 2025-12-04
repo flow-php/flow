@@ -26,11 +26,13 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return $ref;
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->name();
     }
 
+    #[\Override]
     public function as(string $alias) : self
     {
         $this->alias = $alias;
@@ -45,6 +47,7 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return $this;
     }
 
+    #[\Override]
     public function base() : string
     {
         return $this->entry;
@@ -57,16 +60,19 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return $this;
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         return $row->valueOf($this->entry);
     }
 
+    #[\Override]
     public function hasAlias() : bool
     {
         return $this->alias !== null;
     }
 
+    #[\Override]
     public function is(Reference $ref) : bool
     {
         return $this->name() === $ref->name();
@@ -77,11 +83,13 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return new ListFunctions($this);
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->alias ?? $this->entry;
     }
 
+    #[\Override]
     public function sort() : SortOrder
     {
         return $this->sort;
@@ -92,6 +100,7 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return new StructureFunctions($this);
     }
 
+    #[\Override]
     public function to() : string
     {
         return $this->entry;

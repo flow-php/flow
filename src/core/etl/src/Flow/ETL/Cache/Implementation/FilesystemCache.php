@@ -23,16 +23,19 @@ final readonly class FilesystemCache implements Cache
         $this->cacheDir = $cacheDir ?? $this->filesystem->getSystemTmpDir();
     }
 
+    #[\Override]
     public function clear() : void
     {
         $this->filesystem->rm($this->cacheDir);
     }
 
+    #[\Override]
     public function delete(string $key) : void
     {
         $this->filesystem->rm($this->cachePath($key));
     }
 
+    #[\Override]
     public function get(string $key) : Row|Rows|CacheIndex
     {
         $path = $this->cachePath($key);
@@ -49,11 +52,13 @@ final readonly class FilesystemCache implements Cache
         return $this->serializer->unserialize($serializedValue, [Row::class, Rows::class, CacheIndex::class]);
     }
 
+    #[\Override]
     public function has(string $key) : bool
     {
         return $this->filesystem->status($this->cachePath($key)) !== null;
     }
 
+    #[\Override]
     public function set(string $key, CacheIndex|Rows|Row $value) : void
     {
         $cacheStream = $this->filesystem->writeTo($this->cachePath($key));

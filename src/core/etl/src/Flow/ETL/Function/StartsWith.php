@@ -15,6 +15,7 @@ final class StartsWith extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         $haystack = (new Parameter($this->haystack))->asString($row, $context);

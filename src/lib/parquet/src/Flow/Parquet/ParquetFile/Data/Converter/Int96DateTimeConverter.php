@@ -13,11 +13,13 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
 
 final class Int96DateTimeConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
         return $this->convertArrayOfBytesToDateTime(type_instance_of(Bytes::class)->assert($data));
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         if ($column->type() === PhysicalType::INT96 && $options->get(Option::INT_96_AS_DATETIME)) {
@@ -30,6 +32,7 @@ final class Int96DateTimeConverter implements Converter
     /**
      * @return array<never>
      */
+    #[\Override]
     public function toParquetType(mixed $data) : array
     {
         throw new RuntimeException("Converting DateTime to INT96 is deprecated and should not be used, please use INT64 to store \DateTime objects as number of microseconds since Jan 1 1970.");

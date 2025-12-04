@@ -41,6 +41,7 @@ final class FloatDictionaryBuilderTest extends TestCase
         ];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->builder = new FloatDictionaryBuilder();

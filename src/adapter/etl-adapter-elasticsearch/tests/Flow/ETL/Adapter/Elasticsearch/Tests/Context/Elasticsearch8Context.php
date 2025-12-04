@@ -28,6 +28,7 @@ final class Elasticsearch8Context implements ElasticsearchContext
         return $this->client;
     }
 
+    #[\Override]
     public function clientConfig() : array
     {
         return [
@@ -35,6 +36,7 @@ final class Elasticsearch8Context implements ElasticsearchContext
         ];
     }
 
+    #[\Override]
     public function createIndex(string $name) : void
     {
         try {
@@ -53,6 +55,7 @@ final class Elasticsearch8Context implements ElasticsearchContext
         }
     }
 
+    #[\Override]
     public function deleteIndex(string $name) : void
     {
         try {
@@ -75,6 +78,7 @@ final class Elasticsearch8Context implements ElasticsearchContext
             ->load($rows, flow_context(config()));
     }
 
+    #[\Override]
     public function version() : int
     {
         return 8;

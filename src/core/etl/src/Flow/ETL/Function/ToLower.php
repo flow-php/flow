@@ -14,6 +14,7 @@ final class ToLower extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $value = (new Parameter($this->value))->asString($row, $context);

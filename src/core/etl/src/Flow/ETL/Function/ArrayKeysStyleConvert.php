@@ -24,6 +24,7 @@ final class ArrayKeysStyleConvert extends ScalarFunctionChain
         }
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $array = (new Parameter($this->ref))->asArray($row, $context);

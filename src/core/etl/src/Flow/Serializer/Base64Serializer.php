@@ -12,11 +12,13 @@ final readonly class Base64Serializer implements Serializer
     {
     }
 
+    #[\Override]
     public function serialize(object $serializable) : string
     {
         return \base64_encode($this->serializer->serialize($serializable));
     }
 
+    #[\Override]
     public function unserialize(string $serialized, array $classes) : object
     {
         $decodedString = \base64_decode($serialized, true);

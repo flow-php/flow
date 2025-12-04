@@ -22,6 +22,7 @@ final class ArrayMemory implements \Countable, Memory
     /**
      * @return array<self>
      */
+    #[\Override]
     public function chunks(int $size) : array
     {
         if ($size < 1) {
@@ -37,6 +38,7 @@ final class ArrayMemory implements \Countable, Memory
         return $chunks;
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->memory);
@@ -47,6 +49,7 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @return array<array<string, mixed>>
      */
+    #[\Override]
     public function dump() : array
     {
         return $this->memory;
@@ -60,6 +63,7 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function flatValues() : array
     {
         $data = [];
@@ -76,6 +80,7 @@ final class ArrayMemory implements \Countable, Memory
      *
      * @return array<mixed>
      */
+    #[\Override]
     public function map(callable $callback) : array
     {
         $data = [];
@@ -90,6 +95,7 @@ final class ArrayMemory implements \Countable, Memory
     /**
      * @param array<array<string, mixed>> $data
      */
+    #[\Override]
     public function save(array $data) : void
     {
         $this->assertMemoryStructure($data);

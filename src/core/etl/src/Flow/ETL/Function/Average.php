@@ -26,6 +26,7 @@ final class Average implements AggregatingFunction, WindowFunction
         $this->sum = 0;
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
@@ -41,6 +42,7 @@ final class Average implements AggregatingFunction, WindowFunction
         }
     }
 
+    #[\Override]
     public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $sum = 0;
@@ -63,6 +65,7 @@ final class Average implements AggregatingFunction, WindowFunction
         return (new Calculator())->divide($sum, $count, $this->scale, $this->rounding);
     }
 
+    #[\Override]
     public function over(Window $window) : WindowFunction
     {
         $this->window = $window;
@@ -70,6 +73,7 @@ final class Average implements AggregatingFunction, WindowFunction
         return $this;
     }
 
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {
@@ -90,11 +94,13 @@ final class Average implements AggregatingFunction, WindowFunction
         return float_entry($this->ref->name(), $result);
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'average()';
     }
 
+    #[\Override]
     public function window() : Window
     {
         if ($this->window === null) {

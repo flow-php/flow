@@ -16,6 +16,7 @@ final class GreaterThan extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $left = (new Parameter($this->left))->eval($row, $context);

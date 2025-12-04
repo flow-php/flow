@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 final class StructsWritingTest extends TestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         if (!\file_exists(__DIR__ . '/var')) {

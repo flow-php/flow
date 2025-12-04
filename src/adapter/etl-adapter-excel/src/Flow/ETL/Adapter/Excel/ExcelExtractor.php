@@ -45,6 +45,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         $this->resetLimit();
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $headers = [];
@@ -73,6 +74,7 @@ final class ExcelExtractor implements Extractor, FileExtractor, LimitableExtract
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

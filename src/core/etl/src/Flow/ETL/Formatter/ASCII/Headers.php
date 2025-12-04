@@ -17,6 +17,7 @@ final class Headers implements \Countable
     {
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->names());

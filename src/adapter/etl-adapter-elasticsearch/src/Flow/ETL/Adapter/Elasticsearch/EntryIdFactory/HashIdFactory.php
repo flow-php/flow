@@ -25,6 +25,7 @@ final class HashIdFactory implements IdFactory
         $this->hashAlgorithm = new NativePHPHash();
     }
 
+    #[\Override]
     public function create(Row $row) : Entry
     {
         return string_entry(

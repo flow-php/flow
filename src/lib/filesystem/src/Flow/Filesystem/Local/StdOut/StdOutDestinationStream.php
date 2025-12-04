@@ -34,6 +34,7 @@ final class StdOutDestinationStream implements DestinationStream
         }
     }
 
+    #[\Override]
     public function append(string $data) : DestinationStream
     {
         if (\is_resource($this->handle)) {
@@ -43,6 +44,7 @@ final class StdOutDestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function close() : void
     {
         if (\is_resource($this->handle)) {
@@ -50,6 +52,7 @@ final class StdOutDestinationStream implements DestinationStream
         }
     }
 
+    #[\Override]
     public function fromResource($resource) : DestinationStream
     {
         if (\is_resource($this->handle)) {
@@ -59,11 +62,13 @@ final class StdOutDestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return \is_resource($this->handle);
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;

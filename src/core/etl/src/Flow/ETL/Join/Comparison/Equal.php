@@ -16,6 +16,7 @@ final readonly class Equal implements Comparison
     ) {
     }
 
+    #[\Override]
     public function compare(Row $left, Row $right) : bool
     {
         return $left->valueOf($this->entryLeft) == $right->valueOf($this->entryRight);
@@ -24,6 +25,7 @@ final readonly class Equal implements Comparison
     /**
      * @return array<Reference>
      */
+    #[\Override]
     public function left() : array
     {
         return [\is_string($this->entryLeft) ? EntryReference::init($this->entryLeft) : $this->entryLeft];
@@ -32,6 +34,7 @@ final readonly class Equal implements Comparison
     /**
      * @return array<Reference>
      */
+    #[\Override]
     public function right() : array
     {
         return [\is_string($this->entryRight) ? EntryReference::init($this->entryRight) : $this->entryRight];

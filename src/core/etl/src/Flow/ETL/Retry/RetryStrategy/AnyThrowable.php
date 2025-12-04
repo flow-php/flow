@@ -16,6 +16,7 @@ final readonly class AnyThrowable implements RetryStrategy
         }
     }
 
+    #[\Override]
     public function shouldRetry(\Throwable $exception, int $attemptNumber) : bool
     {
         return $attemptNumber <= $this->limit;

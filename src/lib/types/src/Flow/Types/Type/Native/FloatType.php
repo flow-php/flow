@@ -12,6 +12,7 @@ use Flow\Types\Type;
  */
 final readonly class FloatType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : float
     {
         if ($this->isValid($value)) {
@@ -21,6 +22,7 @@ final readonly class FloatType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : float
     {
         if ($this->isValid($value)) {
@@ -49,11 +51,13 @@ final readonly class FloatType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return \is_float($value);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -61,6 +65,7 @@ final readonly class FloatType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'float';

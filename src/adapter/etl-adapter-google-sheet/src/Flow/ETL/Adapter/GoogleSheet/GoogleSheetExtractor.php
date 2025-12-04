@@ -35,6 +35,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         $this->resetLimit();
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsPerPage);

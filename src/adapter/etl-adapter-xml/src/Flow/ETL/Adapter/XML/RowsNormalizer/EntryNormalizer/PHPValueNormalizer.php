@@ -32,7 +32,7 @@ final readonly class PHPValueNormalizer
     public function normalize(string $name, Type $type, mixed $value) : XMLNode|XMLAttribute
     {
         if (\str_starts_with($name, $this->attributePrefix)) {
-            return new XMLAttribute(\substr($name, \strlen($this->attributePrefix)), (string) type_string()->cast($value));
+            return new XMLAttribute(\substr($name, \strlen($this->attributePrefix)),  type_string()->cast($value));
         }
 
         if ($value === null) {

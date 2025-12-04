@@ -25,6 +25,7 @@ final class ArrayUnpack extends ScalarFunctionChain implements UnpackResults
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : array
     {
         $array = (new Parameter($this->array))->asArray($row, $context);

@@ -14,6 +14,7 @@ final readonly class FixedMilliseconds implements DelayFactory
 
     }
 
+    #[\Override]
     public function delay(int $attempt) : Duration
     {
         return Duration::fromMilliseconds($this->milliseconds);

@@ -20,6 +20,7 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $chunk = [];
@@ -72,6 +73,7 @@ final readonly class BatchExtractor implements Extractor, OverridingExtractor
         }
     }
 
+    #[\Override]
     public function extractors() : array
     {
         return [$this->extractor];

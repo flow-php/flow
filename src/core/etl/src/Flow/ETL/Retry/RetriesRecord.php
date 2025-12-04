@@ -24,6 +24,7 @@ final class RetriesRecord implements \Countable
         return $this->attempts;
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->attempts);

@@ -388,6 +388,7 @@ final class MockConverter implements Converter
     ) {
     }
 
+    #[\Override]
     public function fromParquetType(mixed $data) : mixed
     {
         $this->fromParquetTypeCallCount++;
@@ -395,6 +396,7 @@ final class MockConverter implements Converter
         return $this->conversionResult;
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         $this->isForCallCount++;
@@ -402,6 +404,7 @@ final class MockConverter implements Converter
         return $this->isForResult;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : mixed
     {
         $this->toParquetTypeCallCount++;
@@ -427,6 +430,7 @@ final class SelectiveMockConverter implements Converter
     ) {
     }
 
+    #[\Override]
     public function fromParquetType(mixed $data) : mixed
     {
         $this->fromParquetTypeCallCount++;
@@ -434,6 +438,7 @@ final class SelectiveMockConverter implements Converter
         return $this->conversionResult;
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         $this->isForCallCount++;
@@ -441,6 +446,7 @@ final class SelectiveMockConverter implements Converter
         return $column->name() === $this->matchingColumnName;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : mixed
     {
         $this->toParquetTypeCallCount++;
@@ -454,16 +460,19 @@ final class SelectiveMockConverter implements Converter
  */
 final class ComplexDataMockConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : mixed
     {
         return 'complex_from_parquet';
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         return true;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : mixed
     {
         return 'complex_to_parquet';
@@ -475,16 +484,19 @@ final class ComplexDataMockConverter implements Converter
  */
 final class ThrowingMockConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : mixed
     {
         throw new \RuntimeException('Test exception from converter');
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         return true;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : mixed
     {
         throw new \RuntimeException('Test exception from converter');

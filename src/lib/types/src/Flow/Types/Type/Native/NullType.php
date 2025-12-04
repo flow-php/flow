@@ -12,6 +12,7 @@ use Flow\Types\Type;
  */
 final class NullType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : null
     {
         if ($this->isValid($value)) {
@@ -21,16 +22,19 @@ final class NullType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : null
     {
         return null;
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return null === $value;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -38,6 +42,7 @@ final class NullType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'null';

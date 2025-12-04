@@ -21,6 +21,7 @@ final readonly class MySQLInsertOptions implements InsertOptions
     ) {
     }
 
+    #[\Override]
     public static function fromArray(array $options) : InsertOptions
     {
         $options = type_structure(
@@ -39,6 +40,7 @@ final readonly class MySQLInsertOptions implements InsertOptions
         );
     }
 
+    #[\Override]
     public static function new() : self
     {
         return new self();

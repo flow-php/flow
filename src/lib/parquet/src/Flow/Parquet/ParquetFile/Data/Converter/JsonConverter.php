@@ -11,6 +11,7 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType};
 
 final class JsonConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : string
     {
         if (!\is_string($data)) {
@@ -20,6 +21,7 @@ final class JsonConverter implements Converter
         return $data;
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         if ($column->logicalType()?->name() === LogicalType::JSON) {
@@ -29,6 +31,7 @@ final class JsonConverter implements Converter
         return false;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : string
     {
         if (!\is_string($data)) {

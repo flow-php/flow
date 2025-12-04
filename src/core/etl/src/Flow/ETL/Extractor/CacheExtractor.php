@@ -17,6 +17,7 @@ final class CacheExtractor implements Extractor
     ) {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         if (!$context->cache()->has($this->id)) {

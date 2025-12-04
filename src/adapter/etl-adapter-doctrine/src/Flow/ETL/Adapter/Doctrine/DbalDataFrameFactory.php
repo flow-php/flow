@@ -43,6 +43,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
         return $factory;
     }
 
+    #[\Override]
     public function from(Rows $rows) : DataFrame
     {
         $parameters = [];

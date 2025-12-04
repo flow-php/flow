@@ -14,6 +14,7 @@ final class BufferValueStorage implements ValueStorage
 
     private int $size = 0;
 
+    #[\Override]
     public function addValues(FlatColumn $column, array $values) : void
     {
         $localBuffer = '';
@@ -22,22 +23,26 @@ final class BufferValueStorage implements ValueStorage
         $this->size += \strlen($localBuffer);
     }
 
+    #[\Override]
     public function getBuffer() : string
     {
         return $this->buffer;
     }
 
+    #[\Override]
     public function isEmpty() : bool
     {
         return $this->buffer === '';
     }
 
+    #[\Override]
     public function reset() : void
     {
         $this->buffer = '';
         $this->size = 0;
     }
 
+    #[\Override]
     public function size() : int
     {
         return $this->size;

@@ -25,6 +25,7 @@ final class MemoryStream implements DestinationStream, SourceStream
         }
     }
 
+    #[\Override]
     public function append(string $data) : DestinationStream
     {
         fwrite($this->handle, $data);
@@ -35,10 +36,12 @@ final class MemoryStream implements DestinationStream, SourceStream
     /**
      * We are not closing memory streams, in order to cleanup memory use rm on Memory Filesystem.
      */
+    #[\Override]
     public function close() : void
     {
     }
 
+    #[\Override]
     public function content() : string
     {
         \fseek($this->handle, 0);
@@ -52,6 +55,7 @@ final class MemoryStream implements DestinationStream, SourceStream
         return $content;
     }
 
+    #[\Override]
     public function fromResource($resource) : DestinationStream
     {
         stream_copy_to_stream($resource, $this->handle);
@@ -59,11 +63,13 @@ final class MemoryStream implements DestinationStream, SourceStream
         return $this;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return true;
     }
 
+    #[\Override]
     public function iterate(int $length = 1) : \Generator
     {
         \fseek($this->handle, 0);
@@ -73,11 +79,13 @@ final class MemoryStream implements DestinationStream, SourceStream
         }
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function read(int $length, int $offset) : string
     {
         \fseek($this->handle, $offset);
@@ -85,6 +93,7 @@ final class MemoryStream implements DestinationStream, SourceStream
         return (string) \fread($this->handle, $length);
     }
 
+    #[\Override]
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
         \fseek($this->handle, 0);
@@ -94,6 +103,7 @@ final class MemoryStream implements DestinationStream, SourceStream
         }
     }
 
+    #[\Override]
     public function size() : ?int
     {
         $stat = \fstat($this->handle);

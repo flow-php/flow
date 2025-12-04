@@ -17,6 +17,7 @@ final class FakeClock implements ClockInterface
         $this->dateTime = $this->dateTime->modify($modify);
     }
 
+    #[\Override]
     public function now() : \DateTimeImmutable
     {
         return $this->dateTime;

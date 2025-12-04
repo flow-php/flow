@@ -15,6 +15,7 @@ final readonly class CollectingPipeline implements OverridingPipeline, Pipeline
     {
     }
 
+    #[\Override]
     public function add(Loader|Transformer $pipe) : self
     {
         $this->pipeline->add($pipe);
@@ -22,21 +23,25 @@ final readonly class CollectingPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
+    #[\Override]
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
     }
 
+    #[\Override]
     public function pipelines() : array
     {
         return [$this->pipeline];
     }
 
+    #[\Override]
     public function pipes() : Pipes
     {
         return $this->pipeline->pipes();
     }
 
+    #[\Override]
     public function process(FlowContext $context) : \Generator
     {
         $rows = new Rows();
@@ -48,6 +53,7 @@ final readonly class CollectingPipeline implements OverridingPipeline, Pipeline
         yield $rows;
     }
 
+    #[\Override]
     public function source() : Extractor
     {
         return $this->pipeline->source();

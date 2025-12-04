@@ -147,6 +147,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_skips_entire_batches() : void
     {
         $pipeline = new SynchronousPipeline(new class implements Extractor {
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(
@@ -180,6 +181,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_spanning_batches() : void
     {
         $pipeline = new SynchronousPipeline(new class implements Extractor {
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(
@@ -219,6 +221,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_multiple_batches_offset_within_first_batch() : void
     {
         $pipeline = new SynchronousPipeline(new class implements Extractor {
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(
@@ -287,6 +290,7 @@ final class OffsetPipelineTest extends FlowTestCase
     public function test_process_with_offset_resulting_in_empty_batch() : void
     {
         $pipeline = new SynchronousPipeline(new class implements Extractor {
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(

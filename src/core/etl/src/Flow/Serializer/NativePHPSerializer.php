@@ -12,11 +12,13 @@ final class NativePHPSerializer implements Serializer
     {
     }
 
+    #[\Override]
     public function serialize(object $serializable) : string
     {
         return \serialize($serializable);
     }
 
+    #[\Override]
     public function unserialize(string $serialized, array $classes) : object
     {
         $value = \unserialize($serialized, ['allowed_classes' => true]);

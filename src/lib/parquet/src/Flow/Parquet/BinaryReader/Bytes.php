@@ -26,12 +26,14 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     // Countable methods
+    #[\Override]
     public function count() : int
     {
         return \count($this->bytes);
     }
 
     // IteratorAggregate methods
+    #[\Override]
     public function getIterator() : \ArrayIterator
     {
         if ($this->iterator === null) {
@@ -42,16 +44,19 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     // ArrayAccess methods
+    #[\Override]
     public function offsetExists($offset) : bool
     {
         return isset($this->bytes[$offset]);
     }
 
+    #[\Override]
     public function offsetGet($offset) : mixed
     {
         return $this->bytes[$offset];
     }
 
+    #[\Override]
     public function offsetSet($offset, $value) : void
     {
         if ($offset === null) {
@@ -61,6 +66,7 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function offsetUnset($offset) : void
     {
         unset($this->bytes[$offset]);

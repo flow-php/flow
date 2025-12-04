@@ -6,11 +6,13 @@ namespace Flow\ETL;
 
 final class NativePHPRandomValueGenerator implements RandomValueGenerator
 {
+    #[\Override]
     public function int(int $min, int $max) : int
     {
         return \random_int($min, $max);
     }
 
+    #[\Override]
     public function string(int $int) : string
     {
         $bytes = (int) \ceil($int / 2);

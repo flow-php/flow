@@ -13,11 +13,13 @@ final class InMemoryStorage implements Storage
     {
     }
 
+    #[\Override]
     public function clear() : void
     {
         $this->storage = [];
     }
 
+    #[\Override]
     public function delete(string $key) : void
     {
         if ($this->has($key)) {
@@ -25,11 +27,13 @@ final class InMemoryStorage implements Storage
         }
     }
 
+    #[\Override]
     public function has(string $key) : bool
     {
         return isset($this->storage[$key]);
     }
 
+    #[\Override]
     public function set(string $key) : void
     {
         $this->storage[$key] = true;

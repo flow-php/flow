@@ -15,6 +15,7 @@ final class ArrayLoader implements Loader
     {
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $this->array = \array_merge(

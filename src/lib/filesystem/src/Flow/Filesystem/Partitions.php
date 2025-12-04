@@ -22,6 +22,7 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
         $this->partitions = \array_values($partitions);
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->partitions);
@@ -38,6 +39,7 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
         throw new InvalidArgumentException("Partition with name: '{$name}' not found");
     }
 
+    #[\Override]
     public function getIterator() : \Traversable
     {
         return new \ArrayIterator($this->partitions);
@@ -68,6 +70,7 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
         return \hash('xxh128', $id);
     }
 
+    #[\Override]
     public function offsetExists(mixed $offset) : bool
     {
         return \array_key_exists($offset, $this->partitions);
@@ -76,16 +79,19 @@ final readonly class Partitions implements \ArrayAccess, \Countable, \IteratorAg
     /**
      * @return Partition
      */
+    #[\Override]
     public function offsetGet(mixed $offset) : mixed
     {
         return $this->partitions[$offset];
     }
 
+    #[\Override]
     public function offsetSet(mixed $offset, mixed $value) : void
     {
         throw new RuntimeException('Partitions are immutable');
     }
 
+    #[\Override]
     public function offsetUnset(mixed $offset) : void
     {
         throw new RuntimeException('Partitions are immutable');

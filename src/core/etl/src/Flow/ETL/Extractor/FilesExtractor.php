@@ -17,6 +17,7 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
     {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
 
@@ -39,6 +40,7 @@ final class FilesExtractor implements Extractor, FileExtractor, LimitableExtract
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

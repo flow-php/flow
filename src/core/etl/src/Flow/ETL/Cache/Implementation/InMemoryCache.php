@@ -19,11 +19,13 @@ final class InMemoryCache implements Cache
     {
     }
 
+    #[\Override]
     public function clear() : void
     {
         $this->cache = [];
     }
 
+    #[\Override]
     public function delete(string $key) : void
     {
         if (!$this->has($key)) {
@@ -36,6 +38,7 @@ final class InMemoryCache implements Cache
     /**
      * @throws KeyNotInCacheException
      */
+    #[\Override]
     public function get(string $key) : Row|Rows|CacheIndex
     {
         if (!\array_key_exists($key, $this->cache)) {
@@ -45,11 +48,13 @@ final class InMemoryCache implements Cache
         return $this->cache[$key];
     }
 
+    #[\Override]
     public function has(string $key) : bool
     {
         return \array_key_exists($key, $this->cache);
     }
 
+    #[\Override]
     public function set(string $key, CacheIndex|Rows|Row $value) : void
     {
         $this->cache[$key] = $value;

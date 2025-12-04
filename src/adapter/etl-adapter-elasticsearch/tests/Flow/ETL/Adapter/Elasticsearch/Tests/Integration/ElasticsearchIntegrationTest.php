@@ -16,6 +16,7 @@ final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
 
     public const SOURCE_INDEX = 'etl-test-source-index';
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();
@@ -26,6 +27,7 @@ final class ElasticsearchIntegrationTest extends ElasticsearchTestCase
         $this->elasticsearchContext->createIndex(self::DESTINATION_INDEX);
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         $this->elasticsearchContext->deleteIndex(self::SOURCE_INDEX);

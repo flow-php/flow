@@ -19,6 +19,7 @@ final class DbalQueryFactory implements QueryFactory
      *
      * @return string
      */
+    #[\Override]
     public function delete(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData) : string
     {
         return (new DbalPlatform($platform))->dialect()->prepareDelete($table, $bulkData);
@@ -34,6 +35,7 @@ final class DbalQueryFactory implements QueryFactory
      *
      * @return string
      */
+    #[\Override]
     public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
         return (new DbalPlatform($platform))->dialect()->prepareInsert($table, $bulkData, $options);
@@ -49,6 +51,7 @@ final class DbalQueryFactory implements QueryFactory
      *
      * @return string
      */
+    #[\Override]
     public function update(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
     {
         return (new DbalPlatform($platform))->dialect()->prepareUpdate($table, $bulkData, $options);

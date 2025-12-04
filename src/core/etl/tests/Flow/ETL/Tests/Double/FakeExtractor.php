@@ -84,6 +84,7 @@ final readonly class FakeExtractor implements Extractor
      *
      * @return \Generator<int, Rows, mixed, void>
      */
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         for ($i = 0; $i < $this->total; $i++) {

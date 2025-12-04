@@ -13,6 +13,7 @@ final class IsNull extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         return (new Parameter($this->value))->eval($row, $context) === null;

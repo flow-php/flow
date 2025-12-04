@@ -35,6 +35,7 @@ final readonly class Types implements \Countable, \Stringable
         $this->first = $types[0] ?? null;
     }
 
+    #[\Override]
     public function __toString() : string
     {
         $types = [];
@@ -54,6 +55,7 @@ final readonly class Types implements \Countable, \Stringable
         return $this->types;
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->types);

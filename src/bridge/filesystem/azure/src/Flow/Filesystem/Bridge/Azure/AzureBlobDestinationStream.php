@@ -72,6 +72,7 @@ final class AzureBlobDestinationStream implements DestinationStream
         );
     }
 
+    #[\Override]
     public function append(string $data) : self
     {
         $this->blocks->append($data);
@@ -79,6 +80,7 @@ final class AzureBlobDestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function close() : void
     {
         if ($this->blocks->size() === 0) {
@@ -113,6 +115,7 @@ final class AzureBlobDestinationStream implements DestinationStream
         $this->closed = true;
     }
 
+    #[\Override]
     public function fromResource($resource) : self
     {
         if (!\is_resource($resource)) {
@@ -130,11 +133,13 @@ final class AzureBlobDestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return !$this->closed;
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;

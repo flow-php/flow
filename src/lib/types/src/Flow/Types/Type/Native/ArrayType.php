@@ -16,6 +16,7 @@ final readonly class ArrayType implements Type
     /**
      * @return array<array-key, mixed>
      */
+    #[\Override]
     public function assert(mixed $value) : array
     {
         if ($this->isValid($value)) {
@@ -28,6 +29,7 @@ final readonly class ArrayType implements Type
     /**
      * @return array<array-key, mixed>
      */
+    #[\Override]
     public function cast(mixed $value) : array
     {
         if ($this->isValid($value)) {
@@ -57,6 +59,7 @@ final readonly class ArrayType implements Type
         }
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         if (!\is_array($value)) {
@@ -66,6 +69,7 @@ final readonly class ArrayType implements Type
         return true;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -73,6 +77,7 @@ final readonly class ArrayType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'array<mixed>';

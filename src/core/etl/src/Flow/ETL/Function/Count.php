@@ -22,6 +22,7 @@ final class Count implements AggregatingFunction, WindowFunction
         $this->count = 0;
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
@@ -34,6 +35,7 @@ final class Count implements AggregatingFunction, WindowFunction
         }
     }
 
+    #[\Override]
     public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         if ($this->ref === null) {
@@ -63,6 +65,7 @@ final class Count implements AggregatingFunction, WindowFunction
         return $count;
     }
 
+    #[\Override]
     public function over(Window $window) : WindowFunction
     {
         $this->window = $window;
@@ -73,6 +76,7 @@ final class Count implements AggregatingFunction, WindowFunction
     /**
      * @return Entry<?int>
      */
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref) {
@@ -86,11 +90,13 @@ final class Count implements AggregatingFunction, WindowFunction
         return int_entry($this->ref->name(), $this->count);
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'count()';
     }
 
+    #[\Override]
     public function window() : Window
     {
         if ($this->window === null) {

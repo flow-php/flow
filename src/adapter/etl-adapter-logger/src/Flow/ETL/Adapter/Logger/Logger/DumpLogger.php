@@ -14,6 +14,7 @@ final class DumpLogger extends AbstractLogger
      * @param mixed $message
      * @param array<mixed> $context
      */
+    #[\Override]
     public function log($level, $message, array $context = []) : void
     {
         if (!\is_string($message)) {

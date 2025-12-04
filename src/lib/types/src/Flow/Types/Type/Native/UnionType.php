@@ -71,6 +71,7 @@ final readonly class UnionType implements Type
     /**
      * @return TLeft|TRight
      */
+    #[\Override]
     public function assert(mixed $value) : mixed
     {
         if ($this->left->isValid($value)) {
@@ -84,6 +85,7 @@ final readonly class UnionType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
@@ -124,6 +126,7 @@ final readonly class UnionType implements Type
         return false;
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return $this->left->isValid($value) || $this->right->isValid($value);
@@ -132,6 +135,7 @@ final readonly class UnionType implements Type
     /**
      * @return array{type: 'union', left: array<string, mixed>, right: array<string, mixed>}
      */
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -141,6 +145,7 @@ final readonly class UnionType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         $stringTypes = [];

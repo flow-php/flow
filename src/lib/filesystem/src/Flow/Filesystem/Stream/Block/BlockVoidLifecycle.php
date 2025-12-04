@@ -12,6 +12,7 @@ final class BlockVoidLifecycle implements BlockLifecycle
     {
     }
 
+    #[\Override]
     public function filled(Block $block) : void
     {
     }

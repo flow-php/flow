@@ -19,6 +19,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'read:metadata', description: 'Read metadata from parquet file')]
 final class ReadMetadataCommand extends Command
 {
+    #[\Override]
     protected function configure() : void
     {
         $this
@@ -30,6 +31,7 @@ final class ReadMetadataCommand extends Command
             ->addOption('page-headers', null, InputOption::VALUE_NONE, 'Display page headers details');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);

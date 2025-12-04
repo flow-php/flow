@@ -18,6 +18,7 @@ final class XPath extends ScalarFunctionChain
     /**
      * @return null|array<\DOMNode>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?array
     {
         $value = (new Parameter($this->value))->asInstanceOf($row, $context, \DOMNode::class);

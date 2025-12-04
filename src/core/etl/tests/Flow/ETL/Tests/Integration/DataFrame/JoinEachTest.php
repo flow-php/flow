@@ -33,6 +33,7 @@ final class JoinEachTest extends FlowTestCase
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {
+                    #[\Override]
                     public function from(Rows $rows) : DataFrame
                     {
                         return data_frame()->process(
@@ -85,6 +86,7 @@ final class JoinEachTest extends FlowTestCase
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {
+                    #[\Override]
                     public function from(Rows $rows) : DataFrame
                     {
                         return data_frame()->process(

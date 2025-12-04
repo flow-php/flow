@@ -21,6 +21,7 @@ final readonly class WindowFunctionPipeline implements OverridingPipeline, Pipel
     ) {
     }
 
+    #[\Override]
     public function add(Loader|Transformer $pipe) : Pipeline
     {
         $this->pipeline->add($pipe);
@@ -28,16 +29,19 @@ final readonly class WindowFunctionPipeline implements OverridingPipeline, Pipel
         return $this;
     }
 
+    #[\Override]
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
     }
 
+    #[\Override]
     public function pipelines() : array
     {
         return [$this->pipeline];
     }
 
+    #[\Override]
     public function pipes() : Pipes
     {
         return $this->pipeline->pipes();
@@ -46,6 +50,7 @@ final readonly class WindowFunctionPipeline implements OverridingPipeline, Pipel
     /**
      * @return \Generator<int, Rows>
      */
+    #[\Override]
     public function process(FlowContext $context) : \Generator
     {
         $currentPartitionKey = null;
@@ -79,6 +84,7 @@ final readonly class WindowFunctionPipeline implements OverridingPipeline, Pipel
         }
     }
 
+    #[\Override]
     public function source() : Extractor
     {
         return $this->pipeline->source();

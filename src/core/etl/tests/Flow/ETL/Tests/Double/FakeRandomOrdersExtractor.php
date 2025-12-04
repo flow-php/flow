@@ -53,6 +53,7 @@ final readonly class FakeRandomOrdersExtractor implements Extractor
         );
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->rawData() as $row) {

@@ -20,6 +20,7 @@ final readonly class MaskColumns implements Transformation
     {
     }
 
+    #[\Override]
     public function transform(DataFrame $dataFrame) : DataFrame
     {
         foreach ($this->columns as $column) {

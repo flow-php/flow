@@ -15,6 +15,7 @@ final readonly class Linear implements DelayFactory
     ) {
     }
 
+    #[\Override]
     public function delay(int $attempt) : Duration
     {
         return Duration::fromMicroseconds(

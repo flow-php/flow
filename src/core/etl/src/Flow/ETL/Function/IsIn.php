@@ -19,6 +19,7 @@ final class IsIn extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $haystack = (new Parameter($this->haystack))->asArray($row, $context);

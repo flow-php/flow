@@ -58,6 +58,7 @@ final class XMLEntry implements Entry
         ];
     }
 
+    #[\Override]
     public function __toString() : string
     {
         if ($this->value === null) {
@@ -96,16 +97,19 @@ final class XMLEntry implements Entry
         $this->value = $doc;
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : self
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
+    #[\Override]
     public function is(Reference|string $name) : bool
     {
         if ($name instanceof Reference) {
@@ -115,6 +119,7 @@ final class XMLEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
@@ -132,6 +137,7 @@ final class XMLEntry implements Entry
         return $entry->value()?->C14N() === $this->value?->C14N();
     }
 
+    #[\Override]
     public function map(callable $mapper) : self
     {
         $mappedValue = $mapper($this->value());
@@ -140,16 +146,19 @@ final class XMLEntry implements Entry
         return new self($this->name, $mappedValue);
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
 
+    #[\Override]
     public function toString() : string
     {
         if ($this->value === null) {
@@ -160,16 +169,19 @@ final class XMLEntry implements Entry
         return $this->value->saveXML($this->value->documentElement);
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?\DOMDocument
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : self
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

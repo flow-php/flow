@@ -69,6 +69,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         $this->writingStreams = $streams;
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->writingStreams);
@@ -89,6 +90,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @return \Traversable<string, DestinationStream>
      */
+    #[\Override]
     public function getIterator() : \Traversable
     {
         return new \ArrayIterator(\array_merge(...\array_values($this->writingStreams)));

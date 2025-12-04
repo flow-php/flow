@@ -13,30 +13,36 @@ final readonly class VoidStream implements DestinationStream, SourceStream
 
     }
 
+    #[\Override]
     public function append(string $data) : self
     {
         return $this;
     }
 
+    #[\Override]
     public function close() : void
     {
     }
 
+    #[\Override]
     public function content() : string
     {
         return '';
     }
 
+    #[\Override]
     public function fromResource($resource) : self
     {
         return $this;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return true;
     }
 
+    #[\Override]
     public function iterate(int $length = 1) : \Generator
     {
         /** @phpstan-ignore-next-line */
@@ -45,16 +51,19 @@ final readonly class VoidStream implements DestinationStream, SourceStream
         }
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function read(int $length, int $offset) : string
     {
         return '';
     }
 
+    #[\Override]
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
         /** @phpstan-ignore-next-line */
@@ -63,6 +72,7 @@ final readonly class VoidStream implements DestinationStream, SourceStream
         }
     }
 
+    #[\Override]
     public function size() : int
     {
         return 0;

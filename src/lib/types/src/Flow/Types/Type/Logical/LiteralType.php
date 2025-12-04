@@ -38,6 +38,7 @@ final readonly class LiteralType implements Type
         return self::createFromString($data['value']);
     }
 
+    #[\Override]
     public function assert(mixed $value) : bool|float|int|string
     {
         if ($this->isValid($value)) {
@@ -47,6 +48,7 @@ final readonly class LiteralType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : bool|float|int|string
     {
         if ($this->isValid($value)) {
@@ -56,11 +58,13 @@ final readonly class LiteralType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return $value === $this->value;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -69,6 +73,7 @@ final readonly class LiteralType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         if (\is_string($this->value)) {

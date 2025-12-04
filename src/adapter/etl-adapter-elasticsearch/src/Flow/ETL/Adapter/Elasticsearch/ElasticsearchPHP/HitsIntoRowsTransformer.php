@@ -13,6 +13,7 @@ final readonly class HitsIntoRowsTransformer implements Transformer
     ) {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $newRows = [];

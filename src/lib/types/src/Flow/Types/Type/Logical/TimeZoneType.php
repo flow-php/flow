@@ -6,12 +6,14 @@ namespace Flow\Types\Type\Logical;
 
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
+use function Flow\Types\DSL\type_instance_of;
 
 /**
  * @implements Type<\DateTimeZone>
  */
 final readonly class TimeZoneType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : \DateTimeZone
     {
         if ($this->isValid($value)) {
@@ -21,6 +23,7 @@ final readonly class TimeZoneType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : \DateTimeZone
     {
         if ($this->isValid($value)) {
@@ -37,7 +40,7 @@ final readonly class TimeZoneType implements Type
             }
 
             if ($value instanceof \DateTimeInterface) {
-                return $value->getTimezone();
+                return type_instance_of(\DateTimeZone::class)->assert($value->getTimezone());
             }
         } catch (\Throwable) {
             throw new CastingException($value, $this);
@@ -46,11 +49,13 @@ final readonly class TimeZoneType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return $value instanceof \DateTimeZone;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -58,6 +63,7 @@ final readonly class TimeZoneType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'timezone';

@@ -14,6 +14,7 @@ use Flow\Types\Type\AutoCaster;
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         if (!\file_exists(__DIR__ . '/var')) {

@@ -15,6 +15,7 @@ final readonly class MatchCondition implements ScalarFunction
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         return (new Parameter($this->then))->eval($row, $context);

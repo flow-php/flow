@@ -23,6 +23,7 @@ final readonly class HTMLType implements Type
 $@isx
 REGXP;
 
+    #[\Override]
     public function assert(mixed $value) : HTMLDocument
     {
         if ($this->isValid($value)) {
@@ -32,6 +33,7 @@ REGXP;
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : HTMLDocument
     {
         if (!$this->isValid($value)) {
@@ -46,6 +48,7 @@ REGXP;
         return $value;
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         // \Dom\HTMLDocument exist in PHP 8.4+
@@ -56,6 +59,7 @@ REGXP;
         return $value instanceof HTMLDocument;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -63,6 +67,7 @@ REGXP;
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'html';

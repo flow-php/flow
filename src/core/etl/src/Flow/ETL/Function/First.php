@@ -22,6 +22,7 @@ final class First implements AggregatingFunction
         $this->first = null;
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         if ($this->first === null) {
@@ -36,6 +37,7 @@ final class First implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_first';

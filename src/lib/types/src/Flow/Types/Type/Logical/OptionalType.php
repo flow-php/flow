@@ -52,6 +52,7 @@ final readonly class OptionalType implements Type
         return new self(TypeFactory::fromArray($data['base']));
     }
 
+    #[\Override]
     public function assert(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
@@ -69,6 +70,7 @@ final readonly class OptionalType implements Type
         return $this->base;
     }
 
+    #[\Override]
     public function cast(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
@@ -78,6 +80,7 @@ final readonly class OptionalType implements Type
         return $this->base->cast($value);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         if ($value === null) {
@@ -90,6 +93,7 @@ final readonly class OptionalType implements Type
     /**
      * @return array{type: 'optional', base: array<string, mixed>}
      */
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -98,6 +102,7 @@ final readonly class OptionalType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return '?' . $this->base->toString();

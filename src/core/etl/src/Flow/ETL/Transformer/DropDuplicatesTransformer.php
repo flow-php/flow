@@ -31,6 +31,7 @@ final readonly class DropDuplicatesTransformer implements Transformer
         $this->hashAlgorithm = new NativePHPHash();
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $newRows = [];

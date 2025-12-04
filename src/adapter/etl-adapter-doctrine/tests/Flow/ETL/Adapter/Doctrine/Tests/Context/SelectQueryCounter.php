@@ -22,6 +22,7 @@ final class SelectQueryCounter extends AbstractLogger implements LoggerAwareInte
         $this->logger = new NullLogger();
     }
 
+    #[\Override]
     public function log(mixed $level, string|\Stringable $message, array $context = []) : void
     {
         if (!isset($context['sql'])) {

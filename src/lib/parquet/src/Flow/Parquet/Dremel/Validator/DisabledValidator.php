@@ -9,6 +9,7 @@ use Flow\Parquet\ParquetFile\Schema\Column;
 
 final class DisabledValidator implements Validator
 {
+    #[\Override]
     public function validate(Column $column, mixed $data) : void
     {
     }

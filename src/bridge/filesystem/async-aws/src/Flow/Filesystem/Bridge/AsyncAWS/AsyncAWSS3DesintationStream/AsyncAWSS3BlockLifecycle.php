@@ -21,6 +21,7 @@ final readonly class AsyncAWSS3BlockLifecycle implements BlockLifecycle
     ) {
     }
 
+    #[\Override]
     public function filled(Block $block) : void
     {
         $handle = \fopen($block->path()->path(), 'rb');

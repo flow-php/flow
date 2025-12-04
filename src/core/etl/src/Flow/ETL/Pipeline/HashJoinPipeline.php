@@ -26,6 +26,7 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
         $this->extractor = from_rows(rows());
     }
 
+    #[\Override]
     public function add(Loader|Transformer $pipe) : Pipeline
     {
         $this->left->add($pipe);
@@ -33,21 +34,25 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
+    #[\Override]
     public function has(string $transformerClass) : bool
     {
         return $this->left->has($transformerClass);
     }
 
+    #[\Override]
     public function pipelines() : array
     {
         return [$this->left];
     }
 
+    #[\Override]
     public function pipes() : Pipes
     {
         return $this->left->pipes();
     }
 
+    #[\Override]
     public function process(FlowContext $context) : \Generator
     {
         $leftReferences = refs(...$this->expression->left());
@@ -119,6 +124,7 @@ final readonly class HashJoinPipeline implements OverridingPipeline, Pipeline
         }
     }
 
+    #[\Override]
     public function source() : Extractor
     {
         return $this->extractor;

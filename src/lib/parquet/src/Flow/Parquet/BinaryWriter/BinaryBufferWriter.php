@@ -13,16 +13,19 @@ final class BinaryBufferWriter implements BinaryWriter
         $this->buffer = '';
     }
 
+    #[\Override]
     public function append(string $buffer) : void
     {
         $this->buffer .= $buffer;
     }
 
+    #[\Override]
     public function length() : DataSize
     {
         return DataSize::fromBytes(\strlen($this->buffer));
     }
 
+    #[\Override]
     public function writeBits(array $bits) : void
     {
         $byte = 0;
@@ -48,6 +51,7 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    #[\Override]
     public function writeBooleans(array $values) : void
     {
         $bits = [];
@@ -58,11 +62,13 @@ final class BinaryBufferWriter implements BinaryWriter
         $this->writeBits($bits);
     }
 
+    #[\Override]
     public function writeBytes(array $bytes) : void
     {
         $this->buffer .= \pack('C*', ...$bytes);
     }
 
+    #[\Override]
     public function writeDecimals(array $decimals, int $byteLength, int $precision = 10, int $scale = 2) : void
     {
         $isBigEndian = $this->byteOrder === ByteOrder::BIG_ENDIAN;
@@ -90,6 +96,7 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    #[\Override]
     public function writeDoubles(array $doubles) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'E' : 'e';
@@ -99,6 +106,7 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    #[\Override]
     public function writeFloats(array $floats) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'G' : 'g';
@@ -108,6 +116,7 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    #[\Override]
     public function writeInts16(array $ints) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'n' : 'v';
@@ -117,6 +126,7 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    #[\Override]
     public function writeInts32(array $ints) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'N' : 'V';
@@ -126,6 +136,7 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    #[\Override]
     public function writeInts64(array $ints) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'J' : 'P';
@@ -138,6 +149,7 @@ final class BinaryBufferWriter implements BinaryWriter
     /**
      * @param array<string> $strings
      */
+    #[\Override]
     public function writeStrings(array $strings) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'N' : 'V';
@@ -149,6 +161,7 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    #[\Override]
     public function writeVarInts(array $values) : void
     {
         foreach ($values as $value) {

@@ -16,6 +16,7 @@ final class ToTimeZone extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $dateTime = (new Parameter($this->value))->asInstanceOf($row, $context, \DateTimeInterface::class);

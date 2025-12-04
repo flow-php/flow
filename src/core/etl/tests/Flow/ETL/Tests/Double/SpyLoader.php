@@ -15,6 +15,7 @@ final class SpyLoader implements Loader
 
     public int $loadsCount = 0;
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $this->loadedRows[] = $rows;

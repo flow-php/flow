@@ -14,6 +14,7 @@ final readonly class SerializeTransformer implements Transformer
     {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $target = $this->target instanceof Reference ? $this->target : ref($this->target);

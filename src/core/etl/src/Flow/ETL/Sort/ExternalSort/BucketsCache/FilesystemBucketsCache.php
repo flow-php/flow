@@ -33,6 +33,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
     /**
      * @return \Generator<Row>
      */
+    #[\Override]
     public function get(string $bucketId) : \Generator
     {
         $path = $this->keyPath($bucketId);
@@ -50,6 +51,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
         $stream->close();
     }
 
+    #[\Override]
     public function remove(string $bucketId) : void
     {
         // we want to remove not only cache file but entire directory
@@ -60,6 +62,7 @@ final readonly class FilesystemBucketsCache implements BucketsCache
      * @param string $bucketId
      * @param iterable<Row>|Rows $rows
      */
+    #[\Override]
     public function set(string $bucketId, iterable $rows) : void
     {
         $path = $this->keyPath($bucketId);

@@ -29,6 +29,7 @@ final class ArrayGetCollection extends ScalarFunctionChain
         return new self($ref, $keys, '0');
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         try {

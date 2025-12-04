@@ -27,11 +27,13 @@ final class PhpFileStream implements Transport
         $this->stream = $resource;
     }
 
+    #[\Override]
     public function available() : int
     {
         return 1;
     }
 
+    #[\Override]
     public function close() : void
     {
         @\fclose($this->stream);
@@ -43,11 +45,13 @@ final class PhpFileStream implements Transport
         @\fflush($this->stream);
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return \is_resource($this->stream);
     }
 
+    #[\Override]
     public function open() : void
     {
         if (!\is_resource($this->stream)) {
@@ -55,6 +59,7 @@ final class PhpFileStream implements Transport
         }
     }
 
+    #[\Override]
     public function read(int $len) : string
     {
         $data = @\fread($this->stream, $len);
@@ -66,6 +71,7 @@ final class PhpFileStream implements Transport
         return $data;
     }
 
+    #[\Override]
     public function write(string $buf) : void
     {
         while ($buf !== '') {

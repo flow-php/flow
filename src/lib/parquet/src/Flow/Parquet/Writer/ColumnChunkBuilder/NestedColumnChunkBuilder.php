@@ -18,6 +18,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
     {
     }
 
+    #[\Override]
     public function addRow(WriteColumnData $columnData) : void
     {
         foreach ($columnData->flatValues() as $flatValues) {
@@ -33,6 +34,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         }
     }
 
+    #[\Override]
     public function closePage() : void
     {
         foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
@@ -40,11 +42,13 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         }
     }
 
+    #[\Override]
     public function column() : Column
     {
         return $this->column;
     }
 
+    #[\Override]
     public function flush(int $fileOffset) : array
     {
         $offset = $fileOffset;
@@ -60,6 +64,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         return $containers;
     }
 
+    #[\Override]
     public function isFull() : bool
     {
         foreach ($this->childrenColumnChunkBuilders as $childBuilder) {
@@ -71,6 +76,7 @@ final readonly class NestedColumnChunkBuilder implements ColumnChunkBuilder
         return false;
     }
 
+    #[\Override]
     public function uncompressedSize() : int
     {
         $size = 0;

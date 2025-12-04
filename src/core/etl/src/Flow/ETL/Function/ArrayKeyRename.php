@@ -17,6 +17,7 @@ final class ArrayKeyRename extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $value = (new Parameter($this->ref))->asArray($row, $context);

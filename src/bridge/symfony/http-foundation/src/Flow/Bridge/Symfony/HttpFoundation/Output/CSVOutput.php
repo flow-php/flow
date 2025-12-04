@@ -26,6 +26,7 @@ final readonly class CSVOutput implements Output
 
     }
 
+    #[\Override]
     public function memoryLoader(string $id) : Loader
     {
         return to_csv(path_memory($id, ['stream' => 'temp']))
@@ -37,6 +38,7 @@ final readonly class CSVOutput implements Output
             ->withDateTimeFormat($this->datetimeFormat);
     }
 
+    #[\Override]
     public function stdoutLoader() : Loader
     {
         return to_csv(path_stdout(['stream' => 'output']))
@@ -48,6 +50,7 @@ final readonly class CSVOutput implements Output
             ->withDateTimeFormat($this->datetimeFormat);
     }
 
+    #[\Override]
     public function type() : Type
     {
         return Type::CSV;

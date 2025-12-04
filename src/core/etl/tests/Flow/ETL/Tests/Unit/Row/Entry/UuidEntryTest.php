@@ -44,6 +44,7 @@ final class UuidEntryTest extends FlowTestCase
         yield ['9a419c18-fc21-4481-9dea-5e9cf057d137'];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Component\Uid\Uuid::class)) {

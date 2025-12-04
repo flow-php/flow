@@ -24,7 +24,7 @@ final class DOMElementParentTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('DOMElementParent requires non-null DOMNode or HTMLElement.');
 
-        ref('value')->domElementParent()->eval(row($context->entryFactory()->create('value', $element->documentElement->parentElement)), $context);
+        ref('value')->domElementParent()->eval(row($context->entryFactory()->create('value', $element->documentElement?->parentElement)), $context);
     }
 
     #[RequiresPhp('>= 8.4')]
@@ -73,7 +73,7 @@ final class DOMElementParentTest extends TestCase
         self::assertEquals(
             $xml->documentElement,
             /* @phpstan-ignore-next-line */
-            ref('value')->domElementParent()->eval(row(flow_context(config())->entryFactory()->create('value', $xml->documentElement->firstChild)), flow_context())
+            ref('value')->domElementParent()->eval(row(flow_context(config())->entryFactory()->create('value', $xml->documentElement?->firstChild)), flow_context())
         );
     }
 

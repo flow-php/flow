@@ -161,6 +161,7 @@ final class FlatColumn implements Column
         ];
     }
 
+    #[\Override]
     public function convertedType() : ?ConvertedType
     {
         return $this->convertedType;
@@ -169,6 +170,7 @@ final class FlatColumn implements Column
     /**
      * @return array<array-key, mixed>
      */
+    #[\Override]
     public function ddl() : array
     {
         return [
@@ -178,6 +180,7 @@ final class FlatColumn implements Column
         ];
     }
 
+    #[\Override]
     public function flatPath() : string
     {
         if ($this->flatPath !== null) {
@@ -209,21 +212,25 @@ final class FlatColumn implements Column
         return $this->flatPath;
     }
 
+    #[\Override]
     public function isList() : bool
     {
         return false;
     }
 
+    #[\Override]
     public function isMap() : bool
     {
         return false;
     }
 
+    #[\Override]
     public function isStruct() : bool
     {
         return false;
     }
 
+    #[\Override]
     public function logicalType() : ?LogicalType
     {
         return $this->logicalType;
@@ -243,6 +250,7 @@ final class FlatColumn implements Column
         return new self($this->name, $this->type, $this->convertedType, $this->logicalType, Repetition::REQUIRED, $this->precision, $this->scale, $this->typeLength);
     }
 
+    #[\Override]
     public function maxDefinitionsLevel() : int
     {
         $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
@@ -251,6 +259,7 @@ final class FlatColumn implements Column
         return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }
 
+    #[\Override]
     public function maxRepetitionsLevel() : int
     {
         $level = $this->repetition === Repetition::REPEATED ? 1 : 0;
@@ -258,16 +267,19 @@ final class FlatColumn implements Column
         return $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function parent() : ?NestedColumn
     {
         return $this->parent;
     }
 
+    #[\Override]
     public function path() : array
     {
         return \explode('.', $this->flatPath());
@@ -278,11 +290,13 @@ final class FlatColumn implements Column
         return $this->precision;
     }
 
+    #[\Override]
     public function repetition() : ?Repetition
     {
         return $this->repetition;
     }
 
+    #[\Override]
     public function repetitions() : Repetitions
     {
         if ($this->repetitions !== null) {
@@ -312,12 +326,14 @@ final class FlatColumn implements Column
         return $this->scale;
     }
 
+    #[\Override]
     public function setParent(NestedColumn $parent) : void
     {
         $this->flatPath = null;
         $this->parent = $parent;
     }
 
+    #[\Override]
     public function toThrift() : SchemaElement
     {
         return new SchemaElement([
@@ -332,11 +348,13 @@ final class FlatColumn implements Column
         ]);
     }
 
+    #[\Override]
     public function type() : PhysicalType
     {
         return $this->type;
     }
 
+    #[\Override]
     public function typeLength() : ?int
     {
         return $this->typeLength;

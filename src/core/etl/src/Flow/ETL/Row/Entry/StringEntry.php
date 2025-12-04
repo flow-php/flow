@@ -66,11 +66,13 @@ final class StringEntry implements Entry
         return new self($name, \mb_strtoupper($value));
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition(
@@ -83,11 +85,13 @@ final class StringEntry implements Entry
         );
     }
 
+    #[\Override]
     public function duplicate() : self
     {
         return new self($this->name, $this->value, $this->metadata);
     }
 
+    #[\Override]
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {
@@ -97,16 +101,19 @@ final class StringEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() === $entry->value();
     }
 
+    #[\Override]
     public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value()));
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
@@ -115,6 +122,7 @@ final class StringEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
@@ -125,6 +133,7 @@ final class StringEntry implements Entry
         return new self($this->name, $this->value ? \mb_strtolower($this->value) : null);
     }
 
+    #[\Override]
     public function toString() : string
     {
         $value = $this->value();
@@ -136,16 +145,19 @@ final class StringEntry implements Entry
         return $value;
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?string
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : self
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

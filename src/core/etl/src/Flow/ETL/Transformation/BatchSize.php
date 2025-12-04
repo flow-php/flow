@@ -27,6 +27,7 @@ final readonly class BatchSize implements Transformation
         }
     }
 
+    #[\Override]
     public function transform(DataFrame $dataFrame) : DataFrame
     {
         return $dataFrame->batchSize($this->size);

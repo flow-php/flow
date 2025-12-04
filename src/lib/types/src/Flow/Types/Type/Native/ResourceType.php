@@ -12,6 +12,7 @@ use Flow\Types\Type;
  */
 final readonly class ResourceType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
@@ -21,6 +22,7 @@ final readonly class ResourceType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
@@ -30,11 +32,13 @@ final readonly class ResourceType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return \is_resource($value);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -42,6 +46,7 @@ final readonly class ResourceType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'resource';

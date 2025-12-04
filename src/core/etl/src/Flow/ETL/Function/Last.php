@@ -22,6 +22,7 @@ final class Last implements AggregatingFunction
         $this->last = null;
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
@@ -34,6 +35,7 @@ final class Last implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         $name = $this->ref->hasAlias() ? $this->ref->name() : $this->ref->name() . '_last';

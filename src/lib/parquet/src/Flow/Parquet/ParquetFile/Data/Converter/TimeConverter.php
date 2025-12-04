@@ -12,11 +12,13 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class TimeConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : \DateInterval
     {
         return $this->toDateInterval(type_integer()->assert($data));
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         if ($column->type() === PhysicalType::INT64 && $column->logicalType()?->name() === LogicalType::TIME) {
@@ -26,6 +28,7 @@ final class TimeConverter implements Converter
         return false;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : int
     {
         return $this->toInt(type_instance_of(\DateInterval::class)->assert($data));

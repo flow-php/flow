@@ -8,6 +8,7 @@ use Flow\Filesystem\{FileStatus, Path\Filter};
 
 final class KeepAll implements Filter
 {
+    #[\Override]
     public function accept(FileStatus $status) : bool
     {
         return true;

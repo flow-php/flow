@@ -25,6 +25,7 @@ final readonly class ListSelect implements ScalarFunction
     /**
      * @return null|array<int, array<string, mixed>>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?array
     {
         if (!$row->has($this->ref)) {

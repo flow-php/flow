@@ -42,21 +42,25 @@ final class FloatEntry implements Entry
         $this->type = type_float();
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : self
     {
         return new self($this->name, $this->value, $this->metadata);
     }
 
+    #[\Override]
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {
@@ -66,6 +70,7 @@ final class FloatEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         $entryValue = $entry->value();
@@ -92,11 +97,13 @@ final class FloatEntry implements Entry
             && \bccomp((string) $thisValue, (string) $entryValue) === 0;
     }
 
+    #[\Override]
     public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value()));
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
@@ -105,11 +112,13 @@ final class FloatEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
 
+    #[\Override]
     public function toString() : string
     {
         if ($this->value === null) {
@@ -119,16 +128,19 @@ final class FloatEntry implements Entry
         return \number_format($this->value, 6, '.', '');
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?float
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : self
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

@@ -20,6 +20,7 @@ abstract class IntegrationTestCase extends TestCase
         parent::__construct($name);
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         $this->databaseContext->dropAllTables();

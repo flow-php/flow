@@ -34,6 +34,7 @@ final class FileSchemaCommand extends Command
 
     private ?Path $sourcePath = null;
 
+    #[\Override]
     public function configure() : void
     {
         $this
@@ -57,6 +58,7 @@ final class FileSchemaCommand extends Command
         $this->addParquetInputOptions($this);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);
@@ -104,6 +106,7 @@ final class FileSchemaCommand extends Command
         return Command::SUCCESS;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);

@@ -16,6 +16,7 @@ final class Round extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : int|float|null
     {
         $value = (new Parameter($this->value))->asNumber($row, $context);

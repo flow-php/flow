@@ -40,6 +40,7 @@ final readonly class ClassStringType implements Type
         return new self($data['class'] ?? null);
     }
 
+    #[\Override]
     public function assert(mixed $value) : string
     {
         if ($this->isValid($value)) {
@@ -49,6 +50,7 @@ final readonly class ClassStringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : string
     {
         if ($this->isValid($value)) {
@@ -76,6 +78,7 @@ final readonly class ClassStringType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         if (!\is_string($value)) {
@@ -93,6 +96,7 @@ final readonly class ClassStringType implements Type
         return \is_a($value, $this->class, true);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         $result = ['type' => 'class_string'];
@@ -104,6 +108,7 @@ final readonly class ClassStringType implements Type
         return $result;
     }
 
+    #[\Override]
     public function toString() : string
     {
         return $this->class === null ? 'class-string' : 'class-string<' . $this->class . '>';

@@ -15,6 +15,7 @@ final class StringWidth extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?int
     {
         $value = (new Parameter($this->value))->asString($row, $context);

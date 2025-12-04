@@ -87,6 +87,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         self::assertSame('appended content', \file_get_contents($files[0]->path->path()));
     }
 
+    #[\Override]
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());

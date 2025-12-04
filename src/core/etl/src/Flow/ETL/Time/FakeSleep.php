@@ -13,6 +13,7 @@ final class FakeSleep implements Sleep
 
     private int $totalMicroseconds = 0;
 
+    #[\Override]
     public function for(Duration $duration) : void
     {
         $this->sleepDurations[] = $duration;

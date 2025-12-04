@@ -10,6 +10,7 @@ use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, LogicalType, NestedColu
 
 final class ColumnDataValidator implements Validator
 {
+    #[\Override]
     public function validate(Column $column, mixed $data) : void
     {
         if ($column->repetition()?->isRequired()) {

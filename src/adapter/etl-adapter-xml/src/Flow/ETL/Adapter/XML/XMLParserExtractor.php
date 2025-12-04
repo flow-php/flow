@@ -81,6 +81,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         array_pop($this->currentPath);
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -153,6 +154,7 @@ final class XMLParserExtractor implements Extractor, FileExtractor, LimitableExt
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

@@ -26,6 +26,7 @@ final class CallUserFunc extends ScalarFunctionChain
         $this->callable = $callable;
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $callable = (new Parameter($this->callable))->eval($row, $context);

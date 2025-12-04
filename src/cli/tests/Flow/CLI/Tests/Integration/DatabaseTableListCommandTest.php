@@ -18,6 +18,7 @@ final class DatabaseTableListCommandTest extends FlowTestCase
 
     use OperatingSystem;
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();

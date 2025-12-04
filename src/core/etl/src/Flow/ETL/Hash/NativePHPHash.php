@@ -21,6 +21,7 @@ final readonly class NativePHPHash implements Algorithm
         return (new self('xxh128'))->hash($string);
     }
 
+    #[\Override]
     public function hash(string $value) : string
     {
         return \hash($this->algorithm, $value, $this->binary, $this->options);

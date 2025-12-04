@@ -93,7 +93,7 @@ TXT
         self::assertTrue($fs->status(path_memory('/var/some_path_to/file.txt'))->isFile());
         self::assertSame(
             'memory://var/some_path_to/file.txt',
-            $fs->status(path_memory('/var/some_path_to/*.txt'))->path->uri()
+            $fs->status(path_memory('/var/some_path_to/*.txt'))?->path->uri()
         );
     }
 

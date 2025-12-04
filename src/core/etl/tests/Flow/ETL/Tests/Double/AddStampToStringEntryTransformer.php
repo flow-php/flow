@@ -19,6 +19,7 @@ final readonly class AddStampToStringEntryTransformer implements Transformer
         return new self($entryName, $stamp, ':');
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->map(

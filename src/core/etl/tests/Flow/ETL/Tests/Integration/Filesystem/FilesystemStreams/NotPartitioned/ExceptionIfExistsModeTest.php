@@ -49,6 +49,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         self::assertSame('some content', \file_get_contents($file->path()));
     }
 
+    #[\Override]
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());

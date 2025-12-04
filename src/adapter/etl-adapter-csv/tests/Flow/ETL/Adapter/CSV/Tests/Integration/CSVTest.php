@@ -11,6 +11,7 @@ use Flow\ETL\Tests\FlowTestCase;
 
 final class CSVTest extends FlowTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         if (!\file_exists(__DIR__ . '/var')) {

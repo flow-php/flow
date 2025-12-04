@@ -42,6 +42,7 @@ final readonly class EnumType implements Type
         return new self($data['class']);
     }
 
+    #[\Override]
     public function assert(mixed $value) : \UnitEnum
     {
         if ($this->isValid($value)) {
@@ -51,6 +52,7 @@ final readonly class EnumType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : \UnitEnum
     {
         if ($this->isValid($value)) {
@@ -74,11 +76,13 @@ final readonly class EnumType implements Type
         }
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -87,6 +91,7 @@ final readonly class EnumType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'enum<' . $this->class . '>';

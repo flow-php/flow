@@ -19,6 +19,7 @@ final class ArrayValues extends ScalarFunctionChain
     /**
      * @return null|array<int, mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $array = (new Parameter($this->array))->asArray($row, $context);

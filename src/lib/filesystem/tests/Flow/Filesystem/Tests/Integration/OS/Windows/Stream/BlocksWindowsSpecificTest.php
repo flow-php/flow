@@ -18,6 +18,7 @@ final class BlocksWindowsSpecificTest extends TestCase
 {
     use OperatingSystem;
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();

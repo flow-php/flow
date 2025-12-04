@@ -137,21 +137,25 @@ final class TimeEntry implements Entry
         return new self($name, $time);
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : self
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
+    #[\Override]
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {
@@ -161,6 +165,7 @@ final class TimeEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         $entryValue = $entry->value();
@@ -183,21 +188,25 @@ final class TimeEntry implements Entry
             && date_interval_to_microseconds($thisValue) == date_interval_to_microseconds($entryValue);
     }
 
+    #[\Override]
     public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value));
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
 
+    #[\Override]
     public function toString() : string
     {
         $value = $this->value;
@@ -215,16 +224,19 @@ final class TimeEntry implements Entry
         return sprintf('%02d:%02d:%02d', $totalHours, $value->i, $value->s);
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?\DateInterval
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : self
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

@@ -56,6 +56,7 @@ final class DictionaryBuilderTest extends TestCase
         yield 'INT32 with null logical type' => [PhysicalType::INT32, null];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->builder = new DictionaryBuilder();

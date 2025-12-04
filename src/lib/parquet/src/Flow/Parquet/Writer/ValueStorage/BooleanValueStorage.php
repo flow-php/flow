@@ -17,6 +17,7 @@ final class BooleanValueStorage implements ValueStorage
     /**
      * @param array<bool> $values
      */
+    #[\Override]
     public function addValues(FlatColumn $column, array $values) : void
     {
         $nonNullValues = \array_filter($values, static fn (?bool $value) => $value !== null);
@@ -26,6 +27,7 @@ final class BooleanValueStorage implements ValueStorage
         }
     }
 
+    #[\Override]
     public function getBuffer() : string
     {
         if (empty($this->values)) {
@@ -39,16 +41,19 @@ final class BooleanValueStorage implements ValueStorage
         return $buffer;
     }
 
+    #[\Override]
     public function isEmpty() : bool
     {
         return !\count($this->values);
     }
 
+    #[\Override]
     public function reset() : void
     {
         $this->values = [];
     }
 
+    #[\Override]
     public function size() : int
     {
         return \count($this->values);

@@ -25,6 +25,7 @@ final readonly class StructureSelect implements ScalarFunction
     /**
      * @return null|array<string, mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?array
     {
         if (!$row->has($this->ref)) {

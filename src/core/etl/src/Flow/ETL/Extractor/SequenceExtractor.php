@@ -15,6 +15,7 @@ final readonly class SequenceExtractor implements Extractor
     ) {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         /** @var mixed $item */

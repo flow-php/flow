@@ -12,6 +12,7 @@ use Flow\Types\Type;
  */
 final readonly class DateTimeType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : \DateTimeInterface
     {
         if ($this->isValid($value)) {
@@ -21,6 +22,7 @@ final readonly class DateTimeType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : \DateTimeInterface
     {
         if ($value instanceof \DateTimeImmutable) {
@@ -60,11 +62,13 @@ final readonly class DateTimeType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return $value instanceof \DateTimeInterface;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -72,6 +76,7 @@ final readonly class DateTimeType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'datetime';

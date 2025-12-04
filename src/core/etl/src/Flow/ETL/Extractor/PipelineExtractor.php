@@ -18,6 +18,7 @@ final readonly class PipelineExtractor implements Extractor
      *
      * @return \Generator<Rows>
      */
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         return $this->pipeline->process($context);

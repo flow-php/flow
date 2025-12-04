@@ -28,6 +28,7 @@ final class PipelineRunCommand extends Command
 
     private ?Path $pipelinePath = null;
 
+    #[\Override]
     public function configure() : void
     {
         $this
@@ -57,6 +58,7 @@ HELP
         $this->addStatisticsOptions($this);
     }
 
+    #[\Override]
     public function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);
@@ -93,6 +95,7 @@ HELP
         return Command::SUCCESS;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);

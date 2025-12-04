@@ -16,6 +16,7 @@ final readonly class DropEntriesTransformer implements Transformer
         $this->refs = References::init(...$names);
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $transformer = fn (Row $row) : Row => $row->remove(...$this->refs);

@@ -12,6 +12,7 @@ final class PathTest extends FlowIntegrationTestCase
 {
     use OperatingSystem;
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();

@@ -21,6 +21,7 @@ final readonly class RowsExtractor implements Extractor
         $this->rows = $rows;
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->rows as $rows) {

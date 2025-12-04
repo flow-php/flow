@@ -11,6 +11,7 @@ abstract class ElasticsearchTestCase extends FlowTestCase
 {
     protected ElasticsearchContext $elasticsearchContext;
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->elasticsearchContext = (\class_exists("Elasticsearch\Client"))

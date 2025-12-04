@@ -13,6 +13,7 @@ final readonly class PsrLoggerLoader implements Loader
     {
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $loader = function (Row $row) : void {

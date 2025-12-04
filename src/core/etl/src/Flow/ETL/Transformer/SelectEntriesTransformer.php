@@ -17,6 +17,7 @@ final readonly class SelectEntriesTransformer implements Transformer
         $this->refs = References::init(...$refs);
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $newRows = [];

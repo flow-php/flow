@@ -18,6 +18,7 @@ final class StringBefore extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $string = (new Parameter($this->string))->asString($row, $context);

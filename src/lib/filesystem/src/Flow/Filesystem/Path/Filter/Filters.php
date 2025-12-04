@@ -19,6 +19,7 @@ final readonly class Filters implements Filter
         $this->filters = $filters;
     }
 
+    #[\Override]
     public function accept(FileStatus $status) : bool
     {
         foreach ($this->filters as $filter) {

@@ -13,6 +13,7 @@ final class BlocksUnixTest extends TestCase
 {
     use OperatingSystem;
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();

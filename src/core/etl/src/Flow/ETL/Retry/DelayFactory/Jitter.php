@@ -19,6 +19,7 @@ final readonly class Jitter implements DelayFactory
         }
     }
 
+    #[\Override]
     public function delay(int $attempt) : Duration
     {
         $baseDelay = $this->delayFactory->delay($attempt);

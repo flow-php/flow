@@ -14,6 +14,7 @@ final readonly class IsValidExcelSheetName implements ScalarFunction
     {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $sheetName = (new Parameter($this->sheetName))->asString($row, $context);

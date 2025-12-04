@@ -16,6 +16,7 @@ final readonly class Drop implements Transformation
         $this->references = References::init(...$entries);
     }
 
+    #[\Override]
     public function transform(DataFrame $dataFrame) : DataFrame
     {
         return $dataFrame->drop(...$this->references->all());

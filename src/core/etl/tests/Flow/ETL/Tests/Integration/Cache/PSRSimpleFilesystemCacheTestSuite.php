@@ -11,6 +11,7 @@ use Symfony\Component\Cache\Psr16Cache;
 
 final class PSRSimpleFilesystemCacheTestSuite extends CacheBaseTestSuite
 {
+    #[\Override]
     protected function cache() : Cache
     {
         return new PSRSimpleCache(new Psr16Cache(new FilesystemAdapter(directory: __DIR__ . '/var/psr-simple-file-cache')));

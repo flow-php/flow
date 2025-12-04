@@ -21,6 +21,7 @@ final readonly class ScalarFunctionFilter implements Filter
     ) {
     }
 
+    #[\Override]
     public function accept(FileStatus $status) : bool
     {
         return (bool) $this->function->eval(

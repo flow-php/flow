@@ -160,11 +160,13 @@ final class NestedColumn implements Column
         return $flat;
     }
 
+    #[\Override]
     public function convertedType() : ?ConvertedType
     {
         return $this->convertedType;
     }
 
+    #[\Override]
     public function ddl() : array
     {
         $ddlArray = [
@@ -180,6 +182,7 @@ final class NestedColumn implements Column
         return $ddlArray;
     }
 
+    #[\Override]
     public function flatPath() : string
     {
         if ($this->flatPath !== null) {
@@ -241,11 +244,13 @@ final class NestedColumn implements Column
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
     }
 
+    #[\Override]
     public function isList() : bool
     {
         return $this->logicalType()?->name() === 'LIST' || $this->convertedType() === ConvertedType::LIST;
     }
 
+    #[\Override]
     public function isMap() : bool
     {
         return $this->logicalType()?->name() === 'MAP' || $this->convertedType() === ConvertedType::MAP;
@@ -268,6 +273,7 @@ final class NestedColumn implements Column
         return false;
     }
 
+    #[\Override]
     public function isStruct() : bool
     {
         if ($this->isMap()) {
@@ -281,6 +287,7 @@ final class NestedColumn implements Column
         return true;
     }
 
+    #[\Override]
     public function logicalType() : ?LogicalType
     {
         return $this->logicalType;
@@ -293,6 +300,7 @@ final class NestedColumn implements Column
         return $this;
     }
 
+    #[\Override]
     public function maxDefinitionsLevel() : int
     {
         if ($this->repetition === null) {
@@ -304,6 +312,7 @@ final class NestedColumn implements Column
         return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }
 
+    #[\Override]
     public function maxRepetitionsLevel() : int
     {
         if ($this->repetition === null) {
@@ -315,26 +324,31 @@ final class NestedColumn implements Column
         return $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function parent() : ?self
     {
         return $this->parent;
     }
 
+    #[\Override]
     public function path() : array
     {
         return \explode('.', $this->flatPath());
     }
 
+    #[\Override]
     public function repetition() : ?Repetition
     {
         return $this->repetition;
     }
 
+    #[\Override]
     public function repetitions() : Repetitions
     {
         if ($this->repetitions !== null) {
@@ -360,6 +374,7 @@ final class NestedColumn implements Column
         return $this->repetitions;
     }
 
+    #[\Override]
     public function setParent(self $parent) : void
     {
         $this->flatPath = null;
@@ -373,6 +388,7 @@ final class NestedColumn implements Column
     /**
      * @return array<SchemaElement>
      */
+    #[\Override]
     public function toThrift() : array
     {
         $elements = [
@@ -398,11 +414,13 @@ final class NestedColumn implements Column
         return $elements;
     }
 
+    #[\Override]
     public function type() : ?PhysicalType
     {
         return null;
     }
 
+    #[\Override]
     public function typeLength() : ?int
     {
         return null;

@@ -16,6 +16,7 @@ final class CrossJoinRowsTransformer implements Transformer
     ) {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->joinCross($this->rows(), $this->prefix);

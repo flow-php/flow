@@ -48,6 +48,7 @@ final class TransactionalDbalLoader implements Loader
         return $loader;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $this->executeInTransaction($this->connection(), $rows, $context);

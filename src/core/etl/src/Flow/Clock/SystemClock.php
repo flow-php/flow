@@ -22,6 +22,7 @@ final readonly class SystemClock implements ClockInterface
         return new self(new \DateTimeZone('UTC'));
     }
 
+    #[\Override]
     public function now() : \DateTimeImmutable
     {
         return new \DateTimeImmutable('now', $this->timezone);

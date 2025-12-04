@@ -15,6 +15,7 @@ class RandomString implements ScalarFunction
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $length = (new Parameter($this->length))->asInt($row, $context);

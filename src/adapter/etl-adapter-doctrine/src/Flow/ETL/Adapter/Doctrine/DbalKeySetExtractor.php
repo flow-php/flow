@@ -49,6 +49,7 @@ final class DbalKeySetExtractor implements Extractor
         }
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $totalFetched = 0;

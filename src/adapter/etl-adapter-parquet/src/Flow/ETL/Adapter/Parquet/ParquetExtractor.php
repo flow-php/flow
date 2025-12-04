@@ -38,6 +38,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $this->options = Options::default();
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -80,6 +81,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

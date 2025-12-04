@@ -70,6 +70,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->pageStatistics = new StatisticsCounter($this->column);
     }
 
+    #[\Override]
     public function addRow(WriteColumnData $columnData) : void
     {
         $flatValues = $columnData->values($this->column->flatPath());
@@ -93,6 +94,7 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->rowsCount++;
     }
 
+    #[\Override]
     public function closePage() : void
     {
         if ($this->isEmpty()) {
@@ -134,11 +136,13 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
         $this->pageStatistics = new StatisticsCounter($this->column);
     }
 
+    #[\Override]
     public function column() : Column
     {
         return $this->column;
     }
 
+    #[\Override]
     public function flush(int $fileOffset) : array
     {
         $this->closePage();
@@ -187,11 +191,13 @@ final class RLEDictionaryChunkBuilder implements ColumnChunkBuilder
                && count($this->repetitionLevels) === 0;
     }
 
+    #[\Override]
     public function isFull() : bool
     {
         return \count($this->pageValues) * 4 >= $this->options->get(Option::PAGE_SIZE_BYTES);
     }
 
+    #[\Override]
     public function uncompressedSize() : int
     {
         return $this->pages->uncompressedSize() + $this->currentPageUncompressedSize();

@@ -11,6 +11,7 @@ use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
 
 abstract class PostgreSqlIntegrationTestCase extends IntegrationTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         $this->databaseContext = new DatabaseContext(

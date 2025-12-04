@@ -13,6 +13,7 @@ final readonly class JsonSchemaFormatter implements SchemaFormatter
     {
     }
 
+    #[\Override]
     public function format(Schema $schema) : string
     {
         if ($this->pretty) {

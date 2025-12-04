@@ -23,6 +23,7 @@ final readonly class JsonOutput implements Output
 
     }
 
+    #[\Override]
     public function memoryLoader(string $id) : Loader
     {
         return to_json(path_memory($id, ['stream' => 'temp']))
@@ -31,6 +32,7 @@ final readonly class JsonOutput implements Output
             ->withRowsInNewLines($this->putRowsInNewLines);
     }
 
+    #[\Override]
     public function stdoutLoader() : Loader
     {
         return to_json(path_stdout(['stream' => 'output']))
@@ -39,6 +41,7 @@ final readonly class JsonOutput implements Output
             ->withRowsInNewLines($this->putRowsInNewLines);
     }
 
+    #[\Override]
     public function type() : Type
     {
         return Type::JSON;

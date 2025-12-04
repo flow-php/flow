@@ -39,6 +39,7 @@ final readonly class Mask implements Sanitizer
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -48,6 +49,7 @@ final readonly class Mask implements Sanitizer
         ];
     }
 
+    #[\Override]
     public function sanitize(string $value) : string
     {
         if ($value === '') {

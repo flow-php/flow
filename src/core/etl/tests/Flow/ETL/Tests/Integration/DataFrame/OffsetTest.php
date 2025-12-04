@@ -123,6 +123,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 10; $i++) {
@@ -157,6 +158,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
@@ -188,6 +190,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
@@ -256,6 +259,7 @@ final class OffsetTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 10; $i++) {

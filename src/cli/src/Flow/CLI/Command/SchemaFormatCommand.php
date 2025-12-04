@@ -24,6 +24,7 @@ final class SchemaFormatCommand extends Command
 
     private ?Path $schemaPath = null;
 
+    #[\Override]
     public function configure() : void
     {
         $this
@@ -37,6 +38,7 @@ final class SchemaFormatCommand extends Command
         $this->addConfigOptions($this);
     }
 
+    #[\Override]
     public function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);
@@ -66,6 +68,7 @@ final class SchemaFormatCommand extends Command
         return Command::SUCCESS;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);

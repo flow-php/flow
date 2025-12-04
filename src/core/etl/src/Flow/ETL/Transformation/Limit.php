@@ -12,6 +12,7 @@ final readonly class Limit implements Transformation
     {
     }
 
+    #[\Override]
     public function transform(DataFrame $dataFrame) : DataFrame
     {
         return $dataFrame->limit($this->limit);

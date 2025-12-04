@@ -24,6 +24,7 @@ final class AzureBlobBlockLifecycle implements BlockLifecycle
         }
     }
 
+    #[\Override]
     public function filled(Block $block) : void
     {
         if (!$this->initialized) {

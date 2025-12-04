@@ -14,6 +14,7 @@ final readonly class EntryIdFactory implements IdFactory
     {
     }
 
+    #[\Override]
     public function create(Row $row) : Entry
     {
         return $row->get($this->entryName)->rename('id');

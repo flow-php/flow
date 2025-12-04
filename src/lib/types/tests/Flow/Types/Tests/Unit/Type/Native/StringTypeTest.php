@@ -106,6 +106,7 @@ final class StringTypeTest extends TestCase
 
         yield 'Stringable' => [
             'value' => new class() implements \Stringable {
+                #[\Override]
                 public function __toString() : string
                 {
                     return 'stringable';

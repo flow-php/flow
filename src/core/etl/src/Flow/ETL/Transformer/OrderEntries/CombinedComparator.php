@@ -12,6 +12,7 @@ final readonly class CombinedComparator implements Comparator
     {
     }
 
+    #[\Override]
     public function compare(Entry $left, Entry $right) : int
     {
         $result = $this->first->compare($left, $right);

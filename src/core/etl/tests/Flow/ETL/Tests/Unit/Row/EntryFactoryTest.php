@@ -74,6 +74,7 @@ final class EntryFactoryTest extends TestCase
         ];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->entryFactory = flow_context(config())->entryFactory();

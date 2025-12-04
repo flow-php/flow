@@ -16,6 +16,7 @@ final readonly class Select implements Transformation
         $this->references = References::init(...$entries);
     }
 
+    #[\Override]
     public function transform(DataFrame $dataFrame) : DataFrame
     {
         return $dataFrame->select(...$this->references->all());

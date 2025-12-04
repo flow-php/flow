@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class CompressingSerializerTest extends TestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         if (!\function_exists('gzcompress')) {

@@ -42,6 +42,7 @@ final class ElasticsearchExtractor implements Extractor
         $this->client = null;
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $pit = \is_array($this->pointInTimeParams)

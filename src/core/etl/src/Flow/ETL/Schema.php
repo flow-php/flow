@@ -122,6 +122,7 @@ final class Schema implements \Countable
         return $this;
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->definitions);

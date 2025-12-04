@@ -22,6 +22,7 @@ final readonly class PostgreSQLUpdateOptions implements UpdateOptions
     /**
      * @param array<string, mixed> $options
      */
+    #[\Override]
     public static function fromArray(array $options) : UpdateOptions
     {
         $options = type_structure(
@@ -37,6 +38,7 @@ final readonly class PostgreSQLUpdateOptions implements UpdateOptions
         );
     }
 
+    #[\Override]
     public static function new() : UpdateOptions
     {
         return new self();

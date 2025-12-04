@@ -25,6 +25,7 @@ final class DatabaseTableListCommand extends Command
 
     private ?Config $flowConfig = null;
 
+    #[\Override]
     public function configure() : void
     {
         $this
@@ -37,6 +38,7 @@ final class DatabaseTableListCommand extends Command
         $this->addDbOptions($this);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);
@@ -76,6 +78,7 @@ final class DatabaseTableListCommand extends Command
         return Command::SUCCESS;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);

@@ -18,6 +18,7 @@ final class Greatest extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $extractedValues = [];

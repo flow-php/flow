@@ -16,6 +16,7 @@ final readonly class NameComparator implements Comparator
      * @param Entry<mixed> $left
      * @param Entry<mixed> $right
      */
+    #[\Override]
     public function compare(Entry $left, Entry $right) : int
     {
         if ($this->order === Order::ASC) {

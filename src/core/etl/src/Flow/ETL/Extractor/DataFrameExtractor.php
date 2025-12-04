@@ -12,6 +12,7 @@ final readonly class DataFrameExtractor implements Extractor
     {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->dataFrame->get() as $rows) {

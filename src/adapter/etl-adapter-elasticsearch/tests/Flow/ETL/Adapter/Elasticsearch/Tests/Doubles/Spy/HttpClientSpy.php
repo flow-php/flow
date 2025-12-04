@@ -13,6 +13,7 @@ final class HttpClientSpy implements ClientInterface
 {
     public array $requests = [];
 
+    #[\Override]
     public function sendRequest(RequestInterface $request) : ResponseInterface
     {
         $this->requests[] = $request;

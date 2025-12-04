@@ -19,16 +19,19 @@ final readonly class PSRSimpleCache implements Cache
     ) {
     }
 
+    #[\Override]
     public function clear() : void
     {
         $this->cache->clear();
     }
 
+    #[\Override]
     public function delete(string $key) : void
     {
         $this->cache->delete($key);
     }
 
+    #[\Override]
     public function get(string $key) : Row|Rows|CacheIndex
     {
         $serializedValue = $this->cache->get($key);
@@ -40,6 +43,7 @@ final readonly class PSRSimpleCache implements Cache
         return $this->serializer->unserialize(\is_string($serializedValue) ? $serializedValue : '', [Row::class, Rows::class, CacheIndex::class]);
     }
 
+    #[\Override]
     public function has(string $key) : bool
     {
         try {
@@ -49,6 +53,7 @@ final readonly class PSRSimpleCache implements Cache
         }
     }
 
+    #[\Override]
     public function set(string $key, CacheIndex|Rows|Row $value) : void
     {
         $this->cache->set($key, $this->serializer->serialize($value), $this->ttl);

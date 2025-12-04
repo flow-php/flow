@@ -22,16 +22,19 @@ final readonly class BinaryBufferReader implements BinaryReader
         $this->length = new DataSize($bits);
     }
 
+    #[\Override]
     public function length() : DataSize
     {
         return $this->length;
     }
 
+    #[\Override]
     public function position() : DataSize
     {
         return $this->position;
     }
 
+    #[\Override]
     public function readBits(int $total) : \Generator
     {
         $bytePosition = $this->position()->bytes();
@@ -58,6 +61,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readBooleans(int $total) : \Generator
     {
         foreach ($this->readBits($total) as $bit) {
@@ -65,6 +69,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readByteArrays(int $total) : \Generator
     {
         $position = $this->position()->bytes();
@@ -93,6 +98,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         $this->remainingLength->sub($position * 8);
     }
 
+    #[\Override]
     public function readBytes(int $total) : Bytes
     {
         $bytes = \array_values(\unpack('C*', \substr($this->buffer, $this->position()->bytes(), $total)));
@@ -103,6 +109,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         return new Bytes($bytes);
     }
 
+    #[\Override]
     public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : \Generator
     {
         $allBytes = $this->readBytes($byteLength * $total)->toArray();
@@ -122,6 +129,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readDoubles(int $total) : \Generator
     {
         $doubleBytes = \array_chunk($this->readBytes(8 * $total)->toArray(), 8);
@@ -131,6 +139,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readFloats(int $total) : \Generator
     {
         $floatBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
@@ -140,6 +149,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readInts16(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(2 * $total)->toArray(), 2);
@@ -160,6 +170,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readInts32(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
@@ -179,6 +190,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readInts64(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(8 * $total)->toArray(), 8);
@@ -204,6 +216,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readInts96(int $total) : \Generator
     {
         $intsData = \substr($this->buffer, $this->position()->bytes(), 12 * $total);
@@ -222,6 +235,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         $this->remainingLength->sub(12 * $total * 8);
     }
 
+    #[\Override]
     public function readStrings(int $total) : \Generator
     {
         $position = $this->position()->bytes();
@@ -247,6 +261,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         $this->remainingLength->sub($position * 8);
     }
 
+    #[\Override]
     public function readUInts32(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
@@ -260,6 +275,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readUInts64(int $total) : \Generator
     {
         $intBytes = \array_chunk($this->readBytes(8 * $total)->toArray(), 8);
@@ -275,6 +291,7 @@ final readonly class BinaryBufferReader implements BinaryReader
         }
     }
 
+    #[\Override]
     public function readVarInt() : int
     {
         $result = 0;
@@ -295,17 +312,20 @@ final readonly class BinaryBufferReader implements BinaryReader
         return $result;
     }
 
+    #[\Override]
     public function remainingLength() : DataSize
     {
         return $this->remainingLength;
     }
 
+    #[\Override]
     public function seekBits(int $bits) : void
     {
         $this->position->add($bits);
         $this->length->sub($bits);
     }
 
+    #[\Override]
     public function seekBytes(int $bytes) : void
     {
         $this->position->add($bytes * 8);

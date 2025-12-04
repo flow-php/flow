@@ -102,6 +102,7 @@ final readonly class StructureType implements Type
         return $this->allowExtra;
     }
 
+    #[\Override]
     public function assert(mixed $value) : array
     {
         if ($this->isValid($value)) {
@@ -111,6 +112,7 @@ final readonly class StructureType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : array
     {
         if ($this->isValid($value)) {
@@ -152,6 +154,7 @@ final readonly class StructureType implements Type
         return $this->elements;
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         if (!\is_array($value)) {
@@ -192,6 +195,7 @@ final readonly class StructureType implements Type
     /**
      * @return array{type: 'structure', elements: array<string, array<string, mixed>>, optional_elements: array<string, array<string, mixed>>, allow_extra: bool}
      */
+    #[\Override]
     public function normalize() : array
     {
         $elements = [];
@@ -231,6 +235,7 @@ final readonly class StructureType implements Type
         return $this->optionalElements;
     }
 
+    #[\Override]
     public function toString() : string
     {
         $content = [];

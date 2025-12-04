@@ -19,6 +19,7 @@ final class Coalesce extends ScalarFunctionChain
         $this->values = $values;
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         foreach ($this->values as $value) {

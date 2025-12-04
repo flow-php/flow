@@ -23,6 +23,7 @@ final class ArrayMerge extends ScalarFunctionChain
     /**
      * @return null|array<mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $left = (new Parameter($this->left))->asArray($row, $context);

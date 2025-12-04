@@ -11,5 +11,6 @@ interface UnpackResults extends ScalarFunction
     /**
      * @return array<array-key, mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : array;
 }

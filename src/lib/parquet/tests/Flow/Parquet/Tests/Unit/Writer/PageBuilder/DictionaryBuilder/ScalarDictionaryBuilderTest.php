@@ -41,6 +41,7 @@ final class ScalarDictionaryBuilderTest extends TestCase
         ];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->builder = new ScalarDictionaryBuilder();

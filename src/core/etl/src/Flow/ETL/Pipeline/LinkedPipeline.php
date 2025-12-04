@@ -25,6 +25,7 @@ final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
         $this->nextPipeline = new SynchronousPipeline(new PipelineExtractor($this->pipeline));
     }
 
+    #[\Override]
     public function add(Loader|Transformer $pipe) : Pipeline
     {
         $this->nextPipeline->add($pipe);
@@ -32,6 +33,7 @@ final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
+    #[\Override]
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
@@ -40,21 +42,25 @@ final readonly class LinkedPipeline implements OverridingPipeline, Pipeline
     /**
      * @return array<Pipeline>
      */
+    #[\Override]
     public function pipelines() : array
     {
         return [$this->pipeline, $this->nextPipeline];
     }
 
+    #[\Override]
     public function pipes() : Pipes
     {
         return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
     }
 
+    #[\Override]
     public function process(FlowContext $context) : \Generator
     {
         return $this->nextPipeline->process($context);
     }
 
+    #[\Override]
     public function source() : Extractor
     {
         return $this->pipeline->source();

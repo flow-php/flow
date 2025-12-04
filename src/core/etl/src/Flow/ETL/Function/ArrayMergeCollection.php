@@ -19,6 +19,7 @@ final class ArrayMergeCollection extends ScalarFunctionChain
     /**
      * @return null|array<mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $array = (new Parameter($this->array))->asArray($row, $context);

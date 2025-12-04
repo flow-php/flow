@@ -23,6 +23,7 @@ final class MeilisearchExtractor implements Extractor
     ) {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $params = new SearchParams($this->params);

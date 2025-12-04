@@ -9,6 +9,7 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 abstract class FilesystemStreamsTestCase extends FlowIntegrationTestCase
 {
+    #[\Override]
     protected function filesDirectory() : string
     {
         return __DIR__ . '/tmp';

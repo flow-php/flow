@@ -12,6 +12,7 @@ final readonly class CompressingSerializer implements Serializer
     {
     }
 
+    #[\Override]
     public function serialize(object $serializable) : string
     {
         if (!\function_exists('gzcompress')) {
@@ -31,6 +32,7 @@ final readonly class CompressingSerializer implements Serializer
         return $content;
     }
 
+    #[\Override]
     public function unserialize(string $serialized, array $classes) : object
     {
         if (!\function_exists('gzcompress')) {

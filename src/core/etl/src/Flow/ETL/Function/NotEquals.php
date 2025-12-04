@@ -15,6 +15,7 @@ final class NotEquals extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         $left = (new Parameter($this->left))->eval($row, $context);

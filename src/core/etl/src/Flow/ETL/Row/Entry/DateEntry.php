@@ -53,21 +53,25 @@ final class DateEntry implements Entry
         $this->type = type_date();
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : self
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
+    #[\Override]
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {
@@ -77,26 +81,31 @@ final class DateEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && $this->value() == $entry->value();
     }
 
+    #[\Override]
     public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value));
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
 
+    #[\Override]
     public function toString() : string
     {
         $value = $this->value;
@@ -108,16 +117,19 @@ final class DateEntry implements Entry
         return $value->format('Y-m-d');
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?\DateTimeInterface
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : self
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

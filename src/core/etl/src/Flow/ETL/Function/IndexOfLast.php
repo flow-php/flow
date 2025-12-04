@@ -19,6 +19,7 @@ final class IndexOfLast extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : int|false|null
     {
         $string = (new Parameter($this->string))->asString($row, $context);

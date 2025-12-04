@@ -23,15 +23,18 @@ final readonly class AvroLoader implements Closure, FileLoader, Loader
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE->value, ContentType::AVRO);
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
     }
 
+    #[\Override]
     public function destination() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
     }

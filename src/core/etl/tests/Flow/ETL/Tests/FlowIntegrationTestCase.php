@@ -25,6 +25,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
 
     private string $baseMemoryLimit;
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->baseMemoryLimit = (\ini_get('memory_limit')) ?: '-1';
@@ -39,6 +40,7 @@ abstract class FlowIntegrationTestCase extends FlowTestCase
         \mkdir($this->cacheDir->path(), recursive: true);
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         if (\ini_get('memory_limit') !== $this->baseMemoryLimit) {

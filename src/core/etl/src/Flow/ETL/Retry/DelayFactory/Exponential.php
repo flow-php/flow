@@ -16,6 +16,7 @@ final readonly class Exponential implements DelayFactory
     ) {
     }
 
+    #[\Override]
     public function delay(int $attempt) : Duration
     {
         $calculatedDelay = Duration::fromMicroseconds(

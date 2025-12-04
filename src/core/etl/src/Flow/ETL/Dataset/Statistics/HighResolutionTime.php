@@ -21,6 +21,7 @@ final readonly class HighResolutionTime implements \Stringable
         return new self($timeParts[0], $timeParts[1]);
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();

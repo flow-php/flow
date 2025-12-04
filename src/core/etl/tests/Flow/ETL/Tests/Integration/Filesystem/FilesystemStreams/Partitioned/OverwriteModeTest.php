@@ -111,6 +111,7 @@ final class OverwriteModeTest extends FilesystemStreamsTestCase
         self::assertSame('new content', \file_get_contents($files[0]->path->path()));
     }
 
+    #[\Override]
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());

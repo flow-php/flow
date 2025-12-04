@@ -13,6 +13,7 @@ final class Literal extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         return $this->value;

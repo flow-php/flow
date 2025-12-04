@@ -24,6 +24,7 @@ final readonly class ParquetOutput implements Output
     ) {
     }
 
+    #[\Override]
     public function memoryLoader(string $id) : Loader
     {
         $loader = to_parquet(path_memory($id, ['stream' => 'temp']))
@@ -40,6 +41,7 @@ final readonly class ParquetOutput implements Output
         return $loader;
     }
 
+    #[\Override]
     public function stdoutLoader() : Loader
     {
         $loader = to_parquet(path_stdout(['stream' => 'output']))
@@ -56,6 +58,7 @@ final readonly class ParquetOutput implements Output
         return $loader;
     }
 
+    #[\Override]
     public function type() : Type
     {
         return Type::PARQUET;

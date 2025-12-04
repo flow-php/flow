@@ -26,6 +26,7 @@ final class IsType extends ScalarFunctionChain
         $this->types = $types;
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         $value = (new Parameter($this->value))->eval($row, $context);

@@ -23,6 +23,7 @@ final readonly class SynchronousPipeline implements Pipeline
         $this->extractor = $extractor ?? from_rows(new Rows());
     }
 
+    #[\Override]
     public function add(Loader|Transformer $pipe) : self
     {
         $this->pipes->add($pipe);
@@ -30,16 +31,19 @@ final readonly class SynchronousPipeline implements Pipeline
         return $this;
     }
 
+    #[\Override]
     public function has(string $transformerClass) : bool
     {
         return $this->pipes->has($transformerClass);
     }
 
+    #[\Override]
     public function pipes() : Pipes
     {
         return $this->pipes;
     }
 
+    #[\Override]
     public function process(FlowContext $context) : \Generator
     {
         $generator = $this->extractor->extract($context);
@@ -89,6 +93,7 @@ final readonly class SynchronousPipeline implements Pipeline
         }
     }
 
+    #[\Override]
     public function source() : Extractor
     {
         return $this->extractor;

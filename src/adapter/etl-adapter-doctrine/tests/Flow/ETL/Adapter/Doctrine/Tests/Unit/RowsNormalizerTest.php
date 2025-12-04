@@ -13,6 +13,7 @@ final class RowsNormalizerTest extends TestCase
 {
     private RowsNormalizer $normalizer;
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->normalizer = new RowsNormalizer();

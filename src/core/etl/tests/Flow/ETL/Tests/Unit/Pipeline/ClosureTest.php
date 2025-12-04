@@ -21,11 +21,13 @@ final class ClosureTest extends FlowTestCase
 
                 public int $rowsLoaded = 0;
 
+                #[\Override]
                 public function load(Rows $rows, FlowContext $context) : void
                 {
                     $this->rowsLoaded++;
                 }
 
+                #[\Override]
                 public function closure(FlowContext $context) : void
                 {
                     $this->closureCalled = true;

@@ -24,6 +24,7 @@ final class SortedByConstraint implements Constraint
         $this->references = new References($column, ...$columns);
     }
 
+    #[\Override]
     public function isSatisfiedBy(Row $row) : bool
     {
         if ($this->firstRow) {
@@ -64,6 +65,7 @@ final class SortedByConstraint implements Constraint
         return true;
     }
 
+    #[\Override]
     public function toString() : string
     {
         $columns = [];
@@ -78,6 +80,7 @@ final class SortedByConstraint implements Constraint
         );
     }
 
+    #[\Override]
     public function violation(Row $row) : string
     {
         $violations = [];

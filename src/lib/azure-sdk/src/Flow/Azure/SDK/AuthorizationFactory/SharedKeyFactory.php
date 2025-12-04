@@ -17,6 +17,7 @@ final readonly class SharedKeyFactory implements AuthorizationFactory
     ) {
     }
 
+    #[\Override]
     public function for(RequestInterface $request) : string
     {
         $signature = $this->computeSignature(

@@ -27,6 +27,7 @@ final class Cast extends ScalarFunctionChain
      * @throws InvalidArgumentException
      * @throws \JsonException
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?ScalarResult
     {
         $value = (new Parameter($this->value))->eval($row, $context);

@@ -17,6 +17,7 @@ final class SimpleXMLSerializer implements Serializer
         }
     }
 
+    #[\Override]
     public function serialize(mixed $data) : string
     {
         if (!$data instanceof BlockList) {

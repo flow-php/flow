@@ -12,11 +12,13 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class Int32DateTimeConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
         return $this->millisecondsToDateTimeImmutable(type_integer()->assert($data));
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         if ($column->type() === PhysicalType::INT32 && $column->logicalType()?->name() === LogicalType::TIMESTAMP) {
@@ -26,6 +28,7 @@ final class Int32DateTimeConverter implements Converter
         return false;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : int
     {
         return $this->dateTimeToMicroseconds(type_instance_of(\DateTimeInterface::class)->assert($data));

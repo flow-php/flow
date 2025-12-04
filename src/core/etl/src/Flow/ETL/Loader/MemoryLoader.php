@@ -13,6 +13,7 @@ final readonly class MemoryLoader implements Loader
     {
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $this->memory->save($rows->toArray());

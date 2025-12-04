@@ -25,6 +25,7 @@ final readonly class DuplicateRowTransformer implements Transformer
         $this->entries = $entries;
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $duplicatedRows = \Flow\ETL\DSL\rows();

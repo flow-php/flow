@@ -21,6 +21,7 @@ final readonly class PSR7Processor implements ProcessorInterface
      *
      * @return array<string, mixed>|LogRecord
      */
+    #[\Override]
     public function __invoke(LogRecord|array $record) : LogRecord|array
     {
         $context = \is_array($record) ? $record['context'] : $record->context;

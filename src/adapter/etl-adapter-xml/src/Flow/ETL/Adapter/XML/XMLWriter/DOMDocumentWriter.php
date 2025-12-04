@@ -10,6 +10,7 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class DOMDocumentWriter implements XMLWriter
 {
+    #[\Override]
     public function write(XMLNode $node) : string
     {
         $dom = new \DOMDocument();

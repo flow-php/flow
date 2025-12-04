@@ -12,6 +12,7 @@ final readonly class RenameEntryTransformer implements Transformer
     {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->map(fn (Row $row) : Row => $row->rename($this->from, $this->to));

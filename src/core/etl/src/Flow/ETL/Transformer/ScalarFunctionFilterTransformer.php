@@ -15,6 +15,7 @@ final readonly class ScalarFunctionFilterTransformer implements Transformer
     ) {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->filter(function (Row $r) use ($context) : bool {

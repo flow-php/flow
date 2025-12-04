@@ -16,6 +16,7 @@ final readonly class SchemaValidationLoader implements Loader
     ) {
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $given = $rows->schema();

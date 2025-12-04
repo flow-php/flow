@@ -15,6 +15,7 @@ final class DateTimeFormat extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $value = (new Parameter($this->dateTime))->asInstanceOf($row, $context, \DateTimeInterface::class);

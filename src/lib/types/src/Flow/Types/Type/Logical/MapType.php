@@ -43,9 +43,13 @@ final readonly class MapType implements Type
             'value' => type_map(type_string(), type_mixed()),
         ])->assert($data);
 
-        return new self(type_from_array($data['key']), type_from_array($data['value']));
+        return new self(
+            type_from_array($data['key']),
+            type_from_array($data['value'])
+        );
     }
 
+    #[\Override]
     public function assert(mixed $value) : array
     {
         if ($this->isValid($value)) {
@@ -55,6 +59,7 @@ final readonly class MapType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : array
     {
         try {
@@ -86,6 +91,7 @@ final readonly class MapType implements Type
         }
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         if (!\is_array($value)) {
@@ -116,6 +122,7 @@ final readonly class MapType implements Type
     /**
      * @return array{type: 'map', key: array<string, mixed>, value: array<string, mixed>}
      */
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -125,6 +132,7 @@ final readonly class MapType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';

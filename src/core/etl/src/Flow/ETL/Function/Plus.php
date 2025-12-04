@@ -16,6 +16,7 @@ final class Plus extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : int|float|null
     {
         $leftValue = (new Parameter($this->left))->asNumber($row, $context);

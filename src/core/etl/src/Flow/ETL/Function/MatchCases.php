@@ -19,6 +19,7 @@ final class MatchCases extends ScalarFunctionChain
 
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         foreach ($this->cases as $condition) {

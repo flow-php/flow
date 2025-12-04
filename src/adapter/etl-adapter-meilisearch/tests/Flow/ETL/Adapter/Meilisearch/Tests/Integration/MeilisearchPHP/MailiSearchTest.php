@@ -20,6 +20,7 @@ final class MailiSearchTest extends FlowTestCase
 
     private MeilisearchContext $meilisearchContext;
 
+    #[\Override]
     protected function setUp() : void
     {
         $url = \getenv('MEILISEARCH_URL');
@@ -40,6 +41,7 @@ final class MailiSearchTest extends FlowTestCase
         $this->meilisearchContext->createIndex(self::DESTINATION_INDEX);
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         $this->meilisearchContext->deleteIndex(self::SOURCE_INDEX);

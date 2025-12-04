@@ -26,6 +26,7 @@ final class RegexAll extends ScalarFunctionChain
     /**
      * @return null|array<array-key, mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?array
     {
         $pattern = (new Parameter($this->pattern))->asString($row, $context);

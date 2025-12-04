@@ -21,6 +21,7 @@ final class RealpathTest extends TestCase
         yield ['/path/more/nested/..//../file.txt', '/path/file.txt'];
     }
 
+    #[\Override]
     protected function setup() : void
     {
         parent::setUp();

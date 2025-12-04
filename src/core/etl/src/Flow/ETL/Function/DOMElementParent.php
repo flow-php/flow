@@ -16,6 +16,7 @@ final class DOMElementParent extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : \DOMNode|HTMLElement|null
     {
         $types = [

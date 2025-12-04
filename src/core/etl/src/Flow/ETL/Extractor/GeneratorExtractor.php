@@ -22,6 +22,7 @@ final readonly class GeneratorExtractor implements Extractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->rows as $row) {

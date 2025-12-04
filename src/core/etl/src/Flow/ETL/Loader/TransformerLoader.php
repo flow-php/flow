@@ -15,6 +15,7 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
     ) {
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
         if ($this->loader instanceof Closure) {
@@ -22,6 +23,7 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
         }
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         if ($this->transformer instanceof Transformer) {
@@ -33,6 +35,7 @@ final readonly class TransformerLoader implements Closure, Loader, OverridingLoa
         $this->loader->load($rows, $context);
     }
 
+    #[\Override]
     public function loaders() : array
     {
         return [$this->loader];

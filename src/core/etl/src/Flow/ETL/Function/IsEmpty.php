@@ -15,6 +15,7 @@ final class IsEmpty extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?bool
     {
         $value = (new Parameter($this->value))->asString($row, $context);

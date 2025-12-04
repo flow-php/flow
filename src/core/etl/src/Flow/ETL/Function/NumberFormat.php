@@ -17,6 +17,7 @@ final class NumberFormat extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $value = (new Parameter($this->value))->asNumber($row, $context);

@@ -37,6 +37,7 @@ final class DisplayTest extends FlowIntegrationTestCase
                 /**
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 20; $i++) {
@@ -107,6 +108,7 @@ ASCIITABLE,
                 /**
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 5; $i++) {

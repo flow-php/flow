@@ -6,6 +6,7 @@ namespace Flow\ETL\Hash;
 
 final class PlainText implements Algorithm
 {
+    #[\Override]
     public function hash(string $value) : string
     {
         return $value;

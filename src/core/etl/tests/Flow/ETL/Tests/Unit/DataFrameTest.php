@@ -122,6 +122,7 @@ final class DataFrameTest extends FlowTestCase
             )
         )
             ->rows(new class implements Transformation {
+                #[\Override]
                 public function transform(DataFrame $dataFrame) : DataFrame
                 {
                     return $dataFrame
@@ -131,6 +132,7 @@ final class DataFrameTest extends FlowTestCase
             })
             ->rows(
                 new class implements Transformation {
+                    #[\Override]
                     public function transform(DataFrame $dataFrame) : DataFrame
                     {
                         return $dataFrame->drop('gender')
@@ -188,6 +190,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
@@ -291,6 +294,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
@@ -348,6 +352,7 @@ final class DataFrameTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield rows(row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
@@ -357,6 +362,7 @@ final class DataFrameTest extends FlowTestCase
         };
 
         $addStampStringEntry = new class implements Transformer {
+            #[\Override]
             public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 return $rows->map(
@@ -369,6 +375,7 @@ final class DataFrameTest extends FlowTestCase
             /** @var array<array-key, mixed> */
             public array $result = [];
 
+            #[\Override]
             public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
@@ -379,6 +386,7 @@ final class DataFrameTest extends FlowTestCase
             ->onError(new IgnoreError())
             ->rows($addStampStringEntry)
             ->rows(new class implements Transformer {
+                #[\Override]
                 public function transform(Rows $rows, FlowContext $context) : Rows
                 {
                     throw new \RuntimeException('Unexpected exception');
@@ -523,6 +531,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     yield rows(row(integer_entry('id', 1)), row(integer_entry('id', 2)), row(integer_entry('id', 3)), row(integer_entry('id', 4)), row(integer_entry('id', 5)), row(integer_entry('id', 6)), row(integer_entry('id', 7)), row(integer_entry('id', 8)), row(integer_entry('id', 9)), row(integer_entry('id', 10)));
@@ -531,6 +540,7 @@ final class DataFrameTest extends FlowTestCase
         )
             ->with(
                 new class implements Transformer {
+                    #[\Override]
                     public function transform(Rows $rows, FlowContext $context) : Rows
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
@@ -540,6 +550,7 @@ final class DataFrameTest extends FlowTestCase
             ->batchSize(2)
             ->load(
                 new class implements Loader {
+                    #[\Override]
                     public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(2, $rows);
@@ -558,6 +569,7 @@ final class DataFrameTest extends FlowTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     yield rows(row(integer_entry('id', 1)));
@@ -568,6 +580,7 @@ final class DataFrameTest extends FlowTestCase
         )
             ->with(
                 new class implements Transformer {
+                    #[\Override]
                     public function transform(Rows $rows, FlowContext $context) : Rows
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
@@ -577,6 +590,7 @@ final class DataFrameTest extends FlowTestCase
             ->collect()
             ->load(
                 new class implements Loader {
+                    #[\Override]
                     public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(3, $rows);

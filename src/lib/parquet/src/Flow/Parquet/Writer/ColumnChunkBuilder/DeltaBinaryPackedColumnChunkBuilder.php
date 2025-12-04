@@ -71,6 +71,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         }
     }
 
+    #[\Override]
     public function addRow(WriteColumnData $columnData) : void
     {
         $flatValues = $columnData->values($this->column->flatPath());
@@ -96,6 +97,7 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         $this->rowsCount++;
     }
 
+    #[\Override]
     public function closePage() : void
     {
         if ($this->isEmpty()) {
@@ -122,11 +124,13 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
         $this->pageStatistics = new StatisticsCounter($this->column);
     }
 
+    #[\Override]
     public function column() : Column
     {
         return $this->column;
     }
 
+    #[\Override]
     public function flush(int $fileOffset) : array
     {
         $this->closePage();
@@ -174,12 +178,14 @@ final class DeltaBinaryPackedColumnChunkBuilder implements ColumnChunkBuilder
                && count($this->repetitionLevels) === 0;
     }
 
+    #[\Override]
     public function isFull() : bool
     {
         // Use the original estimation logic for compatibility with existing tests
         return $this->valueStorage->size() * ($this->column->type() === PhysicalType::INT32 ? 4 : 8) >= $this->options->get(Option::PAGE_SIZE_BYTES);
     }
 
+    #[\Override]
     public function uncompressedSize() : int
     {
         return $this->pages->uncompressedSize() + $this->currentPageUncompressedSize();

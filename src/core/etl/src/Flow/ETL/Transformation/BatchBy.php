@@ -24,6 +24,7 @@ final readonly class BatchBy implements Transformation
         }
     }
 
+    #[\Override]
     public function transform(DataFrame $dataFrame) : DataFrame
     {
         return $dataFrame->batchBy($this->column, $this->minSize);

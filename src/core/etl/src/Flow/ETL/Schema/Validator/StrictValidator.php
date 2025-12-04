@@ -17,6 +17,7 @@ final class StrictValidator implements SchemaValidator
      * @param Schema $expected
      * @param Schema $given
      */
+    #[\Override]
     public function isValid(Schema $expected, Schema $given) : bool
     {
         if ($expected->count() !== $given->count()) {

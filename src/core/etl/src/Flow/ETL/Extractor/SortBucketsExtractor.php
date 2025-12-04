@@ -25,6 +25,7 @@ final readonly class SortBucketsExtractor implements Extractor
     /**
      * @return \Generator<int, Rows, mixed, mixed>
      */
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->sortBuckets as $bucket) {

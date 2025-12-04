@@ -97,6 +97,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->rows);
@@ -277,6 +278,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return \Iterator<int, Row>
      */
+    #[\Override]
     public function getIterator() : \Iterator
     {
         return new \ArrayIterator($this->rows);
@@ -542,6 +544,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public function offsetExists($offset) : bool
     {
         if (!\is_int($offset)) {
@@ -556,6 +559,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public function offsetGet($offset) : Row
     {
         if ($this->offsetExists($offset)) {
@@ -565,6 +569,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         throw new InvalidArgumentException("Row {$offset} does not exists.");
     }
 
+    #[\Override]
     public function offsetSet(mixed $offset, mixed $value) : void
     {
         throw new RuntimeException('In order to add new rows use Rows::add(Row $row) : self');
@@ -575,6 +580,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws RuntimeException
      */
+    #[\Override]
     public function offsetUnset(mixed $offset) : void
     {
         throw new RuntimeException('In order to remove rows use Rows::remove(int $offset) : self');

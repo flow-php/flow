@@ -47,6 +47,7 @@ final class DbalQueryExtractor implements Extractor
         return $extractor;
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {

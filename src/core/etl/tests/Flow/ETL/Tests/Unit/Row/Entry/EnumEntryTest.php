@@ -20,7 +20,7 @@ final class EnumEntryTest extends FlowTestCase
         );
         self::assertSame(
             1,
-            $enum->value()->value,
+            $enum->value()?->value,
         );
     }
 
@@ -34,7 +34,7 @@ final class EnumEntryTest extends FlowTestCase
         );
         self::assertSame(
             'one',
-            $enum->value()->value,
+            $enum->value()?->value,
         );
     }
 

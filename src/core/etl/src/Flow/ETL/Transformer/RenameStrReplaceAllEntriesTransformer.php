@@ -20,6 +20,7 @@ final readonly class RenameStrReplaceAllEntriesTransformer implements Transforme
         $this->transformer = new RenameReplaceEntryStrategy($this->search, $this->replace);
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->map(function (Row $row) use ($context) : Row {

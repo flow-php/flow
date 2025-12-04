@@ -53,6 +53,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         );
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         if ($this->maximum === null && $this->queryBuilder->getMaxResults()) {

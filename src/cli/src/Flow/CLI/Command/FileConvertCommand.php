@@ -38,6 +38,7 @@ final class FileConvertCommand extends Command
 
     private ?FileFormat $outputFileFormat = null;
 
+    #[\Override]
     public function configure() : void
     {
         $this
@@ -65,6 +66,7 @@ final class FileConvertCommand extends Command
         $this->addParquetInputOptions($this);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new SymfonyStyle($input, $output);
@@ -116,6 +118,7 @@ final class FileConvertCommand extends Command
         return Command::SUCCESS;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);

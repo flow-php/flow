@@ -18,6 +18,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield \Flow\ETL\DSL\rows(row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
@@ -27,6 +28,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         };
 
         $brokenTransformer = new class implements Transformer {
+            #[\Override]
             public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 throw new \RuntimeException('Transformer Exception');
@@ -37,6 +39,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             /** @var array<array-key, mixed> */
             public array $result = [];
 
+            #[\Override]
             public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
@@ -62,6 +65,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield \Flow\ETL\DSL\rows(row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
@@ -71,6 +75,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         };
 
         $brokenTransformer = new class implements Transformer {
+            #[\Override]
             public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 throw new \RuntimeException('Transformer Exception');
@@ -81,6 +86,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             /** @var array<array-key, mixed> */
             public array $result = [];
 
+            #[\Override]
             public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
@@ -121,6 +127,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
              *
              * @return \Generator<int, Rows, mixed, void>
              */
+            #[\Override]
             public function extract(FlowContext $context) : \Generator
             {
                 yield \Flow\ETL\DSL\rows(row(integer_entry('id', 101), boolean_entry('deleted', false), new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')), string_entry('phase', null)));
@@ -130,6 +137,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
         };
 
         $brokenTransformer = new class implements Transformer {
+            #[\Override]
             public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 if ($rows->first()->valueOf('id') === 101) {
@@ -144,6 +152,7 @@ final class ETLErrorHandlingTest extends FlowTestCase
             /** @var array<array-key, mixed> */
             public array $result = [];
 
+            #[\Override]
             public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());

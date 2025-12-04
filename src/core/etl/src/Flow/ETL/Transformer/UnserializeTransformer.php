@@ -20,6 +20,7 @@ final readonly class UnserializeTransformer implements Transformer
     {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $source = $this->source instanceof Reference ? $this->source : ref($this->source);

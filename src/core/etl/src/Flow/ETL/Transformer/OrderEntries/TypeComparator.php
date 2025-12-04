@@ -16,6 +16,7 @@ final readonly class TypeComparator implements Comparator
      * @param Entry<mixed> $left
      * @param Entry<mixed> $right
      */
+    #[\Override]
     public function compare(Entry $left, Entry $right) : int
     {
         $leftTypePriority = $this->priorities->for($left);

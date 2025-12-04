@@ -129,7 +129,7 @@ TXT
         self::assertTrue($fs->status(path('aws-s3://var/some_path_to/*.txt'))?->isFile());
         self::assertSame(
             'aws-s3://var/some_path_to/file.txt',
-            $fs->status(path('aws-s3://var/some_path_to/*.txt'))->path->uri()
+            $fs->status(path('aws-s3://var/some_path_to/*.txt'))?->path->uri()
         );
     }
 

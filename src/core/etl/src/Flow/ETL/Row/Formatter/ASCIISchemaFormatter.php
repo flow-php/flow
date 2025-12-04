@@ -17,6 +17,7 @@ final readonly class ASCIISchemaFormatter implements SchemaFormatter
     {
     }
 
+    #[\Override]
     public function format(Schema $schema) : string
     {
         if ($this->asTable) {

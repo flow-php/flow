@@ -24,6 +24,7 @@ final class ChartJSLoader implements Closure, Loader
         $this->template = \Flow\Filesystem\DSL\path(__DIR__ . '/Resources/template/full_page.html');
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
         if ($this->output === null && $this->outputVar === null) {
@@ -58,6 +59,7 @@ final class ChartJSLoader implements Closure, Loader
         }
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (!$rows->count()) {

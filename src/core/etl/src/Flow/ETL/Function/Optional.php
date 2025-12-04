@@ -12,6 +12,7 @@ final class Optional extends ScalarFunctionChain
     {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         try {

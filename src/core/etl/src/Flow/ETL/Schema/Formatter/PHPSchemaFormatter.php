@@ -34,6 +34,7 @@ final readonly class PHPSchemaFormatter implements SchemaFormatter
     /**
      * @param Schema $schema
      */
+    #[\Override]
     public function format(Schema $schema) : string
     {
         $reflection = new \ReflectionFunction("\Flow\ETL\DSL\schema");

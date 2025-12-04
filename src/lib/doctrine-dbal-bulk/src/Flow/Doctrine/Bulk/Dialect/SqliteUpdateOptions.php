@@ -8,11 +8,13 @@ use Flow\Doctrine\Bulk\UpdateOptions;
 
 final class SqliteUpdateOptions implements UpdateOptions
 {
+    #[\Override]
     public static function fromArray(array $options) : UpdateOptions
     {
         return new self();
     }
 
+    #[\Override]
     public static function new() : UpdateOptions
     {
         return new self();

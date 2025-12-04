@@ -13,6 +13,7 @@ final readonly class Fixed implements DelayFactory
     {
     }
 
+    #[\Override]
     public function delay(int $attempt) : Duration
     {
         return $this->duration;

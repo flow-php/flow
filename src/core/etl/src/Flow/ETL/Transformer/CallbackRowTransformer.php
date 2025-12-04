@@ -21,6 +21,7 @@ final class CallbackRowTransformer implements Transformer
         $this->callable = $callable;
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->map($this->callable);

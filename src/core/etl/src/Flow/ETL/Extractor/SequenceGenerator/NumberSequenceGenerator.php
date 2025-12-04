@@ -10,6 +10,7 @@ final readonly class NumberSequenceGenerator implements SequenceGenerator
     {
     }
 
+    #[\Override]
     public function generate() : \Generator
     {
         foreach (\range($this->start, $this->end, $this->step) as $item) {

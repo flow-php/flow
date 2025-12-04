@@ -16,6 +16,7 @@ final class RowNumber implements WindowFunction
         $this->window = null;
     }
 
+    #[\Override]
     public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $number = 1;
@@ -31,6 +32,7 @@ final class RowNumber implements WindowFunction
         return null;
     }
 
+    #[\Override]
     public function over(Window $window) : WindowFunction
     {
         $this->window = $window;
@@ -38,11 +40,13 @@ final class RowNumber implements WindowFunction
         return $this;
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'row_number()';
     }
 
+    #[\Override]
     public function window() : Window
     {
         if ($this->window === null) {

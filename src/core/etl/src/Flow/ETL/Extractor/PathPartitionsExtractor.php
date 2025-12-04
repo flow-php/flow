@@ -18,6 +18,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
     {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($context->filesystem($this->path)->list($this->path, $this->filter()) as $fileStatus) {
@@ -40,6 +41,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

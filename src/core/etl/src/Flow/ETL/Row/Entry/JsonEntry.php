@@ -85,6 +85,7 @@ final class JsonEntry implements Entry
         return $entry;
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();
@@ -95,11 +96,13 @@ final class JsonEntry implements Entry
      *
      * @phpstan-ignore-next-line
      */
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : Entry
     {
         $entry = new self($this->name, $this->value, $this->metadata);
@@ -108,6 +111,7 @@ final class JsonEntry implements Entry
         return $entry;
     }
 
+    #[\Override]
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {
@@ -117,6 +121,7 @@ final class JsonEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         $entryValue = $entry instanceof self ? $entry->value : $entry->value();
@@ -139,6 +144,7 @@ final class JsonEntry implements Entry
         return $this->is($entry->name()) && $entry instanceof self && type_equals($this->type, $entry->type) && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
+    #[\Override]
     public function map(callable $mapper) : Entry
     {
         $mappedValue = new self($this->name, $mapper($this->value()));
@@ -147,11 +153,13 @@ final class JsonEntry implements Entry
         return $mappedValue;
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function rename(string $name) : Entry
     {
         $entry = new self($name, $this->value);
@@ -160,6 +168,7 @@ final class JsonEntry implements Entry
         return $entry;
     }
 
+    #[\Override]
     public function toString() : string
     {
         if ($this->value === null) {
@@ -178,16 +187,19 @@ final class JsonEntry implements Entry
      *
      * @phpstan-ignore-next-line
      */
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?array
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : Entry
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

@@ -16,6 +16,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
     use OperatingSystem;
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();
@@ -35,7 +36,7 @@ final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 
         self::assertSame(
             'file://' . ltrim(__DIR__, '/') . '/../var/some_path_to/file.txt',
-            $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'))->path->uri()
+            $fs->status(path(__DIR__ . '/../var/some_path_to/*.txt'))?->path->uri()
         );
 
         $fs->rm(path(__DIR__ . '/../var/some_path_to'));

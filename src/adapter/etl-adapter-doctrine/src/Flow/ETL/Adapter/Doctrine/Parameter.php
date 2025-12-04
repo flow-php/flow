@@ -32,6 +32,7 @@ final readonly class Parameter implements QueryParameter
         return new self($queryParamName, $ref, ArrayParameterType::STRING);
     }
 
+    #[\Override]
     public function queryParamName() : string
     {
         return $this->queryParamName;
@@ -40,6 +41,7 @@ final readonly class Parameter implements QueryParameter
     /**
      * @return array<array-key, null|bool|float|int|string>
      */
+    #[\Override]
     public function toQueryParam(Rows $rows) : array
     {
         $values = $rows->reduceToArray($this->ref);
@@ -47,6 +49,7 @@ final readonly class Parameter implements QueryParameter
         return \array_filter($values, fn ($value) => \is_scalar($value) || $value === null);
     }
 
+    #[\Override]
     public function type() : int|ArrayParameterType
     {
         return $this->type;

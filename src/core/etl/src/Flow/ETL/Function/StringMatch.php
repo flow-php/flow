@@ -19,6 +19,7 @@ final class StringMatch extends ScalarFunctionChain
     /**
      * @return null|array<int|string, string>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?array
     {
         $haystack = (new Parameter($this->haystack))->asString($row, $context);

@@ -21,6 +21,7 @@ final class Sprintf extends ScalarFunctionChain
         $this->values = $values;
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $format = (new Parameter($this->format))->asString($row, $context);

@@ -13,6 +13,7 @@ final class ChainExtractorTest extends FlowTestCase
     {
         $extractor = from_all(
             new class implements Extractor {
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     yield rows(row(int_entry('id', 1)));
@@ -20,6 +21,7 @@ final class ChainExtractorTest extends FlowTestCase
                 }
             },
             new class implements Extractor {
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     yield rows(row(int_entry('id', 3)));

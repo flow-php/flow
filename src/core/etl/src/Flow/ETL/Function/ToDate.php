@@ -16,6 +16,7 @@ final class ToDate extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?\DateTimeInterface
     {
         $value = (new Parameter($this->value))->eval($row, $context);

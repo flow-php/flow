@@ -13,6 +13,7 @@ use Flow\Types\Value\Uuid;
  */
 final readonly class UuidType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : Uuid
     {
         if ($this->isValid($value)) {
@@ -22,6 +23,7 @@ final readonly class UuidType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : mixed
     {
         if ($this->isValid($value)) {
@@ -47,6 +49,7 @@ final readonly class UuidType implements Type
         throw new CastingException($value, $this);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         if ($value instanceof Uuid) {
@@ -56,6 +59,7 @@ final readonly class UuidType implements Type
         return false;
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -63,6 +67,7 @@ final readonly class UuidType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'uuid';

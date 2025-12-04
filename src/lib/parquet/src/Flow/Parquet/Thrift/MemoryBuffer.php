@@ -27,11 +27,13 @@ class MemoryBuffer implements Transport
         $this->length = \strlen($this->data);
     }
 
+    #[\Override]
     public function available() : int
     {
         return $this->length - $this->position;
     }
 
+    #[\Override]
     public function close() : void
     {
     }
@@ -41,15 +43,18 @@ class MemoryBuffer implements Transport
         return $this->data;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return true;
     }
 
+    #[\Override]
     public function open() : void
     {
     }
 
+    #[\Override]
     public function read(int $len) : string
     {
         $availableBytes = $this->length - $this->position;
@@ -71,6 +76,7 @@ class MemoryBuffer implements Transport
         return $ret;
     }
 
+    #[\Override]
     public function write(string $buf) : void
     {
         $this->data .= $buf;

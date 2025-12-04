@@ -12,6 +12,7 @@ final readonly class CollectingExtractor implements Extractor, OverridingExtract
     {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $collectedRows = new Rows();
@@ -23,6 +24,7 @@ final readonly class CollectingExtractor implements Extractor, OverridingExtract
         yield $collectedRows;
     }
 
+    #[\Override]
     public function extractors() : array
     {
         return [$this->extractor];

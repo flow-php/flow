@@ -20,6 +20,7 @@ final class HTMLQuerySelector extends ScalarFunctionChain
         }
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?Element
     {
         $value = (new Parameter($this->value))->as($row, $context, type_instance_of(HTMLDocument::class), type_instance_of(HTMLElement::class));

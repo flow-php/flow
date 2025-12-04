@@ -48,6 +48,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function copyBlob(string $fromBlob, string $toBlob, CopyBlobOptions $options = new CopyBlobOptions()) : void
     {
         $request = $this->httpFactory->put(
@@ -66,7 +67,7 @@ final readonly class BlobService implements BlobServiceInterface
             ));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Copy Blob', ['request' => $request]);
@@ -89,6 +90,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function deleteBlob(string $blob, DeleteBlobOptions $options = new DeleteBlobOptions()) : void
     {
         $request = $this->httpFactory->delete(
@@ -102,7 +104,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Delete Blob', ['request' => $request]);
@@ -124,6 +126,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function deleteContainer(DeleteContainerOptions $options = new DeleteContainerOptions()) : void
     {
         $request = $this->httpFactory->delete(
@@ -137,7 +140,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Delete Container', ['request' => $request]);
@@ -159,6 +162,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function getBlob(string $blob, GetBlobOptions $options = new GetBlobOptions()) : BlobContent
     {
         $request = $this->httpFactory->get(
@@ -173,7 +177,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Blob', ['request' => $request]);
@@ -197,6 +201,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function getBlobProperties(string $blob, GetBlobPropertiesOptions $options = new GetBlobPropertiesOptions()) : ?BlobProperties
     {
         $request = $this->httpFactory->get(
@@ -211,7 +216,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Blob Properties', ['request' => $request]);
@@ -235,6 +240,7 @@ final readonly class BlobService implements BlobServiceInterface
         return new BlobProperties($response);
     }
 
+    #[\Override]
     public function getBlockBlobBlockList(string $blob, GetBlockBlobBlockListOptions $options = new GetBlockBlobBlockListOptions()) : BlockList
     {
         $request = $this->httpFactory->get(
@@ -251,7 +257,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Block Blob Block List', ['request' => $request]);
@@ -339,6 +345,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function getContainerProperties(GetContainerPropertiesOptions $options = new GetContainerPropertiesOptions()) : ?ContainerProperties
     {
         $request = $this->httpFactory->get(
@@ -355,7 +362,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Get Container Properties', ['request' => $request]);
@@ -384,6 +391,7 @@ final readonly class BlobService implements BlobServiceInterface
      *
      * @return \Generator<Blob>
      */
+    #[\Override]
     public function listBlobs(ListBlobOptions $options = new ListBlobOptions()) : \Generator
     {
         $request = $this->httpFactory->get(
@@ -400,7 +408,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - List Blobs', ['request' => $request]);
@@ -455,6 +463,7 @@ final readonly class BlobService implements BlobServiceInterface
      *
      * @throws AzureException
      */
+    #[\Override]
     public function putBlockBlob(string $path, $content = null, ?int $size = null, PutBlockBlobOptions $options = new PutBlockBlobOptions()) : void
     {
         if ($content !== null) {
@@ -481,7 +490,7 @@ final readonly class BlobService implements BlobServiceInterface
             ->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         if ($content) {
@@ -515,6 +524,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function putBlockBlobBlock(string $path, string $blockId, $content, int $size, PutBlockBlobBlockOptions $options = new PutBlockBlobBlockOptions()) : void
     {
         $request = $this->httpFactory->put(
@@ -534,7 +544,7 @@ final readonly class BlobService implements BlobServiceInterface
             ->withHeader('content-length', (string) $size);
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $request = $request
@@ -558,6 +568,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function putBlockBlobBlockList(string $path, BlockList $blockList, PutBlockBlobBlockListOptions $options = new PutBlockBlobBlockListOptions(), Serializer $serializer = new SimpleXMLSerializer()) : void
     {
         $request = $this->httpFactory->put(
@@ -602,6 +613,7 @@ final readonly class BlobService implements BlobServiceInterface
      * @throws AzureException
      * @throws ClientExceptionInterface
      */
+    #[\Override]
     public function putContainer(CreateContainerOptions $options = new CreateContainerOptions()) : void
     {
         $request = $this->httpFactory->put(
@@ -618,7 +630,7 @@ final readonly class BlobService implements BlobServiceInterface
         $request = $request->withHeader('date', \gmdate('D, d M Y H:i:s T', time()));
 
         foreach ($options->toHeaders() as $header => $value) {
-            $request = $request->withHeader($header, (string) $value);
+            $request = $request->withHeader($header,  $value);
         }
 
         $this->logger->info('Azure - Blob Service - Put Container', ['request' => $request]);

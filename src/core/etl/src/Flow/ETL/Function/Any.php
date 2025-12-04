@@ -29,6 +29,7 @@ final readonly class Any implements ScalarFunction
         return new All(...$this->functions, ...[new Not($scalarFunction)]);
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         foreach ($this->functions as $ref) {

@@ -24,6 +24,7 @@ final class RenameCaseEntryStrategy implements RenameEntryStrategy
         }
     }
 
+    #[\Override]
     public function rename(Row $row, Entry $entry, FlowContext $context) : Row
     {
         return $row->rename($entry->name(), $this->style->convert($entry->name()));

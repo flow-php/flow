@@ -21,6 +21,7 @@ final class RowsMinHeap extends \SplMinHeap
         $this->ref = References::init(...$refs);
     }
 
+    #[\Override]
     public function __debugInfo() : array
     {
         $clone = clone $this;
@@ -37,11 +38,13 @@ final class RowsMinHeap extends \SplMinHeap
     /**
      * @return BucketRow
      */
+    #[\Override]
     public function extract() : mixed
     {
         return parent::extract();
     }
 
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function insert(mixed $value) : void
     {
@@ -56,6 +59,7 @@ final class RowsMinHeap extends \SplMinHeap
      * @param BucketRow $value1
      * @param BucketRow $value2
      */
+    #[\Override]
     protected function compare($value1, $value2) : int
     {
         $leftValues = [];

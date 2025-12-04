@@ -70,6 +70,7 @@ final class BranchingTest extends FlowIntegrationTestCase
                     ref('group')->equals(lit('A')),
                     to_memory($memoryA = new ArrayMemory()),
                 )->withTransformation(new class implements Transformation {
+                    #[\Override]
                     public function transform(DataFrame $dataFrame) : DataFrame
                     {
                         return $dataFrame->withEntry('group_name', lit('A'));
@@ -81,6 +82,7 @@ final class BranchingTest extends FlowIntegrationTestCase
                     ref('group')->isIn(lit(['B', 'C'])),
                     to_memory($memoryBC = new ArrayMemory()),
                 )->withTransformation(new class implements Transformation {
+                    #[\Override]
                     public function transform(DataFrame $dataFrame) : DataFrame
                     {
                         return $dataFrame->withEntry('group_name', lit('BC'));

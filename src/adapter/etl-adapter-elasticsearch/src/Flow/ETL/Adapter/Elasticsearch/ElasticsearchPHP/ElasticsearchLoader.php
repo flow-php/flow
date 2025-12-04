@@ -54,6 +54,7 @@ final class ElasticsearchLoader implements Loader
         return $loader;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (!$rows->count()) {

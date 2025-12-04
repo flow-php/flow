@@ -23,6 +23,7 @@ final class Sum implements AggregatingFunction, WindowFunction
         $this->window = null;
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
@@ -38,6 +39,7 @@ final class Sum implements AggregatingFunction, WindowFunction
         }
     }
 
+    #[\Override]
     public function apply(Row $row, Rows $partition, FlowContext $context) : mixed
     {
         $sum = 0;
@@ -58,6 +60,7 @@ final class Sum implements AggregatingFunction, WindowFunction
         return $sum;
     }
 
+    #[\Override]
     public function over(Window $window) : WindowFunction
     {
         $this->window = $window;
@@ -68,6 +71,7 @@ final class Sum implements AggregatingFunction, WindowFunction
     /**
      * @return Entry<?float>|Entry<?int>
      */
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {
@@ -81,11 +85,13 @@ final class Sum implements AggregatingFunction, WindowFunction
         return float_entry($this->ref->name(), $this->sum);
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'sum()';
     }
 
+    #[\Override]
     public function window() : Window
     {
         if ($this->window === null) {

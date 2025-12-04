@@ -52,21 +52,25 @@ final class ListEntry implements Entry
         $this->type = $type;
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : Entry
     {
         return new self($this->name, $this->value, $this->type, $this->metadata);
     }
 
+    #[\Override]
     public function is(string|Reference $name) : bool
     {
         if ($name instanceof Reference) {
@@ -76,6 +80,7 @@ final class ListEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         $entryValue = $entry->value();
@@ -101,21 +106,25 @@ final class ListEntry implements Entry
             && (new ArrayComparison())->equals($thisValue, \is_array($entryValue) ? $entryValue : null);
     }
 
+    #[\Override]
     public function map(callable $mapper) : Entry
     {
         return new self($this->name, $mapper($this->value), $this->type);
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value, $this->type);
     }
 
+    #[\Override]
     public function toString() : string
     {
         if ($this->value === null) {
@@ -125,16 +134,19 @@ final class ListEntry implements Entry
         return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?array
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : Entry
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->type);

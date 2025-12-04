@@ -16,11 +16,13 @@ final readonly class LiteralParameter implements QueryParameter
     ) {
     }
 
+    #[\Override]
     public function queryParamName() : string
     {
         return $this->queryParamName;
     }
 
+    #[\Override]
     public function toQueryParam(Rows $rows) : array|bool|float|int|string|null
     {
         if (\is_array($this->value)) {
@@ -30,6 +32,7 @@ final readonly class LiteralParameter implements QueryParameter
         return \is_scalar($this->value) || $this->value === null ? $this->value : null;
     }
 
+    #[\Override]
     public function type() : int|ArrayParameterType|null
     {
         return $this->type;

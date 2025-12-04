@@ -20,6 +20,7 @@ final class RealpathTest extends TestCase
         yield ['D:\\Documents\\Projects', 'D:/Documents/Projects'];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();

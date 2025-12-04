@@ -21,6 +21,7 @@ final class Split extends ScalarFunctionChain
     /**
      * @return null|array<int, string>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?array
     {
         $value = (new Parameter($this->value))->asString($row, $context);

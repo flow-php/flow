@@ -29,6 +29,7 @@ final class JsonLoader implements Closure, FileLoader, Loader
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::JSON);
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
 
@@ -39,11 +40,13 @@ final class JsonLoader implements Closure, FileLoader, Loader
         $context->streams()->closeStreams($this->path);
     }
 
+    #[\Override]
     public function destination() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         if ($rows->partitions()->count()) {

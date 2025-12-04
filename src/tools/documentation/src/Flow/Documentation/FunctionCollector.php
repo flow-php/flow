@@ -16,6 +16,7 @@ class FunctionCollector extends NodeVisitorAbstract
 
     private string $currentNamespace = '';
 
+    #[\Override]
     public function enterNode(Node $node) : int|Node|null
     {
         if ($node instanceof Namespace_) {

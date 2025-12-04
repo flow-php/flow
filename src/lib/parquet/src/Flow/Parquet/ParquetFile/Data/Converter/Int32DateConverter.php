@@ -11,11 +11,13 @@ use Flow\Parquet\ParquetFile\Schema\{ConvertedType, FlatColumn, LogicalType, Phy
 
 final class Int32DateConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
         return $this->numberOfDaysToDateTime(type_integer()->assert($data));
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         if ($column->type() === PhysicalType::INT32 && $column->logicalType()?->name() === LogicalType::DATE) {
@@ -29,6 +31,7 @@ final class Int32DateConverter implements Converter
         return false;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : int
     {
         if (!$data instanceof \DateTime && !$data instanceof \DateTimeImmutable) {

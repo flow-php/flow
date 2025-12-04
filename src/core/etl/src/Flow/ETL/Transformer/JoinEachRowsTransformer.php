@@ -39,6 +39,7 @@ final readonly class JoinEachRowsTransformer implements Transformer
     /**
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $rightRows = $this->factory->from($rows)->fetch();

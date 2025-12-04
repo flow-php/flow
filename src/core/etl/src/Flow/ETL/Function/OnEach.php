@@ -22,6 +22,7 @@ final class OnEach extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $value = (new Parameter($this->array))->asArray($row, $context);

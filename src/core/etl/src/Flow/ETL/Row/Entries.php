@@ -73,6 +73,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         return \array_values($this->entries);
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->entries);
@@ -119,6 +120,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return \Iterator<string, Entry<mixed>>
      */
+    #[\Override]
     public function getIterator() : \Iterator
     {
         return new \ArrayIterator($this->all());
@@ -202,6 +204,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws InvalidArgumentException
      */
+    #[\Override]
     public function offsetExists($offset) : bool
     {
         if (!\is_string($offset)) {
@@ -218,6 +221,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return Entry<mixed>
      */
+    #[\Override]
     public function offsetGet($offset) : Entry
     {
         if (!\is_string($offset)) {
@@ -231,6 +235,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         throw new InvalidArgumentException("Entry {$offset} does not exists.");
     }
 
+    #[\Override]
     public function offsetSet(mixed $offset, mixed $value) : void
     {
         throw new RuntimeException('In order to add new rows use Entries::add(Entry $entry) : self');
@@ -241,6 +246,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @throws RuntimeException
      */
+    #[\Override]
     public function offsetUnset(mixed $offset) : void
     {
         throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');

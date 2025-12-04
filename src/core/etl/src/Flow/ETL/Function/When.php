@@ -15,6 +15,7 @@ final class When extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $condition = (new Parameter($this->condition))->asBoolean($row, $context);

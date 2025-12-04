@@ -29,6 +29,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         $this->resetLimit();
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -81,6 +82,7 @@ final class JsonLinesExtractor implements Extractor, FileExtractor, LimitableExt
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

@@ -9,6 +9,7 @@ use Flow\ETL\{Extractor, FlowContext};
 
 final class EmptyExtractor implements Extractor
 {
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         yield rows();

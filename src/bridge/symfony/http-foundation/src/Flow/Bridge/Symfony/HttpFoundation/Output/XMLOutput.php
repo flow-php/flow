@@ -26,6 +26,7 @@ final readonly class XMLOutput implements Output
     ) {
     }
 
+    #[\Override]
     public function memoryLoader(string $id) : Loader
     {
         return to_xml(path_memory($id, ['stream' => 'temp']), xml_writer: $this->xmlWriter)
@@ -35,6 +36,7 @@ final readonly class XMLOutput implements Output
             ->withDateTimeFormat($this->dateTimeFormat);
     }
 
+    #[\Override]
     public function stdoutLoader() : Loader
     {
         return to_xml(path_stdout(['stream' => 'output']), xml_writer: $this->xmlWriter)
@@ -44,6 +46,7 @@ final readonly class XMLOutput implements Output
             ->withDateTimeFormat($this->dateTimeFormat);
     }
 
+    #[\Override]
     public function type() : Type
     {
         return Type::XML;

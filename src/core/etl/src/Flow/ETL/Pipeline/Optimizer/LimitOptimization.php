@@ -48,6 +48,7 @@ final class LimitOptimization implements Optimization
         LimitTransformer::class,
     ];
 
+    #[\Override]
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
     {
         return $element instanceof LimitTransformer
@@ -55,6 +56,7 @@ final class LimitOptimization implements Optimization
             && $pipeline->source() instanceof LimitableExtractor;
     }
 
+    #[\Override]
     public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
     {
         /** @var LimitableExtractor $extractor */

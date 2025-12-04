@@ -17,6 +17,7 @@ final class BlocksUnixSpecificTest extends TestCase
 {
     use OperatingSystem;
 
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();

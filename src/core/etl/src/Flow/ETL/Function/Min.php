@@ -19,6 +19,7 @@ final class Min implements AggregatingFunction
         $this->min = null;
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
@@ -46,6 +47,7 @@ final class Min implements AggregatingFunction
     /**
      * @return Entry<?\DateTimeInterface>|Entry<?float>|Entry<?int>
      */
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {

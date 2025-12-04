@@ -165,7 +165,7 @@ TXT
         $fs->writeTo(path('azure-blob://some_path_to/file.txt'))->fromResource($resource)->close();
 
         self::assertTrue($fs->status(path('azure-blob://some_path_to/*.txt'))?->isFile());
-        self::assertSame('azure-blob://some_path_to/file.txt', $fs->status(path('azure-blob://some_path_to/*.txt'))->path->uri());
+        self::assertSame('azure-blob://some_path_to/file.txt', $fs->status(path('azure-blob://some_path_to/*.txt'))?->path->uri());
     }
 
     public function test_file_status_on_root_folder() : void

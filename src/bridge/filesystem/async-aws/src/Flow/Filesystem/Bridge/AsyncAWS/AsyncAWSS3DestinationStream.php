@@ -143,6 +143,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         );
     }
 
+    #[\Override]
     public function append(string $data) : DestinationStream
     {
         $this->blocks->append($data);
@@ -150,6 +151,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function close() : void
     {
         if ($this->blocks->size() === 0) {
@@ -236,6 +238,7 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         $this->closed = true;
     }
 
+    #[\Override]
     public function fromResource($resource) : DestinationStream
     {
         if (!\is_resource($resource)) {
@@ -253,11 +256,13 @@ final class AsyncAWSS3DestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return !$this->closed;
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;

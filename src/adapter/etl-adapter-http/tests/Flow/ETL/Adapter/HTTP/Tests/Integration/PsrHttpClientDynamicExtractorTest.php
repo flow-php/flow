@@ -33,6 +33,7 @@ final class PsrHttpClientDynamicExtractorTest extends FlowTestCase
         );
 
         $extractor = from_dynamic_http_requests($psr18Client, new class implements NextRequestFactory {
+            #[\Override]
             public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
             {
                 $psr17Factory = new Psr17Factory();

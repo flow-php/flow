@@ -31,6 +31,7 @@ final readonly class NativeLocalFileBlocksFactory implements BlockFactory
         $this->blockLocation = $blockLocation ?: \sys_get_temp_dir();
     }
 
+    #[\Override]
     public function create(int $size) : Block
     {
         $id = generate_random_string();

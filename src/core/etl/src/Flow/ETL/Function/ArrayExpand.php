@@ -17,6 +17,7 @@ final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
     /**
      * @return array<mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : array
     {
         $array = (new Parameter($this->ref))->asArray($row, $context);

@@ -15,6 +15,7 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
      */
     private array $values = [];
 
+    #[\Override]
     public function addValues(FlatColumn $column, array $values) : void
     {
         if (!in_array($column->type(), [PhysicalType::INT32, PhysicalType::INT64], true)) {
@@ -32,6 +33,7 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
         }
     }
 
+    #[\Override]
     public function getBuffer() : string
     {
         if (!\count($this->values)) {
@@ -41,16 +43,19 @@ final class DeltaBinaryPackedValueStorage implements ValueStorage
         return (new DeltaBinaryPackedEncoder())->encode($this->values);
     }
 
+    #[\Override]
     public function isEmpty() : bool
     {
         return empty($this->values);
     }
 
+    #[\Override]
     public function reset() : void
     {
         $this->values = [];
     }
 
+    #[\Override]
     public function size() : int
     {
         return \count($this->values);

@@ -16,7 +16,20 @@ use function Flow\ETL\DSL\{bool_schema,
     struct_schema,
     time_schema,
     uuid_schema};
-use function Flow\Types\DSL\{type_boolean, type_date, type_datetime, type_float, type_integer, type_json, type_list, type_map, type_optional, type_string, type_structure, type_time, type_uuid};
+use function Flow\Types\DSL\{type_boolean,
+    type_date,
+    type_datetime,
+    type_float,
+    type_instance_of,
+    type_integer,
+    type_json,
+    type_list,
+    type_map,
+    type_optional,
+    type_string,
+    type_structure,
+    type_time,
+    type_uuid};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Schema;
 use Flow\ETL\Schema\Definition;
@@ -251,7 +264,9 @@ final class SchemaConverter
             return $nullable ? type_optional($type) : $type;
         }
 
-        /** @var NestedColumn $column */
+        /**
+         * @var NestedColumn $column
+         */
         $nullable = $column->repetition() === ParquetSchema\Repetition::OPTIONAL;
 
         if ($column->isList()) {

@@ -135,6 +135,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         self::assertCount(1, $streams);
     }
 
+    #[\Override]
     protected function streams() : FilesystemStreams
     {
         return new FilesystemStreams($this->fstab());

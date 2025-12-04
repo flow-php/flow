@@ -16,6 +16,7 @@ final class Sanitize extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?string
     {
         $val = (new Parameter($this->value))->asString($row, $context);

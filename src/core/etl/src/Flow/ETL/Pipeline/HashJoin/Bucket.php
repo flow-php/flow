@@ -38,6 +38,7 @@ final class Bucket implements \Countable
         $this->rows = null;
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->rowsArray);

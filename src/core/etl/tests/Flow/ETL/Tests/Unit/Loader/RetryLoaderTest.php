@@ -50,6 +50,7 @@ final class RetryLoaderTest extends TestCase
 
             public int $loads = 0;
 
+            #[\Override]
             public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->loads++;

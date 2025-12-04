@@ -30,6 +30,7 @@ final class MeilisearchLoader implements Loader
         return new self($config, $index);
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (!$rows->count()) {

@@ -17,21 +17,25 @@ final class AzureBlobSourceStream implements SourceStream
     {
     }
 
+    #[\Override]
     public function close() : void
     {
         // do nothing as we can't close Azure Blob since we are just reading parts of it at once
     }
 
+    #[\Override]
     public function content() : string
     {
         return $this->blobService->getBlob($this->path->path())->content();
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return true;
     }
 
+    #[\Override]
     public function iterate(int $length = 1) : \Generator
     {
         $offset = 0;
@@ -42,11 +46,13 @@ final class AzureBlobSourceStream implements SourceStream
         }
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function read(int $length, int $offset) : string
     {
         $offset = $offset < 0 ? $this->size() + $offset : $offset;
@@ -57,6 +63,7 @@ final class AzureBlobSourceStream implements SourceStream
         )->content();
     }
 
+    #[\Override]
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
         $offset = 0;
@@ -102,6 +109,7 @@ final class AzureBlobSourceStream implements SourceStream
         }
     }
 
+    #[\Override]
     public function size() : ?int
     {
         if ($this->blobProperties === null) {

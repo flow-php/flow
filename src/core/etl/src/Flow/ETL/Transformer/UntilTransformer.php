@@ -16,6 +16,7 @@ final class UntilTransformer implements Transformer
     {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         if ($this->limitReached) {

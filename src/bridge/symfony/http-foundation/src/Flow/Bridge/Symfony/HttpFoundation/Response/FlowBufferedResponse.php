@@ -33,6 +33,7 @@ final class FlowBufferedResponse extends Response
         parent::__construct(null, $status, $headers);
     }
 
+    #[\Override]
     public function getContent() : string
     {
         $this->evaluate();
@@ -40,6 +41,7 @@ final class FlowBufferedResponse extends Response
         return $this->content;
     }
 
+    #[\Override]
     public function sendContent() : static
     {
         $this->evaluate();

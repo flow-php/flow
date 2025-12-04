@@ -20,6 +20,7 @@ final readonly class ScalarFunctionTransformer implements Transformer
     ) {
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         if ($this->function instanceof ExpandResults) {

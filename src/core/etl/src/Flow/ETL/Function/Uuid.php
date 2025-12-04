@@ -34,6 +34,7 @@ final class Uuid extends ScalarFunctionChain
         return new self('uuid7', $value);
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ScalarResult
     {
         $param = (new Parameter($this->value))->as($row, $context, type_string(), type_instance_of(\DateTimeInterface::class));

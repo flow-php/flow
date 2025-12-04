@@ -11,6 +11,7 @@ use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
 
 abstract class MysqlIntegrationTestCase extends IntegrationTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         $this->databaseContext = new DatabaseContext(

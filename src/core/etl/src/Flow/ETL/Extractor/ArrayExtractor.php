@@ -18,6 +18,7 @@ final class ArrayExtractor implements Extractor
     {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->dataset as $row) {

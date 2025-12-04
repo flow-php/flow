@@ -14,6 +14,7 @@ use Flow\Types\Type;
  */
 final readonly class StringType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : string
     {
         if ($this->isValid($value)) {
@@ -23,6 +24,7 @@ final readonly class StringType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : string
     {
         if ($this->isValid($value)) {
@@ -85,11 +87,13 @@ final readonly class StringType implements Type
         return \is_string($value) || (\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable;
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return \is_string($value);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -97,6 +101,7 @@ final readonly class StringType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'string';

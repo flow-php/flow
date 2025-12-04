@@ -18,6 +18,7 @@ final readonly class MemoryExtractor implements Extractor
     ) {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->memory->dump() as $row) {

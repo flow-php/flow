@@ -22,6 +22,7 @@ final class CollectUnique implements AggregatingFunction
         $this->collection = [];
     }
 
+    #[\Override]
     public function aggregate(Row $row, FlowContext $context) : void
     {
         try {
@@ -44,6 +45,7 @@ final class CollectUnique implements AggregatingFunction
     /**
      * @return Entry<mixed>
      */
+    #[\Override]
     public function result(EntryFactory $entryFactory) : Entry
     {
         if (!$this->ref->hasAlias()) {

@@ -14,6 +14,7 @@ final readonly class AddRowIndex implements Transformation
     {
     }
 
+    #[\Override]
     public function transform(DataFrame $dataFrame) : DataFrame
     {
         $index = $this->startFrom === StartFrom::ZERO ? 0 : 1;

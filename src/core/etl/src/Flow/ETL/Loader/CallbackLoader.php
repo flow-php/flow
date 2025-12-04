@@ -20,6 +20,7 @@ final class CallbackLoader implements Loader
         $this->callback = $callback;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         ($this->callback)($rows, $context);

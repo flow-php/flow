@@ -12,6 +12,7 @@ final class Not extends ScalarFunctionChain
     {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         return !(new Parameter($this->value))->eval($row, $context);

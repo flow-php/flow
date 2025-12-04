@@ -27,6 +27,7 @@ final readonly class RenameEachEntryTransformer implements Transformer
         $this->strategies = $strategies;
     }
 
+    #[\Override]
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->map(function (Row $row) use ($context) : Row {

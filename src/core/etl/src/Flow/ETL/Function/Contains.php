@@ -16,6 +16,7 @@ final class Contains extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         $haystack = (new Parameter($this->haystack))->as($row, $context, type_string(), type_array());

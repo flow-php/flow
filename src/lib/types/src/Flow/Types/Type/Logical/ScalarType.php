@@ -27,11 +27,13 @@ final readonly class ScalarType implements Type
         );
     }
 
+    #[\Override]
     public function assert(mixed $value) : string|int|bool|float
     {
         return $this->innerType->assert($value);
     }
 
+    #[\Override]
     public function cast(mixed $value) : int|float|string|bool
     {
         if ($this->isValid($value)) {
@@ -41,11 +43,13 @@ final readonly class ScalarType implements Type
         return $this->innerType->cast($value);
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return $this->innerType->isValid($value);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -53,6 +57,7 @@ final readonly class ScalarType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'scalar';

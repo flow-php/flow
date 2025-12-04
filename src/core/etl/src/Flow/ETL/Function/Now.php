@@ -13,6 +13,7 @@ final class Now extends ScalarFunctionChain
     {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?\DateTimeImmutable
     {
         $tz = (new Parameter($this->timeZone))->asInstanceOf($row, $context, \DateTimeZone::class);

@@ -59,6 +59,7 @@ final class RLEBitPackedPackerTest extends TestCase
         yield 'sequential values' => [8, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'sequential values with length'];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->hybrid = new RLEBitPackedHybrid();

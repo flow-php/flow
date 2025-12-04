@@ -42,6 +42,7 @@ final class HTMLElementEntry implements Entry
         $this->type = type_html_element();
     }
 
+    #[\Override]
     public function __toString() : string
     {
         if ($this->value === null) {
@@ -51,16 +52,19 @@ final class HTMLElementEntry implements Entry
         return $this->toString();
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, $this->value === null, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : self
     {
         return new self($this->name, type_optional(type_instance_of(HTMLElement::class))->assert($this->value ? $this->value->cloneNode(true) : null), $this->metadata);
     }
 
+    #[\Override]
     public function is(Reference|string $name) : bool
     {
         if ($name instanceof Reference) {
@@ -70,6 +74,7 @@ final class HTMLElementEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
@@ -83,6 +88,7 @@ final class HTMLElementEntry implements Entry
         return $this->value?->C14N() === $entry->value?->C14N();
     }
 
+    #[\Override]
     public function map(callable $mapper) : self
     {
         $mappedValue = $mapper($this->value());
@@ -91,16 +97,19 @@ final class HTMLElementEntry implements Entry
         return new self($this->name, $mappedValue);
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
 
+    #[\Override]
     public function toString() : string
     {
         if ($this->value === null) {
@@ -110,16 +119,19 @@ final class HTMLElementEntry implements Entry
         return $this->value->innerHTML;
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?HTMLElement
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : self
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

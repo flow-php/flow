@@ -18,11 +18,11 @@ final class XMLElementEntryTest extends FlowTestCase
         $document->loadXML('<root><name>User Name</name><id>01</id></root>');
 
         /* @phpstan-ignore-next-line */
-        $entry = xml_element_entry('node', $document->documentElement->firstChild);
+        $entry = xml_element_entry('node', $document->documentElement?->firstChild);
 
         self::assertInstanceOf(\DOMElement::class, $entry->value());
         self::assertSame('<name>User Name</name>', $entry->toString());
-        self::assertSame($document->documentElement, $entry->value()->parentNode);
+        self::assertSame($document->documentElement, $entry->value()?->parentNode);
     }
 
     public function test_create_from_string() : void
@@ -62,6 +62,6 @@ final class XMLElementEntryTest extends FlowTestCase
 
         self::assertTrue($entry->isEqual(type_instance_of(XMLElementEntry::class)->assert($unserialized)));
         self::assertInstanceOf(\DOMElement::class, $entry->value());
-        self::assertEquals($element->attributes, $entry->value()->attributes);
+        self::assertEquals($element->attributes, $entry->value()?->attributes);
     }
 }

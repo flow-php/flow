@@ -39,6 +39,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $this->resetLimit();
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -97,6 +98,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         }
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

@@ -42,6 +42,7 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         $this->path = $path->setOptionWhenEmpty(Option::CONTENT_TYPE, ContentType::PARQUET);
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
         if (\count($this->writers)) {
@@ -54,11 +55,13 @@ final class ParquetLoader implements Closure, FileLoader, Loader
         $this->writers = [];
     }
 
+    #[\Override]
     public function destination() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         if ($this->schema === null && $this->inferredSchema === null) {

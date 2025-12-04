@@ -57,6 +57,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
         return \array_values($this->refs);
     }
 
+    #[\Override]
     public function count() : int
     {
         return \count($this->refs);
@@ -74,6 +75,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
     /**
      * @return \Traversable<string, Reference>
      */
+    #[\Override]
     public function getIterator() : \Traversable
     {
         return new \ArrayIterator($this->refs);
@@ -111,6 +113,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return bool
      */
+    #[\Override]
     public function offsetExists($offset) : bool
     {
         return \array_key_exists($offset, $this->refs);
@@ -123,6 +126,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @return Reference
      */
+    #[\Override]
     public function offsetGet($offset) : Reference
     {
         if ($this->offsetExists($offset)) {
@@ -132,11 +136,13 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate
         throw new InvalidArgumentException("Reference {$offset} does not exists.");
     }
 
+    #[\Override]
     public function offsetSet(mixed $offset, mixed $value) : void
     {
         throw new InvalidArgumentException('Method not implemented.');
     }
 
+    #[\Override]
     public function offsetUnset(mixed $offset) : void
     {
         throw new InvalidArgumentException('Method not implemented.');

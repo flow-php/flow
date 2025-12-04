@@ -53,11 +53,13 @@ final class StreamLoader implements Closure, Loader
         return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stdout);
     }
 
+    #[\Override]
     public function closure(FlowContext $context) : void
     {
         $this->closeStream();
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $stream = $this->getStream();

@@ -20,6 +20,7 @@ final class Concat extends ScalarFunctionChain
         $this->refs = $refs;
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : string
     {
         /** @var array<string> $concatValues */

@@ -13,6 +13,7 @@ final class Exists extends ScalarFunctionChain
     {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         try {

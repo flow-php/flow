@@ -17,6 +17,7 @@ final class ProxyLogger extends AbstractLogger implements LoggerAwareInterface
         $this->logger = new NullLogger();
     }
 
+    #[\Override]
     public function log($level, $message, array $context = []) : void
     {
         if (!isset($context['sql'])) {

@@ -62,6 +62,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         self::assertSame('non-existing-file.txt', $files[0]->path->basename());
     }
 
+    #[\Override]
     protected function streams() : FilesystemStreams
     {
         $streams = new FilesystemStreams($this->fstab());

@@ -34,6 +34,7 @@ final class MemorySort implements SortingAlgorithm
         }
     }
 
+    #[\Override]
     public function sortBy(Pipeline $pipeline, FlowContext $context, References $refs) : Extractor
     {
         $memoryConsumption = new Consumption();

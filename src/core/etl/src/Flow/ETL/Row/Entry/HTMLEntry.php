@@ -41,21 +41,25 @@ final class HTMLEntry implements Entry
         $this->type = type_html();
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();
     }
 
+    #[\Override]
     public function definition() : Definition
     {
         return new Definition($this->name, $this->type, null === $this->value, $this->metadata);
     }
 
+    #[\Override]
     public function duplicate() : self
     {
         return new self($this->name, $this->value ? clone $this->value : null, $this->metadata);
     }
 
+    #[\Override]
     public function is(Reference|string $name) : bool
     {
         if ($name instanceof Reference) {
@@ -65,6 +69,7 @@ final class HTMLEntry implements Entry
         return $this->name === $name;
     }
 
+    #[\Override]
     public function isEqual(Entry $entry) : bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
@@ -78,21 +83,25 @@ final class HTMLEntry implements Entry
         return $entry->value()?->saveHtml() === $this->value?->saveHtml();
     }
 
+    #[\Override]
     public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value));
     }
 
+    #[\Override]
     public function name() : string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
 
+    #[\Override]
     public function toString() : string
     {
         if (null === $this->value) {
@@ -102,16 +111,19 @@ final class HTMLEntry implements Entry
         return $this->value->saveHtml();
     }
 
+    #[\Override]
     public function type() : Type
     {
         return $this->type;
     }
 
+    #[\Override]
     public function value() : ?HTMLDocument
     {
         return $this->value;
     }
 
+    #[\Override]
     public function withValue(mixed $value) : self
     {
         return new self($this->name, type_optional($this->type())->assert($value), $this->metadata);

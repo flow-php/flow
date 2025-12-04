@@ -11,11 +11,13 @@ use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class Int64DateTimeConverter implements Converter
 {
+    #[\Override]
     public function fromParquetType(mixed $data) : \DateTimeImmutable
     {
         return $this->microsecondsToDateTimeImmutable(type_integer()->assert($data));
     }
 
+    #[\Override]
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         if ($column->type() === PhysicalType::INT64 && $column->logicalType()?->name() === LogicalType::TIMESTAMP) {
@@ -25,6 +27,7 @@ final class Int64DateTimeConverter implements Converter
         return false;
     }
 
+    #[\Override]
     public function toParquetType(mixed $data) : int
     {
         return $this->dateTimeToMicroseconds(type_instance_of(\DateTimeInterface::class)->assert($data));

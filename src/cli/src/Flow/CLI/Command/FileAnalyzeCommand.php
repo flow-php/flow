@@ -42,6 +42,7 @@ final class FileAnalyzeCommand extends Command
 
     private ?Path $sourcePath = null;
 
+    #[\Override]
     public function configure() : void
     {
         $this
@@ -63,6 +64,7 @@ final class FileAnalyzeCommand extends Command
         $this->addStatisticsOptions($this);
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output) : int
     {
         $style = new FlowStyle($input, $output);
@@ -135,6 +137,7 @@ final class FileAnalyzeCommand extends Command
         return Command::SUCCESS;
     }
 
+    #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output) : void
     {
         $this->flowConfig = (new ConfigOption('config'))->get($input);

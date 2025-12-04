@@ -50,6 +50,7 @@ final class BatchSizeOptimization implements Optimization
         }
     }
 
+    #[\Override]
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
     {
         // Pipeline is already batching so we don't need to optimize it
@@ -70,6 +71,7 @@ final class BatchSizeOptimization implements Optimization
         return false;
     }
 
+    #[\Override]
     public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
     {
         if ($pipeline instanceof BatchingPipeline) {

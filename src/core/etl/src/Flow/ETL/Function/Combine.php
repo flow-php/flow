@@ -22,6 +22,7 @@ final class Combine extends ScalarFunctionChain
     /**
      * @return null|array<int|string, mixed>
      */
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : ?array
     {
         $keys = (new Parameter($this->keys))->asArray($row, $context);

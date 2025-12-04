@@ -15,10 +15,12 @@ final class AsyncAWSS3SourceStream implements SourceStream
     {
     }
 
+    #[\Override]
     public function close() : void
     {
     }
 
+    #[\Override]
     public function content() : string
     {
         return $this->s3Client->getObject([
@@ -27,11 +29,13 @@ final class AsyncAWSS3SourceStream implements SourceStream
         ])->getBody()->getContentAsString();
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return true;
     }
 
+    #[\Override]
     public function iterate(int $length = 1) : \Generator
     {
         for ($offset = 0; $offset < $this->size(); $offset += $length) {
@@ -39,11 +43,13 @@ final class AsyncAWSS3SourceStream implements SourceStream
         }
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;
     }
 
+    #[\Override]
     public function read(int $length, int $offset) : string
     {
         $response = $this->s3Client->getObject([
@@ -55,6 +61,7 @@ final class AsyncAWSS3SourceStream implements SourceStream
         return $response->getBody()->getContentAsString();
     }
 
+    #[\Override]
     public function readLines(string $separator = "\n", ?int $length = null) : \Generator
     {
         $offset = 0;
@@ -100,6 +107,7 @@ final class AsyncAWSS3SourceStream implements SourceStream
         }
     }
 
+    #[\Override]
     public function size() : ?int
     {
         if ($this->size === null) {

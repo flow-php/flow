@@ -13,6 +13,7 @@ use Flow\Types\Type;
  */
 final readonly class JsonType implements Type
 {
+    #[\Override]
     public function assert(mixed $value) : string
     {
         if ($this->isValid($value)) {
@@ -22,6 +23,7 @@ final readonly class JsonType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : string
     {
         if ($this->isValid($value)) {
@@ -39,6 +41,7 @@ final readonly class JsonType implements Type
         }
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         if (!\is_string($value)) {
@@ -63,6 +66,7 @@ final readonly class JsonType implements Type
         return \json_validate($value);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -70,6 +74,7 @@ final readonly class JsonType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'json';

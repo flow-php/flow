@@ -52,6 +52,7 @@ final class NativeLocalDestinationStream implements DestinationStream
         return new self($path, $resource);
     }
 
+    #[\Override]
     public function append(string $data) : self
     {
         if (!$this->isOpen()) {
@@ -64,6 +65,7 @@ final class NativeLocalDestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function close() : void
     {
         if (!\is_resource($this->handle)) {
@@ -79,6 +81,7 @@ final class NativeLocalDestinationStream implements DestinationStream
     /**
      * @param resource $resource
      */
+    #[\Override]
     public function fromResource($resource) : self
     {
         if (!\is_resource($resource)) {
@@ -100,11 +103,13 @@ final class NativeLocalDestinationStream implements DestinationStream
         return $this;
     }
 
+    #[\Override]
     public function isOpen() : bool
     {
         return \is_resource($this->handle);
     }
 
+    #[\Override]
     public function path() : Path
     {
         return $this->path;

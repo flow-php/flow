@@ -65,6 +65,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 20; $i++) {
@@ -86,6 +87,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
@@ -131,6 +133,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
@@ -171,6 +174,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
@@ -194,6 +198,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 100; $i++) {
@@ -217,6 +222,7 @@ final class LimitTest extends FlowIntegrationTestCase
                  *
                  * @return \Generator<int, Rows, mixed, void>
                  */
+                #[\Override]
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 5; $i++) {

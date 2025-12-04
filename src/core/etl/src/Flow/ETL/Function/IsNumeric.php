@@ -13,6 +13,7 @@ final class IsNumeric extends ScalarFunctionChain
     ) {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         return (new Parameter($this->value))->asNumber($row, $context) !== null;

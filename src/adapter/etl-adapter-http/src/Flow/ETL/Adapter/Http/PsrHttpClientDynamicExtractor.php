@@ -29,6 +29,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     ) {
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         $responseFactory = new ResponseEntriesFactory();

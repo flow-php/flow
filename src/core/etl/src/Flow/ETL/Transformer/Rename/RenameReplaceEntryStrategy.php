@@ -18,6 +18,7 @@ final readonly class RenameReplaceEntryStrategy implements RenameEntryStrategy
     ) {
     }
 
+    #[\Override]
     public function rename(Row $row, Entry $entry, FlowContext $context) : Row
     {
         return $row->rename($entry->name(), \str_replace($this->search, $this->replace, $entry->name()));

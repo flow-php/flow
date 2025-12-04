@@ -57,6 +57,7 @@ final readonly class Uuid implements \Stringable
         return 1 === \preg_match(self::UUID_REGEXP, $value);
     }
 
+    #[\Override]
     public function __toString() : string
     {
         return $this->toString();

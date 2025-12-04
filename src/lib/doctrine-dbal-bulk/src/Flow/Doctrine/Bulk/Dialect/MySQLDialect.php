@@ -20,6 +20,7 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
+    #[\Override]
     public function prepareDelete(TableDefinition $table, BulkData $bulkData) : string
     {
         $columns = $bulkData->columns()->all();
@@ -49,6 +50,7 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
+    #[\Override]
     public function prepareInsert(TableDefinition $table, BulkData $bulkData, ?InsertOptions $options = null) : string
     {
         if ($options === null) {
@@ -98,6 +100,7 @@ final readonly class MySQLDialect implements Dialect
      *
      * @return string
      */
+    #[\Override]
     public function prepareUpdate(TableDefinition $table, BulkData $bulkData, ?UpdateOptions $options = null) : string
     {
         return \sprintf(

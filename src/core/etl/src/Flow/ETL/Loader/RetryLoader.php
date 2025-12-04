@@ -20,6 +20,7 @@ final readonly class RetryLoader implements Loader
     ) {
     }
 
+    #[\Override]
     public function load(Rows $rows, FlowContext $context) : void
     {
         $attemptNumber = 0;

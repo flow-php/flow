@@ -40,6 +40,7 @@ final readonly class InstanceOfType implements Type
         return new self($data['class']);
     }
 
+    #[\Override]
     public function assert(mixed $value) : object
     {
         if ($this->isValid($value)) {
@@ -49,6 +50,7 @@ final readonly class InstanceOfType implements Type
         throw InvalidTypeException::value($value, $this);
     }
 
+    #[\Override]
     public function cast(mixed $value) : object
     {
         if (\is_object($value) && \is_a($value, $this->class, true)) {
@@ -68,11 +70,13 @@ final readonly class InstanceOfType implements Type
         }
     }
 
+    #[\Override]
     public function isValid(mixed $value) : bool
     {
         return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
     }
 
+    #[\Override]
     public function normalize() : array
     {
         return [
@@ -81,6 +85,7 @@ final readonly class InstanceOfType implements Type
         ];
     }
 
+    #[\Override]
     public function toString() : string
     {
         return 'object<' . $this->class . '>';

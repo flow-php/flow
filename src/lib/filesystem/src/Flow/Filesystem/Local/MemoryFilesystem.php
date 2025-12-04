@@ -24,6 +24,7 @@ final readonly class MemoryFilesystem implements Filesystem
         $this->memory = new Memory($filter);
     }
 
+    #[\Override]
     public function appendTo(Path $path) : DestinationStream
     {
         $this->protocol()->validateScheme($path);
@@ -31,11 +32,13 @@ final readonly class MemoryFilesystem implements Filesystem
         return $this->memory->for($path);
     }
 
+    #[\Override]
     public function getSystemTmpDir() : Path
     {
         throw new RuntimeException('Memory does not have a system tmp directory');
     }
 
+    #[\Override]
     public function list(Path $path, Filter $pathFilter = new KeepAll()) : \Generator
     {
         $this->protocol()->validateScheme($path);
@@ -60,16 +63,19 @@ final readonly class MemoryFilesystem implements Filesystem
         }
     }
 
+    #[\Override]
     public function mv(Path $from, Path $to) : bool
     {
         throw new RuntimeException('Cannot move files around in memory');
     }
 
+    #[\Override]
     public function protocol() : Protocol
     {
         return new Protocol('memory');
     }
 
+    #[\Override]
     public function readFrom(Path $path) : SourceStream
     {
         $this->protocol()->validateScheme($path);
@@ -81,6 +87,7 @@ final readonly class MemoryFilesystem implements Filesystem
         return $this->memory->for($path);
     }
 
+    #[\Override]
     public function rm(Path $path) : bool
     {
         $this->protocol()->validateScheme($path);
@@ -107,6 +114,7 @@ final readonly class MemoryFilesystem implements Filesystem
         return $removed;
     }
 
+    #[\Override]
     public function status(Path $path) : ?FileStatus
     {
         $this->protocol()->validateScheme($path);
@@ -128,6 +136,7 @@ final readonly class MemoryFilesystem implements Filesystem
         return null;
     }
 
+    #[\Override]
     public function writeTo(Path $path) : DestinationStream
     {
         $this->protocol()->validateScheme($path);

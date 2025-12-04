@@ -26,6 +26,7 @@ final readonly class BatchingByPipeline implements OverridingPipeline, Pipeline
         }
     }
 
+    #[\Override]
     public function add(Loader|Transformer $pipe) : self
     {
         $this->pipeline->add($pipe);
@@ -33,16 +34,19 @@ final readonly class BatchingByPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
+    #[\Override]
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
     }
 
+    #[\Override]
     public function pipelines() : array
     {
         return [$this->pipeline];
     }
 
+    #[\Override]
     public function pipes() : Pipes
     {
         return $this->pipeline->pipes();
@@ -51,11 +55,13 @@ final readonly class BatchingByPipeline implements OverridingPipeline, Pipeline
     /**
      * @return \Generator<int, Rows>
      */
+    #[\Override]
     public function process(FlowContext $context) : \Generator
     {
         return batched_by(from_pipeline($this->pipeline), $this->column, $this->minSize)->extract($context);
     }
 
+    #[\Override]
     public function source() : Extractor
     {
         return $this->pipeline->source();

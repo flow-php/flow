@@ -27,6 +27,7 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
     /**
      * @return array<string, int|string>
      */
+    #[\Override]
     public function toHeaders() : array
     {
         $headers = [];
@@ -61,6 +62,7 @@ final class PutBlockBlobBlockListOptions implements EndpointOptions
     /**
      * @return array<string, int|string>
      */
+    #[\Override]
     public function toURIParameters() : array
     {
         $uriParameters = [];

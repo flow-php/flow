@@ -19,11 +19,13 @@ final class AvroExtractor implements Extractor, FileExtractor, LimitableExtracto
         throw new RuntimeException('Avro integration was abandoned due to lack of availability of good Avro libraries.');
     }
 
+    #[\Override]
     public function extract(FlowContext $context) : \Generator
     {
         yield;
     }
 
+    #[\Override]
     public function source() : Path
     {
         return $this->path;

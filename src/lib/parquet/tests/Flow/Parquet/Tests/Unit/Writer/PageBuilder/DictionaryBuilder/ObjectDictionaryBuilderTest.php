@@ -48,6 +48,7 @@ final class ObjectDictionaryBuilderTest extends TestCase
         ];
     }
 
+    #[\Override]
     protected function setUp() : void
     {
         $this->builder = new ObjectDictionaryBuilder();

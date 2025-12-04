@@ -40,6 +40,7 @@ final readonly class OnExceptionTypes implements RetryStrategy
         $this->exceptionTypes = $exceptionTypes;
     }
 
+    #[\Override]
     public function shouldRetry(\Throwable $exception, int $attemptNumber) : bool
     {
         if ($attemptNumber > $this->limit) {

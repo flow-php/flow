@@ -23,6 +23,7 @@ final class ConcatWithSeparator extends ScalarFunctionChain
         $this->refs = $refs;
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : mixed
     {
         $separator = (new Parameter($this->separator))->asString($row, $context);

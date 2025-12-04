@@ -14,6 +14,7 @@ final class IsUtf8 extends ScalarFunctionChain
     {
     }
 
+    #[\Override]
     public function eval(Row $row, FlowContext $context) : bool
     {
         $string = (new Parameter($this->string))->asString($row, $context);
