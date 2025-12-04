@@ -72,6 +72,7 @@ includes = [
     "tools/phpunit/vendor",
     "src/core/etl/src/Flow",
     "src/tools/documentation/src",
+    "src/lib/types/src/Flow/Types/PHPStan",
     "src/lib/parquet/src/Flow/Parquet/BinaryReader",
     "src/lib/parquet/src/Flow/Parquet/BinaryReader",
     "src/lib/parquet/src/Flow/Parquet/Data",

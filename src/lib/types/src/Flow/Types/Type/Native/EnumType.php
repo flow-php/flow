@@ -7,10 +7,9 @@ namespace Flow\Types\Type\Native;
 use function Flow\Types\DSL\{type_class_string, type_literal, type_structure};
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type;
-use UnitEnum;
 
 /**
- * @template T of UnitEnum
+ * @template T of \UnitEnum
  *
  * @implements Type<T>
  */
@@ -27,7 +26,7 @@ final readonly class EnumType implements Type
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param array{type: 'enum', class: class-string<\UnitEnum>} $data
      *
      * @return EnumType<\UnitEnum>
      */
@@ -38,7 +37,6 @@ final readonly class EnumType implements Type
             'class' => type_class_string(),
         ])->assert($data);
 
-        /** @phpstan-ignore-next-line */
         return new self($data['class']);
     }
 

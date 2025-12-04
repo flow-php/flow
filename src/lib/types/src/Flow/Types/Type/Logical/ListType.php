@@ -97,7 +97,7 @@ final readonly class ListType implements Type
             return false;
         }
 
-        if ([] !== $value && !\array_is_list($value)) {
+        if (!\array_is_list($value)) {
             return false;
         }
 

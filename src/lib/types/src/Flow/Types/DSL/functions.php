@@ -510,7 +510,7 @@ function dom_element_to_string(\DOMElement $element, bool $format_output = false
     $doc->preserveWhiteSpace = $preserver_white_space;
 
     $importedNode = $doc->importNode($element, true);
-    $doc->appendChild($importedNode);
+    $doc->appendChild(type_instance_of(\DOMNode::class)->assert($importedNode));
 
     return $doc->saveXML($doc->documentElement);
 }

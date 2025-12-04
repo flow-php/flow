@@ -68,9 +68,6 @@ final readonly class UnionType implements Type
         );
     }
 
-    /**
-     * @return TLeft|TRight
-     */
     #[\Override]
     public function assert(mixed $value) : mixed
     {

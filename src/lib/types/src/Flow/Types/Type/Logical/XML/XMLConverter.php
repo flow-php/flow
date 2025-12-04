@@ -17,6 +17,10 @@ final class XMLConverter
 
         if ($document->hasChildNodes()) {
             foreach ($document->childNodes as $child) {
+                if ($child instanceof \DOMNameSpaceNode) {
+                    continue;
+                }
+
                 $xmlArray[$child->nodeName] = $this->convertDOMElement($child);
             }
         }
@@ -41,6 +45,10 @@ final class XMLConverter
         }
 
         foreach ($element->childNodes as $childNode) {
+            if ($childNode instanceof \DOMNameSpaceNode) {
+                continue;
+            }
+
             if ($childNode->nodeType === XML_TEXT_NODE) {
                 if (\trim((string) $childNode->nodeValue)) {
                     $xmlArray['@value'] = $childNode->nodeValue;
