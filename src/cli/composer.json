@@ -22,7 +22,7 @@
         "flow-php/etl-adapter-chartjs": "self.version",
         "flow-php/openapi-specification-bridge": "self.version",
         "flow-php/parquet-viewer": "self.version",
-        "flow-php/pg-query": "1.x-dev"
+        "flow-php/pg-query": "self.version"
     },
     "config": {
         "optimize-autoloader": true,
