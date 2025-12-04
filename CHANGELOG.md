@@ -1,6 +1,8 @@
-## [Unreleased] - 2025-12-02
+## [Unreleased] - 2025-12-04
 
 ### Added
+- [#2050](https://github.com/flow-php/flow/pull/2050) - **modification of PG Query AST tree during travers** - [@norberttech](https://github.com/norberttech)
+- [#2050](https://github.com/flow-php/flow/pull/2050) - **count / paginate / key set - modifiers with DSL** - [@norberttech](https://github.com/norberttech)
 - [#2048](https://github.com/flow-php/flow/pull/2048) - **auto generated table of contents to documentation pages** - [@norberttech](https://github.com/norberttech)
 - [#2043](https://github.com/flow-php/flow/pull/2043) - **open playground files preview in tabs** - [@norberttech](https://github.com/norberttech)
 - [#2042](https://github.com/flow-php/flow/pull/2042) - **deparse method with formatting options to PGQuery parser** - [@norberttech](https://github.com/norberttech)
