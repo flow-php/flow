@@ -89,15 +89,11 @@ final class InsertBuilderTest extends TestCase
         $ast = $query->toAst();
 
         self::assertInstanceOf(InsertStmt::class, $ast);
-        $selectStmtNode = $ast->getSelectStmt();
-        self::assertNotNull($selectStmtNode);
 
-        $selectStmt = $selectStmtNode->getSelectStmt();
-        self::assertNotNull($selectStmt);
-        $valuesLists = $selectStmt->getValuesLists();
-        self::assertTrue($valuesLists === null || \count($valuesLists) === 0);
-        $targetList = $selectStmt->getTargetList();
-        self::assertTrue($targetList === null || \count($targetList) === 0);
+        // DEFAULT VALUES produces an INSERT with no selectStmt at all
+        // This is the correct PostgreSQL AST representation for DEFAULT VALUES
+        $selectStmtNode = $ast->getSelectStmt();
+        self::assertNull($selectStmtNode);
     }
 
     public function test_insert_multiple_rows() : void
@@ -438,7 +434,9 @@ final class InsertBuilderTest extends TestCase
         $relation = $restoredAst->getRelation();
         self::assertNotNull($relation);
         self::assertSame('logs', $relation->getRelname());
-        self::assertNotNull($restoredAst->getSelectStmt());
+
+        // DEFAULT VALUES has no selectStmt - this is correct PostgreSQL AST
+        self::assertNull($restoredAst->getSelectStmt());
     }
 
     public function test_round_trip_multiple_rows() : void

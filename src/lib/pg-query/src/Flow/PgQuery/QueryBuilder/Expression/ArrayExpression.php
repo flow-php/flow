@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
 use Flow\PgQuery\Protobuf\AST\{A_ArrayExpr, Node};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * ARRAY[expr, expr, ...] - PostgreSQL array constructor.
@@ -74,6 +74,6 @@ final readonly class ArrayExpression implements Expression
 
     private static function expressionFromNode(Node $node) : Expression
     {
-        throw UnsupportedNodeException::cannotReconstruct('Expression from arbitrary Node - implement Expression::fromAst() factory');
+        return ExpressionFactory::fromAst($node);
     }
 }

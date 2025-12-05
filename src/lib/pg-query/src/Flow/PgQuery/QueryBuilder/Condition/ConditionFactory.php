@@ -62,6 +62,14 @@ final class ConditionFactory
             };
         }
 
+        if ($node->getTypeCast() !== null) {
+            return RawCondition::fromTypeCast($node);
+        }
+
+        if ($node->getAConst() !== null) {
+            return RawCondition::fromAConst($node);
+        }
+
         throw UnsupportedNodeException::forNodeType('Unknown condition node type');
     }
 }

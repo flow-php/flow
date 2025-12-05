@@ -95,22 +95,16 @@ final readonly class Star implements Expression
 
     public function toAst() : Node
     {
-        if ($this->table === null) {
-            $aStar = new A_Star();
-            $node = new Node();
-            $node->setAStar($aStar);
-
-            return $node;
-        }
-
         $columnRef = new ColumnRef();
         $fields = [];
 
-        $tableString = new PBString();
-        $tableString->setSval($this->table);
-        $tableNode = new Node();
-        $tableNode->setString($tableString);
-        $fields[] = $tableNode;
+        if ($this->table !== null) {
+            $tableString = new PBString();
+            $tableString->setSval($this->table);
+            $tableNode = new Node();
+            $tableNode->setString($tableString);
+            $fields[] = $tableNode;
+        }
 
         $aStar = new A_Star();
         $starNode = new Node();

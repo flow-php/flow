@@ -121,7 +121,15 @@ final class DeleteBuilderTest extends TestCase
 
         $val = $firstReturn->getVal();
         self::assertNotNull($val);
-        self::assertTrue($val->hasAStar());
+
+        // Star.toAst() produces a ColumnRef with A_Star inside
+        self::assertTrue($val->hasColumnRef());
+        $columnRef = $val->getColumnRef();
+        self::assertNotNull($columnRef);
+        $fields = $columnRef->getFields();
+        self::assertNotNull($fields);
+        self::assertCount(1, $fields);
+        self::assertTrue($fields[0]->hasAStar());
     }
 
     public function test_delete_with_alias() : void

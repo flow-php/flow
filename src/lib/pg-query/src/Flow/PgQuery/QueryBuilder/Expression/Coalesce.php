@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
 use Flow\PgQuery\Protobuf\AST\{CoalesceExpr, Node};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * COALESCE(expr, expr, ...) - returns first non-null expression.
@@ -40,7 +40,7 @@ final readonly class Coalesce implements Expression
         $expressions = [];
 
         foreach ($args as $argNode) {
-            $expressions[] = self::expressionFromNode($argNode);
+            $expressions[] = ExpressionFactory::fromAst($argNode);
         }
 
         return new self($expressions);
@@ -77,10 +77,5 @@ final readonly class Coalesce implements Expression
         $node->setCoalesceExpr($coalesceExpr);
 
         return $node;
-    }
-
-    private static function expressionFromNode(Node $node) : Expression
-    {
-        throw UnsupportedNodeException::cannotReconstruct('Expression from arbitrary Node - implement Expression::fromAst() factory');
     }
 }

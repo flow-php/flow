@@ -412,10 +412,7 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
             $selectNode->setSelectStmt($this->selectQuery->toAst());
             $insertStmt->setSelectStmt($selectNode);
         } elseif ($this->defaultValues) {
-            $selectStmt = new SelectStmt();
-            $selectNode = new Node();
-            $selectNode->setSelectStmt($selectStmt);
-            $insertStmt->setSelectStmt($selectNode);
+            // DEFAULT VALUES: do not set selectStmt at all
         } elseif ($this->valuesList !== []) {
             $selectStmt = new SelectStmt();
             $valuesListsNodes = [];

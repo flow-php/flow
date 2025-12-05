@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
 use Flow\PgQuery\Protobuf\AST\{CoercionForm, Node, RowExpr};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * ROW(expr, expr, ...) or (expr, expr, ...) - PostgreSQL row constructor.
@@ -93,6 +93,6 @@ final readonly class RowExpression implements Expression
 
     private static function expressionFromNode(Node $node) : Expression
     {
-        throw UnsupportedNodeException::cannotReconstruct('Expression from arbitrary Node - implement Expression::fromAst() factory');
+        return ExpressionFactory::fromAst($node);
     }
 }

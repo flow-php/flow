@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
 use Flow\PgQuery\Protobuf\AST\{MinMaxExpr, MinMaxOp, Node};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * GREATEST(expr, expr, ...) - returns largest value from list of expressions.
@@ -87,6 +87,6 @@ final readonly class Greatest implements Expression
 
     private static function expressionFromNode(Node $node) : Expression
     {
-        throw UnsupportedNodeException::cannotReconstruct('Expression from arbitrary Node - implement Expression::fromAst() factory');
+        return ExpressionFactory::fromAst($node);
     }
 }
