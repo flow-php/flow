@@ -14,7 +14,7 @@ use Flow\PgQuery\QueryBuilder\Table\{JoinedTable, SubqueryReference, Table, Tabl
 /**
  * Builder for UPDATE statements.
  */
-final readonly class UpdateBuilder implements UpdateFinalStep, UpdateFromStep, UpdateReturningStep, UpdateSetStep, UpdateTableStep, UpdateWhereStep
+final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 {
     /**
      * @param array<string, Expression> $assignments

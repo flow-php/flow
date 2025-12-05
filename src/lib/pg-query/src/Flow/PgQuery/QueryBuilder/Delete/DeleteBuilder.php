@@ -21,7 +21,7 @@ use Flow\PgQuery\QueryBuilder\Table\{AliasedTable, Table, TableReference};
  * - WHERE clause
  * - RETURNING clause
  */
-final readonly class DeleteBuilder implements DeleteFinalStep, DeleteFromStep, DeleteReturningStep, DeleteUsingStep, DeleteWhereStep
+final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 {
     /**
      * @param array<TableReference> $using
