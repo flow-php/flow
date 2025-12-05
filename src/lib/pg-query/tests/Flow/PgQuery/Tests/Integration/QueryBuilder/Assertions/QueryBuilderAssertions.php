@@ -29,10 +29,7 @@ trait QueryBuilderAssertions
         $rebuiltStmt = $stmts[0]->getStmt();
         Assert::assertNotNull($rebuiltStmt);
 
-        $deleteStmt = $rebuiltStmt->getDeleteStmt();
-        Assert::assertNotNull($deleteStmt);
-
-        $rebuilt = DeleteBuilder::fromAst($deleteStmt);
+        $rebuilt = DeleteBuilder::fromAst($rebuiltStmt);
         $rebuiltSql = $this->deparseDeleteStmt($rebuilt->toAst());
 
         Assert::assertSame($sql, $rebuiltSql);

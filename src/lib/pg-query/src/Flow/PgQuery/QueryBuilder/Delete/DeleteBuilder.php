@@ -42,8 +42,14 @@ final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
         return new self();
     }
 
-    public static function fromAst(DeleteStmt $deleteStmt) : self
+    public static function fromAst(Node $node) : static
     {
+        $deleteStmt = $node->getDeleteStmt();
+
+        if ($deleteStmt === null) {
+            throw InvalidAstException::invalidFieldValue('node', 'DeleteBuilder', 'Expected DeleteStmt');
+        }
+
         $relation = $deleteStmt->getRelation();
 
         if ($relation === null) {

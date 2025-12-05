@@ -446,7 +446,9 @@ final class DeleteBuilderTest extends TestCase
             'relname' => '',
         ]));
 
-        DeleteBuilder::fromAst($deleteStmt);
+        $node = new Node();
+        $node->setDeleteStmt($deleteStmt);
+        DeleteBuilder::fromAst($node);
     }
 
     public function test_from_ast_missing_relation_throws_exception() : void
@@ -455,7 +457,9 @@ final class DeleteBuilderTest extends TestCase
         $this->expectExceptionMessage('Missing required field "relation" in DeleteStmt node');
 
         $deleteStmt = new DeleteStmt();
-        DeleteBuilder::fromAst($deleteStmt);
+        $node = new Node();
+        $node->setDeleteStmt($deleteStmt);
+        DeleteBuilder::fromAst($node);
     }
 
     public function test_immutability_from() : void
@@ -520,7 +524,9 @@ final class DeleteBuilderTest extends TestCase
             ->returning(Column::name('id'), Column::name('product_id'));
 
         $ast = $original->toAst();
-        $restored = DeleteBuilder::fromAst($ast);
+        $node = new Node();
+        $node->setDeleteStmt($ast);
+        $restored = DeleteBuilder::fromAst($node);
 
         $restoredAst = $restored->toAst();
 
@@ -546,7 +552,9 @@ final class DeleteBuilderTest extends TestCase
             ->from('users');
 
         $ast = $original->toAst();
-        $restored = DeleteBuilder::fromAst($ast);
+        $node = new Node();
+        $node->setDeleteStmt($ast);
+        $restored = DeleteBuilder::fromAst($node);
 
         $restoredAst = $restored->toAst();
 
@@ -566,7 +574,9 @@ final class DeleteBuilderTest extends TestCase
             ->from('users', 'u');
 
         $ast = $original->toAst();
-        $restored = DeleteBuilder::fromAst($ast);
+        $node = new Node();
+        $node->setDeleteStmt($ast);
+        $restored = DeleteBuilder::fromAst($node);
 
         $restoredAst = $restored->toAst();
 
@@ -595,7 +605,9 @@ final class DeleteBuilderTest extends TestCase
             ->returning(Column::name('id'));
 
         $ast = $original->toAst();
-        $restored = DeleteBuilder::fromAst($ast);
+        $node = new Node();
+        $node->setDeleteStmt($ast);
+        $restored = DeleteBuilder::fromAst($node);
 
         $restoredAst = $restored->toAst();
         self::assertTrue($restoredAst->hasWhereClause());
@@ -619,7 +631,9 @@ final class DeleteBuilderTest extends TestCase
             );
 
         $ast = $original->toAst();
-        $restored = DeleteBuilder::fromAst($ast);
+        $node = new Node();
+        $node->setDeleteStmt($ast);
+        $restored = DeleteBuilder::fromAst($node);
 
         $restoredAst = $restored->toAst();
 
@@ -643,7 +657,9 @@ final class DeleteBuilderTest extends TestCase
             ->where(new Comparison(Column::tableColumn('u', 'id'), ComparisonOperator::EQ, Literal::int(1)));
 
         $ast = $original->toAst();
-        $restored = DeleteBuilder::fromAst($ast);
+        $node = new Node();
+        $node->setDeleteStmt($ast);
+        $restored = DeleteBuilder::fromAst($node);
 
         $restoredAst = $restored->toAst();
         self::assertTrue($restoredAst->hasWhereClause());
