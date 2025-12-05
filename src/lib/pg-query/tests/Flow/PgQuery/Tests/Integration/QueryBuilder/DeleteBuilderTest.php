@@ -15,8 +15,6 @@ use function Flow\PgQuery\DSL\{
     pg_table
 };
 
-use Flow\PgQuery\Protobuf\AST\Node;
-
 use Flow\PgQuery\QueryBuilder\Condition\ComparisonOperator;
 
 final class DeleteBuilderTest extends PGQueryTestCase
@@ -77,12 +75,9 @@ final class DeleteBuilderTest extends PGQueryTestCase
             ->select(pg_col('user_id'))
             ->from(pg_table('inactive_users'));
 
-        $subqueryNode = new Node();
-        $subqueryNode->setSelectStmt($subquery->toAst());
-
         $query = pg_delete()
             ->from('users')
-            ->where(pg_any(pg_col('id'), ComparisonOperator::EQ, $subqueryNode));
+            ->where(pg_any(pg_col('id'), ComparisonOperator::EQ, $subquery));
 
         $this->assertDeleteQueryRoundTrip(
             $query,
