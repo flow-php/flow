@@ -15,7 +15,7 @@ use Flow\Types\Type;
 final readonly class HTMLElementType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : HTMLElement
+    public function assert(mixed $value): HTMLElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -25,7 +25,7 @@ final readonly class HTMLElementType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : HTMLElement
+    public function cast(mixed $value): HTMLElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -41,13 +41,13 @@ final readonly class HTMLElementType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof HTMLElement;
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'html_element',
@@ -55,7 +55,7 @@ final readonly class HTMLElementType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'html_element';
     }

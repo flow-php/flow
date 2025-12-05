@@ -14,17 +14,17 @@ use Flow\Types\Type;
 final readonly class HTMLType implements Type
 {
     public const string HTML_ALIKE_REGEX = <<<'REGXP'
-@^
-    <!DOCTYPE\s+html[^>]*>\s*      # must start with <!DOCTYPE html ...>
-    <html[^>]*>\s*                 # opening <html>
-    <head[^>]*>.*?<\/head>\s*      # exactly one <head> ... </head>
-    <body[^>]*>.*?<\/body>\s*      # exactly one <body> ... </body>
-    <\/html>\s*                    # closing </html>
-$@isx
-REGXP;
+    @^
+        <!DOCTYPE\s+html[^>]*>\s*      # must start with <!DOCTYPE html ...>
+        <html[^>]*>\s*                 # opening <html>
+        <head[^>]*>.*?<\/head>\s*      # exactly one <head> ... </head>
+        <body[^>]*>.*?<\/body>\s*      # exactly one <body> ... </body>
+        <\/html>\s*                    # closing </html>
+    $@isx
+    REGXP;
 
     #[\Override]
-    public function assert(mixed $value) : HTMLDocument
+    public function assert(mixed $value): HTMLDocument
     {
         if ($this->isValid($value)) {
             return $value;
@@ -34,7 +34,7 @@ REGXP;
     }
 
     #[\Override]
-    public function cast(mixed $value) : HTMLDocument
+    public function cast(mixed $value): HTMLDocument
     {
         if (!$this->isValid($value)) {
             throw new CastingException($value, $this);
@@ -49,7 +49,7 @@ REGXP;
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         // \Dom\HTMLDocument exist in PHP 8.4+
         if (!\class_exists('\Dom\HTMLDocument')) {
@@ -60,7 +60,7 @@ REGXP;
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'html',
@@ -68,7 +68,7 @@ REGXP;
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'html';
     }

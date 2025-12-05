@@ -15,7 +15,7 @@ use Flow\Types\Type;
 final readonly class StringType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : string
+    public function assert(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -25,7 +25,7 @@ final readonly class StringType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : string
+    public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -72,7 +72,7 @@ final readonly class StringType implements Type
                 return '';
             }
 
-            if (\is_scalar($value) || (\is_object($value) && method_exists($value, '__toString'))) {
+            if (\is_scalar($value) || \is_object($value) && method_exists($value, '__toString')) {
                 return (string) $value;
             }
 
@@ -82,19 +82,19 @@ final readonly class StringType implements Type
         }
     }
 
-    public function isStringable(mixed $value) : bool
+    public function isStringable(mixed $value): bool
     {
-        return \is_string($value) || (\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable;
+        return \is_string($value) || \is_object($value) && method_exists($value, '__toString') || $value instanceof \Stringable;
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_string($value);
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'string',
@@ -102,7 +102,7 @@ final readonly class StringType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'string';
     }

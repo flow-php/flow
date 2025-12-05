@@ -13,7 +13,7 @@ use Flow\Types\Type;
 final readonly class PositiveIntegerType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : int
+    public function assert(mixed $value): int
     {
         if ($this->isValid($value)) {
             return $value;
@@ -23,14 +23,13 @@ final readonly class PositiveIntegerType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : int
+    public function cast(mixed $value): int
     {
         if ($this->isValid($value)) {
             return $value;
         }
 
         try {
-
             if ($value instanceof \DOMElement) {
                 return $this->assert((int) $value->nodeValue);
             }
@@ -43,7 +42,7 @@ final readonly class PositiveIntegerType implements Type
                 $reference = new \DateTimeImmutable();
                 $endTime = $reference->add($value);
 
-                return $this->assert(((int) $endTime->format('Uu')) - (int) ($reference->format('Uu')));
+                return $this->assert((int) $endTime->format('Uu') - (int) $reference->format('Uu'));
             }
 
             if (\is_numeric($value)) {
@@ -61,13 +60,13 @@ final readonly class PositiveIntegerType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_int($value) && $value > 0;
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'positive_integer',
@@ -75,7 +74,7 @@ final readonly class PositiveIntegerType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'positive_integer';
     }

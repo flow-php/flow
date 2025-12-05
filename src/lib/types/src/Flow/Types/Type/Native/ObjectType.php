@@ -12,12 +12,10 @@ use Flow\Types\Type;
  */
 final class ObjectType implements Type
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     #[\Override]
-    public function assert(mixed $value) : mixed
+    public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -27,7 +25,7 @@ final class ObjectType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : object
+    public function cast(mixed $value): object
     {
         if ($this->isValid($value)) {
             return $value;
@@ -37,13 +35,13 @@ final class ObjectType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_object($value);
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'object',
@@ -51,7 +49,7 @@ final class ObjectType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'object';
     }

@@ -10,7 +10,7 @@ use Flow\Types\Type\Native\String\StringTypeNarrower;
 
 final readonly class AutoCaster
 {
-    public function cast(mixed $value) : mixed
+    public function cast(mixed $value): mixed
     {
         if (\is_string($value)) {
             return $this->castToString($value);
@@ -28,7 +28,7 @@ final readonly class AutoCaster
      *
      * @return array<array-key, mixed>
      */
-    private function castArray(array $value) : array
+    private function castArray(array $value): array
     {
         $keyTypes = [];
         $valueTypes = [];
@@ -53,7 +53,7 @@ final readonly class AutoCaster
         return $value;
     }
 
-    private function castToString(string $value) : mixed
+    private function castToString(string $value): mixed
     {
         $narrowedType = (new StringTypeNarrower())->narrow($value);
 

@@ -14,7 +14,7 @@ use function Flow\Types\DSL\type_instance_of;
 final readonly class TimeZoneType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : \DateTimeZone
+    public function assert(mixed $value): \DateTimeZone
     {
         if ($this->isValid($value)) {
             return $value;
@@ -24,7 +24,7 @@ final readonly class TimeZoneType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : \DateTimeZone
+    public function cast(mixed $value): \DateTimeZone
     {
         if ($this->isValid($value)) {
             return $value;
@@ -50,13 +50,13 @@ final readonly class TimeZoneType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof \DateTimeZone;
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'timezone',
@@ -64,7 +64,7 @@ final readonly class TimeZoneType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'timezone';
     }

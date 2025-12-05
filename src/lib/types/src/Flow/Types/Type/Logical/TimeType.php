@@ -14,7 +14,7 @@ use Flow\Types\Type;
 final readonly class TimeType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : \DateInterval
+    public function assert(mixed $value): \DateInterval
     {
         if ($this->isValid($value)) {
             return $value;
@@ -24,7 +24,7 @@ final readonly class TimeType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : \DateInterval
+    public function cast(mixed $value): \DateInterval
     {
         if ($this->isValid($value)) {
             return $value;
@@ -50,13 +50,13 @@ final readonly class TimeType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof \DateInterval;
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'time',
@@ -64,7 +64,7 @@ final readonly class TimeType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'time';
     }

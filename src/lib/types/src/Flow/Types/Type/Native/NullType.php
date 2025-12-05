@@ -13,7 +13,7 @@ use Flow\Types\Type;
 final class NullType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : null
+    public function assert(mixed $value): null
     {
         if ($this->isValid($value)) {
             return $value;
@@ -23,19 +23,19 @@ final class NullType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : null
+    public function cast(mixed $value): null
     {
         return null;
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return null === $value;
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'null',
@@ -43,7 +43,7 @@ final class NullType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'null';
     }

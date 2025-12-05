@@ -13,7 +13,7 @@ use Flow\Types\Type;
 final readonly class ResourceType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : mixed
+    public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -23,7 +23,7 @@ final readonly class ResourceType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : mixed
+    public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -33,13 +33,13 @@ final readonly class ResourceType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_resource($value);
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'resource',
@@ -47,7 +47,7 @@ final readonly class ResourceType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'resource';
     }

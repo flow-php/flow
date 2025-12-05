@@ -18,8 +18,9 @@ final readonly class ClassStringType implements Type
     /**
      * @param null|class-string<T> $class
      */
-    public function __construct(public ?string $class = null)
-    {
+    public function __construct(
+        public null|string $class = null,
+    ) {
         if ($class !== null && (!\class_exists($class) && !\interface_exists($class))) {
             throw new InvalidArgumentException("Class {$class} not found");
         }
@@ -30,18 +31,15 @@ final readonly class ClassStringType implements Type
      *
      * @return Type<class-string>
      */
-    public static function fromArray(array $data) : Type
+    public static function fromArray(array $data): Type
     {
-        $data = type_structure(
-            ['type' => type_literal('class_string')],
-            ['class' => type_class_string()],
-        )->assert($data);
+        $data = type_structure(['type' => type_literal('class_string')], ['class' => type_class_string()])->assert($data);
 
         return new self($data['class'] ?? null);
     }
 
     #[\Override]
-    public function assert(mixed $value) : string
+    public function assert(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -51,7 +49,7 @@ final readonly class ClassStringType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : string
+    public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -79,7 +77,7 @@ final readonly class ClassStringType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         if (!\is_string($value)) {
             return false;
@@ -96,8 +94,11 @@ final readonly class ClassStringType implements Type
         return \is_a($value, $this->class, true);
     }
 
+    /**
+     * @return array{type: 'class_string', class?: class-string}
+     */
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         $result = ['type' => 'class_string'];
 
@@ -109,7 +110,7 @@ final readonly class ClassStringType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return $this->class === null ? 'class-string' : 'class-string<' . $this->class . '>';
     }

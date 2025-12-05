@@ -22,8 +22,9 @@ final readonly class OptionalType implements Type
      *
      * @throws InvalidTypeException
      */
-    public function __construct(private Type $base)
-    {
+    public function __construct(
+        private Type $base,
+    ) {
         if ($base instanceof MixedType) {
             throw new InvalidTypeException('Optional type cannot be created from MixedType, mixed is a standalone type');
         }
@@ -42,7 +43,7 @@ final readonly class OptionalType implements Type
      *
      * @return OptionalType<mixed>
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         type_structure([
             'type' => type_literal('optional'),
@@ -53,7 +54,7 @@ final readonly class OptionalType implements Type
     }
 
     #[\Override]
-    public function assert(mixed $value) : mixed
+    public function assert(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -65,13 +66,13 @@ final readonly class OptionalType implements Type
     /**
      * @return Type<T>
      */
-    public function base() : Type
+    public function base(): Type
     {
         return $this->base;
     }
 
     #[\Override]
-    public function cast(mixed $value) : mixed
+    public function cast(mixed $value): mixed
     {
         if ($this->isValid($value)) {
             return $value;
@@ -81,7 +82,7 @@ final readonly class OptionalType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         if ($value === null) {
             return true;
@@ -94,7 +95,7 @@ final readonly class OptionalType implements Type
      * @return array{type: 'optional', base: array<string, mixed>}
      */
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'optional',
@@ -103,7 +104,7 @@ final readonly class OptionalType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return '?' . $this->base->toString();
     }

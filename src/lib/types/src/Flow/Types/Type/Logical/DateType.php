@@ -13,7 +13,7 @@ use Flow\Types\Type;
 final readonly class DateType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : \DateTimeInterface
+    public function assert(mixed $value): \DateTimeInterface
     {
         if ($this->isValid($value)) {
             return $value;
@@ -23,7 +23,7 @@ final readonly class DateType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : \DateTimeInterface
+    public function cast(mixed $value): \DateTimeInterface
     {
         if ($this->isValid($value)) {
             return $value;
@@ -63,13 +63,13 @@ final readonly class DateType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof \DateTimeInterface && $value->format('H:i:s') === '00:00:00';
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'date',
@@ -77,7 +77,7 @@ final readonly class DateType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'date';
     }

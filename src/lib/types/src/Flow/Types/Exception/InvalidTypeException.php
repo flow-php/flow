@@ -9,7 +9,7 @@ use Flow\Types\Type\TypeDetector;
 
 final class InvalidTypeException extends InvalidArgumentException
 {
-    public function __construct(string $message, ?\Throwable $previous = null)
+    public function __construct(string $message, null|\Throwable $previous = null)
     {
         parent::__construct($message, 0, $previous);
     }
@@ -18,28 +18,22 @@ final class InvalidTypeException extends InvalidArgumentException
      * @param Type<mixed> $givenType
      * @param Type<mixed> $expectedType
      */
-    public static function type(Type $givenType, Type $expectedType) : self
+    public static function type(Type $givenType, Type $expectedType): self
     {
-        return new self(
-            sprintf(
-                'Expected type "%s", got "%s".',
-                $expectedType->toString(),
-                $givenType->toString(),
-            )
-        );
+        return new self(sprintf('Expected type "%s", got "%s".', $expectedType->toString(), $givenType->toString()));
     }
 
     /**
      * @param Type<mixed> $expectedType
      */
-    public static function value(mixed $value, Type $expectedType) : self
+    public static function value(mixed $value, Type $expectedType): self
     {
-        return new self(
-            sprintf(
-                'Expected type "%s", got "%s".',
-                $expectedType->toString(),
-                (new TypeDetector())->detectType($value)->toString(),
-            )
-        );
+        return new self(sprintf(
+            'Expected type "%s", got "%s".',
+            $expectedType->toString(),
+            (new TypeDetector())
+                ->detectType($value)
+                ->toString(),
+        ));
     }
 }

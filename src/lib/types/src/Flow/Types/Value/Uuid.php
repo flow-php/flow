@@ -31,7 +31,9 @@ final readonly class Uuid implements \Stringable
                 } elseif (self::isValid($value)) {
                     $this->value = $value;
                 } else {
-                    throw new RuntimeException("\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.");
+                    throw new RuntimeException(
+                        "\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.",
+                    );
                 }
             } catch (\InvalidArgumentException $e) {
                 throw new InvalidArgumentException("Invalid UUID: '{$value}'", $e->getCode(), $e);
@@ -43,12 +45,12 @@ final readonly class Uuid implements \Stringable
         }
     }
 
-    public static function fromString(string $value) : self
+    public static function fromString(string $value): self
     {
         return new self($value);
     }
 
-    public static function isValid(string $value) : bool
+    public static function isValid(string $value): bool
     {
         if (\strlen($value) !== 36) {
             return false;
@@ -58,17 +60,17 @@ final readonly class Uuid implements \Stringable
     }
 
     #[\Override]
-    public function __toString() : string
+    public function __toString(): string
     {
         return $this->toString();
     }
 
-    public function isEqual(self $type) : bool
+    public function isEqual(self $type): bool
     {
         return $this->toString() === $type->toString();
     }
 
-    public function toString() : string
+    public function toString(): string
     {
         return $this->value;
     }

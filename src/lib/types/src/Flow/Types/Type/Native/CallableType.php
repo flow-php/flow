@@ -13,7 +13,7 @@ use Flow\Types\Type;
 final readonly class CallableType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : callable
+    public function assert(mixed $value): callable
     {
         if ($this->isValid($value)) {
             return $value;
@@ -23,7 +23,7 @@ final readonly class CallableType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : callable
+    public function cast(mixed $value): callable
     {
         if ($this->isValid($value)) {
             return $value;
@@ -33,13 +33,13 @@ final readonly class CallableType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_callable($value);
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'callable',
@@ -47,7 +47,7 @@ final readonly class CallableType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'callable';
     }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_array,
+use function Flow\Types\DSL\{
+    type_array,
     type_boolean,
     type_date,
     type_datetime,
@@ -23,7 +24,8 @@ use function Flow\Types\DSL\{type_array,
     type_uuid,
     type_xml,
     type_xml_element,
-    types};
+    types
+};
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ListType, StructureType};
@@ -33,7 +35,7 @@ final class TypeDetector
     /**
      * @return Type<mixed>
      */
-    public function detectType(mixed $value) : Type
+    public function detectType(mixed $value): Type
     {
         if (null === $value) {
             return type_null();
@@ -72,7 +74,7 @@ final class TypeDetector
             $detector = new ArrayContentDetector(
                 types(...\array_map($this->detectType(...), \array_keys($value)))->deduplicate(),
                 types(...\array_map($this->detectType(...), \array_values($value)))->deduplicate(),
-                \array_is_list($value)
+                \array_is_list($value),
             );
 
             if ($detector->isList()) {

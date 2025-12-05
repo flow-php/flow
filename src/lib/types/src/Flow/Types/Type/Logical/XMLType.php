@@ -14,7 +14,7 @@ use Flow\Types\Type;
 final readonly class XMLType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : \DOMDocument
+    public function assert(mixed $value): \DOMDocument
     {
         if ($this->isValid($value)) {
             return $value;
@@ -24,7 +24,7 @@ final readonly class XMLType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : \DOMDocument
+    public function cast(mixed $value): \DOMDocument
     {
         if ($this->isValid($value)) {
             return $value;
@@ -45,7 +45,7 @@ final readonly class XMLType implements Type
 
             $doc = new \DOMDocument();
 
-            if (!@$doc->loadXML( $stringValue)) {
+            if (!@$doc->loadXML($stringValue)) {
                 throw new CastingException($stringValue, $this);
             }
 
@@ -56,7 +56,7 @@ final readonly class XMLType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         if ($value instanceof \DOMDocument) {
             return true;
@@ -66,7 +66,7 @@ final readonly class XMLType implements Type
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'xml',
@@ -74,7 +74,7 @@ final readonly class XMLType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'xml';
     }

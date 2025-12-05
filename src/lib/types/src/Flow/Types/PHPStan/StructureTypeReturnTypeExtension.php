@@ -15,7 +15,7 @@ use PHPStan\Type\Generic\GenericObjectType;
 
 final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTypeExtension
 {
-    public function getTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope) : ?Type
+    public function getTypeFromFunctionCall(FunctionReflection $functionReflection, FuncCall $functionCall, Scope $scope): null|Type
     {
         $args = $functionCall->getArgs();
 
@@ -50,20 +50,17 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
             }
         }
 
-        return new GenericObjectType(
-            FlowType::class,
-            [
-                TypeCombinator::union(...$results),
-            ]
-        );
+        return new GenericObjectType(FlowType::class, [
+            TypeCombinator::union(...$results),
+        ]);
     }
 
-    public function isFunctionSupported(FunctionReflection $functionReflection) : bool
+    public function isFunctionSupported(FunctionReflection $functionReflection): bool
     {
         return $functionReflection->getName() === 'Flow\Types\DSL\type_structure';
     }
 
-    private function createResult(ConstantArrayType $requiredArrayType, ?ConstantArrayType $optionalArrayType = null) : Type
+    private function createResult(ConstantArrayType $requiredArrayType, null|ConstantArrayType $optionalArrayType = null): Type
     {
         $builder = ConstantArrayTypeBuilder::createEmpty();
 
@@ -92,7 +89,7 @@ final class StructureTypeReturnTypeExtension implements DynamicFunctionReturnTyp
     /**
      * @return array{Type, bool}
      */
-    private function extractOptional(Type $type) : array
+    private function extractOptional(Type $type): array
     {
         $optionalType = $type->getTemplateType(OptionalType::class, 'T');
 

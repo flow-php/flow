@@ -18,30 +18,32 @@ final readonly class EnumType implements Type
     /**
      * @param class-string<T> $class
      */
-    public function __construct(public string $class)
-    {
+    public function __construct(
+        public string $class,
+    ) {
         if ($class !== \UnitEnum::class && $this->class !== \BackedEnum::class && !\enum_exists($class)) {
             throw new InvalidArgumentException("Enum {$class} not found");
         }
     }
 
     /**
-     * @param array{type: 'enum', class: class-string<\UnitEnum>} $data
+     * @param array<string, mixed> $data
      *
      * @return EnumType<\UnitEnum>
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'type' => type_literal('enum'),
             'class' => type_class_string(),
         ])->assert($data);
 
+        // @phpstan-ignore argument.type (class-string validated at runtime by constructor)
         return new self($data['class']);
     }
 
     #[\Override]
-    public function assert(mixed $value) : \UnitEnum
+    public function assert(mixed $value): \UnitEnum
     {
         if ($this->isValid($value)) {
             return $value;
@@ -51,7 +53,7 @@ final readonly class EnumType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : \UnitEnum
+    public function cast(mixed $value): \UnitEnum
     {
         if ($this->isValid($value)) {
             return $value;
@@ -75,13 +77,13 @@ final readonly class EnumType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return (\is_object($value) || \is_string($value)) && \is_a($value, $this->class, true);
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'enum',
@@ -90,7 +92,7 @@ final readonly class EnumType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'enum<' . $this->class . '>';
     }

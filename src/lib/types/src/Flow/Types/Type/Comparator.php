@@ -6,14 +6,7 @@ namespace Flow\Types\Type;
 
 use function Flow\Types\DSL\{type_equals, type_instance_of};
 use Flow\Types\Type;
-use Flow\Types\Type\Logical\{DateTimeType,
-    DateType,
-    JsonType,
-    ListType,
-    MapType,
-    OptionalType,
-    StructureType,
-    TimeType};
+use Flow\Types\Type\Logical\{DateTimeType, DateType, JsonType, ListType, MapType, OptionalType, StructureType, TimeType};
 use Flow\Types\Type\Native\{FloatType, IntegerType, NullType, StringType, UnionType};
 
 final class Comparator
@@ -22,7 +15,7 @@ final class Comparator
      * @param Type<mixed> $left
      * @param Type<mixed> $right
      */
-    public function comparable(Type $left, Type $right) : bool
+    public function comparable(Type $left, Type $right): bool
     {
         if ($left instanceof UnionType && $left->isOptionalType()) {
             return $this->comparable(type_instance_of(Type::class)->assert($left->types()->reduceOptionals()->first()), $right);
@@ -64,7 +57,10 @@ final class Comparator
             return true;
         }
 
-        if (\in_array($left::class, [StringType::class, JsonType::class], true) && \in_array($right::class, [StringType::class, JsonType::class], true)) {
+        if (
+            \in_array($left::class, [StringType::class, JsonType::class], true)
+            && \in_array($right::class, [StringType::class, JsonType::class], true)
+        ) {
             return true;
         }
 
@@ -75,7 +71,7 @@ final class Comparator
      * @param Type<mixed> $left
      * @param Type<mixed> $right
      */
-    public function equals(Type $left, Type $right) : bool
+    public function equals(Type $left, Type $right): bool
     {
         if ($left::class !== $right::class) {
             return false;
@@ -118,7 +114,7 @@ final class Comparator
      * @param Type<T> $type
      * @param class-string<Type<mixed>> $typeClass
      */
-    public function is(Type $type, string $typeClass) : bool
+    public function is(Type $type, string $typeClass): bool
     {
         if ($type instanceof $typeClass) {
             return true;
@@ -148,7 +144,7 @@ final class Comparator
      * @param class-string<Type<mixed>> $typeClass
      * @param class-string<Type<mixed>> ...$typeClasses
      */
-    public function isAny(Type $type, string $typeClass, string ...$typeClasses) : bool
+    public function isAny(Type $type, string $typeClass, string ...$typeClasses): bool
     {
         $classes = [$typeClass, ...$typeClasses];
 

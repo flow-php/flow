@@ -4,13 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\{
-    type_from_array,
-    type_literal,
-    type_map,
-    type_mixed,
-    type_string,
-    type_structure};
+use function Flow\Types\DSL\{type_from_array, type_literal, type_map, type_mixed, type_string, type_structure};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
@@ -26,16 +20,17 @@ final readonly class MapType implements Type
      * @param Type<TKey> $key
      * @param Type<TValue> $value
      */
-    public function __construct(private Type $key, private Type $value)
-    {
-    }
+    public function __construct(
+        private Type $key,
+        private Type $value,
+    ) {}
 
     /**
      * @param array<string, mixed> $data
      *
      * @return MapType<array-key, mixed>
      */
-    public static function fromArray(array $data) : self
+    public static function fromArray(array $data): self
     {
         $data = type_structure([
             'type' => type_literal('map'),
@@ -43,14 +38,11 @@ final readonly class MapType implements Type
             'value' => type_map(type_string(), type_mixed()),
         ])->assert($data);
 
-        return new self(
-            type_from_array($data['key']),
-            type_from_array($data['value'])
-        );
+        return new self(type_from_array($data['key']), type_from_array($data['value']));
     }
 
     #[\Override]
-    public function assert(mixed $value) : array
+    public function assert(mixed $value): array
     {
         if ($this->isValid($value)) {
             return $value;
@@ -60,7 +52,7 @@ final readonly class MapType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : array
+    public function cast(mixed $value): array
     {
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
@@ -92,7 +84,7 @@ final readonly class MapType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         if (!\is_array($value)) {
             return false;
@@ -114,7 +106,7 @@ final readonly class MapType implements Type
     /**
      * @return Type<TKey>
      */
-    public function key() : Type
+    public function key(): Type
     {
         return $this->key;
     }
@@ -123,7 +115,7 @@ final readonly class MapType implements Type
      * @return array{type: 'map', key: array<string, mixed>, value: array<string, mixed>}
      */
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'map',
@@ -133,7 +125,7 @@ final readonly class MapType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';
     }
@@ -141,7 +133,7 @@ final readonly class MapType implements Type
     /**
      * @return Type<TValue>
      */
-    public function value() : Type
+    public function value(): Type
     {
         return $this->value;
     }

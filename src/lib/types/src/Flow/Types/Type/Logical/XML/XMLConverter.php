@@ -11,7 +11,7 @@ final class XMLConverter
      *
      * @return array<mixed>
      */
-    public function toArray(\DOMDocument $document) : array
+    public function toArray(\DOMDocument $document): array
     {
         $xmlArray = [];
 
@@ -31,7 +31,7 @@ final class XMLConverter
     /**
      * @return array<string, mixed>
      */
-    private function convertDOMElement(\DOMElement|\DOMNode $element) : array
+    private function convertDOMElement(\DOMElement|\DOMNode $element): array
     {
         $xmlArray = [];
 
@@ -68,7 +68,7 @@ final class XMLConverter
         return $xmlArray;
     }
 
-    private function isElementCollection(\DOMElement|\DOMNode $element) : bool
+    private function isElementCollection(\DOMElement|\DOMNode $element): bool
     {
         if ($element->childNodes->count() <= 1) {
             return false;

@@ -14,7 +14,7 @@ use Flow\Types\Type;
 final class NonEmptyStringType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : string
+    public function assert(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -24,7 +24,7 @@ final class NonEmptyStringType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : string
+    public function cast(mixed $value): string
     {
         if ($this->isValid($value)) {
             return $value;
@@ -63,7 +63,7 @@ final class NonEmptyStringType implements Type
                 throw new CastingException($value, $this);
             }
 
-            if (\is_scalar($value) || (\is_object($value) && method_exists($value, '__toString'))) {
+            if (\is_scalar($value) || \is_object($value) && method_exists($value, '__toString')) {
                 return $this->assert((string) $value);
             }
 
@@ -73,19 +73,19 @@ final class NonEmptyStringType implements Type
         }
     }
 
-    public function isStringable(mixed $value) : bool
+    public function isStringable(mixed $value): bool
     {
-        return \is_string($value) || (\is_object($value) && method_exists($value, '__toString')) || $value instanceof \Stringable;
+        return \is_string($value) || \is_object($value) && method_exists($value, '__toString') || $value instanceof \Stringable;
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return \is_string($value) && $value !== '';
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'non_empty_string',
@@ -93,7 +93,7 @@ final class NonEmptyStringType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'non_empty_string';
     }

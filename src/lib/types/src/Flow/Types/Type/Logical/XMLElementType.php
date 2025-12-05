@@ -14,7 +14,7 @@ use Flow\Types\Type;
 final readonly class XMLElementType implements Type
 {
     #[\Override]
-    public function assert(mixed $value) : \DOMElement
+    public function assert(mixed $value): \DOMElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -24,7 +24,7 @@ final readonly class XMLElementType implements Type
     }
 
     #[\Override]
-    public function cast(mixed $value) : \DOMElement
+    public function cast(mixed $value): \DOMElement
     {
         if ($this->isValid($value)) {
             return $value;
@@ -41,13 +41,13 @@ final readonly class XMLElementType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $value instanceof \DOMElement;
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'xml_element',
@@ -55,7 +55,7 @@ final readonly class XMLElementType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'xml_element';
     }

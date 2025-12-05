@@ -19,7 +19,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @var ?Type<T>
      */
-    private ?Type $first;
+    private null|Type $first;
 
     /**
      * @var array<Type<T>>
@@ -36,7 +36,7 @@ final readonly class Types implements \Countable, \Stringable
     }
 
     #[\Override]
-    public function __toString() : string
+    public function __toString(): string
     {
         $types = [];
 
@@ -50,13 +50,13 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @return array<Type<T>>
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->types;
     }
 
     #[\Override]
-    public function count() : int
+    public function count(): int
     {
         return \count($this->types);
     }
@@ -64,7 +64,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @return Types<T>
      */
-    public function deduplicate() : self
+    public function deduplicate(): self
     {
         $types = [];
 
@@ -78,7 +78,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @return ?Type<T>
      */
-    public function first() : ?Type
+    public function first(): null|Type
     {
         return $this->first;
     }
@@ -86,7 +86,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @param Type<mixed> $type
      */
-    public function has(Type $type) : bool
+    public function has(Type $type): bool
     {
         foreach ($this->types as $existingType) {
             if (type_equals($existingType, $type)) {
@@ -100,7 +100,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @param Type<mixed> ...$types
      */
-    public function hasAll(Type ...$types) : bool
+    public function hasAll(Type ...$types): bool
     {
         foreach ($types as $type) {
             if (!$this->has($type)) {
@@ -114,7 +114,7 @@ final readonly class Types implements \Countable, \Stringable
     /**
      * @param Type<mixed> ...$types
      */
-    public function hasAny(Type ...$types) : bool
+    public function hasAny(Type ...$types): bool
     {
         foreach ($this->types as $existingType) {
             foreach ($types as $type) {
@@ -132,9 +132,9 @@ final readonly class Types implements \Countable, \Stringable
      *
      * @return Types<T>
      */
-    public function only(Type ...$types) : self
+    public function only(Type ...$types): self
     {
-        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types) : bool {
+        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $keepType) {
                 if (type_equals($type, $keepType)) {
                     return true;
@@ -152,7 +152,7 @@ final readonly class Types implements \Countable, \Stringable
      *
      * @return Types<mixed>
      */
-    public function reduceOptionals() : self
+    public function reduceOptionals(): self
     {
         $types = [];
 
@@ -174,9 +174,9 @@ final readonly class Types implements \Countable, \Stringable
      *
      * @return Types<T>
      */
-    public function without(Type ...$types) : self
+    public function without(Type ...$types): self
     {
-        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types) : bool {
+        $filteredTypes = \array_filter($this->types, static function (Type $type) use ($types): bool {
             foreach ($types as $withoutType) {
                 if (type_equals($type, $withoutType)) {
                     return false;

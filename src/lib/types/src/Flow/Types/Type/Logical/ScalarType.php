@@ -19,22 +19,17 @@ final readonly class ScalarType implements Type
 
     public function __construct()
     {
-        $this->innerType = type_union(
-            type_string(),
-            type_integer(),
-            type_boolean(),
-            type_float()
-        );
+        $this->innerType = type_union(type_string(), type_integer(), type_boolean(), type_float());
     }
 
     #[\Override]
-    public function assert(mixed $value) : string|int|bool|float
+    public function assert(mixed $value): string|int|bool|float
     {
         return $this->innerType->assert($value);
     }
 
     #[\Override]
-    public function cast(mixed $value) : int|float|string|bool
+    public function cast(mixed $value): int|float|string|bool
     {
         if ($this->isValid($value)) {
             return $value;
@@ -44,13 +39,13 @@ final readonly class ScalarType implements Type
     }
 
     #[\Override]
-    public function isValid(mixed $value) : bool
+    public function isValid(mixed $value): bool
     {
         return $this->innerType->isValid($value);
     }
 
     #[\Override]
-    public function normalize() : array
+    public function normalize(): array
     {
         return [
             'type' => 'scalar',
@@ -58,7 +53,7 @@ final readonly class ScalarType implements Type
     }
 
     #[\Override]
-    public function toString() : string
+    public function toString(): string
     {
         return 'scalar';
     }

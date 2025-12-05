@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type;
 
-use function Flow\Types\DSL\{type_array,
+use function Flow\Types\DSL\{
+    type_array,
     type_boolean,
     type_callable,
     type_date,
@@ -27,7 +28,8 @@ use function Flow\Types\DSL\{type_array,
     type_time_zone,
     type_uuid,
     type_xml,
-    type_xml_element};
+    type_xml_element
+};
 use Flow\Types\Exception\InvalidArgumentException;
 use Flow\Types\Type;
 use Flow\Types\Type\Logical\{ClassStringType, InstanceOfType, ListType, LiteralType, MapType, OptionalType, StructureType};
@@ -40,7 +42,7 @@ final class TypeFactory
      *
      * @return Type<mixed>
      */
-    public static function fromArray(array $data) : Type
+    public static function fromArray(array $data): Type
     {
         type_array()->assert($data);
 
@@ -85,7 +87,9 @@ final class TypeFactory
             'numeric-string' => type_numeric_string(),
             'html' => type_html(),
             'html_element' => type_html_element(),
-            default => throw new InvalidArgumentException("Unknown type '" . (\is_string($data['type']) ? $data['type'] : \gettype($data['type'])) . "'"),
+            default => throw new InvalidArgumentException(
+                "Unknown type '" . (\is_string($data['type']) ? $data['type'] : \gettype($data['type'])) . "'",
+            ),
         };
     }
 
@@ -94,13 +98,13 @@ final class TypeFactory
      *
      * @return Type<mixed>
      */
-    public static function fromString(string $name) : Type
+    public static function fromString(string $name): Type
     {
         return match (\mb_strtolower($name)) {
-            'int','integer' => self::fromArray(['type' => 'integer', 'scalar_type' => 'integer']),
+            'int', 'integer' => self::fromArray(['type' => 'integer', 'scalar_type' => 'integer']),
             'float' => self::fromArray(['type' => 'float', 'scalar_type' => 'float']),
             'string' => self::fromArray(['type' => 'string', 'scalar_type' => 'string']),
-            'bool','boolean' => self::fromArray(['type' => 'boolean', 'scalar_type' => 'boolean']),
+            'bool', 'boolean' => self::fromArray(['type' => 'boolean', 'scalar_type' => 'boolean']),
             default => self::fromArray(['type' => $name]),
         };
     }
