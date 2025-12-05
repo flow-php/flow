@@ -409,12 +409,14 @@ function pg_delete() : DeleteFromStep
 /**
  * Create a column reference expression.
  *
- * @param string $name Column name (can include table prefix like "users.id")
+ * @param string $name Column name (can include table prefix like "users.id" or "schema.table.column")
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pg_col(string $name) : Column
 {
-    return Column::name($name);
+    $parts = \explode('.', $name);
+
+    return Column::fromParts($parts);
 }
 
 /**
@@ -710,7 +712,7 @@ function pg_binary(Expression $left, string $operator, Expression $right) : Bina
  * @param string $name Function name
  * @param list<Expression> $args Function arguments
  * @param list<Expression> $partitionBy PARTITION BY expressions
- * @param list<OrderBy> $orderBy ORDER BY items
+ * @param list<OrderBy|OrderByItem> $orderBy ORDER BY items
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pg_window_func(
@@ -1037,7 +1039,7 @@ function pg_cte(
  *
  * @param string $name Window name
  * @param list<Expression> $partitionBy PARTITION BY expressions
- * @param list<OrderBy> $orderBy ORDER BY items
+ * @param list<OrderBy|OrderByItem> $orderBy ORDER BY items
  * @param null|WindowFrame $frame Window frame specification
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]

@@ -315,7 +315,8 @@
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-types-unit --log-junit ./var/phpunit/logs/lib-types-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-types-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-types-unit"
         ],
         "test:lib:pg-query": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-pg-query-unit --log-junit ./var/phpunit/logs/lib-pg-query-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-pg-query-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-pg-query-unit"
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-pg-query-unit --log-junit ./var/phpunit/logs/lib-pg-query-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-pg-query-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-pg-query-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-pg-query-integration --log-junit ./var/phpunit/logs/lib-pg-query-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-pg-query-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-pg-query-integration"
         ],
         "test:bridge:filesystem-azure": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-unit --log-junit ./var/phpunit/logs/bridge-filesystem-azure-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-azure-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-filesystem-azure-unit",

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit\QueryBuilder\Expression;
 
-use Flow\PgQuery\Protobuf\AST\{Node, NullIfExpr};
+use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, Node};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{AliasedExpression, NullIf};
 use PHPUnit\Framework\TestCase;
@@ -27,25 +27,27 @@ final class NullIfTest extends TestCase
         self::assertInstanceOf(AliasedExpression::class, $aliased);
     }
 
-    public function test_from_ast_throws_on_non_null_if_expr() : void
+    public function test_from_ast_throws_on_non_a_expr() : void
     {
         $this->expectException(InvalidAstException::class);
-        $this->expectExceptionMessage('Expected NullIfExpr node, got unknown');
+        $this->expectExceptionMessage('Expected A_Expr node, got unknown');
 
         $node = new Node();
         NullIf::fromAst($node);
     }
 
-    public function test_from_ast_throws_on_wrong_args_count() : void
+    public function test_from_ast_throws_on_wrong_a_expr_kind() : void
     {
         $this->expectException(InvalidAstException::class);
-        $this->expectExceptionMessage('must have exactly 2 arguments');
+        $this->expectExceptionMessage('Expected AEXPR_NULLIF for NullIf expression');
 
-        $nullIfExpr = new NullIfExpr();
-        $nullIfExpr->setArgs([new Node()]);
+        $aExpr = new A_Expr();
+        $aExpr->setKind(A_Expr_Kind::AEXPR_OP);
+        $aExpr->setLexpr(new Node());
+        $aExpr->setRexpr(new Node());
 
         $node = new Node();
-        $node->setNullIfExpr($nullIfExpr);
+        $node->setAExpr($aExpr);
 
         NullIf::fromAst($node);
     }
@@ -61,7 +63,7 @@ final class NullIfTest extends TestCase
         self::assertSame($second, $expr->second());
     }
 
-    public function test_to_ast_creates_null_if_expr() : void
+    public function test_to_ast_creates_a_expr_with_aexpr_nullif() : void
     {
         $expr = new NullIf(
             new MockExpression('value1'),
@@ -71,12 +73,13 @@ final class NullIfTest extends TestCase
         $ast = $expr->toAst();
 
         self::assertInstanceOf(Node::class, $ast);
-        self::assertTrue($ast->hasNullIfExpr());
+        self::assertTrue($ast->hasAExpr());
 
-        $nullIfExpr = $ast->getNullIfExpr();
-        self::assertNotNull($nullIfExpr);
-        $args = $nullIfExpr->getArgs();
+        $aExpr = $ast->getAExpr();
+        self::assertNotNull($aExpr);
+        self::assertSame(A_Expr_Kind::AEXPR_NULLIF, $aExpr->getKind());
 
-        self::assertCount(2, $args);
+        self::assertNotNull($aExpr->getLexpr());
+        self::assertNotNull($aExpr->getRexpr());
     }
 }

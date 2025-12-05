@@ -80,6 +80,12 @@
         <testsuite name="lib-types-unit">
             <directory>src/lib/types/tests/Flow/Types/Tests/Unit</directory>
         </testsuite>
+        <testsuite name="lib-pg-query-unit">
+            <directory>src/lib/pg-query/tests/Flow/PgQuery/Tests/Unit</directory>
+        </testsuite>
+        <testsuite name="lib-pg-query-integration">
+            <directory>src/lib/pg-query/tests/Flow/PgQuery/Tests/Integration</directory>
+        </testsuite>
         <testsuite name="bridge-filesystem-azure-unit">
             <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Unit</directory>
         </testsuite>

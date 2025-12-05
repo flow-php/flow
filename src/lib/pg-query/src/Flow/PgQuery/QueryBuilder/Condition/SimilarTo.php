@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Condition;
 
-use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBString};
+use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, CoercionForm, FuncCall, Node, PBString};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{Expression, ExpressionFactory};
 
@@ -43,10 +43,32 @@ final readonly class SimilarTo implements Condition
             throw InvalidAstException::missingRequiredField('rexpr', 'A_Expr');
         }
 
+        $pattern = null;
+        $escape = null;
+
+        if ($rexpr->hasFuncCall()) {
+            $funcCall = $rexpr->getFuncCall();
+            $args = $funcCall?->getArgs();
+
+            if ($args !== null && \count($args) > 0) {
+                $pattern = ExpressionFactory::fromAst($args[0]);
+            }
+
+            if ($args !== null && \count($args) > 1) {
+                $escape = ExpressionFactory::fromAst($args[1]);
+            }
+        } else {
+            $pattern = ExpressionFactory::fromAst($rexpr);
+        }
+
+        if ($pattern === null) {
+            throw InvalidAstException::missingRequiredField('pattern', 'SimilarTo');
+        }
+
         return new self(
             ExpressionFactory::fromAst($lexpr),
-            ExpressionFactory::fromAst($rexpr),
-            null
+            $pattern,
+            $escape
         );
     }
 
@@ -70,11 +92,28 @@ final readonly class SimilarTo implements Condition
         $operatorString = new PBString(['sval' => '~']);
         $operatorNode = new Node(['string' => $operatorString]);
 
+        $funcArgs = [$this->pattern->toAst()];
+
+        if ($this->escape !== null) {
+            $funcArgs[] = $this->escape->toAst();
+        }
+
+        $funcCall = new FuncCall([
+            'funcname' => [
+                new Node(['string' => new PBString(['sval' => 'pg_catalog'])]),
+                new Node(['string' => new PBString(['sval' => 'similar_to_escape'])]),
+            ],
+            'args' => $funcArgs,
+            'funcformat' => CoercionForm::COERCE_EXPLICIT_CALL,
+            'location' => -1,
+        ]);
+
         $aExpr = new A_Expr([
             'kind' => A_Expr_Kind::AEXPR_SIMILAR,
             'name' => [$operatorNode],
             'lexpr' => $this->expression->toAst(),
-            'rexpr' => $this->pattern->toAst(),
+            'rexpr' => new Node(['func_call' => $funcCall]),
+            'location' => -1,
         ]);
 
         return new Node(['a_expr' => $aExpr]);

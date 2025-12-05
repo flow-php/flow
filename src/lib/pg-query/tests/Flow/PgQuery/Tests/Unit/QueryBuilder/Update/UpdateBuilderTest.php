@@ -12,7 +12,7 @@ use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionE
 use Flow\PgQuery\QueryBuilder\Expression\{BinaryExpression, Column, FunctionCall, Literal};
 use Flow\PgQuery\QueryBuilder\Select\SelectBuilder;
 use Flow\PgQuery\QueryBuilder\Table\Table;
-use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder, UpdateFinalStep};
+use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder};
 use PHPUnit\Framework\TestCase;
 
 final class UpdateBuilderTest extends TestCase
@@ -312,11 +312,9 @@ final class UpdateBuilderTest extends TestCase
         $this->expectException(InvalidExpressionException::class);
         $this->expectExceptionMessage('assignments cannot be empty');
 
-        $builder = UpdateBuilder::create()
-            ->update('users');
-
-        \assert($builder instanceof UpdateFinalStep);
-        $builder->toAst();
+        UpdateBuilder::create()
+            ->update('users')
+            ->toAst();
     }
 
     public function test_throws_on_missing_table() : void
@@ -592,7 +590,15 @@ final class UpdateBuilderTest extends TestCase
         self::assertNotNull($resTarget);
         $val = $resTarget->getVal();
         self::assertNotNull($val);
-        self::assertTrue($val->hasAStar());
+
+        // Star.toAst() produces a ColumnRef with A_Star inside
+        self::assertTrue($val->hasColumnRef());
+        $columnRef = $val->getColumnRef();
+        self::assertNotNull($columnRef);
+        $fields = $columnRef->getFields();
+        self::assertNotNull($fields);
+        self::assertCount(1, $fields);
+        self::assertTrue($fields[0]->hasAStar());
     }
 
     public function test_update_with_returning_deparsed_output() : void

@@ -14,8 +14,14 @@ final class StarTest extends TestCase
         $star = Star::all();
         $node = $star->toAst();
 
-        $aStar = $node->getAStar();
-        self::assertNotNull($aStar);
+        $columnRef = $node->getColumnRef();
+        self::assertNotNull($columnRef);
+
+        $fields = $columnRef->getFields();
+        self::assertCount(1, $fields);
+
+        $starField = $fields[0]->getAStar();
+        self::assertNotNull($starField);
     }
 
     public function test_converts_qualified_star_to_ast() : void

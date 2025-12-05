@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
-use Flow\PgQuery\Protobuf\AST\Node;
+use Flow\PgQuery\Protobuf\AST\{A_Expr_Kind, MinMaxOp, Node};
 use Flow\PgQuery\QueryBuilder\Exception\UnsupportedNodeException;
 
 /**
@@ -56,7 +56,18 @@ final class ExpressionFactory
         }
 
         if ($node->getAExpr() !== null) {
+            $aExpr = $node->getAExpr();
+            $kind = $aExpr->getKind();
+
+            if ($kind === A_Expr_Kind::AEXPR_NULLIF) {
+                return NullIf::fromAst($node);
+            }
+
             return BinaryExpression::fromAst($node);
+        }
+
+        if ($node->getCoalesceExpr() !== null) {
+            return Coalesce::fromAst($node);
         }
 
         if ($node->getResTarget() !== null) {
@@ -86,6 +97,24 @@ final class ExpressionFactory
 
         if ($node->getSubLink() !== null) {
             return Subquery::fromAst($node);
+        }
+
+        if ($node->getMinMaxExpr() !== null) {
+            $minMaxExpr = $node->getMinMaxExpr();
+
+            if ($minMaxExpr->getOp() === MinMaxOp::IS_GREATEST) {
+                return Greatest::fromAst($node);
+            }
+
+            return Least::fromAst($node);
+        }
+
+        if ($node->getRowExpr() !== null) {
+            return RowExpression::fromAst($node);
+        }
+
+        if ($node->getAArrayExpr() !== null) {
+            return ArrayExpression::fromAst($node);
         }
 
         throw UnsupportedNodeException::forNodeType('Unknown expression node type');

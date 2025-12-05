@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
 use Flow\PgQuery\Protobuf\AST\{FuncCall, Node, PBString, WindowDef};
-use Flow\PgQuery\QueryBuilder\Clause\OrderBy;
+use Flow\PgQuery\QueryBuilder\Clause\{OrderBy, OrderByItem};
 use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
 
 final readonly class WindowFunction implements Expression
@@ -14,7 +14,7 @@ final readonly class WindowFunction implements Expression
      * @param non-empty-list<string> $funcName Function name parts (e.g., ['row_number'] or ['rank'])
      * @param list<Expression> $args Function arguments
      * @param list<Expression> $partitionBy PARTITION BY expressions
-     * @param list<OrderBy> $orderBy ORDER BY clauses
+     * @param list<OrderBy|OrderByItem> $orderBy ORDER BY clauses
      */
     public function __construct(
         private array $funcName,
@@ -115,7 +115,7 @@ final readonly class WindowFunction implements Expression
     }
 
     /**
-     * @return list<OrderBy>
+     * @return list<OrderBy|OrderByItem>
      */
     public function getOrderBy() : array
     {
@@ -170,7 +170,11 @@ final readonly class WindowFunction implements Expression
         $orderNodes = [];
 
         foreach ($this->orderBy as $order) {
-            $orderNodes[] = $order->toAst();
+            if ($order instanceof OrderByItem) {
+                $orderNodes[] = new Node(['sort_by' => $order->toAst()]);
+            } else {
+                $orderNodes[] = $order->toAst();
+            }
         }
 
         if ($orderNodes !== []) {

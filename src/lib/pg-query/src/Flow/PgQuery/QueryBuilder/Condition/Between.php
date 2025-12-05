@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Condition;
 
-use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBList};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException};
+use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBList, PBString};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{Expression, ExpressionFactory};
 
 final readonly class Between implements Condition
@@ -107,8 +107,13 @@ final readonly class Between implements Condition
 
         $listNode = new Node(['list' => $list]);
 
+        $nameString = new PBString();
+        $nameString->setSval('BETWEEN');
+        $nameNode = new Node(['string' => $nameString]);
+
         $aExpr = new A_Expr([
             'kind' => $kind,
+            'name' => [$nameNode],
             'lexpr' => $this->expression->toAst(),
             'rexpr' => $listNode,
         ]);

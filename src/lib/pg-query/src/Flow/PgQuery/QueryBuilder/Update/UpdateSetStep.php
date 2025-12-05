@@ -9,7 +9,7 @@ use Flow\PgQuery\QueryBuilder\Expression\Expression;
 /**
  * Step for specifying SET assignments in UPDATE query.
  */
-interface UpdateSetStep
+interface UpdateSetStep extends UpdateFromStep
 {
     /**
      * Set a single column assignment.

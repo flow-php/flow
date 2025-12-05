@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Condition;
 
 use Flow\PgQuery\Parser;
-use Flow\PgQuery\Protobuf\AST\Node;
+use Flow\PgQuery\Protobuf\AST\{Boolean, Node};
 use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
 
 final readonly class RawCondition implements Condition
@@ -15,9 +15,68 @@ final readonly class RawCondition implements Condition
     ) {
     }
 
+    public static function fromAConst(Node $node) : static
+    {
+        $aConst = $node->getAConst();
+
+        if ($aConst === null) {
+            throw InvalidAstException::unexpectedNodeType('A_Const', 'unknown');
+        }
+
+        if ($aConst->hasBoolval()) {
+            $boolval = $aConst->getBoolval();
+            \assert($boolval instanceof Boolean);
+
+            return new self($boolval->getBoolval() ? 'true' : 'false');
+        }
+
+        throw UnsupportedNodeException::cannotReconstruct(self::class . ' from A_Const');
+    }
+
     public static function fromAst(Node $node) : static
     {
         throw UnsupportedNodeException::cannotReconstruct(self::class);
+    }
+
+    public static function fromTypeCast(Node $node) : static
+    {
+        $typeCast = $node->getTypeCast();
+
+        if ($typeCast === null) {
+            throw InvalidAstException::unexpectedNodeType('TypeCast', 'unknown');
+        }
+
+        $typeName = $typeCast->getTypeName();
+
+        if ($typeName === null) {
+            throw InvalidAstException::missingRequiredField('type_name', 'TypeCast');
+        }
+
+        $names = $typeName->getNames();
+
+        if ($names !== null) {
+            foreach ($names as $nameNode) {
+                $stringNode = $nameNode->getString();
+
+                if ($stringNode !== null && $stringNode->getSval() === 'bool') {
+                    $arg = $typeCast->getArg();
+
+                    if ($arg !== null) {
+                        $aConst = $arg->getAConst();
+
+                        if ($aConst !== null) {
+                            $sval = $aConst->getSval();
+
+                            if ($sval !== null) {
+                                return new self($sval->getSval());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        throw UnsupportedNodeException::cannotReconstruct(self::class . ' from TypeCast');
     }
 
     public function and(Condition $other) : AndCondition

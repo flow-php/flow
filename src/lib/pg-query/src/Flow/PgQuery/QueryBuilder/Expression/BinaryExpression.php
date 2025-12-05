@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
 use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBString};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * Binary expression: left op right (e.g., a + b, x * y, s1 || s2).
@@ -56,9 +56,9 @@ final readonly class BinaryExpression implements Expression
         }
 
         return new self(
-            self::expressionFromNode($lexpr),
+            ExpressionFactory::fromAst($lexpr),
             $operatorString->getSval(),
-            self::expressionFromNode($rexpr)
+            ExpressionFactory::fromAst($rexpr)
         );
     }
 
@@ -100,10 +100,5 @@ final readonly class BinaryExpression implements Expression
         $node->setAExpr($aExpr);
 
         return $node;
-    }
-
-    private static function expressionFromNode(Node $node) : Expression
-    {
-        throw UnsupportedNodeException::cannotReconstruct('Expression from arbitrary Node - implement Expression::fromAst() factory');
     }
 }

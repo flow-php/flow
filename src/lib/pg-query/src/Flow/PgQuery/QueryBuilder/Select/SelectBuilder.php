@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Select;
 
-use Flow\PgQuery\Protobuf\AST\{Node, ResTarget, SelectStmt as ProtobufSelectStmt};
+use Flow\PgQuery\Protobuf\AST\{LimitOption, Node, ResTarget, SelectStmt as ProtobufSelectStmt};
 use Flow\PgQuery\QueryBuilder\Clause\{LockingClause, OrderByItem, WindowDefinition, WithClause};
 use Flow\PgQuery\QueryBuilder\Condition\{Condition, ConditionFactory};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory, Literal};
-use Flow\PgQuery\QueryBuilder\Table\{DerivedTable, Table, TableFunction};
-use Flow\PgQuery\QueryBuilder\Table\{JoinType, JoinedTable, TableReference};
+use Flow\PgQuery\QueryBuilder\Table\{AliasedTable, DerivedTable, JoinType, JoinedTable, Table, TableFunction, TableReference};
 
 final readonly class SelectBuilder implements SelectFinalStep, SelectFromStep, SelectGroupByStep, SelectHavingStep, SelectJoinStep, SelectLimitStep, SelectLockingStep, SelectOffsetStep, SelectOrderByStep, SelectSelectStep, SelectSetOperationStep, SelectWhereStep, SelectWindowStep
 {
@@ -99,7 +98,9 @@ final readonly class SelectBuilder implements SelectFinalStep, SelectFromStep, S
             $distinct = true;
 
             foreach ($distinctClause as $distinctNode) {
-                $distinctOn[] = ExpressionFactory::fromAst($distinctNode);
+                if ($distinctNode->serializeToJsonString() !== '{}') {
+                    $distinctOn[] = ExpressionFactory::fromAst($distinctNode);
+                }
             }
         }
 
@@ -862,6 +863,7 @@ final readonly class SelectBuilder implements SelectFinalStep, SelectFromStep, S
 
         if ($this->limit !== null) {
             $selectStmt->setLimitCount(Literal::int($this->limit)->toAst());
+            $selectStmt->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
         }
 
         if ($this->offset !== null) {
@@ -903,7 +905,7 @@ final readonly class SelectBuilder implements SelectFinalStep, SelectFromStep, S
 
             $selectStmt->setDistinctClause($distinctClause);
         } elseif ($this->distinct) {
-            $selectStmt->setDistinctClause([]);
+            $selectStmt->setDistinctClause([new Node()]);
         }
 
         $targetList = [];
@@ -1000,6 +1002,7 @@ final readonly class SelectBuilder implements SelectFinalStep, SelectFromStep, S
 
         if ($this->limit !== null) {
             $selectStmt->setLimitCount(Literal::int($this->limit)->toAst());
+            $selectStmt->setLimitOption(LimitOption::LIMIT_OPTION_COUNT);
         }
 
         if ($this->offset !== null) {
@@ -1155,7 +1158,33 @@ final readonly class SelectBuilder implements SelectFinalStep, SelectFromStep, S
         }
 
         if ($node->hasRangeFunction()) {
-            return TableFunction::fromAst($node);
+            $rangeFunction = $node->getRangeFunction();
+            $tableFunction = TableFunction::fromAst($node);
+
+            if ($rangeFunction !== null) {
+                $alias = $rangeFunction->getAlias();
+
+                if ($alias !== null && $alias->getAliasname() !== '') {
+                    $columnAliases = null;
+                    $colnames = $alias->getColnames();
+
+                    if ($colnames !== null && \count($colnames) > 0) {
+                        $columnAliases = [];
+
+                        foreach ($colnames as $colNode) {
+                            $colString = $colNode->getString();
+
+                            if ($colString !== null) {
+                                $columnAliases[] = $colString->getSval();
+                            }
+                        }
+                    }
+
+                    return new AliasedTable($tableFunction, $alias->getAliasname(), $columnAliases);
+                }
+            }
+
+            return $tableFunction;
         }
 
         throw InvalidAstException::unexpectedNodeType('RangeVar, RangeSubselect or RangeFunction', 'unknown');

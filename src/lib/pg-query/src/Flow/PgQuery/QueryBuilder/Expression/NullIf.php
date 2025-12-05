@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
-use Flow\PgQuery\Protobuf\AST\{Node, NullIfExpr};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, UnsupportedNodeException};
+use Flow\PgQuery\Protobuf\AST\{A_Expr, A_Expr_Kind, Node, PBString};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * NULLIF(expr1, expr2) - returns NULL if expr1 equals expr2, otherwise returns expr1.
@@ -20,21 +20,26 @@ final readonly class NullIf implements Expression
 
     public static function fromAst(Node $node) : static
     {
-        $nullIfExpr = $node->getNullIfExpr();
+        $aExpr = $node->getAExpr();
 
-        if ($nullIfExpr === null) {
-            throw InvalidAstException::unexpectedNodeType('NullIfExpr', 'unknown');
+        if ($aExpr === null) {
+            throw InvalidAstException::unexpectedNodeType('A_Expr', 'unknown');
         }
 
-        $args = $nullIfExpr->getArgs();
+        if ($aExpr->getKind() !== A_Expr_Kind::AEXPR_NULLIF) {
+            throw InvalidAstException::invalidFieldValue('kind', 'A_Expr', 'Expected AEXPR_NULLIF for NullIf expression');
+        }
 
-        if ($args === null || \count($args) !== 2) {
-            throw InvalidAstException::invalidFieldValue('args', 'NullIfExpr', 'must have exactly 2 arguments');
+        $lexpr = $aExpr->getLexpr();
+        $rexpr = $aExpr->getRexpr();
+
+        if ($lexpr === null || $rexpr === null) {
+            throw InvalidAstException::missingRequiredField('lexpr/rexpr', 'A_Expr');
         }
 
         return new self(
-            self::expressionFromNode($args[0]),
-            self::expressionFromNode($args[1])
+            ExpressionFactory::fromAst($lexpr),
+            ExpressionFactory::fromAst($rexpr)
         );
     }
 
@@ -55,26 +60,17 @@ final readonly class NullIf implements Expression
 
     public function toAst() : Node
     {
-        $nullIfExpr = new NullIfExpr();
-        $nullIfExpr->setArgs([
-            $this->first->toAst(),
-            $this->second->toAst(),
+        $nameString = new PBString();
+        $nameString->setSval('=');
+        $nameNode = new Node(['string' => $nameString]);
+
+        $aExpr = new A_Expr([
+            'kind' => A_Expr_Kind::AEXPR_NULLIF,
+            'name' => [$nameNode],
+            'lexpr' => $this->first->toAst(),
+            'rexpr' => $this->second->toAst(),
         ]);
-        $nullIfExpr->setOpno(0);
-        $nullIfExpr->setOpresulttype(0);
-        $nullIfExpr->setOpretset(false);
-        $nullIfExpr->setOpcollid(0);
-        $nullIfExpr->setInputcollid(0);
-        $nullIfExpr->setLocation(-1);
 
-        $node = new Node();
-        $node->setNullIfExpr($nullIfExpr);
-
-        return $node;
-    }
-
-    private static function expressionFromNode(Node $node) : Expression
-    {
-        throw UnsupportedNodeException::cannotReconstruct('Expression from arbitrary Node - implement Expression::fromAst() factory');
+        return new Node(['a_expr' => $aExpr]);
     }
 }
