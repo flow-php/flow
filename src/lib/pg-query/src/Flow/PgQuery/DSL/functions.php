@@ -402,6 +402,20 @@ function pg_delete() : DeleteFromStep
     return DeleteBuilder::create();
 }
 
+/**
+ * Parse SQL and convert to a QueryBuilder for modification.
+ *
+ * Only works for single-statement queries. For multiple statements,
+ * use pg_split() to parse statements individually.
+ *
+ * @throws \InvalidArgumentException if query contains multiple statements or unsupported statement type
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function pg_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateBuilder|DeleteBuilder
+{
+    return pg_parse($sql)->toQueryBuilder();
+}
+
 // ----------------------------------------------------------------------------
 // Expressions
 // ----------------------------------------------------------------------------

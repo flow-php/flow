@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit;
 
-use function Flow\PgQuery\DSL\{pg_parse, pg_query_columns, pg_query_functions, pg_query_tables};
+use function Flow\PgQuery\DSL\{pg_and, pg_col, pg_eq, pg_gt, pg_int, pg_parse, pg_query_columns, pg_query_functions, pg_query_tables, pg_to_query_builder};
 use Flow\PgQuery\AST\Nodes\{Column, FunctionCall, Table};
 use Flow\PgQuery\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
-use Flow\PgQuery\Protobuf\AST\ParseResult;
+use Flow\PgQuery\ParsedQuery;
+use Flow\PgQuery\Protobuf\AST\{Node, ParseResult, RawStmt};
+use Flow\PgQuery\QueryBuilder\Delete\DeleteBuilder;
+use Flow\PgQuery\QueryBuilder\Insert\InsertBuilder;
+use Flow\PgQuery\QueryBuilder\Select\SelectBuilder;
+use Flow\PgQuery\QueryBuilder\Update\UpdateBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class ParsedQueryTest extends TestCase
@@ -238,6 +243,134 @@ final class ParsedQueryTest extends TestCase
         self::assertCount(1, $tables);
         self::assertSame('users', $tables[0]->name());
         self::assertSame('public', $tables[0]->schema());
+    }
+
+    public function test_to_delete_builder() : void
+    {
+        $builder = pg_parse('DELETE FROM users WHERE id = 1')->toDeleteBuilder();
+
+        self::assertInstanceOf(DeleteBuilder::class, $builder);
+    }
+
+    public function test_to_delete_builder_throws_on_wrong_type() : void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query is not a DELETE statement');
+
+        pg_parse('SELECT * FROM users')->toDeleteBuilder();
+    }
+
+    public function test_to_insert_builder() : void
+    {
+        $builder = pg_parse("INSERT INTO users (name) VALUES ('John')")->toInsertBuilder();
+
+        self::assertInstanceOf(InsertBuilder::class, $builder);
+    }
+
+    public function test_to_insert_builder_throws_on_wrong_type() : void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query is not an INSERT statement');
+
+        pg_parse('SELECT * FROM users')->toInsertBuilder();
+    }
+
+    public function test_to_query_builder_delete() : void
+    {
+        $builder = pg_parse('DELETE FROM users WHERE id = 1')->toQueryBuilder();
+
+        self::assertInstanceOf(DeleteBuilder::class, $builder);
+    }
+
+    public function test_to_query_builder_dsl_function() : void
+    {
+        $builder = pg_to_query_builder('SELECT * FROM users');
+
+        self::assertInstanceOf(SelectBuilder::class, $builder);
+    }
+
+    public function test_to_query_builder_insert() : void
+    {
+        $builder = pg_parse("INSERT INTO users (name) VALUES ('John')")->toQueryBuilder();
+
+        self::assertInstanceOf(InsertBuilder::class, $builder);
+    }
+
+    public function test_to_query_builder_modify_and_deparse() : void
+    {
+        $builder = pg_parse('SELECT * FROM users')->toQueryBuilder();
+
+        self::assertInstanceOf(SelectBuilder::class, $builder);
+
+        $modified = $builder
+            ->where(pg_and(
+                pg_eq(pg_col('id'), pg_int(1)),
+                pg_gt(pg_col('age'), pg_int(18))
+            ))
+            ->limit(10);
+
+        $sql = pg_parse('SELECT 1')->raw();
+        $rawStmt = new RawStmt();
+        $node = new Node();
+        $node->setSelectStmt($modified->toAst());
+        $rawStmt->setStmt($node);
+        $sql->setStmts([$rawStmt]);
+
+        $result = (new ParsedQuery($sql))->deparse();
+
+        self::assertSame('SELECT * FROM users WHERE id = 1 AND age > 18 LIMIT 10', $result);
+    }
+
+    public function test_to_query_builder_select() : void
+    {
+        $builder = pg_parse('SELECT * FROM users')->toQueryBuilder();
+
+        self::assertInstanceOf(SelectBuilder::class, $builder);
+    }
+
+    public function test_to_query_builder_throws_on_multiple_statements() : void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Multiple statements found. Use pg_split() to parse statements individually.');
+
+        pg_parse('SELECT 1; SELECT 2')->toQueryBuilder();
+    }
+
+    public function test_to_query_builder_update() : void
+    {
+        $builder = pg_parse("UPDATE users SET name = 'John' WHERE id = 1")->toQueryBuilder();
+
+        self::assertInstanceOf(UpdateBuilder::class, $builder);
+    }
+
+    public function test_to_select_builder() : void
+    {
+        $builder = pg_parse('SELECT * FROM users')->toSelectBuilder();
+
+        self::assertInstanceOf(SelectBuilder::class, $builder);
+    }
+
+    public function test_to_select_builder_throws_on_wrong_type() : void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query is not a SELECT statement');
+
+        pg_parse('DELETE FROM users')->toSelectBuilder();
+    }
+
+    public function test_to_update_builder() : void
+    {
+        $builder = pg_parse("UPDATE users SET name = 'John' WHERE id = 1")->toUpdateBuilder();
+
+        self::assertInstanceOf(UpdateBuilder::class, $builder);
+    }
+
+    public function test_to_update_builder_throws_on_wrong_type() : void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Query is not an UPDATE statement');
+
+        pg_parse('SELECT * FROM users')->toUpdateBuilder();
     }
 
     public function test_traverse_with_multiple_visitors() : void
