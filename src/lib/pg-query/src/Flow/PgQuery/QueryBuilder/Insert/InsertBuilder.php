@@ -12,7 +12,7 @@ use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{Expression, ExpressionFactory, Star};
 use Flow\PgQuery\QueryBuilder\Select\SelectFinalStep;
 
-final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateStep, InsertFinalStep, InsertIntoStep, InsertOnConflictStep, InsertReturningStep, InsertValuesStep
+final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateStep, InsertIntoStep
 {
     /**
      * @param list<string> $columns

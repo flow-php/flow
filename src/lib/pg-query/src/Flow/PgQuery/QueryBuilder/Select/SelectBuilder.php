@@ -11,7 +11,7 @@ use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{AliasedExpression, Expression, ExpressionFactory, Literal};
 use Flow\PgQuery\QueryBuilder\Table\{AliasedTable, DerivedTable, JoinType, JoinedTable, Table, TableFunction, TableReference};
 
-final readonly class SelectBuilder implements SelectFinalStep, SelectFromStep, SelectGroupByStep, SelectHavingStep, SelectJoinStep, SelectLimitStep, SelectLockingStep, SelectOffsetStep, SelectOrderByStep, SelectSelectStep, SelectSetOperationStep, SelectWhereStep, SelectWindowStep
+final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, SelectSelectStep
 {
     /**
      * @param array<Expression> $selectList
