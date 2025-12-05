@@ -64,8 +64,6 @@ use function Flow\PgQuery\DSL\{
     pg_window_func,
     pg_with
 };
-use Flow\PgQuery\Protobuf\AST\Node;
-
 use Flow\PgQuery\QueryBuilder\Clause\{CTEMaterialization, NullsPosition, SortDirection};
 
 use Flow\PgQuery\QueryBuilder\Condition\ComparisonOperator;
@@ -162,16 +160,14 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_all() : void
     {
-        $subqueryNode = new Node();
         $subquery = pg_select()
             ->select(pg_col('price'))
             ->from(pg_table('budget_products'));
-        $subqueryNode->setSelectStmt($subquery->toAst());
 
         $query = pg_select()
             ->select(pg_star())
             ->from(pg_table('products'))
-            ->where(pg_all(pg_col('price'), ComparisonOperator::GT, $subqueryNode));
+            ->where(pg_all(pg_col('price'), ComparisonOperator::GT, $subquery));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -181,16 +177,14 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_any() : void
     {
-        $subqueryNode = new Node();
         $subquery = pg_select()
             ->select(pg_col('price'))
             ->from(pg_table('discounted_products'));
-        $subqueryNode->setSelectStmt($subquery->toAst());
 
         $query = pg_select()
             ->select(pg_star())
             ->from(pg_table('products'))
-            ->where(pg_any(pg_col('price'), ComparisonOperator::GT, $subqueryNode));
+            ->where(pg_any(pg_col('price'), ComparisonOperator::GT, $subquery));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -305,15 +299,14 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_cte() : void
     {
-        $cteNode = new Node();
-        $cteQuery = pg_select()
-            ->select(pg_col('id'), pg_col('name'))
-            ->from(pg_table('users'))
-            ->where(pg_eq(pg_col('active'), pg_bool(true)));
-        $cteNode->setSelectStmt($cteQuery->toAst());
-
         $query = pg_select_with(pg_with([
-            pg_cte('active_users', $cteNode),
+            pg_cte(
+                'active_users',
+                pg_select()
+                    ->select(pg_col('id'), pg_col('name'))
+                    ->from(pg_table('users'))
+                    ->where(pg_eq(pg_col('active'), pg_bool(true)))
+            ),
         ]))
             ->select(pg_star())
             ->from(pg_cte_ref('active_users'));
@@ -326,15 +319,13 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_cte_materialized() : void
     {
-        $cteNode = new Node();
         $cteQuery = pg_select()
             ->select(pg_col('id'), pg_col('name'))
             ->from(pg_table('users'))
             ->where(pg_eq(pg_col('active'), pg_bool(true)));
-        $cteNode->setSelectStmt($cteQuery->toAst());
 
         $query = pg_select_with(pg_with([
-            pg_cte('active_users', $cteNode, [], CTEMaterialization::MATERIALIZED),
+            pg_cte('active_users', $cteQuery, [], CTEMaterialization::MATERIALIZED),
         ]))
             ->select(pg_star())
             ->from(pg_cte_ref('active_users'));
@@ -347,15 +338,13 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_cte_not_materialized() : void
     {
-        $cteNode = new Node();
         $cteQuery = pg_select()
             ->select(pg_col('id'), pg_col('name'))
             ->from(pg_table('users'))
             ->where(pg_eq(pg_col('active'), pg_bool(true)));
-        $cteNode->setSelectStmt($cteQuery->toAst());
 
         $query = pg_select_with(pg_with([
-            pg_cte('active_users', $cteNode, [], CTEMaterialization::NOT_MATERIALIZED),
+            pg_cte('active_users', $cteQuery, [], CTEMaterialization::NOT_MATERIALIZED),
         ]))
             ->select(pg_star())
             ->from(pg_cte_ref('active_users'));
@@ -368,18 +357,16 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_derived_table() : void
     {
-        $subqueryNode = new Node();
         $subquery = pg_select()
             ->select(pg_col('user_id'), pg_sum(pg_col('amount'))->as('total'))
             ->from(pg_table('orders'))
             ->groupBy(pg_col('user_id'));
-        $subqueryNode->setSelectStmt($subquery->toAst());
 
         $query = pg_select()
             ->select(pg_col('u.name'), pg_col('o.total'))
             ->from(pg_table('users')->as('u'))
             ->leftJoin(
-                pg_derived($subqueryNode, 'o'),
+                pg_derived($subquery, 'o'),
                 pg_eq(pg_col('u.id'), pg_col('o.user_id'))
             );
 
@@ -391,18 +378,16 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_derived_table_join() : void
     {
-        $subqueryNode = new Node();
         $subquery = pg_select()
             ->select(pg_col('user_id'), pg_count()->as('order_count'))
             ->from(pg_table('orders'))
             ->groupBy(pg_col('user_id'));
-        $subqueryNode->setSelectStmt($subquery->toAst());
 
         $query = pg_select()
             ->select(pg_col('users.name'), pg_col('order_stats.order_count'))
             ->from(pg_table('users'))
             ->join(
-                pg_derived($subqueryNode, 'order_stats'),
+                pg_derived($subquery, 'order_stats'),
                 pg_eq(pg_col('users.id'), pg_col('order_stats.user_id'))
             );
 
@@ -456,17 +441,15 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_exists() : void
     {
-        $subqueryNode = new Node();
         $subquery = pg_select()
             ->select(pg_int(1))
             ->from(pg_table('orders'))
             ->where(pg_eq(pg_col('orders.user_id'), pg_col('users.id')));
-        $subqueryNode->setSelectStmt($subquery->toAst());
 
         $query = pg_select()
             ->select(pg_star())
             ->from(pg_table('users'))
-            ->where(pg_exists($subqueryNode));
+            ->where(pg_exists($subquery));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -679,20 +662,18 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_lateral_join() : void
     {
-        $lateralSubqueryNode = new Node();
         $lateralQuery = pg_select()
             ->select(pg_star())
             ->from(pg_table('orders'))
             ->where(pg_eq(pg_col('orders.user_id'), pg_col('u.id')))
             ->orderBy(pg_desc(pg_col('created_at')))
             ->limit(3);
-        $lateralSubqueryNode->setSelectStmt($lateralQuery->toAst());
 
         $query = pg_select()
             ->select(pg_col('u.name'), pg_col('recent.id'))
             ->from(pg_table('users')->as('u'))
             ->leftJoin(
-                pg_lateral(pg_derived($lateralSubqueryNode, 'recent')),
+                pg_lateral(pg_derived($lateralQuery, 'recent')),
                 pg_raw_condition('true')
             );
 
@@ -704,19 +685,17 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_lateral_subquery() : void
     {
-        $subqueryNode = new Node();
         $subquery = pg_select()
             ->select(pg_col('order_id'))
             ->from(pg_table('orders'))
             ->where(pg_eq(pg_col('orders.user_id'), pg_col('users.id')))
             ->orderBy(pg_desc(pg_col('created_at')))
             ->limit(5);
-        $subqueryNode->setSelectStmt($subquery->toAst());
 
         $query = pg_select()
             ->select(pg_col('users.name'), pg_col('recent_orders.order_id'))
             ->from(pg_table('users'))
-            ->crossJoin(pg_lateral(pg_derived($subqueryNode, 'recent_orders')));
+            ->crossJoin(pg_lateral(pg_derived($subquery, 'recent_orders')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -941,17 +920,15 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_scalar_subquery() : void
     {
-        $subqueryNode = new Node();
         $subquery = pg_select()
             ->select(pg_count())
             ->from(pg_table('orders'))
             ->where(pg_eq(pg_col('orders.user_id'), pg_col('users.id')));
-        $subqueryNode->setSelectStmt($subquery->toAst());
 
         $query = pg_select()
             ->select(
                 pg_col('name'),
-                pg_subquery($subqueryNode)->as('order_count')
+                pg_subquery($subquery)->as('order_count')
             )
             ->from(pg_table('users'));
 

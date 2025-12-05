@@ -342,7 +342,7 @@ use Flow\PgQuery\QueryBuilder\Expression\{
     WindowFunction
 };
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
-use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectSelectStep};
+use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PgQuery\QueryBuilder\Table\{
     CTEReference,
     DerivedTable,
@@ -661,9 +661,12 @@ function pg_when(Expression $condition, Expression $result) : WhenClause
  * Create a subquery expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_subquery(Node $query) : Subquery
+function pg_subquery(SelectFinalStep $query) : Subquery
 {
-    return new Subquery($query);
+    $node = new Node();
+    $node->setSelectStmt($query->toAst());
+
+    return new Subquery($node);
 }
 
 /**
@@ -843,27 +846,36 @@ function pg_is_distinct_from(Expression $left, Expression $right, bool $not = fa
  * Create an EXISTS condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_exists(Node $subquery) : Exists
+function pg_exists(SelectFinalStep $subquery) : Exists
 {
-    return new Exists($subquery);
+    $node = new Node();
+    $node->setSelectStmt($subquery->toAst());
+
+    return new Exists($node);
 }
 
 /**
  * Create an ANY condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_any(Expression $left, ComparisonOperator $operator, Node $subquery) : Any
+function pg_any(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : Any
 {
-    return new Any($left, $operator, $subquery);
+    $node = new Node();
+    $node->setSelectStmt($subquery->toAst());
+
+    return new Any($left, $operator, $node);
 }
 
 /**
  * Create an ALL condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_all(Expression $left, ComparisonOperator $operator, Node $subquery) : All
+function pg_all(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : All
 {
-    return new All($left, $operator, $subquery);
+    $node = new Node();
+    $node->setSelectStmt($subquery->toAst());
+
+    return new All($left, $operator, $node);
 }
 
 /**
@@ -941,9 +953,12 @@ function pg_cte_ref(string $name) : CTEReference
  * Create a derived table (subquery in FROM clause).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_derived(Node $query, string $alias) : DerivedTable
+function pg_derived(SelectFinalStep $query, string $alias) : DerivedTable
 {
-    return new DerivedTable($query, $alias);
+    $node = new Node();
+    $node->setSelectStmt($query->toAst());
+
+    return new DerivedTable($node, $alias);
 }
 
 /**
@@ -1019,19 +1034,22 @@ function pg_with(array $ctes, bool $recursive = false) : WithClause
  * Create a CTE (Common Table Expression).
  *
  * @param string $name CTE name
- * @param Node $query CTE query
+ * @param SelectFinalStep $query CTE query
  * @param array<string> $columnNames Column aliases (optional)
  * @param CTEMaterialization $materialization Materialization hint
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function pg_cte(
     string $name,
-    Node $query,
+    SelectFinalStep $query,
     array $columnNames = [],
     CTEMaterialization $materialization = CTEMaterialization::DEFAULT,
     bool $recursive = false,
 ) : CTE {
-    return new CTE($name, $query, $columnNames, $materialization, $recursive);
+    $node = new Node();
+    $node->setSelectStmt($query->toAst());
+
+    return new CTE($name, $node, $columnNames, $materialization, $recursive);
 }
 
 /**

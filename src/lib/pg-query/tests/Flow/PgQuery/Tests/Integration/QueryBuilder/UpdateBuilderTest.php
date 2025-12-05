@@ -16,8 +16,6 @@ use function Flow\PgQuery\DSL\{
     pg_update
 };
 
-use Flow\PgQuery\Protobuf\AST\Node;
-
 final class UpdateBuilderTest extends PGQueryTestCase
 {
     public function test_simple_update() : void
@@ -151,12 +149,9 @@ final class UpdateBuilderTest extends PGQueryTestCase
             ->from(pg_table('price_stats'))
             ->where(pg_eq(pg_col('category'), pg_col('products.category')));
 
-        $subqueryNode = new Node();
-        $subqueryNode->setSelectStmt($subquery->toAst());
-
         $query = pg_update()
             ->update('products')
-            ->set('price', pg_subquery($subqueryNode))
+            ->set('price', pg_subquery($subquery))
             ->where(pg_eq(pg_col('id'), pg_int(1)));
 
         $this->assertUpdateQueryRoundTrip(
