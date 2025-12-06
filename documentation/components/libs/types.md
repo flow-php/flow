@@ -1,7 +1,5 @@
 # Types
 
-[TOC]
-
 Flow Types is a small library that provides a set of type classes for PHP. 
 It's designed to work together with static analysis tools like PHPStan and Psalm. 
 
@@ -11,6 +9,9 @@ The main goal of this library is to simplify common type-related tasks, such as 
 - [📖Architecture](/documentation/components/libs/types/architecture.md)
 - [📚API Reference](/documentation/api/lib/types)
   - [⚙️List of all Types](/api/lib/types/namespaces/flow-types-dsl.html)
+- [🗺DSL](/documentation/api/lib/types/namespaces/flow-types-dsl.html) 
+
+[TOC]
 
 ## Installation
 

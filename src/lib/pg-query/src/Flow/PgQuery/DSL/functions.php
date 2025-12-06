@@ -8,278 +8,6 @@ use Flow\ETL\Attribute\{DocumentationDSL, Module, Type as DSLType};
 use Flow\PgQuery\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
 use Flow\PgQuery\{DeparseOptions, ParsedQuery, Parser};
 use Flow\PgQuery\Extractors\{Columns, Functions, Tables};
-
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_parser() : Parser
-{
-    return new Parser();
-}
-
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_parse(string $sql) : ParsedQuery
-{
-    return (new Parser())->parse($sql);
-}
-
-/**
- * Returns a fingerprint of the given SQL query.
- * Literal values are normalized so they won't affect the fingerprint.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_fingerprint(string $sql) : ?string
-{
-    return (new Parser())->fingerprint($sql);
-}
-
-/**
- * Normalize SQL query by replacing literal values and named parameters with positional parameters.
- * WHERE id = :id will be changed into WHERE id = $1
- * WHERE id = 1 will be changed into WHERE id = $1.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_normalize(string $sql) : ?string
-{
-    return (new Parser())->normalize($sql);
-}
-
-/**
- * Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).
- * This handles DDL statements differently from pg_normalize() which is optimized for DML.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_normalize_utility(string $sql) : ?string
-{
-    return (new Parser())->normalizeUtility($sql);
-}
-
-/**
- * Split string with multiple SQL statements into array of individual statements.
- *
- * @return array<string>
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_split(string $sql) : array
-{
-    return (new Parser())->split($sql);
-}
-
-/**
- * Create DeparseOptions for configuring SQL formatting.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_deparse_options() : DeparseOptions
-{
-    return DeparseOptions::new();
-}
-
-/**
- * Convert a ParsedQuery AST back to SQL string.
- *
- * When called without options, returns the SQL as a simple string.
- * When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).
- *
- * @throws \RuntimeException if deparsing fails
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_deparse(ParsedQuery $query, ?DeparseOptions $options = null) : string
-{
-    return $query->deparse($options);
-}
-
-/**
- * Parse and format SQL query with pretty printing.
- *
- * This is a convenience function that parses SQL and returns it formatted.
- *
- * @param string $sql The SQL query to format
- * @param null|DeparseOptions $options Formatting options (defaults to pretty-print enabled)
- *
- * @throws \RuntimeException if parsing or deparsing fails
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_format(string $sql, ?DeparseOptions $options = null) : string
-{
-    return (new Parser())->parse($sql)->deparse($options ?? DeparseOptions::new());
-}
-
-/**
- * Generate a summary of parsed queries in protobuf format.
- * Useful for query monitoring and logging without full AST overhead.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_summary(string $sql, int $options = 0, int $truncateLimit = 0) : string
-{
-    return (new Parser())->summary($sql, $options, $truncateLimit);
-}
-
-/**
- * Transform a SQL query into a paginated query with LIMIT and OFFSET.
- *
- * @param string $sql The SQL query to paginate
- * @param int $limit Maximum number of rows to return
- * @param int $offset Number of rows to skip (requires ORDER BY in query)
- *
- * @return string The paginated SQL query
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_to_paginated_query(string $sql, int $limit, int $offset = 0) : string
-{
-    $query = (new Parser())->parse($sql);
-    $query->traverse(new PaginationModifier(new PaginationConfig($limit, $offset)));
-
-    return $query->deparse();
-}
-
-/**
- * Transform a SQL query into a COUNT query for pagination.
- *
- * Wraps the query in: SELECT COUNT(*) FROM (...) AS _count_subq
- * Removes ORDER BY and LIMIT/OFFSET from the inner query.
- *
- * @param string $sql The SQL query to transform
- *
- * @return string The COUNT query
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_to_count_query(string $sql) : string
-{
-    $query = (new Parser())->parse($sql);
-    $query->traverse(new CountModifier());
-
-    return $query->deparse();
-}
-
-/**
- * Transform a SQL query into a keyset (cursor-based) paginated query.
- *
- * More efficient than OFFSET for large datasets - uses indexed WHERE conditions.
- *
- * @param string $sql The SQL query to paginate (must have ORDER BY)
- * @param int $limit Maximum number of rows to return
- * @param list<KeysetColumn> $columns Columns for keyset pagination (must match ORDER BY)
- * @param null|list<null|bool|float|int|string> $cursor Values from last row of previous page (null for first page)
- *
- * @return string The paginated SQL query
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_to_keyset_query(string $sql, int $limit, array $columns, ?array $cursor = null) : string
-{
-    $query = (new Parser())->parse($sql);
-    $query->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig($limit, $columns, $cursor)));
-
-    return $query->deparse();
-}
-
-/**
- * Create a PaginationConfig for offset-based pagination.
- *
- * @param int $limit Maximum number of rows to return
- * @param int $offset Number of rows to skip (requires ORDER BY in query)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_pagination_config(int $limit, int $offset = 0) : PaginationConfig
-{
-    return new PaginationConfig($limit, $offset);
-}
-
-/**
- * Create a PaginationModifier for offset-based pagination.
- *
- * Applies LIMIT and OFFSET to the query. OFFSET without ORDER BY will throw an exception.
- *
- * @param int $limit Maximum number of rows to return
- * @param int $offset Number of rows to skip (requires ORDER BY in query)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_pagination(int $limit, int $offset = 0) : PaginationModifier
-{
-    return new PaginationModifier(new PaginationConfig($limit, $offset));
-}
-
-/**
- * Create a CountModifier that transforms a SELECT query into a COUNT query.
- *
- * The original query is wrapped in: SELECT COUNT(*) FROM (...) AS _count_subq
- * ORDER BY and LIMIT/OFFSET are removed from the inner query.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_count_modifier() : CountModifier
-{
-    return new CountModifier();
-}
-
-/**
- * Create a KeysetColumn for keyset pagination.
- *
- * @param string $column Column name (can include table alias like "u.id")
- * @param SortOrder $order Sort order (ASC or DESC)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_keyset_column(string $column, SortOrder $order = SortOrder::ASC) : KeysetColumn
-{
-    return new KeysetColumn($column, $order);
-}
-
-/**
- * Create a KeysetPaginationConfig for cursor-based pagination.
- *
- * @param int $limit Maximum number of rows to return
- * @param list<KeysetColumn> $columns Columns to use for keyset pagination (must match ORDER BY)
- * @param null|list<null|bool|float|int|string> $cursor Cursor values from the last row of previous page (null for first page)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_keyset_pagination_config(int $limit, array $columns, ?array $cursor = null) : KeysetPaginationConfig
-{
-    return new KeysetPaginationConfig($limit, $columns, $cursor);
-}
-
-/**
- * Create a KeysetPaginationModifier for cursor-based pagination.
- *
- * Keyset pagination is more efficient than OFFSET for large datasets because it uses
- * indexed WHERE conditions instead of scanning and skipping rows.
- *
- * @param int $limit Maximum number of rows to return
- * @param list<KeysetColumn> $columns Columns to use for keyset pagination (must match ORDER BY)
- * @param null|list<null|bool|float|int|string> $cursor Cursor values from the last row of previous page (null for first page)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_keyset_pagination(int $limit, array $columns, ?array $cursor = null) : KeysetPaginationModifier
-{
-    return new KeysetPaginationModifier(new KeysetPaginationConfig($limit, $columns, $cursor));
-}
-
-/**
- * Extract columns from a parsed SQL query.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_query_columns(ParsedQuery $query) : Columns
-{
-    return new Columns($query);
-}
-
-/**
- * Extract tables from a parsed SQL query.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_query_tables(ParsedQuery $query) : Tables
-{
-    return new Tables($query);
-}
-
-/**
- * Extract functions from a parsed SQL query.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_query_functions(ParsedQuery $query) : Functions
-{
-    return new Functions($query);
-}
-
-// ============================================================================
-// Query Builder DSL Functions
-// ============================================================================
-
 use Flow\PgQuery\Protobuf\AST\Node;
 use Flow\PgQuery\QueryBuilder\Clause\{
     CTE,
@@ -353,15 +81,211 @@ use Flow\PgQuery\QueryBuilder\Table\{
 };
 use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder, UpdateTableStep};
 
-// ----------------------------------------------------------------------------
-// Query Builders
-// ----------------------------------------------------------------------------
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_parser() : Parser
+{
+    return new Parser();
+}
+
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_parse(string $sql) : ParsedQuery
+{
+    return (new Parser())->parse($sql);
+}
+
+/**
+ * Returns a fingerprint of the given SQL query.
+ * Literal values are normalized so they won't affect the fingerprint.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_fingerprint(string $sql) : ?string
+{
+    return (new Parser())->fingerprint($sql);
+}
+
+/**
+ * Normalize SQL query by replacing literal values and named parameters with positional parameters.
+ * WHERE id = :id will be changed into WHERE id = $1
+ * WHERE id = 1 will be changed into WHERE id = $1.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_normalize(string $sql) : ?string
+{
+    return (new Parser())->normalize($sql);
+}
+
+/**
+ * Normalize utility SQL statements (DDL like CREATE, ALTER, DROP).
+ * This handles DDL statements differently from pg_normalize() which is optimized for DML.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_normalize_utility(string $sql) : ?string
+{
+    return (new Parser())->normalizeUtility($sql);
+}
+
+/**
+ * Split string with multiple SQL statements into array of individual statements.
+ *
+ * @return array<string>
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_split(string $sql) : array
+{
+    return (new Parser())->split($sql);
+}
+
+/**
+ * Create DeparseOptions for configuring SQL formatting.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_deparse_options() : DeparseOptions
+{
+    return DeparseOptions::new();
+}
+
+/**
+ * Convert a ParsedQuery AST back to SQL string.
+ *
+ * When called without options, returns the SQL as a simple string.
+ * When called with DeparseOptions, applies formatting (pretty-printing, indentation, etc.).
+ *
+ * @throws \RuntimeException if deparsing fails
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_deparse(ParsedQuery $query, ?DeparseOptions $options = null) : string
+{
+    return $query->deparse($options);
+}
+
+/**
+ * Parse and format SQL query with pretty printing.
+ *
+ * This is a convenience function that parses SQL and returns it formatted.
+ *
+ * @param string $sql The SQL query to format
+ * @param null|DeparseOptions $options Formatting options (defaults to pretty-print enabled)
+ *
+ * @throws \RuntimeException if parsing or deparsing fails
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_format(string $sql, ?DeparseOptions $options = null) : string
+{
+    return (new Parser())->parse($sql)->deparse($options ?? DeparseOptions::new());
+}
+
+/**
+ * Generate a summary of parsed queries in protobuf format.
+ * Useful for query monitoring and logging without full AST overhead.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_summary(string $sql, int $options = 0, int $truncateLimit = 0) : string
+{
+    return (new Parser())->summary($sql, $options, $truncateLimit);
+}
+
+/**
+ * Transform a SQL query into a paginated query with LIMIT and OFFSET.
+ *
+ * @param string $sql The SQL query to paginate
+ * @param int $limit Maximum number of rows to return
+ * @param int $offset Number of rows to skip (requires ORDER BY in query)
+ *
+ * @return string The paginated SQL query
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_to_paginated_query(string $sql, int $limit, int $offset = 0) : string
+{
+    $query = (new Parser())->parse($sql);
+    $query->traverse(new PaginationModifier(new PaginationConfig($limit, $offset)));
+
+    return $query->deparse();
+}
+
+/**
+ * Transform a SQL query into a COUNT query for pagination.
+ *
+ * Wraps the query in: SELECT COUNT(*) FROM (...) AS _count_subq
+ * Removes ORDER BY and LIMIT/OFFSET from the inner query.
+ *
+ * @param string $sql The SQL query to transform
+ *
+ * @return string The COUNT query
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_to_count_query(string $sql) : string
+{
+    $query = (new Parser())->parse($sql);
+    $query->traverse(new CountModifier());
+
+    return $query->deparse();
+}
+
+/**
+ * Transform a SQL query into a keyset (cursor-based) paginated query.
+ *
+ * More efficient than OFFSET for large datasets - uses indexed WHERE conditions.
+ *
+ * @param string $sql The SQL query to paginate (must have ORDER BY)
+ * @param int $limit Maximum number of rows to return
+ * @param list<KeysetColumn> $columns Columns for keyset pagination (must match ORDER BY)
+ * @param null|list<null|bool|float|int|string> $cursor Values from last row of previous page (null for first page)
+ *
+ * @return string The paginated SQL query
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_to_keyset_query(string $sql, int $limit, array $columns, ?array $cursor = null) : string
+{
+    $query = (new Parser())->parse($sql);
+    $query->traverse(new KeysetPaginationModifier(new KeysetPaginationConfig($limit, $columns, $cursor)));
+
+    return $query->deparse();
+}
+
+/**
+ * Create a KeysetColumn for keyset pagination.
+ *
+ * @param string $column Column name (can include table alias like "u.id")
+ * @param SortOrder $order Sort order (ASC or DESC)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_keyset_column(string $column, SortOrder $order = SortOrder::ASC) : KeysetColumn
+{
+    return new KeysetColumn($column, $order);
+}
+
+/**
+ * Extract columns from a parsed SQL query.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_query_columns(ParsedQuery $query) : Columns
+{
+    return new Columns($query);
+}
+
+/**
+ * Extract tables from a parsed SQL query.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_query_tables(ParsedQuery $query) : Tables
+{
+    return new Tables($query);
+}
+
+/**
+ * Extract functions from a parsed SQL query.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_query_functions(ParsedQuery $query) : Functions
+{
+    return new Functions($query);
+}
 
 /**
  * Create a new SELECT query builder.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_select() : SelectSelectStep
+function select() : SelectSelectStep
 {
     return SelectBuilder::create();
 }
@@ -370,7 +294,7 @@ function pg_select() : SelectSelectStep
  * Create a SELECT query builder with a WITH clause (CTE).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_select_with(WithClause $with) : SelectSelectStep
+function select_with(WithClause $with) : SelectSelectStep
 {
     return SelectBuilder::with($with);
 }
@@ -379,7 +303,7 @@ function pg_select_with(WithClause $with) : SelectSelectStep
  * Create a new INSERT query builder.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_insert() : InsertIntoStep
+function insert() : InsertIntoStep
 {
     return InsertBuilder::create();
 }
@@ -388,7 +312,7 @@ function pg_insert() : InsertIntoStep
  * Create a new UPDATE query builder.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_update() : UpdateTableStep
+function update() : UpdateTableStep
 {
     return UpdateBuilder::create();
 }
@@ -397,7 +321,7 @@ function pg_update() : UpdateTableStep
  * Create a new DELETE query builder.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_delete() : DeleteFromStep
+function delete() : DeleteFromStep
 {
     return DeleteBuilder::create();
 }
@@ -411,9 +335,9 @@ function pg_delete() : DeleteFromStep
  * @throws \InvalidArgumentException if query contains multiple statements or unsupported statement type
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateBuilder|DeleteBuilder
+function sql_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateBuilder|DeleteBuilder
 {
-    return pg_parse($sql)->toQueryBuilder();
+    return sql_parse($sql)->toQueryBuilder();
 }
 
 // ----------------------------------------------------------------------------
@@ -426,7 +350,7 @@ function pg_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateBu
  * @param string $name Column name (can include table prefix like "users.id" or "schema.table.column")
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_col(string $name) : Column
+function col_from_string(string $name) : Column
 {
     $parts = \explode('.', $name);
 
@@ -441,7 +365,7 @@ function pg_col(string $name) : Column
  * @param null|string $schema Schema name (optional)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_column(string $column, ?string $table = null, ?string $schema = null) : Column
+function col(string $column, ?string $table = null, ?string $schema = null) : Column
 {
     if ($schema !== null && $table !== null) {
         return Column::schemaTableColumn($schema, $table, $column);
@@ -458,7 +382,7 @@ function pg_column(string $column, ?string $table = null, ?string $schema = null
  * Create a SELECT * expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_star(?string $table = null) : Star
+function star(?string $table = null) : Star
 {
     return $table !== null ? Star::fromTable($table) : Star::all();
 }
@@ -467,7 +391,7 @@ function pg_star(?string $table = null) : Star
  * Create a string literal.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_string(string $value) : Literal
+function literal_string(string $value) : Literal
 {
     return Literal::string($value);
 }
@@ -476,7 +400,7 @@ function pg_string(string $value) : Literal
  * Create an integer literal.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_int(int $value) : Literal
+function literal_int(int $value) : Literal
 {
     return Literal::int($value);
 }
@@ -485,7 +409,7 @@ function pg_int(int $value) : Literal
  * Create a float literal.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_float(float $value) : Literal
+function literal_float(float $value) : Literal
 {
     return Literal::float($value);
 }
@@ -494,7 +418,7 @@ function pg_float(float $value) : Literal
  * Create a boolean literal.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_bool(bool $value) : Literal
+function literal_bool(bool $value) : Literal
 {
     return Literal::bool($value);
 }
@@ -503,7 +427,7 @@ function pg_bool(bool $value) : Literal
  * Create a NULL literal.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_null() : Literal
+function literal_null() : Literal
 {
     return Literal::null();
 }
@@ -512,7 +436,7 @@ function pg_null() : Literal
  * Create a positional parameter ($1, $2, etc.).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_param(int $position) : Parameter
+function param(int $position) : Parameter
 {
     return Parameter::positional($position);
 }
@@ -524,7 +448,7 @@ function pg_param(int $position) : Parameter
  * @param list<Expression> $args Function arguments
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_func(string $name, array $args = []) : FunctionCall
+function func(string $name, array $args = []) : FunctionCall
 {
     $nameParts = \explode('.', $name);
 
@@ -539,7 +463,7 @@ function pg_func(string $name, array $args = []) : FunctionCall
  * @param bool $distinct Use DISTINCT modifier
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_agg(string $name, array $args = [], bool $distinct = false) : AggregateCall
+function agg(string $name, array $args = [], bool $distinct = false) : AggregateCall
 {
     return new AggregateCall([$name], $args, false, $distinct);
 }
@@ -548,7 +472,7 @@ function pg_agg(string $name, array $args = [], bool $distinct = false) : Aggreg
  * Create COUNT(*) aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_count(?Expression $expr = null, bool $distinct = false) : AggregateCall
+function agg_count(?Expression $expr = null, bool $distinct = false) : AggregateCall
 {
     if ($expr === null) {
         return new AggregateCall(['count'], [], true, false);
@@ -561,7 +485,7 @@ function pg_count(?Expression $expr = null, bool $distinct = false) : AggregateC
  * Create SUM aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_sum(Expression $expr, bool $distinct = false) : AggregateCall
+function agg_sum(Expression $expr, bool $distinct = false) : AggregateCall
 {
     return new AggregateCall(['sum'], [$expr], false, $distinct);
 }
@@ -570,7 +494,7 @@ function pg_sum(Expression $expr, bool $distinct = false) : AggregateCall
  * Create AVG aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_avg(Expression $expr, bool $distinct = false) : AggregateCall
+function agg_avg(Expression $expr, bool $distinct = false) : AggregateCall
 {
     return new AggregateCall(['avg'], [$expr], false, $distinct);
 }
@@ -579,7 +503,7 @@ function pg_avg(Expression $expr, bool $distinct = false) : AggregateCall
  * Create MIN aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_min(Expression $expr) : AggregateCall
+function agg_min(Expression $expr) : AggregateCall
 {
     return new AggregateCall(['min'], [$expr]);
 }
@@ -588,7 +512,7 @@ function pg_min(Expression $expr) : AggregateCall
  * Create MAX aggregate.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_max(Expression $expr) : AggregateCall
+function agg_max(Expression $expr) : AggregateCall
 {
     return new AggregateCall(['max'], [$expr]);
 }
@@ -599,7 +523,7 @@ function pg_max(Expression $expr) : AggregateCall
  * @param Expression ...$expressions Expressions to coalesce
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_coalesce(Expression ...$expressions) : Coalesce
+function coalesce(Expression ...$expressions) : Coalesce
 {
     return new Coalesce(\array_values($expressions));
 }
@@ -608,7 +532,7 @@ function pg_coalesce(Expression ...$expressions) : Coalesce
  * Create a NULLIF expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_nullif(Expression $expr1, Expression $expr2) : NullIf
+function nullif(Expression $expr1, Expression $expr2) : NullIf
 {
     return new NullIf($expr1, $expr2);
 }
@@ -619,7 +543,7 @@ function pg_nullif(Expression $expr1, Expression $expr2) : NullIf
  * @param Expression ...$expressions Expressions to compare
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_greatest(Expression ...$expressions) : Greatest
+function greatest(Expression ...$expressions) : Greatest
 {
     return new Greatest(\array_values($expressions));
 }
@@ -630,7 +554,7 @@ function pg_greatest(Expression ...$expressions) : Greatest
  * @param Expression ...$expressions Expressions to compare
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_least(Expression ...$expressions) : Least
+function least(Expression ...$expressions) : Least
 {
     return new Least(\array_values($expressions));
 }
@@ -642,7 +566,7 @@ function pg_least(Expression ...$expressions) : Least
  * @param string $type Target type name (can include schema like "pg_catalog.int4")
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_cast(Expression $expr, string $type) : TypeCast
+function cast(Expression $expr, string $type) : TypeCast
 {
     $typeParts = \explode('.', $type);
 
@@ -657,7 +581,7 @@ function pg_cast(Expression $expr, string $type) : TypeCast
  * @param null|Expression $operand CASE operand for simple CASE (optional)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_case(array $whenClauses, ?Expression $elseResult = null, ?Expression $operand = null) : CaseExpression
+function case_when(array $whenClauses, ?Expression $elseResult = null, ?Expression $operand = null) : CaseExpression
 {
     return new CaseExpression($operand, \array_values($whenClauses), $elseResult);
 }
@@ -666,7 +590,7 @@ function pg_case(array $whenClauses, ?Expression $elseResult = null, ?Expression
  * Create a WHEN clause for CASE expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_when(Expression $condition, Expression $result) : WhenClause
+function when(Expression $condition, Expression $result) : WhenClause
 {
     return new WhenClause($condition, $result);
 }
@@ -675,7 +599,7 @@ function pg_when(Expression $condition, Expression $result) : WhenClause
  * Create a subquery expression.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_subquery(SelectFinalStep $query) : Subquery
+function sub_select(SelectFinalStep $query) : Subquery
 {
     $node = new Node();
     $node->setSelectStmt($query->toAst());
@@ -689,7 +613,7 @@ function pg_subquery(SelectFinalStep $query) : Subquery
  * @param list<Expression> $elements Array elements
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_array(array $elements) : ArrayExpression
+function array_expr(array $elements) : ArrayExpression
 {
     return new ArrayExpression(\array_values($elements));
 }
@@ -700,7 +624,7 @@ function pg_array(array $elements) : ArrayExpression
  * @param list<Expression> $elements Row elements
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_row(array $elements) : RowExpression
+function row_expr(array $elements) : RowExpression
 {
     return new RowExpression(\array_values($elements));
 }
@@ -709,7 +633,7 @@ function pg_row(array $elements) : RowExpression
  * Create a raw SQL expression (use with caution).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_raw(string $sql) : RawExpression
+function raw_expr(string $sql) : RawExpression
 {
     return new RawExpression($sql);
 }
@@ -718,7 +642,7 @@ function pg_raw(string $sql) : RawExpression
  * Create a binary expression (left op right).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_binary(Expression $left, string $operator, Expression $right) : BinaryExpression
+function binary_expr(Expression $left, string $operator, Expression $right) : BinaryExpression
 {
     return new BinaryExpression($left, $operator, $right);
 }
@@ -732,7 +656,7 @@ function pg_binary(Expression $left, string $operator, Expression $right) : Bina
  * @param list<OrderBy|OrderByItem> $orderBy ORDER BY items
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_window_func(
+function window_func(
     string $name,
     array $args = [],
     array $partitionBy = [],
@@ -749,7 +673,7 @@ function pg_window_func(
  * Create an equality comparison (column = value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_eq(Expression $left, Expression $right) : Comparison
+function eq(Expression $left, Expression $right) : Comparison
 {
     return new Comparison($left, ComparisonOperator::EQ, $right);
 }
@@ -758,7 +682,7 @@ function pg_eq(Expression $left, Expression $right) : Comparison
  * Create a not-equal comparison (column != value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_neq(Expression $left, Expression $right) : Comparison
+function neq(Expression $left, Expression $right) : Comparison
 {
     return new Comparison($left, ComparisonOperator::NEQ, $right);
 }
@@ -767,7 +691,7 @@ function pg_neq(Expression $left, Expression $right) : Comparison
  * Create a less-than comparison (column < value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_lt(Expression $left, Expression $right) : Comparison
+function lt(Expression $left, Expression $right) : Comparison
 {
     return new Comparison($left, ComparisonOperator::LT, $right);
 }
@@ -776,7 +700,7 @@ function pg_lt(Expression $left, Expression $right) : Comparison
  * Create a less-than-or-equal comparison (column <= value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_lte(Expression $left, Expression $right) : Comparison
+function lte(Expression $left, Expression $right) : Comparison
 {
     return new Comparison($left, ComparisonOperator::LTE, $right);
 }
@@ -785,7 +709,7 @@ function pg_lte(Expression $left, Expression $right) : Comparison
  * Create a greater-than comparison (column > value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_gt(Expression $left, Expression $right) : Comparison
+function gt(Expression $left, Expression $right) : Comparison
 {
     return new Comparison($left, ComparisonOperator::GT, $right);
 }
@@ -794,7 +718,7 @@ function pg_gt(Expression $left, Expression $right) : Comparison
  * Create a greater-than-or-equal comparison (column >= value).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_gte(Expression $left, Expression $right) : Comparison
+function gte(Expression $left, Expression $right) : Comparison
 {
     return new Comparison($left, ComparisonOperator::GTE, $right);
 }
@@ -803,7 +727,7 @@ function pg_gte(Expression $left, Expression $right) : Comparison
  * Create a BETWEEN condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_between(Expression $expr, Expression $low, Expression $high, bool $not = false) : Between
+function between(Expression $expr, Expression $low, Expression $high, bool $not = false) : Between
 {
     return new Between($expr, $low, $high, $not);
 }
@@ -815,7 +739,7 @@ function pg_between(Expression $expr, Expression $low, Expression $high, bool $n
  * @param list<Expression> $values List of values
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_in(Expression $expr, array $values) : In
+function is_in(Expression $expr, array $values) : In
 {
     return new In($expr, \array_values($values));
 }
@@ -824,7 +748,7 @@ function pg_in(Expression $expr, array $values) : In
  * Create an IS NULL condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_is_null(Expression $expr, bool $not = false) : IsNull
+function is_null(Expression $expr, bool $not = false) : IsNull
 {
     return new IsNull($expr, $not);
 }
@@ -833,7 +757,7 @@ function pg_is_null(Expression $expr, bool $not = false) : IsNull
  * Create a LIKE condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_like(Expression $expr, Expression $pattern, bool $caseInsensitive = false) : Like
+function like(Expression $expr, Expression $pattern, bool $caseInsensitive = false) : Like
 {
     return new Like($expr, $pattern, $caseInsensitive);
 }
@@ -842,7 +766,7 @@ function pg_like(Expression $expr, Expression $pattern, bool $caseInsensitive = 
  * Create a SIMILAR TO condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_similar_to(Expression $expr, Expression $pattern) : SimilarTo
+function similar_to(Expression $expr, Expression $pattern) : SimilarTo
 {
     return new SimilarTo($expr, $pattern);
 }
@@ -851,7 +775,7 @@ function pg_similar_to(Expression $expr, Expression $pattern) : SimilarTo
  * Create an IS DISTINCT FROM condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_is_distinct_from(Expression $left, Expression $right, bool $not = false) : IsDistinctFrom
+function is_distinct_from(Expression $left, Expression $right, bool $not = false) : IsDistinctFrom
 {
     return new IsDistinctFrom($left, $right, $not);
 }
@@ -860,7 +784,7 @@ function pg_is_distinct_from(Expression $left, Expression $right, bool $not = fa
  * Create an EXISTS condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_exists(SelectFinalStep $subquery) : Exists
+function exists(SelectFinalStep $subquery) : Exists
 {
     $node = new Node();
     $node->setSelectStmt($subquery->toAst());
@@ -872,7 +796,7 @@ function pg_exists(SelectFinalStep $subquery) : Exists
  * Create an ANY condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_any(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : Any
+function any_sub_select(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : Any
 {
     $node = new Node();
     $node->setSelectStmt($subquery->toAst());
@@ -884,7 +808,7 @@ function pg_any(Expression $left, ComparisonOperator $operator, SelectFinalStep 
  * Create an ALL condition.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_all(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : All
+function all_sub_selects(Expression $left, ComparisonOperator $operator, SelectFinalStep $subquery) : All
 {
     $node = new Node();
     $node->setSelectStmt($subquery->toAst());
@@ -898,7 +822,7 @@ function pg_all(Expression $left, ComparisonOperator $operator, SelectFinalStep 
  * @param Condition ...$conditions Conditions to combine
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_and(Condition ...$conditions) : AndCondition
+function cond_and(Condition ...$conditions) : AndCondition
 {
     return new AndCondition(...$conditions);
 }
@@ -909,7 +833,7 @@ function pg_and(Condition ...$conditions) : AndCondition
  * @param Condition ...$conditions Conditions to combine
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_or(Condition ...$conditions) : OrCondition
+function cond_or(Condition ...$conditions) : OrCondition
 {
     return new OrCondition(...$conditions);
 }
@@ -918,7 +842,7 @@ function pg_or(Condition ...$conditions) : OrCondition
  * Negate a condition with NOT.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_not(Condition $condition) : NotCondition
+function cond_not(Condition $condition) : NotCondition
 {
     return new NotCondition($condition);
 }
@@ -927,7 +851,7 @@ function pg_not(Condition $condition) : NotCondition
  * Create a raw SQL condition (use with caution).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_raw_condition(string $sql) : RawCondition
+function raw_cond(string $sql) : RawCondition
 {
     return new RawCondition($sql);
 }
@@ -943,7 +867,7 @@ function pg_raw_condition(string $sql) : RawCondition
  * @param null|string $schema Schema name (optional)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_table(string $name, ?string $schema = null) : Table
+function table(string $name, ?string $schema = null) : Table
 {
     return new Table($name, $schema);
 }
@@ -954,7 +878,7 @@ function pg_table(string $name, ?string $schema = null) : Table
  * @param non-empty-string $name CTE name
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_cte_ref(string $name) : CTEReference
+function cte_ref(string $name) : CTEReference
 {
     if ($name === '') {
         throw new \InvalidArgumentException('CTE name cannot be empty');
@@ -967,7 +891,7 @@ function pg_cte_ref(string $name) : CTEReference
  * Create a derived table (subquery in FROM clause).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_derived(SelectFinalStep $query, string $alias) : DerivedTable
+function derived(SelectFinalStep $query, string $alias) : DerivedTable
 {
     $node = new Node();
     $node->setSelectStmt($query->toAst());
@@ -981,7 +905,7 @@ function pg_derived(SelectFinalStep $query, string $alias) : DerivedTable
  * @param TableReference $reference The subquery or table function reference
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_lateral(TableReference $reference) : Lateral
+function lateral(TableReference $reference) : Lateral
 {
     return new Lateral($reference);
 }
@@ -993,7 +917,7 @@ function pg_lateral(TableReference $reference) : Lateral
  * @param bool $withOrdinality Whether to add WITH ORDINALITY
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_table_func(FunctionCall $function, bool $withOrdinality = false) : TableFunction
+function table_func(FunctionCall $function, bool $withOrdinality = false) : TableFunction
 {
     return new TableFunction($function, $withOrdinality);
 }
@@ -1006,7 +930,7 @@ function pg_table_func(FunctionCall $function, bool $withOrdinality = false) : T
  * Create an ORDER BY item.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_order(
+function order_by(
     Expression $expr,
     SortDirection $direction = SortDirection::ASC,
     NullsPosition $nulls = NullsPosition::DEFAULT,
@@ -1018,7 +942,7 @@ function pg_order(
  * Create an ORDER BY item with ASC direction.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_asc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : OrderByItem
+function asc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : OrderByItem
 {
     return new OrderByItem($expr, SortDirection::ASC, $nulls);
 }
@@ -1027,7 +951,7 @@ function pg_asc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT)
  * Create an ORDER BY item with DESC direction.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_desc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : OrderByItem
+function desc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : OrderByItem
 {
     return new OrderByItem($expr, SortDirection::DESC, $nulls);
 }
@@ -1039,7 +963,7 @@ function pg_desc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT
  * @param bool $recursive Whether this is a recursive WITH
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_with(array $ctes, bool $recursive = false) : WithClause
+function with_cte(array $ctes, bool $recursive = false) : WithClause
 {
     return new WithClause($ctes, $recursive);
 }
@@ -1053,7 +977,7 @@ function pg_with(array $ctes, bool $recursive = false) : WithClause
  * @param CTEMaterialization $materialization Materialization hint
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_cte(
+function cte(
     string $name,
     SelectFinalStep $query,
     array $columnNames = [],
@@ -1075,7 +999,7 @@ function pg_cte(
  * @param null|WindowFrame $frame Window frame specification
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_window_def(
+function window_def(
     string $name,
     array $partitionBy = [],
     array $orderBy = [],
@@ -1088,7 +1012,7 @@ function pg_window_def(
  * Create a window frame specification.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_window_frame(
+function window_frame(
     FrameMode $mode,
     FrameBound $start,
     ?FrameBound $end = null,
@@ -1101,7 +1025,7 @@ function pg_window_frame(
  * Create a frame bound for CURRENT ROW.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_frame_current_row() : FrameBound
+function frame_current_row() : FrameBound
 {
     return FrameBound::currentRow();
 }
@@ -1110,7 +1034,7 @@ function pg_frame_current_row() : FrameBound
  * Create a frame bound for UNBOUNDED PRECEDING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_frame_unbounded_preceding() : FrameBound
+function frame_unbounded_preceding() : FrameBound
 {
     return FrameBound::unboundedPreceding();
 }
@@ -1119,7 +1043,7 @@ function pg_frame_unbounded_preceding() : FrameBound
  * Create a frame bound for UNBOUNDED FOLLOWING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_frame_unbounded_following() : FrameBound
+function frame_unbounded_following() : FrameBound
 {
     return FrameBound::unboundedFollowing();
 }
@@ -1128,7 +1052,7 @@ function pg_frame_unbounded_following() : FrameBound
  * Create a frame bound for N PRECEDING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_frame_preceding(Expression $offset) : FrameBound
+function frame_preceding(Expression $offset) : FrameBound
 {
     return FrameBound::preceding($offset);
 }
@@ -1137,7 +1061,7 @@ function pg_frame_preceding(Expression $offset) : FrameBound
  * Create a frame bound for N FOLLOWING.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_frame_following(Expression $offset) : FrameBound
+function frame_following(Expression $offset) : FrameBound
 {
     return FrameBound::following($offset);
 }
@@ -1150,7 +1074,7 @@ function pg_frame_following(Expression $offset) : FrameBound
  * @param LockWaitPolicy $waitPolicy Wait policy
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_lock(
+function lock_for(
     LockStrength $strength,
     array $tables = [],
     LockWaitPolicy $waitPolicy = LockWaitPolicy::DEFAULT,
@@ -1164,7 +1088,7 @@ function pg_lock(
  * @param list<string> $tables Tables to lock (empty for all)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_for_update(array $tables = []) : LockingClause
+function for_update(array $tables = []) : LockingClause
 {
     return LockingClause::forUpdate(\array_values($tables));
 }
@@ -1175,7 +1099,7 @@ function pg_for_update(array $tables = []) : LockingClause
  * @param list<string> $tables Tables to lock (empty for all)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_for_share(array $tables = []) : LockingClause
+function for_share(array $tables = []) : LockingClause
 {
     return LockingClause::forShare(\array_values($tables));
 }
@@ -1184,7 +1108,7 @@ function pg_for_share(array $tables = []) : LockingClause
  * Create an ON CONFLICT DO NOTHING clause.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_on_conflict_nothing(?ConflictTarget $target = null) : OnConflictClause
+function on_conflict_nothing(?ConflictTarget $target = null) : OnConflictClause
 {
     return OnConflictClause::doNothing($target);
 }
@@ -1196,7 +1120,7 @@ function pg_on_conflict_nothing(?ConflictTarget $target = null) : OnConflictClau
  * @param array<string, Expression> $updates Column updates
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_on_conflict_update(ConflictTarget $target, array $updates) : OnConflictClause
+function on_conflict_update(ConflictTarget $target, array $updates) : OnConflictClause
 {
     return OnConflictClause::doUpdate($target, $updates);
 }
@@ -1207,7 +1131,7 @@ function pg_on_conflict_update(ConflictTarget $target, array $updates) : OnConfl
  * @param list<string> $columns Columns that define uniqueness
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_conflict_columns(array $columns) : ConflictTarget
+function conflict_columns(array $columns) : ConflictTarget
 {
     return ConflictTarget::columns(\array_values($columns));
 }
@@ -1216,7 +1140,7 @@ function pg_conflict_columns(array $columns) : ConflictTarget
  * Create a conflict target for ON CONFLICT ON CONSTRAINT.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_conflict_constraint(string $name) : ConflictTarget
+function conflict_constraint(string $name) : ConflictTarget
 {
     return ConflictTarget::constraint($name);
 }
@@ -1227,7 +1151,7 @@ function pg_conflict_constraint(string $name) : ConflictTarget
  * @param Expression ...$expressions Expressions to return
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_returning(Expression ...$expressions) : ReturningClause
+function returning(Expression ...$expressions) : ReturningClause
 {
     return new ReturningClause(\array_values($expressions));
 }
@@ -1236,7 +1160,7 @@ function pg_returning(Expression ...$expressions) : ReturningClause
  * Create a RETURNING * clause.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function pg_returning_all() : ReturningClause
+function returning_all() : ReturningClause
 {
     return ReturningClause::all();
 }

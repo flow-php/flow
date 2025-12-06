@@ -3,6 +3,7 @@
 - [⬅️️ Back](/documentation/introduction.md)
 - [📚API Reference](/documentation/api/lib/filesystem)
 - [📁Files](/documentation/api/lib/filesystem/indices/files.html)
+- [🗺DSL](/documentation/api/lib/filesystem/namespaces/flow-filesystem-dsl.html)
 
 [TOC]
 
