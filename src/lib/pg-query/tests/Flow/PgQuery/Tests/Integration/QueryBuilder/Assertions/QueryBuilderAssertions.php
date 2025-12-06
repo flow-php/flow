@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions;
 
-use function Flow\PgQuery\DSL\pg_parse;
+use function Flow\PgQuery\DSL\sql_parse;
 use Flow\PgQuery\{ParsedQuery, Parser};
 use Flow\PgQuery\Protobuf\AST\{DeleteStmt, InsertStmt, Node, RawStmt, SelectStmt, UpdateStmt};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
@@ -22,7 +22,7 @@ trait QueryBuilderAssertions
 
         Assert::assertSame($expectedSql, $sql);
 
-        $parsed = pg_parse($sql);
+        $parsed = sql_parse($sql);
         $stmts = $parsed->raw()->getStmts();
         Assert::assertCount(1, $stmts);
 
@@ -41,7 +41,7 @@ trait QueryBuilderAssertions
 
         Assert::assertSame($expectedSql, $sql);
 
-        $parsed = pg_parse($sql);
+        $parsed = sql_parse($sql);
         $stmts = $parsed->raw()->getStmts();
         Assert::assertCount(1, $stmts);
 
@@ -60,7 +60,7 @@ trait QueryBuilderAssertions
 
         Assert::assertSame($expectedSql, $sql);
 
-        $parsed = pg_parse($sql);
+        $parsed = sql_parse($sql);
         $stmts = $parsed->raw()->getStmts();
         Assert::assertCount(1, $stmts);
 
@@ -79,7 +79,7 @@ trait QueryBuilderAssertions
 
         Assert::assertSame($expectedSql, $sql);
 
-        $parsed = pg_parse($sql);
+        $parsed = sql_parse($sql);
         $stmts = $parsed->raw()->getStmts();
         Assert::assertCount(1, $stmts);
 

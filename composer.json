@@ -463,6 +463,7 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.filesystem.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet-viewer.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.pg-query.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.snappy.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.types.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.chartjs.xml",
