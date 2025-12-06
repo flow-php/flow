@@ -19,7 +19,7 @@ final class ConditionFactory
             $kind = $aExpr->getKind();
 
             return match ($kind) {
-                A_Expr_Kind::AEXPR_OP => Comparison::fromAst($node),
+                A_Expr_Kind::AEXPR_OP => self::parseOperatorCondition($node),
                 A_Expr_Kind::AEXPR_LIKE => Like::fromAst($node),
                 A_Expr_Kind::AEXPR_ILIKE => Like::fromAst($node),
                 A_Expr_Kind::AEXPR_SIMILAR => SimilarTo::fromAst($node),
@@ -71,5 +71,35 @@ final class ConditionFactory
         }
 
         throw UnsupportedNodeException::forNodeType('Unknown condition node type');
+    }
+
+    /**
+     * Parse an AEXPR_OP node, trying Comparison first for standard operators,
+     * falling back to OperatorCondition for other operators.
+     */
+    private static function parseOperatorCondition(Node $node) : Condition
+    {
+        $aExpr = $node->getAExpr();
+
+        if ($aExpr === null) {
+            return OperatorCondition::fromAst($node);
+        }
+
+        $nameNodes = $aExpr->getName();
+
+        if ($nameNodes !== null && $nameNodes->count() > 0) {
+            $nameNode = $nameNodes->offsetGet(0);
+            $stringNode = $nameNode->getString();
+
+            if ($stringNode !== null) {
+                $operator = $stringNode->getSval();
+
+                if (\in_array($operator, ['=', '<>', '<', '<=', '>', '>='], true)) {
+                    return Comparison::fromAst($node);
+                }
+            }
+        }
+
+        return OperatorCondition::fromAst($node);
     }
 }

@@ -8,7 +8,6 @@ The main goal of this library is to simplify common type-related tasks, such as 
 - [⬅️️ Back](/documentation/introduction.md)
 - [📖Architecture](/documentation/components/libs/types/architecture.md)
 - [📚API Reference](/documentation/api/lib/types)
-  - [⚙️List of all Types](/api/lib/types/namespaces/flow-types-dsl.html)
 - [🗺DSL](/documentation/api/lib/types/namespaces/flow-types-dsl.html) 
 
 [TOC]

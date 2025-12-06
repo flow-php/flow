@@ -42,6 +42,7 @@ use Flow\PgQuery\QueryBuilder\Condition\{
     IsNull,
     Like,
     NotCondition,
+    OperatorCondition,
     OrCondition,
     RawCondition,
     SimilarTo
@@ -854,6 +855,238 @@ function cond_not(Condition $condition) : NotCondition
 function raw_cond(string $sql) : RawCondition
 {
     return new RawCondition($sql);
+}
+
+// ----------------------------------------------------------------------------
+// JSONB Operators
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a JSONB contains condition (@>).
+ *
+ * Example: json_contains(col('metadata'), literal_json('{"category": "electronics"}'))
+ * Produces: metadata @> '{"category": "electronics"}'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_contains(Expression $left, Expression $right) : OperatorCondition
+{
+    return new OperatorCondition($left, '@>', $right);
+}
+
+/**
+ * Create a JSONB is contained by condition (<@).
+ *
+ * Example: json_contained_by(col('metadata'), literal_json('{"category": "electronics", "price": 100}'))
+ * Produces: metadata <@ '{"category": "electronics", "price": 100}'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_contained_by(Expression $left, Expression $right) : OperatorCondition
+{
+    return new OperatorCondition($left, '<@', $right);
+}
+
+/**
+ * Create a JSON field access expression (->).
+ * Returns JSON.
+ *
+ * Example: json_get(col('metadata'), literal_string('category'))
+ * Produces: metadata -> 'category'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_get(Expression $expr, Expression $key) : BinaryExpression
+{
+    return new BinaryExpression($expr, '->', $key);
+}
+
+/**
+ * Create a JSON field access expression (->>).
+ * Returns text.
+ *
+ * Example: json_get_text(col('metadata'), literal_string('name'))
+ * Produces: metadata ->> 'name'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_get_text(Expression $expr, Expression $key) : BinaryExpression
+{
+    return new BinaryExpression($expr, '->>', $key);
+}
+
+/**
+ * Create a JSON path access expression (#>).
+ * Returns JSON.
+ *
+ * Example: json_path(col('metadata'), literal_string('{category,name}'))
+ * Produces: metadata #> '{category,name}'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_path(Expression $expr, Expression $path) : BinaryExpression
+{
+    return new BinaryExpression($expr, '#>', $path);
+}
+
+/**
+ * Create a JSON path access expression (#>>).
+ * Returns text.
+ *
+ * Example: json_path_text(col('metadata'), literal_string('{category,name}'))
+ * Produces: metadata #>> '{category,name}'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_path_text(Expression $expr, Expression $path) : BinaryExpression
+{
+    return new BinaryExpression($expr, '#>>', $path);
+}
+
+/**
+ * Create a JSONB key exists condition (?).
+ *
+ * Example: json_exists(col('metadata'), literal_string('category'))
+ * Produces: metadata ? 'category'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_exists(Expression $expr, Expression $key) : OperatorCondition
+{
+    return new OperatorCondition($expr, '?', $key);
+}
+
+/**
+ * Create a JSONB any key exists condition (?|).
+ *
+ * Example: json_exists_any(col('metadata'), raw_expr("array['category', 'name']"))
+ * Produces: metadata ?| array['category', 'name']
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_exists_any(Expression $expr, Expression $keys) : OperatorCondition
+{
+    return new OperatorCondition($expr, '?|', $keys);
+}
+
+/**
+ * Create a JSONB all keys exist condition (?&).
+ *
+ * Example: json_exists_all(col('metadata'), raw_expr("array['category', 'name']"))
+ * Produces: metadata ?& array['category', 'name']
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function json_exists_all(Expression $expr, Expression $keys) : OperatorCondition
+{
+    return new OperatorCondition($expr, '?&', $keys);
+}
+
+// ----------------------------------------------------------------------------
+// Array Operators
+// ----------------------------------------------------------------------------
+
+/**
+ * Create an array contains condition (@>).
+ *
+ * Example: array_contains(col('tags'), raw_expr("ARRAY['sale']"))
+ * Produces: tags @> ARRAY['sale']
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function array_contains(Expression $left, Expression $right) : OperatorCondition
+{
+    return new OperatorCondition($left, '@>', $right);
+}
+
+/**
+ * Create an array is contained by condition (<@).
+ *
+ * Example: array_contained_by(col('tags'), raw_expr("ARRAY['sale', 'featured', 'new']"))
+ * Produces: tags <@ ARRAY['sale', 'featured', 'new']
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function array_contained_by(Expression $left, Expression $right) : OperatorCondition
+{
+    return new OperatorCondition($left, '<@', $right);
+}
+
+/**
+ * Create an array overlap condition (&&).
+ *
+ * Example: array_overlap(col('tags'), raw_expr("ARRAY['sale', 'featured']"))
+ * Produces: tags && ARRAY['sale', 'featured']
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function array_overlap(Expression $left, Expression $right) : OperatorCondition
+{
+    return new OperatorCondition($left, '&&', $right);
+}
+
+// ----------------------------------------------------------------------------
+// Pattern Matching (Regex) Operators
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a POSIX regex match condition (~).
+ * Case-sensitive.
+ *
+ * Example: regex_match(col('email'), literal_string('.*@gmail\\.com'))
+ *
+ * Produces: email ~ '.*@gmail\.com'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function regex_match(Expression $expr, Expression $pattern) : OperatorCondition
+{
+    return new OperatorCondition($expr, '~', $pattern);
+}
+
+/**
+ * Create a POSIX regex match condition (~*).
+ * Case-insensitive.
+ *
+ * Example: regex_imatch(col('email'), literal_string('.*@gmail\\.com'))
+ *
+ * Produces: email ~* '.*@gmail\.com'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function regex_imatch(Expression $expr, Expression $pattern) : OperatorCondition
+{
+    return new OperatorCondition($expr, '~*', $pattern);
+}
+
+/**
+ * Create a POSIX regex not match condition (!~).
+ * Case-sensitive.
+ *
+ * Example: not_regex_match(col('email'), literal_string('.*@spam\\.com'))
+ *
+ * Produces: email !~ '.*@spam\.com'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function not_regex_match(Expression $expr, Expression $pattern) : OperatorCondition
+{
+    return new OperatorCondition($expr, '!~', $pattern);
+}
+
+/**
+ * Create a POSIX regex not match condition (!~*).
+ * Case-insensitive.
+ *
+ * Example: not_regex_imatch(col('email'), literal_string('.*@spam\\.com'))
+ *
+ * Produces: email !~* '.*@spam\.com'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function not_regex_imatch(Expression $expr, Expression $pattern) : OperatorCondition
+{
+    return new OperatorCondition($expr, '!~*', $pattern);
+}
+
+// ----------------------------------------------------------------------------
+// Full-Text Search Operators
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a full-text search match condition (@@).
+ *
+ * Example: text_search_match(col('document'), raw_expr("to_tsquery('english', 'hello & world')"))
+ * Produces: document @@ to_tsquery('english', 'hello & world')
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function text_search_match(Expression $document, Expression $query) : OperatorCondition
+{
+    return new OperatorCondition($document, '@@', $query);
 }
 
 // ----------------------------------------------------------------------------
