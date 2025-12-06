@@ -36,7 +36,7 @@ final readonly class Uuid implements \Stringable
                     );
                 }
             } catch (\InvalidArgumentException $e) {
-                throw new InvalidArgumentException("Invalid UUID: '{$value}'", $e->getCode(), $e);
+                throw new InvalidArgumentException("Invalid UUID: '{$value}'", (int) $e->getCode(), $e);
             }
         } elseif ($value instanceof UuidInterface) {
             $this->value = $value->toString();

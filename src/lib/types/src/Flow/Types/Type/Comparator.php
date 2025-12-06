@@ -121,11 +121,17 @@ final class Comparator
         }
 
         if ($type instanceof OptionalType) {
-            return $this->is($type->base(), $typeClass);
+            /** @var Type<mixed> $base */
+            $base = $type->base();
+
+            return $this->is($base, $typeClass);
         }
 
         if ($type instanceof UnionType) {
-            foreach ($type->types()->all() as $nextType) {
+            /** @var Types<mixed> $unionTypes */
+            $unionTypes = $type->types();
+
+            foreach ($unionTypes->all() as $nextType) {
                 if ($nextType instanceof $typeClass) {
                     return true;
                 }

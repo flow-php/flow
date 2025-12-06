@@ -38,8 +38,10 @@ final readonly class EnumType implements Type
             'class' => type_class_string(),
         ])->assert($data);
 
-        // @phpstan-ignore argument.type (class-string validated at runtime by constructor)
-        return new self($data['class']);
+        /** @var class-string<\UnitEnum> $class class-string validated at runtime by constructor */
+        $class = $data['class'];
+
+        return new self($class);
     }
 
     #[\Override]
@@ -67,6 +69,7 @@ final readonly class EnumType implements Type
                     throw new CastingException($value, $this);
                 }
 
+                /** @var class-string<\BackedEnum> $enumClass */
                 return $enumClass::from($value);
             }
 

@@ -160,7 +160,11 @@ final readonly class Types implements \Countable, \Stringable
             if ($type instanceof OptionalType) {
                 $types[] = $type->base();
             } elseif ($type instanceof UnionType && $type->isOptionalType()) {
-                $types[] = $type->types()->without(type_null())->first();
+                $firstType = $type->types()->without(type_null())->first();
+
+                if ($firstType !== null) {
+                    $types[] = $firstType;
+                }
             } else {
                 $types[] = $type;
             }

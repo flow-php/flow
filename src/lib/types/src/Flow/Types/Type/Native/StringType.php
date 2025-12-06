@@ -72,7 +72,12 @@ final readonly class StringType implements Type
                 return '';
             }
 
-            if (\is_scalar($value) || \is_object($value) && method_exists($value, '__toString')) {
+            if (\is_scalar($value)) {
+                return (string) $value;
+            }
+
+            if (\is_object($value) && method_exists($value, '__toString')) {
+                /** @var \Stringable $value */
                 return (string) $value;
             }
 

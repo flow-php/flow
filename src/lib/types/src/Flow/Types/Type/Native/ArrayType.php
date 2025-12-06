@@ -9,7 +9,7 @@ use Flow\Types\Type;
 use Flow\Types\Type\Logical\XML\XMLConverter;
 
 /**
- * @implements Type<array>
+ * @implements Type<array<mixed>>
  */
 final readonly class ArrayType implements Type
 {
@@ -38,6 +38,7 @@ final readonly class ArrayType implements Type
 
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
+                /** @var array<array-key, mixed>|scalar|null $decoded */
                 $decoded = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
 
                 return \is_array($decoded) ? $decoded : throw new CastingException($value, $this);
@@ -48,11 +49,17 @@ final readonly class ArrayType implements Type
             }
 
             if (\is_object($value)) {
+                /** @var array<array-key, mixed>|scalar|null $encoded */
                 $encoded = \json_decode(\json_encode($value, \JSON_THROW_ON_ERROR), true, 512, \JSON_THROW_ON_ERROR);
 
                 return \is_array($encoded) ? $encoded : throw new CastingException($value, $this);
             }
 
+            if ($value === null) {
+                return [];
+            }
+
+            /** @var scalar $value At this point, non-array/object/JSON-string values */
             return (array) $value;
         } catch (\Throwable) {
             throw new CastingException($value, $this);

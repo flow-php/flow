@@ -72,7 +72,7 @@ final class StringTypeNarrower implements TypeNarrower
     {
         $dateParts = \date_parse($value);
 
-        if ($dateParts['error_count'] > 0) {
+        if ((int) $dateParts['error_count'] > 0) {
             return false;
         }
 
@@ -114,7 +114,7 @@ final class StringTypeNarrower implements TypeNarrower
     {
         $dateParts = \date_parse($value);
 
-        if ($dateParts['error_count'] > 0) {
+        if ((int) $dateParts['error_count'] > 0) {
             return false;
         }
 
@@ -141,6 +141,7 @@ final class StringTypeNarrower implements TypeNarrower
         }
 
         if (\is_array($dateParts['relative'] ?? false)) {
+            /** @var array{hour?: int, minute?: int, second?: int} $relative */
             $relative = $dateParts['relative'];
 
             return ($relative['hour'] ?? 0) !== 0 || ($relative['minute'] ?? 0) !== 0 || ($relative['second'] ?? 0) !== 0;

@@ -36,9 +36,6 @@ final class XMLConverter
         $xmlArray = [];
 
         if ($element->hasAttributes()) {
-            /**
-             * @var \DOMAttr $attribute
-             */
             foreach ($element->attributes as $attribute) {
                 $xmlArray['@attributes'][$attribute->name] = $attribute->value;
             }

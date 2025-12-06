@@ -13,12 +13,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/carthage-software/mago.git",
-                "reference": "015f0f8710438f1ac0a645a6fc087b4cfd0e5929"
+                "reference": "7c8e9a2b390513d4eee7ed0874942e7f5631aafe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/carthage-software/mago/zipball/015f0f8710438f1ac0a645a6fc087b4cfd0e5929",
-                "reference": "015f0f8710438f1ac0a645a6fc087b4cfd0e5929",
+                "url": "https://api.github.com/repos/carthage-software/mago/zipball/7c8e9a2b390513d4eee7ed0874942e7f5631aafe",
+                "reference": "7c8e9a2b390513d4eee7ed0874942e7f5631aafe",
                 "shasum": ""
             },
             "require": {
@@ -65,7 +65,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-12-05T16:29:21+00:00"
+            "time": "2025-12-12T02:25:06+00:00"
         }
     ],
     "aliases": [],

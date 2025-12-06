@@ -48,8 +48,7 @@ final readonly class DateType implements Type
             }
 
             if (\is_bool($value)) {
-                /* @phpstan-ignore-next-line */
-                return (new \DateTimeImmutable('@' . $value))->setTime(0, 0, 0, 0);
+                return (new \DateTimeImmutable('@' . (int) $value))->setTime(0, 0, 0, 0);
             }
 
             if ($value instanceof \DateInterval) {

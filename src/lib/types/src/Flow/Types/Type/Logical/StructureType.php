@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\{type_array, type_boolean, type_from_array, type_literal, type_map, type_string, type_structure};
+use function Flow\Types\DSL\{
+    type_boolean,
+    type_from_array,
+    type_literal,
+    type_map,
+    type_mixed,
+    type_string,
+    type_structure};
 use Flow\Types\Exception\{CastingException, InvalidArgumentException, InvalidTypeException};
 use Flow\Types\Type;
 
@@ -73,8 +80,8 @@ final readonly class StructureType implements Type
     {
         $data = type_structure([
             'type' => type_literal('structure'),
-            'elements' => type_map(type_string(), type_array()),
-            'optional_elements' => type_map(type_string(), type_array()),
+            'elements' => type_map(type_string(), type_map(type_string(), type_mixed())),
+            'optional_elements' => type_map(type_string(), type_map(type_string(), type_mixed())),
             'allow_extra' => type_boolean(),
         ])->assert($data);
 

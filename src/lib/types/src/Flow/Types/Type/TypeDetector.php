@@ -71,8 +71,10 @@ final class TypeDetector
                 return type_array();
             }
 
+            /** @var Types<array-key> $keyTypes */
+            $keyTypes = types(...\array_map($this->detectType(...), \array_keys($value)))->deduplicate();
             $detector = new ArrayContentDetector(
-                types(...\array_map($this->detectType(...), \array_keys($value)))->deduplicate(),
+                $keyTypes,
                 types(...\array_map($this->detectType(...), \array_values($value)))->deduplicate(),
                 \array_is_list($value),
             );
@@ -82,15 +84,19 @@ final class TypeDetector
             }
 
             if ($detector->isMap()) {
-                return type_map($detector->firstKeyType(), $detector->valueType());
+                $keyType = $detector->firstKeyType();
+
+                if ($keyType !== null) {
+                    return type_map($keyType, $detector->valueType());
+                }
             }
 
             if ($detector->isStructure()) {
-                /** @var array<Type<mixed>> $elements */
+                /** @var array<string, Type<mixed>> $elements */
                 $elements = [];
 
                 foreach ($value as $key => $item) {
-                    $elements[$key] = $this->detectType($item);
+                    $elements[(string) $key] = $this->detectType($item);
                 }
 
                 return new StructureType($elements);

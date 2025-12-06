@@ -30,18 +30,29 @@ final readonly class FloatType implements Type
         }
 
         if ($value instanceof \DOMElement) {
-            return (float) $value->nodeValue;
+            /** @var numeric-string $nodeValue */
+            $nodeValue = $value->nodeValue ?? '0';
+
+            return (float) $nodeValue;
         }
 
         if ($value instanceof \DateTimeImmutable) {
-            return (float) $value->format('Uu');
+            /** @var numeric-string $timestamp */
+            $timestamp = $value->format('Uu');
+
+            return (float) $timestamp;
         }
 
         if ($value instanceof \DateInterval) {
             $reference = new \DateTimeImmutable();
             $endTime = $reference->add($value);
 
-            return (float) $endTime->format('Uu') - (float) $reference->format('Uu');
+            /** @var numeric-string $endTimestamp */
+            $endTimestamp = $endTime->format('Uu');
+            /** @var numeric-string $refTimestamp */
+            $refTimestamp = $reference->format('Uu');
+
+            return (float) $endTimestamp - (float) $refTimestamp;
         }
 
         if (\is_scalar($value) || null === $value || \is_array($value)) {

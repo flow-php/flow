@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\Types\Type\Logical;
 
-use function Flow\Types\DSL\{type_from_array, type_literal, type_map, type_mixed, type_string, type_structure};
+use function Flow\Types\DSL\{type_equals,
+    type_from_array,
+    type_integer,
+    type_is,
+    type_literal,
+    type_map,
+    type_mixed,
+    type_string,
+    type_structure,
+    type_union};
 use Flow\Types\Exception\{CastingException, InvalidTypeException};
 use Flow\Types\Type;
 
@@ -34,11 +43,20 @@ final readonly class MapType implements Type
     {
         $data = type_structure([
             'type' => type_literal('map'),
-            'key' => type_map(type_string(), type_mixed()),
+            'key' => type_structure([
+                'type' => type_union(type_literal('string'), type_literal('integer'))
+            ]),
             'value' => type_map(type_string(), type_mixed()),
         ])->assert($data);
 
-        return new self(type_from_array($data['key']), type_from_array($data['value']));
+        $keyType = type_from_array($data['key']);
+        $valueType = type_from_array($data['value']);
+
+        type_equals(type_union(type_integer(), type_string()), $keyType);
+
+//        \Mago\inspect($keyType);
+
+        return new self($keyType, $valueType);
     }
 
     #[\Override]
@@ -56,6 +74,7 @@ final readonly class MapType implements Type
     {
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
+                /** @var array<array-key, mixed>|scalar|null $decoded */
                 $decoded = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
 
                 return $this->assert($decoded);

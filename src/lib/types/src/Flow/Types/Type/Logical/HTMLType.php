@@ -36,16 +36,15 @@ final readonly class HTMLType implements Type
     #[\Override]
     public function cast(mixed $value): HTMLDocument
     {
-        if (!$this->isValid($value)) {
-            throw new CastingException($value, $this);
+        if ($this->isValid($value)) {
+            return $value;
         }
 
-        /* @phpstan-ignore-next-line */
         if (\is_string($value)) {
             return HTMLDocument::createFromString($value, \LIBXML_NOERROR);
         }
 
-        return $value;
+        throw new CastingException($value, $this);
     }
 
     #[\Override]
