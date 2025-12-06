@@ -346,22 +346,204 @@ echo $query->toSQL();
 // SELECT u.name, recent.id FROM users u LEFT JOIN LATERAL (SELECT * FROM orders WHERE orders.user_id = u.id ORDER BY created_at DESC LIMIT 3) recent ON true
 ```
 
-## JSONB Contains Operator (@>)
+## JSONB Operators
 
-For JSONB operations like the `@>` (contains) operator, use `raw_expr()` or `raw_cond()`:
+The query builder provides native support for PostgreSQL JSONB operators:
 
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, star, table, raw_cond};
+use function Flow\PgQuery\DSL\{
+    select, star, table, col_from_string, literal_string, raw_expr,
+    json_contains, json_contained_by, json_get, json_get_text,
+    json_path, json_path_text, json_exists, json_exists_any, json_exists_all
+};
 
+// JSONB contains (@>)
 $query = select()
     ->select(star())
     ->from(table('products'))
-    ->where(raw_cond("metadata @> '{\"category\": \"electronics\"}'"));
+    ->where(json_contains(col_from_string('metadata'), literal_string('{"category": "electronics"}')));
 
 echo $query->toSQL();
 // SELECT * FROM products WHERE metadata @> '{"category": "electronics"}'
+
+// JSONB is contained by (<@)
+$query = select()
+    ->select(star())
+    ->from(table('products'))
+    ->where(json_contained_by(col_from_string('metadata'), literal_string('{"category": "electronics", "price": 100}')));
+
+echo $query->toSQL();
+// SELECT * FROM products WHERE metadata <@ '{"category": "electronics", "price": 100}'
+
+// JSON field access (->) - returns JSON
+$query = select()
+    ->select(json_get(col_from_string('metadata'), literal_string('category'))->as('category'))
+    ->from(table('products'));
+
+echo $query->toSQL();
+// SELECT metadata -> 'category' AS category FROM products
+
+// JSON field access (->>) - returns text
+$query = select()
+    ->select(json_get_text(col_from_string('metadata'), literal_string('name'))->as('product_name'))
+    ->from(table('products'));
+
+echo $query->toSQL();
+// SELECT metadata ->> 'name' AS product_name FROM products
+
+// JSON path access (#>) - returns JSON
+$query = select()
+    ->select(json_path(col_from_string('metadata'), literal_string('{category,name}'))->as('nested'))
+    ->from(table('products'));
+
+echo $query->toSQL();
+// SELECT metadata #> '{category,name}' AS nested FROM products
+
+// JSON path access (#>>) - returns text
+$query = select()
+    ->select(json_path_text(col_from_string('metadata'), literal_string('{category,name}'))->as('nested_text'))
+    ->from(table('products'));
+
+echo $query->toSQL();
+// SELECT metadata #>> '{category,name}' AS nested_text FROM products
+
+// Key exists (?)
+$query = select()
+    ->select(star())
+    ->from(table('products'))
+    ->where(json_exists(col_from_string('metadata'), literal_string('category')));
+
+echo $query->toSQL();
+// SELECT * FROM products WHERE metadata ? 'category'
+
+// Any key exists (?|)
+$query = select()
+    ->select(star())
+    ->from(table('products'))
+    ->where(json_exists_any(col_from_string('metadata'), raw_expr("array['category', 'name']")));
+
+echo $query->toSQL();
+// SELECT * FROM products WHERE metadata ?| array['category', 'name']
+
+// All keys exist (?&)
+$query = select()
+    ->select(star())
+    ->from(table('products'))
+    ->where(json_exists_all(col_from_string('metadata'), raw_expr("array['category', 'name']")));
+
+echo $query->toSQL();
+// SELECT * FROM products WHERE metadata ?& array['category', 'name']
+```
+
+## Array Operators
+
+PostgreSQL array operators are also supported:
+
+```php
+<?php
+
+use function Flow\PgQuery\DSL\{
+    select, star, table, col_from_string, raw_expr,
+    array_contains, array_contained_by, array_overlap
+};
+
+// Array contains (@>)
+$query = select()
+    ->select(star())
+    ->from(table('products'))
+    ->where(array_contains(col_from_string('tags'), raw_expr("ARRAY['sale']")));
+
+echo $query->toSQL();
+// SELECT * FROM products WHERE tags @> ARRAY['sale']
+
+// Array is contained by (<@)
+$query = select()
+    ->select(star())
+    ->from(table('products'))
+    ->where(array_contained_by(col_from_string('tags'), raw_expr("ARRAY['sale', 'featured', 'new']")));
+
+echo $query->toSQL();
+// SELECT * FROM products WHERE tags <@ ARRAY['sale', 'featured', 'new']
+
+// Array overlap (&&)
+$query = select()
+    ->select(star())
+    ->from(table('products'))
+    ->where(array_overlap(col_from_string('tags'), raw_expr("ARRAY['sale', 'featured']")));
+
+echo $query->toSQL();
+// SELECT * FROM products WHERE tags && ARRAY['sale', 'featured']
+```
+
+## Pattern Matching (Regex)
+
+POSIX regex operators for pattern matching:
+
+```php
+<?php
+
+use function Flow\PgQuery\DSL\{
+    select, star, table, col_from_string, literal_string,
+    regex_match, regex_imatch, not_regex_match, not_regex_imatch
+};
+
+// Case-sensitive regex match (~)
+$query = select()
+    ->select(star())
+    ->from(table('users'))
+    ->where(regex_match(col_from_string('email'), literal_string('.*@gmail\\.com')));
+
+echo $query->toSQL();
+// SELECT * FROM users WHERE email ~ '.*@gmail\.com'
+
+// Case-insensitive regex match (~*)
+$query = select()
+    ->select(star())
+    ->from(table('users'))
+    ->where(regex_imatch(col_from_string('email'), literal_string('.*@gmail\\.com')));
+
+echo $query->toSQL();
+// SELECT * FROM users WHERE email ~* '.*@gmail\.com'
+
+// Does not match (!~)
+$query = select()
+    ->select(star())
+    ->from(table('users'))
+    ->where(not_regex_match(col_from_string('email'), literal_string('.*@spam\\.com')));
+
+echo $query->toSQL();
+// SELECT * FROM users WHERE email !~ '.*@spam\.com'
+
+// Does not match case-insensitive (!~*)
+$query = select()
+    ->select(star())
+    ->from(table('users'))
+    ->where(not_regex_imatch(col_from_string('email'), literal_string('.*@spam\\.com')));
+
+echo $query->toSQL();
+// SELECT * FROM users WHERE email !~* '.*@spam\.com'
+```
+
+## Full-Text Search
+
+PostgreSQL full-text search operator:
+
+```php
+<?php
+
+use function Flow\PgQuery\DSL\{
+    select, star, table, col_from_string, raw_expr, text_search_match
+};
+
+$query = select()
+    ->select(star())
+    ->from(table('documents'))
+    ->where(text_search_match(col_from_string('content'), raw_expr("to_tsquery('english', 'hello & world')")));
+
+echo $query->toSQL();
+// SELECT * FROM documents WHERE content @@ to_tsquery('english', 'hello & world')
 ```
 
 ## Aggregates and GROUP BY
