@@ -83,6 +83,21 @@ use Flow\PgQuery\QueryBuilder\Table\{
     TableFunction,
     TableReference
 };
+use Flow\PgQuery\QueryBuilder\Transaction\{
+    BeginBuilder,
+    BeginOptionsStep,
+    CommitBuilder,
+    CommitOptionsStep,
+    PreparedTransactionBuilder,
+    PreparedTransactionFinalStep,
+    RollbackBuilder,
+    RollbackOptionsStep,
+    SavepointBuilder,
+    SavepointFinalStep,
+    SetTransactionBuilder,
+    SetTransactionFinalStep,
+    SetTransactionOptionsStep
+};
 use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder, UpdateTableStep};
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
@@ -1449,4 +1464,152 @@ function returning(Expression ...$expressions) : ReturningClause
 function returning_all() : ReturningClause
 {
     return ReturningClause::all();
+}
+
+// ----------------------------------------------------------------------------
+// Transaction Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a BEGIN transaction builder.
+ *
+ * Example: begin()->isolationLevel(IsolationLevel::SERIALIZABLE)->readOnly()
+ * Produces: BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function begin() : BeginOptionsStep
+{
+    return BeginBuilder::create();
+}
+
+/**
+ * Create a START TRANSACTION builder (alias for begin()).
+ *
+ * Example: start_transaction()->isolationLevel(IsolationLevel::READ_COMMITTED)
+ * Produces: BEGIN ISOLATION LEVEL READ COMMITTED
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function start_transaction() : BeginOptionsStep
+{
+    return BeginBuilder::create();
+}
+
+/**
+ * Create a COMMIT transaction builder.
+ *
+ * Example: commit()->andChain()
+ * Produces: COMMIT AND CHAIN
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function commit() : CommitOptionsStep
+{
+    return CommitBuilder::create();
+}
+
+/**
+ * Create a ROLLBACK transaction builder.
+ *
+ * Example: rollback()->toSavepoint('my_savepoint')
+ * Produces: ROLLBACK TO SAVEPOINT my_savepoint
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function rollback() : RollbackOptionsStep
+{
+    return RollbackBuilder::create();
+}
+
+/**
+ * Create a SAVEPOINT.
+ *
+ * Example: savepoint('my_savepoint')
+ * Produces: SAVEPOINT my_savepoint
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function savepoint(string $name) : SavepointFinalStep
+{
+    return SavepointBuilder::create($name);
+}
+
+/**
+ * Release a SAVEPOINT.
+ *
+ * Example: release_savepoint('my_savepoint')
+ * Produces: RELEASE my_savepoint
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function release_savepoint(string $name) : SavepointFinalStep
+{
+    return SavepointBuilder::release($name);
+}
+
+/**
+ * Create a SET TRANSACTION builder.
+ *
+ * Example: set_transaction()->isolationLevel(IsolationLevel::SERIALIZABLE)->readOnly()
+ * Produces: SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function set_transaction() : SetTransactionOptionsStep
+{
+    return SetTransactionBuilder::create();
+}
+
+/**
+ * Create a SET SESSION CHARACTERISTICS AS TRANSACTION builder.
+ *
+ * Example: set_session_transaction()->isolationLevel(IsolationLevel::SERIALIZABLE)
+ * Produces: SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function set_session_transaction() : SetTransactionOptionsStep
+{
+    return SetTransactionBuilder::session();
+}
+
+/**
+ * Create a SET TRANSACTION SNAPSHOT builder.
+ *
+ * Example: transaction_snapshot('00000003-0000001A-1')
+ * Produces: SET TRANSACTION SNAPSHOT '00000003-0000001A-1'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function transaction_snapshot(string $snapshotId) : SetTransactionFinalStep
+{
+    return SetTransactionBuilder::create()->snapshot($snapshotId);
+}
+
+/**
+ * Create a PREPARE TRANSACTION builder.
+ *
+ * Example: prepare_transaction('my_transaction')
+ * Produces: PREPARE TRANSACTION 'my_transaction'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function prepare_transaction(string $gid) : PreparedTransactionFinalStep
+{
+    return PreparedTransactionBuilder::prepare($gid);
+}
+
+/**
+ * Create a COMMIT PREPARED builder.
+ *
+ * Example: commit_prepared('my_transaction')
+ * Produces: COMMIT PREPARED 'my_transaction'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function commit_prepared(string $gid) : PreparedTransactionFinalStep
+{
+    return PreparedTransactionBuilder::commitPrepared($gid);
+}
+
+/**
+ * Create a ROLLBACK PREPARED builder.
+ *
+ * Example: rollback_prepared('my_transaction')
+ * Produces: ROLLBACK PREPARED 'my_transaction'
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function rollback_prepared(string $gid) : PreparedTransactionFinalStep
+{
+    return PreparedTransactionBuilder::rollbackPrepared($gid);
 }
