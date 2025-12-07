@@ -334,19 +334,4 @@ The `IsolationLevel` enum provides four standard SQL isolation levels:
 
 ## DSL Functions Reference
 
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `begin()` | `BeginOptionsStep` | Start a new transaction |
-| `start_transaction()` | `BeginOptionsStep` | Alias for `begin()` |
-| `commit()` | `CommitOptionsStep` | Commit current transaction |
-| `rollback()` | `RollbackOptionsStep` | Rollback current transaction |
-| `savepoint(string $name)` | `SavepointFinalStep` | Create a savepoint |
-| `release_savepoint(string $name)` | `SavepointFinalStep` | Release a savepoint |
-| `set_transaction()` | `SetTransactionOptionsStep` | Set transaction characteristics |
-| `set_session_transaction()` | `SetTransactionOptionsStep` | Set session default transaction characteristics |
-| `transaction_snapshot(string $id)` | `SetTransactionFinalStep` | Import a transaction snapshot |
-| `prepare_transaction(string $gid)` | `PreparedTransactionFinalStep` | Prepare transaction for two-phase commit |
-| `commit_prepared(string $gid)` | `PreparedTransactionFinalStep` | Commit a prepared transaction |
-| `rollback_prepared(string $gid)` | `PreparedTransactionFinalStep` | Rollback a prepared transaction |
-
 For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).

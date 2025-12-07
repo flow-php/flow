@@ -74,6 +74,13 @@ use Flow\PgQuery\QueryBuilder\Expression\{
 };
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
 use Flow\PgQuery\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
+use Flow\PgQuery\QueryBuilder\Schema\AlterTable\{AlterTableBuilder, AlterTableFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\{ColumnDefinition, DataType, ReferentialAction};
+use Flow\PgQuery\QueryBuilder\Schema\Constraint\{CheckConstraint, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint};
+use Flow\PgQuery\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep};
+use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PgQuery\QueryBuilder\Table\{
     CTEReference,
@@ -1612,4 +1619,447 @@ function commit_prepared(string $gid) : PreparedTransactionFinalStep
 function rollback_prepared(string $gid) : PreparedTransactionFinalStep
 {
     return PreparedTransactionBuilder::rollbackPrepared($gid);
+}
+
+// ----------------------------------------------------------------------------
+// SQL Data Types
+// ----------------------------------------------------------------------------
+
+/**
+ * Create an INTEGER data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_integer() : DataType
+{
+    return DataType::integer();
+}
+
+/**
+ * Create a BIGINT data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_bigint() : DataType
+{
+    return DataType::bigint();
+}
+
+/**
+ * Create a SMALLINT data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_smallint() : DataType
+{
+    return DataType::smallint();
+}
+
+/**
+ * Create a SERIAL (auto-incrementing integer) data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_serial() : DataType
+{
+    return DataType::serial();
+}
+
+/**
+ * Create a BIGSERIAL (auto-incrementing bigint) data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_bigserial() : DataType
+{
+    return DataType::bigserial();
+}
+
+/**
+ * Create a SMALLSERIAL (auto-incrementing smallint) data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_smallserial() : DataType
+{
+    return DataType::smallserial();
+}
+
+/**
+ * Create a TEXT data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_text() : DataType
+{
+    return DataType::text();
+}
+
+/**
+ * Create a VARCHAR data type.
+ *
+ * @param int $length Maximum character length
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_varchar(int $length) : DataType
+{
+    return DataType::varchar($length);
+}
+
+/**
+ * Create a CHAR data type.
+ *
+ * @param int $length Fixed character length
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_char(int $length) : DataType
+{
+    return DataType::char($length);
+}
+
+/**
+ * Create a BOOLEAN data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_boolean() : DataType
+{
+    return DataType::boolean();
+}
+
+/**
+ * Create a DATE data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_date() : DataType
+{
+    return DataType::date();
+}
+
+/**
+ * Create a TIME data type.
+ *
+ * @param null|int $precision Fractional seconds precision
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_time(?int $precision = null) : DataType
+{
+    return DataType::time($precision);
+}
+
+/**
+ * Create a TIMESTAMP data type.
+ *
+ * @param null|int $precision Fractional seconds precision
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_timestamp(?int $precision = null) : DataType
+{
+    return DataType::timestamp($precision);
+}
+
+/**
+ * Create a TIMESTAMP WITH TIME ZONE data type.
+ *
+ * @param null|int $precision Fractional seconds precision
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_timestamptz(?int $precision = null) : DataType
+{
+    return DataType::timestamptz($precision);
+}
+
+/**
+ * Create an INTERVAL data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_interval() : DataType
+{
+    return DataType::interval();
+}
+
+/**
+ * Create a NUMERIC data type.
+ *
+ * @param null|int $precision Total number of digits
+ * @param null|int $scale Number of digits after decimal point
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_numeric(?int $precision = null, ?int $scale = null) : DataType
+{
+    return DataType::numeric($precision, $scale);
+}
+
+/**
+ * Create a DECIMAL data type (alias for NUMERIC).
+ *
+ * @param null|int $precision Total number of digits
+ * @param null|int $scale Number of digits after decimal point
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_decimal(?int $precision = null, ?int $scale = null) : DataType
+{
+    return DataType::decimal($precision, $scale);
+}
+
+/**
+ * Create a REAL data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_real() : DataType
+{
+    return DataType::real();
+}
+
+/**
+ * Create a DOUBLE PRECISION data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_double() : DataType
+{
+    return DataType::doublePrecision();
+}
+
+/**
+ * Create a UUID data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_uuid() : DataType
+{
+    return DataType::uuid();
+}
+
+/**
+ * Create a JSON data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_json() : DataType
+{
+    return DataType::json();
+}
+
+/**
+ * Create a JSONB data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_jsonb() : DataType
+{
+    return DataType::jsonb();
+}
+
+/**
+ * Create a BYTEA data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_bytea() : DataType
+{
+    return DataType::bytea();
+}
+
+/**
+ * Create an INET data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_inet() : DataType
+{
+    return DataType::inet();
+}
+
+/**
+ * Create a CIDR data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_cidr() : DataType
+{
+    return DataType::cidr();
+}
+
+/**
+ * Create a MACADDR data type.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_macaddr() : DataType
+{
+    return DataType::macaddr();
+}
+
+/**
+ * Create an ARRAY data type.
+ *
+ * @param DataType $elementType The type of array elements
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function sql_type_array(DataType $elementType) : DataType
+{
+    return DataType::array($elementType);
+}
+
+// ----------------------------------------------------------------------------
+// Column Definitions
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a column definition for CREATE TABLE.
+ *
+ * @param string $name Column name
+ * @param DataType $type Column data type
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function column(string $name, DataType $type) : ColumnDefinition
+{
+    return ColumnDefinition::create($name, $type);
+}
+
+// ----------------------------------------------------------------------------
+// Table Constraints
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a PRIMARY KEY constraint.
+ *
+ * @param string ...$columns Columns that form the primary key
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function primary_key(string ...$columns) : PrimaryKeyConstraint
+{
+    return PrimaryKeyConstraint::create(...$columns);
+}
+
+/**
+ * Create a UNIQUE constraint.
+ *
+ * @param string ...$columns Columns that must be unique together
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function unique_constraint(string ...$columns) : UniqueConstraint
+{
+    return UniqueConstraint::create(...$columns);
+}
+
+/**
+ * Create a FOREIGN KEY constraint.
+ *
+ * @param list<string> $columns Local columns
+ * @param string $referenceTable Referenced table
+ * @param list<string> $referenceColumns Referenced columns (defaults to same as $columns if empty)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function foreign_key(array $columns, string $referenceTable, array $referenceColumns = []) : ForeignKeyConstraint
+{
+    return ForeignKeyConstraint::create($columns, $referenceTable, $referenceColumns);
+}
+
+/**
+ * Create a CHECK constraint.
+ *
+ * @param string $expression SQL expression that must evaluate to true
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function check_constraint(string $expression) : CheckConstraint
+{
+    return CheckConstraint::create($expression);
+}
+
+// ----------------------------------------------------------------------------
+// Table DDL Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a CREATE TABLE builder.
+ *
+ * @param string $table Table name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_table(string $table, ?string $schema = null) : CreateTableColumnsStep
+{
+    return CreateTableBuilder::create($table, $schema);
+}
+
+/**
+ * Create a CREATE TABLE AS builder.
+ *
+ * @param string $table Table name
+ * @param SelectFinalStep $query SELECT query to populate the table
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_table_as(string $table, SelectFinalStep $query, ?string $schema = null) : CreateTableAsFinalStep
+{
+    return CreateTableAsBuilder::create($table, $query, $schema);
+}
+
+/**
+ * Create an ALTER TABLE builder.
+ *
+ * @param string $table Table name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_table(string $table, ?string $schema = null) : AlterTableFinalStep
+{
+    return AlterTableBuilder::create($table, $schema);
+}
+
+/**
+ * Create a DROP TABLE builder.
+ *
+ * @param string ...$tables Table names to drop
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_table(string ...$tables) : DropTableFinalStep
+{
+    return DropTableBuilder::create(...$tables);
+}
+
+/**
+ * Create a TRUNCATE TABLE builder.
+ *
+ * @param string ...$tables Table names to truncate
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function truncate_table(string ...$tables) : TruncateFinalStep
+{
+    return TruncateBuilder::create(...$tables);
+}
+
+// ----------------------------------------------------------------------------
+// Referential Actions (for Foreign Keys)
+// ----------------------------------------------------------------------------
+
+/**
+ * Get a CASCADE referential action.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function ref_action_cascade() : ReferentialAction
+{
+    return ReferentialAction::CASCADE;
+}
+
+/**
+ * Get a RESTRICT referential action.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function ref_action_restrict() : ReferentialAction
+{
+    return ReferentialAction::RESTRICT;
+}
+
+/**
+ * Get a SET NULL referential action.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function ref_action_set_null() : ReferentialAction
+{
+    return ReferentialAction::SET_NULL;
+}
+
+/**
+ * Get a SET DEFAULT referential action.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function ref_action_set_default() : ReferentialAction
+{
+    return ReferentialAction::SET_DEFAULT;
+}
+
+/**
+ * Get a NO ACTION referential action.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function ref_action_no_action() : ReferentialAction
+{
+    return ReferentialAction::NO_ACTION;
 }
