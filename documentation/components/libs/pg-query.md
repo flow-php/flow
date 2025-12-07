@@ -405,6 +405,7 @@ For complete documentation on each query builder type, see:
 - [Transaction Query Builder](pg-query/transaction-query-builder.md)
 - [Table Query Builder](pg-query/table-query-builder.md)
 - [Index Query Builder](pg-query/index-query-builder.md)
+- [Sequence Query Builder](pg-query/sequence-query-builder.md)
 - [Utility Query Builder](pg-query/utility-query-builder.md)
 
 
