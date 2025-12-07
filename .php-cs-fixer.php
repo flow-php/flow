@@ -84,6 +84,7 @@ return (new Config())
         'fopen_flags' => true,
         'heredoc_to_nowdoc' => true,
         'increment_style' => ['style' => 'post'],
+        'is_null' => false,
         'linebreak_after_opening_tag' => false,
         'method_argument_space' => ['on_multiline' => 'ensure_fully_multiline'],
         'modernize_types_casting' => false,

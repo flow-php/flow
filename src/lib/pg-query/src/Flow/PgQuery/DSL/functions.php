@@ -351,7 +351,7 @@ function sql_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateB
  * @param string $name Column name (can include table prefix like "users.id" or "schema.table.column")
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function col_from_string(string $name) : Column
+function col_parse(string $name) : Column
 {
     $parts = \explode('.', $name);
 

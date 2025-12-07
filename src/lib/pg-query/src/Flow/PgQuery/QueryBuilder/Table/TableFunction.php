@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Table;
 
 use Flow\PgQuery\Protobuf\AST\{Node, PBList, RangeFunction};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\FunctionCall;
 
 /**
