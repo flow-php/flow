@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit;
 
-use function Flow\PgQuery\DSL\{col_parse, cond_and, eq, gt, literal_int, sql_parse, sql_query_columns, sql_query_functions, sql_query_tables, sql_to_query_builder};
+use function Flow\PgQuery\DSL\{col, cond_and, eq, gt, literal_int, sql_parse, sql_query_columns, sql_query_functions, sql_query_tables, sql_to_query_builder};
 use Flow\PgQuery\AST\Nodes\{Column, FunctionCall, Table};
 use Flow\PgQuery\AST\Visitors\{ColumnRefCollector, FuncCallCollector, RangeVarCollector};
 use Flow\PgQuery\ParsedQuery;
@@ -304,8 +304,8 @@ final class ParsedQueryTest extends TestCase
 
         $modified = $builder
             ->where(cond_and(
-                eq(col_parse('id'), literal_int(1)),
-                gt(col_parse('age'), literal_int(18))
+                eq(col('id'), literal_int(1)),
+                gt(col('age'), literal_int(18))
             ))
             ->limit(10);
 
