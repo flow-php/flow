@@ -48,6 +48,7 @@ use Flow\PgQuery\QueryBuilder\Condition\{
     SimilarTo
 };
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFromStep};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PgQuery\QueryBuilder\Expression\{
     AggregateCall,
     ArrayExpression,
@@ -348,35 +349,38 @@ function sql_to_query_builder(string $sql) : SelectBuilder|InsertBuilder|UpdateB
 /**
  * Create a column reference expression.
  *
- * @param string $name Column name (can include table prefix like "users.id" or "schema.table.column")
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function col_parse(string $name) : Column
-{
-    $parts = \explode('.', $name);
-
-    return Column::fromParts($parts);
-}
-
-/**
- * Create a column reference with explicit table/schema parts.
+ * Can be used in two modes:
+ * - Parse mode: col('users.id') or col('schema.table.column') - parses dot-separated string
+ * - Explicit mode: col('id', 'users') or col('id', 'users', 'schema') - separate arguments
  *
- * @param string $column Column name
- * @param null|string $table Table name (optional)
- * @param null|string $schema Schema name (optional)
+ * When $table or $schema is provided, $column must be a plain column name (no dots).
+ *
+ * @param string $column Column name, or dot-separated path like "table.column" or "schema.table.column"
+ * @param null|string $table Table name (optional, triggers explicit mode)
+ * @param null|string $schema Schema name (optional, requires $table)
+ *
+ * @throws InvalidExpressionException when $schema is provided without $table, or when $column contains dots in explicit mode
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function col(string $column, ?string $table = null, ?string $schema = null) : Column
 {
-    if ($schema !== null && $table !== null) {
-        return Column::schemaTableColumn($schema, $table, $column);
-    }
+    if ($table !== null || $schema !== null) {
+        if ($schema !== null && $table === null) {
+            throw new InvalidExpressionException('Cannot specify schema without table in col()');
+        }
 
-    if ($table !== null) {
+        if (\str_contains($column, '.')) {
+            throw new InvalidExpressionException('Column name cannot contain dots when table or schema is specified. Use col("table.column") or col("column", "table") but not both.');
+        }
+
+        if ($schema !== null && $table !== null) {
+            return Column::schemaTableColumn($schema, $table, $column);
+        }
+
         return Column::tableColumn($table, $column);
     }
 
-    return Column::name($column);
+    return Column::fromParts(\explode('.', $column));
 }
 
 /**

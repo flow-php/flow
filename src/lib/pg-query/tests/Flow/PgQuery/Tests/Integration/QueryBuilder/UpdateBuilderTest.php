@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
-    col_parse,
+    col,
     eq,
     literal_int,
     literal_string,
@@ -23,7 +23,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('users')
             ->set('name', literal_string('John'))
-            ->where(eq(col_parse('id'), literal_int(1)));
+            ->where(eq(col('id'), literal_int(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -36,7 +36,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('users', 'u')
             ->set('name', literal_string('John'))
-            ->where(eq(col_parse('u.id'), literal_int(1)));
+            ->where(eq(col('u.id'), literal_int(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -48,8 +48,8 @@ final class UpdateBuilderTest extends PGQueryTestCase
     {
         $query = update()
             ->update('products')
-            ->set('price', col_parse('price'))
-            ->where(eq(col_parse('id'), literal_int(1)));
+            ->set('price', col('price'))
+            ->where(eq(col('id'), literal_int(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -63,7 +63,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
             ->update('orders')
             ->set('status', literal_string('completed'))
             ->from(table('users'))
-            ->where(eq(col_parse('orders.user_id'), col_parse('users.id')));
+            ->where(eq(col('orders.user_id'), col('users.id')));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -77,7 +77,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
             ->update('users')
             ->set('name', literal_string('John'))
             ->set('email', literal_string('john@example.com'))
-            ->where(eq(col_parse('id'), literal_int(1)));
+            ->where(eq(col('id'), literal_int(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -90,7 +90,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('users')
             ->set('name', param(1))
-            ->where(eq(col_parse('id'), param(2)));
+            ->where(eq(col('id'), param(2)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -103,8 +103,8 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('users')
             ->set('name', literal_string('John'))
-            ->where(eq(col_parse('id'), literal_int(1)))
-            ->returning(col_parse('id'), col_parse('name'));
+            ->where(eq(col('id'), literal_int(1)))
+            ->returning(col('id'), col('name'));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -117,7 +117,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('users')
             ->set('name', literal_string('John'))
-            ->where(eq(col_parse('id'), literal_int(1)))
+            ->where(eq(col('id'), literal_int(1)))
             ->returningAll();
 
         $this->assertUpdateQueryRoundTrip(
@@ -134,7 +134,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
                 'name' => literal_string('John'),
                 'email' => literal_string('john@example.com'),
             ])
-            ->where(eq(col_parse('id'), literal_int(1)));
+            ->where(eq(col('id'), literal_int(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -145,14 +145,14 @@ final class UpdateBuilderTest extends PGQueryTestCase
     public function test_update_with_subquery_in_set() : void
     {
         $subquery = select()
-            ->select(col_parse('avg_price'))
+            ->select(col('avg_price'))
             ->from(table('price_stats'))
-            ->where(eq(col_parse('category'), col_parse('products.category')));
+            ->where(eq(col('category'), col('products.category')));
 
         $query = update()
             ->update('products')
             ->set('price', sub_select($subquery))
-            ->where(eq(col_parse('id'), literal_int(1)));
+            ->where(eq(col('id'), literal_int(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
