@@ -72,6 +72,7 @@ use Flow\PgQuery\QueryBuilder\Expression\{
     WindowFunction
 };
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
+use Flow\PgQuery\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PgQuery\QueryBuilder\Table\{
     CTEReference,
@@ -329,6 +330,31 @@ function delete() : DeleteFromStep
 }
 
 /**
+ * Create a new MERGE query builder.
+ *
+ * @param string $table Target table name
+ * @param null|string $alias Optional table alias
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function merge(string $table, ?string $alias = null) : MergeUsingStep
+{
+    return MergeBuilder::create()->into($table, $alias);
+}
+
+/**
+ * Create a MERGE query builder with a WITH clause (CTE).
+ *
+ * @param WithClause $with The WITH clause containing CTEs
+ * @param string $table Target table name
+ * @param null|string $alias Optional table alias
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function merge_with(WithClause $with, string $table, ?string $alias = null) : MergeUsingStep
+{
+    return MergeBuilder::with($with)->into($table, $alias);
+}
+
+/**
  * Parse SQL and convert to a QueryBuilder for modification.
  *
  * Only works for single-statement queries. For multiple statements,
@@ -375,6 +401,10 @@ function col(string $column, ?string $table = null, ?string $schema = null) : Co
 
         if ($schema !== null && $table !== null) {
             return Column::schemaTableColumn($schema, $table, $column);
+        }
+
+        if ($table === null) {
+            return Column::fromParts(\explode('.', $column));
         }
 
         return Column::tableColumn($table, $column);
