@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Expression;
 
 use Flow\PgQuery\Protobuf\AST\{A_Const, Boolean, Integer, Node, PBFloat, PBString};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 /**
  * Represents a literal value in SQL (string, int, float, bool, null).

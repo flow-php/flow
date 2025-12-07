@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Condition;
 
 use Flow\PgQuery\Protobuf\AST\{Node, NullTest, NullTestType};
-use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{Expression, ExpressionFactory};
 
 final readonly class IsNull implements Condition

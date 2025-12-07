@@ -12,7 +12,7 @@ use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionE
 use Flow\PgQuery\QueryBuilder\Expression\{BinaryExpression, Column, FunctionCall, Literal};
 use Flow\PgQuery\QueryBuilder\Select\SelectBuilder;
 use Flow\PgQuery\QueryBuilder\Table\Table;
-use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder};
+use Flow\PgQuery\QueryBuilder\Update\UpdateBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class UpdateBuilderTest extends TestCase

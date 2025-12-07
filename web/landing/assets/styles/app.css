@@ -111,30 +111,6 @@ code {
     @apply text-orange-100;
 }
 
-#blog-post .table-of-contents {
-    @apply rounded p-4 mt-4 mb-6 border-gray border-2 shadow-2xl shadow-gray list-none;
-}
-
-#blog-post .table-of-contents::before {
-    content: "Table of Contents";
-    @apply block font-bold text-lg mb-2;
-}
-
-#blog-post .table-of-contents li {
-    @apply mb-1 list-none;
-}
-
-#blog-post .table-of-contents ul {
-    @apply list-none pl-4;
-}
-
-#blog-post .table-of-contents a {
-    @apply no-underline hover:underline;
-}
-
-#blog-post .table-of-contents:not(:has(li:nth-child(2))) {
-    display: none;
-}
 
 #example-description h1 {
     @apply font-bold text-2xl;
@@ -237,30 +213,6 @@ code {
     @apply border-l-4 border-orange-100 p-2 bg-blue-300 mb-3;
 }
 
-#documentation-page .table-of-contents {
-    @apply rounded p-4 mt-4 mb-6 border-gray border-2 shadow-2xl shadow-gray list-none;
-}
-
-#documentation-page .table-of-contents::before {
-    content: "Table of Contents";
-    @apply block font-bold text-lg mb-2;
-}
-
-#documentation-page .table-of-contents li {
-    @apply mb-1 list-none;
-}
-
-#documentation-page .table-of-contents ul {
-    @apply list-none pl-4;
-}
-
-#documentation-page .table-of-contents a {
-    @apply no-underline hover:underline;
-}
-
-#documentation-page .table-of-contents:not(:has(li:nth-child(2))) {
-    display: none;
-}
 
 .mermaid-wrapper {
     @apply relative;
@@ -285,6 +237,55 @@ code {
 
 .mermaid-wrapper .mermaid {
     @apply z-0 !p-0;
+}
+
+/* Foldable Table of Contents */
+.toc-wrapper {
+    @apply rounded mt-4 mb-6 border-gray border-2 shadow-2xl shadow-gray overflow-hidden;
+}
+
+.toc-header {
+    @apply grid grid-cols-[1fr_auto] items-center p-4 cursor-pointer select-none;
+    @apply font-bold text-lg;
+}
+
+.toc-arrow {
+    transition: transform 0.3s ease;
+}
+
+.toc-wrapper.open .toc-arrow {
+    transform: rotate(180deg);
+}
+
+.toc-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.toc-wrapper.open .toc-content {
+    max-height: 2000px;
+}
+
+.toc-content .table-of-contents {
+    @apply px-4 pb-4 list-disc ml-4;
+}
+
+.toc-content .table-of-contents li {
+    @apply mb-1;
+}
+
+.toc-content .table-of-contents ul {
+    @apply list-disc pl-4 mt-1;
+}
+
+.toc-content .table-of-contents a {
+    @apply no-underline hover:underline;
+}
+
+/* Hide TOC with less than 2 items */
+.toc-wrapper:has(.table-of-contents:not(:has(li:nth-child(2)))) {
+    display: none;
 }
 
 #playground {

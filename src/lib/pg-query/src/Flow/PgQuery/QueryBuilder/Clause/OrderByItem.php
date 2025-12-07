@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Clause;
 
-use Flow\PgQuery\Protobuf\AST\{SortBy};
+use Flow\PgQuery\Protobuf\AST\SortBy;
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Expression\{Expression, ExpressionFactory};
 

@@ -19,7 +19,7 @@ use function Flow\PgQuery\DSL\{
     case_when,
     cast,
     coalesce,
-    col_from_string,
+    col_parse,
     cond_and,
     cond_not,
     cond_or,
@@ -35,6 +35,7 @@ use function Flow\PgQuery\DSL\{
     gte,
     is_distinct_from,
     is_in,
+    is_null,
     lateral,
     least,
     like,
@@ -73,12 +74,12 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->selectDistinctOn(
-                [col_from_string('department')],
-                col_from_string('name'),
-                col_from_string('salary')
+                [col_parse('department')],
+                col_parse('name'),
+                col_parse('salary')
             )
             ->from(table('employees'))
-            ->orderBy(asc(col_from_string('department')), desc(col_from_string('salary')));
+            ->orderBy(asc(col_parse('department')), desc(col_parse('salary')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -89,11 +90,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_except_all() : void
     {
         $query1 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('all_users'));
 
         $query2 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('banned_users'));
 
         $query = $query1->exceptAll($query2);
@@ -107,11 +108,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_intersect_all() : void
     {
         $query1 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('users'));
 
         $query2 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('admins'));
 
         $query = $query1->intersectAll($query2);
@@ -126,15 +127,15 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('category'),
+                col_parse('category'),
                 agg_count(),
-                agg_sum(col_from_string('amount')),
-                agg_avg(col_from_string('price')),
-                agg_min(col_from_string('created_at')),
-                agg_max(col_from_string('updated_at'))
+                agg_sum(col_parse('amount')),
+                agg_avg(col_parse('price')),
+                agg_min(col_parse('created_at')),
+                agg_max(col_parse('updated_at'))
             )
             ->from(table('orders'))
-            ->groupBy(col_from_string('category'));
+            ->groupBy(col_parse('category'));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -146,8 +147,8 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('first_name')->as('fname'),
-                col_from_string('last_name')->as('lname')
+                col_parse('first_name')->as('fname'),
+                col_parse('last_name')->as('lname')
             )
             ->from(table('users'));
 
@@ -160,13 +161,13 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_all() : void
     {
         $subquery = select()
-            ->select(col_from_string('price'))
+            ->select(col_parse('price'))
             ->from(table('budget_products'));
 
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(all_sub_selects(col_from_string('price'), ComparisonOperator::GT, $subquery));
+            ->where(all_sub_selects(col_parse('price'), ComparisonOperator::GT, $subquery));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -177,13 +178,13 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_any() : void
     {
         $subquery = select()
-            ->select(col_from_string('price'))
+            ->select(col_parse('price'))
             ->from(table('discounted_products'));
 
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(any_sub_select(col_from_string('price'), ComparisonOperator::GT, $subquery));
+            ->where(any_sub_select(col_parse('price'), ComparisonOperator::GT, $subquery));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -208,7 +209,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(is_in(col_from_string('id'), [literal_int(1), literal_int(2), literal_int(3)]));
+            ->where(is_in(col_parse('id'), [literal_int(1), literal_int(2), literal_int(3)]));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -221,7 +222,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(between(col_from_string('price'), literal_int(10), literal_int(100)));
+            ->where(between(col_parse('price'), literal_int(10), literal_int(100)));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -233,10 +234,10 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('name'),
+                col_parse('name'),
                 case_when([
-                    when(binary_expr(col_from_string('price'), '>', literal_int(100)), literal_string('expensive')),
-                    when(binary_expr(col_from_string('price'), '>', literal_int(50)), literal_string('moderate')),
+                    when(binary_expr(col_parse('price'), '>', literal_int(100)), literal_string('expensive')),
+                    when(binary_expr(col_parse('price'), '>', literal_int(50)), literal_string('moderate')),
                 ], literal_string('cheap'))->as('price_category')
             )
             ->from(table('products'));
@@ -251,8 +252,12 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('id'),
-                coalesce(col_from_string('nickname'), col_from_string('name'), literal_string('Anonymous'))->as('display_name')
+                col_parse('id'),
+                coalesce(
+                    col_parse('nickname'),
+                    col_parse('name'),
+                    literal_string('Anonymous')
+                )->as('display_name')
             )
             ->from(table('users'));
 
@@ -269,10 +274,10 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('users'))
             ->where(
                 cond_and(
-                    eq(col_from_string('status'), literal_string('active')),
+                    eq(col_parse('status'), literal_string('active')),
                     cond_or(
-                        gte(col_from_string('age'), literal_int(18)),
-                        eq(col_from_string('guardian_approved'), literal_bool(true))
+                        gte(col_parse('age'), literal_int(18)),
+                        eq(col_parse('guardian_approved'), literal_bool(true))
                     )
                 )
             );
@@ -302,9 +307,9 @@ final class SelectBuilderTest extends PGQueryTestCase
             cte(
                 'active_users',
                 select()
-                    ->select(col_from_string('id'), col_from_string('name'))
+                    ->select(col_parse('id'), col_parse('name'))
                     ->from(table('users'))
-                    ->where(eq(col_from_string('active'), literal_bool(true)))
+                    ->where(eq(col_parse('active'), literal_bool(true)))
             ),
         ]))
             ->select(star())
@@ -319,9 +324,9 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_cte_materialized() : void
     {
         $cteQuery = select()
-            ->select(col_from_string('id'), col_from_string('name'))
+            ->select(col_parse('id'), col_parse('name'))
             ->from(table('users'))
-            ->where(eq(col_from_string('active'), literal_bool(true)));
+            ->where(eq(col_parse('active'), literal_bool(true)));
 
         $query = select_with(with_cte([
             cte('active_users', $cteQuery, [], CTEMaterialization::MATERIALIZED),
@@ -338,9 +343,9 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_cte_not_materialized() : void
     {
         $cteQuery = select()
-            ->select(col_from_string('id'), col_from_string('name'))
+            ->select(col_parse('id'), col_parse('name'))
             ->from(table('users'))
-            ->where(eq(col_from_string('active'), literal_bool(true)));
+            ->where(eq(col_parse('active'), literal_bool(true)));
 
         $query = select_with(with_cte([
             cte('active_users', $cteQuery, [], CTEMaterialization::NOT_MATERIALIZED),
@@ -357,16 +362,16 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_derived_table() : void
     {
         $subquery = select()
-            ->select(col_from_string('user_id'), agg_sum(col_from_string('amount'))->as('total'))
+            ->select(col_parse('user_id'), agg_sum(col_parse('amount'))->as('total'))
             ->from(table('orders'))
-            ->groupBy(col_from_string('user_id'));
+            ->groupBy(col_parse('user_id'));
 
         $query = select()
-            ->select(col_from_string('u.name'), col_from_string('o.total'))
+            ->select(col_parse('u.name'), col_parse('o.total'))
             ->from(table('users')->as('u'))
             ->leftJoin(
                 derived($subquery, 'o'),
-                eq(col_from_string('u.id'), col_from_string('o.user_id'))
+                eq(col_parse('u.id'), col_parse('o.user_id'))
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -378,16 +383,16 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_derived_table_join() : void
     {
         $subquery = select()
-            ->select(col_from_string('user_id'), agg_count()->as('order_count'))
+            ->select(col_parse('user_id'), agg_count()->as('order_count'))
             ->from(table('orders'))
-            ->groupBy(col_from_string('user_id'));
+            ->groupBy(col_parse('user_id'));
 
         $query = select()
-            ->select(col_from_string('users.name'), col_from_string('order_stats.order_count'))
+            ->select(col_parse('users.name'), col_parse('order_stats.order_count'))
             ->from(table('users'))
             ->join(
                 derived($subquery, 'order_stats'),
-                eq(col_from_string('users.id'), col_from_string('order_stats.user_id'))
+                eq(col_parse('users.id'), col_parse('order_stats.user_id'))
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -399,7 +404,7 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_distinct() : void
     {
         $query = select()
-            ->selectDistinct(col_from_string('city'))
+            ->selectDistinct(col_parse('city'))
             ->from(table('users'));
 
         $this->assertSelectQueryRoundTrip(
@@ -411,7 +416,7 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_distinct_count() : void
     {
         $query = select()
-            ->select(agg_count(col_from_string('user_id'), true)->as('unique_users'))
+            ->select(agg_count(col_parse('user_id'), true)->as('unique_users'))
             ->from(table('orders'));
 
         $this->assertSelectQueryRoundTrip(
@@ -423,11 +428,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_except() : void
     {
         $query1 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('all_users'));
 
         $query2 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('banned_users'));
 
         $query = $query1->except($query2);
@@ -443,7 +448,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $subquery = select()
             ->select(literal_int(1))
             ->from(table('orders'))
-            ->where(eq(col_from_string('orders.user_id'), col_from_string('users.id')));
+            ->where(eq(col_parse('orders.user_id'), col_parse('users.id')));
 
         $query = select()
             ->select(star())
@@ -461,7 +466,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('accounts'))
-            ->where(eq(col_from_string('id'), literal_int(1)))
+            ->where(eq(col_parse('id'), literal_int(1)))
             ->forKeyShare();
 
         $this->assertSelectQueryRoundTrip(
@@ -475,7 +480,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('accounts'))
-            ->where(eq(col_from_string('id'), literal_int(1)))
+            ->where(eq(col_parse('id'), literal_int(1)))
             ->forNoKeyUpdate();
 
         $this->assertSelectQueryRoundTrip(
@@ -489,7 +494,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('accounts'))
-            ->where(eq(col_from_string('id'), literal_int(1)))
+            ->where(eq(col_parse('id'), literal_int(1)))
             ->forShare();
 
         $this->assertSelectQueryRoundTrip(
@@ -503,7 +508,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('accounts'))
-            ->where(eq(col_from_string('id'), literal_int(1)))
+            ->where(eq(col_parse('id'), literal_int(1)))
             ->forUpdate();
 
         $this->assertSelectQueryRoundTrip(
@@ -519,7 +524,7 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('table_a')->as('a'))
             ->fullJoin(
                 table('table_b')->as('b'),
-                eq(col_from_string('a.key'), col_from_string('b.key'))
+                eq(col_parse('a.key'), col_parse('b.key'))
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -532,9 +537,9 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('name'),
-                func('upper', [col_from_string('name')])->as('upper_name'),
-                func('length', [col_from_string('name')])->as('name_length')
+                col_parse('name'),
+                func('upper', [col_parse('name')])->as('upper_name'),
+                func('length', [col_parse('name')])->as('name_length')
             )
             ->from(table('users'));
 
@@ -548,8 +553,8 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('id'),
-                greatest(col_from_string('a'), col_from_string('b'), col_from_string('c'))->as('max_value')
+                col_parse('id'),
+                greatest(col_parse('a'), col_parse('b'), col_parse('c'))->as('max_value')
             )
             ->from(table('numbers'));
 
@@ -562,9 +567,9 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_group_by_having() : void
     {
         $query = select()
-            ->select(col_from_string('category'), agg_count()->as('cnt'))
+            ->select(col_parse('category'), agg_count()->as('cnt'))
             ->from(table('products'))
-            ->groupBy(col_from_string('category'))
+            ->groupBy(col_parse('category'))
             ->having(gt(agg_count(), literal_int(5)));
 
         $this->assertSelectQueryRoundTrip(
@@ -578,7 +583,10 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(is_in(col_from_string('status'), [literal_string('active'), literal_string('pending'), literal_string('verified')]));
+            ->where(is_in(
+                col_parse('status'),
+                [literal_string('active'), literal_string('pending'), literal_string('verified')]
+            ));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -589,11 +597,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_inner_join() : void
     {
         $query = select()
-            ->select(col_from_string('u.name'), col_from_string('o.total'))
+            ->select(col_parse('u.name'), col_parse('o.total'))
             ->from(table('users')->as('u'))
             ->join(
                 table('orders')->as('o'),
-                eq(col_from_string('u.id'), col_from_string('o.user_id'))
+                eq(col_parse('u.id'), col_parse('o.user_id'))
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -605,11 +613,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_intersect() : void
     {
         $query1 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('premium_users'));
 
         $query2 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('active_users'));
 
         $query = $query1->intersect($query2);
@@ -625,7 +633,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(is_distinct_from(col_from_string('status'), literal_null()));
+            ->where(is_distinct_from(col_parse('status'), literal_null()));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -638,7 +646,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(is_distinct_from(col_from_string('status'), literal_string('active'), true));
+            ->where(is_distinct_from(col_parse('status'), literal_string('active'), true));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -651,7 +659,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(null === col_from_string('deleted_at'));
+            ->where(is_null(col_parse('deleted_at')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -664,12 +672,12 @@ final class SelectBuilderTest extends PGQueryTestCase
         $lateralQuery = select()
             ->select(star())
             ->from(table('orders'))
-            ->where(eq(col_from_string('orders.user_id'), col_from_string('u.id')))
-            ->orderBy(desc(col_from_string('created_at')))
+            ->where(eq(col_parse('orders.user_id'), col_parse('u.id')))
+            ->orderBy(desc(col_parse('created_at')))
             ->limit(3);
 
         $query = select()
-            ->select(col_from_string('u.name'), col_from_string('recent.id'))
+            ->select(col_parse('u.name'), col_parse('recent.id'))
             ->from(table('users')->as('u'))
             ->leftJoin(
                 lateral(derived($lateralQuery, 'recent')),
@@ -685,14 +693,14 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_lateral_subquery() : void
     {
         $subquery = select()
-            ->select(col_from_string('order_id'))
+            ->select(col_parse('order_id'))
             ->from(table('orders'))
-            ->where(eq(col_from_string('orders.user_id'), col_from_string('users.id')))
-            ->orderBy(desc(col_from_string('created_at')))
+            ->where(eq(col_parse('orders.user_id'), col_parse('users.id')))
+            ->orderBy(desc(col_parse('created_at')))
             ->limit(5);
 
         $query = select()
-            ->select(col_from_string('users.name'), col_from_string('recent_orders.order_id'))
+            ->select(col_parse('users.name'), col_parse('recent_orders.order_id'))
             ->from(table('users'))
             ->crossJoin(lateral(derived($subquery, 'recent_orders')));
 
@@ -706,8 +714,8 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('id'),
-                least(col_from_string('a'), col_from_string('b'), col_from_string('c'))->as('min_value')
+                col_parse('id'),
+                least(col_parse('a'), col_parse('b'), col_parse('c'))->as('min_value')
             )
             ->from(table('numbers'));
 
@@ -720,11 +728,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_left_join() : void
     {
         $query = select()
-            ->select(col_from_string('u.name'), col_from_string('o.total'))
+            ->select(col_parse('u.name'), col_parse('o.total'))
             ->from(table('users')->as('u'))
             ->leftJoin(
                 table('orders')->as('o'),
-                eq(col_from_string('u.id'), col_from_string('o.user_id'))
+                eq(col_parse('u.id'), col_parse('o.user_id'))
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -738,7 +746,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(like(col_from_string('email'), literal_string('%@example.com')));
+            ->where(like(col_parse('email'), literal_string('%@example.com')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -751,7 +759,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->orderBy(asc(col_from_string('id')))
+            ->orderBy(asc(col_parse('id')))
             ->limit(10)
             ->offset(20);
 
@@ -768,9 +776,9 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('users'))
             ->where(
                 cond_and(
-                    eq(col_from_string('active'), literal_bool(true)),
-                    gte(col_from_string('age'), literal_int(18)),
-                    neq(col_from_string('status'), literal_string('banned'))
+                    eq(col_parse('active'), literal_bool(true)),
+                    gte(col_parse('age'), literal_int(18)),
+                    neq(col_parse('status'), literal_string('banned'))
                 )
             );
 
@@ -785,7 +793,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(cond_not(eq(col_from_string('status'), literal_string('banned'))));
+            ->where(cond_not(eq(col_parse('status'), literal_string('banned'))));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -797,8 +805,8 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('id'),
-                nullif(col_from_string('value'), literal_int(0))->as('safe_value')
+                col_parse('id'),
+                nullif(col_parse('value'), literal_int(0))->as('safe_value')
             )
             ->from(table('data'));
 
@@ -814,8 +822,8 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->select(star())
             ->from(table('users'))
             ->orderBy(
-                asc(col_from_string('last_name')),
-                desc(col_from_string('first_name'))
+                asc(col_parse('last_name')),
+                desc(col_parse('first_name'))
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -830,8 +838,8 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->select(star())
             ->from(table('products'))
             ->orderBy(
-                order_by(col_from_string('price'), SortDirection::ASC, NullsPosition::FIRST),
-                order_by(col_from_string('name'), SortDirection::DESC, NullsPosition::LAST)
+                order_by(col_parse('price'), SortDirection::ASC, NullsPosition::FIRST),
+                order_by(col_parse('name'), SortDirection::DESC, NullsPosition::LAST)
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -845,7 +853,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(eq(col_from_string('id'), param(1)));
+            ->where(eq(col_parse('id'), param(1)));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -872,7 +880,7 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('id'),
+                col_parse('id'),
                 raw_expr('1 + 1')->as('two')
             )
             ->from(table('users'));
@@ -883,6 +891,122 @@ final class SelectBuilderTest extends PGQueryTestCase
         );
     }
 
+    public function test_select_with_recursive_cte_window_functions_and_case_expression() : void
+    {
+        $orgTreeAnchor = select()
+            ->select(
+                col_parse('id'),
+                col_parse('name'),
+                col_parse('manager_id'),
+                literal_int(0)->as('level'),
+                cast(col_parse('name'), 'text')->as('path')
+            )
+            ->from(table('employees'))
+            ->where(is_null(col_parse('manager_id')));
+
+        $orgTreeRecursive = select()
+            ->select(
+                col_parse('e.id'),
+                col_parse('e.name'),
+                col_parse('e.manager_id'),
+                binary_expr(col_parse('org_tree.level'), '+', literal_int(1)),
+                binary_expr(
+                    binary_expr(col_parse('org_tree.path'), '||', literal_string(' -> ')),
+                    '||',
+                    col_parse('e.name')
+                )
+            )
+            ->from(table('employees')->as('e'))
+            ->join(cte_ref('org_tree'), eq(col_parse('e.manager_id'), col_parse('org_tree.id')));
+
+        $orgTreeQuery = $orgTreeAnchor->unionAll($orgTreeRecursive);
+
+        $deptStats = select()
+            ->select(
+                col_parse('department_id'),
+                agg_avg(col_parse('salary')),
+                agg_max(col_parse('salary')),
+                agg_count()
+            )
+            ->from(table('employees'))
+            ->groupBy(col_parse('department_id'));
+
+        $rankedEmployees = select()
+            ->select(
+                col_parse('e.id'),
+                col_parse('e.name'),
+                col_parse('e.department_id'),
+                col_parse('e.salary'),
+                window_func(
+                    'row_number',
+                    [],
+                    [col_parse('e.department_id')],
+                    [desc(col_parse('e.salary'))]
+                ),
+                func('round', [
+                    binary_expr(
+                        binary_expr(col_parse('e.salary'), '/', col_parse('ds.max_salary')),
+                        '*',
+                        literal_int(100)
+                    ),
+                    literal_int(2),
+                ])
+            )
+            ->from(table('employees')->as('e'))
+            ->join(
+                cte_ref('dept_stats')->as('ds'),
+                eq(col_parse('e.department_id'), col_parse('ds.department_id'))
+            );
+
+        $query = select_with(with_cte([
+            cte('org_tree', $orgTreeQuery, ['id', 'name', 'manager_id', 'level', 'path']),
+            cte('dept_stats', $deptStats, ['department_id', 'avg_salary', 'max_salary', 'employee_count']),
+            cte(
+                'ranked_employees',
+                $rankedEmployees,
+                ['id', 'name', 'department_id', 'salary', 'salary_rank', 'pct_of_max']
+            ),
+        ], true))
+            ->select(
+                col_parse('org_tree.name')->as('employee'),
+                col_parse('org_tree.level'),
+                col_parse('org_tree.path')->as('reporting_chain'),
+                col_parse('d.name')->as('department'),
+                col_parse('re.salary'),
+                col_parse('re.salary_rank'),
+                col_parse('re.pct_of_max'),
+                col_parse('ds.avg_salary')->as('dept_avg'),
+                case_when([
+                    when(
+                        binary_expr(col_parse('re.salary'), '>', col_parse('ds.avg_salary')),
+                        literal_string('Above Average')
+                    ),
+                ], literal_string('At/Below Average'))->as('salary_status')
+            )
+            ->from(cte_ref('org_tree'))
+            ->join(cte_ref('ranked_employees')->as('re'), eq(col_parse('org_tree.id'), col_parse('re.id')))
+            ->join(
+                cte_ref('dept_stats')->as('ds'),
+                eq(col_parse('re.department_id'), col_parse('ds.department_id'))
+            )
+            ->join(table('departments')->as('d'), eq(col_parse('re.department_id'), col_parse('d.id')))
+            ->where(cond_and(
+                lte(col_parse('org_tree.level'), literal_int(3)),
+                lte(col_parse('re.salary_rank'), literal_int(5))
+            ))
+            ->orderBy(
+                asc(col_parse('org_tree.level')),
+                asc(col_parse('d.name')),
+                desc(col_parse('re.salary'))
+            );
+
+        $expectedSql = <<<'SQL'
+            WITH RECURSIVE org_tree(id, name, manager_id, level, path) AS (SELECT id, name, manager_id, 0 AS level, name::text AS path FROM employees WHERE manager_id IS NULL UNION ALL SELECT e.id, e.name, e.manager_id, org_tree.level + 1, (org_tree.path || ' -> ') || e.name FROM employees e JOIN org_tree ON e.manager_id = org_tree.id), dept_stats(department_id, avg_salary, max_salary, employee_count) AS (SELECT department_id, avg(salary), max(salary), count(*) FROM employees GROUP BY department_id), ranked_employees(id, name, department_id, salary, salary_rank, pct_of_max) AS (SELECT e.id, e.name, e.department_id, e.salary, row_number() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC), round((e.salary / ds.max_salary) * 100, 2) FROM employees e JOIN dept_stats ds ON e.department_id = ds.department_id) SELECT org_tree.name AS employee, org_tree.level, org_tree.path AS reporting_chain, d.name AS department, re.salary, re.salary_rank, re.pct_of_max, ds.avg_salary AS dept_avg, CASE WHEN re.salary > ds.avg_salary THEN 'Above Average' ELSE 'At/Below Average' END AS salary_status FROM org_tree JOIN ranked_employees re ON org_tree.id = re.id JOIN dept_stats ds ON re.department_id = ds.department_id JOIN departments d ON re.department_id = d.id WHERE org_tree.level <= 3 AND re.salary_rank <= 5 ORDER BY org_tree.level ASC, d.name ASC, re.salary DESC
+            SQL;
+
+        $this->assertSelectQueryRoundTrip($query, $expectedSql);
+    }
+
     public function test_select_with_right_join() : void
     {
         $query = select()
@@ -890,7 +1014,7 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('orders')->as('o'))
             ->rightJoin(
                 table('users')->as('u'),
-                eq(col_from_string('o.user_id'), col_from_string('u.id'))
+                eq(col_parse('o.user_id'), col_parse('u.id'))
             );
 
         $this->assertSelectQueryRoundTrip(
@@ -906,7 +1030,7 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('users'))
             ->where(
                 eq(
-                    row_expr([col_from_string('first_name'), col_from_string('last_name')]),
+                    row_expr([col_parse('first_name'), col_parse('last_name')]),
                     row_expr([literal_string('John'), literal_string('Doe')])
                 )
             );
@@ -922,11 +1046,11 @@ final class SelectBuilderTest extends PGQueryTestCase
         $subquery = select()
             ->select(agg_count())
             ->from(table('orders'))
-            ->where(eq(col_from_string('orders.user_id'), col_from_string('users.id')));
+            ->where(eq(col_parse('orders.user_id'), col_parse('users.id')));
 
         $query = select()
             ->select(
-                col_from_string('name'),
+                col_parse('name'),
                 sub_select($subquery)->as('order_count')
             )
             ->from(table('users'));
@@ -954,7 +1078,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(similar_to(col_from_string('name'), literal_string('%John%')));
+            ->where(similar_to(col_parse('name'), literal_string('%John%')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -965,7 +1089,7 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_table_function() : void
     {
         $query = select()
-            ->select(col_from_string('value'))
+            ->select(col_parse('value'))
             ->from(table_func(func('generate_series', [literal_int(1), literal_int(10)]))->as('value'));
 
         $this->assertSelectQueryRoundTrip(
@@ -978,8 +1102,8 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('id'),
-                cast(col_from_string('price'), 'integer')->as('price_int')
+                col_parse('id'),
+                cast(col_parse('price'), 'integer')->as('price_int')
             )
             ->from(table('products'));
 
@@ -992,11 +1116,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_union() : void
     {
         $query1 = select()
-            ->select(col_from_string('name'))
+            ->select(col_parse('name'))
             ->from(table('users'));
 
         $query2 = select()
-            ->select(col_from_string('name'))
+            ->select(col_parse('name'))
             ->from(table('admins'));
 
         $query = $query1->union($query2);
@@ -1010,11 +1134,11 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_select_with_union_all() : void
     {
         $query1 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('table1'));
 
         $query2 = select()
-            ->select(col_from_string('id'))
+            ->select(col_parse('id'))
             ->from(table('table2'));
 
         $query = $query1->unionAll($query2);
@@ -1032,10 +1156,10 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('products'))
             ->where(
                 cond_and(
-                    gt(col_from_string('price'), literal_int(10)),
-                    lt(col_from_string('price'), literal_int(100)),
-                    gte(col_from_string('quantity'), literal_int(1)),
-                    lte(col_from_string('weight'), literal_int(50))
+                    gt(col_parse('price'), literal_int(10)),
+                    lt(col_parse('price'), literal_int(100)),
+                    gte(col_parse('quantity'), literal_int(1)),
+                    lte(col_parse('weight'), literal_int(50))
                 )
             );
 
@@ -1049,12 +1173,21 @@ final class SelectBuilderTest extends PGQueryTestCase
     {
         $query = select()
             ->select(
-                col_from_string('department'),
-                col_from_string('salary'),
-                window_func('row_number', [], [], [order_by(col_from_string('salary'), SortDirection::DESC)])->as('rank')
+                col_parse('department'),
+                col_parse('salary'),
+                window_func(
+                    'row_number',
+                    [],
+                    [],
+                    [order_by(col_parse('salary'), SortDirection::DESC)]
+                )->as('rank')
             )
             ->from(table('employees'))
-            ->window(window_def('w', [col_from_string('department')], [order_by(col_from_string('salary'), SortDirection::DESC)]));
+            ->window(window_def(
+                'w',
+                [col_parse('department')],
+                [order_by(col_parse('salary'), SortDirection::DESC)]
+            ));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -1065,7 +1198,7 @@ final class SelectBuilderTest extends PGQueryTestCase
     public function test_simple_select() : void
     {
         $query = select()
-            ->select(col_from_string('id'), col_from_string('name'))
+            ->select(col_parse('id'), col_parse('name'))
             ->from(table('users'));
 
         $this->assertSelectQueryRoundTrip(
@@ -1091,7 +1224,7 @@ final class SelectBuilderTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(eq(col_from_string('active'), literal_bool(true)));
+            ->where(eq(col_parse('active'), literal_bool(true)));
 
         $this->assertSelectQueryRoundTrip(
             $query,

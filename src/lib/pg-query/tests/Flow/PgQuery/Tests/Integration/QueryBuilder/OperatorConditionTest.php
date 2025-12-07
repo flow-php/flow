@@ -8,7 +8,7 @@ use function Flow\PgQuery\DSL\{
     array_contained_by,
     array_contains,
     array_overlap,
-    col_from_string,
+    col_parse,
     json_contained_by,
     json_contains,
     json_exists,
@@ -37,7 +37,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(array_contained_by(col_from_string('tags'), raw_expr("ARRAY['sale', 'featured', 'new']")));
+            ->where(array_contained_by(col_parse('tags'), raw_expr("ARRAY['sale', 'featured', 'new']")));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -50,7 +50,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(array_contains(col_from_string('tags'), raw_expr("ARRAY['sale']")));
+            ->where(array_contains(col_parse('tags'), raw_expr("ARRAY['sale']")));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -63,7 +63,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(array_overlap(col_from_string('tags'), raw_expr("ARRAY['sale', 'featured']")));
+            ->where(array_overlap(col_parse('tags'), raw_expr("ARRAY['sale', 'featured']")));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -76,7 +76,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(json_contained_by(col_from_string('metadata'), literal_string('{"category": "electronics", "price": 100}')));
+            ->where(json_contained_by(col_parse('metadata'), literal_string('{"category": "electronics", "price": 100}')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -89,7 +89,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(json_contains(col_from_string('metadata'), literal_string('{"category": "electronics"}')));
+            ->where(json_contains(col_parse('metadata'), literal_string('{"category": "electronics"}')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -102,7 +102,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(json_exists(col_from_string('metadata'), literal_string('category')));
+            ->where(json_exists(col_parse('metadata'), literal_string('category')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -115,7 +115,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(json_exists_all(col_from_string('metadata'), raw_expr("array['category', 'name']")));
+            ->where(json_exists_all(col_parse('metadata'), raw_expr("array['category', 'name']")));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -128,7 +128,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('products'))
-            ->where(json_exists_any(col_from_string('metadata'), raw_expr("array['category', 'name']")));
+            ->where(json_exists_any(col_parse('metadata'), raw_expr("array['category', 'name']")));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -139,7 +139,7 @@ final class OperatorConditionTest extends PGQueryTestCase
     public function test_json_get() : void
     {
         $query = select()
-            ->select(json_get(col_from_string('metadata'), literal_string('category'))->as('category'))
+            ->select(json_get(col_parse('metadata'), literal_string('category'))->as('category'))
             ->from(table('products'));
 
         $this->assertSelectQueryRoundTrip(
@@ -151,7 +151,7 @@ final class OperatorConditionTest extends PGQueryTestCase
     public function test_json_get_text() : void
     {
         $query = select()
-            ->select(json_get_text(col_from_string('metadata'), literal_string('name'))->as('product_name'))
+            ->select(json_get_text(col_parse('metadata'), literal_string('name'))->as('product_name'))
             ->from(table('products'));
 
         $this->assertSelectQueryRoundTrip(
@@ -163,7 +163,7 @@ final class OperatorConditionTest extends PGQueryTestCase
     public function test_json_path() : void
     {
         $query = select()
-            ->select(json_path(col_from_string('metadata'), literal_string('{category,name}'))->as('nested'))
+            ->select(json_path(col_parse('metadata'), literal_string('{category,name}'))->as('nested'))
             ->from(table('products'));
 
         $this->assertSelectQueryRoundTrip(
@@ -175,7 +175,7 @@ final class OperatorConditionTest extends PGQueryTestCase
     public function test_json_path_text() : void
     {
         $query = select()
-            ->select(json_path_text(col_from_string('metadata'), literal_string('{category,name}'))->as('nested_text'))
+            ->select(json_path_text(col_parse('metadata'), literal_string('{category,name}'))->as('nested_text'))
             ->from(table('products'));
 
         $this->assertSelectQueryRoundTrip(
@@ -189,7 +189,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(not_regex_imatch(col_from_string('email'), literal_string('.*@spam\\.com')));
+            ->where(not_regex_imatch(col_parse('email'), literal_string('.*@spam\\.com')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -202,7 +202,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(not_regex_match(col_from_string('email'), literal_string('.*@spam\\.com')));
+            ->where(not_regex_match(col_parse('email'), literal_string('.*@spam\\.com')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -215,7 +215,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(regex_imatch(col_from_string('email'), literal_string('.*@gmail\\.com')));
+            ->where(regex_imatch(col_parse('email'), literal_string('.*@gmail\\.com')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -228,7 +228,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('users'))
-            ->where(regex_match(col_from_string('email'), literal_string('.*@gmail\\.com')));
+            ->where(regex_match(col_parse('email'), literal_string('.*@gmail\\.com')));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -241,7 +241,7 @@ final class OperatorConditionTest extends PGQueryTestCase
         $query = select()
             ->select(star())
             ->from(table('documents'))
-            ->where(text_search_match(col_from_string('content'), raw_expr("to_tsquery('english', 'hello & world')")));
+            ->where(text_search_match(col_parse('content'), raw_expr("to_tsquery('english', 'hello & world')")));
 
         $this->assertSelectQueryRoundTrip(
             $query,

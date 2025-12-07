@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
-    col_from_string,
+    col_parse,
     conflict_columns,
     conflict_constraint,
     eq,
@@ -29,7 +29,7 @@ final class InsertBuilderTest extends PGQueryTestCase
                 conflict_columns(['email']),
                 ['name' => literal_string('Updated John')]
             )
-            ->where(eq(col_from_string('users.active'), literal_bool(true)));
+            ->where(eq(col_parse('users.active'), literal_bool(true)));
 
         $this->assertInsertQueryRoundTrip(
             $query,
@@ -54,7 +54,7 @@ final class InsertBuilderTest extends PGQueryTestCase
     public function test_insert_select() : void
     {
         $selectQuery = select()
-            ->select(col_from_string('name'), col_from_string('email'))
+            ->select(col_parse('name'), col_parse('email'))
             ->from(table('archived_users'));
 
         $query = insert()
@@ -158,7 +158,7 @@ final class InsertBuilderTest extends PGQueryTestCase
             ->into('users')
             ->columns('name')
             ->values(literal_string('John'))
-            ->returning(col_from_string('id'));
+            ->returning(col_parse('id'));
 
         $this->assertInsertQueryRoundTrip(
             $query,

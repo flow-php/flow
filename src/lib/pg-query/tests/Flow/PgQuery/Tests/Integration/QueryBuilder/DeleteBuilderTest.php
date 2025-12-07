@@ -6,7 +6,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
     any_sub_select,
-    col_from_string,
+    col_parse,
     delete,
     eq,
     literal_int,
@@ -23,7 +23,7 @@ final class DeleteBuilderTest extends PGQueryTestCase
     {
         $query = delete()
             ->from('users', 'u')
-            ->where(eq(col_from_string('u.id'), literal_int(1)));
+            ->where(eq(col_parse('u.id'), literal_int(1)));
 
         $this->assertDeleteQueryRoundTrip(
             $query,
@@ -35,7 +35,7 @@ final class DeleteBuilderTest extends PGQueryTestCase
     {
         $query = delete()
             ->from('users')
-            ->where(eq(col_from_string('id'), param(1)));
+            ->where(eq(col_parse('id'), param(1)));
 
         $this->assertDeleteQueryRoundTrip(
             $query,
@@ -47,8 +47,8 @@ final class DeleteBuilderTest extends PGQueryTestCase
     {
         $query = delete()
             ->from('users')
-            ->where(eq(col_from_string('id'), literal_int(1)))
-            ->returning(col_from_string('id'), col_from_string('name'));
+            ->where(eq(col_parse('id'), literal_int(1)))
+            ->returning(col_parse('id'), col_parse('name'));
 
         $this->assertDeleteQueryRoundTrip(
             $query,
@@ -60,7 +60,7 @@ final class DeleteBuilderTest extends PGQueryTestCase
     {
         $query = delete()
             ->from('users')
-            ->where(eq(col_from_string('id'), literal_int(1)))
+            ->where(eq(col_parse('id'), literal_int(1)))
             ->returningAll();
 
         $this->assertDeleteQueryRoundTrip(
@@ -72,12 +72,12 @@ final class DeleteBuilderTest extends PGQueryTestCase
     public function test_delete_with_subquery_in_where() : void
     {
         $subquery = select()
-            ->select(col_from_string('user_id'))
+            ->select(col_parse('user_id'))
             ->from(table('inactive_users'));
 
         $query = delete()
             ->from('users')
-            ->where(any_sub_select(col_from_string('id'), ComparisonOperator::EQ, $subquery));
+            ->where(any_sub_select(col_parse('id'), ComparisonOperator::EQ, $subquery));
 
         $this->assertDeleteQueryRoundTrip(
             $query,
@@ -90,7 +90,7 @@ final class DeleteBuilderTest extends PGQueryTestCase
         $query = delete()
             ->from('orders')
             ->using(table('users'))
-            ->where(eq(col_from_string('orders.user_id'), col_from_string('users.id')));
+            ->where(eq(col_parse('orders.user_id'), col_parse('users.id')));
 
         $this->assertDeleteQueryRoundTrip(
             $query,
@@ -102,7 +102,7 @@ final class DeleteBuilderTest extends PGQueryTestCase
     {
         $query = delete()
             ->from('users')
-            ->where(eq(col_from_string('id'), literal_int(1)));
+            ->where(eq(col_parse('id'), literal_int(1)));
 
         $this->assertDeleteQueryRoundTrip(
             $query,
