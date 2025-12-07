@@ -47,6 +47,7 @@ use Flow\PgQuery\QueryBuilder\Condition\{
     RawCondition,
     SimilarTo
 };
+use Flow\PgQuery\QueryBuilder\Copy\{CopyFromBuilder, CopyFromTableStep, CopyToBuilder, CopyToTableStep};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFromStep};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PgQuery\QueryBuilder\Expression\{
@@ -352,6 +353,24 @@ function merge(string $table, ?string $alias = null) : MergeUsingStep
 function merge_with(WithClause $with, string $table, ?string $alias = null) : MergeUsingStep
 {
     return MergeBuilder::with($with)->into($table, $alias);
+}
+
+/**
+ * Create a new COPY TO query builder for data export.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function copy_to() : CopyToTableStep
+{
+    return CopyToBuilder::create();
+}
+
+/**
+ * Create a new COPY FROM query builder for data import.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function copy_from() : CopyFromTableStep
+{
+    return CopyFromBuilder::create();
 }
 
 /**
