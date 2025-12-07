@@ -80,6 +80,11 @@ use Flow\PgQuery\QueryBuilder\Schema\Constraint\{CheckConstraint, ForeignKeyCons
 use Flow\PgQuery\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep};
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Index\AlterIndex\{AlterIndexBuilder, AlterIndexFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\{CreateIndexBuilder, CreateIndexOnStep};
+use Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex\{DropIndexBuilder, DropIndexFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
+use Flow\PgQuery\QueryBuilder\Schema\Index\Reindex\{ReindexBuilder, ReindexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PgQuery\QueryBuilder\Table\{
@@ -2062,4 +2067,195 @@ function ref_action_set_default() : ReferentialAction
 function ref_action_no_action() : ReferentialAction
 {
     return ReferentialAction::NO_ACTION;
+}
+
+/**
+ * Start building a CREATE INDEX statement.
+ *
+ * Use chainable methods for modifiers: ->unique(), ->concurrently(), ->ifNotExists()
+ *
+ * Example: create_index('idx_users_email')->unique()->on('users')->columns('email')
+ *
+ * @param string $name The index name
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create_index(string $name) : CreateIndexOnStep
+{
+    return CreateIndexBuilder::create($name);
+}
+
+/**
+ * Start building a DROP INDEX statement.
+ *
+ * Use chainable methods: ->ifExists(), ->concurrently(), ->cascade(), ->restrict()
+ *
+ * Example: drop_index('idx_users_email')->ifExists()->cascade()
+ *
+ * @param string ...$indexes The index names to drop
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function drop_index(string ...$indexes) : DropIndexFinalStep
+{
+    return DropIndexBuilder::create(...$indexes);
+}
+
+/**
+ * Start building an ALTER INDEX statement.
+ *
+ * Use chainable methods: ->ifExists(), then ->renameTo() or ->setTablespace()
+ *
+ * Example: alter_index('idx_old')->ifExists()->renameTo('idx_new')
+ * Example with schema: alter_index('idx_old', 'public')->renameTo('idx_new')
+ *
+ * @param string $name The index name
+ * @param null|string $schema Optional schema name
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function alter_index(string $name, ?string $schema = null) : AlterIndexFinalStep
+{
+    return AlterIndexBuilder::create($name, $schema);
+}
+
+/**
+ * Start building a REINDEX INDEX statement.
+ *
+ * Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()
+ *
+ * Example: reindex_index('idx_users_email')->concurrently()
+ *
+ * @param string $name The index name (may include schema: schema.index)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function reindex_index(string $name) : ReindexFinalStep
+{
+    return ReindexBuilder::index($name);
+}
+
+/**
+ * Start building a REINDEX TABLE statement.
+ *
+ * Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()
+ *
+ * Example: reindex_table('users')->concurrently()
+ *
+ * @param string $name The table name (may include schema: schema.table)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function reindex_table(string $name) : ReindexFinalStep
+{
+    return ReindexBuilder::table($name);
+}
+
+/**
+ * Start building a REINDEX SCHEMA statement.
+ *
+ * Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()
+ *
+ * Example: reindex_schema('public')->concurrently()
+ *
+ * @param string $name The schema name
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function reindex_schema(string $name) : ReindexFinalStep
+{
+    return ReindexBuilder::schema($name);
+}
+
+/**
+ * Start building a REINDEX DATABASE statement.
+ *
+ * Use chainable methods: ->concurrently(), ->verbose(), ->tablespace()
+ *
+ * Example: reindex_database('mydb')->concurrently()
+ *
+ * @param string $name The database name
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function reindex_database(string $name) : ReindexFinalStep
+{
+    return ReindexBuilder::database($name);
+}
+
+/**
+ * Create an index column specification.
+ *
+ * Use chainable methods: ->asc(), ->desc(), ->nullsFirst(), ->nullsLast(), ->opclass(), ->collate()
+ *
+ * Example: index_col('email')->desc()->nullsLast()
+ *
+ * @param string $name The column name
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function index_col(string $name) : IndexColumn
+{
+    return IndexColumn::column($name);
+}
+
+/**
+ * Create an index column specification from an expression.
+ *
+ * Use chainable methods: ->asc(), ->desc(), ->nullsFirst(), ->nullsLast(), ->opclass(), ->collate()
+ *
+ * Example: index_expr(fn_call('lower', col('email')))->desc()
+ *
+ * @param Expression $expression The expression to index
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function index_expr(Expression $expression) : IndexColumn
+{
+    return IndexColumn::expression($expression);
+}
+
+/**
+ * Get the BTREE index method.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function index_method_btree() : IndexMethod
+{
+    return IndexMethod::BTREE;
+}
+
+/**
+ * Get the HASH index method.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function index_method_hash() : IndexMethod
+{
+    return IndexMethod::HASH;
+}
+
+/**
+ * Get the GIST index method.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function index_method_gist() : IndexMethod
+{
+    return IndexMethod::GIST;
+}
+
+/**
+ * Get the SPGIST index method.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function index_method_spgist() : IndexMethod
+{
+    return IndexMethod::SPGIST;
+}
+
+/**
+ * Get the GIN index method.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function index_method_gin() : IndexMethod
+{
+    return IndexMethod::GIN;
+}
+
+/**
+ * Get the BRIN index method.
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function index_method_brin() : IndexMethod
+{
+    return IndexMethod::BRIN;
 }

@@ -6,13 +6,17 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions;
 
 use function Flow\PgQuery\DSL\sql_parse;
 use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, AlterTableStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DropStmt, InsertStmt, Node, RawStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt};
+use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, AlterTableStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DropStmt, IndexStmt, InsertStmt, Node, RawStmt, ReindexStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterTable\{AlterTableFinalStep, AlterTableSchemaBuilder, RenameTableBuilder};
 use Flow\PgQuery\QueryBuilder\Schema\CreateTable\CreateTableFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\CreateTableAsFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\DropTableFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\Index\AlterIndex\{AlterTablespaceIndexFinalStep, RenameIndexFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\CreateIndexFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex\DropIndexFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\Index\Reindex\ReindexFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\TruncateFinalStep;
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep};
 use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder, UpdateFinalStep};
@@ -21,6 +25,20 @@ use PHPUnit\Framework\Assert;
 
 trait QueryBuilderAssertions
 {
+    protected function assertAlterIndexRenameQuery(RenameIndexFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseRenameStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterIndexTablespaceQuery(AlterTablespaceIndexFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterTableStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertAlterObjectSchemaQuery(AlterTableSchemaBuilder $builder, string $expectedSql) : void
     {
         $sql = $this->deparseAlterObjectSchemaStmt($builder->toAst());
@@ -31,6 +49,13 @@ trait QueryBuilderAssertions
     protected function assertAlterTableQuery(AlterTableFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseAlterTableStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateIndexQuery(CreateIndexFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseIndexStmt($builder->toAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -68,6 +93,13 @@ trait QueryBuilderAssertions
         Assert::assertSame($sql, $rebuiltSql);
     }
 
+    protected function assertDropIndexQuery(DropIndexFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertDropTableQuery(DropTableFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropStmt($builder->toAst());
@@ -92,6 +124,13 @@ trait QueryBuilderAssertions
         $rebuiltSql = $this->deparseInsertStmt($rebuilt->toAst());
 
         Assert::assertSame($sql, $rebuiltSql);
+    }
+
+    protected function assertReindexQuery(ReindexFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseReindexStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
     }
 
     protected function assertRenameQuery(RenameTableBuilder $builder, string $expectedSql) : void
@@ -176,9 +215,19 @@ trait QueryBuilderAssertions
         return $this->deparseNode(new Node(['drop_stmt' => $stmt]));
     }
 
+    protected function deparseIndexStmt(IndexStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['index_stmt' => $stmt]));
+    }
+
     protected function deparseInsertStmt(InsertStmt $insertStmt) : string
     {
         return $this->deparseNode(new Node(['insert_stmt' => $insertStmt]));
+    }
+
+    protected function deparseReindexStmt(ReindexStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['reindex_stmt' => $stmt]));
     }
 
     protected function deparseRenameStmt(RenameStmt $stmt) : string
