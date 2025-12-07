@@ -74,11 +74,14 @@ use Flow\PgQuery\QueryBuilder\Expression\{
 };
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
 use Flow\PgQuery\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
+use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceBuilder, AlterSequenceOptionsStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterTable\{AlterTableBuilder, AlterTableFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\{ColumnDefinition, DataType, ReferentialAction};
 use Flow\PgQuery\QueryBuilder\Schema\Constraint\{CheckConstraint, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint};
+use Flow\PgQuery\QueryBuilder\Schema\CreateSequence\{CreateSequenceBuilder, CreateSequenceOptionsStep};
 use Flow\PgQuery\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep};
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\DropSequence\{DropSequenceBuilder, DropSequenceFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\AlterIndex\{AlterIndexBuilder, AlterIndexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\{CreateIndexBuilder, CreateIndexOnStep};
@@ -2433,4 +2436,126 @@ function cluster_table(string $table) : ClusterFinalStep
 function discard(DiscardType $type) : DiscardFinalStep
 {
     return DiscardBuilder::create($type);
+}
+
+// ----------------------------------------------------------------------------
+// Sequence Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a CREATE SEQUENCE builder.
+ *
+ * Example: create_sequence('user_id_seq')->startWith(1)->incrementBy(1)
+ * Produces: CREATE SEQUENCE user_id_seq START WITH 1 INCREMENT BY 1
+ *
+ * @param string $name Sequence name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create_sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
+{
+    return CreateSequenceBuilder::create()->sequence($name, $schema);
+}
+
+/**
+ * Create a CREATE SEQUENCE IF NOT EXISTS builder.
+ *
+ * Example: create_sequence_if_not_exists('user_id_seq')->startWith(1)
+ * Produces: CREATE SEQUENCE IF NOT EXISTS user_id_seq START WITH 1
+ *
+ * @param string $name Sequence name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create_sequence_if_not_exists(string $name, ?string $schema = null) : CreateSequenceOptionsStep
+{
+    return CreateSequenceBuilder::createIfNotExists()->sequence($name, $schema);
+}
+
+/**
+ * Create a CREATE TEMPORARY SEQUENCE builder.
+ *
+ * Example: create_temp_sequence('temp_seq')->startWith(100)
+ * Produces: CREATE TEMPORARY SEQUENCE temp_seq START WITH 100
+ *
+ * @param string $name Sequence name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create_temp_sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
+{
+    return CreateSequenceBuilder::createTemporary()->sequence($name, $schema);
+}
+
+/**
+ * Create a CREATE UNLOGGED SEQUENCE builder.
+ *
+ * Example: create_unlogged_sequence('fast_seq')->cache(100)
+ * Produces: CREATE UNLOGGED SEQUENCE fast_seq CACHE 100
+ *
+ * @param string $name Sequence name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create_unlogged_sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
+{
+    return CreateSequenceBuilder::createUnlogged()->sequence($name, $schema);
+}
+
+/**
+ * Create an ALTER SEQUENCE builder.
+ *
+ * Example: alter_sequence('user_id_seq')->restartWith(1000)
+ * Produces: ALTER SEQUENCE user_id_seq RESTART WITH 1000
+ *
+ * @param string $name Sequence name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function alter_sequence(string $name, ?string $schema = null) : AlterSequenceOptionsStep
+{
+    return AlterSequenceBuilder::create()->sequence($name, $schema);
+}
+
+/**
+ * Create an ALTER SEQUENCE IF EXISTS builder.
+ *
+ * Example: alter_sequence_if_exists('user_id_seq')->incrementBy(10)
+ * Produces: ALTER SEQUENCE IF EXISTS user_id_seq INCREMENT BY 10
+ *
+ * @param string $name Sequence name
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function alter_sequence_if_exists(string $name, ?string $schema = null) : AlterSequenceOptionsStep
+{
+    return AlterSequenceBuilder::ifExists()->sequence($name, $schema);
+}
+
+/**
+ * Create a DROP SEQUENCE builder.
+ *
+ * Example: drop_sequence('user_id_seq', 'order_id_seq')->cascade()
+ * Produces: DROP SEQUENCE user_id_seq, order_id_seq CASCADE
+ *
+ * @param string ...$names Sequence names to drop
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function drop_sequence(string ...$names) : DropSequenceFinalStep
+{
+    return DropSequenceBuilder::create()->sequence(...$names);
+}
+
+/**
+ * Create a DROP SEQUENCE IF EXISTS builder.
+ *
+ * Example: drop_sequence_if_exists('user_id_seq')->cascade()
+ * Produces: DROP SEQUENCE IF EXISTS user_id_seq CASCADE
+ *
+ * @param string ...$names Sequence names to drop
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function drop_sequence_if_exists(string ...$names) : DropSequenceFinalStep
+{
+    return DropSequenceBuilder::ifExists()->sequence(...$names);
 }

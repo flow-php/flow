@@ -6,12 +6,15 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions;
 
 use function Flow\PgQuery\DSL\sql_parse;
 use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, AlterTableStmt, ClusterStmt, CommentStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DiscardStmt, DropStmt, ExplainStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReindexStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt};
+use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, AlterSeqStmt, AlterTableStmt, ClusterStmt, CommentStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DiscardStmt, DropStmt, ExplainStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReindexStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceLoggingFinalStep, AlterSequenceOptionsStep, AlterSequenceOwnerFinalStep, AlterSequenceSchemaFinalStep, RenameSequenceFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterTable\{AlterTableFinalStep, AlterTableSchemaBuilder, RenameTableBuilder};
+use Flow\PgQuery\QueryBuilder\Schema\CreateSequence\CreateSequenceOptionsStep;
 use Flow\PgQuery\QueryBuilder\Schema\CreateTable\CreateTableFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\CreateTableAsFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\DropSequence\DropSequenceFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\DropTableFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\Index\AlterIndex\{AlterTablespaceIndexFinalStep, RenameIndexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\CreateIndexFinalStep;
@@ -41,6 +44,41 @@ trait QueryBuilderAssertions
     }
 
     protected function assertAlterObjectSchemaQuery(AlterTableSchemaBuilder $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterObjectSchemaStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterSequenceLoggingQuery(AlterSequenceLoggingFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterTableStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterSequenceOwnerQuery(AlterSequenceOwnerFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterTableStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterSequenceQuery(AlterSequenceOptionsStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterSeqStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterSequenceRenameQuery(RenameSequenceFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseRenameStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterSequenceSchemaQuery(AlterSequenceSchemaFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseAlterObjectSchemaStmt($builder->toAst());
 
@@ -78,6 +116,13 @@ trait QueryBuilderAssertions
     protected function assertCreateIndexQuery(CreateIndexFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseIndexStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateSequenceQuery(CreateSequenceOptionsStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateSeqStmt($builder->toAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -123,6 +168,13 @@ trait QueryBuilderAssertions
     }
 
     protected function assertDropIndexQuery(DropIndexFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertDropSequenceQuery(DropSequenceFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropStmt($builder->toAst());
 
@@ -240,6 +292,11 @@ trait QueryBuilderAssertions
         return $this->deparseNode(new Node(['alter_object_schema_stmt' => $stmt]));
     }
 
+    protected function deparseAlterSeqStmt(AlterSeqStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['alter_seq_stmt' => $stmt]));
+    }
+
     protected function deparseAlterTableStmt(AlterTableStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['alter_table_stmt' => $stmt]));
@@ -253,6 +310,11 @@ trait QueryBuilderAssertions
     protected function deparseCommentStmt(CommentStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['comment_stmt' => $stmt]));
+    }
+
+    protected function deparseCreateSeqStmt(CreateSeqStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['create_seq_stmt' => $stmt]));
     }
 
     protected function deparseCreateStmt(CreateStmt $stmt) : string
