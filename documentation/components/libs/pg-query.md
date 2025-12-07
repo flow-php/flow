@@ -394,6 +394,18 @@ Return values:
 
 The library also provides a fluent, type-safe query builder for constructing PostgreSQL queries programmatically. Instead of string concatenation, you build queries using a step-by-step builder pattern that guides you through valid SQL construction.
 
+For complete documentation on each query builder type, see:
+
+- [Select Query Builder](pg-query/select-query-builder.md) 
+- [Insert Query Builder](pg-query/insert-query-builder.md) 
+- [Update Query Builder](pg-query/update-query-builder.md) 
+- [Delete Query Builder](pg-query/delete-query-builder.md) 
+- [Merge Query Builder](pg-query/merge-query-builder.md)
+- [Copy Query Builder](pg-query/copy-query-builder.md)
+- [Transaction Query Builder](pg-query/transaction-query-builder.md)
+- [Table Query Builder](pg-query/table-query-builder.md)
+
+
 ```php
 <?php
 
@@ -436,15 +448,6 @@ echo $query->toSQL();
 // INSERT INTO users (email, name) VALUES ($1, $2)
 // ON CONFLICT (email) DO UPDATE SET name = excluded.name RETURNING *
 ```
-
-For complete documentation on each query builder type, see:
-
-- [Select Query Builder](pg-query/select-query-builder.md) - SELECT queries with JOINs, CTEs, subqueries, and more
-- [Insert Query Builder](pg-query/insert-query-builder.md) - INSERT with upsert (ON CONFLICT) and RETURNING
-- [Update Query Builder](pg-query/update-query-builder.md) - UPDATE with FROM clause and complex conditions
-- [Delete Query Builder](pg-query/delete-query-builder.md) - DELETE with USING clause
-
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
 
 ## Raw AST Access
 

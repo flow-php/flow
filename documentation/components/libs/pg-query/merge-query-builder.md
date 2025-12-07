@@ -263,9 +263,4 @@ echo $query->toSQL();
 
 ## DSL Functions
 
-| Function | Description |
-|----------|-------------|
-| `merge($table, $alias)` | Creates a new MERGE query builder |
-| `merge_with($with, $table, $alias)` | Creates a MERGE query builder with a WITH clause |
-
 For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
