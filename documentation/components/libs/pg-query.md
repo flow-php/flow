@@ -404,6 +404,7 @@ For complete documentation on each query builder type, see:
 - [Copy Query Builder](pg-query/copy-query-builder.md)
 - [Transaction Query Builder](pg-query/transaction-query-builder.md)
 - [Table Query Builder](pg-query/table-query-builder.md)
+- [Index Query Builder](pg-query/index-query-builder.md)
 
 
 ```php
