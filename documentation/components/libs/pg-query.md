@@ -396,15 +396,16 @@ The library also provides a fluent, type-safe query builder for constructing Pos
 
 For complete documentation on each query builder type, see:
 
-- [Select Query Builder](pg-query/select-query-builder.md) 
-- [Insert Query Builder](pg-query/insert-query-builder.md) 
-- [Update Query Builder](pg-query/update-query-builder.md) 
-- [Delete Query Builder](pg-query/delete-query-builder.md) 
+- [Select Query Builder](pg-query/select-query-builder.md)
+- [Insert Query Builder](pg-query/insert-query-builder.md)
+- [Update Query Builder](pg-query/update-query-builder.md)
+- [Delete Query Builder](pg-query/delete-query-builder.md)
 - [Merge Query Builder](pg-query/merge-query-builder.md)
 - [Copy Query Builder](pg-query/copy-query-builder.md)
 - [Transaction Query Builder](pg-query/transaction-query-builder.md)
 - [Table Query Builder](pg-query/table-query-builder.md)
 - [Index Query Builder](pg-query/index-query-builder.md)
+- [Utility Query Builder](pg-query/utility-query-builder.md)
 
 
 ```php

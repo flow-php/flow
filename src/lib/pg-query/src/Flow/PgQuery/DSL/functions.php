@@ -111,6 +111,24 @@ use Flow\PgQuery\QueryBuilder\Transaction\{
     SetTransactionOptionsStep
 };
 use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder, UpdateTableStep};
+use Flow\PgQuery\QueryBuilder\Utility\{
+    AnalyzeBuilder,
+    AnalyzeFinalStep,
+    ClusterBuilder,
+    ClusterFinalStep,
+    CommentBuilder,
+    CommentFinalStep,
+    CommentTarget,
+    DiscardBuilder,
+    DiscardFinalStep,
+    DiscardType,
+    ExplainBuilder,
+    ExplainFinalStep,
+    LockBuilder,
+    LockFinalStep,
+    VacuumBuilder,
+    VacuumFinalStep
+};
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function sql_parser() : Parser
@@ -2258,4 +2276,161 @@ function index_method_gin() : IndexMethod
 function index_method_brin() : IndexMethod
 {
     return IndexMethod::BRIN;
+}
+
+// ----------------------------------------------------------------------------
+// Utility Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a VACUUM builder.
+ *
+ * Example: vacuum()->table('users')
+ * Produces: VACUUM users
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function vacuum() : VacuumFinalStep
+{
+    return VacuumBuilder::create();
+}
+
+/**
+ * Create a VACUUM FULL builder for one or more tables.
+ *
+ * Example: vacuum_full('users', 'orders')
+ * Produces: VACUUM (FULL) users, orders
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function vacuum_full(string ...$tables) : VacuumFinalStep
+{
+    return VacuumBuilder::create()->full()->tables(...$tables);
+}
+
+/**
+ * Create a VACUUM ANALYZE builder for one or more tables.
+ *
+ * Example: vacuum_analyze('users', 'orders')
+ * Produces: VACUUM (ANALYZE) users, orders
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function vacuum_analyze(string ...$tables) : VacuumFinalStep
+{
+    return VacuumBuilder::create()->analyze()->tables(...$tables);
+}
+
+/**
+ * Create an ANALYZE builder.
+ *
+ * Example: analyze()->table('users')
+ * Produces: ANALYZE users
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function analyze() : AnalyzeFinalStep
+{
+    return AnalyzeBuilder::create();
+}
+
+/**
+ * Create an ANALYZE builder for a specific table with optional columns.
+ *
+ * Example: analyze_table('users', 'email', 'name')
+ * Produces: ANALYZE users (email, name)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function analyze_table(string $table, string ...$columns) : AnalyzeFinalStep
+{
+    return AnalyzeBuilder::create()->table($table, ...$columns);
+}
+
+/**
+ * Create an EXPLAIN builder for a query.
+ *
+ * Example: explain(select()->from('users'))
+ * Produces: EXPLAIN SELECT * FROM users
+ *
+ * @param DeleteBuilder|InsertBuilder|SelectFinalStep|UpdateBuilder $query Query to explain
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function explain(SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder $query) : ExplainFinalStep
+{
+    return ExplainBuilder::create($query);
+}
+
+/**
+ * Create an EXPLAIN ANALYZE builder for a query.
+ *
+ * Example: explain_analyze(select()->from('users'))
+ * Produces: EXPLAIN ANALYZE SELECT * FROM users
+ *
+ * @param DeleteBuilder|InsertBuilder|SelectFinalStep|UpdateBuilder $query Query to explain
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function explain_analyze(SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder $query) : ExplainFinalStep
+{
+    return ExplainBuilder::create($query)->analyze();
+}
+
+/**
+ * Create a LOCK TABLE builder.
+ *
+ * Example: lock_table('users', 'orders')->accessExclusive()
+ * Produces: LOCK TABLE users, orders IN ACCESS EXCLUSIVE MODE
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function lock_table(string ...$tables) : LockFinalStep
+{
+    return LockBuilder::create(...$tables);
+}
+
+/**
+ * Create a COMMENT ON builder.
+ *
+ * Example: comment(CommentTarget::TABLE, 'users')->is('User accounts table')
+ * Produces: COMMENT ON TABLE users IS 'User accounts table'
+ *
+ * @param CommentTarget $target Target type (TABLE, COLUMN, INDEX, etc.)
+ * @param string $name Target name (use 'table.column' for COLUMN targets)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function comment(CommentTarget $target, string $name) : CommentFinalStep
+{
+    return CommentBuilder::create($target, $name);
+}
+
+/**
+ * Create a CLUSTER builder.
+ *
+ * Example: cluster()->table('users')->using('idx_users_pkey')
+ * Produces: CLUSTER users USING idx_users_pkey
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function cluster() : ClusterFinalStep
+{
+    return ClusterBuilder::create();
+}
+
+/**
+ * Create a CLUSTER builder for a specific table.
+ *
+ * Example: cluster_table('users')->using('idx_users_pkey')
+ * Produces: CLUSTER users USING idx_users_pkey
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function cluster_table(string $table) : ClusterFinalStep
+{
+    return ClusterBuilder::create()->table($table);
+}
+
+/**
+ * Create a DISCARD builder.
+ *
+ * Example: discard(DiscardType::ALL)
+ * Produces: DISCARD ALL
+ *
+ * @param DiscardType $type Type of resources to discard (ALL, PLANS, SEQUENCES, TEMP)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function discard(DiscardType $type) : DiscardFinalStep
+{
+    return DiscardBuilder::create($type);
 }

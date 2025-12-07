@@ -4,7 +4,8 @@
 
 [TOC]
 
-The Index Query Builder provides a fluent, type-safe interface for constructing PostgreSQL index management statements: CREATE INDEX, DROP INDEX, REINDEX, and ALTER INDEX.
+The Index Query Builder provides a fluent, type-safe interface for constructing PostgreSQL index management statements:
+CREATE INDEX, DROP INDEX, REINDEX, and ALTER INDEX.
 
 ## CREATE INDEX
 
@@ -637,29 +638,5 @@ $query = alter_index('idx_users_email')
 echo $query->toSQL();
 // ALTER INDEX IF EXISTS idx_users_email SET TABLESPACE fast_storage
 ```
-
-## Index Methods Reference
-
-| Function | PostgreSQL Method | Best For |
-|----------|-------------------|----------|
-| `index_method_btree()` | btree | Equality and range queries (default) |
-| `index_method_hash()` | hash | Equality comparisons only |
-| `index_method_gist()` | gist | Geometric data, full-text search |
-| `index_method_spgist()` | spgist | Non-balanced data (phone numbers, IP ranges) |
-| `index_method_gin()` | gin | Arrays, full-text search, JSONB |
-| `index_method_brin()` | brin | Large tables with naturally ordered data |
-
-## IndexColumn Options Reference
-
-The `index_col()` function creates an `IndexColumn` with the following chainable methods:
-
-| Method | Description |
-|--------|-------------|
-| `asc()` | Sort ascending (default) |
-| `desc()` | Sort descending |
-| `nullsFirst()` | NULLs sort before non-null values |
-| `nullsLast()` | NULLs sort after non-null values |
-| `opclass(string)` | Specify operator class |
-| `collate(string)` | Specify collation |
 
 For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
