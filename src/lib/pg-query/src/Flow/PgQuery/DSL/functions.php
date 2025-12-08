@@ -83,6 +83,25 @@ use Flow\PgQuery\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTabl
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropSequence\{DropSequenceBuilder, DropSequenceFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Function\{
+    AlterFunctionArgsStep,
+    AlterFunctionBuilder,
+    AlterProcedureArgsStep,
+    AlterProcedureBuilder,
+    CallBuilder,
+    CallFinalStep,
+    CreateFunctionArgsStep,
+    CreateFunctionBuilder,
+    CreateProcedureArgsStep,
+    CreateProcedureBuilder,
+    DoBuilder,
+    DoFinalStep,
+    DropFunctionBuilder,
+    DropFunctionFinalStep,
+    DropProcedureBuilder,
+    DropProcedureFinalStep,
+    FunctionArgument
+};
 use Flow\PgQuery\QueryBuilder\Schema\Grant\{
     GrantBuilder,
     GrantOnStep,
@@ -3002,4 +3021,202 @@ function reassign_owned(string ...$roles) : ReassignOwnedToStep
 function drop_owned(string ...$roles) : DropOwnedFinalStep
 {
     return DropOwnedBuilder::create(...$roles);
+}
+
+// =====================================================
+// Function and Procedure Query Builders
+// =====================================================
+
+/**
+ * Creates a new function argument for use in function/procedure definitions.
+ *
+ * Example: func_arg('integer')
+ * Example: func_arg('text')->named('username')
+ * Example: func_arg('integer')->named('count')->default('0')
+ * Example: func_arg('text')->out()
+ *
+ * @param string $type The PostgreSQL data type for the argument
+ *
+ * @return FunctionArgument Builder for function argument options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function func_arg(string $type) : FunctionArgument
+{
+    return FunctionArgument::of($type);
+}
+
+/**
+ * Creates a CREATE FUNCTION statement builder.
+ *
+ * Example: create_function('add_numbers')
+ *     ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
+ *     ->returns('integer')
+ *     ->language('sql')
+ *     ->as('SELECT a + b')
+ * Produces: CREATE FUNCTION add_numbers(a integer, b integer) RETURNS integer LANGUAGE sql AS 'SELECT a + b'
+ *
+ * Example: create_function('get_users')
+ *     ->orReplace()
+ *     ->returnsTable(['id' => 'integer', 'name' => 'text'])
+ *     ->language('sql')
+ *     ->as('SELECT id, name FROM users')
+ * Produces: CREATE OR REPLACE FUNCTION get_users() RETURNS TABLE(id integer, name text) LANGUAGE sql AS '...'
+ *
+ * @param string $name The name of the function to create
+ *
+ * @return CreateFunctionArgsStep Builder for create function options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_function(string $name) : CreateFunctionArgsStep
+{
+    return CreateFunctionBuilder::create($name);
+}
+
+/**
+ * Creates a CREATE PROCEDURE statement builder.
+ *
+ * Example: create_procedure('update_stats')
+ *     ->arguments(func_arg('integer')->named('user_id'))
+ *     ->language('plpgsql')
+ *     ->as('BEGIN UPDATE user_stats SET last_updated = now() WHERE id = user_id; END;')
+ * Produces: CREATE PROCEDURE update_stats(user_id integer) LANGUAGE plpgsql AS '...'
+ *
+ * Example: create_procedure('my_proc')->orReplace()->language('sql')->as('...')
+ * Produces: CREATE OR REPLACE PROCEDURE my_proc() LANGUAGE sql AS '...'
+ *
+ * @param string $name The name of the procedure to create
+ *
+ * @return CreateProcedureArgsStep Builder for create procedure options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_procedure(string $name) : CreateProcedureArgsStep
+{
+    return CreateProcedureBuilder::create($name);
+}
+
+/**
+ * Creates an ALTER FUNCTION statement builder.
+ *
+ * Example: alter_function('my_func')
+ *     ->arguments(func_arg('integer'))
+ *     ->immutable()
+ * Produces: ALTER FUNCTION my_func(integer) IMMUTABLE
+ *
+ * Example: alter_function('old_name')
+ *     ->arguments(func_arg('text'))
+ *     ->renameTo('new_name')
+ * Produces: ALTER FUNCTION old_name(text) RENAME TO new_name
+ *
+ * @param string $name The name of the function to alter
+ *
+ * @return AlterFunctionArgsStep Builder for alter function options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_function(string $name) : AlterFunctionArgsStep
+{
+    return AlterFunctionBuilder::create($name);
+}
+
+/**
+ * Creates an ALTER PROCEDURE statement builder.
+ *
+ * Example: alter_procedure('my_proc')
+ *     ->arguments(func_arg('integer'))
+ *     ->securityDefiner()
+ * Produces: ALTER PROCEDURE my_proc(integer) SECURITY DEFINER
+ *
+ * Example: alter_procedure('old_proc')
+ *     ->renameTo('new_proc')
+ * Produces: ALTER PROCEDURE old_proc RENAME TO new_proc
+ *
+ * @param string $name The name of the procedure to alter
+ *
+ * @return AlterProcedureArgsStep Builder for alter procedure options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_procedure(string $name) : AlterProcedureArgsStep
+{
+    return AlterProcedureBuilder::create($name);
+}
+
+/**
+ * Creates a DROP FUNCTION statement builder.
+ *
+ * Example: drop_function('my_func')
+ * Produces: DROP FUNCTION my_func
+ *
+ * Example: drop_function('my_func')
+ *     ->ifExists()
+ *     ->arguments(func_arg('integer'), func_arg('text'))
+ *     ->cascade()
+ * Produces: DROP FUNCTION IF EXISTS my_func(integer, text) CASCADE
+ *
+ * @param string $name The name of the function to drop
+ *
+ * @return DropFunctionFinalStep Builder for drop function options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_function(string $name) : DropFunctionFinalStep
+{
+    return DropFunctionBuilder::create($name);
+}
+
+/**
+ * Creates a DROP PROCEDURE statement builder.
+ *
+ * Example: drop_procedure('my_proc')
+ * Produces: DROP PROCEDURE my_proc
+ *
+ * Example: drop_procedure('my_proc')
+ *     ->ifExists()
+ *     ->arguments(func_arg('integer'))
+ *     ->cascade()
+ * Produces: DROP PROCEDURE IF EXISTS my_proc(integer) CASCADE
+ *
+ * @param string $name The name of the procedure to drop
+ *
+ * @return DropProcedureFinalStep Builder for drop procedure options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_procedure(string $name) : DropProcedureFinalStep
+{
+    return DropProcedureBuilder::create($name);
+}
+
+/**
+ * Creates a CALL statement builder for invoking a procedure.
+ *
+ * Example: call('update_stats')->with(123)
+ * Produces: CALL update_stats(123)
+ *
+ * Example: call('process_data')->with('test', 42, true)
+ * Produces: CALL process_data('test', 42, true)
+ *
+ * @param string $procedure The name of the procedure to call
+ *
+ * @return CallFinalStep Builder for call statement options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function call(string $procedure) : CallFinalStep
+{
+    return CallBuilder::create($procedure);
+}
+
+/**
+ * Creates a DO statement builder for executing an anonymous code block.
+ *
+ * Example: do_block('BEGIN RAISE NOTICE $$Hello World$$; END;')
+ * Produces: DO $$ BEGIN RAISE NOTICE $$Hello World$$; END; $$ LANGUAGE plpgsql
+ *
+ * Example: do_block('SELECT 1')->language('sql')
+ * Produces: DO $$ SELECT 1 $$ LANGUAGE sql
+ *
+ * @param string $code The anonymous code block to execute
+ *
+ * @return DoFinalStep Builder for DO statement options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function do_block(string $code) : DoFinalStep
+{
+    return DoBuilder::create($code);
 }
