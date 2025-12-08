@@ -43,7 +43,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
     ) {
     }
 
-    public static function create() : SelectSelectStep
+    public static function create() : self
     {
         return new self();
     }
@@ -669,7 +669,7 @@ final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, Se
         );
     }
 
-    public function select(Expression ...$expressions) : SelectFromStep
+    public function select(Expression ...$expressions) : self
     {
         return new self(
             with: $this->with,

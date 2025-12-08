@@ -443,11 +443,17 @@ function sql_query_functions(ParsedQuery $query) : Functions
 
 /**
  * Create a new SELECT query builder.
+ *
+ * @param Expression ...$expressions Columns to select. If empty, returns SelectSelectStep.
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function select() : SelectSelectStep
+function select(Expression ...$expressions) : SelectBuilder
 {
-    return SelectBuilder::create();
+    if ($expressions === []) {
+        return SelectBuilder::create();
+    }
+
+    return SelectBuilder::create()->select(...$expressions);
 }
 
 /**

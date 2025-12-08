@@ -227,7 +227,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_analyze() : void
     {
-        $builder = explain_analyze(select()->select(star())->from(table('users')));
+        $builder = explain_analyze(select(star())->from(table('users')));
 
         $this->assertExplainQuery(
             $builder,
@@ -237,7 +237,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_format_json() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->format(ExplainFormat::JSON);
+        $builder = explain(select(star())->from(table('users')))->format(ExplainFormat::JSON);
 
         $this->assertExplainQuery(
             $builder,
@@ -247,7 +247,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_format_xml() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->format(ExplainFormat::XML);
+        $builder = explain(select(star())->from(table('users')))->format(ExplainFormat::XML);
 
         $this->assertExplainQuery(
             $builder,
@@ -257,7 +257,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_format_yaml() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->format(ExplainFormat::YAML);
+        $builder = explain(select(star())->from(table('users')))->format(ExplainFormat::YAML);
 
         $this->assertExplainQuery(
             $builder,
@@ -267,7 +267,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_full_options() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))
+        $builder = explain(select(star())->from(table('users')))
             ->analyze()
             ->verbose()
             ->buffers(true)
@@ -282,7 +282,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_select() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')));
+        $builder = explain(select(star())->from(table('users')));
 
         $this->assertExplainQuery(
             $builder,
@@ -292,7 +292,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_verbose() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->verbose();
+        $builder = explain(select(star())->from(table('users')))->verbose();
 
         $this->assertExplainQuery(
             $builder,
@@ -302,7 +302,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_with_buffers() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->analyze()->buffers(true);
+        $builder = explain(select(star())->from(table('users')))->analyze()->buffers(true);
 
         $this->assertExplainQuery(
             $builder,
@@ -312,7 +312,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_with_costs() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->costs(true);
+        $builder = explain(select(star())->from(table('users')))->costs(true);
 
         $this->assertExplainQuery(
             $builder,
@@ -322,7 +322,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_with_timing() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->analyze()->timing(true);
+        $builder = explain(select(star())->from(table('users')))->analyze()->timing(true);
 
         $this->assertExplainQuery(
             $builder,
@@ -332,7 +332,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_without_costs() : void
     {
-        $builder = explain(select()->select(star())->from(table('users')))->costs(false);
+        $builder = explain(select(star())->from(table('users')))->costs(false);
 
         $this->assertExplainQuery(
             $builder,

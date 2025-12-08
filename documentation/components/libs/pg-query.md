@@ -424,8 +424,7 @@ use function Flow\PgQuery\DSL\{
 };
 
 // Build a SELECT query
-$query = select()
-    ->select(col('id'), col('name'), col('email'))
+$query = select(col('id'), col('name'), col('email'))
     ->from(table('users'))
     ->where(eq(col('active'), literal_int(1)))
     ->orderBy(asc(col('name')))
@@ -440,7 +439,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    insert, col_from_string, param, conflict_columns, returning_all
+    insert, col, param, conflict_columns, returning_all
 };
 
 // Build an upsert query
@@ -450,7 +449,7 @@ $query = insert()
     ->values(param(1), param(2))
     ->onConflictDoUpdate(
         conflict_columns(['email']),
-        ['name' => col_from_string('excluded.name')]
+        ['name' => col('excluded.name')]
     )
     ->returningAll();
 

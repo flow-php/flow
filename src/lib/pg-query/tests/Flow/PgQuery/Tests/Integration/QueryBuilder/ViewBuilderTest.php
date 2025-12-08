@@ -162,7 +162,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     public function test_create_materialized_view() : void
     {
         $builder = create_materialized_view('user_stats')
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateMaterializedViewQuery(
             $builder,
@@ -174,7 +174,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     {
         $builder = create_materialized_view('user_stats')
             ->ifNotExists()
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateMaterializedViewQuery(
             $builder,
@@ -186,7 +186,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     {
         $builder = create_materialized_view('user_stats')
             ->using('heap')
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateMaterializedViewQuery(
             $builder,
@@ -198,7 +198,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     {
         $builder = create_materialized_view('user_stats')
             ->columns('user_id', 'order_count')
-            ->as(select()->select(col('id'), agg_count())->from(table('users')));
+            ->as(select(col('id'), agg_count())->from(table('users')));
 
         $this->assertCreateMaterializedViewQuery(
             $builder,
@@ -233,7 +233,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     public function test_create_materialized_view_with_schema() : void
     {
         $builder = create_materialized_view('analytics.user_stats')
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateMaterializedViewQuery(
             $builder,
@@ -257,7 +257,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     {
         $builder = create_view('active_users')
             ->orReplace()
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateViewQuery(
             $builder,
@@ -276,7 +276,7 @@ final class ViewBuilderTest extends PGQueryTestCase
         $builder = create_view('subordinates')
             ->recursive()
             ->columns('id', 'name', 'manager_id')
-            ->as(select()->select(col('id'), col('name'), col('manager_id'))->from(table('employees')));
+            ->as(select(col('id'), col('name'), col('manager_id'))->from(table('employees')));
 
         $this->assertCreateViewQuery(
             $builder,
@@ -288,7 +288,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     {
         $builder = create_view('temp_users')
             ->temporary()
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateViewQuery(
             $builder,
@@ -299,7 +299,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     public function test_create_view_simple() : void
     {
         $builder = create_view('active_users')
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateViewQuery(
             $builder,
@@ -322,7 +322,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     public function test_create_view_with_check_option() : void
     {
         $builder = create_view('active_users')
-            ->as(select()->select(star())->from(table('users'))->where(eq(col('active'), literal_bool(true))))
+            ->as(select(star())->from(table('users'))->where(eq(col('active'), literal_bool(true))))
             ->withCheckOption();
 
         $this->assertCreateViewQuery(
@@ -335,7 +335,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     {
         $builder = create_view('user_info')
             ->columns('user_id', 'user_name', 'email_address')
-            ->as(select()->select(col('id'), col('name'), col('email'))->from(table('users')));
+            ->as(select(col('id'), col('name'), col('email'))->from(table('users')));
 
         $this->assertCreateViewQuery(
             $builder,
@@ -358,7 +358,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     public function test_create_view_with_schema() : void
     {
         $builder = create_view('public.active_users')
-            ->as(select()->select(star())->from(table('users')));
+            ->as(select(star())->from(table('users')));
 
         $this->assertCreateViewQuery(
             $builder,
