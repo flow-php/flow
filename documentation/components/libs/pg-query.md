@@ -409,7 +409,8 @@ For complete documentation on each query builder type, see:
 - [Utility Query Builder](pg-query/utility-query-builder.md)
 - [View Query Builder](pg-query/view-query-builder.md)
 - [Schema Query Builder](pg-query/schema-query-builder.md)
-
+- [Role Grant Query Builder](pg-query/role-grant-query-builder.md)
+- 
 ```php
 <?php
 
