@@ -6,7 +6,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions;
 
 use function Flow\PgQuery\DSL\sql_parse;
 use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\PgQuery\Protobuf\AST\{AlterFunctionStmt, AlterObjectDependsStmt, AlterObjectSchemaStmt, AlterOwnerStmt, AlterRoleStmt, AlterSeqStmt, AlterTableStmt, CallStmt, ClusterStmt, CommentStmt, CreateFunctionStmt, CreateRoleStmt, CreateSchemaStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, CreateTrigStmt, DeleteStmt, DiscardStmt, DoStmt, DropOwnedStmt, DropRoleStmt, DropStmt, ExplainStmt, GrantRoleStmt, GrantStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReassignOwnedStmt, RefreshMatViewStmt, ReindexStmt, RenameStmt, RuleStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt, VariableSetStmt, ViewStmt};
+use Flow\PgQuery\Protobuf\AST\{AlterDomainStmt, AlterEnumStmt, AlterExtensionContentsStmt, AlterExtensionStmt, AlterFunctionStmt, AlterObjectDependsStmt, AlterObjectSchemaStmt, AlterOwnerStmt, AlterRoleStmt, AlterSeqStmt, AlterTableStmt, CallStmt, ClusterStmt, CommentStmt, CompositeTypeStmt, CreateDomainStmt, CreateEnumStmt, CreateExtensionStmt, CreateFunctionStmt, CreateRangeStmt, CreateRoleStmt, CreateSchemaStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, CreateTrigStmt, DeleteStmt, DiscardStmt, DoStmt, DropOwnedStmt, DropRoleStmt, DropStmt, ExplainStmt, GrantRoleStmt, GrantStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReassignOwnedStmt, RefreshMatViewStmt, ReindexStmt, RenameStmt, RuleStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt, VariableSetStmt, ViewStmt};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceLoggingFinalStep, AlterSequenceOptionsStep, AlterSequenceOwnerFinalStep, AlterSequenceSchemaFinalStep, RenameSequenceFinalStep};
@@ -14,8 +14,10 @@ use Flow\PgQuery\QueryBuilder\Schema\AlterTable\{AlterTableFinalStep, AlterTable
 use Flow\PgQuery\QueryBuilder\Schema\CreateSequence\CreateSequenceOptionsStep;
 use Flow\PgQuery\QueryBuilder\Schema\CreateTable\CreateTableFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\CreateTableAsFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\Domain\{AlterDomainFinalStep, CreateDomainOptionsStep, DropDomainFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropSequence\DropSequenceFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\DropTableFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\Extension\{AlterExtensionFinalStep, CreateExtensionOptionsStep, DropExtensionFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Function\{
     AlterFunctionFinalStep,
     AlterProcedureFinalStep,
@@ -38,6 +40,7 @@ use Flow\PgQuery\QueryBuilder\Schema\Schema\{AlterSchemaOwnerFinalStep, AlterSch
 use Flow\PgQuery\QueryBuilder\Schema\Session\{ResetRoleFinalStep, SetRoleFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Trigger\{AlterTriggerFinalStep, CreateTriggerFinalStep, DropTriggerFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\TruncateFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\Type\{AlterEnumTypeFinalStep, CreateCompositeTypeFinalStep, CreateEnumTypeFinalStep, CreateRangeTypeFinalStep, DropTypeFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewOwnerFinalStep, AlterMatViewSchemaFinalStep, AlterMatViewTablespaceFinalStep, RenameMatViewFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterView\{AlterViewOwnerFinalStep, AlterViewSchemaFinalStep, RenameViewFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\View\CreateMaterializedView\CreateMatViewFinalStep;
@@ -53,6 +56,33 @@ use PHPUnit\Framework\Assert;
 
 trait QueryBuilderAssertions
 {
+    protected function assertAlterDomainQuery(AlterDomainFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterDomainStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterEnumTypeQuery(AlterEnumTypeFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterEnumStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterExtensionQuery(AlterExtensionFinalStep $builder, string $expectedSql) : void
+    {
+        $ast = $builder->toAst();
+
+        if ($ast instanceof AlterExtensionStmt) {
+            $sql = $this->deparseAlterExtensionStmt($ast);
+        } else {
+            $sql = $this->deparseAlterExtensionContentsStmt($ast);
+        }
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertAlterFunctionQuery(AlterFunctionFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseAlterFunctionStmt($builder->toAlterAst());
@@ -263,6 +293,34 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertCreateCompositeTypeQuery(CreateCompositeTypeFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCompositeTypeStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateDomainQuery(CreateDomainOptionsStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateDomainStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateEnumTypeQuery(CreateEnumTypeFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateEnumStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateExtensionQuery(CreateExtensionOptionsStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateExtensionStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertCreateFunctionQuery(CreateFunctionFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseCreateFunctionStmt($builder->toAst());
@@ -287,6 +345,13 @@ trait QueryBuilderAssertions
     protected function assertCreateProcedureQuery(CreateProcedureFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseCreateFunctionStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateRangeTypeQuery(CreateRangeTypeFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateRangeStmt($builder->toAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -380,6 +445,20 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertDropDomainQuery(DropDomainFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertDropExtensionQuery(DropExtensionFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertDropFunctionQuery(DropFunctionFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropStmt($builder->toAst());
@@ -451,6 +530,13 @@ trait QueryBuilderAssertions
     }
 
     protected function assertDropTriggerQuery(DropTriggerFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertDropTypeQuery(DropTypeFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropStmt($builder->toAst());
 
@@ -619,6 +705,26 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function deparseAlterDomainStmt(AlterDomainStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['alter_domain_stmt' => $stmt]));
+    }
+
+    protected function deparseAlterEnumStmt(AlterEnumStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['alter_enum_stmt' => $stmt]));
+    }
+
+    protected function deparseAlterExtensionContentsStmt(AlterExtensionContentsStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['alter_extension_contents_stmt' => $stmt]));
+    }
+
+    protected function deparseAlterExtensionStmt(AlterExtensionStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['alter_extension_stmt' => $stmt]));
+    }
+
     protected function deparseAlterFunctionStmt(AlterFunctionStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['alter_function_stmt' => $stmt]));
@@ -669,9 +775,34 @@ trait QueryBuilderAssertions
         return $this->deparseNode(new Node(['comment_stmt' => $stmt]));
     }
 
+    protected function deparseCompositeTypeStmt(CompositeTypeStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['composite_type_stmt' => $stmt]));
+    }
+
+    protected function deparseCreateDomainStmt(CreateDomainStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['create_domain_stmt' => $stmt]));
+    }
+
+    protected function deparseCreateEnumStmt(CreateEnumStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['create_enum_stmt' => $stmt]));
+    }
+
+    protected function deparseCreateExtensionStmt(CreateExtensionStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['create_extension_stmt' => $stmt]));
+    }
+
     protected function deparseCreateFunctionStmt(CreateFunctionStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['create_function_stmt' => $stmt]));
+    }
+
+    protected function deparseCreateRangeStmt(CreateRangeStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['create_range_stmt' => $stmt]));
     }
 
     protected function deparseCreateRoleStmt(CreateRoleStmt $stmt) : string
