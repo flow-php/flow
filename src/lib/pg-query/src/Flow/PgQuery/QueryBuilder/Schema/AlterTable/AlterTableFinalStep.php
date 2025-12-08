@@ -24,6 +24,12 @@ interface AlterTableFinalStep
 
     public function alterColumnType(string $column, DataType $type) : self;
 
+    public function disableTrigger(string $trigger) : self;
+
+    public function disableTriggerAll() : self;
+
+    public function disableTriggerUser() : self;
+
     public function dropColumn(string $column, bool $cascade = false) : self;
 
     public function dropColumnIfExists(string $column, bool $cascade = false) : self;
@@ -31,6 +37,16 @@ interface AlterTableFinalStep
     public function dropConstraint(string $constraintName, bool $cascade = false) : self;
 
     public function dropConstraintIfExists(string $constraintName, bool $cascade = false) : self;
+
+    public function enableTrigger(string $trigger) : self;
+
+    public function enableTriggerAll() : self;
+
+    public function enableTriggerAlways(string $trigger) : self;
+
+    public function enableTriggerReplica(string $trigger) : self;
+
+    public function enableTriggerUser() : self;
 
     public function ifExists() : self;
 

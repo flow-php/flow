@@ -132,6 +132,12 @@ use Flow\PgQuery\QueryBuilder\Schema\Role\{
     DropRoleBuilder,
     DropRoleFinalStep
 };
+use Flow\PgQuery\QueryBuilder\Schema\Rule\{
+    CreateRuleBuilder,
+    CreateRuleEventStep,
+    DropRuleBuilder,
+    DropRuleOnStep
+};
 use Flow\PgQuery\QueryBuilder\Schema\Schema\{
     AlterSchemaActionStep,
     AlterSchemaBuilder,
@@ -145,6 +151,14 @@ use Flow\PgQuery\QueryBuilder\Schema\Session\{
     ResetRoleFinalStep,
     SetRoleBuilder,
     SetRoleFinalStep
+};
+use Flow\PgQuery\QueryBuilder\Schema\Trigger\{
+    AlterTriggerBuilder,
+    AlterTriggerOnStep,
+    CreateTriggerBuilder,
+    CreateTriggerTimingStep,
+    DropTriggerBuilder,
+    DropTriggerOnStep
 };
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewActionStep, AlterMaterializedViewBuilder};
@@ -3219,4 +3233,103 @@ function call(string $procedure) : CallFinalStep
 function do_block(string $code) : DoFinalStep
 {
     return DoBuilder::create($code);
+}
+
+/**
+ * Creates a CREATE TRIGGER statement builder.
+ *
+ * Example: create_trigger('audit_trigger')->before()->insert()->on('users')->execute('audit_function')
+ * Produces: CREATE TRIGGER audit_trigger BEFORE INSERT ON users EXECUTE FUNCTION audit_function()
+ *
+ * Example: create_trigger('notify_trigger')->orReplace()->after()->insertOrUpdate()->on('orders')
+ *          ->forEachRow()->when('NEW.status IS DISTINCT FROM OLD.status')->execute('notify_function')
+ * Produces: CREATE OR REPLACE TRIGGER notify_trigger AFTER INSERT OR UPDATE ON orders
+ *           FOR EACH ROW WHEN (NEW.status IS DISTINCT FROM OLD.status) EXECUTE FUNCTION notify_function()
+ *
+ * @param string $name The name of the trigger
+ *
+ * @return CreateTriggerTimingStep Builder for CREATE TRIGGER statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_trigger(string $name) : CreateTriggerTimingStep
+{
+    return CreateTriggerBuilder::create($name);
+}
+
+/**
+ * Creates an ALTER TRIGGER statement builder for renaming triggers or managing extension dependencies.
+ *
+ * Example: alter_trigger('old_trigger')->on('users')->renameTo('new_trigger')
+ * Produces: ALTER TRIGGER old_trigger ON users RENAME TO new_trigger
+ *
+ * Example: alter_trigger('my_trigger')->on('users')->dependsOnExtension('myext')
+ * Produces: ALTER TRIGGER my_trigger ON users DEPENDS ON EXTENSION myext
+ *
+ * @param string $name The name of the trigger to alter
+ *
+ * @return AlterTriggerOnStep Builder for ALTER TRIGGER statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_trigger(string $name) : AlterTriggerOnStep
+{
+    return AlterTriggerBuilder::create($name);
+}
+
+/**
+ * Creates a DROP TRIGGER statement builder.
+ *
+ * Example: drop_trigger('audit_trigger')->on('users')
+ * Produces: DROP TRIGGER audit_trigger ON users
+ *
+ * Example: drop_trigger('audit_trigger')->ifExists()->on('public.users')->cascade()
+ * Produces: DROP TRIGGER IF EXISTS audit_trigger ON public.users CASCADE
+ *
+ * @param string $name The name of the trigger to drop
+ *
+ * @return DropTriggerOnStep Builder for DROP TRIGGER statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_trigger(string $name) : DropTriggerOnStep
+{
+    return DropTriggerBuilder::create($name);
+}
+
+/**
+ * Creates a CREATE RULE statement builder.
+ *
+ * Example: create_rule('prevent_delete')->asOnDelete()->to('users')->doNothing()
+ * Produces: CREATE RULE prevent_delete AS ON DELETE TO users DO NOTHING
+ *
+ * Example: create_rule('audit_insert')->orReplace()->asOnInsert()->to('orders')
+ *          ->doAlso("INSERT INTO audit_log (action, table_name) VALUES ('INSERT', 'orders')")
+ * Produces: CREATE OR REPLACE RULE audit_insert AS ON INSERT TO orders
+ *           DO ALSO INSERT INTO audit_log (action, table_name) VALUES ('INSERT', 'orders')
+ *
+ * @param string $name The name of the rule
+ *
+ * @return CreateRuleEventStep Builder for CREATE RULE statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_rule(string $name) : CreateRuleEventStep
+{
+    return CreateRuleBuilder::create($name);
+}
+
+/**
+ * Creates a DROP RULE statement builder.
+ *
+ * Example: drop_rule('prevent_delete')->on('users')
+ * Produces: DROP RULE prevent_delete ON users
+ *
+ * Example: drop_rule('audit_insert')->ifExists()->on('public.orders')->cascade()
+ * Produces: DROP RULE IF EXISTS audit_insert ON public.orders CASCADE
+ *
+ * @param string $name The name of the rule to drop
+ *
+ * @return DropRuleOnStep Builder for DROP RULE statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_rule(string $name) : DropRuleOnStep
+{
+    return DropRuleBuilder::create($name);
 }
