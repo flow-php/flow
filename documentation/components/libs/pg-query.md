@@ -408,7 +408,7 @@ For complete documentation on each query builder type, see:
 - [Sequence Query Builder](pg-query/sequence-query-builder.md)
 - [Utility Query Builder](pg-query/utility-query-builder.md)
 - [View Query Builder](pg-query/view-query-builder.md)
-
+- [Schema Query Builder](pg-query/schema-query-builder.md)
 
 ```php
 <?php

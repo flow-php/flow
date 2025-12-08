@@ -88,6 +88,14 @@ use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\{CreateIndexBuilder, Crea
 use Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex\{DropIndexBuilder, DropIndexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
 use Flow\PgQuery\QueryBuilder\Schema\Index\Reindex\{ReindexBuilder, ReindexFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Schema\{
+    AlterSchemaActionStep,
+    AlterSchemaBuilder,
+    CreateSchemaBuilder,
+    CreateSchemaOptionsStep,
+    DropSchemaBuilder,
+    DropSchemaFinalStep
+};
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewActionStep, AlterMaterializedViewBuilder};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterView\{AlterViewActionStep, AlterViewBuilder};
@@ -2686,4 +2694,65 @@ function drop_materialized_view(string ...$views) : DropMatViewFinalStep
 function refresh_materialized_view(string $name, ?string $schema = null) : RefreshMatViewOptionsStep
 {
     return RefreshMaterializedViewBuilder::create($name, $schema);
+}
+
+// ----------------------------------------------------------------------------
+// Schema Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a CREATE SCHEMA builder.
+ *
+ * Example: create_schema('my_schema')
+ * Produces: CREATE SCHEMA my_schema
+ *
+ * Example: create_schema('my_schema')->ifNotExists()->authorization('admin')
+ * Produces: CREATE SCHEMA IF NOT EXISTS my_schema AUTHORIZATION admin
+ *
+ * @param string $name The schema name
+ *
+ * @return CreateSchemaOptionsStep Builder for schema creation options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_schema(string $name) : CreateSchemaOptionsStep
+{
+    return CreateSchemaBuilder::create($name);
+}
+
+/**
+ * Create an ALTER SCHEMA builder.
+ *
+ * Example: alter_schema('my_schema')->renameTo('new_schema')
+ * Produces: ALTER SCHEMA my_schema RENAME TO new_schema
+ *
+ * Example: alter_schema('my_schema')->ownerTo('new_owner')
+ * Produces: ALTER SCHEMA my_schema OWNER TO new_owner
+ *
+ * @param string $name The schema name
+ *
+ * @return AlterSchemaActionStep Builder for schema alter actions
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_schema(string $name) : AlterSchemaActionStep
+{
+    return AlterSchemaBuilder::create($name);
+}
+
+/**
+ * Create a DROP SCHEMA builder.
+ *
+ * Example: drop_schema('my_schema')
+ * Produces: DROP SCHEMA my_schema
+ *
+ * Example: drop_schema('schema1', 'schema2')->ifExists()->cascade()
+ * Produces: DROP SCHEMA IF EXISTS schema1, schema2 CASCADE
+ *
+ * @param string ...$names The schema name(s) to drop
+ *
+ * @return DropSchemaFinalStep Builder for schema drop options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_schema(string ...$names) : DropSchemaFinalStep
+{
+    return DropSchemaBuilder::create(...$names);
 }
