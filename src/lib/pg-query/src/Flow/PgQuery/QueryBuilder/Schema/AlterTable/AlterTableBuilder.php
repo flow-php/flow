@@ -142,6 +142,46 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         );
     }
 
+    public function disableTrigger(string $trigger) : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_DisableTrig);
+        $cmd->setName($trigger);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function disableTriggerAll() : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_DisableTrigAll);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function disableTriggerUser() : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_DisableTrigUser);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
     public function dropColumn(string $column, bool $cascade = false) : AlterTableFinalStep
     {
         $cmd = new AlterTableCmd();
@@ -207,6 +247,74 @@ final readonly class AlterTableBuilder implements AlterTableFinalStep
         if ($cascade) {
             $cmd->setBehavior(DropBehavior::DROP_CASCADE);
         }
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function enableTrigger(string $trigger) : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_EnableTrig);
+        $cmd->setName($trigger);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function enableTriggerAll() : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_EnableTrigAll);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function enableTriggerAlways(string $trigger) : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_EnableAlwaysTrig);
+        $cmd->setName($trigger);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function enableTriggerReplica(string $trigger) : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_EnableReplicaTrig);
+        $cmd->setName($trigger);
+
+        return new self(
+            $this->table,
+            $this->schema,
+            [...$this->commands, $cmd],
+            $this->ifExists,
+        );
+    }
+
+    public function enableTriggerUser() : AlterTableFinalStep
+    {
+        $cmd = new AlterTableCmd();
+        $cmd->setSubtype(AlterTableType::AT_EnableTrigUser);
 
         return new self(
             $this->table,
