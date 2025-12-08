@@ -81,8 +81,24 @@ use Flow\PgQuery\QueryBuilder\Schema\Constraint\{CheckConstraint, ForeignKeyCons
 use Flow\PgQuery\QueryBuilder\Schema\CreateSequence\{CreateSequenceBuilder, CreateSequenceOptionsStep};
 use Flow\PgQuery\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep};
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Domain\{
+    AlterDomainActionStep,
+    AlterDomainBuilder,
+    CreateDomainBuilder,
+    CreateDomainTypeStep,
+    DropDomainBuilder,
+    DropDomainFinalStep
+};
 use Flow\PgQuery\QueryBuilder\Schema\DropSequence\{DropSequenceBuilder, DropSequenceFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Extension\{
+    AlterExtensionActionStep,
+    AlterExtensionBuilder,
+    CreateExtensionBuilder,
+    CreateExtensionOptionsStep,
+    DropExtensionBuilder,
+    DropExtensionFinalStep
+};
 use Flow\PgQuery\QueryBuilder\Schema\Function\{
     AlterFunctionArgsStep,
     AlterFunctionBuilder,
@@ -161,6 +177,19 @@ use Flow\PgQuery\QueryBuilder\Schema\Trigger\{
     DropTriggerOnStep
 };
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Type\{
+    AlterEnumTypeActionStep,
+    AlterEnumTypeBuilder,
+    CreateCompositeTypeAttributesStep,
+    CreateCompositeTypeBuilder,
+    CreateEnumTypeBuilder,
+    CreateEnumTypeLabelsStep,
+    CreateRangeTypeBuilder,
+    CreateRangeTypeSubtypeStep,
+    DropTypeBuilder,
+    DropTypeFinalStep,
+    TypeAttribute
+};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewActionStep, AlterMaterializedViewBuilder};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterView\{AlterViewActionStep, AlterViewBuilder};
 use Flow\PgQuery\QueryBuilder\Schema\View\CreateMaterializedView\{CreateMatViewOptionsStep, CreateMaterializedViewBuilder};
@@ -3332,4 +3361,242 @@ function create_rule(string $name) : CreateRuleEventStep
 function drop_rule(string $name) : DropRuleOnStep
 {
     return DropRuleBuilder::create($name);
+}
+
+/**
+ * Creates a CREATE EXTENSION statement builder.
+ *
+ * Example: create_extension('uuid-ossp')
+ * Produces: CREATE EXTENSION "uuid-ossp"
+ *
+ * Example: create_extension('postgis')->ifNotExists()->schema('public')->version('3.0')
+ * Produces: CREATE EXTENSION IF NOT EXISTS postgis SCHEMA public VERSION '3.0'
+ *
+ * @param string $name The name of the extension to create
+ *
+ * @return CreateExtensionOptionsStep Builder for CREATE EXTENSION statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_extension(string $name) : CreateExtensionOptionsStep
+{
+    return CreateExtensionBuilder::create($name);
+}
+
+/**
+ * Creates an ALTER EXTENSION statement builder.
+ *
+ * Example: alter_extension('postgis')->update()
+ * Produces: ALTER EXTENSION postgis UPDATE
+ *
+ * Example: alter_extension('postgis')->updateTo('3.1')
+ * Produces: ALTER EXTENSION postgis UPDATE TO '3.1'
+ *
+ * Example: alter_extension('postgis')->addTable('spatial_ref_sys')
+ * Produces: ALTER EXTENSION postgis ADD TABLE spatial_ref_sys
+ *
+ * @param string $name The name of the extension to alter
+ *
+ * @return AlterExtensionActionStep Builder for ALTER EXTENSION statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_extension(string $name) : AlterExtensionActionStep
+{
+    return AlterExtensionBuilder::create($name);
+}
+
+/**
+ * Creates a DROP EXTENSION statement builder.
+ *
+ * Example: drop_extension('uuid-ossp')
+ * Produces: DROP EXTENSION "uuid-ossp"
+ *
+ * Example: drop_extension('postgis', 'pg_trgm')->ifExists()->cascade()
+ * Produces: DROP EXTENSION IF EXISTS postgis, pg_trgm CASCADE
+ *
+ * @param string ...$names The names of the extensions to drop
+ *
+ * @return DropExtensionFinalStep Builder for DROP EXTENSION statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_extension(string ...$names) : DropExtensionFinalStep
+{
+    return DropExtensionBuilder::create(...$names);
+}
+
+/**
+ * Creates a CREATE TYPE (composite) statement builder.
+ *
+ * Example: create_composite_type('address')->attributes(type_attr('street', 'text'), type_attr('city', 'text'))
+ * Produces: CREATE TYPE address AS (street text, city text)
+ *
+ * Example: create_composite_type('public.person')->attributes(type_attr('name', 'text')->collate('en_US'))
+ * Produces: CREATE TYPE public.person AS (name text COLLATE "en_US")
+ *
+ * @param string $name The name of the composite type to create (can be schema-qualified)
+ *
+ * @return CreateCompositeTypeAttributesStep Builder for CREATE TYPE statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_composite_type(string $name) : CreateCompositeTypeAttributesStep
+{
+    return CreateCompositeTypeBuilder::create($name);
+}
+
+/**
+ * Creates a CREATE TYPE (enum) statement builder.
+ *
+ * Example: create_enum_type('status')->labels('pending', 'active', 'closed')
+ * Produces: CREATE TYPE status AS ENUM ('pending', 'active', 'closed')
+ *
+ * Example: create_enum_type('public.priority')->labels('low', 'medium', 'high')
+ * Produces: CREATE TYPE public.priority AS ENUM ('low', 'medium', 'high')
+ *
+ * @param string $name The name of the enum type to create (can be schema-qualified)
+ *
+ * @return CreateEnumTypeLabelsStep Builder for CREATE TYPE AS ENUM statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_enum_type(string $name) : CreateEnumTypeLabelsStep
+{
+    return CreateEnumTypeBuilder::create($name);
+}
+
+/**
+ * Creates a CREATE TYPE (range) statement builder.
+ *
+ * Example: create_range_type('floatrange')->subtype('float8')
+ * Produces: CREATE TYPE floatrange AS RANGE (SUBTYPE = float8)
+ *
+ * Example: create_range_type('daterange')->subtype('date')->subtypeOpclass('date_ops')
+ * Produces: CREATE TYPE daterange AS RANGE (SUBTYPE = date, SUBTYPE_OPCLASS = date_ops)
+ *
+ * @param string $name The name of the range type to create (can be schema-qualified)
+ *
+ * @return CreateRangeTypeSubtypeStep Builder for CREATE TYPE AS RANGE statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_range_type(string $name) : CreateRangeTypeSubtypeStep
+{
+    return CreateRangeTypeBuilder::create($name);
+}
+
+/**
+ * Creates a type attribute for composite types.
+ *
+ * Example: type_attr('name', 'text')
+ * Produces: name text
+ *
+ * Example: type_attr('description', 'text')->collate('en_US')
+ * Produces: description text COLLATE "en_US"
+ *
+ * @param string $name The attribute name
+ * @param string $type The attribute type
+ *
+ * @return TypeAttribute Type attribute value object
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function type_attr(string $name, string $type) : TypeAttribute
+{
+    return TypeAttribute::of($name, $type);
+}
+
+/**
+ * Creates an ALTER TYPE (enum) statement builder.
+ *
+ * Example: alter_enum_type('status')->addValue('archived')
+ * Produces: ALTER TYPE status ADD VALUE 'archived'
+ *
+ * Example: alter_enum_type('status')->addValueBefore('pending', 'draft')
+ * Produces: ALTER TYPE status ADD VALUE 'pending' BEFORE 'draft'
+ *
+ * Example: alter_enum_type('status')->renameValue('old_name', 'new_name')
+ * Produces: ALTER TYPE status RENAME VALUE 'old_name' TO 'new_name'
+ *
+ * @param string $name The name of the enum type to alter (can be schema-qualified)
+ *
+ * @return AlterEnumTypeActionStep Builder for ALTER TYPE statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_enum_type(string $name) : AlterEnumTypeActionStep
+{
+    return AlterEnumTypeBuilder::create($name);
+}
+
+/**
+ * Creates a DROP TYPE statement builder.
+ *
+ * Example: drop_type('address')
+ * Produces: DROP TYPE address
+ *
+ * Example: drop_type('status', 'priority')->ifExists()->cascade()
+ * Produces: DROP TYPE IF EXISTS status, priority CASCADE
+ *
+ * @param string ...$names The names of the types to drop (can be schema-qualified)
+ *
+ * @return DropTypeFinalStep Builder for DROP TYPE statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_type(string ...$names) : DropTypeFinalStep
+{
+    return DropTypeBuilder::create(...$names);
+}
+
+/**
+ * Creates a CREATE DOMAIN statement builder.
+ *
+ * Example: create_domain('email')->as('text')->constraint('valid_email')->check("VALUE ~ '^.+@.+$'")
+ * Produces: CREATE DOMAIN email AS text CONSTRAINT valid_email CHECK (VALUE ~ '^.+@.+$')
+ *
+ * Example: create_domain('positive_int')->as('integer')->notNull()->default('0')->check('VALUE > 0')
+ * Produces: CREATE DOMAIN positive_int AS integer NOT NULL DEFAULT 0 CHECK (VALUE > 0)
+ *
+ * @param string $name The name of the domain to create (can be schema-qualified)
+ *
+ * @return CreateDomainTypeStep Builder for CREATE DOMAIN statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_domain(string $name) : CreateDomainTypeStep
+{
+    return CreateDomainBuilder::create($name);
+}
+
+/**
+ * Creates an ALTER DOMAIN statement builder.
+ *
+ * Example: alter_domain('email')->setNotNull()
+ * Produces: ALTER DOMAIN email SET NOT NULL
+ *
+ * Example: alter_domain('email')->dropConstraint('valid_email')
+ * Produces: ALTER DOMAIN email DROP CONSTRAINT valid_email
+ *
+ * Example: alter_domain('positive_int')->addConstraint('min_value', 'VALUE >= 0')
+ * Produces: ALTER DOMAIN positive_int ADD CONSTRAINT min_value CHECK (VALUE >= 0)
+ *
+ * @param string $name The name of the domain to alter (can be schema-qualified)
+ *
+ * @return AlterDomainActionStep Builder for ALTER DOMAIN statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_domain(string $name) : AlterDomainActionStep
+{
+    return AlterDomainBuilder::create($name);
+}
+
+/**
+ * Creates a DROP DOMAIN statement builder.
+ *
+ * Example: drop_domain('email')
+ * Produces: DROP DOMAIN email
+ *
+ * Example: drop_domain('email', 'positive_int')->ifExists()->cascade()
+ * Produces: DROP DOMAIN IF EXISTS email, positive_int CASCADE
+ *
+ * @param string ...$names The names of the domains to drop (can be schema-qualified)
+ *
+ * @return DropDomainFinalStep Builder for DROP DOMAIN statement
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_domain(string ...$names) : DropDomainFinalStep
+{
+    return DropDomainBuilder::create(...$names);
 }

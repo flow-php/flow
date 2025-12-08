@@ -410,7 +410,12 @@ For complete documentation on each query builder type, see:
 - [View Query Builder](pg-query/view-query-builder.md)
 - [Schema Query Builder](pg-query/schema-query-builder.md)
 - [Role Grant Query Builder](pg-query/role-grant-query-builder.md)
-- 
+- [Trigger Rule Query Builder](pg-query/trigger-rule-query-builder.md)
+- [Extension Query Builder](pg-query/extension-query-builder.md)
+- [Type Query Builder](pg-query/type-query-builder.md)
+- [Domain Query Builder](pg-query/domain-query-builder.md)
+
+ 
 ```php
 <?php
 
