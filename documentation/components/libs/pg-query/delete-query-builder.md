@@ -11,11 +11,11 @@ The Delete Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col_from_string, eq, literal_int};
+use function Flow\PgQuery\DSL\{delete, col, eq, literal_int};
 
 $query = delete()
     ->from('users')
-    ->where(eq(col_from_string('id'), literal_int(1)));
+    ->where(eq(col('id'), literal_int(1)));
 
 echo $query->toSQL();
 // DELETE FROM users WHERE id = 1
@@ -28,11 +28,11 @@ Use positional parameters for prepared statements:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col_from_string, eq, param};
+use function Flow\PgQuery\DSL\{delete, col, eq, param};
 
 $query = delete()
     ->from('users')
-    ->where(eq(col_from_string('id'), param(1)));
+    ->where(eq(col('id'), param(1)));
 
 echo $query->toSQL();
 // DELETE FROM users WHERE id = $1
@@ -43,11 +43,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col_from_string, eq, literal_int};
+use function Flow\PgQuery\DSL\{delete, col, eq, literal_int};
 
 $query = delete()
     ->from('users', 'u')
-    ->where(eq(col_from_string('u.id'), literal_int(1)));
+    ->where(eq(col('u.id'), literal_int(1)));
 
 echo $query->toSQL();
 // DELETE FROM users u WHERE u.id = 1
@@ -60,12 +60,12 @@ The USING clause allows you to reference other tables in your DELETE, similar to
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, table, col_from_string, eq};
+use function Flow\PgQuery\DSL\{delete, table, col, eq};
 
 $query = delete()
     ->from('orders')
     ->using(table('users'))
-    ->where(eq(col_from_string('orders.user_id'), col_from_string('users.id')));
+    ->where(eq(col('orders.user_id'), col('users.id')));
 
 echo $query->toSQL();
 // DELETE FROM orders USING users WHERE orders.user_id = users.id
@@ -77,18 +77,18 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    delete, select, col_from_string, table, any_sub_select
+    delete, select, col, table, any_sub_select
 };
 
 use Flow\PgQuery\QueryBuilder\Condition\ComparisonOperator;
 
 $subquery = select()
-    ->select(col_from_string('user_id'))
+    ->select(col('user_id'))
     ->from(table('inactive_users'));
 
 $query = delete()
     ->from('users')
-    ->where(any_sub_select(col_from_string('id'), ComparisonOperator::EQ, $subquery));
+    ->where(any_sub_select(col('id'), ComparisonOperator::EQ, $subquery));
 
 echo $query->toSQL();
 // DELETE FROM users WHERE id = ANY (SELECT user_id FROM inactive_users)
@@ -99,13 +99,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col_from_string, eq, literal_int};
+use function Flow\PgQuery\DSL\{delete, col, eq, literal_int};
 
 // Return specific columns
 $query = delete()
     ->from('users')
-    ->where(eq(col_from_string('id'), literal_int(1)))
-    ->returning(col_from_string('id'), col_from_string('name'));
+    ->where(eq(col('id'), literal_int(1)))
+    ->returning(col('id'), col('name'));
 
 echo $query->toSQL();
 // DELETE FROM users WHERE id = 1 RETURNING id, name
@@ -113,7 +113,7 @@ echo $query->toSQL();
 // Return all columns
 $query = delete()
     ->from('users')
-    ->where(eq(col_from_string('id'), literal_int(1)))
+    ->where(eq(col('id'), literal_int(1)))
     ->returningAll();
 
 echo $query->toSQL();
@@ -126,15 +126,15 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    delete, col_from_string, eq, lt, literal_bool, literal_string, cond_and
+    delete, col, eq, lt, literal_bool, literal_string, cond_and
 };
 
 $query = delete()
     ->from('sessions')
     ->where(
         cond_and(
-            eq(col_from_string('active'), literal_bool(false)),
-            lt(col_from_string('expires_at'), literal_string('2024-01-01'))
+            eq(col('active'), literal_bool(false)),
+            lt(col('expires_at'), literal_string('2024-01-01'))
         )
     );
 

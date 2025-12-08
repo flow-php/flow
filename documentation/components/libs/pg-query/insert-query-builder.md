@@ -77,10 +77,10 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, select, col_from_string, table};
+use function Flow\PgQuery\DSL\{insert, select, table};
 
 $selectQuery = select()
-    ->select(col_from_string('name'), col_from_string('email'))
+    ->select(col('name'), col('email'))
     ->from(table('archived_users'));
 
 $query = insert()
@@ -173,7 +173,7 @@ Reference the values that would have been inserted using the `excluded` pseudo-t
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, param, conflict_columns, col_from_string};
+use function Flow\PgQuery\DSL\{insert, param, conflict_columns};
 
 $query = insert()
     ->into('users')
@@ -181,7 +181,7 @@ $query = insert()
     ->values(param(1), param(2))
     ->onConflictDoUpdate(
         conflict_columns(['email']),
-        ['name' => col_from_string('excluded.name')]
+        ['name' => col('excluded.name')]
     );
 
 echo $query->toSQL();
@@ -194,7 +194,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    insert, literal_string, literal_bool, conflict_columns, col_from_string, eq
+    insert, literal_string, literal_bool, conflict_columns, eq
 };
 
 $query = insert()
@@ -205,7 +205,7 @@ $query = insert()
         conflict_columns(['email']),
         ['name' => literal_string('Updated John')]
     )
-    ->where(eq(col_from_string('users.active'), literal_bool(true)));
+    ->where(eq(col('users.active'), literal_bool(true)));
 
 echo $query->toSQL();
 // INSERT INTO users (email, name, active) VALUES ('john@example.com', 'John', true) ON CONFLICT (email) DO UPDATE SET name = 'Updated John' WHERE users.active = true
@@ -216,14 +216,14 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string, col_from_string};
+use function Flow\PgQuery\DSL\{insert, literal_string};
 
 // Return specific columns
 $query = insert()
     ->into('users')
     ->columns('name')
     ->values(literal_string('John'))
-    ->returning(col_from_string('id'));
+    ->returning(col('id'));
 
 echo $query->toSQL();
 // INSERT INTO users (name) VALUES ('John') RETURNING id
