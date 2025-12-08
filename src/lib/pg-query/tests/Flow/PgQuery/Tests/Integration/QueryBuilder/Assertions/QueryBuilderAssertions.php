@@ -6,7 +6,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions;
 
 use function Flow\PgQuery\DSL\sql_parse;
 use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, AlterSeqStmt, AlterTableStmt, ClusterStmt, CommentStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DiscardStmt, DropStmt, ExplainStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReindexStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt};
+use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, AlterSeqStmt, AlterTableStmt, ClusterStmt, CommentStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DiscardStmt, DropStmt, ExplainStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, RefreshMatViewStmt, ReindexStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt, ViewStmt};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceLoggingFinalStep, AlterSequenceOptionsStep, AlterSequenceOwnerFinalStep, AlterSequenceSchemaFinalStep, RenameSequenceFinalStep};
@@ -21,6 +21,13 @@ use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\CreateIndexFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex\DropIndexFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\Index\Reindex\ReindexFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\TruncateFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewOwnerFinalStep, AlterMatViewSchemaFinalStep, AlterMatViewTablespaceFinalStep, RenameMatViewFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\View\AlterView\{AlterViewOwnerFinalStep, AlterViewSchemaFinalStep, RenameViewFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\View\CreateMaterializedView\CreateMatViewFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\View\CreateView\CreateViewFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\View\DropMaterializedView\DropMatViewFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\View\DropView\DropViewFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\View\RefreshMaterializedView\RefreshMatViewFinalStep;
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep};
 use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder, UpdateFinalStep};
 use Flow\PgQuery\QueryBuilder\Utility\{AnalyzeFinalStep, ClusterFinalStep, CommentFinalStep, DiscardFinalStep, ExplainFinalStep, LockFinalStep, VacuumFinalStep};
@@ -37,6 +44,34 @@ trait QueryBuilderAssertions
     }
 
     protected function assertAlterIndexTablespaceQuery(AlterTablespaceIndexFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterTableStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterMaterializedViewOwnerQuery(AlterMatViewOwnerFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterTableStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterMaterializedViewRenameQuery(RenameMatViewFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseRenameStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterMaterializedViewSchemaQuery(AlterMatViewSchemaFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterObjectSchemaStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterMaterializedViewTablespaceQuery(AlterMatViewTablespaceFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseAlterTableStmt($builder->toAst());
 
@@ -92,6 +127,27 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertAlterViewOwnerQuery(AlterViewOwnerFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterTableStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterViewRenameQuery(RenameViewFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseRenameStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterViewSchemaQuery(AlterViewSchemaFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterObjectSchemaStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertAnalyzeQuery(AnalyzeFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseVacuumStmt($builder->toAst());
@@ -120,6 +176,13 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertCreateMaterializedViewQuery(CreateMatViewFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateTableAsStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertCreateSequenceQuery(CreateSequenceOptionsStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseCreateSeqStmt($builder->toAst());
@@ -137,6 +200,13 @@ trait QueryBuilderAssertions
     protected function assertCreateTableQuery(CreateTableFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseCreateStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateViewQuery(CreateViewFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseViewStmt($builder->toAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -174,6 +244,13 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertDropMaterializedViewQuery(DropMatViewFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertDropSequenceQuery(DropSequenceFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropStmt($builder->toAst());
@@ -182,6 +259,13 @@ trait QueryBuilderAssertions
     }
 
     protected function assertDropTableQuery(DropTableFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertDropViewQuery(DropViewFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropStmt($builder->toAst());
 
@@ -217,6 +301,13 @@ trait QueryBuilderAssertions
     protected function assertLockQuery(LockFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseLockStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertRefreshMaterializedViewQuery(RefreshMatViewFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseRefreshMatViewStmt($builder->toAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -362,6 +453,11 @@ trait QueryBuilderAssertions
         return $this->deparseNode(new Node(['lock_stmt' => $stmt]));
     }
 
+    protected function deparseRefreshMatViewStmt(RefreshMatViewStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['refresh_mat_view_stmt' => $stmt]));
+    }
+
     protected function deparseReindexStmt(ReindexStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['reindex_stmt' => $stmt]));
@@ -390,6 +486,11 @@ trait QueryBuilderAssertions
     protected function deparseVacuumStmt(VacuumStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['vacuum_stmt' => $stmt]));
+    }
+
+    protected function deparseViewStmt(ViewStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['view_stmt' => $stmt]));
     }
 
     private function deparseNode(Node $node) : string

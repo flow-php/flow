@@ -89,6 +89,13 @@ use Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex\{DropIndexBuilder, DropInde
 use Flow\PgQuery\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
 use Flow\PgQuery\QueryBuilder\Schema\Index\Reindex\{ReindexBuilder, ReindexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewActionStep, AlterMaterializedViewBuilder};
+use Flow\PgQuery\QueryBuilder\Schema\View\AlterView\{AlterViewActionStep, AlterViewBuilder};
+use Flow\PgQuery\QueryBuilder\Schema\View\CreateMaterializedView\{CreateMatViewOptionsStep, CreateMaterializedViewBuilder};
+use Flow\PgQuery\QueryBuilder\Schema\View\CreateView\{CreateViewBuilder, CreateViewOptionsStep};
+use Flow\PgQuery\QueryBuilder\Schema\View\DropMaterializedView\{DropMatViewFinalStep, DropMaterializedViewBuilder};
+use Flow\PgQuery\QueryBuilder\Schema\View\DropView\{DropViewBuilder, DropViewFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\View\RefreshMaterializedView\{RefreshMatViewOptionsStep, RefreshMaterializedViewBuilder};
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PgQuery\QueryBuilder\Table\{
     CTEReference,
@@ -2558,4 +2565,125 @@ function drop_sequence(string ...$names) : DropSequenceFinalStep
 function drop_sequence_if_exists(string ...$names) : DropSequenceFinalStep
 {
     return DropSequenceBuilder::ifExists()->sequence(...$names);
+}
+
+// ----------------------------------------------------------------------------
+// View Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a CREATE VIEW builder.
+ *
+ * Use chainable methods for modifiers: ->orReplace(), ->temporary(), ->recursive(), ->columns()
+ *
+ * Example: create_view('active_users')->as(select()->from('users')->where(eq(col('active'), literal_bool(true))))
+ * Produces: CREATE VIEW active_users AS SELECT * FROM users WHERE active = true
+ *
+ * @param string $name View name (can include schema: schema.view)
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create_view(string $name, ?string $schema = null) : CreateViewOptionsStep
+{
+    return CreateViewBuilder::create($name, $schema);
+}
+
+/**
+ * Create a CREATE MATERIALIZED VIEW builder.
+ *
+ * Use chainable methods for modifiers: ->ifNotExists(), ->columns(), ->using(), ->tablespace(), ->withData(), ->withNoData()
+ *
+ * Example: create_materialized_view('user_stats')->as(select()->from('users'))->withNoData()
+ * Produces: CREATE MATERIALIZED VIEW user_stats AS SELECT * FROM users WITH NO DATA
+ *
+ * @param string $name Materialized view name (can include schema: schema.matview)
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create_materialized_view(string $name, ?string $schema = null) : CreateMatViewOptionsStep
+{
+    return CreateMaterializedViewBuilder::create($name, $schema);
+}
+
+/**
+ * Create an ALTER VIEW builder.
+ *
+ * Use chainable methods: ->ifExists(), then ->renameTo(), ->setSchema(), or ->ownerTo()
+ *
+ * Example: alter_view('old_view')->renameTo('new_view')
+ * Produces: ALTER VIEW old_view RENAME TO new_view
+ *
+ * @param string $name View name (can include schema: schema.view)
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function alter_view(string $name, ?string $schema = null) : AlterViewActionStep
+{
+    return AlterViewBuilder::create($name, $schema);
+}
+
+/**
+ * Create an ALTER MATERIALIZED VIEW builder.
+ *
+ * Use chainable methods: ->ifExists(), then ->renameTo(), ->setSchema(), ->ownerTo(), or ->setTablespace()
+ *
+ * Example: alter_materialized_view('my_matview')->setTablespace('fast_storage')
+ * Produces: ALTER MATERIALIZED VIEW my_matview SET TABLESPACE fast_storage
+ *
+ * @param string $name Materialized view name (can include schema: schema.matview)
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function alter_materialized_view(string $name, ?string $schema = null) : AlterMatViewActionStep
+{
+    return AlterMaterializedViewBuilder::create($name, $schema);
+}
+
+/**
+ * Create a DROP VIEW builder.
+ *
+ * Use chainable methods: ->ifExists(), ->cascade(), ->restrict()
+ *
+ * Example: drop_view('view1', 'view2')->ifExists()->cascade()
+ * Produces: DROP VIEW IF EXISTS view1, view2 CASCADE
+ *
+ * @param string ...$views View names to drop
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function drop_view(string ...$views) : DropViewFinalStep
+{
+    return DropViewBuilder::create(...$views);
+}
+
+/**
+ * Create a DROP MATERIALIZED VIEW builder.
+ *
+ * Use chainable methods: ->ifExists(), ->cascade(), ->restrict()
+ *
+ * Example: drop_materialized_view('matview1')->ifExists()->cascade()
+ * Produces: DROP MATERIALIZED VIEW IF EXISTS matview1 CASCADE
+ *
+ * @param string ...$views Materialized view names to drop
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function drop_materialized_view(string ...$views) : DropMatViewFinalStep
+{
+    return DropMaterializedViewBuilder::create(...$views);
+}
+
+/**
+ * Create a REFRESH MATERIALIZED VIEW builder.
+ *
+ * Use chainable methods: ->concurrently(), ->withData(), ->withNoData()
+ *
+ * Example: refresh_materialized_view('user_stats')->concurrently()->withData()
+ * Produces: REFRESH MATERIALIZED VIEW CONCURRENTLY user_stats WITH DATA
+ *
+ * @param string $name Materialized view name (can include schema: schema.matview)
+ * @param null|string $schema Schema name (optional)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function refresh_materialized_view(string $name, ?string $schema = null) : RefreshMatViewOptionsStep
+{
+    return RefreshMaterializedViewBuilder::create($name, $schema);
 }
