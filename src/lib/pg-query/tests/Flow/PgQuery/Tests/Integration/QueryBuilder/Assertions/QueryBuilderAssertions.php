@@ -6,7 +6,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions;
 
 use function Flow\PgQuery\DSL\sql_parse;
 use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, AlterOwnerStmt, AlterRoleStmt, AlterSeqStmt, AlterTableStmt, ClusterStmt, CommentStmt, CreateRoleStmt, CreateSchemaStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DiscardStmt, DropOwnedStmt, DropRoleStmt, DropStmt, ExplainStmt, GrantRoleStmt, GrantStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReassignOwnedStmt, RefreshMatViewStmt, ReindexStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt, VariableSetStmt, ViewStmt};
+use Flow\PgQuery\Protobuf\AST\{AlterFunctionStmt, AlterObjectSchemaStmt, AlterOwnerStmt, AlterRoleStmt, AlterSeqStmt, AlterTableStmt, CallStmt, ClusterStmt, CommentStmt, CreateFunctionStmt, CreateRoleStmt, CreateSchemaStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, DeleteStmt, DiscardStmt, DoStmt, DropOwnedStmt, DropRoleStmt, DropStmt, ExplainStmt, GrantRoleStmt, GrantStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReassignOwnedStmt, RefreshMatViewStmt, ReindexStmt, RenameStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt, VariableSetStmt, ViewStmt};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceLoggingFinalStep, AlterSequenceOptionsStep, AlterSequenceOwnerFinalStep, AlterSequenceSchemaFinalStep, RenameSequenceFinalStep};
@@ -16,6 +16,16 @@ use Flow\PgQuery\QueryBuilder\Schema\CreateTable\CreateTableFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\CreateTableAsFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\DropSequence\DropSequenceFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\DropTableFinalStep;
+use Flow\PgQuery\QueryBuilder\Schema\Function\{
+    AlterFunctionFinalStep,
+    AlterProcedureFinalStep,
+    CallFinalStep,
+    CreateFunctionFinalStep,
+    CreateProcedureFinalStep,
+    DoFinalStep,
+    DropFunctionFinalStep,
+    DropProcedureFinalStep
+};
 use Flow\PgQuery\QueryBuilder\Schema\Grant\{GrantFinalStep, GrantRoleFinalStep, RevokeFinalStep, RevokeRoleFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\AlterIndex\{AlterTablespaceIndexFinalStep, RenameIndexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\CreateIndexFinalStep;
@@ -41,6 +51,20 @@ use PHPUnit\Framework\Assert;
 
 trait QueryBuilderAssertions
 {
+    protected function assertAlterFunctionQuery(AlterFunctionFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterFunctionStmt($builder->toAlterAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterFunctionRenameQuery(AlterFunctionFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseRenameStmt($builder->toRenameAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertAlterIndexRenameQuery(RenameIndexFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseRenameStmt($builder->toAst());
@@ -86,6 +110,20 @@ trait QueryBuilderAssertions
     protected function assertAlterObjectSchemaQuery(AlterTableSchemaBuilder $builder, string $expectedSql) : void
     {
         $sql = $this->deparseAlterObjectSchemaStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterProcedureQuery(AlterProcedureFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseAlterFunctionStmt($builder->toAlterAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertAlterProcedureRenameQuery(AlterProcedureFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseRenameStmt($builder->toRenameAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -188,6 +226,13 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertCallQuery(CallFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCallStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertClusterQuery(ClusterFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseClusterStmt($builder->toAst());
@@ -202,6 +247,13 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertCreateFunctionQuery(CreateFunctionFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateFunctionStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertCreateIndexQuery(CreateIndexFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseIndexStmt($builder->toAst());
@@ -212,6 +264,13 @@ trait QueryBuilderAssertions
     protected function assertCreateMaterializedViewQuery(CreateMatViewFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseCreateTableAsStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertCreateProcedureQuery(CreateProcedureFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseCreateFunctionStmt($builder->toAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -284,6 +343,20 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertDoQuery(DoFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDoStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertDropFunctionQuery(DropFunctionFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertDropIndexQuery(DropIndexFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropStmt($builder->toAst());
@@ -301,6 +374,13 @@ trait QueryBuilderAssertions
     protected function assertDropOwnedQuery(DropOwnedFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseDropOwnedStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertDropProcedureQuery(DropProcedureFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseDropStmt($builder->toAst());
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -495,6 +575,11 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function deparseAlterFunctionStmt(AlterFunctionStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['alter_function_stmt' => $stmt]));
+    }
+
     protected function deparseAlterObjectSchemaStmt(AlterObjectSchemaStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['alter_object_schema_stmt' => $stmt]));
@@ -520,6 +605,11 @@ trait QueryBuilderAssertions
         return $this->deparseNode(new Node(['alter_table_stmt' => $stmt]));
     }
 
+    protected function deparseCallStmt(CallStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['call_stmt' => $stmt]));
+    }
+
     protected function deparseClusterStmt(ClusterStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['cluster_stmt' => $stmt]));
@@ -528,6 +618,11 @@ trait QueryBuilderAssertions
     protected function deparseCommentStmt(CommentStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['comment_stmt' => $stmt]));
+    }
+
+    protected function deparseCreateFunctionStmt(CreateFunctionStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['create_function_stmt' => $stmt]));
     }
 
     protected function deparseCreateRoleStmt(CreateRoleStmt $stmt) : string
@@ -563,6 +658,11 @@ trait QueryBuilderAssertions
     protected function deparseDiscardStmt(DiscardStmt $stmt) : string
     {
         return $this->deparseNode(new Node(['discard_stmt' => $stmt]));
+    }
+
+    protected function deparseDoStmt(DoStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['do_stmt' => $stmt]));
     }
 
     protected function deparseDropOwnedStmt(DropOwnedStmt $stmt) : string
