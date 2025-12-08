@@ -83,11 +83,36 @@ use Flow\PgQuery\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTabl
 use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropSequence\{DropSequenceBuilder, DropSequenceFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Grant\{
+    GrantBuilder,
+    GrantOnStep,
+    GrantRoleBuilder,
+    GrantRoleToStep,
+    RevokeBuilder,
+    RevokeOnStep,
+    RevokeRoleBuilder,
+    RevokeRoleFromStep,
+    TablePrivilege
+};
 use Flow\PgQuery\QueryBuilder\Schema\Index\AlterIndex\{AlterIndexBuilder, AlterIndexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\{CreateIndexBuilder, CreateIndexOnStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex\{DropIndexBuilder, DropIndexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
 use Flow\PgQuery\QueryBuilder\Schema\Index\Reindex\{ReindexBuilder, ReindexFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Ownership\{
+    DropOwnedBuilder,
+    DropOwnedFinalStep,
+    ReassignOwnedBuilder,
+    ReassignOwnedToStep
+};
+use Flow\PgQuery\QueryBuilder\Schema\Role\{
+    AlterRoleActionStep,
+    AlterRoleBuilder,
+    CreateRoleBuilder,
+    CreateRoleOptionsStep,
+    DropRoleBuilder,
+    DropRoleFinalStep
+};
 use Flow\PgQuery\QueryBuilder\Schema\Schema\{
     AlterSchemaActionStep,
     AlterSchemaBuilder,
@@ -95,6 +120,12 @@ use Flow\PgQuery\QueryBuilder\Schema\Schema\{
     CreateSchemaOptionsStep,
     DropSchemaBuilder,
     DropSchemaFinalStep
+};
+use Flow\PgQuery\QueryBuilder\Schema\Session\{
+    ResetRoleBuilder,
+    ResetRoleFinalStep,
+    SetRoleBuilder,
+    SetRoleFinalStep
 };
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewActionStep, AlterMaterializedViewBuilder};
@@ -2755,4 +2786,220 @@ function alter_schema(string $name) : AlterSchemaActionStep
 function drop_schema(string ...$names) : DropSchemaFinalStep
 {
     return DropSchemaBuilder::create(...$names);
+}
+
+// ----------------------------------------------------------------------------
+// Role Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a CREATE ROLE builder.
+ *
+ * Example: create_role('admin')
+ * Produces: CREATE ROLE admin
+ *
+ * Example: create_role('admin')->superuser()->login()->withPassword('secret')
+ * Produces: CREATE ROLE admin SUPERUSER LOGIN PASSWORD 'secret'
+ *
+ * To create a user (role with LOGIN), use: create_role('user')->login()
+ *
+ * @param string $name The role name
+ *
+ * @return CreateRoleOptionsStep Builder for role creation options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function create_role(string $name) : CreateRoleOptionsStep
+{
+    return CreateRoleBuilder::create($name);
+}
+
+/**
+ * Create an ALTER ROLE builder.
+ *
+ * Example: alter_role('admin')->superuser()
+ * Produces: ALTER ROLE admin SUPERUSER
+ *
+ * Example: alter_role('admin')->renameTo('administrator')
+ * Produces: ALTER ROLE admin RENAME TO administrator
+ *
+ * @param string $name The role name
+ *
+ * @return AlterRoleActionStep Builder for role alter actions
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function alter_role(string $name) : AlterRoleActionStep
+{
+    return AlterRoleBuilder::create($name);
+}
+
+/**
+ * Create a DROP ROLE builder.
+ *
+ * Example: drop_role('admin')
+ * Produces: DROP ROLE admin
+ *
+ * Example: drop_role('user1', 'user2')->ifExists()
+ * Produces: DROP ROLE IF EXISTS user1, user2
+ *
+ * @param string ...$names The role name(s) to drop
+ *
+ * @return DropRoleFinalStep Builder for role drop options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_role(string ...$names) : DropRoleFinalStep
+{
+    return DropRoleBuilder::create(...$names);
+}
+
+// ----------------------------------------------------------------------------
+// Grant/Revoke Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a GRANT privileges builder.
+ *
+ * Example: grant(TablePrivilege::SELECT)->onTable('users')->to('app_user')
+ * Produces: GRANT SELECT ON users TO app_user
+ *
+ * Example: grant(TablePrivilege::ALL)->onAllTablesInSchema('public')->to('admin')
+ * Produces: GRANT ALL ON ALL TABLES IN SCHEMA public TO admin
+ *
+ * @param string|TablePrivilege ...$privileges The privileges to grant
+ *
+ * @return GrantOnStep Builder for grant options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function grant(TablePrivilege|string ...$privileges) : GrantOnStep
+{
+    return GrantBuilder::create(...$privileges);
+}
+
+/**
+ * Create a GRANT role builder.
+ *
+ * Example: grant_role('admin')->to('user1')
+ * Produces: GRANT admin TO user1
+ *
+ * Example: grant_role('admin', 'developer')->to('user1')->withAdminOption()
+ * Produces: GRANT admin, developer TO user1 WITH ADMIN OPTION
+ *
+ * @param string ...$roles The roles to grant
+ *
+ * @return GrantRoleToStep Builder for grant role options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function grant_role(string ...$roles) : GrantRoleToStep
+{
+    return GrantRoleBuilder::create(...$roles);
+}
+
+/**
+ * Create a REVOKE privileges builder.
+ *
+ * Example: revoke(TablePrivilege::SELECT)->onTable('users')->from('app_user')
+ * Produces: REVOKE SELECT ON users FROM app_user
+ *
+ * Example: revoke(TablePrivilege::ALL)->onTable('users')->from('app_user')->cascade()
+ * Produces: REVOKE ALL ON users FROM app_user CASCADE
+ *
+ * @param string|TablePrivilege ...$privileges The privileges to revoke
+ *
+ * @return RevokeOnStep Builder for revoke options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function revoke(TablePrivilege|string ...$privileges) : RevokeOnStep
+{
+    return RevokeBuilder::create(...$privileges);
+}
+
+/**
+ * Create a REVOKE role builder.
+ *
+ * Example: revoke_role('admin')->from('user1')
+ * Produces: REVOKE admin FROM user1
+ *
+ * Example: revoke_role('admin')->from('user1')->cascade()
+ * Produces: REVOKE admin FROM user1 CASCADE
+ *
+ * @param string ...$roles The roles to revoke
+ *
+ * @return RevokeRoleFromStep Builder for revoke role options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function revoke_role(string ...$roles) : RevokeRoleFromStep
+{
+    return RevokeRoleBuilder::create(...$roles);
+}
+
+// ----------------------------------------------------------------------------
+// Session Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a SET ROLE builder.
+ *
+ * Example: set_role('admin')
+ * Produces: SET ROLE admin
+ *
+ * @param string $role The role to set
+ *
+ * @return SetRoleFinalStep Builder for set role
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function set_role(string $role) : SetRoleFinalStep
+{
+    return SetRoleBuilder::create($role);
+}
+
+/**
+ * Create a RESET ROLE builder.
+ *
+ * Example: reset_role()
+ * Produces: RESET ROLE
+ *
+ * @return ResetRoleFinalStep Builder for reset role
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function reset_role() : ResetRoleFinalStep
+{
+    return ResetRoleBuilder::create();
+}
+
+// ----------------------------------------------------------------------------
+// Ownership Commands
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a REASSIGN OWNED builder.
+ *
+ * Example: reassign_owned('old_role')->to('new_role')
+ * Produces: REASSIGN OWNED BY old_role TO new_role
+ *
+ * @param string ...$roles The roles whose owned objects should be reassigned
+ *
+ * @return ReassignOwnedToStep Builder for reassign owned options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function reassign_owned(string ...$roles) : ReassignOwnedToStep
+{
+    return ReassignOwnedBuilder::create(...$roles);
+}
+
+/**
+ * Create a DROP OWNED builder.
+ *
+ * Example: drop_owned('role1')
+ * Produces: DROP OWNED BY role1
+ *
+ * Example: drop_owned('role1', 'role2')->cascade()
+ * Produces: DROP OWNED BY role1, role2 CASCADE
+ *
+ * @param string ...$roles The roles whose owned objects should be dropped
+ *
+ * @return DropOwnedFinalStep Builder for drop owned options
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
+function drop_owned(string ...$roles) : DropOwnedFinalStep
+{
+    return DropOwnedBuilder::create(...$roles);
 }
