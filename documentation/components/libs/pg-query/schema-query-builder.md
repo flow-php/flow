@@ -1,5 +1,9 @@
 # Schema Query Builder
 
+- [⬅️ Back](/documentation/components/libs/pg-query.md)
+
+[TOC]
+
 The Schema Query Builder provides a fluent interface for building PostgreSQL schema management statements.
 
 ## CREATE SCHEMA
@@ -7,30 +11,36 @@ The Schema Query Builder provides a fluent interface for building PostgreSQL sch
 Create a new schema in the database.
 
 ```php
+<?php
+
 use function Flow\PgQuery\DSL\create_schema;
 
 // Simple schema creation
-$sql = create_schema('my_schema')
-    ->toAst();
+$query = create_schema('my_schema');
+
+echo $query->toSQL();
 // CREATE SCHEMA my_schema
 
 // With IF NOT EXISTS
-$sql = create_schema('my_schema')
-    ->ifNotExists()
-    ->toAst();
+$query = create_schema('my_schema')
+    ->ifNotExists();
+
+echo $query->toSQL();
 // CREATE SCHEMA IF NOT EXISTS my_schema
 
 // With authorization
-$sql = create_schema('my_schema')
-    ->authorization('admin_user')
-    ->toAst();
+$query = create_schema('my_schema')
+    ->authorization('admin_user');
+
+echo $query->toSQL();
 // CREATE SCHEMA my_schema AUTHORIZATION admin_user
 
 // Combined options
-$sql = create_schema('my_schema')
+$query = create_schema('my_schema')
     ->ifNotExists()
-    ->authorization('admin_user')
-    ->toAst();
+    ->authorization('admin_user');
+
+echo $query->toSQL();
 // CREATE SCHEMA IF NOT EXISTS my_schema AUTHORIZATION admin_user
 ```
 
@@ -48,22 +58,28 @@ Modify an existing schema.
 ### Rename Schema
 
 ```php
+<?php
+
 use function Flow\PgQuery\DSL\alter_schema;
 
-$sql = alter_schema('old_schema')
-    ->renameTo('new_schema')
-    ->toAst();
+$query = alter_schema('old_schema')
+    ->renameTo('new_schema');
+
+echo $query->toSQL();
 // ALTER SCHEMA old_schema RENAME TO new_schema
 ```
 
 ### Change Owner
 
 ```php
+<?php
+
 use function Flow\PgQuery\DSL\alter_schema;
 
-$sql = alter_schema('my_schema')
-    ->ownerTo('new_owner')
-    ->toAst();
+$query = alter_schema('my_schema')
+    ->ownerTo('new_owner');
+
+echo $query->toSQL();
 // ALTER SCHEMA my_schema OWNER TO new_owner
 ```
 
@@ -72,36 +88,43 @@ $sql = alter_schema('my_schema')
 Remove one or more schemas from the database.
 
 ```php
+<?php
+
 use function Flow\PgQuery\DSL\drop_schema;
 
 // Simple drop
-$sql = drop_schema('my_schema')
-    ->toAst();
+$query = drop_schema('my_schema');
+
+echo $query->toSQL();
 // DROP SCHEMA my_schema
 
 // With IF EXISTS
-$sql = drop_schema('my_schema')
-    ->ifExists()
-    ->toAst();
+$query = drop_schema('my_schema')
+    ->ifExists();
+
+echo $query->toSQL();
 // DROP SCHEMA IF EXISTS my_schema
 
 // With CASCADE
-$sql = drop_schema('my_schema')
-    ->cascade()
-    ->toAst();
+$query = drop_schema('my_schema')
+    ->cascade();
+
+echo $query->toSQL();
 // DROP SCHEMA my_schema CASCADE
 
 // Combined options
-$sql = drop_schema('my_schema')
+$query = drop_schema('my_schema')
     ->ifExists()
-    ->cascade()
-    ->toAst();
+    ->cascade();
+
+echo $query->toSQL();
 // DROP SCHEMA IF EXISTS my_schema CASCADE
 
 // Drop multiple schemas
-$sql = drop_schema('schema1', 'schema2', 'schema3')
-    ->cascade()
-    ->toAst();
+$query = drop_schema('schema1', 'schema2', 'schema3')
+    ->cascade();
+
+echo $query->toSQL();
 // DROP SCHEMA schema1, schema2, schema3 CASCADE
 ```
 
@@ -120,3 +143,5 @@ $sql = drop_schema('schema1', 'schema2', 'schema3')
 | `create_schema(string $name)` | `CreateSchemaOptionsStep` | Start building a CREATE SCHEMA statement |
 | `alter_schema(string $name)` | `AlterSchemaActionStep` | Start building an ALTER SCHEMA statement |
 | `drop_schema(string ...$names)` | `DropSchemaFinalStep` | Start building a DROP SCHEMA statement |
+
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).

@@ -13,9 +13,9 @@ use function Flow\PgQuery\DSL\{
     literal_int,
     literal_string,
     merge,
-    merge_with,
     param,
     select,
+    with,
     with_cte
 };
 
@@ -102,7 +102,7 @@ final class MergeBuilderTest extends PGQueryTestCase
             cte('staged_data', $stagedData),
         ]);
 
-        $query = merge_with($with, 'users')
+        $query = with($with)->merge('users')
             ->using('staged_data', 's')
             ->on(eq(col('users.id'), col('s.id')))
             ->whenMatched()

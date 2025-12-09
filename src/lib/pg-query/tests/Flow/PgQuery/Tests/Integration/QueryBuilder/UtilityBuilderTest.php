@@ -6,20 +6,15 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
     analyze,
-    analyze_table,
     cluster,
-    cluster_table,
     comment,
     discard,
     explain,
-    explain_analyze,
     lock_table,
     select,
     star,
     table,
-    vacuum,
-    vacuum_analyze,
-    vacuum_full
+    vacuum
 };
 use Flow\PgQuery\QueryBuilder\Utility\{CommentTarget, DiscardType, ExplainFormat, IndexCleanup, LockMode};
 
@@ -47,7 +42,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_analyze_single_table() : void
     {
-        $builder = analyze_table('users');
+        $builder = analyze()->table('users');
 
         $this->assertAnalyzeQuery(
             $builder,
@@ -67,7 +62,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_analyze_table_with_columns() : void
     {
-        $builder = analyze_table('users', 'email', 'name');
+        $builder = analyze()->table('users', 'email', 'name');
 
         $this->assertAnalyzeQuery(
             $builder,
@@ -97,7 +92,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_cluster_single_table() : void
     {
-        $builder = cluster_table('users');
+        $builder = cluster()->table('users');
 
         $this->assertClusterQuery(
             $builder,
@@ -107,7 +102,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_cluster_table_using_index() : void
     {
-        $builder = cluster_table('users')->using('idx_users_pkey');
+        $builder = cluster()->table('users')->using('idx_users_pkey');
 
         $this->assertClusterQuery(
             $builder,
@@ -117,7 +112,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_cluster_table_with_schema() : void
     {
-        $builder = cluster_table('public.users');
+        $builder = cluster()->table('public.users');
 
         $this->assertClusterQuery(
             $builder,
@@ -227,7 +222,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_explain_analyze() : void
     {
-        $builder = explain_analyze(select(star())->from(table('users')));
+        $builder = explain(select(star())->from(table('users')))->analyze();
 
         $this->assertExplainQuery(
             $builder,
@@ -472,7 +467,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_vacuum_analyze() : void
     {
-        $builder = vacuum_analyze('users');
+        $builder = vacuum()->analyze()->tables('users');
 
         $this->assertVacuumQuery(
             $builder,
@@ -502,7 +497,7 @@ final class UtilityBuilderTest extends PGQueryTestCase
 
     public function test_vacuum_full() : void
     {
-        $builder = vacuum_full('users');
+        $builder = vacuum()->full()->tables('users');
 
         $this->assertVacuumQuery(
             $builder,

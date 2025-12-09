@@ -245,6 +245,16 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         return $stmt;
     }
 
+    public function withIfExists() : self
+    {
+        return new self(
+            $this->name,
+            $this->schema,
+            true,
+            $this->options,
+        );
+    }
+
     private function withBooleanOption(string $name, bool $value) : self
     {
         $boolean = new Boolean();

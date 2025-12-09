@@ -234,14 +234,14 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    select, select_with, star, table, col,
+    select, with, star, table, col,
     cte, cte_ref, with_cte, eq, literal_bool
 };
 
 use Flow\PgQuery\QueryBuilder\Clause\CTEMaterialization;
 
 // Simple CTE
-$query = select_with(with_cte([
+$query = with(with_cte([
     cte(
         'active_users',
         select(col('id'), col('name'))
@@ -256,7 +256,7 @@ echo $query->toSQL();
 // WITH active_users AS (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users
 
 // Materialized CTE
-$query = select_with(with_cte([
+$query = with(with_cte([
     cte(
         'active_users',
         select(col('id'), col('name'))

@@ -182,17 +182,17 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge_with, col, eq, select, cte, cte_ref, with_cte};
+use function Flow\PgQuery\DSL\{with, col, eq, select, cte, cte_ref, with_cte};
 
 $stagedData = select()
     ->select(col('id'), col('name'))
     ->from(cte_ref('raw_input'));
 
-$with = with_cte([
+$withClause = with_cte([
     cte('staged_data', $stagedData),
 ]);
 
-$query = merge_with($with, 'users')
+$query = with($withClause)->merge('users')
     ->using('staged_data', 's')
     ->on(eq(col('users.id'), col('s.id')))
     ->whenMatched()

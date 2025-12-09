@@ -240,6 +240,7 @@ use Flow\PgQuery\QueryBuilder\Utility\{
     VacuumBuilder,
     VacuumFinalStep
 };
+use Flow\PgQuery\QueryBuilder\With\WithBuilder;
 
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function sql_parser() : Parser
@@ -457,12 +458,15 @@ function select(Expression ...$expressions) : SelectBuilder
 }
 
 /**
- * Create a SELECT query builder with a WITH clause (CTE).
+ * Create a WITH clause builder for CTEs.
+ *
+ * Example: with(with_cte([cte('users', $subquery)]))->select(star())->from(cte_ref('users'))
+ * Example: with(with_cte([cte('data', $subquery)], recursive: true))->select(col('id'))->from(...)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function select_with(WithClause $with) : SelectSelectStep
+function with(WithClause $clause) : WithBuilder
 {
-    return SelectBuilder::with($with);
+    return new WithBuilder($clause);
 }
 
 /**
@@ -502,19 +506,6 @@ function delete() : DeleteFromStep
 function merge(string $table, ?string $alias = null) : MergeUsingStep
 {
     return MergeBuilder::create()->into($table, $alias);
-}
-
-/**
- * Create a MERGE query builder with a WITH clause (CTE).
- *
- * @param WithClause $with The WITH clause containing CTEs
- * @param string $table Target table name
- * @param null|string $alias Optional table alias
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function merge_with(WithClause $with, string $table, ?string $alias = null) : MergeUsingStep
-{
-    return MergeBuilder::with($with)->into($table, $alias);
 }
 
 /**
@@ -1630,18 +1621,6 @@ function begin() : BeginOptionsStep
 }
 
 /**
- * Create a START TRANSACTION builder (alias for begin()).
- *
- * Example: start_transaction()->isolationLevel(IsolationLevel::READ_COMMITTED)
- * Produces: BEGIN ISOLATION LEVEL READ COMMITTED
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function start_transaction() : BeginOptionsStep
-{
-    return BeginBuilder::create();
-}
-
-/**
  * Create a COMMIT transaction builder.
  *
  * Example: commit()->andChain()
@@ -2412,30 +2391,6 @@ function vacuum() : VacuumFinalStep
 }
 
 /**
- * Create a VACUUM FULL builder for one or more tables.
- *
- * Example: vacuum_full('users', 'orders')
- * Produces: VACUUM (FULL) users, orders
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function vacuum_full(string ...$tables) : VacuumFinalStep
-{
-    return VacuumBuilder::create()->full()->tables(...$tables);
-}
-
-/**
- * Create a VACUUM ANALYZE builder for one or more tables.
- *
- * Example: vacuum_analyze('users', 'orders')
- * Produces: VACUUM (ANALYZE) users, orders
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function vacuum_analyze(string ...$tables) : VacuumFinalStep
-{
-    return VacuumBuilder::create()->analyze()->tables(...$tables);
-}
-
-/**
  * Create an ANALYZE builder.
  *
  * Example: analyze()->table('users')
@@ -2445,18 +2400,6 @@ function vacuum_analyze(string ...$tables) : VacuumFinalStep
 function analyze() : AnalyzeFinalStep
 {
     return AnalyzeBuilder::create();
-}
-
-/**
- * Create an ANALYZE builder for a specific table with optional columns.
- *
- * Example: analyze_table('users', 'email', 'name')
- * Produces: ANALYZE users (email, name)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function analyze_table(string $table, string ...$columns) : AnalyzeFinalStep
-{
-    return AnalyzeBuilder::create()->table($table, ...$columns);
 }
 
 /**
@@ -2471,20 +2414,6 @@ function analyze_table(string $table, string ...$columns) : AnalyzeFinalStep
 function explain(SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder $query) : ExplainFinalStep
 {
     return ExplainBuilder::create($query);
-}
-
-/**
- * Create an EXPLAIN ANALYZE builder for a query.
- *
- * Example: explain_analyze(select()->from('users'))
- * Produces: EXPLAIN ANALYZE SELECT * FROM users
- *
- * @param DeleteBuilder|InsertBuilder|SelectFinalStep|UpdateBuilder $query Query to explain
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function explain_analyze(SelectFinalStep|InsertBuilder|UpdateBuilder|DeleteBuilder $query) : ExplainFinalStep
-{
-    return ExplainBuilder::create($query)->analyze();
 }
 
 /**
@@ -2527,18 +2456,6 @@ function cluster() : ClusterFinalStep
 }
 
 /**
- * Create a CLUSTER builder for a specific table.
- *
- * Example: cluster_table('users')->using('idx_users_pkey')
- * Produces: CLUSTER users USING idx_users_pkey
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function cluster_table(string $table) : ClusterFinalStep
-{
-    return ClusterBuilder::create()->table($table);
-}
-
-/**
  * Create a DISCARD builder.
  *
  * Example: discard(DiscardType::ALL)
@@ -2572,51 +2489,6 @@ function create_sequence(string $name, ?string $schema = null) : CreateSequenceO
 }
 
 /**
- * Create a CREATE SEQUENCE IF NOT EXISTS builder.
- *
- * Example: create_sequence_if_not_exists('user_id_seq')->startWith(1)
- * Produces: CREATE SEQUENCE IF NOT EXISTS user_id_seq START WITH 1
- *
- * @param string $name Sequence name
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create_sequence_if_not_exists(string $name, ?string $schema = null) : CreateSequenceOptionsStep
-{
-    return CreateSequenceBuilder::createIfNotExists()->sequence($name, $schema);
-}
-
-/**
- * Create a CREATE TEMPORARY SEQUENCE builder.
- *
- * Example: create_temp_sequence('temp_seq')->startWith(100)
- * Produces: CREATE TEMPORARY SEQUENCE temp_seq START WITH 100
- *
- * @param string $name Sequence name
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create_temp_sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
-{
-    return CreateSequenceBuilder::createTemporary()->sequence($name, $schema);
-}
-
-/**
- * Create a CREATE UNLOGGED SEQUENCE builder.
- *
- * Example: create_unlogged_sequence('fast_seq')->cache(100)
- * Produces: CREATE UNLOGGED SEQUENCE fast_seq CACHE 100
- *
- * @param string $name Sequence name
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create_unlogged_sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
-{
-    return CreateSequenceBuilder::createUnlogged()->sequence($name, $schema);
-}
-
-/**
  * Create an ALTER SEQUENCE builder.
  *
  * Example: alter_sequence('user_id_seq')->restartWith(1000)
@@ -2632,21 +2504,6 @@ function alter_sequence(string $name, ?string $schema = null) : AlterSequenceOpt
 }
 
 /**
- * Create an ALTER SEQUENCE IF EXISTS builder.
- *
- * Example: alter_sequence_if_exists('user_id_seq')->incrementBy(10)
- * Produces: ALTER SEQUENCE IF EXISTS user_id_seq INCREMENT BY 10
- *
- * @param string $name Sequence name
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function alter_sequence_if_exists(string $name, ?string $schema = null) : AlterSequenceOptionsStep
-{
-    return AlterSequenceBuilder::ifExists()->sequence($name, $schema);
-}
-
-/**
  * Create a DROP SEQUENCE builder.
  *
  * Example: drop_sequence('user_id_seq', 'order_id_seq')->cascade()
@@ -2658,20 +2515,6 @@ function alter_sequence_if_exists(string $name, ?string $schema = null) : AlterS
 function drop_sequence(string ...$names) : DropSequenceFinalStep
 {
     return DropSequenceBuilder::create()->sequence(...$names);
-}
-
-/**
- * Create a DROP SEQUENCE IF EXISTS builder.
- *
- * Example: drop_sequence_if_exists('user_id_seq')->cascade()
- * Produces: DROP SEQUENCE IF EXISTS user_id_seq CASCADE
- *
- * @param string ...$names Sequence names to drop
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function drop_sequence_if_exists(string ...$names) : DropSequenceFinalStep
-{
-    return DropSequenceBuilder::ifExists()->sequence(...$names);
 }
 
 // ----------------------------------------------------------------------------

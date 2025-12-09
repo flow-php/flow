@@ -15,28 +15,13 @@ use function Flow\PgQuery\DSL\{
     savepoint,
     set_session_transaction,
     set_transaction,
-    start_transaction,
     transaction_snapshot
 };
 
-use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\PgQuery\Protobuf\AST\{Node, RawStmt, TransactionStmt, VariableSetStmt};
-use Flow\PgQuery\QueryBuilder\Transaction\{
-    BeginFinalStep,
-    CommitFinalStep,
-    IsolationLevel,
-    PreparedTransactionFinalStep,
-    RollbackFinalStep,
-    SavepointFinalStep,
-    SetTransactionFinalStep
-};
+use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
 
 final class TransactionBuilderTest extends PGQueryTestCase
 {
-    // -------------------------------------------------------------------
-    // BEGIN / START TRANSACTION
-    // -------------------------------------------------------------------
-
     public function test_begin_basic() : void
     {
         $query = begin();
@@ -183,10 +168,6 @@ final class TransactionBuilderTest extends PGQueryTestCase
         );
     }
 
-    // -------------------------------------------------------------------
-    // PREPARED TRANSACTIONS (TWO-PHASE COMMIT)
-    // -------------------------------------------------------------------
-
     public function test_prepare_transaction() : void
     {
         $query = prepare_transaction('my_transaction');
@@ -217,10 +198,6 @@ final class TransactionBuilderTest extends PGQueryTestCase
             'ROLLBACK AND CHAIN'
         );
     }
-
-    // -------------------------------------------------------------------
-    // ROLLBACK
-    // -------------------------------------------------------------------
 
     public function test_rollback_basic() : void
     {
@@ -253,10 +230,6 @@ final class TransactionBuilderTest extends PGQueryTestCase
         );
     }
 
-    // -------------------------------------------------------------------
-    // SAVEPOINT
-    // -------------------------------------------------------------------
-
     public function test_savepoint() : void
     {
         $query = savepoint('my_savepoint');
@@ -288,10 +261,6 @@ final class TransactionBuilderTest extends PGQueryTestCase
             'SET TRANSACTION DEFERRABLE'
         );
     }
-
-    // -------------------------------------------------------------------
-    // SET TRANSACTION
-    // -------------------------------------------------------------------
 
     public function test_set_transaction_isolation_level() : void
     {
@@ -341,7 +310,7 @@ final class TransactionBuilderTest extends PGQueryTestCase
 
     public function test_start_transaction_basic() : void
     {
-        $query = start_transaction();
+        $query = begin();
 
         $this->assertTransactionQueryEquals(
             $query,
@@ -357,51 +326,5 @@ final class TransactionBuilderTest extends PGQueryTestCase
             $query,
             "SET TRANSACTION SNAPSHOT '00000003-0000001A-1'"
         );
-    }
-
-    protected function assertSetTransactionQueryEquals(SetTransactionFinalStep $builder, string $expectedSql) : void
-    {
-        $sql = $this->deparseVariableSetStmt($builder->toAst());
-
-        self::assertSame($expectedSql, $sql);
-    }
-
-    // -------------------------------------------------------------------
-    // Assertions
-    // -------------------------------------------------------------------
-
-    protected function assertTransactionQueryEquals(BeginFinalStep|CommitFinalStep|RollbackFinalStep|SavepointFinalStep|PreparedTransactionFinalStep $builder, string $expectedSql) : void
-    {
-        $sql = $this->deparseTransactionStmt($builder->toAst());
-
-        self::assertSame($expectedSql, $sql);
-    }
-
-    protected function deparseTransactionStmt(TransactionStmt $stmt) : string
-    {
-        $node = new Node();
-        $node->setTransactionStmt($stmt);
-
-        $parser = new Parser();
-        $rawStmt = new RawStmt(['stmt' => $node]);
-        $parsed = $parser->parse('SELECT 1');
-        $parseResult = $parsed->raw();
-        $parseResult->setStmts([$rawStmt]);
-
-        return (new ParsedQuery($parseResult))->deparse();
-    }
-
-    protected function deparseVariableSetStmt(VariableSetStmt $stmt) : string
-    {
-        $node = new Node();
-        $node->setVariableSetStmt($stmt);
-
-        $parser = new Parser();
-        $rawStmt = new RawStmt(['stmt' => $node]);
-        $parsed = $parser->parse('SELECT 1');
-        $parseResult = $parsed->raw();
-        $parseResult->setStmts([$rawStmt]);
-
-        return (new ParsedQuery($parseResult))->deparse();
     }
 }

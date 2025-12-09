@@ -6,14 +6,12 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{create_rule, drop_rule};
 use Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions\QueryBuilderAssertions;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class RuleBuilderTest extends TestCase
 {
     use QueryBuilderAssertions;
 
-    #[Test]
     public function test_create_rule_do_also_insert() : void
     {
         $builder = create_rule('audit_insert')
@@ -24,7 +22,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, "CREATE RULE audit_insert AS ON INSERT TO users DO INSERT INTO audit_log (action) VALUES ('insert')");
     }
 
-    #[Test]
     public function test_create_rule_do_instead_delete() : void
     {
         $builder = create_rule('soft_delete')
@@ -35,7 +32,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, 'CREATE RULE soft_delete AS ON DELETE TO users DO INSTEAD UPDATE users SET deleted = true WHERE id = old.id');
     }
 
-    #[Test]
     public function test_create_rule_do_nothing() : void
     {
         $builder = create_rule('prevent_delete')
@@ -46,7 +42,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, 'CREATE RULE prevent_delete AS ON DELETE TO users DO NOTHING');
     }
 
-    #[Test]
     public function test_create_rule_on_select() : void
     {
         $builder = create_rule('redirect_select')
@@ -57,7 +52,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, 'CREATE RULE redirect_select AS ON SELECT TO old_table DO INSTEAD SELECT * FROM new_table');
     }
 
-    #[Test]
     public function test_create_rule_on_update() : void
     {
         $builder = create_rule('track_update')
@@ -68,7 +62,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, "CREATE RULE track_update AS ON UPDATE TO users DO INSERT INTO update_log (table_name) VALUES ('users')");
     }
 
-    #[Test]
     public function test_create_rule_or_replace() : void
     {
         $builder = create_rule('prevent_delete')
@@ -80,7 +73,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, 'CREATE OR REPLACE RULE prevent_delete AS ON DELETE TO users DO NOTHING');
     }
 
-    #[Test]
     public function test_create_rule_with_schema() : void
     {
         $builder = create_rule('prevent_delete')
@@ -91,7 +83,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, 'CREATE RULE prevent_delete AS ON DELETE TO public.users DO NOTHING');
     }
 
-    #[Test]
     public function test_create_rule_with_where_condition() : void
     {
         $builder = create_rule('protect_admin')
@@ -103,7 +94,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertCreateRuleQuery($builder, "CREATE RULE protect_admin AS ON DELETE TO users WHERE old.role = 'admin' DO NOTHING");
     }
 
-    #[Test]
     public function test_drop_rule() : void
     {
         $builder = drop_rule('prevent_delete')
@@ -112,7 +102,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertDropRuleQuery($builder, 'DROP RULE prevent_delete ON users');
     }
 
-    #[Test]
     public function test_drop_rule_cascade() : void
     {
         $builder = drop_rule('prevent_delete')
@@ -122,7 +111,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertDropRuleQuery($builder, 'DROP RULE prevent_delete ON users CASCADE');
     }
 
-    #[Test]
     public function test_drop_rule_if_exists() : void
     {
         $builder = drop_rule('prevent_delete')
@@ -132,7 +120,6 @@ final class RuleBuilderTest extends TestCase
         $this->assertDropRuleQuery($builder, 'DROP RULE IF EXISTS prevent_delete ON users');
     }
 
-    #[Test]
     public function test_drop_rule_with_schema() : void
     {
         $builder = drop_rule('prevent_delete')

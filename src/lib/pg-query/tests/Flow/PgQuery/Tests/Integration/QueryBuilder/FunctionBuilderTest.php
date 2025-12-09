@@ -6,15 +6,9 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{alter_function, alter_procedure, call, create_function, create_procedure, do_block, drop_function, drop_procedure, func_arg};
 use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
-use Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions\QueryBuilderAssertions;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
-final class FunctionBuilderTest extends TestCase
+final class FunctionBuilderTest extends PGQueryTestCase
 {
-    use QueryBuilderAssertions;
-
-    #[Test]
     public function test_alter_function_immutable() : void
     {
         $builder = alter_function('my_func')
@@ -24,7 +18,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertAlterFunctionQuery($builder, 'ALTER FUNCTION my_func("integer") IMMUTABLE');
     }
 
-    #[Test]
     public function test_alter_function_parallel_safe() : void
     {
         $builder = alter_function('my_func')
@@ -34,7 +27,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertAlterFunctionQuery($builder, 'ALTER FUNCTION my_func("integer") PARALLEL safe');
     }
 
-    #[Test]
     public function test_alter_function_rename() : void
     {
         $builder = alter_function('old_name')
@@ -44,7 +36,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertAlterFunctionRenameQuery($builder, 'ALTER FUNCTION old_name(text) RENAME TO new_name');
     }
 
-    #[Test]
     public function test_alter_procedure_rename() : void
     {
         $builder = alter_procedure('old_proc')
@@ -54,7 +45,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertAlterProcedureRenameQuery($builder, 'ALTER PROCEDURE old_proc("integer") RENAME TO new_proc');
     }
 
-    #[Test]
     public function test_call_procedure() : void
     {
         $builder = call('update_stats');
@@ -62,7 +52,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertCallQuery($builder, 'CALL update_stats()');
     }
 
-    #[Test]
     public function test_call_procedure_with_args() : void
     {
         $builder = call('update_stats')->with(123, 'test');
@@ -70,7 +59,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertCallQuery($builder, "CALL update_stats(123, 'test')");
     }
 
-    #[Test]
     public function test_create_function_plpgsql() : void
     {
         $builder = create_function('increment')
@@ -85,7 +73,6 @@ final class FunctionBuilderTest extends TestCase
         );
     }
 
-    #[Test]
     public function test_create_function_returns_table() : void
     {
         $builder = create_function('get_users')
@@ -99,7 +86,6 @@ final class FunctionBuilderTest extends TestCase
         );
     }
 
-    #[Test]
     public function test_create_function_simple() : void
     {
         $builder = create_function('add_numbers')
@@ -114,7 +100,6 @@ final class FunctionBuilderTest extends TestCase
         );
     }
 
-    #[Test]
     public function test_create_function_with_options() : void
     {
         $builder = create_function('compute')
@@ -132,7 +117,6 @@ final class FunctionBuilderTest extends TestCase
         );
     }
 
-    #[Test]
     public function test_create_function_with_or_replace() : void
     {
         $builder = create_function('my_func')
@@ -147,7 +131,6 @@ final class FunctionBuilderTest extends TestCase
         );
     }
 
-    #[Test]
     public function test_create_procedure() : void
     {
         $builder = create_procedure('update_stats')
@@ -161,7 +144,6 @@ final class FunctionBuilderTest extends TestCase
         );
     }
 
-    #[Test]
     public function test_create_procedure_with_or_replace() : void
     {
         $builder = create_procedure('my_proc')
@@ -175,7 +157,6 @@ final class FunctionBuilderTest extends TestCase
         );
     }
 
-    #[Test]
     public function test_do_block() : void
     {
         $builder = do_block('BEGIN RAISE NOTICE $$Hello$$; END;');
@@ -183,7 +164,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertDoQuery($builder, 'DO $outer$BEGIN RAISE NOTICE $$Hello$$; END;$outer$ LANGUAGE plpgsql');
     }
 
-    #[Test]
     public function test_do_block_with_language() : void
     {
         $builder = do_block('SELECT 1')->language('sql');
@@ -191,7 +171,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertDoQuery($builder, 'DO $$SELECT 1$$ LANGUAGE sql');
     }
 
-    #[Test]
     public function test_drop_function() : void
     {
         $builder = drop_function('my_func');
@@ -199,7 +178,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertDropFunctionQuery($builder, 'DROP FUNCTION my_func');
     }
 
-    #[Test]
     public function test_drop_function_if_exists_cascade() : void
     {
         $builder = drop_function('my_func')
@@ -210,7 +188,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertDropFunctionQuery($builder, 'DROP FUNCTION IF EXISTS my_func("integer", text) CASCADE');
     }
 
-    #[Test]
     public function test_drop_procedure() : void
     {
         $builder = drop_procedure('my_proc');
@@ -218,7 +195,6 @@ final class FunctionBuilderTest extends TestCase
         $this->assertDropProcedureQuery($builder, 'DROP PROCEDURE my_proc');
     }
 
-    #[Test]
     public function test_drop_procedure_if_exists() : void
     {
         $builder = drop_procedure('my_proc')

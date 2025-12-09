@@ -53,7 +53,6 @@ use function Flow\PgQuery\DSL\{
     raw_expr,
     row_expr,
     select,
-    select_with,
     similar_to,
     star,
     sub_select,
@@ -62,6 +61,7 @@ use function Flow\PgQuery\DSL\{
     when,
     window_def,
     window_func,
+    with,
     with_cte
 };
 use Flow\PgQuery\QueryBuilder\Clause\{CTEMaterialization, NullsPosition, SortDirection};
@@ -303,7 +303,7 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_cte() : void
     {
-        $query = select_with(with_cte([
+        $query = with(with_cte([
             cte(
                 'active_users',
                 select()
@@ -328,7 +328,7 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('users'))
             ->where(eq(col('active'), literal_bool(true)));
 
-        $query = select_with(with_cte([
+        $query = with(with_cte([
             cte('active_users', $cteQuery, [], CTEMaterialization::MATERIALIZED),
         ]))
             ->select(star())
@@ -347,7 +347,7 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('users'))
             ->where(eq(col('active'), literal_bool(true)));
 
-        $query = select_with(with_cte([
+        $query = with(with_cte([
             cte('active_users', $cteQuery, [], CTEMaterialization::NOT_MATERIALIZED),
         ]))
             ->select(star())
@@ -958,7 +958,7 @@ final class SelectBuilderTest extends PGQueryTestCase
                 eq(col('e.department_id'), col('ds.department_id'))
             );
 
-        $query = select_with(with_cte([
+        $query = with(with_cte([
             cte('org_tree', $orgTreeQuery, ['id', 'name', 'manager_id', 'level', 'path']),
             cte('dept_stats', $deptStats, ['department_id', 'avg_salary', 'max_salary', 'employee_count']),
             cte(

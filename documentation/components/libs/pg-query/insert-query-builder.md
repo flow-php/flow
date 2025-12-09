@@ -77,7 +77,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, select, table};
+use function Flow\PgQuery\DSL\{insert, select, table, col};
 
 $selectQuery = select()
     ->select(col('name'), col('email'))
@@ -173,7 +173,7 @@ Reference the values that would have been inserted using the `excluded` pseudo-t
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, param, conflict_columns};
+use function Flow\PgQuery\DSL\{insert, param, conflict_columns, col};
 
 $query = insert()
     ->into('users')
@@ -194,7 +194,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    insert, literal_string, literal_bool, conflict_columns, eq
+    insert, literal_string, literal_bool, conflict_columns, eq, col
 };
 
 $query = insert()
@@ -216,7 +216,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string};
+use function Flow\PgQuery\DSL\{insert, literal_string, col};
 
 // Return specific columns
 $query = insert()
