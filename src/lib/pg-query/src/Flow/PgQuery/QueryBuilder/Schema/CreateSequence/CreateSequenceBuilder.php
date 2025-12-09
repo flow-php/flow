@@ -88,6 +88,18 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $this->withBooleanOption('cycle', true);
     }
 
+    public function ifNotExists() : self
+    {
+        return new self(
+            $this->name,
+            $this->schema,
+            true,
+            $this->temporary,
+            $this->unlogged,
+            $this->options,
+        );
+    }
+
     public function incrementBy(int $increment) : CreateSequenceOptionsStep
     {
         return $this->withIntegerOption('increment', $increment);
@@ -183,6 +195,18 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         return $this->withIntegerOption('start', $start);
     }
 
+    public function temporary() : self
+    {
+        return new self(
+            $this->name,
+            $this->schema,
+            $this->ifNotExists,
+            true,
+            false,
+            $this->options,
+        );
+    }
+
     public function toAst() : CreateSeqStmt
     {
         $stmt = new CreateSeqStmt();
@@ -229,6 +253,18 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         }
 
         return $stmt;
+    }
+
+    public function unlogged() : self
+    {
+        return new self(
+            $this->name,
+            $this->schema,
+            $this->ifNotExists,
+            false,
+            true,
+            $this->options,
+        );
     }
 
     private function withBooleanOption(string $name, bool $value) : self

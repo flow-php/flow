@@ -6,7 +6,7 @@
 
 The Transaction Query Builder provides a fluent, type-safe interface for constructing PostgreSQL transaction control statements. It supports BEGIN, COMMIT, ROLLBACK, SAVEPOINT, SET TRANSACTION, and two-phase commit operations.
 
-## BEGIN / START TRANSACTION
+## BEGIN
 
 ### Basic BEGIN
 
@@ -75,23 +75,6 @@ $query = begin()
 
 echo $query->toSQL();
 // BEGIN ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE
-```
-
-### START TRANSACTION Alias
-
-`start_transaction()` is an alias for `begin()`:
-
-```php
-<?php
-
-use function Flow\PgQuery\DSL\start_transaction;
-use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
-
-$query = start_transaction()
-    ->isolationLevel(IsolationLevel::READ_COMMITTED);
-
-echo $query->toSQL();
-// BEGIN ISOLATION LEVEL READ COMMITTED
 ```
 
 ## COMMIT

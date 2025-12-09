@@ -40,9 +40,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence_if_not_exists;
+use function Flow\PgQuery\DSL\create_sequence;
 
-$query = create_sequence_if_not_exists('user_id_seq');
+$query = create_sequence('user_id_seq')->ifNotExists();
 
 echo $query->toSQL();
 // CREATE SEQUENCE IF NOT EXISTS user_id_seq
@@ -55,9 +55,9 @@ Create a temporary sequence that is automatically dropped at the end of the sess
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_temp_sequence;
+use function Flow\PgQuery\DSL\create_sequence;
 
-$query = create_temp_sequence('temp_seq');
+$query = create_sequence('temp_seq')->temporary();
 
 echo $query->toSQL();
 // CREATE TEMPORARY SEQUENCE temp_seq
@@ -70,9 +70,9 @@ Create an unlogged sequence for better performance (data not written to WAL):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_unlogged_sequence;
+use function Flow\PgQuery\DSL\create_sequence;
 
-$query = create_unlogged_sequence('fast_seq');
+$query = create_sequence('fast_seq')->unlogged();
 
 echo $query->toSQL();
 // CREATE UNLOGGED SEQUENCE fast_seq
@@ -298,9 +298,10 @@ Only alter the sequence if it exists:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence_if_exists;
+use function Flow\PgQuery\DSL\alter_sequence;
 
-$query = alter_sequence_if_exists('user_id_seq')
+$query = alter_sequence('user_id_seq')
+    ->withIfExists()
     ->incrementBy(10);
 
 echo $query->toSQL();
@@ -445,9 +446,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence_if_exists;
+use function Flow\PgQuery\DSL\drop_sequence;
 
-$query = drop_sequence_if_exists('user_id_seq');
+$query = drop_sequence('user_id_seq')->withIfExists();
 
 echo $query->toSQL();
 // DROP SEQUENCE IF EXISTS user_id_seq
@@ -503,9 +504,10 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence_if_exists;
+use function Flow\PgQuery\DSL\drop_sequence;
 
-$query = drop_sequence_if_exists('user_id_seq')
+$query = drop_sequence('user_id_seq')
+    ->withIfExists()
     ->cascade();
 
 echo $query->toSQL();

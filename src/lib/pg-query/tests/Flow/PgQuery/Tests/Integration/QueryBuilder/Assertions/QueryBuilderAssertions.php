@@ -6,7 +6,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions;
 
 use function Flow\PgQuery\DSL\sql_parse;
 use Flow\PgQuery\{ParsedQuery, Parser};
-use Flow\PgQuery\Protobuf\AST\{AlterDomainStmt, AlterEnumStmt, AlterExtensionContentsStmt, AlterExtensionStmt, AlterFunctionStmt, AlterObjectDependsStmt, AlterObjectSchemaStmt, AlterOwnerStmt, AlterRoleStmt, AlterSeqStmt, AlterTableStmt, CallStmt, ClusterStmt, CommentStmt, CompositeTypeStmt, CreateDomainStmt, CreateEnumStmt, CreateExtensionStmt, CreateFunctionStmt, CreateRangeStmt, CreateRoleStmt, CreateSchemaStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, CreateTrigStmt, DeleteStmt, DiscardStmt, DoStmt, DropOwnedStmt, DropRoleStmt, DropStmt, ExplainStmt, GrantRoleStmt, GrantStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReassignOwnedStmt, RefreshMatViewStmt, ReindexStmt, RenameStmt, RuleStmt, SelectStmt, TruncateStmt, UpdateStmt, VacuumStmt, VariableSetStmt, ViewStmt};
+use Flow\PgQuery\Protobuf\AST\{AlterDomainStmt, AlterEnumStmt, AlterExtensionContentsStmt, AlterExtensionStmt, AlterFunctionStmt, AlterObjectDependsStmt, AlterObjectSchemaStmt, AlterOwnerStmt, AlterRoleStmt, AlterSeqStmt, AlterTableStmt, CallStmt, ClusterStmt, CommentStmt, CompositeTypeStmt, CreateDomainStmt, CreateEnumStmt, CreateExtensionStmt, CreateFunctionStmt, CreateRangeStmt, CreateRoleStmt, CreateSchemaStmt, CreateSeqStmt, CreateStmt, CreateTableAsStmt, CreateTrigStmt, DeleteStmt, DiscardStmt, DoStmt, DropOwnedStmt, DropRoleStmt, DropStmt, ExplainStmt, GrantRoleStmt, GrantStmt, IndexStmt, InsertStmt, LockStmt, Node, RawStmt, ReassignOwnedStmt, RefreshMatViewStmt, ReindexStmt, RenameStmt, RuleStmt, SelectStmt, TransactionStmt, TruncateStmt, UpdateStmt, VacuumStmt, VariableSetStmt, ViewStmt};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFinalStep};
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceLoggingFinalStep, AlterSequenceOptionsStep, AlterSequenceOwnerFinalStep, AlterSequenceSchemaFinalStep, RenameSequenceFinalStep};
@@ -49,6 +49,14 @@ use Flow\PgQuery\QueryBuilder\Schema\View\DropMaterializedView\DropMatViewFinalS
 use Flow\PgQuery\QueryBuilder\Schema\View\DropView\DropViewFinalStep;
 use Flow\PgQuery\QueryBuilder\Schema\View\RefreshMaterializedView\RefreshMatViewFinalStep;
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep};
+use Flow\PgQuery\QueryBuilder\Transaction\{
+    BeginFinalStep,
+    CommitFinalStep,
+    PreparedTransactionFinalStep,
+    RollbackFinalStep,
+    SavepointFinalStep,
+    SetTransactionFinalStep
+};
 use Flow\PgQuery\QueryBuilder\Update\{UpdateBuilder, UpdateFinalStep};
 use Flow\PgQuery\QueryBuilder\Utility\{AnalyzeFinalStep, ClusterFinalStep, CommentFinalStep, DiscardFinalStep, ExplainFinalStep, LockFinalStep, VacuumFinalStep};
 
@@ -672,6 +680,20 @@ trait QueryBuilderAssertions
         Assert::assertSame($expectedSql, $sql);
     }
 
+    protected function assertSetTransactionQueryEquals(SetTransactionFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseVariableSetStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
+    protected function assertTransactionQueryEquals(BeginFinalStep|CommitFinalStep|RollbackFinalStep|SavepointFinalStep|PreparedTransactionFinalStep $builder, string $expectedSql) : void
+    {
+        $sql = $this->deparseTransactionStmt($builder->toAst());
+
+        Assert::assertSame($expectedSql, $sql);
+    }
+
     protected function assertTruncateQuery(TruncateFinalStep $builder, string $expectedSql) : void
     {
         $sql = $this->deparseTruncateStmt($builder->toAst());
@@ -923,6 +945,11 @@ trait QueryBuilderAssertions
     protected function deparseSelectStmt(SelectStmt $selectStmt) : string
     {
         return $this->deparseNode(new Node(['select_stmt' => $selectStmt]));
+    }
+
+    protected function deparseTransactionStmt(TransactionStmt $stmt) : string
+    {
+        return $this->deparseNode(new Node(['transaction_stmt' => $stmt]));
     }
 
     protected function deparseTruncateStmt(TruncateStmt $stmt) : string

@@ -6,13 +6,8 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
     alter_sequence,
-    alter_sequence_if_exists,
     create_sequence,
-    create_sequence_if_not_exists,
-    create_temp_sequence,
-    create_unlogged_sequence,
-    drop_sequence,
-    drop_sequence_if_exists
+    drop_sequence
 };
 
 final class SequenceBuilderTest extends PGQueryTestCase
@@ -52,7 +47,8 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_if_exists() : void
     {
-        $builder = alter_sequence_if_exists('user_id_seq')
+        $builder = alter_sequence('user_id_seq')
+            ->withIfExists()
             ->incrementBy(10);
 
         $this->assertAlterSequenceQuery(
@@ -176,7 +172,8 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_owner_to_if_exists() : void
     {
-        $builder = alter_sequence_if_exists('user_id_seq')
+        $builder = alter_sequence('user_id_seq')
+            ->withIfExists()
             ->ownerTo('new_owner');
 
         $this->assertAlterSequenceOwnerQuery(
@@ -198,7 +195,8 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_rename_to_if_exists() : void
     {
-        $builder = alter_sequence_if_exists('old_seq')
+        $builder = alter_sequence('old_seq')
+            ->withIfExists()
             ->renameTo('new_seq');
 
         $this->assertAlterSequenceRenameQuery(
@@ -253,7 +251,8 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_set_logged_if_exists() : void
     {
-        $builder = alter_sequence_if_exists('user_id_seq')
+        $builder = alter_sequence('user_id_seq')
+            ->withIfExists()
             ->setLogged();
 
         $this->assertAlterSequenceLoggingQuery(
@@ -275,7 +274,8 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_set_schema_if_exists() : void
     {
-        $builder = alter_sequence_if_exists('user_id_seq')
+        $builder = alter_sequence('user_id_seq')
+            ->withIfExists()
             ->setSchema('new_schema');
 
         $this->assertAlterSequenceSchemaQuery(
@@ -319,7 +319,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_if_not_exists() : void
     {
-        $builder = create_sequence_if_not_exists('user_id_seq');
+        $builder = create_sequence('user_id_seq')->ifNotExists();
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -509,7 +509,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_temporary_sequence() : void
     {
-        $builder = create_temp_sequence('temp_seq');
+        $builder = create_sequence('temp_seq')->temporary();
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -519,7 +519,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_unlogged_sequence() : void
     {
-        $builder = create_unlogged_sequence('fast_seq');
+        $builder = create_sequence('fast_seq')->unlogged();
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -540,7 +540,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_if_exists() : void
     {
-        $builder = drop_sequence_if_exists('user_id_seq');
+        $builder = drop_sequence('user_id_seq')->withIfExists();
 
         $this->assertDropSequenceQuery(
             $builder,
@@ -550,7 +550,8 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_if_exists_cascade() : void
     {
-        $builder = drop_sequence_if_exists('user_id_seq')
+        $builder = drop_sequence('user_id_seq')
+            ->withIfExists()
             ->cascade();
 
         $this->assertDropSequenceQuery(

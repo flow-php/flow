@@ -79,6 +79,15 @@ final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropS
         return $stmt;
     }
 
+    public function withIfExists() : self
+    {
+        return new self(
+            $this->sequences,
+            true,
+            $this->behavior,
+        );
+    }
+
     private function createSequenceListNode(string $sequence) : Node
     {
         $parts = \explode('.', $sequence);

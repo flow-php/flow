@@ -82,9 +82,9 @@ VACUUM FULL rewrites the entire table to reclaim maximum space:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum_full;
+use function Flow\PgQuery\DSL\vacuum;
 
-$query = vacuum_full('users');
+$query = vacuum()->full()->tables('users');
 
 echo $query->toSQL();
 // VACUUM (FULL) users
@@ -97,9 +97,9 @@ VACUUM ANALYZE updates planner statistics after vacuuming:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum_analyze;
+use function Flow\PgQuery\DSL\vacuum;
 
-$query = vacuum_analyze('users');
+$query = vacuum()->analyze()->tables('users');
 
 echo $query->toSQL();
 // VACUUM (ANALYZE) users
@@ -203,9 +203,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\analyze_table;
+use function Flow\PgQuery\DSL\analyze;
 
-$query = analyze_table('users');
+$query = analyze()->table('users');
 
 echo $query->toSQL();
 // ANALYZE users
@@ -216,9 +216,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\analyze_table;
+use function Flow\PgQuery\DSL\analyze;
 
-$query = analyze_table('users', 'email', 'name');
+$query = analyze()->table('users', 'email', 'name');
 
 echo $query->toSQL();
 // ANALYZE users (email, name)
@@ -285,9 +285,9 @@ EXPLAIN ANALYZE actually executes the query and shows real timing:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{explain_analyze, select};
+use function Flow\PgQuery\DSL\{explain, select};
 
-$query = explain_analyze(select()->from('users'));
+$query = explain(select()->from('users'))->analyze();
 
 echo $query->toSQL();
 // EXPLAIN (ANALYZE) SELECT * FROM users
@@ -607,9 +607,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster_table;
+use function Flow\PgQuery\DSL\cluster;
 
-$query = cluster_table('users');
+$query = cluster()->table('users');
 
 echo $query->toSQL();
 // CLUSTER users
@@ -620,9 +620,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster_table;
+use function Flow\PgQuery\DSL\cluster;
 
-$query = cluster_table('users')
+$query = cluster()->table('users')
     ->using('idx_users_pkey');
 
 echo $query->toSQL();
@@ -634,9 +634,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster_table;
+use function Flow\PgQuery\DSL\cluster;
 
-$query = cluster_table('public.users');
+$query = cluster()->table('public.users');
 
 echo $query->toSQL();
 // CLUSTER public.users
