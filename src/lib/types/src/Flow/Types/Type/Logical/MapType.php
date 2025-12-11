@@ -54,8 +54,6 @@ final readonly class MapType implements Type
 
         type_equals(type_union(type_integer(), type_string()), $keyType);
 
-//        \Mago\inspect($keyType);
-
         return new self($keyType, $valueType);
     }
 
