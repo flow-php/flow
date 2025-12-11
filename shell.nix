@@ -1,31 +1,33 @@
-let
-    nixpkgs = fetchTarball {
-        # Oct 31, 2025
-        url = "https://github.com/NixOS/nixpkgs/archive/66a437ebcf6160152336e801a7ec289ba2aba3c5.tar.gz";
-    };
-
-    lockedPkgs = import nixpkgs {
-        config = {
-            allowUnfree = true;
-        };
-    };
-in
 {
-    pkgs ? lockedPkgs,
     php-version ? 8.3,
     with-blackfire ? false,
     with-xdebug ? false,
     with-pcov ? !with-blackfire,
-    with-pg-query-ext ? false,
+    with-pg-query-ext ? true,
     with-terraform ? false,
     with-wasm ? false,
 }:
 
 let
+    nixpkgs = fetchTarball {
+        url = if php-version == 8.5 then
+            "https://github.com/NixOS/nixpkgs/archive/refs/pull/422308/head.tar.gz"
+        else
+            "https://github.com/NixOS/nixpkgs/archive/66a437ebcf6160152336e801a7ec289ba2aba3c5.tar.gz";
+    };
+
+    pkgs = import nixpkgs {
+        config = {
+            allowUnfree = true;
+        };
+    };
+
     base-php = if php-version == 8.3 then
         pkgs.php83
     else if php-version == 8.4 then
         pkgs.php84
+    else if php-version == 8.5 then
+        pkgs.php85
     else
         throw "Unknown php version ${php-version}";
 
