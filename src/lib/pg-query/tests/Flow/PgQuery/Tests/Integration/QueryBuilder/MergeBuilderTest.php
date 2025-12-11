@@ -7,7 +7,6 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 use function Flow\PgQuery\DSL\{
     col,
     cte,
-    cte_ref,
     eq,
     gt,
     literal_int,
@@ -15,8 +14,8 @@ use function Flow\PgQuery\DSL\{
     merge,
     param,
     select,
-    with,
-    with_cte
+    table,
+    with
 };
 
 use Flow\PgQuery\{ParsedQuery, Parser};
@@ -45,7 +44,7 @@ final class MergeBuilderTest extends PGQueryTestCase
     {
         $sourceQuery = select()
             ->select(col('id'), col('name'), col('email'))
-            ->from(cte_ref('staged_data'));
+            ->from(table('staged_data'));
 
         $query = merge('users')
             ->using($sourceQuery, 'src')
@@ -96,13 +95,9 @@ final class MergeBuilderTest extends PGQueryTestCase
     {
         $stagedData = select()
             ->select(col('id'), col('name'))
-            ->from(cte_ref('raw_input'));
+            ->from(table('raw_input'));
 
-        $with = with_cte([
-            cte('staged_data', $stagedData),
-        ]);
-
-        $query = with($with)->merge('users')
+        $query = with(cte('staged_data', $stagedData))->merge('users')
             ->using('staged_data', 's')
             ->on(eq(col('users.id'), col('s.id')))
             ->whenMatched()
