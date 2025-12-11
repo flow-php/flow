@@ -1,6 +1,7 @@
-## [Unreleased] - 2025-12-04
+## [Unreleased] - 2025-12-11
 
 ### Added
+- [#2062](https://github.com/flow-php/flow/pull/2062) - **flow-php/postgresql - Query Builder that covers most of the Postgres SQL syntax** - [@norberttech](https://github.com/norberttech)
 - [#2050](https://github.com/flow-php/flow/pull/2050) - **modification of PG Query AST tree during travers** - [@norberttech](https://github.com/norberttech)
 - [#2050](https://github.com/flow-php/flow/pull/2050) - **count / paginate / key set - modifiers with DSL** - [@norberttech](https://github.com/norberttech)
 - [#2048](https://github.com/flow-php/flow/pull/2048) - **auto generated table of contents to documentation pages** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +22,7 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#2062](https://github.com/flow-php/flow/pull/2062) - **renamed flow-php/pg-query into flow-php/postgresql** - [@norberttech](https://github.com/norberttech)
 - [d70698](https://github.com/flow-php/flow/commit/d70698e0b463ef9f2e8e391e9752828ed8019ec1) - **chore: added documentation for building wasm** - [@norberttech](https://github.com/norberttech)
 - [#2040](https://github.com/flow-php/flow/pull/2040) - **cast thrift encoded values to ints to preven issues with 32 systems** - [@norberttech](https://github.com/norberttech)
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **all actions will now trigger an event that other actions are going to listen to** - [@norberttech](https://github.com/norberttech)
