@@ -45,7 +45,7 @@ jobs:
             php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-windows-
 
       - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress --no-scripts"
+        run: "composer install --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-pgsql --ignore-platform-req=ext-pg_query"
 
       - name: "Install PHPUnit"
         run: "composer install --working-dir=./tools/phpunit --no-interaction --no-progress"
