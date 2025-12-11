@@ -13,11 +13,11 @@ The Copy Query Builder provides a fluent, type-safe interface for constructing P
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 
-$query = copy_from()
-    ->table('users')
-    ->fromFile('/tmp/users.csv');
+$query = copy()
+    ->from('users')
+    ->file('/tmp/users.csv');
 
 echo $query->toSQL();
 // COPY users FROM '/tmp/users.csv'
@@ -28,11 +28,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 
-$query = copy_from()
-    ->table('users', 'id', 'name', 'email')
-    ->fromFile('/tmp/users.csv');
+$query = copy()
+    ->from('users')
+    ->columns('id', 'name', 'email')
+    ->file('/tmp/users.csv');
 
 echo $query->toSQL();
 // COPY users(id, name, email) FROM '/tmp/users.csv'
@@ -43,12 +44,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
-$query = copy_from()
-    ->table('users')
-    ->fromStdin()
+$query = copy()
+    ->from('users')
+    ->stdin()
     ->format(CopyFormat::CSV);
 
 echo $query->toSQL();
@@ -60,11 +61,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 
-$query = copy_from()
-    ->table('logs')
-    ->fromProgram('gunzip -c /var/log/app.log.gz');
+$query = copy()
+    ->from('logs')
+    ->program('gunzip -c /var/log/app.log.gz');
 
 echo $query->toSQL();
 // COPY logs FROM PROGRAM 'gunzip -c /var/log/app.log.gz'
@@ -75,12 +76,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
-$query = copy_from()
-    ->table('data')
-    ->fromFile('/tmp/data.csv')
+$query = copy()
+    ->from('data')
+    ->file('/tmp/data.csv')
     ->format(CopyFormat::CSV)
     ->withHeader()
     ->delimiter(';')
@@ -100,12 +101,12 @@ Treat specified columns as non-nullable during import:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
-$query = copy_from()
-    ->table('users')
-    ->fromFile('/tmp/users.csv')
+$query = copy()
+    ->from('users')
+    ->file('/tmp/users.csv')
     ->format(CopyFormat::CSV)
     ->forceNotNull('name', 'email');
 
@@ -120,12 +121,12 @@ Treat specified values as NULL for these columns:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
-$query = copy_from()
-    ->table('users')
-    ->fromFile('/tmp/users.csv')
+$query = copy()
+    ->from('users')
+    ->file('/tmp/users.csv')
     ->format(CopyFormat::CSV)
     ->forceNull('description', 'notes');
 
@@ -140,12 +141,12 @@ Control behavior when encountering invalid data:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_from;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyOnError;
 
-$query = copy_from()
-    ->table('events')
-    ->fromFile('/tmp/events.csv')
+$query = copy()
+    ->from('events')
+    ->file('/tmp/events.csv')
     ->onError(CopyOnError::IGNORE);
 
 echo $query->toSQL();
@@ -159,11 +160,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_to;
+use function Flow\PgQuery\DSL\copy;
 
-$query = copy_to()
-    ->table('users')
-    ->toFile('/tmp/users.csv');
+$query = copy()
+    ->to('users')
+    ->file('/tmp/users.csv');
 
 echo $query->toSQL();
 // COPY users TO '/tmp/users.csv'
@@ -174,11 +175,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_to;
+use function Flow\PgQuery\DSL\copy;
 
-$query = copy_to()
-    ->table('users', 'id', 'name', 'email')
-    ->toFile('/tmp/users.csv');
+$query = copy()
+    ->to('users')
+    ->columns('id', 'name', 'email')
+    ->file('/tmp/users.csv');
 
 echo $query->toSQL();
 // COPY users(id, name, email) TO '/tmp/users.csv'
@@ -189,12 +191,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_to;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
-$query = copy_to()
-    ->table('users')
-    ->toStdout()
+$query = copy()
+    ->to('users')
+    ->stdout()
     ->format(CopyFormat::CSV);
 
 echo $query->toSQL();
@@ -206,11 +208,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_to;
+use function Flow\PgQuery\DSL\copy;
 
-$query = copy_to()
-    ->table('logs')
-    ->toProgram('gzip > /tmp/logs.csv.gz');
+$query = copy()
+    ->to('logs')
+    ->program('gzip > /tmp/logs.csv.gz');
 
 echo $query->toSQL();
 // COPY logs TO PROGRAM 'gzip > /tmp/logs.csv.gz'
@@ -223,16 +225,16 @@ Export results of a query instead of a table:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{copy_to, select, col, table};
+use function Flow\PgQuery\DSL\{copy, select, col, table};
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
     ->from(table('users'));
 
-$query = copy_to()
-    ->query($selectQuery)
-    ->toFile('/tmp/active_users.csv')
+$query = copy()
+    ->toQuery($selectQuery)
+    ->file('/tmp/active_users.csv')
     ->format(CopyFormat::CSV);
 
 echo $query->toSQL();
@@ -244,12 +246,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_to;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
-$query = copy_to()
-    ->table('data')
-    ->toFile('/tmp/data.bin')
+$query = copy()
+    ->to('data')
+    ->file('/tmp/data.bin')
     ->format(CopyFormat::BINARY);
 
 echo $query->toSQL();
@@ -263,13 +265,13 @@ Quote specific columns or all columns in CSV output:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy_to;
+use function Flow\PgQuery\DSL\copy;
 use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
 
 // Quote specific columns
-$query = copy_to()
-    ->table('products')
-    ->toFile('/tmp/products.csv')
+$query = copy()
+    ->to('products')
+    ->file('/tmp/products.csv')
     ->format(CopyFormat::CSV)
     ->forceQuote('name', 'description');
 
@@ -277,9 +279,9 @@ echo $query->toSQL();
 // COPY products TO '/tmp/products.csv' WITH (format csv, force_quote (name, description))
 
 // Quote all columns
-$query = copy_to()
-    ->table('products')
-    ->toFile('/tmp/products.csv')
+$query = copy()
+    ->to('products')
+    ->file('/tmp/products.csv')
     ->format(CopyFormat::CSV)
     ->forceQuoteAll();
 
@@ -292,18 +294,18 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{copy_from, copy_to};
+use function Flow\PgQuery\DSL\copy;
 
-$query = copy_from()
-    ->table('analytics.events')
-    ->fromFile('/tmp/events.csv');
+$query = copy()
+    ->from('analytics.events')
+    ->file('/tmp/events.csv');
 
 echo $query->toSQL();
 // COPY analytics.events FROM '/tmp/events.csv'
 
-$query = copy_to()
-    ->table('analytics.events')
-    ->toFile('/tmp/events.csv');
+$query = copy()
+    ->to('analytics.events')
+    ->file('/tmp/events.csv');
 
 echo $query->toSQL();
 // COPY analytics.events TO '/tmp/events.csv'

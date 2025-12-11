@@ -47,7 +47,6 @@ use Flow\PgQuery\QueryBuilder\Condition\{
     RawCondition,
     SimilarTo
 };
-use Flow\PgQuery\QueryBuilder\Copy\{CopyFromBuilder, CopyFromTableStep, CopyToBuilder, CopyToTableStep};
 use Flow\PgQuery\QueryBuilder\Delete\{DeleteBuilder, DeleteFromStep};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PgQuery\QueryBuilder\Expression\{
@@ -73,6 +72,7 @@ use Flow\PgQuery\QueryBuilder\Expression\{
     WindowFunction
 };
 use Flow\PgQuery\QueryBuilder\Factory\{AlterFactory, CreateFactory, DropFactory};
+use Flow\PgQuery\QueryBuilder\Factory\CopyFactory;
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
 use Flow\PgQuery\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
 use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
@@ -428,21 +428,17 @@ function merge(string $table, ?string $alias = null) : MergeUsingStep
 }
 
 /**
- * Create a new COPY TO query builder for data export.
+ * Create a new COPY query builder for data import/export.
+ *
+ * Usage:
+ *   copy()->from('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)
+ *   copy()->to('users')->file('/tmp/users.csv')->format(CopyFormat::CSV)
+ *   copy()->toQuery(select(...))->file('/tmp/data.csv')
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function copy_to() : CopyToTableStep
+function copy() : CopyFactory
 {
-    return CopyToBuilder::create();
-}
-
-/**
- * Create a new COPY FROM query builder for data import.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function copy_from() : CopyFromTableStep
-{
-    return CopyFromBuilder::create();
+    return new CopyFactory();
 }
 
 /**

@@ -43,6 +43,28 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         return new self();
     }
 
+    public function columns(string ...$columns) : CopyFromSourceStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            \array_values($columns),
+            $this->filename,
+            $this->isProgram,
+            $this->isStdin,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
+            $this->escape,
+            $this->forceNotNullColumns,
+            $this->forceNullColumns,
+            $this->encoding,
+            $this->onError,
+        );
+    }
+
     public function delimiter(string $delimiter) : CopyFromOptionsStep
     {
         return new self(
@@ -102,6 +124,28 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
             $this->header,
             $this->quote,
             $escape,
+            $this->forceNotNullColumns,
+            $this->forceNullColumns,
+            $this->encoding,
+            $this->onError,
+        );
+    }
+
+    public function file(string $filename) : CopyFromOptionsStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $filename,
+            false,
+            false,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
+            $this->escape,
             $this->forceNotNullColumns,
             $this->forceNullColumns,
             $this->encoding,
@@ -175,72 +219,6 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
-    public function fromFile(string $filename) : CopyFromOptionsStep
-    {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->columns,
-            $filename,
-            false,
-            false,
-            $this->format,
-            $this->delimiter,
-            $this->nullString,
-            $this->header,
-            $this->quote,
-            $this->escape,
-            $this->forceNotNullColumns,
-            $this->forceNullColumns,
-            $this->encoding,
-            $this->onError,
-        );
-    }
-
-    public function fromProgram(string $command) : CopyFromOptionsStep
-    {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->columns,
-            $command,
-            true,
-            false,
-            $this->format,
-            $this->delimiter,
-            $this->nullString,
-            $this->header,
-            $this->quote,
-            $this->escape,
-            $this->forceNotNullColumns,
-            $this->forceNullColumns,
-            $this->encoding,
-            $this->onError,
-        );
-    }
-
-    public function fromStdin() : CopyFromOptionsStep
-    {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->columns,
-            null,
-            false,
-            true,
-            $this->format,
-            $this->delimiter,
-            $this->nullString,
-            $this->header,
-            $this->quote,
-            $this->escape,
-            $this->forceNotNullColumns,
-            $this->forceNullColumns,
-            $this->encoding,
-            $this->onError,
-        );
-    }
-
     public function nullAs(string $nullString) : CopyFromOptionsStep
     {
         return new self(
@@ -285,6 +263,28 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
         );
     }
 
+    public function program(string $command) : CopyFromOptionsStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $command,
+            true,
+            false,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
+            $this->escape,
+            $this->forceNotNullColumns,
+            $this->forceNullColumns,
+            $this->encoding,
+            $this->onError,
+        );
+    }
+
     public function quote(string $quote) : CopyFromOptionsStep
     {
         return new self(
@@ -299,6 +299,28 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
             $this->nullString,
             $this->header,
             $quote,
+            $this->escape,
+            $this->forceNotNullColumns,
+            $this->forceNullColumns,
+            $this->encoding,
+            $this->onError,
+        );
+    }
+
+    public function stdin() : CopyFromOptionsStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            null,
+            false,
+            true,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
             $this->escape,
             $this->forceNotNullColumns,
             $this->forceNullColumns,

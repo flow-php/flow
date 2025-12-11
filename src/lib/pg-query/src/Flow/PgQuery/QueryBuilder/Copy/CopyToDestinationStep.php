@@ -6,9 +6,11 @@ namespace Flow\PgQuery\QueryBuilder\Copy;
 
 interface CopyToDestinationStep
 {
-    public function toFile(string $filename) : CopyToOptionsStep;
+    public function columns(string ...$columns) : self;
 
-    public function toProgram(string $command) : CopyToOptionsStep;
+    public function file(string $filename) : CopyToOptionsStep;
 
-    public function toStdout() : CopyToOptionsStep;
+    public function program(string $command) : CopyToOptionsStep;
+
+    public function stdout() : CopyToOptionsStep;
 }
