@@ -11,7 +11,11 @@
     "fakerphp",
     "mock-client",
     "dotenv",
-    "var-exporter"
+    "var-exporter",
+    "resources/python",
+    "bin/parquet.php",
+    "CONTRIBUTING.md",
+    "README.md"
   ],
   "check-requirements": false,
   "compression": "GZ",

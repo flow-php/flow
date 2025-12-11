@@ -77,6 +77,11 @@
       "type": "adapter"
     },
     {
+      "name" : "flow-php/etl-adapter-excel",
+      "path": "src/adapter/etl-adapter-excel",
+      "type": "adapter"
+    },
+    {
       "name" : "flow-php/filesystem-async-aws-bridge",
       "path": "src/bridge/filesystem/async-aws",
       "type": "bridge"
@@ -94,6 +99,11 @@
     {
       "name" : "flow-php/symfony-http-foundation-bridge",
       "path": "src/bridge/symfony/http-foundation",
+      "type": "bridge"
+    },
+    {
+      "name" : "flow-php/openapi-specification-bridge",
+      "path": "src/bridge/openapi/specification",
       "type": "bridge"
     },
     {
@@ -139,6 +149,11 @@
     {
       "name" : "flow-php/types",
       "path": "src/lib/types",
+      "type": "lib"
+    },
+    {
+      "name" : "flow-php/postgresql",
+      "path": "src/lib/postgresql",
       "type": "lib"
     }
   ]

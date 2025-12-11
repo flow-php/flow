@@ -3,9 +3,9 @@
 use Rector\Config\RectorConfig;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Set\ValueObject\LevelSetList;
-use Rector\CodingStyle\Rector\FunctionLike\FunctionLikeToFirstClassCallableRector;
 use Rector\CodingStyle\Rector\FuncCall\FunctionFirstClassCallableRector;
 use Rector\Php71\Rector\FuncCall\RemoveExtraParametersRector;
+use Rector\CodingStyle\Rector\ArrowFunction\ArrowFunctionDelegatingCallToFirstClassCallableRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -22,7 +22,7 @@ return RectorConfig::configure()
     ->withSkip([
         RemoveExtraParametersRector::class,
         FunctionFirstClassCallableRector::class,
-        FunctionLikeToFirstClassCallableRector::class,
+        ArrowFunctionDelegatingCallToFirstClassCallableRector::class,
         StringClassNameToClassConstantRector::class,
         __DIR__ . '/src/lib/parquet/src/Flow/Parquet/ThriftModel/*',
     ])
