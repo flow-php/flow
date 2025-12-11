@@ -1,0 +1,48 @@
+{
+    "name": "flow-php/postgresql",
+    "type": "library",
+    "description": "Flow PHP - PostgreSQL Client Library",
+    "keywords": [
+        "php",
+        "postgresql",
+        "parser",
+        "query",
+        "sql",
+        "ast"
+    ],
+    "require": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+        "google/protobuf": "^4.0"
+    },
+    "require-dev": {
+        "ext-pg_query": "*",
+        "ext-pgsql": "*"
+    },
+    "suggest": {
+        "ext-protobuf": "For faster protobuf parsing performance",
+        "ext-pg_query": "Mandatory for PostgreSQL query parsing functionality"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/PostgreSql/DSL/functions.php",
+            "src/stubs.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

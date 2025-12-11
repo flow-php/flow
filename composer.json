@@ -96,7 +96,7 @@
         "flow-php/snappy": "self.version",
         "flow-php/symfony-http-foundation-bridge": "self.version",
         "flow-php/types": "self.version",
-        "flow-php/pg-query": "self.version"
+        "flow-php/postgresql": "self.version"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -133,7 +133,7 @@
                 "src/lib/parquet/src/Flow",
                 "src/lib/snappy/src/Flow",
                 "src/lib/types/src/Flow",
-                "src/lib/pg-query/src/Flow",
+                "src/lib/postgresql/src/Flow",
                 "src/tools/documentation/src/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
@@ -172,8 +172,8 @@
             "src/lib/parquet/src/stubs.php",
             "src/lib/snappy/polyfill.php",
             "src/lib/types/src/Flow/Types/DSL/functions.php",
-            "src/lib/pg-query/src/Flow/PgQuery/DSL/functions.php",
-            "src/lib/pg-query/src/stubs.php"
+            "src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php",
+            "src/lib/postgresql/src/stubs.php"
         ]
     },
     "autoload-dev": {
@@ -209,7 +209,7 @@
                 "src/lib/parquet/tests/Flow",
                 "src/lib/snappy/tests/Flow",
                 "src/lib/types/tests/Flow",
-                "src/lib/pg-query/tests/Flow",
+                "src/lib/postgresql/tests/Flow",
                 "src/tools/documentation/tests/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
@@ -254,7 +254,7 @@
             "@test:lib:filesystem",
             "@test:lib:parquet",
             "@test:lib:parquet-viewer",
-            "@test:lib:pg-query",
+            "@test:lib:postgresql",
             "@test:lib:snappy",
             "@test:lib:types"
         ],
@@ -315,9 +315,9 @@
         "test:lib:types": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=lib-types-unit --log-junit ./var/phpunit/logs/lib-types-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-types-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-types-unit"
         ],
-        "test:lib:pg-query": [
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-pg-query-unit --log-junit ./var/phpunit/logs/lib-pg-query-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-pg-query-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-pg-query-unit",
-            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-pg-query-integration --log-junit ./var/phpunit/logs/lib-pg-query-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-pg-query-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-pg-query-integration"
+        "test:lib:postgresql": [
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-postgresql-unit --log-junit ./var/phpunit/logs/lib-postgresql-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-postgresql-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-postgresql-unit",
+            "tools/phpunit/vendor/bin/phpunit --testsuite=lib-postgresql-integration --log-junit ./var/phpunit/logs/lib-postgresql-integration.junit.xml --coverage-clover=./var/phpunit/coverage/clover/lib-postgresql-integration.coverage.xml --coverage-html=./var/phpunit/coverage/html/lib-postgresql-integration"
         ],
         "test:bridge:filesystem-azure": [
             "tools/phpunit/vendor/bin/phpunit --testsuite=bridge-filesystem-azure-unit --log-junit ./var/phpunit/logs/bridge-filesystem-azure-unit.junit.xml --coverage-clover=./var/phpunit/coverage/clover/bridge-filesystem-azure-unit.coverage.xml --coverage-html=./var/phpunit/coverage/html/bridge-filesystem-azure-unit",
@@ -464,7 +464,7 @@
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.filesystem.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.parquet-viewer.xml",
-            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.pg-query.xml",
+            "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.postgresql.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.snappy.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/lib.types.xml",
             "./tools/phpdocumentor/vendor/bin/phpdoc --config=./phpdoc/adapter.chartjs.xml",
@@ -492,9 +492,9 @@
             "thrift --gen php --out src/lib/parquet/src src/lib/parquet/src/Flow/Parquet/Resources/Thrift/parquet.thrift",
             "@cs:php:fix"
         ],
-        "build:pg-query:protobuf": [
-            "rm -rf src/lib/pg-query/src/Flow/PgQuery/Protobuf",
-            "protoc --php_out=src/lib/pg-query/src --proto_path=src/lib/pg-query/resources/proto pg_query.proto",
+        "build:postgresql:protobuf": [
+            "rm -rf src/lib/postgresql/src/Flow/PostgreSql/Protobuf",
+            "protoc --php_out=src/lib/postgresql/src --proto_path=src/lib/postgresql/resources/proto pg_query.proto",
             "@cs:php:fix"
         ],
         "pre-autoload-dump": [

@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\PostgreSql\QueryBuilder\Schema\View\DropMaterializedView;
+
+use Flow\PostgreSql\Protobuf\AST\DropStmt;
+
+interface DropMatViewFinalStep
+{
+    public function cascade() : self;
+
+    public function ifExists() : self;
+
+    public function restrict() : self;
+
+    public function toAst() : DropStmt;
+
+    public function toSql() : string;
+}

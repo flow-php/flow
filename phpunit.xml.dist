@@ -80,11 +80,11 @@
         <testsuite name="lib-types-unit">
             <directory>src/lib/types/tests/Flow/Types/Tests/Unit</directory>
         </testsuite>
-        <testsuite name="lib-pg-query-unit">
-            <directory>src/lib/pg-query/tests/Flow/PgQuery/Tests/Unit</directory>
+        <testsuite name="lib-postgresql-unit">
+            <directory>src/lib/postgresql/tests/Flow/PostgreSql/Tests/Unit</directory>
         </testsuite>
-        <testsuite name="lib-pg-query-integration">
-            <directory>src/lib/pg-query/tests/Flow/PgQuery/Tests/Integration</directory>
+        <testsuite name="lib-postgresql-integration">
+            <directory>src/lib/postgresql/tests/Flow/PostgreSql/Tests/Integration</directory>
         </testsuite>
         <testsuite name="bridge-filesystem-azure-unit">
             <directory>src/bridge/filesystem/azure/tests/Flow/Filesystem/Bridge/Azure/Tests/Unit</directory>
@@ -193,7 +193,7 @@
         </include>
         <exclude>
             <directory suffix=".php">src/lib/parquet/src/Flow/Parquet/Thrift</directory>
-            <directory suffix=".php">src/lib/pg-query/src/Flow/PgQuery/Protobuf</directory>
+            <directory suffix=".php">src/lib/postgresql/src/Flow/PostgreSql/Protobuf</directory>
             <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
         </exclude>
     </source>

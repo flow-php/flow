@@ -17,7 +17,6 @@
         "flow-php/types": "self.version",
         "flow-php/array-dot": "self.version",
         "flow-php/filesystem": "self.version",
-        "flow-php/pg-query": "self.version",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
         "webmozart/glob": "^3.0 || ^4.0",
         "symfony/string": "^6.4 || ^7.3 || ^8.0"
