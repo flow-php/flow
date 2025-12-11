@@ -1,6 +1,6 @@
 # Delete Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -11,7 +11,7 @@ The Delete Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col, eq, literal};
+use function Flow\PostgreSql\DSL\{delete, col, eq, literal};
 
 $query = delete()
     ->from('users')
@@ -28,7 +28,7 @@ Use positional parameters for prepared statements:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col, eq, param};
+use function Flow\PostgreSql\DSL\{delete, col, eq, param};
 
 $query = delete()
     ->from('users')
@@ -43,7 +43,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col, eq, literal};
+use function Flow\PostgreSql\DSL\{delete, col, eq, literal};
 
 $query = delete()
     ->from('users', 'u')
@@ -60,7 +60,7 @@ The USING clause allows you to reference other tables in your DELETE, similar to
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, table, col, eq};
+use function Flow\PostgreSql\DSL\{delete, table, col, eq};
 
 $query = delete()
     ->from('orders')
@@ -76,11 +76,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     delete, select, col, table, any_sub_select
 };
 
-use Flow\PgQuery\QueryBuilder\Condition\ComparisonOperator;
+use Flow\PostgreSql\QueryBuilder\Condition\ComparisonOperator;
 
 $subquery = select()
     ->select(col('user_id'))
@@ -99,7 +99,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col, eq, literal};
+use function Flow\PostgreSql\DSL\{delete, col, eq, literal};
 
 // Return specific columns
 $query = delete()
@@ -125,7 +125,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     delete, col, eq, lt, literal, cond_and
 };
 
@@ -142,4 +142,4 @@ echo $query->toSQL();
 // DELETE FROM sessions WHERE active = false AND expires_at < '2024-01-01'
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

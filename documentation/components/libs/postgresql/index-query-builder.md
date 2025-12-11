@@ -1,6 +1,6 @@
 # Index Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -14,7 +14,7 @@ CREATE INDEX, DROP INDEX, REINDEX, and ALTER INDEX.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->on('users')
@@ -29,7 +29,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->unique()
@@ -45,7 +45,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->ifNotExists()
@@ -63,7 +63,7 @@ Create an index without locking out concurrent inserts, updates, or deletes:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->concurrently()
@@ -79,7 +79,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->unique()
@@ -97,7 +97,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->on('users', 'public')
@@ -114,7 +114,7 @@ PostgreSQL supports different index access methods. Use the `using()` method wit
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, index_method_btree, index_method_hash, index_method_gin, index_method_gist, index_method_spgist, index_method_brin};
+use function Flow\PostgreSql\DSL\{create, index_method_btree, index_method_hash, index_method_gin, index_method_gist, index_method_spgist, index_method_brin};
 
 // B-tree (default, good for equality and range queries)
 $query = create()->index('idx_users_email')
@@ -158,7 +158,7 @@ $query = create()->index('idx_events_timestamp')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_name_email')
     ->on('users')
@@ -175,7 +175,7 @@ Use `index_col()` to customize column ordering:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, index_col};
+use function Flow\PostgreSql\DSL\{create, index_col};
 
 // Descending order
 $query = create()->index('idx_users_created_at')
@@ -208,7 +208,7 @@ Specify an operator class for index columns:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, index_col};
+use function Flow\PostgreSql\DSL\{create, index_col};
 
 $query = create()->index('idx_users_name_pattern')
     ->on('users')
@@ -225,7 +225,7 @@ Specify a collation for index columns:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, index_col};
+use function Flow\PostgreSql\DSL\{create, index_col};
 
 $query = create()->index('idx_users_name')
     ->on('users')
@@ -239,8 +239,8 @@ Create an index on an expression:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, index_expr};
-use Flow\PgQuery\QueryBuilder\Expression\RawExpression;
+use function Flow\PostgreSql\DSL\{create, index_expr};
+use Flow\PostgreSql\QueryBuilder\Expression\RawExpression;
 
 $query = create()->index('idx_users_lower_email')
     ->on('users')
@@ -257,7 +257,7 @@ Include additional columns in the index for index-only scans:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->on('users')
@@ -275,7 +275,7 @@ Create an index on a subset of rows:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, col, eq, literal};
+use function Flow\PostgreSql\DSL\{create, col, eq, literal};
 
 $query = create()->index('idx_users_active_email')
     ->on('users')
@@ -293,7 +293,7 @@ Specify a tablespace for the index:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->on('users')
@@ -311,7 +311,7 @@ For unique indexes, treat NULL values as not distinct:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->unique()
@@ -330,7 +330,7 @@ Create an index on only the specified table, not including child partitions:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->index('idx_users_email')
     ->onOnly('users')
@@ -347,7 +347,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email');
 
@@ -360,7 +360,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email')
     ->ifExists();
@@ -376,7 +376,7 @@ Drop an index without locking out concurrent selects, inserts, updates, or delet
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email')
     ->concurrently();
@@ -392,7 +392,7 @@ Drop objects that depend on the index:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email')
     ->cascade();
@@ -406,7 +406,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email')
     ->ifExists()
@@ -421,7 +421,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('idx_users_email', 'idx_users_name', 'idx_orders_date');
 
@@ -434,7 +434,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->index('public.idx_users_email');
 
@@ -449,7 +449,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_index;
+use function Flow\PostgreSql\DSL\reindex_index;
 
 $query = reindex_index('idx_users_email');
 
@@ -464,7 +464,7 @@ Rebuild all indexes on a table:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_table;
+use function Flow\PostgreSql\DSL\reindex_table;
 
 $query = reindex_table('users');
 
@@ -479,7 +479,7 @@ Rebuild all indexes in a schema:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_schema;
+use function Flow\PostgreSql\DSL\reindex_schema;
 
 $query = reindex_schema('public');
 
@@ -494,7 +494,7 @@ Rebuild all indexes in the current database:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_database;
+use function Flow\PostgreSql\DSL\reindex_database;
 
 $query = reindex_database('mydb');
 
@@ -509,7 +509,7 @@ Rebuild an index without locking out writes:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_index;
+use function Flow\PostgreSql\DSL\reindex_index;
 
 $query = reindex_index('idx_users_email')
     ->concurrently();
@@ -525,7 +525,7 @@ Print progress reports:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_table;
+use function Flow\PostgreSql\DSL\reindex_table;
 
 $query = reindex_table('users')
     ->verbose();
@@ -541,7 +541,7 @@ Rebuild the index in a different tablespace:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_index;
+use function Flow\PostgreSql\DSL\reindex_index;
 
 $query = reindex_index('idx_users_email')
     ->tablespace('fast_storage');
@@ -555,7 +555,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\reindex_table;
+use function Flow\PostgreSql\DSL\reindex_table;
 
 $query = reindex_table('public.users');
 
@@ -570,7 +570,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->index('idx_old')
     ->renameTo('idx_new');
@@ -584,7 +584,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->index('idx_old')
     ->ifExists()
@@ -599,7 +599,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->index('idx_old', 'public')
     ->renameTo('idx_new');
@@ -615,7 +615,7 @@ Move an index to a different tablespace:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->index('idx_users_email')
     ->setTablespace('fast_storage');
@@ -629,7 +629,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->index('idx_users_email')
     ->ifExists()
@@ -639,4 +639,4 @@ echo $query->toSQL();
 // ALTER INDEX IF EXISTS idx_users_email SET TABLESPACE fast_storage
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

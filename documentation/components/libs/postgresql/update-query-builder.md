@@ -1,6 +1,6 @@
 # Update Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -11,7 +11,7 @@ The Update Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
 
 $query = update()
     ->update('users')
@@ -29,7 +29,7 @@ Use positional parameters for prepared statements:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, param, col, eq};
+use function Flow\PostgreSql\DSL\{update, param, col, eq};
 
 $query = update()
     ->update('users')
@@ -45,7 +45,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
 
 // Chained set() calls
 $query = update()
@@ -75,7 +75,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
 
 $query = update()
     ->update('users', 'u')
@@ -93,7 +93,7 @@ The FROM clause allows you to reference other tables in your UPDATE, similar to 
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal, table, col, eq};
+use function Flow\PostgreSql\DSL\{update, literal, table, col, eq};
 
 $query = update()
     ->update('orders')
@@ -110,7 +110,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     update, select, sub_select, table, col, eq, literal
 };
 
@@ -133,7 +133,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, col, eq, literal};
 
 $query = update()
     ->update('products')
@@ -149,7 +149,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
+use function Flow\PostgreSql\DSL\{update, literal, col, eq, literal};
 
 // Return specific columns
 $query = update()
@@ -177,7 +177,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     update, literal, literal,
     col, eq, gt, cond_and
 };
@@ -196,4 +196,4 @@ echo $query->toSQL();
 // UPDATE users SET status = 'premium' WHERE active = true AND orders_count > 100
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

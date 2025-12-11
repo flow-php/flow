@@ -1,6 +1,6 @@
 # Copy Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -13,7 +13,7 @@ The Copy Query Builder provides a fluent, type-safe interface for constructing P
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
+use function Flow\PostgreSql\DSL\copy;
 
 $query = copy()
     ->from('users')
@@ -28,7 +28,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
+use function Flow\PostgreSql\DSL\copy;
 
 $query = copy()
     ->from('users')
@@ -44,8 +44,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 $query = copy()
     ->from('users')
@@ -61,7 +61,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
+use function Flow\PostgreSql\DSL\copy;
 
 $query = copy()
     ->from('logs')
@@ -76,8 +76,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 $query = copy()
     ->from('data')
@@ -101,8 +101,8 @@ Treat specified columns as non-nullable during import:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 $query = copy()
     ->from('users')
@@ -121,8 +121,8 @@ Treat specified values as NULL for these columns:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 $query = copy()
     ->from('users')
@@ -141,8 +141,8 @@ Control behavior when encountering invalid data:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyOnError;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyOnError;
 
 $query = copy()
     ->from('events')
@@ -160,7 +160,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
+use function Flow\PostgreSql\DSL\copy;
 
 $query = copy()
     ->to('users')
@@ -175,7 +175,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
+use function Flow\PostgreSql\DSL\copy;
 
 $query = copy()
     ->to('users')
@@ -191,8 +191,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 $query = copy()
     ->to('users')
@@ -208,7 +208,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
+use function Flow\PostgreSql\DSL\copy;
 
 $query = copy()
     ->to('logs')
@@ -225,8 +225,8 @@ Export results of a query instead of a table:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{copy, select, col, table};
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\{copy, select, col, table};
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
@@ -246,8 +246,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 $query = copy()
     ->to('data')
@@ -265,8 +265,8 @@ Quote specific columns or all columns in CSV output:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
-use Flow\PgQuery\QueryBuilder\Copy\CopyFormat;
+use function Flow\PostgreSql\DSL\copy;
+use Flow\PostgreSql\QueryBuilder\Copy\CopyFormat;
 
 // Quote specific columns
 $query = copy()
@@ -294,7 +294,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\copy;
+use function Flow\PostgreSql\DSL\copy;
 
 $query = copy()
     ->from('analytics.events')
@@ -330,4 +330,4 @@ The `CopyOnError` enum (COPY FROM only) provides error handling options:
 | `CopyOnError::STOP` | Stop on first error (default) |
 | `CopyOnError::IGNORE` | Skip rows with errors and continue |
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

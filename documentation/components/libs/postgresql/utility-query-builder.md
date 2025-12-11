@@ -1,6 +1,6 @@
 # Utility Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -15,7 +15,7 @@ VACUUM reclaims storage occupied by dead tuples and optionally updates planner s
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
+use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum();
 
@@ -28,7 +28,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
+use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->table('users');
 
@@ -41,7 +41,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
+use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->tables('users', 'orders', 'products');
 
@@ -54,7 +54,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
+use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->table('public.users');
 
@@ -67,7 +67,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
+use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->table('users', 'email', 'name');
 
@@ -82,7 +82,7 @@ VACUUM FULL rewrites the entire table to reclaim maximum space:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
+use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->full()->tables('users');
 
@@ -97,7 +97,7 @@ VACUUM ANALYZE updates planner statistics after vacuuming:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
+use function Flow\PostgreSql\DSL\vacuum;
 
 $query = vacuum()->analyze()->tables('users');
 
@@ -110,8 +110,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\vacuum;
-use Flow\PgQuery\QueryBuilder\Utility\IndexCleanup;
+use function Flow\PostgreSql\DSL\vacuum;
+use Flow\PostgreSql\QueryBuilder\Utility\IndexCleanup;
 
 // Full vacuum with analyze and verbose output
 $query = vacuum()
@@ -190,7 +190,7 @@ ANALYZE collects statistics about table contents for the query planner.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\analyze;
+use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze();
 
@@ -203,7 +203,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\analyze;
+use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze()->table('users');
 
@@ -216,7 +216,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\analyze;
+use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze()->table('users', 'email', 'name');
 
@@ -229,7 +229,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\analyze;
+use function Flow\PostgreSql\DSL\analyze;
 
 $query = analyze()->tables('users', 'orders', 'products');
 
@@ -242,7 +242,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\analyze;
+use function Flow\PostgreSql\DSL\analyze;
 
 // Verbose output
 $query = analyze()
@@ -270,7 +270,7 @@ EXPLAIN shows the execution plan for a statement.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{explain, select};
+use function Flow\PostgreSql\DSL\{explain, select};
 
 $query = explain(select()->from('users'));
 
@@ -285,7 +285,7 @@ EXPLAIN ANALYZE actually executes the query and shows real timing:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{explain, select};
+use function Flow\PostgreSql\DSL\{explain, select};
 
 $query = explain(select()->from('users'))->analyze();
 
@@ -298,7 +298,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{explain, select};
+use function Flow\PostgreSql\DSL\{explain, select};
 
 $query = explain(select()->from('users'))
     ->verbose();
@@ -312,8 +312,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{explain, select};
-use Flow\PgQuery\QueryBuilder\Utility\ExplainFormat;
+use function Flow\PostgreSql\DSL\{explain, select};
+use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
 
 // JSON format
 $query = explain(select()->from('users'))
@@ -342,8 +342,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{explain, select};
-use Flow\PgQuery\QueryBuilder\Utility\ExplainFormat;
+use function Flow\PostgreSql\DSL\{explain, select};
+use Flow\PostgreSql\QueryBuilder\Utility\ExplainFormat;
 
 $query = explain(select()->from('users'))
     ->analyze()
@@ -362,7 +362,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{explain, select};
+use function Flow\PostgreSql\DSL\{explain, select};
 
 // With costs
 $query = explain(select()->from('users'))
@@ -388,7 +388,7 @@ LOCK TABLE obtains a table-level lock for the current transaction.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\lock_table;
+use function Flow\PostgreSql\DSL\lock_table;
 
 $query = lock_table('users');
 
@@ -401,8 +401,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\lock_table;
-use Flow\PgQuery\QueryBuilder\Utility\LockMode;
+use function Flow\PostgreSql\DSL\lock_table;
+use Flow\PostgreSql\QueryBuilder\Utility\LockMode;
 
 // Using mode shortcuts
 $query = lock_table('users')->accessShare();
@@ -448,7 +448,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\lock_table;
+use function Flow\PostgreSql\DSL\lock_table;
 
 $query = lock_table('users', 'orders')
     ->exclusive();
@@ -462,7 +462,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\lock_table;
+use function Flow\PostgreSql\DSL\lock_table;
 
 $query = lock_table('users')
     ->exclusive()
@@ -494,8 +494,8 @@ COMMENT sets or removes a comment on a database object.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\comment;
-use Flow\PgQuery\QueryBuilder\Utility\CommentTarget;
+use function Flow\PostgreSql\DSL\comment;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 
 $query = comment(CommentTarget::TABLE, 'users')
     ->is('User accounts table');
@@ -509,8 +509,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\comment;
-use Flow\PgQuery\QueryBuilder\Utility\CommentTarget;
+use function Flow\PostgreSql\DSL\comment;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 
 $query = comment(CommentTarget::COLUMN, 'users.email')
     ->is('User email address');
@@ -524,8 +524,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\comment;
-use Flow\PgQuery\QueryBuilder\Utility\CommentTarget;
+use function Flow\PostgreSql\DSL\comment;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 
 $query = comment(CommentTarget::INDEX, 'idx_users_email')
     ->is('Email lookup index');
@@ -539,8 +539,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\comment;
-use Flow\PgQuery\QueryBuilder\Utility\CommentTarget;
+use function Flow\PostgreSql\DSL\comment;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 
 $query = comment(CommentTarget::SCHEMA, 'public')
     ->is('Default schema');
@@ -554,8 +554,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\comment;
-use Flow\PgQuery\QueryBuilder\Utility\CommentTarget;
+use function Flow\PostgreSql\DSL\comment;
+use Flow\PostgreSql\QueryBuilder\Utility\CommentTarget;
 
 $query = comment(CommentTarget::TABLE, 'users')
     ->isNull();
@@ -594,7 +594,7 @@ CLUSTER physically reorders a table based on an index.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster;
+use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster();
 
@@ -607,7 +607,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster;
+use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster()->table('users');
 
@@ -620,7 +620,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster;
+use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster()->table('users')
     ->using('idx_users_pkey');
@@ -634,7 +634,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster;
+use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster()->table('public.users');
 
@@ -647,7 +647,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\cluster;
+use function Flow\PostgreSql\DSL\cluster;
 
 $query = cluster()
     ->verbose()
@@ -666,8 +666,8 @@ DISCARD releases session resources.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\discard;
-use Flow\PgQuery\QueryBuilder\Utility\DiscardType;
+use function Flow\PostgreSql\DSL\discard;
+use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::ALL);
 
@@ -680,8 +680,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\discard;
-use Flow\PgQuery\QueryBuilder\Utility\DiscardType;
+use function Flow\PostgreSql\DSL\discard;
+use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::PLANS);
 
@@ -694,8 +694,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\discard;
-use Flow\PgQuery\QueryBuilder\Utility\DiscardType;
+use function Flow\PostgreSql\DSL\discard;
+use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::SEQUENCES);
 
@@ -708,8 +708,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\discard;
-use Flow\PgQuery\QueryBuilder\Utility\DiscardType;
+use function Flow\PostgreSql\DSL\discard;
+use Flow\PostgreSql\QueryBuilder\Utility\DiscardType;
 
 $query = discard(DiscardType::TEMP);
 
@@ -728,4 +728,4 @@ echo $query->toSQL();
 
 ## DSL Functions Reference
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

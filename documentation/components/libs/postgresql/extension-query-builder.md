@@ -1,6 +1,6 @@
 # Extension Query Builder
 
-- [Back](/documentation/components/libs/pg-query.md)
+- [Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -14,7 +14,7 @@ CREATE EXTENSION, ALTER EXTENSION, and DROP EXTENSION.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->extension('uuid-ossp');
 
@@ -27,7 +27,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->extension('uuid-ossp')
     ->ifNotExists();
@@ -43,7 +43,7 @@ Install the extension's objects in a specific schema:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->extension('uuid-ossp')
     ->schema('public');
@@ -59,7 +59,7 @@ Install a specific version of the extension:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->extension('postgis')
     ->version('3.0');
@@ -75,7 +75,7 @@ Automatically install any extensions that this extension depends on:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->extension('postgis_raster')
     ->cascade();
@@ -89,7 +89,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->extension('postgis')
     ->ifNotExists()
@@ -110,7 +110,7 @@ Update to the latest version:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->extension('postgis')
     ->update();
@@ -124,7 +124,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->extension('postgis')
     ->updateTo('3.0');
@@ -140,7 +140,7 @@ Move extension objects to a different schema:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->extension('uuid-ossp')
     ->setSchema('public');
@@ -156,7 +156,7 @@ Add a function to an extension:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->extension('my_extension')
     ->addFunction('my_func', ['integer', 'text']);
@@ -170,7 +170,7 @@ Add a table to an extension:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->extension('my_extension')
     ->addTable('my_table');
@@ -184,7 +184,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->extension('my_extension')
     ->dropFunction('my_func', ['integer']);
@@ -206,7 +206,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('uuid-ossp');
 
@@ -219,7 +219,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('uuid-ossp')
     ->ifExists();
@@ -235,7 +235,7 @@ Drop all objects that depend on the extension:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('postgis')
     ->cascade();
@@ -251,7 +251,7 @@ Refuse to drop the extension if any objects depend on it (default behavior):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('uuid-ossp')
     ->restrict();
@@ -265,7 +265,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('postgis', 'postgis_raster', 'postgis_topology');
 
@@ -278,7 +278,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->extension('postgis')
     ->ifExists()
@@ -288,4 +288,4 @@ echo $query->toSQL();
 // DROP EXTENSION IF EXISTS postgis CASCADE
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

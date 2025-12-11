@@ -1,6 +1,6 @@
 # Sequence Query Builder
 
-- [Back](/documentation/components/libs/pg-query.md)
+- [Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -14,7 +14,7 @@ CREATE SEQUENCE, ALTER SEQUENCE, and DROP SEQUENCE.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq');
 
@@ -27,7 +27,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq', 'public');
 
@@ -40,7 +40,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq')->ifNotExists();
 
@@ -55,7 +55,7 @@ Create a temporary sequence that is automatically dropped at the end of the sess
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('temp_seq')->temporary();
 
@@ -70,7 +70,7 @@ Create an unlogged sequence for better performance (data not written to WAL):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('fast_seq')->unlogged();
 
@@ -85,7 +85,7 @@ Specify the starting value of the sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq')
     ->startWith(100);
@@ -101,7 +101,7 @@ Specify the increment value (positive for ascending, negative for descending):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq')
     ->incrementBy(10);
@@ -117,7 +117,7 @@ Set the minimum value or remove the minimum bound:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 // Set minimum value
 $query = create()->sequence('user_id_seq')
@@ -141,7 +141,7 @@ Set the maximum value or remove the maximum bound:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 // Set maximum value
 $query = create()->sequence('user_id_seq')
@@ -165,7 +165,7 @@ Specify how many sequence numbers are preallocated and stored in memory:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq')
     ->cache(20);
@@ -181,7 +181,7 @@ Enable or disable cycling when the sequence reaches its bounds:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 // Enable cycling
 $query = create()->sequence('user_id_seq')
@@ -205,7 +205,7 @@ Specify the data type of the sequence (smallint, integer, or bigint):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq')
     ->asType('bigint');
@@ -221,7 +221,7 @@ Associate the sequence with a table column (dropped automatically when the colum
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 // Basic owned by
 $query = create()->sequence('user_id_seq')
@@ -250,7 +250,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->sequence('user_id_seq')
     ->asType('bigint')
@@ -274,7 +274,7 @@ Restart the sequence at its start value or at a specific value:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 // Restart at start value
 $query = alter()->sequence('user_id_seq')
@@ -298,7 +298,7 @@ Only alter the sequence if it exists:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->sequence('user_id_seq')
     ->ifExists()
@@ -313,7 +313,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->sequence('user_id_seq', 'public')
     ->incrementBy(10);
@@ -329,7 +329,7 @@ All CREATE SEQUENCE options can also be modified with ALTER SEQUENCE:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->sequence('user_id_seq')
     ->incrementBy(10)
@@ -348,7 +348,7 @@ Rename a sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->sequence('old_seq')
     ->renameTo('new_seq');
@@ -364,7 +364,7 @@ Move a sequence to a different schema:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->sequence('user_id_seq')
     ->setSchema('new_schema');
@@ -380,7 +380,7 @@ Change the owner of a sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->sequence('user_id_seq')
     ->ownerTo('new_owner');
@@ -396,7 +396,7 @@ Change the logging behavior of a sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 // Make the sequence logged
 $query = alter()->sequence('user_id_seq')
@@ -420,7 +420,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq');
 
@@ -433,7 +433,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('public.user_id_seq');
 
@@ -446,7 +446,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq')->ifExists();
 
@@ -459,7 +459,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq', 'order_id_seq', 'product_id_seq');
 
@@ -474,7 +474,7 @@ Drop objects that depend on the sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq')
     ->cascade();
@@ -490,7 +490,7 @@ Refuse to drop the sequence if any objects depend on it (default behavior):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq')
     ->restrict();
@@ -504,7 +504,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->sequence('user_id_seq')
     ->ifExists()
@@ -514,4 +514,4 @@ echo $query->toSQL();
 // DROP SEQUENCE IF EXISTS user_id_seq CASCADE
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

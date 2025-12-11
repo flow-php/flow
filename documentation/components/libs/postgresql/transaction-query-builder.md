@@ -1,6 +1,6 @@
 # Transaction Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -13,7 +13,7 @@ The Transaction Query Builder provides a fluent, type-safe interface for constru
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\begin;
+use function Flow\PostgreSql\DSL\begin;
 
 $query = begin();
 
@@ -26,8 +26,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\begin;
-use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
+use function Flow\PostgreSql\DSL\begin;
+use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 
 $query = begin()
     ->isolationLevel(IsolationLevel::SERIALIZABLE);
@@ -41,7 +41,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\begin;
+use function Flow\PostgreSql\DSL\begin;
 
 // Read-only transaction
 $query = begin()
@@ -65,8 +65,8 @@ Deferrable transactions are useful for long-running read-only queries that need 
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\begin;
-use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
+use function Flow\PostgreSql\DSL\begin;
+use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 
 $query = begin()
     ->isolationLevel(IsolationLevel::SERIALIZABLE)
@@ -84,7 +84,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\commit;
+use function Flow\PostgreSql\DSL\commit;
 
 $query = commit();
 
@@ -99,7 +99,7 @@ Start a new transaction with the same characteristics immediately after committi
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\commit;
+use function Flow\PostgreSql\DSL\commit;
 
 $query = commit()
     ->andChain();
@@ -115,7 +115,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\rollback;
+use function Flow\PostgreSql\DSL\rollback;
 
 $query = rollback();
 
@@ -130,7 +130,7 @@ Roll back to a specific savepoint:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\rollback;
+use function Flow\PostgreSql\DSL\rollback;
 
 $query = rollback()
     ->toSavepoint('my_savepoint');
@@ -144,7 +144,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\rollback;
+use function Flow\PostgreSql\DSL\rollback;
 
 $query = rollback()
     ->andChain();
@@ -160,7 +160,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\savepoint;
+use function Flow\PostgreSql\DSL\savepoint;
 
 $query = savepoint('my_savepoint');
 
@@ -173,7 +173,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\release_savepoint;
+use function Flow\PostgreSql\DSL\release_savepoint;
 
 $query = release_savepoint('my_savepoint');
 
@@ -188,8 +188,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\set_transaction;
-use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
+use function Flow\PostgreSql\DSL\set_transaction;
+use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 
 $query = set_transaction()
     ->isolationLevel(IsolationLevel::SERIALIZABLE);
@@ -203,7 +203,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\set_transaction;
+use function Flow\PostgreSql\DSL\set_transaction;
 
 $query = set_transaction()
     ->readOnly();
@@ -217,8 +217,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\set_transaction;
-use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
+use function Flow\PostgreSql\DSL\set_transaction;
+use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 
 $query = set_transaction()
     ->isolationLevel(IsolationLevel::SERIALIZABLE)
@@ -236,8 +236,8 @@ Set default transaction characteristics for the session:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\set_session_transaction;
-use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
+use function Flow\PostgreSql\DSL\set_session_transaction;
+use Flow\PostgreSql\QueryBuilder\Transaction\IsolationLevel;
 
 $query = set_session_transaction()
     ->isolationLevel(IsolationLevel::SERIALIZABLE);
@@ -253,7 +253,7 @@ Import a snapshot from another session (for parallel queries):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\transaction_snapshot;
+use function Flow\PostgreSql\DSL\transaction_snapshot;
 
 $query = transaction_snapshot('00000003-0000001A-1');
 
@@ -270,7 +270,7 @@ Two-phase commit is useful for distributed transactions across multiple database
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\prepare_transaction;
+use function Flow\PostgreSql\DSL\prepare_transaction;
 
 $query = prepare_transaction('my_transaction');
 
@@ -283,7 +283,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\commit_prepared;
+use function Flow\PostgreSql\DSL\commit_prepared;
 
 $query = commit_prepared('my_transaction');
 
@@ -296,7 +296,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\rollback_prepared;
+use function Flow\PostgreSql\DSL\rollback_prepared;
 
 $query = rollback_prepared('my_transaction');
 
@@ -317,4 +317,4 @@ The `IsolationLevel` enum provides four standard SQL isolation levels:
 
 ## DSL Functions Reference
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

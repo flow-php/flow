@@ -1,6 +1,6 @@
 # Domain Query Builder
 
-- [Back](/documentation/components/libs/pg-query.md)
+- [Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -16,7 +16,7 @@ Domains are user-defined data types with optional constraints. They are useful f
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('email')
     ->as('text');
@@ -30,7 +30,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('public.email')
     ->as('text');
@@ -44,7 +44,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('email')
     ->as('text')
@@ -61,7 +61,7 @@ Explicitly allow NULL values:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('email')
     ->as('text')
@@ -78,7 +78,7 @@ Set a default value:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('email')
     ->as('text')
@@ -95,7 +95,7 @@ Add a CHECK constraint:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('positive_int')
     ->as('int4')
@@ -112,7 +112,7 @@ Add a named CHECK constraint:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('positive_int')
     ->as('int4')
@@ -130,7 +130,7 @@ Specify a collation:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('email')
     ->as('text')
@@ -145,7 +145,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->domain('email')
     ->as('text')
@@ -163,7 +163,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->setNotNull();
@@ -177,7 +177,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->dropNotNull();
@@ -191,7 +191,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->setDefault("'default@example.com'");
@@ -205,7 +205,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->dropDefault();
@@ -219,7 +219,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->addConstraint('valid_email', "VALUE ~ '^.+@.+$'");
@@ -233,7 +233,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->dropConstraint('valid_email');
@@ -247,7 +247,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->dropConstraint('valid_email')
@@ -264,7 +264,7 @@ Validate an existing constraint:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('email')
     ->validateConstraint('valid_email');
@@ -278,7 +278,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->domain('public.email')
     ->setNotNull();
@@ -294,7 +294,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email');
 
@@ -307,7 +307,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email')
     ->ifExists();
@@ -323,7 +323,7 @@ Drop all objects that depend on the domain:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email')
     ->cascade();
@@ -339,7 +339,7 @@ Refuse to drop the domain if any objects depend on it (default behavior):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email')
     ->restrict();
@@ -353,7 +353,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email', 'phone', 'url');
 
@@ -366,7 +366,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->domain('email')
     ->ifExists()
@@ -376,4 +376,4 @@ echo $query->toSQL();
 // DROP DOMAIN IF EXISTS email CASCADE
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

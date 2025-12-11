@@ -1,6 +1,6 @@
 # Merge Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -11,7 +11,7 @@ The Merge Query Builder provides a fluent, type-safe interface for constructing 
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq};
+use function Flow\PostgreSql\DSL\{merge, col, eq};
 
 $query = merge('target_table', 't')
     ->using('source_table', 's')
@@ -31,7 +31,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq};
+use function Flow\PostgreSql\DSL\{merge, col, eq};
 
 $query = merge('target_table', 't')
     ->using('source_table', 's')
@@ -48,7 +48,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq};
+use function Flow\PostgreSql\DSL\{merge, col, eq};
 
 $query = merge('customers')
     ->using('new_customers', 'nc')
@@ -70,7 +70,7 @@ Alternative syntax using column => value pairs:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq, literal};
+use function Flow\PostgreSql\DSL\{merge, col, eq, literal};
 
 $query = merge('users')
     ->using('new_users', 'n')
@@ -93,7 +93,7 @@ Combine different actions based on matching conditions:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq};
+use function Flow\PostgreSql\DSL\{merge, col, eq};
 
 $query = merge('inventory', 'i')
     ->using('updates', 'u')
@@ -120,7 +120,7 @@ Add conditions to WHEN MATCHED and WHEN NOT MATCHED clauses:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq, gt, literal};
+use function Flow\PostgreSql\DSL\{merge, col, eq, gt, literal};
 
 $query = merge('products', 'p')
     ->using('price_updates', 'pu')
@@ -139,7 +139,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq};
+use function Flow\PostgreSql\DSL\{merge, col, eq};
 
 $query = merge('products')
     ->using('updates', 'u')
@@ -158,11 +158,11 @@ Use a subquery as the source:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq, select, cte_ref};
+use function Flow\PostgreSql\DSL\{merge, col, eq, select, table};
 
 $sourceQuery = select()
     ->select(col('id'), col('name'), col('email'))
-    ->from(cte_ref('staged_data'));
+    ->from(table('staged_data'));
 
 $query = merge('users')
     ->using($sourceQuery, 'src')
@@ -182,17 +182,15 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{with, col, eq, select, cte, cte_ref, with_cte};
+use function Flow\PostgreSql\DSL\{with, col, eq, select, cte, table, merge};
 
 $stagedData = select()
     ->select(col('id'), col('name'))
-    ->from(cte_ref('raw_input'));
+    ->from(table('raw_input'));
 
-$withClause = with_cte([
-    cte('staged_data', $stagedData),
-]);
-
-$query = with($withClause)->merge('users')
+$query = with(
+    cte('staged_data', $stagedData)
+)->merge('users')
     ->using('staged_data', 's')
     ->on(eq(col('users.id'), col('s.id')))
     ->whenMatched()
@@ -200,7 +198,7 @@ $query = with($withClause)->merge('users')
         'name' => col('s.name'),
     ]);
 
-echo $query->toSQL();
+echo $query->toSql();
 // WITH staged_data AS (SELECT id, name FROM raw_input) MERGE INTO users USING staged_data s ON users.id = s.id WHEN MATCHED THEN UPDATE SET name = s.name
 ```
 
@@ -211,7 +209,7 @@ Use positional parameters for prepared statements:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq, param};
+use function Flow\PostgreSql\DSL\{merge, col, eq, param};
 
 $query = merge('accounts')
     ->using('transactions', 't')
@@ -232,7 +230,7 @@ Handle rows in the target that don't have matching rows in the source:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq};
+use function Flow\PostgreSql\DSL\{merge, col, eq};
 
 $query = merge('target', 't')
     ->using('source', 's')
@@ -249,7 +247,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq};
+use function Flow\PostgreSql\DSL\{merge, col, eq};
 
 $query = merge('myschema.users', 'u')
     ->using('public.updates', 's')
@@ -263,4 +261,4 @@ echo $query->toSQL();
 
 ## DSL Functions
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

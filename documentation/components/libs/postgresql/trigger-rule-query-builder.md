@@ -9,8 +9,8 @@ This document describes the PostgreSQL Trigger and Rule Query Builder components
 Create triggers using the `create_trigger()` DSL function:
 
 ```php
-use function Flow\PgQuery\DSL\create;
-use Flow\PgQuery\QueryBuilder\Schema\Trigger\TriggerEvent;
+use function Flow\PostgreSql\DSL\create;
+use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent;
 
 // Basic AFTER INSERT trigger
 $builder = create()->trigger('audit_trigger')
@@ -88,7 +88,7 @@ $builder = create()->trigger('batch_process')
 Rename triggers or manage extension dependencies:
 
 ```php
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 // Rename trigger
 $builder = alter()->trigger('old_name')
@@ -114,7 +114,7 @@ $builder = alter()->trigger('my_trigger')
 Drop triggers with optional IF EXISTS and CASCADE/RESTRICT:
 
 ```php
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 // Basic drop
 $builder = drop()->trigger('audit_trigger')->on('users');
@@ -141,41 +141,41 @@ $builder = drop()->trigger('audit_trigger')
 
 ### ENABLE/DISABLE TRIGGER
 
-Use `alter_table()` to enable or disable triggers:
+Use `alter()->table()` to enable or disable triggers:
 
 ```php
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PostgreSql\DSL\alter;
 
 // Enable trigger
-$builder = alter_table('users')->enableTrigger('audit_trigger');
+$builder = alter()->table('users')->enableTrigger('audit_trigger');
 // ALTER TABLE users ENABLE TRIGGER audit_trigger
 
 // Enable all triggers
-$builder = alter_table('users')->enableTriggerAll();
+$builder = alter()->table('users')->enableTriggerAll();
 // ALTER TABLE users ENABLE TRIGGER ALL
 
 // Enable user triggers only
-$builder = alter_table('users')->enableTriggerUser();
+$builder = alter()->table('users')->enableTriggerUser();
 // ALTER TABLE users ENABLE TRIGGER USER
 
 // Enable always (fires even during replication)
-$builder = alter_table('users')->enableTriggerAlways('critical_trigger');
+$builder = alter()->table('users')->enableTriggerAlways('critical_trigger');
 // ALTER TABLE users ENABLE ALWAYS TRIGGER critical_trigger
 
 // Enable replica (fires only during replication)
-$builder = alter_table('users')->enableTriggerReplica('sync_trigger');
+$builder = alter()->table('users')->enableTriggerReplica('sync_trigger');
 // ALTER TABLE users ENABLE REPLICA TRIGGER sync_trigger
 
 // Disable trigger
-$builder = alter_table('users')->disableTrigger('audit_trigger');
+$builder = alter()->table('users')->disableTrigger('audit_trigger');
 // ALTER TABLE users DISABLE TRIGGER audit_trigger
 
 // Disable all triggers
-$builder = alter_table('users')->disableTriggerAll();
+$builder = alter()->table('users')->disableTriggerAll();
 // ALTER TABLE users DISABLE TRIGGER ALL
 
 // Disable user triggers only
-$builder = alter_table('users')->disableTriggerUser();
+$builder = alter()->table('users')->disableTriggerUser();
 // ALTER TABLE users DISABLE TRIGGER USER
 ```
 
@@ -186,7 +186,7 @@ $builder = alter_table('users')->disableTriggerUser();
 Create rules using the `create_rule()` DSL function:
 
 ```php
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 // DO NOTHING rule
 $builder = create()->rule('prevent_delete')
@@ -245,7 +245,7 @@ $builder = create()->rule('audit_rule')
 Drop rules with optional IF EXISTS and CASCADE/RESTRICT:
 
 ```php
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 // Basic drop
 $builder = drop()->rule('prevent_delete')->on('users');
@@ -275,7 +275,7 @@ $builder = drop()->rule('audit_rule')
 ### TriggerTiming
 
 ```php
-use Flow\PgQuery\QueryBuilder\Schema\Trigger\TriggerTiming;
+use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerTiming;
 
 TriggerTiming::BEFORE;      // BEFORE timing
 TriggerTiming::AFTER;       // AFTER timing
@@ -285,7 +285,7 @@ TriggerTiming::INSTEAD_OF;  // INSTEAD OF timing (for views)
 ### TriggerEvent
 
 ```php
-use Flow\PgQuery\QueryBuilder\Schema\Trigger\TriggerEvent;
+use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerEvent;
 
 TriggerEvent::INSERT;    // INSERT event
 TriggerEvent::UPDATE;    // UPDATE event
@@ -296,7 +296,7 @@ TriggerEvent::TRUNCATE;  // TRUNCATE event
 ### TriggerLevel
 
 ```php
-use Flow\PgQuery\QueryBuilder\Schema\Trigger\TriggerLevel;
+use Flow\PostgreSql\QueryBuilder\Schema\Trigger\TriggerLevel;
 
 TriggerLevel::ROW;        // FOR EACH ROW
 TriggerLevel::STATEMENT;  // FOR EACH STATEMENT (default)
@@ -305,7 +305,7 @@ TriggerLevel::STATEMENT;  // FOR EACH STATEMENT (default)
 ### RuleEvent
 
 ```php
-use Flow\PgQuery\QueryBuilder\Schema\Rule\RuleEvent;
+use Flow\PostgreSql\QueryBuilder\Schema\Rule\RuleEvent;
 
 RuleEvent::SELECT;  // ON SELECT
 RuleEvent::INSERT;  // ON INSERT
@@ -316,7 +316,7 @@ RuleEvent::DELETE;  // ON DELETE
 ### RuleAction
 
 ```php
-use Flow\PgQuery\QueryBuilder\Schema\Rule\RuleAction;
+use Flow\PostgreSql\QueryBuilder\Schema\Rule\RuleAction;
 
 RuleAction::ALSO;     // DO ALSO
 RuleAction::INSTEAD;  // DO INSTEAD
