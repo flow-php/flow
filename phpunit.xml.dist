@@ -195,6 +195,34 @@
             <directory suffix=".php">src/lib/parquet/src/Flow/Parquet/Thrift</directory>
             <directory suffix=".php">src/lib/postgresql/src/Flow/PostgreSql/Protobuf</directory>
             <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
+            <file>src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php</file>
+            <file>src/functions.php</file>
+            <file>src/tools/documentation/tests/Flow/Documentation/Tests/Integration/functions.php</file>
+            <file>src/core/etl/src/Flow/ETL/DSL/functions.php</file>
+            <file>src/bridge/filesystem/async-aws/src/Flow/Filesystem/Bridge/AsyncAWS/DSL/functions.php</file>
+            <file>src/bridge/filesystem/azure/src/Flow/Filesystem/Bridge/Azure/DSL/functions.php</file>
+            <file>src/bridge/openapi/specification/src/Flow/Bridge/OpenAPI/Specification/DSL/functions.php</file>
+            <file>src/bridge/monolog/http/src/Flow/Bridge/Monolog/Http/DSL/functions.php</file>
+            <file>src/bridge/symfony/http-foundation/src/Flow/Bridge/Symfony/HttpFoundation/functions.php</file>
+            <file>src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php</file>
+            <file>src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php</file>
+            <file>src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php</file>
+            <file>src/adapter/etl-adapter-http/src/Flow/ETL/Adapter/Http/DSL/functions.php</file>
+            <file>src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php</file>
+            <file>src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php</file>
+            <file>src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php</file>
+            <file>src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php</file>
+            <file>src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php</file>
+            <file>src/adapter/etl-adapter-chartjs/src/Flow/ETL/Adapter/ChartJS/functions.php</file>
+            <file>src/adapter/etl-adapter-excel/src/Flow/ETL/Adapter/Excel/DSL/functions.php</file>
+            <file>src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php</file>
+            <file>src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php</file>
+            <file>src/cli/src/Flow/CLI/DSL/functions.php</file>
+            <file>src/lib/postgresql/src/Flow/PostgreSql/DSL/functions.php</file>
+            <file>src/lib/types/src/Flow/Types/DSL/functions.php</file>
+            <file>src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php</file>
+            <file>src/lib/parquet/src/Flow/Parquet/functions.php</file>
+            <file>src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php</file>
         </exclude>
     </source>
 </phpunit>

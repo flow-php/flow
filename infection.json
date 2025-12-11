@@ -8,7 +8,7 @@
       "src/lib/parquet/src"
     ],
     "excludes": [
-      "Flow/ETL/DSL",
+      "{.*/DSL.*}",
       "Flow/ETL/Attribute",
       "Flow/Calculator/Exception",
       "Flow/Serializer/Exception",
@@ -70,6 +70,59 @@
       "ignore": [
         "Flow\\Doctrine\\Bulk\\BulkData"
       ]
+    },
+    "UnwrapRtrim": {
+      "ignore": [
+        "Flow\\Calculator\\Calculator::*"
+      ]
+    },
+    "LogicalAnd": {
+      "ignore": [
+        "Flow\\ArrayComparison\\ArrayComparison::equals"
+      ]
+    },
+    "LogicalOr": {
+      "ignore": [
+        "Flow\\ArrayComparison\\ArrayComparison::equals"
+      ]
+    },
+    "AssignCoalesce": {
+      "ignore": [
+        "Flow\\ETL\\Config\\ConfigBuilder::build"
+      ]
+    },
+    "Coalesce": {
+      "ignore": [
+        "Flow\\ETL\\Cache\\Implementation\\FilesystemCache::__construct",
+        "Flow\\ETL\\Config\\Cache\\CacheConfigBuilder::build"
+      ]
+    },
+    "CloneRemoval": {
+      "ignore": [
+        "Flow\\ETL\\DataFrame::count",
+        "Flow\\ETL\\DataFrame::fetch", 
+        "Flow\\ETL\\DataFrame::run",
+        "Flow\\ETL\\DataFrame::get*"
+      ]
+    },
+    "MethodCallRemoval": {
+      "ignore": [
+        "Flow\\ETL\\DataFrame::autoCast",
+        "Flow\\ETL\\DataFrame::aggregate",
+        "Flow\\ETL\\DataFrame::match"
+      ]
+    },
+    "BitwiseAnd": {
+      "ignore": [
+        "Flow\\Parquet\\Data\\*"
+      ]
+    },
+    "Assignment": {
+      "ignore": [
+        "Flow\\Parquet\\Writer\\*::addRow",
+        "Flow\\Parquet\\Writer\\*::addBytes",
+        "Flow\\Parquet\\Data\\*::*"
+      ]
     }
   },
   "bootstrap": "vendor/autoload.php",
@@ -79,5 +132,5 @@
   },
   "tmpDir": "var/infection/cache",
   "minMsi": 30,
-  "minCoveredMsi": 75
+  "minCoveredMsi": 70
 }

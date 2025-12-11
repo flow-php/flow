@@ -417,6 +417,7 @@
             "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=parquet-library"
         ],
         "test:mutation": [
+            "Composer\\Config::disableProcessTimeout",
             "tools/infection/vendor/bin/infection --threads=max"
         ],
         "test:monorepo": "tools/monorepo/vendor/bin/monorepo-builder validate",
@@ -449,6 +450,9 @@
             "Composer\\Config::disableProcessTimeout",
             "cd wasm && ./build.sh",
             "@build:phar"
+        ],
+        "build:docker": [
+            "docker buildx build -t flow-php/flow:latest . --progress=plain --load"
         ],
         "build:docs": [
             "bin/docs.php dsl:dump web/landing/resources/dsl.json",
