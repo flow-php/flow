@@ -234,29 +234,48 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    select, with, star, table, col,
-    cte, cte_ref, with_cte, eq, literal_bool
+    select, with, star, table, col, cte, eq, literal_bool
 };
 
 use Flow\PgQuery\QueryBuilder\Clause\CTEMaterialization;
 
 // Simple CTE
-$query = with(with_cte([
+$query = with(
     cte(
         'active_users',
         select(col('id'), col('name'))
             ->from(table('users'))
             ->where(eq(col('active'), literal_bool(true)))
-    ),
-]))
+    )
+)
     ->select(star())
-    ->from(cte_ref('active_users'));
+    ->from(table('active_users'));
 
 echo $query->toSQL();
 // WITH active_users AS (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users
 
+// Multiple CTEs
+$query = with(
+    cte('users_cte', select(col('id'), col('name'))->from(table('users'))),
+    cte('orders_cte', select(col('id'), col('user_id'))->from(table('orders')))
+)
+    ->select(star())
+    ->from(table('users_cte'));
+
+echo $query->toSQL();
+// WITH users_cte AS (SELECT id, name FROM users), orders_cte AS (SELECT id, user_id FROM orders) SELECT * FROM users_cte
+
+// Recursive CTE
+$query = with(cte('tree', $recursiveQuery))
+    ->recursive()
+    ->select(star())
+    ->from(table('tree'));
+
+echo $query->toSQL();
+// WITH RECURSIVE tree AS (...) SELECT * FROM tree
+
 // Materialized CTE
-$query = with(with_cte([
+$query = with(
     cte(
         'active_users',
         select(col('id'), col('name'))
@@ -264,10 +283,10 @@ $query = with(with_cte([
             ->where(eq(col('active'), literal_bool(true))),
         [],
         CTEMaterialization::MATERIALIZED
-    ),
-]))
+    )
+)
     ->select(star())
-    ->from(cte_ref('active_users'));
+    ->from(table('active_users'));
 
 echo $query->toSQL();
 // WITH active_users AS MATERIALIZED (SELECT id, name FROM users WHERE active = true) SELECT * FROM active_users

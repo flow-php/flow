@@ -115,7 +115,6 @@ use Flow\PgQuery\QueryBuilder\Schema\Type\TypeAttribute;
 use Flow\PgQuery\QueryBuilder\Schema\View\RefreshMaterializedView\{RefreshMatViewOptionsStep, RefreshMaterializedViewBuilder};
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PgQuery\QueryBuilder\Table\{
-    CTEReference,
     DerivedTable,
     Lateral,
     Table,
@@ -376,13 +375,17 @@ function select(Expression ...$expressions) : SelectBuilder
 /**
  * Create a WITH clause builder for CTEs.
  *
- * Example: with(with_cte([cte('users', $subquery)]))->select(star())->from(cte_ref('users'))
- * Example: with(with_cte([cte('data', $subquery)], recursive: true))->select(col('id'))->from(...)
+ * Example: with(cte('users', $subquery))->select(star())->from(table('users'))
+ * Example: with(cte('a', $q1), cte('b', $q2))->recursive()->select(...)->from(table('a'))
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function with(WithClause $clause) : WithBuilder
+function with(CTE ...$ctes) : WithBuilder
 {
-    return new WithBuilder($clause);
+    if ($ctes === []) {
+        throw new \InvalidArgumentException('At least one CTE is required');
+    }
+
+    return new WithBuilder(new WithClause($ctes));
 }
 
 /**
@@ -1233,21 +1236,6 @@ function table(string $name, ?string $schema = null) : Table
 }
 
 /**
- * Create a CTE (Common Table Expression) reference.
- *
- * @param non-empty-string $name CTE name
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function cte_ref(string $name) : CTEReference
-{
-    if ($name === '') {
-        throw new \InvalidArgumentException('CTE name cannot be empty');
-    }
-
-    return new CTEReference($name);
-}
-
-/**
  * Create a derived table (subquery in FROM clause).
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
@@ -1314,18 +1302,6 @@ function asc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : 
 function desc(Expression $expr, NullsPosition $nulls = NullsPosition::DEFAULT) : OrderByItem
 {
     return new OrderByItem($expr, SortDirection::DESC, $nulls);
-}
-
-/**
- * Create a WITH clause (CTE container).
- *
- * @param array<CTE> $ctes CTEs to include
- * @param bool $recursive Whether this is a recursive WITH
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function with_cte(array $ctes, bool $recursive = false) : WithClause
-{
-    return new WithClause($ctes, $recursive);
 }
 
 /**

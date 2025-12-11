@@ -44,6 +44,14 @@ final readonly class WithBuilder
     }
 
     /**
+     * Mark this WITH clause as recursive.
+     */
+    public function recursive() : self
+    {
+        return new self(new WithClause($this->withClause->ctes(), true));
+    }
+
+    /**
      * Start a SELECT query with this WITH clause.
      */
     public function select(Expression ...$expressions) : SelectFromStep|SelectSelectStep

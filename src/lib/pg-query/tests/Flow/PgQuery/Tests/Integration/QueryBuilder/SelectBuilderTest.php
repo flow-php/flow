@@ -24,7 +24,6 @@ use function Flow\PgQuery\DSL\{
     cond_not,
     cond_or,
     cte,
-    cte_ref,
     derived,
     desc,
     eq,
@@ -61,8 +60,7 @@ use function Flow\PgQuery\DSL\{
     when,
     window_def,
     window_func,
-    with,
-    with_cte
+    with
 };
 use Flow\PgQuery\QueryBuilder\Clause\{CTEMaterialization, NullsPosition, SortDirection};
 
@@ -303,17 +301,17 @@ final class SelectBuilderTest extends PGQueryTestCase
 
     public function test_select_with_cte() : void
     {
-        $query = with(with_cte([
+        $query = with(
             cte(
                 'active_users',
                 select()
                     ->select(col('id'), col('name'))
                     ->from(table('users'))
                     ->where(eq(col('active'), literal_bool(true)))
-            ),
-        ]))
+            )
+        )
             ->select(star())
-            ->from(cte_ref('active_users'));
+            ->from(table('active_users'));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -328,11 +326,9 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('users'))
             ->where(eq(col('active'), literal_bool(true)));
 
-        $query = with(with_cte([
-            cte('active_users', $cteQuery, [], CTEMaterialization::MATERIALIZED),
-        ]))
+        $query = with(cte('active_users', $cteQuery, [], CTEMaterialization::MATERIALIZED))
             ->select(star())
-            ->from(cte_ref('active_users'));
+            ->from(table('active_users'));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -347,11 +343,9 @@ final class SelectBuilderTest extends PGQueryTestCase
             ->from(table('users'))
             ->where(eq(col('active'), literal_bool(true)));
 
-        $query = with(with_cte([
-            cte('active_users', $cteQuery, [], CTEMaterialization::NOT_MATERIALIZED),
-        ]))
+        $query = with(cte('active_users', $cteQuery, [], CTEMaterialization::NOT_MATERIALIZED))
             ->select(star())
-            ->from(cte_ref('active_users'));
+            ->from(table('active_users'));
 
         $this->assertSelectQueryRoundTrip(
             $query,
@@ -917,7 +911,7 @@ final class SelectBuilderTest extends PGQueryTestCase
                 )
             )
             ->from(table('employees')->as('e'))
-            ->join(cte_ref('org_tree'), eq(col('e.manager_id'), col('org_tree.id')));
+            ->join(table('org_tree'), eq(col('e.manager_id'), col('org_tree.id')));
 
         $orgTreeQuery = $orgTreeAnchor->unionAll($orgTreeRecursive);
 
@@ -954,19 +948,20 @@ final class SelectBuilderTest extends PGQueryTestCase
             )
             ->from(table('employees')->as('e'))
             ->join(
-                cte_ref('dept_stats')->as('ds'),
+                table('dept_stats')->as('ds'),
                 eq(col('e.department_id'), col('ds.department_id'))
             );
 
-        $query = with(with_cte([
+        $query = with(
             cte('org_tree', $orgTreeQuery, ['id', 'name', 'manager_id', 'level', 'path']),
             cte('dept_stats', $deptStats, ['department_id', 'avg_salary', 'max_salary', 'employee_count']),
             cte(
                 'ranked_employees',
                 $rankedEmployees,
                 ['id', 'name', 'department_id', 'salary', 'salary_rank', 'pct_of_max']
-            ),
-        ], true))
+            )
+        )
+            ->recursive()
             ->select(
                 col('org_tree.name')->as('employee'),
                 col('org_tree.level'),
@@ -983,10 +978,10 @@ final class SelectBuilderTest extends PGQueryTestCase
                     ),
                 ], literal_string('At/Below Average'))->as('salary_status')
             )
-            ->from(cte_ref('org_tree'))
-            ->join(cte_ref('ranked_employees')->as('re'), eq(col('org_tree.id'), col('re.id')))
+            ->from(table('org_tree'))
+            ->join(table('ranked_employees')->as('re'), eq(col('org_tree.id'), col('re.id')))
             ->join(
-                cte_ref('dept_stats')->as('ds'),
+                table('dept_stats')->as('ds'),
                 eq(col('re.department_id'), col('ds.department_id'))
             )
             ->join(table('departments')->as('d'), eq(col('re.department_id'), col('d.id')))

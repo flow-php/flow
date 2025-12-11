@@ -11,7 +11,6 @@ use function Flow\PgQuery\DSL\{
     cond_and,
     create,
     cte,
-    cte_ref,
     desc,
     eq,
     gt,
@@ -26,8 +25,7 @@ use function Flow\PgQuery\DSL\{
     sql_type_varchar,
     star,
     table,
-    with,
-    with_cte
+    with
 };
 
 final class SelectDatabaseTest extends DatabaseTestCase
@@ -136,9 +134,9 @@ final class SelectDatabaseTest extends DatabaseTestCase
             ->groupBy(col('user_id'));
 
         /** @phpstan-ignore method.notFound (WithBuilder::select return type issue - same as existing SelectBuilderTest) */
-        $query = with(with_cte([cte('order_totals', $cteQuery)]))
+        $query = with(cte('order_totals', $cteQuery))
             ->select(star())
-            ->from(cte_ref('order_totals'))
+            ->from(table('order_totals'))
             ->where(gt(col('total'), literal_int(200)));
 
         $result = $this->execute($query->toSql());
