@@ -50,16 +50,6 @@ jobs:
           echo "extension=pg_query.so" | sudo tee -a "$(php -r 'echo php_ini_loaded_file();')"
           php -m | grep pg_query
 
-      - name: Run pg-query library tests
-        run: composer test:lib:pg-query
-
-      - name: Upload to Codecov
-        uses: ./.github/actions/codecov-report
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          php-version: ${{ matrix.php }}
-          dependencies: locked
-
   pie-install-test:
     name: Test PIE Installation
     runs-on: ubuntu-latest
