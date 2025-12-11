@@ -6,8 +6,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
     col,
-    copy_from,
-    copy_to,
+    copy,
     select
 };
 
@@ -20,9 +19,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 {
     public function test_copy_from_basic() : void
     {
-        $query = copy_from()
-            ->table('users')
-            ->fromFile('/tmp/users.csv');
+        $query = copy()
+            ->from('users')
+            ->file('/tmp/users.csv');
 
         $this->assertCopyFromQueryEquals(
             $query,
@@ -32,9 +31,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_from_csv_with_header() : void
     {
-        $query = copy_from()
-            ->table('users')
-            ->fromFile('/tmp/users.csv')
+        $query = copy()
+            ->from('users')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->withHeader();
 
@@ -46,9 +45,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_from_program() : void
     {
-        $query = copy_from()
-            ->table('logs')
-            ->fromProgram('gunzip -c /var/log/app.log.gz');
+        $query = copy()
+            ->from('logs')
+            ->program('gunzip -c /var/log/app.log.gz');
 
         $this->assertCopyFromQueryEquals(
             $query,
@@ -58,9 +57,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_from_stdin() : void
     {
-        $query = copy_from()
-            ->table('users')
-            ->fromStdin()
+        $query = copy()
+            ->from('users')
+            ->stdin()
             ->format(CopyFormat::CSV);
 
         $this->assertCopyFromQueryEquals(
@@ -71,9 +70,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_from_with_all_csv_options() : void
     {
-        $query = copy_from()
-            ->table('data')
-            ->fromFile('/tmp/data.csv')
+        $query = copy()
+            ->from('data')
+            ->file('/tmp/data.csv')
             ->format(CopyFormat::CSV)
             ->withHeader()
             ->delimiter(';')
@@ -90,9 +89,10 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_from_with_columns() : void
     {
-        $query = copy_from()
-            ->table('users', 'id', 'name', 'email')
-            ->fromFile('/tmp/users.csv');
+        $query = copy()
+            ->from('users')
+            ->columns('id', 'name', 'email')
+            ->file('/tmp/users.csv');
 
         $this->assertCopyFromQueryEquals(
             $query,
@@ -102,9 +102,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_from_with_force_not_null() : void
     {
-        $query = copy_from()
-            ->table('users')
-            ->fromFile('/tmp/users.csv')
+        $query = copy()
+            ->from('users')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->forceNotNull('name', 'email');
 
@@ -116,9 +116,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_from_with_on_error_ignore() : void
     {
-        $query = copy_from()
-            ->table('events')
-            ->fromFile('/tmp/events.csv')
+        $query = copy()
+            ->from('events')
+            ->file('/tmp/events.csv')
             ->onError(CopyOnError::IGNORE);
 
         $this->assertCopyFromQueryEquals(
@@ -129,9 +129,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_basic() : void
     {
-        $query = copy_to()
-            ->table('users')
-            ->toFile('/tmp/users.csv');
+        $query = copy()
+            ->to('users')
+            ->file('/tmp/users.csv');
 
         $this->assertCopyToQueryEquals(
             $query,
@@ -141,9 +141,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_binary_format() : void
     {
-        $query = copy_to()
-            ->table('data')
-            ->toFile('/tmp/data.bin')
+        $query = copy()
+            ->to('data')
+            ->file('/tmp/data.bin')
             ->format(CopyFormat::BINARY);
 
         $this->assertCopyToQueryEquals(
@@ -154,9 +154,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_csv_with_header() : void
     {
-        $query = copy_to()
-            ->table('users')
-            ->toFile('/tmp/users.csv')
+        $query = copy()
+            ->to('users')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->withHeader();
 
@@ -168,9 +168,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_program() : void
     {
-        $query = copy_to()
-            ->table('logs')
-            ->toProgram('gzip > /tmp/logs.csv.gz');
+        $query = copy()
+            ->to('logs')
+            ->program('gzip > /tmp/logs.csv.gz');
 
         $this->assertCopyToQueryEquals(
             $query,
@@ -180,9 +180,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_stdout() : void
     {
-        $query = copy_to()
-            ->table('users')
-            ->toStdout()
+        $query = copy()
+            ->to('users')
+            ->stdout()
             ->format(CopyFormat::CSV);
 
         $this->assertCopyToQueryEquals(
@@ -193,9 +193,10 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_with_columns() : void
     {
-        $query = copy_to()
-            ->table('users', 'id', 'name', 'email')
-            ->toFile('/tmp/users.csv');
+        $query = copy()
+            ->to('users')
+            ->columns('id', 'name', 'email')
+            ->file('/tmp/users.csv');
 
         $this->assertCopyToQueryEquals(
             $query,
@@ -205,9 +206,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_with_force_quote_all() : void
     {
-        $query = copy_to()
-            ->table('products')
-            ->toFile('/tmp/products.csv')
+        $query = copy()
+            ->to('products')
+            ->file('/tmp/products.csv')
             ->format(CopyFormat::CSV)
             ->forceQuoteAll();
 
@@ -219,9 +220,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_with_force_quote_columns() : void
     {
-        $query = copy_to()
-            ->table('products')
-            ->toFile('/tmp/products.csv')
+        $query = copy()
+            ->to('products')
+            ->file('/tmp/products.csv')
             ->format(CopyFormat::CSV)
             ->forceQuote('name', 'description');
 
@@ -237,9 +238,9 @@ final class CopyBuilderTest extends PGQueryTestCase
             ->select(col('id'), col('name'))
             ->from(new Table('users'));
 
-        $query = copy_to()
-            ->query($selectQuery)
-            ->toFile('/tmp/active_users.csv')
+        $query = copy()
+            ->toQuery($selectQuery)
+            ->file('/tmp/active_users.csv')
             ->format(CopyFormat::CSV);
 
         $this->assertCopyToQueryEquals(
@@ -250,9 +251,9 @@ final class CopyBuilderTest extends PGQueryTestCase
 
     public function test_copy_to_with_schema() : void
     {
-        $query = copy_to()
-            ->table('analytics.events')
-            ->toFile('/tmp/events.csv');
+        $query = copy()
+            ->to('analytics.events')
+            ->file('/tmp/events.csv');
 
         $this->assertCopyToQueryEquals(
             $query,

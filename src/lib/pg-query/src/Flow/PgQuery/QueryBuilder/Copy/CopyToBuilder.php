@@ -43,6 +43,28 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
         return new self();
     }
 
+    public function columns(string ...$columns) : CopyToDestinationStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            \array_values($columns),
+            $this->query,
+            $this->filename,
+            $this->isProgram,
+            $this->isStdout,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
+            $this->escape,
+            $this->forceQuoteColumns,
+            $this->forceQuoteAll,
+            $this->encoding,
+        );
+    }
+
     public function delimiter(string $delimiter) : CopyToOptionsStep
     {
         return new self(
@@ -103,6 +125,28 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
             $this->header,
             $this->quote,
             $escape,
+            $this->forceQuoteColumns,
+            $this->forceQuoteAll,
+            $this->encoding,
+        );
+    }
+
+    public function file(string $filename) : CopyToOptionsStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $this->query,
+            $filename,
+            false,
+            false,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
+            $this->escape,
             $this->forceQuoteColumns,
             $this->forceQuoteAll,
             $this->encoding,
@@ -197,6 +241,28 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
         );
     }
 
+    public function program(string $command) : CopyToOptionsStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $this->query,
+            $command,
+            true,
+            false,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
+            $this->escape,
+            $this->forceQuoteColumns,
+            $this->forceQuoteAll,
+            $this->encoding,
+        );
+    }
+
     public function query(SelectFinalStep $query) : CopyToDestinationStep
     {
         return new self(
@@ -234,6 +300,28 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
             $this->nullString,
             $this->header,
             $quote,
+            $this->escape,
+            $this->forceQuoteColumns,
+            $this->forceQuoteAll,
+            $this->encoding,
+        );
+    }
+
+    public function stdout() : CopyToOptionsStep
+    {
+        return new self(
+            $this->table,
+            $this->schema,
+            $this->columns,
+            $this->query,
+            null,
+            false,
+            true,
+            $this->format,
+            $this->delimiter,
+            $this->nullString,
+            $this->header,
+            $this->quote,
             $this->escape,
             $this->forceQuoteColumns,
             $this->forceQuoteAll,
@@ -325,72 +413,6 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
         }
 
         return $copyStmt;
-    }
-
-    public function toFile(string $filename) : CopyToOptionsStep
-    {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->columns,
-            $this->query,
-            $filename,
-            false,
-            false,
-            $this->format,
-            $this->delimiter,
-            $this->nullString,
-            $this->header,
-            $this->quote,
-            $this->escape,
-            $this->forceQuoteColumns,
-            $this->forceQuoteAll,
-            $this->encoding,
-        );
-    }
-
-    public function toProgram(string $command) : CopyToOptionsStep
-    {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->columns,
-            $this->query,
-            $command,
-            true,
-            false,
-            $this->format,
-            $this->delimiter,
-            $this->nullString,
-            $this->header,
-            $this->quote,
-            $this->escape,
-            $this->forceQuoteColumns,
-            $this->forceQuoteAll,
-            $this->encoding,
-        );
-    }
-
-    public function toStdout() : CopyToOptionsStep
-    {
-        return new self(
-            $this->table,
-            $this->schema,
-            $this->columns,
-            $this->query,
-            null,
-            false,
-            true,
-            $this->format,
-            $this->delimiter,
-            $this->nullString,
-            $this->header,
-            $this->quote,
-            $this->escape,
-            $this->forceQuoteColumns,
-            $this->forceQuoteAll,
-            $this->encoding,
-        );
     }
 
     public function withHeader(bool $header = true) : CopyToOptionsStep

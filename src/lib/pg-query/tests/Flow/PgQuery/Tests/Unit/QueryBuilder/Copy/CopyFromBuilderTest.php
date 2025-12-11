@@ -23,7 +23,7 @@ final class CopyFromBuilderTest extends TestCase
     {
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->withHeader();
 
@@ -42,7 +42,7 @@ final class CopyFromBuilderTest extends TestCase
     {
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv');
+            ->file('/tmp/users.csv');
 
         $ast = $query->toAst();
 
@@ -63,7 +63,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv');
+            ->file('/tmp/users.csv');
 
         $deparsed = $this->deparse($query->toAst());
         self::assertSame("COPY users FROM '/tmp/users.csv'", $deparsed);
@@ -77,7 +77,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.bin')
+            ->file('/tmp/users.bin')
             ->format(CopyFormat::BINARY);
 
         $deparsed = $this->deparse($query->toAst());
@@ -92,7 +92,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromProgram('gunzip -c /tmp/users.csv.gz');
+            ->program('gunzip -c /tmp/users.csv.gz');
 
         $deparsed = $this->deparse($query->toAst());
         self::assertSame("COPY users FROM PROGRAM 'gunzip -c /tmp/users.csv.gz'", $deparsed);
@@ -106,7 +106,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromStdin();
+            ->stdin();
 
         $deparsed = $this->deparse($query->toAst());
         self::assertSame('COPY users FROM STDIN', $deparsed);
@@ -120,7 +120,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users', 'id', 'name', 'email')
-            ->fromFile('/tmp/users.csv');
+            ->file('/tmp/users.csv');
 
         $deparsed = $this->deparse($query->toAst());
         self::assertSame("COPY users(id, name, email) FROM '/tmp/users.csv'", $deparsed);
@@ -134,7 +134,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV);
 
         $deparsed = $this->deparse($query->toAst());
@@ -149,7 +149,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->delimiter(';');
 
@@ -165,7 +165,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->encoding('UTF8');
 
         $deparsed = $this->deparse($query->toAst());
@@ -180,7 +180,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->escape('\\');
 
@@ -196,7 +196,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->forceNotNull('name', 'email');
 
@@ -212,7 +212,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->forceNull('name', 'email');
 
@@ -228,7 +228,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->withHeader();
 
@@ -244,7 +244,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->nullAs('\\N');
 
         $deparsed = $this->deparse($query->toAst());
@@ -259,7 +259,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->onError(CopyOnError::IGNORE);
 
         $deparsed = $this->deparse($query->toAst());
@@ -274,7 +274,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('users')
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->format(CopyFormat::CSV)
             ->quote("'");
 
@@ -290,7 +290,7 @@ final class CopyFromBuilderTest extends TestCase
 
         $query = CopyFromBuilder::create()
             ->table('myschema.users')
-            ->fromFile('/tmp/users.csv');
+            ->file('/tmp/users.csv');
 
         $deparsed = $this->deparse($query->toAst());
         self::assertSame("COPY myschema.users FROM '/tmp/users.csv'", $deparsed);
@@ -300,7 +300,7 @@ final class CopyFromBuilderTest extends TestCase
     {
         $query = CopyFromBuilder::create()
             ->table('myschema.users')
-            ->fromFile('/tmp/users.csv');
+            ->file('/tmp/users.csv');
 
         $ast = $query->toAst();
 
@@ -318,7 +318,7 @@ final class CopyFromBuilderTest extends TestCase
 
     public function test_immutability_options() : void
     {
-        $original = CopyFromBuilder::create()->table('users')->fromFile('/tmp/users.csv');
+        $original = CopyFromBuilder::create()->table('users')->file('/tmp/users.csv');
         $modified = $original->format(CopyFormat::CSV);
 
         self::assertNotSame($original, $modified);
@@ -327,7 +327,7 @@ final class CopyFromBuilderTest extends TestCase
     public function test_immutability_source() : void
     {
         $original = CopyFromBuilder::create()->table('users');
-        $modified = $original->fromFile('/tmp/users.csv');
+        $modified = $original->file('/tmp/users.csv');
 
         self::assertNotSame($original, $modified);
     }
@@ -354,7 +354,7 @@ final class CopyFromBuilderTest extends TestCase
         $this->expectException(InvalidExpressionException::class);
 
         CopyFromBuilder::create()
-            ->fromFile('/tmp/users.csv')
+            ->file('/tmp/users.csv')
             ->toAst();
     }
 
