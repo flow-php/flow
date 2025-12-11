@@ -12,6 +12,8 @@ interface ClusterFinalStep
 
     public function toAst() : ClusterStmt;
 
+    public function toSql() : string;
+
     public function using(string $index) : self;
 
     public function verbose() : self;

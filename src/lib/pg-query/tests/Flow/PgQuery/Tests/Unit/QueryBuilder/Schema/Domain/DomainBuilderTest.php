@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Unit\QueryBuilder\Schema\Domain;
 
+use function Flow\PgQuery\DSL\sql_type_text;
 use Flow\PgQuery\Protobuf\AST\{AlterDomainStmt, ConstrType, CreateDomainStmt, DropBehavior, DropStmt, ObjectType};
 use Flow\PgQuery\QueryBuilder\Schema\Domain\{AlterDomainBuilder, CreateDomainBuilder, DropDomainBuilder};
+
 use PHPUnit\Framework\TestCase;
 
 final class DomainBuilderTest extends TestCase
@@ -126,7 +128,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_ast_type() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text');
+            ->as(sql_type_text());
 
         $ast = $builder->toAst();
 
@@ -136,7 +138,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_sets_name() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text');
+            ->as(sql_type_text());
 
         $ast = $builder->toAst();
         $domainname = $ast->getDomainname();
@@ -147,19 +149,19 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_sets_type() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text');
+            ->as(sql_type_text());
 
         $ast = $builder->toAst();
         $typeName = $ast->getTypeName();
 
         self::assertNotNull($typeName);
-        self::assertCount(1, $typeName->getNames());
+        self::assertCount(2, $typeName->getNames()); // pg_catalog.text = 2 parts
     }
 
     public function test_create_domain_with_check() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text')
+            ->as(sql_type_text())
             ->check("VALUE ~ '^.+@.+$'");
 
         $ast = $builder->toAst();
@@ -175,7 +177,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_collation() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text')
+            ->as(sql_type_text())
             ->collate('en_US');
 
         $ast = $builder->toAst();
@@ -186,7 +188,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_default() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text')
+            ->as(sql_type_text())
             ->default("'default@example.com'");
 
         $ast = $builder->toAst();
@@ -202,7 +204,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_multiple_constraints() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text')
+            ->as(sql_type_text())
             ->notNull()
             ->check("VALUE ~ '^.+@.+$'");
 
@@ -215,7 +217,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_named_constraint() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text')
+            ->as(sql_type_text())
             ->constraint('valid_email')
             ->check("VALUE ~ '^.+@.+$'");
 
@@ -232,7 +234,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_not_null() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text')
+            ->as(sql_type_text())
             ->notNull();
 
         $ast = $builder->toAst();
@@ -248,7 +250,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_null() : void
     {
         $builder = CreateDomainBuilder::create('email')
-            ->as('text')
+            ->as(sql_type_text())
             ->null();
 
         $ast = $builder->toAst();
@@ -264,7 +266,7 @@ final class DomainBuilderTest extends TestCase
     public function test_create_domain_with_schema() : void
     {
         $builder = CreateDomainBuilder::create('public.email')
-            ->as('text');
+            ->as(sql_type_text());
 
         $ast = $builder->toAst();
         $domainname = $ast->getDomainname();

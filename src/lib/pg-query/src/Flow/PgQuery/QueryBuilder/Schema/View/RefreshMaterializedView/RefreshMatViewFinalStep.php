@@ -10,6 +10,8 @@ interface RefreshMatViewFinalStep
 {
     public function toAst() : RefreshMatViewStmt;
 
+    public function toSql() : string;
+
     public function withData() : self;
 
     public function withNoData() : self;

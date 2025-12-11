@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\View\CreateView;
 
 use Flow\PgQuery\Protobuf\AST\{Node, PBString, RangeVar, ViewCheckOption, ViewStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
 use Flow\PgQuery\QueryBuilder\Select\SelectFinalStep;
 
 final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCheckOptionStep, CreateViewFinalStep, CreateViewOptionsStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $columns
      */
@@ -27,13 +30,13 @@ final readonly class CreateViewBuilder implements CreateViewAsStep, CreateViewCh
 
     public static function create(string $name, ?string $schema = null) : CreateViewOptionsStep
     {
-        $parts = \explode('.', $name);
-
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
+        if ($schema !== null) {
+            return new self($name, $schema);
         }
 
-        return new self($name, $schema);
+        $identifier = QualifiedIdentifier::parse($name);
+
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function as(SelectFinalStep $query) : CreateViewCheckOptionStep

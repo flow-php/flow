@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\CreateTable;
 
 use Flow\PgQuery\Protobuf\AST\{CreateStmt, Node, OnCommitAction, PartitionElem, PartitionSpec, PartitionStrategy, RangeVar};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Schema\ColumnDefinition;
 use Flow\PgQuery\QueryBuilder\Schema\Constraint\TableConstraint;
 
 final readonly class CreateTableBuilder implements CreateTableColumnsStep
 {
+    use AstToSql;
+
     /**
      * @param list<ColumnDefinition> $columns
      * @param list<TableConstraint> $constraints

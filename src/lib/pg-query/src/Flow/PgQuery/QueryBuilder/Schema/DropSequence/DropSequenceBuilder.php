@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\DropSequence;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBList, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropSequenceNameStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $sequences
      */
@@ -23,17 +26,21 @@ final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropS
         return new self();
     }
 
-    public static function ifExists() : DropSequenceNameStep
-    {
-        return new self(ifExists: true);
-    }
-
     public function cascade() : DropSequenceFinalStep
     {
         return new self(
             $this->sequences,
             $this->ifExists,
             DropBehavior::DROP_CASCADE,
+        );
+    }
+
+    public function ifExists() : DropSequenceFinalStep
+    {
+        return new self(
+            $this->sequences,
+            true,
+            $this->behavior,
         );
     }
 
@@ -79,21 +86,12 @@ final readonly class DropSequenceBuilder implements DropSequenceFinalStep, DropS
         return $stmt;
     }
 
-    public function withIfExists() : self
-    {
-        return new self(
-            $this->sequences,
-            true,
-            $this->behavior,
-        );
-    }
-
     private function createSequenceListNode(string $sequence) : Node
     {
-        $parts = \explode('.', $sequence);
+        $identifier = QualifiedIdentifier::parse($sequence);
         $listItems = [];
 
-        foreach ($parts as $part) {
+        foreach ($identifier->parts() as $part) {
             $str = new PBString();
             $str->setSval($part);
 

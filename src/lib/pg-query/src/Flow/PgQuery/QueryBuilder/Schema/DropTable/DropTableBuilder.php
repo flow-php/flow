@@ -6,9 +6,12 @@ namespace Flow\PgQuery\QueryBuilder\Schema\DropTable;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString};
 use Flow\PgQuery\Protobuf\AST\PBList;
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class DropTableBuilder implements DropTableFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $tables
      */
@@ -77,10 +80,10 @@ final readonly class DropTableBuilder implements DropTableFinalStep
 
     private function createTableListNode(string $table) : Node
     {
-        $parts = \explode('.', $table);
+        $identifier = QualifiedIdentifier::parse($table);
         $listItems = [];
 
-        foreach ($parts as $part) {
+        foreach ($identifier->parts() as $part) {
             $str = new PBString();
             $str->setSval($part);
 

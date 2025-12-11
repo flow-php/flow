@@ -11,4 +11,6 @@ interface DoFinalStep
     public function language(string $language) : self;
 
     public function toAst() : DoStmt;
+
+    public function toSql() : string;
 }

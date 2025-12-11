@@ -16,5 +16,7 @@ interface AnalyzeFinalStep
 
     public function toAst() : VacuumStmt;
 
+    public function toSql() : string;
+
     public function verbose() : self;
 }

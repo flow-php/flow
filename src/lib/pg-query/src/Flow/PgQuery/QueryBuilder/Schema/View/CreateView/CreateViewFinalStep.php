@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\ViewStmt;
 interface CreateViewFinalStep
 {
     public function toAst() : ViewStmt;
+
+    public function toSql() : string;
 }

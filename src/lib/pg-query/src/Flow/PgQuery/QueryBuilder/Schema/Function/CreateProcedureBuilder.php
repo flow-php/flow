@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\Function;
 
-use Flow\PgQuery\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, Node, PBList, PBString, TypeName};
+use Flow\PgQuery\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, Node, PBList, PBString};
 use Flow\PgQuery\Protobuf\AST\Integer;
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, CreateProcedureFinalStep, CreateProcedureOptionsStep
 {
+    use AstToSql;
+
     /**
      * @param list<FunctionArgument> $arguments
      * @param list<array{name: string, arg: ?Node}> $options
@@ -135,9 +138,7 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
                 }
 
                 $param->setMode($arg->mode->value);
-
-                $typeName = $this->createTypeName($arg->type);
-                $param->setArgType($typeName);
+                $param->setArgType($arg->type->toAst());
 
                 if ($arg->default !== null) {
                     $param->setDefexpr($this->createDefaultExpr($arg->default));
@@ -189,21 +190,6 @@ final readonly class CreateProcedureBuilder implements CreateProcedureArgsStep, 
         $node->setAConst($aConst);
 
         return $node;
-    }
-
-    private function createTypeName(string $type) : TypeName
-    {
-        $typeName = new TypeName();
-
-        $typeNames = [];
-        $str = new PBString();
-        $str->setSval($type);
-        $node = new Node();
-        $node->setString($str);
-        $typeNames[] = $node;
-        $typeName->setNames($typeNames);
-
-        return $typeName;
     }
 
     private function withListOption(string $name, string $value) : self

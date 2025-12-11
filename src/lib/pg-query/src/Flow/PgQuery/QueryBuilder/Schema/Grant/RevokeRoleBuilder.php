@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Grant;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, GrantRoleStmt, Node, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class RevokeRoleBuilder implements RevokeRoleFinalStep, RevokeRoleFromStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $revokedRoles
      * @param list<string> $fromRoles

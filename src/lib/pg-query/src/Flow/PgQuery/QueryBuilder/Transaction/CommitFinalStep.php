@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\TransactionStmt;
 interface CommitFinalStep
 {
     public function toAst() : TransactionStmt;
+
+    public function toSql() : string;
 }

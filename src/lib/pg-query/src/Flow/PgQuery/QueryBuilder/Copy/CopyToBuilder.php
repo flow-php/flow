@@ -6,6 +6,7 @@ namespace Flow\PgQuery\QueryBuilder\Copy;
 
 use Flow\PgQuery\Protobuf\AST\{A_Star, CopyStmt, DefElem, Node, PBList, PBString, RangeVar};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
 use Flow\PgQuery\QueryBuilder\Select\SelectFinalStep;
 
 /**
@@ -242,19 +243,11 @@ final readonly class CopyToBuilder implements CopyToDestinationStep, CopyToOptio
 
     public function table(string $table, string ...$columns) : CopyToDestinationStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
-            $schema = $parts[0];
-            $tableName = $parts[1];
-        } else {
-            $schema = null;
-            $tableName = $table;
-        }
+        $identifier = QualifiedIdentifier::parse($table);
 
         return new self(
-            $tableName,
-            $schema,
+            $identifier->name(),
+            $identifier->schema(),
             \array_values($columns),
             null,
             $this->filename,

@@ -13,6 +13,7 @@
     "require": {
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
         "ext-pg_query": "*",
+        "ext-pgsql": "*",
         "google/protobuf": "^4.0"
     },
     "suggest": {

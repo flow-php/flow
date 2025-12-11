@@ -17,4 +17,6 @@ interface TruncateFinalStep
     public function restrict() : self;
 
     public function toAst() : TruncateStmt;
+
+    public function toSql() : string;
 }

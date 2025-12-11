@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\AlterOwnerStmt;
 interface AlterSchemaOwnerFinalStep
 {
     public function toAst() : AlterOwnerStmt;
+
+    public function toSql() : string;
 }

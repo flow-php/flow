@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Ownership;
 
 use Flow\PgQuery\Protobuf\AST\{Node, ReassignOwnedStmt, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class ReassignOwnedBuilder implements ReassignOwnedFinalStep, ReassignOwnedToStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $roles
      */

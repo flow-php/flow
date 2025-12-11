@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CompositeTypeStmt;
 interface CreateCompositeTypeFinalStep
 {
     public function toAst() : CompositeTypeStmt;
+
+    public function toSql() : string;
 }

@@ -13,4 +13,6 @@ interface DropOwnedFinalStep
     public function restrict() : self;
 
     public function toAst() : DropOwnedStmt;
+
+    public function toSql() : string;
 }

@@ -59,4 +59,6 @@ interface AlterTableFinalStep
     public function setSchema(string $schema) : AlterTableSchemaBuilder;
 
     public function toAst() : AlterTableStmt;
+
+    public function toSql() : string;
 }

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Utility;
 
 use Flow\PgQuery\Protobuf\AST\{LockStmt, Node, RangeVar};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class LockBuilder implements LockFinalStep
 {
+    use AstToSql;
+
     /**
      * @param array<string> $tables
      */
@@ -82,17 +85,16 @@ final readonly class LockBuilder implements LockFinalStep
         $relations = [];
 
         foreach ($this->tables as $table) {
+            $identifier = QualifiedIdentifier::parse($table);
             $rangeVar = new RangeVar();
 
-            $parts = \explode('.', $table);
+            $schema = $identifier->schema();
 
-            if (\count($parts) === 2) {
-                $rangeVar->setSchemaname($parts[0]);
-                $rangeVar->setRelname($parts[1]);
-            } else {
-                $rangeVar->setRelname($table);
+            if ($schema !== null) {
+                $rangeVar->setSchemaname($schema);
             }
 
+            $rangeVar->setRelname($identifier->name());
             $rangeVar->setInh(true);
             $rangeVar->setRelpersistence('p');
 

@@ -10,7 +10,11 @@ interface DropSequenceFinalStep
 {
     public function cascade() : self;
 
+    public function ifExists() : self;
+
     public function restrict() : self;
 
     public function toAst() : DropStmt;
+
+    public function toSql() : string;
 }

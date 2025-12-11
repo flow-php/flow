@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateRoleStmt;
 interface CreateRoleFinalStep
 {
     public function toAst() : CreateRoleStmt;
+
+    public function toSql() : string;
 }

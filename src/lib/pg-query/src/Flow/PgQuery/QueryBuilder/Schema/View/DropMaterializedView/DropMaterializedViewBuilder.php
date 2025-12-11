@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\View\DropMaterializedView;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBList, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class DropMaterializedViewBuilder implements DropMatViewFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $views
      */
@@ -76,10 +79,10 @@ final readonly class DropMaterializedViewBuilder implements DropMatViewFinalStep
 
     private function createViewListNode(string $view) : Node
     {
-        $parts = \explode('.', $view);
+        $identifier = QualifiedIdentifier::parse($view);
         $listItems = [];
 
-        foreach ($parts as $part) {
+        foreach ($identifier->parts() as $part) {
             $str = new PBString();
             $str->setSval($part);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Delete;
 
 use Flow\PgQuery\Protobuf\AST\{Alias, DeleteStmt, Node, RangeVar, ResTarget};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Clause\WithClause;
 use Flow\PgQuery\QueryBuilder\Condition\{Condition, ConditionFactory};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
@@ -23,6 +24,8 @@ use Flow\PgQuery\QueryBuilder\Table\{AliasedTable, Table, TableReference};
  */
 final readonly class DeleteBuilder implements DeleteFromStep, DeleteUsingStep
 {
+    use AstToSql;
+
     /**
      * @param array<TableReference> $using
      * @param array<Expression> $returning

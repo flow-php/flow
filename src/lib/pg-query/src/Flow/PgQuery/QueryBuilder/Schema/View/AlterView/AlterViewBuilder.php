@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\View\AlterView;
 
+use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
+
 final readonly class AlterViewBuilder implements AlterViewActionStep
 {
     private function __construct(
@@ -15,13 +17,13 @@ final readonly class AlterViewBuilder implements AlterViewActionStep
 
     public static function create(string $name, ?string $schema = null) : AlterViewActionStep
     {
-        $parts = \explode('.', $name);
-
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
+        if ($schema !== null) {
+            return new self($name, $schema);
         }
 
-        return new self($name, $schema);
+        $identifier = QualifiedIdentifier::parse($name);
+
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function ifExists() : AlterViewActionStep

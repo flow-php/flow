@@ -15,4 +15,9 @@ interface InsertFinalStep
      * Convert this INSERT query to protobuf AST.
      */
     public function toAst() : InsertStmt;
+
+    /**
+     * Convert this INSERT query to SQL string.
+     */
+    public function toSql() : string;
 }

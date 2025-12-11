@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Truncate;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, Node, RangeVar, TruncateStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class TruncateBuilder implements TruncateFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $tables
      */
@@ -84,18 +87,17 @@ final readonly class TruncateBuilder implements TruncateFinalStep
 
     private function createRangeVarNode(string $table) : Node
     {
-        $parts = \explode('.', $table);
+        $identifier = QualifiedIdentifier::parse($table);
 
         $rangeVar = new RangeVar();
         $rangeVar->setRelpersistence('p');
         $rangeVar->setInh(true);
 
-        if (\count($parts) === 2) {
-            $rangeVar->setSchemaname($parts[0]);
-            $rangeVar->setRelname($parts[1]);
-        } else {
-            $rangeVar->setRelname($parts[0]);
+        if ($identifier->hasSchema()) {
+            $rangeVar->setSchemaname($identifier->schema());
         }
+
+        $rangeVar->setRelname($identifier->name());
 
         $node = new Node();
         $node->setRangeVar($rangeVar);

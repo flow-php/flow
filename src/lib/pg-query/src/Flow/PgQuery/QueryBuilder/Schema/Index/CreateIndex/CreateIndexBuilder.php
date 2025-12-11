@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex;
 
 use Flow\PgQuery\Protobuf\AST\{IndexElem, IndexStmt, Node, RangeVar};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Condition\Condition;
 use Flow\PgQuery\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
 
 final readonly class CreateIndexBuilder implements CreateIndexColumnsStep, CreateIndexFinalStep, CreateIndexOnStep
 {
+    use AstToSql;
+
     /**
      * @param list<IndexColumn> $columns
      * @param list<string> $includeColumns

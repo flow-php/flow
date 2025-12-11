@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Utility;
 
 use Flow\PgQuery\Protobuf\AST\DiscardStmt;
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class DiscardBuilder implements DiscardFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private DiscardType $type,
     ) {

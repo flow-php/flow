@@ -29,4 +29,6 @@ interface LockFinalStep
     public function shareUpdateExclusive() : self;
 
     public function toAst() : LockStmt;
+
+    public function toSql() : string;
 }

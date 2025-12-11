@@ -13,4 +13,6 @@ interface RevokeRoleFinalStep
     public function restrict() : self;
 
     public function toAst() : GrantRoleStmt;
+
+    public function toSql() : string;
 }

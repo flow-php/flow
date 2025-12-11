@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\CreateSequence;
 
 use Flow\PgQuery\Protobuf\AST\{Boolean, CreateSeqStmt, DefElem, Integer, Node, PBList, PBString, RangeVar, TypeName};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, CreateSequenceOptionsStep
 {
+    use AstToSql;
+
     /**
      * @param array<array{name: string, arg: null|Node}> $options
      */
@@ -135,9 +138,9 @@ final readonly class CreateSequenceBuilder implements CreateSequenceNameStep, Cr
         $list = new PBList();
         $items = [];
 
-        $tableParts = \explode('.', $table);
+        $identifier = QualifiedIdentifier::parse($table);
 
-        foreach ($tableParts as $part) {
+        foreach ($identifier->parts() as $part) {
             $str = new PBString();
             $str->setSval($part);
             $strNode = new Node();

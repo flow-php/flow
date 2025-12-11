@@ -4,20 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\Function;
 
-use Flow\PgQuery\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, FunctionParameterMode, Integer, Node, PBList, PBString, TypeName};
+use Flow\PgQuery\Protobuf\AST\{A_Const, CreateFunctionStmt, DefElem, FunctionParameter, FunctionParameterMode, Integer, Node, PBList, PBString};
+use Flow\PgQuery\QueryBuilder\AstToSql;
+use Flow\PgQuery\QueryBuilder\Schema\DataType;
 
 final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, CreateFunctionFinalStep, CreateFunctionOptionsStep, CreateFunctionReturnsStep
 {
+    use AstToSql;
+
     /**
      * @param list<FunctionArgument> $arguments
      * @param list<array{name: string, arg: ?Node}> $options
-     * @param null|array<string, string> $tableColumns
+     * @param null|array<string, DataType> $tableColumns
      */
     private function __construct(
         private string $name,
         private bool $replace = false,
         private array $arguments = [],
-        private ?string $returnType = null,
+        private ?DataType $returnType = null,
         private bool $setof = false,
         private ?array $tableColumns = null,
         private array $options = [],
@@ -90,7 +94,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         return $this->withStringOption('parallel', $safety->value);
     }
 
-    public function returns(string $type) : CreateFunctionOptionsStep
+    public function returns(DataType $type) : CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
@@ -103,7 +107,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         );
     }
 
-    public function returnsSetOf(string $type) : CreateFunctionOptionsStep
+    public function returnsSetOf(DataType $type) : CreateFunctionOptionsStep
     {
         return new self(
             $this->name,
@@ -117,7 +121,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
     }
 
     /**
-     * @param array<string, string> $columns
+     * @param array<string, DataType> $columns
      */
     public function returnsTable(array $columns) : CreateFunctionOptionsStep
     {
@@ -138,7 +142,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
             $this->name,
             $this->replace,
             $this->arguments,
-            'void',
+            DataType::custom('void'),
             false,
             null,
             $this->options,
@@ -228,9 +232,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
                 }
 
                 $param->setMode($arg->mode->value);
-
-                $typeName = $this->createTypeName($arg->type);
-                $param->setArgType($typeName);
+                $param->setArgType($arg->type->toAst());
 
                 if ($arg->default !== null) {
                     $param->setDefexpr($this->createDefaultExpr($arg->default));
@@ -245,7 +247,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         }
 
         if ($this->returnType !== null) {
-            $typeName = $this->createTypeName($this->returnType);
+            $typeName = $this->returnType->toAst();
 
             if ($this->setof) {
                 $typeName->setSetof(true);
@@ -259,7 +261,7 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
                 $param = new FunctionParameter();
                 $param->setName($columnName);
                 $param->setMode(FunctionParameterMode::FUNC_PARAM_TABLE);
-                $param->setArgType($this->createTypeName($columnType));
+                $param->setArgType($columnType->toAst());
 
                 $node = new Node();
                 $node->setFunctionParameter($param);
@@ -318,21 +320,6 @@ final readonly class CreateFunctionBuilder implements CreateFunctionArgsStep, Cr
         $node->setAConst($aConst);
 
         return $node;
-    }
-
-    private function createTypeName(string $type) : TypeName
-    {
-        $typeName = new TypeName();
-
-        $typeNames = [];
-        $str = new PBString();
-        $str->setSval($type);
-        $node = new Node();
-        $node->setString($str);
-        $typeNames[] = $node;
-        $typeName->setNames($typeNames);
-
-        return $typeName;
     }
 
     private function withBooleanOption(string $name, bool $value) : self

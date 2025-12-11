@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\RuleStmt;
 interface CreateRuleFinalStep
 {
     public function toAst() : RuleStmt;
+
+    public function toSql() : string;
 }

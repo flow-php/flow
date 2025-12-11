@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Index\Reindex;
 
 use Flow\PgQuery\Protobuf\AST\{DefElem, Node, PBString, RangeVar, ReindexObjectType, ReindexStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class ReindexBuilder implements ReindexFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private int $kind,
         private string $name,
@@ -72,14 +75,13 @@ final readonly class ReindexBuilder implements ReindexFinalStep
         if ($this->kind === ReindexObjectType::REINDEX_OBJECT_INDEX || $this->kind === ReindexObjectType::REINDEX_OBJECT_TABLE) {
             $rangeVar = new RangeVar();
 
-            $parts = \explode('.', $this->name);
+            $identifier = QualifiedIdentifier::parse($this->name);
 
-            if (\count($parts) === 2) {
-                $rangeVar->setSchemaname($parts[0]);
-                $rangeVar->setRelname($parts[1]);
-            } else {
-                $rangeVar->setRelname($this->name);
+            if ($identifier->hasSchema()) {
+                $rangeVar->setSchemaname($identifier->schema());
             }
+
+            $rangeVar->setRelname($identifier->name());
 
             $rangeVar->setInh(true);
             $rangeVar->setRelpersistence('p');

@@ -10,5 +10,7 @@ interface CallFinalStep
 {
     public function toAst() : CallStmt;
 
+    public function toSql() : string;
+
     public function with(mixed ...$args) : self;
 }

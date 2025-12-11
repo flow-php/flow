@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Role;
 
 use Flow\PgQuery\Protobuf\AST\{DropRoleStmt, Node, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class DropRoleBuilder implements DropRoleFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $names
      */

@@ -7,12 +7,15 @@ namespace Flow\PgQuery\QueryBuilder\Schema\AlterTable;
 use Flow\PgQuery\Parser;
 use Flow\PgQuery\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar};
 use Flow\PgQuery\Protobuf\AST\ColumnDef;
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 use Flow\PgQuery\QueryBuilder\Schema\{ColumnDefinition, DataType};
 use Flow\PgQuery\QueryBuilder\Schema\Constraint\TableConstraint;
 
 final readonly class AlterTableBuilder implements AlterTableFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<AlterTableCmd> $commands
      */

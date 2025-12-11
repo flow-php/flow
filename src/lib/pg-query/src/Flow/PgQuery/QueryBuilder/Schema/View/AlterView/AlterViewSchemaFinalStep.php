@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\AlterObjectSchemaStmt;
 interface AlterViewSchemaFinalStep
 {
     public function toAst() : AlterObjectSchemaStmt;
+
+    public function toSql() : string;
 }

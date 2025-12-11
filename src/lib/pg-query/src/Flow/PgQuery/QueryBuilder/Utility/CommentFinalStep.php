@@ -13,4 +13,6 @@ interface CommentFinalStep
     public function isNull() : self;
 
     public function toAst() : CommentStmt;
+
+    public function toSql() : string;
 }

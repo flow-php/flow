@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Trigger;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBList, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class DropTriggerBuilder implements DropTriggerFinalStep, DropTriggerOnStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $name,
         private bool $ifExists = false,
@@ -46,23 +49,23 @@ final readonly class DropTriggerBuilder implements DropTriggerFinalStep, DropTri
 
     public function on(string $table, ?string $schema = null) : DropTriggerFinalStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
+        if ($schema !== null) {
             return new self(
                 $this->name,
                 $this->ifExists,
-                $parts[1],
-                $parts[0],
+                $table,
+                $schema,
                 $this->behavior,
             );
         }
 
+        $identifier = QualifiedIdentifier::parse($table);
+
         return new self(
             $this->name,
             $this->ifExists,
-            $table,
-            $schema,
+            $identifier->name(),
+            $identifier->schema(),
             $this->behavior,
         );
     }

@@ -1,0 +1,220 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
+
+use function Flow\PgQuery\DSL\{
+    begin,
+    col,
+    column,
+    commit,
+    create_table,
+    eq,
+    insert,
+    literal_int,
+    literal_string,
+    primary_key,
+    release_savepoint,
+    rollback,
+    savepoint,
+    select,
+    sql_type_decimal,
+    sql_type_serial,
+    sql_type_varchar,
+    star,
+    table,
+    update
+};
+
+use Flow\PgQuery\QueryBuilder\Transaction\IsolationLevel;
+
+final class TransactionDatabaseTest extends DatabaseTestCase
+{
+    private const TABLE_ACCOUNTS = 'flow_postgres_accounts';
+
+    protected function setUp() : void
+    {
+        parent::setUp();
+
+        $this->execute(
+            create_table(self::TABLE_ACCOUNTS)
+                ->column(column('id', sql_type_serial()))
+                ->column(column('name', sql_type_varchar(100))->notNull())
+                ->column(column('balance', sql_type_decimal(10, 2))->default(0))
+                ->constraint(primary_key('id'))
+                ->toSql()
+        );
+
+        $this->execute(
+            insert()
+                ->into(self::TABLE_ACCOUNTS)
+                ->columns('name', 'balance')
+                ->values(literal_string('Account A'), literal_int(1000))
+                ->values(literal_string('Account B'), literal_int(500))
+                ->toSql()
+        );
+    }
+
+    protected function tearDown() : void
+    {
+        $this->execute(rollback()->toSql());
+        $this->dropTableIfExists(self::TABLE_ACCOUNTS);
+
+        parent::tearDown();
+    }
+
+    public function test_begin_and_commit() : void
+    {
+        $this->execute(begin()->toSql());
+
+        $updateQuery = update()
+            ->update(self::TABLE_ACCOUNTS)
+            ->set('balance', literal_int(1500))
+            ->where(eq(col('name'), literal_string('Account A')));
+
+        $this->execute($updateQuery->toSql());
+
+        $this->execute(commit()->toSql());
+
+        $check = $this->execute(
+            select(col('balance'))
+                ->from(table(self::TABLE_ACCOUNTS))
+                ->where(eq(col('name'), literal_string('Account A')))
+                ->toSql()
+        );
+        $row = $this->fetchOne($check);
+        self::assertSame('1500.00', $row['balance']);
+    }
+
+    public function test_begin_and_rollback() : void
+    {
+        $checkBefore = $this->execute(
+            select(col('balance'))
+                ->from(table(self::TABLE_ACCOUNTS))
+                ->where(eq(col('name'), literal_string('Account A')))
+                ->toSql()
+        );
+        $beforeRow = $this->fetchOne($checkBefore);
+        $originalBalance = $beforeRow['balance'];
+
+        $this->execute(begin()->toSql());
+
+        $updateQuery = update()
+            ->update(self::TABLE_ACCOUNTS)
+            ->set('balance', literal_int(9999))
+            ->where(eq(col('name'), literal_string('Account A')));
+
+        $this->execute($updateQuery->toSql());
+
+        $this->execute(rollback()->toSql());
+
+        $check = $this->execute(
+            select(col('balance'))
+                ->from(table(self::TABLE_ACCOUNTS))
+                ->where(eq(col('name'), literal_string('Account A')))
+                ->toSql()
+        );
+        $row = $this->fetchOne($check);
+        self::assertSame($originalBalance, $row['balance']);
+    }
+
+    public function test_begin_with_isolation_level() : void
+    {
+        $this->execute(begin()->isolationLevel(IsolationLevel::SERIALIZABLE)->toSql());
+
+        $selectQuery = select(star())->from(table(self::TABLE_ACCOUNTS));
+        $result = $this->execute($selectQuery->toSql());
+
+        self::assertNotFalse($result);
+        $rows = $this->fetchAll($result);
+        self::assertCount(2, $rows);
+
+        $this->execute(commit()->toSql());
+    }
+
+    public function test_begin_with_read_only() : void
+    {
+        $this->execute(begin()->readOnly()->toSql());
+
+        $selectQuery = select(star())->from(table(self::TABLE_ACCOUNTS));
+        $result = $this->execute($selectQuery->toSql());
+
+        self::assertNotFalse($result);
+        self::assertCount(2, $this->fetchAll($result));
+
+        $this->execute(commit()->toSql());
+    }
+
+    public function test_rollback_to_savepoint() : void
+    {
+        $this->execute(begin()->toSql());
+
+        $updateQuery1 = update()
+            ->update(self::TABLE_ACCOUNTS)
+            ->set('balance', literal_int(750))
+            ->where(eq(col('name'), literal_string('Account A')));
+        $this->execute($updateQuery1->toSql());
+
+        $this->execute(savepoint('sp_rollback')->toSql());
+
+        $updateQuery2 = update()
+            ->update(self::TABLE_ACCOUNTS)
+            ->set('balance', literal_int(9999))
+            ->where(eq(col('name'), literal_string('Account A')));
+        $this->execute($updateQuery2->toSql());
+
+        $this->execute(rollback()->toSavepoint('sp_rollback')->toSql());
+
+        $check = $this->execute(
+            select(col('balance'))
+                ->from(table(self::TABLE_ACCOUNTS))
+                ->where(eq(col('name'), literal_string('Account A')))
+                ->toSql()
+        );
+        $row = $this->fetchOne($check);
+        self::assertSame('750.00', $row['balance']);
+
+        $this->execute(commit()->toSql());
+    }
+
+    public function test_savepoint_and_release() : void
+    {
+        $this->execute(begin()->toSql());
+
+        $updateQuery1 = update()
+            ->update(self::TABLE_ACCOUNTS)
+            ->set('balance', literal_int(800))
+            ->where(eq(col('name'), literal_string('Account A')));
+        $this->execute($updateQuery1->toSql());
+
+        $this->execute(savepoint('sp1')->toSql());
+
+        $updateQuery2 = update()
+            ->update(self::TABLE_ACCOUNTS)
+            ->set('balance', literal_int(600))
+            ->where(eq(col('name'), literal_string('Account B')));
+        $this->execute($updateQuery2->toSql());
+
+        $this->execute(release_savepoint('sp1')->toSql());
+        $this->execute(commit()->toSql());
+
+        $checkA = $this->execute(
+            select(col('balance'))
+                ->from(table(self::TABLE_ACCOUNTS))
+                ->where(eq(col('name'), literal_string('Account A')))
+                ->toSql()
+        );
+        $rowA = $this->fetchOne($checkA);
+        self::assertSame('800.00', $rowA['balance']);
+
+        $checkB = $this->execute(
+            select(col('balance'))
+                ->from(table(self::TABLE_ACCOUNTS))
+                ->where(eq(col('name'), literal_string('Account B')))
+                ->toSql()
+        );
+        $rowB = $this->fetchOne($checkB);
+        self::assertSame('600.00', $rowB['balance']);
+    }
+}

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\Type;
 
-use Flow\PgQuery\Protobuf\AST\{CollateClause, ColumnDef, CompositeTypeStmt, Node, PBString, RangeVar, TypeName};
+use Flow\PgQuery\Protobuf\AST\{CollateClause, ColumnDef, CompositeTypeStmt, Node, PBString, RangeVar};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class CreateCompositeTypeBuilder implements CreateCompositeTypeAttributesStep, CreateCompositeTypeFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<TypeAttribute> $attributes
      */
@@ -20,13 +23,9 @@ final readonly class CreateCompositeTypeBuilder implements CreateCompositeTypeAt
 
     public static function create(string $name) : CreateCompositeTypeAttributesStep
     {
-        $parts = \explode('.', $name);
+        $identifier = QualifiedIdentifier::parse($name);
 
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
-        }
-
-        return new self($name);
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function attributes(TypeAttribute ...$attributes) : CreateCompositeTypeFinalStep
@@ -58,7 +57,7 @@ final readonly class CreateCompositeTypeBuilder implements CreateCompositeTypeAt
         foreach ($this->attributes as $attr) {
             $coldef = new ColumnDef();
             $coldef->setColname($attr->name);
-            $coldef->setTypeName($this->createTypeName($attr->type));
+            $coldef->setTypeName($attr->type->toAst());
 
             if ($attr->collation !== null) {
                 $collClause = new CollateClause();
@@ -82,20 +81,5 @@ final readonly class CreateCompositeTypeBuilder implements CreateCompositeTypeAt
         $stmt->setColdeflist($coldefNodes);
 
         return $stmt;
-    }
-
-    private function createTypeName(string $type) : TypeName
-    {
-        $typeName = new TypeName();
-
-        $typeNames = [];
-        $str = new PBString();
-        $str->setSval($type);
-        $node = new Node();
-        $node->setString($str);
-        $typeNames[] = $node;
-        $typeName->setNames($typeNames);
-
-        return $typeName;
     }
 }

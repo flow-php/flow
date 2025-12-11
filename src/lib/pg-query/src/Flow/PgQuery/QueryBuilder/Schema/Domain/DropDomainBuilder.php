@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Domain;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString, TypeName};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class DropDomainBuilder implements DropDomainFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $names
      */
@@ -60,10 +63,10 @@ final readonly class DropDomainBuilder implements DropDomainFinalStep
         $objects = [];
 
         foreach ($this->names as $name) {
-            $parts = \explode('.', $name);
+            $identifier = QualifiedIdentifier::parse($name);
             $nameNodes = [];
 
-            foreach ($parts as $part) {
+            foreach ($identifier->parts() as $part) {
                 $str = new PBString();
                 $str->setSval($part);
                 $node = new Node();

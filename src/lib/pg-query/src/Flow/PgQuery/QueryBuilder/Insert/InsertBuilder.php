@@ -6,6 +6,7 @@ namespace Flow\PgQuery\QueryBuilder\Insert;
 
 use Flow\PgQuery\Protobuf\AST\{Alias, PBList};
 use Flow\PgQuery\Protobuf\AST\{InsertStmt, Node, RangeVar, ResTarget, SelectStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Clause\{ConflictTarget, OnConflictClause, WithClause};
 use Flow\PgQuery\QueryBuilder\Condition\Condition;
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
@@ -14,6 +15,8 @@ use Flow\PgQuery\QueryBuilder\Select\SelectFinalStep;
 
 final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateStep, InsertIntoStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $columns
      * @param list<list<Expression>> $valuesList
@@ -129,6 +132,8 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                         $defaultValues = true;
                     } else {
                         $selectQuery = new class($selectStmt) implements SelectFinalStep {
+                            use AstToSql;
+
                             public function __construct(private readonly SelectStmt $stmt)
                             {
                             }
@@ -255,20 +260,12 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
 
     public function into(string $table, ?string $alias = null) : InsertColumnsStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
-            $schema = $parts[0];
-            $tableName = $parts[1];
-        } else {
-            $schema = null;
-            $tableName = $table;
-        }
+        $identifier = QualifiedIdentifier::parse($table);
 
         return new self(
             $this->with,
-            $tableName,
-            $schema,
+            $identifier->name(),
+            $identifier->schema(),
             $alias,
             $this->columns,
             $this->valuesList,

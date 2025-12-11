@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateTrigStmt;
 interface CreateTriggerFinalStep
 {
     public function toAst() : CreateTrigStmt;
+
+    public function toSql() : string;
 }

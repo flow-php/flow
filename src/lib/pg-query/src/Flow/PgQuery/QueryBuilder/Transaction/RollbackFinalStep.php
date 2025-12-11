@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\TransactionStmt;
 interface RollbackFinalStep
 {
     public function toAst() : TransactionStmt;
+
+    public function toSql() : string;
 }

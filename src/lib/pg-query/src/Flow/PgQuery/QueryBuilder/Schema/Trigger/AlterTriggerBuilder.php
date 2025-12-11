@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Trigger;
 
 use Flow\PgQuery\Protobuf\AST\{AlterObjectDependsStmt, Node, ObjectType, PBList, PBString, RangeVar, RenameStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
+use Flow\PgQuery\QueryBuilder\Exception\InvalidBuilderStateException;
 
 final readonly class AlterTriggerBuilder implements AlterTriggerActionStep, AlterTriggerFinalStep, AlterTriggerOnStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $name,
         private ?string $table = null,
@@ -49,23 +53,23 @@ final readonly class AlterTriggerBuilder implements AlterTriggerActionStep, Alte
 
     public function on(string $table, ?string $schema = null) : AlterTriggerActionStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
+        if ($schema !== null) {
             return new self(
                 $this->name,
-                $parts[1],
-                $parts[0],
+                $table,
+                $schema,
                 $this->newName,
                 $this->extension,
                 $this->removeDepends,
             );
         }
 
+        $identifier = QualifiedIdentifier::parse($table);
+
         return new self(
             $this->name,
-            $table,
-            $schema,
+            $identifier->name(),
+            $identifier->schema(),
             $this->newName,
             $this->extension,
             $this->removeDepends,
@@ -84,7 +88,20 @@ final readonly class AlterTriggerBuilder implements AlterTriggerActionStep, Alte
         );
     }
 
-    public function toDependsAst() : AlterObjectDependsStmt
+    public function toAst() : RenameStmt|AlterObjectDependsStmt
+    {
+        if ($this->newName !== null && $this->extension !== null) {
+            throw InvalidBuilderStateException::mutuallyExclusiveOptions('RENAME TO', 'DEPENDS ON EXTENSION');
+        }
+
+        if ($this->newName !== null) {
+            return $this->buildRenameAst();
+        }
+
+        return $this->buildDependsAst();
+    }
+
+    private function buildDependsAst() : AlterObjectDependsStmt
     {
         $stmt = new AlterObjectDependsStmt();
 
@@ -124,7 +141,7 @@ final readonly class AlterTriggerBuilder implements AlterTriggerActionStep, Alte
         return $stmt;
     }
 
-    public function toRenameAst() : RenameStmt
+    private function buildRenameAst() : RenameStmt
     {
         $stmt = new RenameStmt();
 

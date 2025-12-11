@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Session;
 
 use Flow\PgQuery\Protobuf\AST\{A_Const, Node, PBString, VariableSetKind, VariableSetStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class SetRoleBuilder implements SetRoleFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $roleName,
     ) {

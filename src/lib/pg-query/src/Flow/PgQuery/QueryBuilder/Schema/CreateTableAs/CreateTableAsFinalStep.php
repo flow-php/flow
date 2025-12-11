@@ -14,5 +14,7 @@ interface CreateTableAsFinalStep
 
     public function toAst() : CreateTableAsStmt;
 
+    public function toSql() : string;
+
     public function withNoData() : self;
 }

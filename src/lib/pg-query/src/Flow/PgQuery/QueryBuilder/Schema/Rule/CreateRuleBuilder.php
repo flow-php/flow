@@ -6,10 +6,13 @@ namespace Flow\PgQuery\QueryBuilder\Schema\Rule;
 
 use Flow\PgQuery\Parser;
 use Flow\PgQuery\Protobuf\AST\{Node, RangeVar, RuleStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEventStep, CreateRuleFinalStep, CreateRuleToStep, CreateRuleWhereStep
 {
+    use AstToSql;
+
     /**
      * @param list<Node> $actions
      */
@@ -144,27 +147,14 @@ final readonly class CreateRuleBuilder implements CreateRuleDoStep, CreateRuleEv
 
     public function to(string $table, ?string $schema = null) : CreateRuleWhereStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
-            return new self(
-                $this->name,
-                $this->replace,
-                $this->event,
-                $parts[1],
-                $parts[0],
-                $this->whereCondition,
-                $this->instead,
-                $this->actions,
-            );
-        }
+        $identifier = QualifiedIdentifier::parse($table);
 
         return new self(
             $this->name,
             $this->replace,
             $this->event,
-            $table,
-            $schema,
+            $identifier->name(),
+            $schema ?? $identifier->schema(),
             $this->whereCondition,
             $this->instead,
             $this->actions,

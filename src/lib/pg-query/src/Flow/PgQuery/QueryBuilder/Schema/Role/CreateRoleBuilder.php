@@ -6,9 +6,12 @@ namespace Flow\PgQuery\QueryBuilder\Schema\Role;
 
 use Flow\PgQuery\Protobuf\AST\{CreateRoleStmt, DefElem, Integer, Node, PBString, RoleSpec, RoleSpecType, RoleStmtType};
 use Flow\PgQuery\Protobuf\AST\PBList;
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class CreateRoleBuilder implements CreateRoleFinalStep, CreateRoleOptionsStep
 {
+    use AstToSql;
+
     /**
      * @param list<array{name: string, arg: ?Node}> $options
      * @param list<string> $inRoles

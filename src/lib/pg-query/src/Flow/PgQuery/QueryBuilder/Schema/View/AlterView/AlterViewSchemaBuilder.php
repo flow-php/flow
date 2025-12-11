@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\View\AlterView;
 
 use Flow\PgQuery\Protobuf\AST\{AlterObjectSchemaStmt, ObjectType, RangeVar};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class AlterViewSchemaBuilder implements AlterViewSchemaFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $view,
         private ?string $schema,

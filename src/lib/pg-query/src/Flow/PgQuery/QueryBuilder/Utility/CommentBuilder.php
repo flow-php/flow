@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Utility;
 
 use Flow\PgQuery\Protobuf\AST\{CommentStmt, Node, ObjectType, PBList, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class CommentBuilder implements CommentFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private CommentTarget $target,
         private string $name,
@@ -50,11 +53,11 @@ final readonly class CommentBuilder implements CommentFinalStep
         $node = new Node();
 
         if ($this->target === CommentTarget::COLUMN) {
-            $parts = \explode('.', $this->name);
+            $identifier = QualifiedIdentifier::parse($this->name);
             $list = new PBList();
             $items = [];
 
-            foreach ($parts as $part) {
+            foreach ($identifier->parts() as $part) {
                 $str = new PBString();
                 $str->setSval($part);
                 $strNode = new Node();
@@ -65,12 +68,11 @@ final readonly class CommentBuilder implements CommentFinalStep
             $list->setItems($items);
             $node->setList($list);
         } elseif (\in_array($this->target, [CommentTarget::FUNCTION, CommentTarget::PROCEDURE], true)) {
+            $identifier = QualifiedIdentifier::parse($this->name);
             $list = new PBList();
             $items = [];
 
-            $parts = \explode('.', $this->name);
-
-            foreach ($parts as $part) {
+            foreach ($identifier->parts() as $part) {
                 $str = new PBString();
                 $str->setSval($part);
                 $strNode = new Node();
@@ -89,12 +91,11 @@ final readonly class CommentBuilder implements CommentFinalStep
             ObjectType::OBJECT_TRIGGER,
             ObjectType::OBJECT_TYPE,
         ], true)) {
+            $identifier = QualifiedIdentifier::parse($this->name);
             $list = new PBList();
             $items = [];
 
-            $parts = \explode('.', $this->name);
-
-            foreach ($parts as $part) {
+            foreach ($identifier->parts() as $part) {
                 $str = new PBString();
                 $str->setSval($part);
                 $strNode = new Node();

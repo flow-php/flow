@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Schema;
 
 use Flow\PgQuery\Protobuf\AST\{ObjectType, RenameStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class AlterSchemaRenameBuilder implements AlterSchemaRenameFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $name,
         private string $newName,

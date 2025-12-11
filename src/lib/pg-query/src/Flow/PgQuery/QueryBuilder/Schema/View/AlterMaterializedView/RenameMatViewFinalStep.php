@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\RenameStmt;
 interface RenameMatViewFinalStep
 {
     public function toAst() : RenameStmt;
+
+    public function toSql() : string;
 }

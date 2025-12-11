@@ -20,6 +20,7 @@ use Flow\PgQuery\Protobuf\AST\{
     ParamRef,
     SelectStmt
 };
+use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
 
 /**
  * Applies keyset (cursor-based) pagination to SELECT queries.
@@ -173,10 +174,9 @@ final readonly class KeysetPaginationModifier implements NodeModifier
 
     private function createColumnRef(string $columnName) : Node
     {
-        $parts = \explode('.', $columnName);
         $fields = [];
 
-        foreach ($parts as $part) {
+        foreach (QualifiedIdentifier::parse($columnName)->parts() as $part) {
             $str = new PBString();
             $str->setSval($part);
             $strNode = new Node();

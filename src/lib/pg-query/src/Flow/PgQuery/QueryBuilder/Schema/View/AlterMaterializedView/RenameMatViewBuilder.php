@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, ObjectType, RangeVar, RenameStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class RenameMatViewBuilder implements RenameMatViewFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $view,
         private ?string $schema,

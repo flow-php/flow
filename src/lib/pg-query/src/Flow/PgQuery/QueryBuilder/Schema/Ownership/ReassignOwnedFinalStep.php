@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\ReassignOwnedStmt;
 interface ReassignOwnedFinalStep
 {
     public function toAst() : ReassignOwnedStmt;
+
+    public function toSql() : string;
 }

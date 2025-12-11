@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Utility;
 
 use Flow\PgQuery\Protobuf\AST\{ClusterStmt, DefElem, Node, RangeVar};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class ClusterBuilder implements ClusterFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private ?string $table = null,
         private ?string $index = null,
@@ -35,17 +38,16 @@ final readonly class ClusterBuilder implements ClusterFinalStep
         $stmt = new ClusterStmt();
 
         if ($this->table !== null) {
+            $identifier = QualifiedIdentifier::parse($this->table);
             $rangeVar = new RangeVar();
 
-            $parts = \explode('.', $this->table);
+            $schema = $identifier->schema();
 
-            if (\count($parts) === 2) {
-                $rangeVar->setSchemaname($parts[0]);
-                $rangeVar->setRelname($parts[1]);
-            } else {
-                $rangeVar->setRelname($this->table);
+            if ($schema !== null) {
+                $rangeVar->setSchemaname($schema);
             }
 
+            $rangeVar->setRelname($identifier->name());
             $rangeVar->setInh(true);
             $rangeVar->setRelpersistence('p');
 

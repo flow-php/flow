@@ -6,10 +6,13 @@ namespace Flow\PgQuery\QueryBuilder\Schema\Domain;
 
 use Flow\PgQuery\Parser;
 use Flow\PgQuery\Protobuf\AST\{AlterDomainStmt, ConstrType, Constraint, DropBehavior, Node, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
 
 final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterDomainFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $name,
         private ?string $schema = null,
@@ -23,13 +26,9 @@ final readonly class AlterDomainBuilder implements AlterDomainActionStep, AlterD
 
     public static function create(string $name) : AlterDomainActionStep
     {
-        $parts = \explode('.', $name);
+        $identifier = QualifiedIdentifier::parse($name);
 
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
-        }
-
-        return new self($name);
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function addConstraint(string $name, string $expression) : AlterDomainFinalStep

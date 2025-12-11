@@ -20,6 +20,7 @@
         "ext-xmlreader": "*",
         "ext-xmlwriter": "*",
         "ext-zlib": "*",
+        "ext-pgsql": "*",
         "composer-runtime-api": "^2.1",
         "async-aws/s3": "^2.6",
         "brick/math": "^0.11 || ^0.12 || ^0.13 || ^0.14",

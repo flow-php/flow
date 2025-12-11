@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_function, alter_procedure, call, create_function, create_procedure, do_block, drop_function, drop_procedure, func_arg};
+use function Flow\PgQuery\DSL\{alter_function, alter_procedure, call, create_function, create_procedure, do_block, drop_function, drop_procedure, func_arg, sql_type_integer, sql_type_text};
 use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
 
 final class FunctionBuilderTest extends PGQueryTestCase
@@ -12,37 +12,37 @@ final class FunctionBuilderTest extends PGQueryTestCase
     public function test_alter_function_immutable() : void
     {
         $builder = alter_function('my_func')
-            ->arguments(func_arg('integer'))
+            ->arguments(func_arg(sql_type_integer()))
             ->immutable();
 
-        $this->assertAlterFunctionQuery($builder, 'ALTER FUNCTION my_func("integer") IMMUTABLE');
+        $this->assertAlterFunctionQuery($builder, 'ALTER FUNCTION my_func(int) IMMUTABLE');
     }
 
     public function test_alter_function_parallel_safe() : void
     {
         $builder = alter_function('my_func')
-            ->arguments(func_arg('integer'))
+            ->arguments(func_arg(sql_type_integer()))
             ->parallel(ParallelSafety::SAFE);
 
-        $this->assertAlterFunctionQuery($builder, 'ALTER FUNCTION my_func("integer") PARALLEL safe');
+        $this->assertAlterFunctionQuery($builder, 'ALTER FUNCTION my_func(int) PARALLEL safe');
     }
 
     public function test_alter_function_rename() : void
     {
         $builder = alter_function('old_name')
-            ->arguments(func_arg('text'))
+            ->arguments(func_arg(sql_type_text()))
             ->renameTo('new_name');
 
-        $this->assertAlterFunctionRenameQuery($builder, 'ALTER FUNCTION old_name(text) RENAME TO new_name');
+        $this->assertAlterFunctionRenameQuery($builder, 'ALTER FUNCTION old_name(pg_catalog.text) RENAME TO new_name');
     }
 
     public function test_alter_procedure_rename() : void
     {
         $builder = alter_procedure('old_proc')
-            ->arguments(func_arg('integer'))
+            ->arguments(func_arg(sql_type_integer()))
             ->renameTo('new_proc');
 
-        $this->assertAlterProcedureRenameQuery($builder, 'ALTER PROCEDURE old_proc("integer") RENAME TO new_proc');
+        $this->assertAlterProcedureRenameQuery($builder, 'ALTER PROCEDURE old_proc(int) RENAME TO new_proc');
     }
 
     public function test_call_procedure() : void
@@ -62,49 +62,49 @@ final class FunctionBuilderTest extends PGQueryTestCase
     public function test_create_function_plpgsql() : void
     {
         $builder = create_function('increment')
-            ->arguments(func_arg('integer')->named('val'))
-            ->returns('integer')
+            ->arguments(func_arg(sql_type_integer())->named('val'))
+            ->returns(sql_type_integer())
             ->language('plpgsql')
             ->as('BEGIN RETURN val + 1; END;');
 
         $this->assertCreateFunctionQuery(
             $builder,
-            'CREATE FUNCTION increment(IN val "integer") RETURNS "integer" LANGUAGE plpgsql AS $$BEGIN RETURN val + 1; END;$$'
+            'CREATE FUNCTION increment(IN val int) RETURNS int LANGUAGE plpgsql AS $$BEGIN RETURN val + 1; END;$$'
         );
     }
 
     public function test_create_function_returns_table() : void
     {
         $builder = create_function('get_users')
-            ->returnsTable(['id' => 'integer', 'name' => 'text'])
+            ->returnsTable(['id' => sql_type_integer(), 'name' => sql_type_text()])
             ->language('sql')
             ->as('SELECT id, name FROM users');
 
         $this->assertCreateFunctionQuery(
             $builder,
-            'CREATE FUNCTION get_users() RETURNS TABLE (id "integer", name text) LANGUAGE sql AS $$SELECT id, name FROM users$$'
+            'CREATE FUNCTION get_users() RETURNS TABLE (id int, name pg_catalog.text) LANGUAGE sql AS $$SELECT id, name FROM users$$'
         );
     }
 
     public function test_create_function_simple() : void
     {
         $builder = create_function('add_numbers')
-            ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
-            ->returns('integer')
+            ->arguments(func_arg(sql_type_integer())->named('a'), func_arg(sql_type_integer())->named('b'))
+            ->returns(sql_type_integer())
             ->language('sql')
             ->as('SELECT a + b');
 
         $this->assertCreateFunctionQuery(
             $builder,
-            'CREATE FUNCTION add_numbers(IN a "integer", IN b "integer") RETURNS "integer" LANGUAGE sql AS $$SELECT a + b$$'
+            'CREATE FUNCTION add_numbers(IN a int, IN b int) RETURNS int LANGUAGE sql AS $$SELECT a + b$$'
         );
     }
 
     public function test_create_function_with_options() : void
     {
         $builder = create_function('compute')
-            ->arguments(func_arg('integer')->named('x'))
-            ->returns('integer')
+            ->arguments(func_arg(sql_type_integer())->named('x'))
+            ->returns(sql_type_integer())
             ->language('sql')
             ->immutable()
             ->parallel(ParallelSafety::SAFE)
@@ -113,7 +113,7 @@ final class FunctionBuilderTest extends PGQueryTestCase
 
         $this->assertCreateFunctionQuery(
             $builder,
-            'CREATE FUNCTION compute(IN x "integer") RETURNS "integer" LANGUAGE sql IMMUTABLE PARALLEL safe RETURNS NULL ON NULL INPUT AS $$SELECT x * 2$$'
+            'CREATE FUNCTION compute(IN x int) RETURNS int LANGUAGE sql IMMUTABLE PARALLEL safe RETURNS NULL ON NULL INPUT AS $$SELECT x * 2$$'
         );
     }
 
@@ -121,26 +121,26 @@ final class FunctionBuilderTest extends PGQueryTestCase
     {
         $builder = create_function('my_func')
             ->orReplace()
-            ->returns('integer')
+            ->returns(sql_type_integer())
             ->language('sql')
             ->as('SELECT 1');
 
         $this->assertCreateFunctionQuery(
             $builder,
-            'CREATE OR REPLACE FUNCTION my_func() RETURNS "integer" LANGUAGE sql AS $$SELECT 1$$'
+            'CREATE OR REPLACE FUNCTION my_func() RETURNS int LANGUAGE sql AS $$SELECT 1$$'
         );
     }
 
     public function test_create_procedure() : void
     {
         $builder = create_procedure('update_stats')
-            ->arguments(func_arg('integer')->named('user_id'))
+            ->arguments(func_arg(sql_type_integer())->named('user_id'))
             ->language('plpgsql')
             ->as('BEGIN UPDATE stats SET count = count + 1 WHERE id = user_id; END;');
 
         $this->assertCreateProcedureQuery(
             $builder,
-            'CREATE PROCEDURE update_stats(IN user_id "integer") LANGUAGE plpgsql AS $$BEGIN UPDATE stats SET count = count + 1 WHERE id = user_id; END;$$'
+            'CREATE PROCEDURE update_stats(IN user_id int) LANGUAGE plpgsql AS $$BEGIN UPDATE stats SET count = count + 1 WHERE id = user_id; END;$$'
         );
     }
 
@@ -182,10 +182,10 @@ final class FunctionBuilderTest extends PGQueryTestCase
     {
         $builder = drop_function('my_func')
             ->ifExists()
-            ->arguments(func_arg('integer'), func_arg('text'))
+            ->arguments(func_arg(sql_type_integer()), func_arg(sql_type_text()))
             ->cascade();
 
-        $this->assertDropFunctionQuery($builder, 'DROP FUNCTION IF EXISTS my_func("integer", text) CASCADE');
+        $this->assertDropFunctionQuery($builder, 'DROP FUNCTION IF EXISTS my_func(int, pg_catalog.text) CASCADE');
     }
 
     public function test_drop_procedure() : void
@@ -199,9 +199,9 @@ final class FunctionBuilderTest extends PGQueryTestCase
     {
         $builder = drop_procedure('my_proc')
             ->ifExists()
-            ->arguments(func_arg('integer'))
+            ->arguments(func_arg(sql_type_integer()))
             ->cascade();
 
-        $this->assertDropProcedureQuery($builder, 'DROP PROCEDURE IF EXISTS my_proc("integer") CASCADE');
+        $this->assertDropProcedureQuery($builder, 'DROP PROCEDURE IF EXISTS my_proc(int) CASCADE');
     }
 }

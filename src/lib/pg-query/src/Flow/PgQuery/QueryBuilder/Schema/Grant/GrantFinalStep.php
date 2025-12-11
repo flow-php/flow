@@ -10,5 +10,7 @@ interface GrantFinalStep
 {
     public function toAst() : GrantStmt;
 
+    public function toSql() : string;
+
     public function withGrantOption() : self;
 }

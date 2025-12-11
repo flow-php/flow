@@ -15,4 +15,6 @@ interface MergeFinalStep
      * Convert this MERGE query to protobuf AST.
      */
     public function toAst() : MergeStmt;
+
+    public function toSql() : string;
 }

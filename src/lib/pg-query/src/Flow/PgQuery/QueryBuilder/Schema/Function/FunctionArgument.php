@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\Function;
 
+use Flow\PgQuery\QueryBuilder\Schema\DataType;
+
 final readonly class FunctionArgument
 {
     private function __construct(
-        public string $type,
+        public DataType $type,
         public ?string $name = null,
         public ArgumentMode $mode = ArgumentMode::IN,
         public ?string $default = null,
     ) {
     }
 
-    public static function of(string $type) : self
+    public static function of(DataType $type) : self
     {
         return new self($type);
     }

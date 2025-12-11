@@ -42,8 +42,9 @@ final class DropSequenceBuilderTest extends TestCase
 
     public function test_drop_sequence_if_exists() : void
     {
-        $builder = DropSequenceBuilder::ifExists()
-            ->sequence('user_id_seq');
+        $builder = DropSequenceBuilder::create()
+            ->sequence('user_id_seq')
+            ->ifExists();
 
         $ast = $builder->toAst();
 
@@ -53,8 +54,9 @@ final class DropSequenceBuilderTest extends TestCase
 
     public function test_drop_sequence_if_exists_cascade() : void
     {
-        $builder = DropSequenceBuilder::ifExists()
+        $builder = DropSequenceBuilder::create()
             ->sequence('user_id_seq')
+            ->ifExists()
             ->cascade();
 
         $ast = $builder->toAst();

@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Trigger;
 
 use Flow\PgQuery\Protobuf\AST\{CreateTrigStmt, Node, PBString, RangeVar, TriggerTransition};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Condition\Condition;
 use Flow\PgQuery\QueryBuilder\Expression\Expression;
 
 final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, CreateTriggerOnStep, CreateTriggerOptionsStep, CreateTriggerTimingStep
 {
+    use AstToSql;
+
     /**
      * @param list<TriggerEvent> $events
      * @param list<string> $columns
@@ -351,28 +354,7 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
 
     public function on(string $table, ?string $schema = null) : CreateTriggerOptionsStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
-            return new self(
-                $this->name,
-                $this->replace,
-                $this->constraint,
-                $this->timing,
-                $this->events,
-                $this->columns,
-                $parts[1],
-                $parts[0],
-                $this->fromTable,
-                $this->deferrable,
-                $this->initDeferred,
-                $this->transitionTables,
-                $this->level,
-                $this->when,
-                $this->functionName,
-                $this->functionArgs,
-            );
-        }
+        $identifier = QualifiedIdentifier::parse($table);
 
         return new self(
             $this->name,
@@ -381,8 +363,8 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
             $this->timing,
             $this->events,
             $this->columns,
-            $table,
-            $schema,
+            $identifier->name(),
+            $schema ?? $identifier->schema(),
             $this->fromTable,
             $this->deferrable,
             $this->initDeferred,
@@ -538,10 +520,10 @@ final readonly class CreateTriggerBuilder implements CreateTriggerFinalStep, Cre
         }
 
         if ($this->functionName !== null) {
-            $funcNameParts = \explode('.', $this->functionName);
+            $funcIdentifier = QualifiedIdentifier::parse($this->functionName);
             $funcnameNodes = [];
 
-            foreach ($funcNameParts as $part) {
+            foreach ($funcIdentifier->parts() as $part) {
                 $str = new PBString();
                 $str->setSval($part);
                 $node = new Node();

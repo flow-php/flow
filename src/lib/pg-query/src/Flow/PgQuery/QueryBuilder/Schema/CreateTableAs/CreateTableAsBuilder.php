@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\CreateTableAs;
 
 use Flow\PgQuery\Protobuf\AST\{CreateTableAsStmt, IntoClause, Node, ObjectType, PBString, RangeVar};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Select\SelectFinalStep;
 
 final readonly class CreateTableAsBuilder implements CreateTableAsFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $columnNames
      */

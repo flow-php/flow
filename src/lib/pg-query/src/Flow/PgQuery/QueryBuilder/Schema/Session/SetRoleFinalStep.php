@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\VariableSetStmt;
 interface SetRoleFinalStep
 {
     public function toAst() : VariableSetStmt;
+
+    public function toSql() : string;
 }

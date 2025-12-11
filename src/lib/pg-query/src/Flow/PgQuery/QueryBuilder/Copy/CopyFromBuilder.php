@@ -6,6 +6,7 @@ namespace Flow\PgQuery\QueryBuilder\Copy;
 
 use Flow\PgQuery\Protobuf\AST\{CopyStmt, DefElem, Node, PBList, PBString, RangeVar};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
+use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
 
 /**
  * Builder for COPY FROM statements (data import).
@@ -308,19 +309,11 @@ final readonly class CopyFromBuilder implements CopyFromOptionsStep, CopyFromSou
 
     public function table(string $table, string ...$columns) : CopyFromSourceStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
-            $schema = $parts[0];
-            $tableName = $parts[1];
-        } else {
-            $schema = null;
-            $tableName = $table;
-        }
+        $identifier = QualifiedIdentifier::parse($table);
 
         return new self(
-            $tableName,
-            $schema,
+            $identifier->name(),
+            $identifier->schema(),
             \array_values($columns),
             $this->filename,
             $this->isProgram,

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Role;
 
 use Flow\PgQuery\Protobuf\AST\{AlterRoleStmt, DefElem, Integer, Node, PBString, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class AlterRoleBuilder implements AlterRoleActionStep, AlterRoleFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<array{name: string, arg: ?Node}> $options
      */

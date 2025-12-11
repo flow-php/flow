@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\DiscardStmt;
 interface DiscardFinalStep
 {
     public function toAst() : DiscardStmt;
+
+    public function toSql() : string;
 }

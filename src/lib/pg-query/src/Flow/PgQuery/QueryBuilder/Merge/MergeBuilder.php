@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Merge;
 
 use Flow\PgQuery\Protobuf\AST\{Alias, MergeStmt, MergeWhenClause, Node, RangeSubselect, RangeVar, ResTarget};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Clause\WithClause;
 use Flow\PgQuery\QueryBuilder\Condition\Condition;
 use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
@@ -15,6 +16,8 @@ use Flow\PgQuery\QueryBuilder\Select\SelectFinalStep;
  */
 final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUsingStep, MergeWhenStep
 {
+    use AstToSql;
+
     /**
      * @param list<MergeWhenClauseData> $whenClauses
      */
@@ -58,20 +61,12 @@ final readonly class MergeBuilder implements MergeIntoStep, MergeOnStep, MergeUs
 
     public function into(string $table, ?string $alias = null) : MergeUsingStep
     {
-        $parts = \explode('.', $table);
-
-        if (\count($parts) === 2) {
-            $schema = $parts[0];
-            $tableName = $parts[1];
-        } else {
-            $schema = null;
-            $tableName = $table;
-        }
+        $identifier = QualifiedIdentifier::parse($table);
 
         return new self(
             $this->with,
-            $tableName,
-            $schema,
+            $identifier->name(),
+            $identifier->schema(),
             $alias,
             $this->sourceTable,
             $this->sourceSelect,

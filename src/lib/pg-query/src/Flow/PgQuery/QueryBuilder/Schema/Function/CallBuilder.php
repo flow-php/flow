@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Function;
 
 use Flow\PgQuery\Protobuf\AST\{A_Const, Boolean, CallStmt, FuncCall, Integer, Node, PBFloat, PBString};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class CallBuilder implements CallFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<Node> $arguments
      */

@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateRangeStmt;
 interface CreateRangeTypeFinalStep
 {
     public function toAst() : CreateRangeStmt;
+
+    public function toSql() : string;
 }
