@@ -129,6 +129,7 @@ final readonly class ForeignKeyConstraint implements TableConstraint
 
         $rangeVar = new RangeVar();
         $rangeVar->setRelname($this->referenceTable);
+        $rangeVar->setInh(true);
 
         if ($this->referenceSchema !== null) {
             $rangeVar->setSchemaname($this->referenceSchema);
