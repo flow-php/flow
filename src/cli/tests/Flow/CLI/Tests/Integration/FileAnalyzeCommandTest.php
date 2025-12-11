@@ -7,7 +7,6 @@ namespace Flow\CLI\Tests\Integration;
 use Flow\CLI\Command\{FileAnalyzeCommand};
 use Flow\ETL\Tests\CommandOutputNormalizer;
 use Flow\ETL\Tests\FlowTestCase;
-use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 final class FileAnalyzeCommandTest extends FlowTestCase
@@ -15,9 +14,7 @@ final class FileAnalyzeCommandTest extends FlowTestCase
     use CommandOutputNormalizer;
     public function test_read_rows_csv() : void
     {
-        $application = new Application();
-        $application->add(new FileAnalyzeCommand());
-        $tester = new CommandTester($application->get('file:analyze'));
+        $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
 
         $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--input-file-limit' => 5, '--stats-schema' => true, '--stats-columns' => true, '--schema-auto-cast' => true]);
 
@@ -72,9 +69,7 @@ OUTPUT,
 
     public function test_read_rows_csv_without_schema() : void
     {
-        $application = new Application();
-        $application->add(new FileAnalyzeCommand());
-        $tester = new CommandTester($application->get('file:analyze'));
+        $tester = new CommandTester(new FileAnalyzeCommand('file:analyze'));
 
         $tester->execute(['input-file' => __DIR__ . '/Fixtures/orders.csv', '--input-file-limit' => 5, '--stats-columns' => true, '--schema-auto-cast' => true]);
 
