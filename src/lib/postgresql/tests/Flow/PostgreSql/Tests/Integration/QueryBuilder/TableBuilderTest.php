@@ -353,7 +353,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
         $this->assertCreateTableQuery(
             $builder,
-            'CREATE TABLE orders (id serial PRIMARY KEY, user_id int NOT NULL, FOREIGN KEY (user_id) REFERENCES ONLY users (id) ON UPDATE RESTRICT ON DELETE CASCADE)'
+            'CREATE TABLE orders (id serial PRIMARY KEY, user_id int NOT NULL, FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE RESTRICT ON DELETE CASCADE)'
         );
     }
 
@@ -369,7 +369,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
         $this->assertCreateTableQuery(
             $builder,
-            'CREATE TABLE comments (id serial PRIMARY KEY, user_id int, FOREIGN KEY (user_id) REFERENCES ONLY users (id) ON DELETE SET NULL)'
+            'CREATE TABLE comments (id serial PRIMARY KEY, user_id int, FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL)'
         );
     }
 

@@ -10,6 +10,7 @@ use function Flow\PostgreSql\DSL\{
     column,
     create,
     drop,
+    foreign_key,
     primary_key,
     sql_type_integer,
     sql_type_serial,
@@ -129,7 +130,31 @@ final class TableDatabaseTest extends DatabaseTestCase
 
     public function test_create_table_with_foreign_key() : void
     {
-        self::markTestSkipped('Builder generates invalid SQL with "REFERENCES ONLY" syntax - needs fix in ForeignKeyConstraint');
+        $parentQuery = create()->table(self::TABLE_PARENT)
+            ->column(column('id', sql_type_serial()))
+            ->column(column('name', sql_type_varchar(100)))
+            ->constraint(primary_key('id'));
+        $this->execute($parentQuery->toSql());
+
+        $childQuery = create()->table(self::TABLE_CHILD)
+            ->column(column('id', sql_type_serial()))
+            ->column(column('parent_id', sql_type_integer())->notNull())
+            ->constraint(foreign_key(['parent_id'], self::TABLE_PARENT, ['id']));
+
+        $result = $this->execute($childQuery->toSql());
+
+        self::assertNotFalse($result);
+
+        $check = $this->execute("
+            SELECT tc.constraint_type, ccu.table_name AS foreign_table_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.constraint_column_usage ccu
+                ON tc.constraint_name = ccu.constraint_name
+            WHERE tc.table_name = '" . self::TABLE_CHILD . "' AND tc.constraint_type = 'FOREIGN KEY'
+        ");
+        $constraints = $this->fetchAll($check);
+        self::assertCount(1, $constraints);
+        self::assertSame(self::TABLE_PARENT, $constraints[0]['foreign_table_name']);
     }
 
     public function test_create_table_with_primary_key() : void
