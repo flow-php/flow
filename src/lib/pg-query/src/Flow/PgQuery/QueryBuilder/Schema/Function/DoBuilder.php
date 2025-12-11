@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Function;
 
 use Flow\PgQuery\Protobuf\AST\{DefElem, DoStmt, Node, PBString};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class DoBuilder implements DoFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $code,
         private string $language = 'plpgsql',

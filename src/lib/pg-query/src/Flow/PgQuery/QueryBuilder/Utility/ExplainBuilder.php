@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Utility;
 
 use Flow\PgQuery\Protobuf\AST\{DefElem, ExplainStmt, Integer, Node, PBString};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Delete\DeleteFinalStep;
 use Flow\PgQuery\QueryBuilder\Insert\InsertFinalStep;
 use Flow\PgQuery\QueryBuilder\Select\SelectFinalStep;
@@ -12,6 +13,8 @@ use Flow\PgQuery\QueryBuilder\Update\UpdateFinalStep;
 
 final readonly class ExplainBuilder implements ExplainFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private SelectFinalStep|InsertFinalStep|UpdateFinalStep|DeleteFinalStep $query,
         private bool $analyze = false,

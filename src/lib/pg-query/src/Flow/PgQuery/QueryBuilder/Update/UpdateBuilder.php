@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Update;
 
 use Flow\PgQuery\Protobuf\AST\{Alias, Node, RangeVar, ResTarget, UpdateStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Clause\WithClause;
 use Flow\PgQuery\QueryBuilder\Condition\{Condition, ConditionFactory};
 use Flow\PgQuery\QueryBuilder\Exception\{InvalidAstException, InvalidExpressionException};
@@ -16,6 +17,8 @@ use Flow\PgQuery\QueryBuilder\Table\{JoinedTable, SubqueryReference, Table, Tabl
  */
 final readonly class UpdateBuilder implements UpdateSetStep, UpdateTableStep
 {
+    use AstToSql;
+
     /**
      * @param array<string, Expression> $assignments
      * @param array<TableReference> $from

@@ -15,4 +15,9 @@ interface UpdateFinalStep
      * Convert this UPDATE query to protobuf AST.
      */
     public function toAst() : UpdateStmt;
+
+    /**
+     * Convert this UPDATE query to SQL string.
+     */
+    public function toSql() : string;
 }

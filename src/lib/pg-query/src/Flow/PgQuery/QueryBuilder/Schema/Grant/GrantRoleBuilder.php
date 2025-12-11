@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Grant;
 
 use Flow\PgQuery\Protobuf\AST\{Boolean, DefElem, GrantRoleStmt, Node, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class GrantRoleBuilder implements GrantRoleFinalStep, GrantRoleToStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $grantedRoles
      * @param list<string> $granteeRoles

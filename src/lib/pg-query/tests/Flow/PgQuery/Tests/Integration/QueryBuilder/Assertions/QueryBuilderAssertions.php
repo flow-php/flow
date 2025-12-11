@@ -93,14 +93,18 @@ trait QueryBuilderAssertions
 
     protected function assertAlterFunctionQuery(AlterFunctionFinalStep $builder, string $expectedSql) : void
     {
-        $sql = $this->deparseAlterFunctionStmt($builder->toAlterAst());
+        $ast = $builder->toAst();
+        Assert::assertInstanceOf(AlterFunctionStmt::class, $ast);
+        $sql = $this->deparseAlterFunctionStmt($ast);
 
         Assert::assertSame($expectedSql, $sql);
     }
 
     protected function assertAlterFunctionRenameQuery(AlterFunctionFinalStep $builder, string $expectedSql) : void
     {
-        $sql = $this->deparseRenameStmt($builder->toRenameAst());
+        $ast = $builder->toAst();
+        Assert::assertInstanceOf(RenameStmt::class, $ast);
+        $sql = $this->deparseRenameStmt($ast);
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -156,14 +160,18 @@ trait QueryBuilderAssertions
 
     protected function assertAlterProcedureQuery(AlterProcedureFinalStep $builder, string $expectedSql) : void
     {
-        $sql = $this->deparseAlterFunctionStmt($builder->toAlterAst());
+        $ast = $builder->toAst();
+        Assert::assertInstanceOf(AlterFunctionStmt::class, $ast);
+        $sql = $this->deparseAlterFunctionStmt($ast);
 
         Assert::assertSame($expectedSql, $sql);
     }
 
     protected function assertAlterProcedureRenameQuery(AlterProcedureFinalStep $builder, string $expectedSql) : void
     {
-        $sql = $this->deparseRenameStmt($builder->toRenameAst());
+        $ast = $builder->toAst();
+        Assert::assertInstanceOf(RenameStmt::class, $ast);
+        $sql = $this->deparseRenameStmt($ast);
 
         Assert::assertSame($expectedSql, $sql);
     }
@@ -240,14 +248,18 @@ trait QueryBuilderAssertions
 
     protected function assertAlterTriggerDependsQuery(AlterTriggerFinalStep $builder, string $expectedSql) : void
     {
-        $sql = $this->deparseAlterObjectDependsStmt($builder->toDependsAst());
+        $ast = $builder->toAst();
+        Assert::assertInstanceOf(AlterObjectDependsStmt::class, $ast);
+        $sql = $this->deparseAlterObjectDependsStmt($ast);
 
         Assert::assertSame($expectedSql, $sql);
     }
 
     protected function assertAlterTriggerRenameQuery(AlterTriggerFinalStep $builder, string $expectedSql) : void
     {
-        $sql = $this->deparseRenameStmt($builder->toRenameAst());
+        $ast = $builder->toAst();
+        Assert::assertInstanceOf(RenameStmt::class, $ast);
+        $sql = $this->deparseRenameStmt($ast);
 
         Assert::assertSame($expectedSql, $sql);
     }

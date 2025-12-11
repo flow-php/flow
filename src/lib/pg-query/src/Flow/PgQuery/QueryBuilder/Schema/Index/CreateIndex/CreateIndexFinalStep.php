@@ -19,5 +19,7 @@ interface CreateIndexFinalStep
 
     public function toAst() : IndexStmt;
 
+    public function toSql() : string;
+
     public function where(Condition $predicate) : self;
 }

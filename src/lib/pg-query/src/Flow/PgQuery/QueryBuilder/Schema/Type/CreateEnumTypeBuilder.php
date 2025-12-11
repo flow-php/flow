@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Type;
 
 use Flow\PgQuery\Protobuf\AST\{CreateEnumStmt, Node, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class CreateEnumTypeBuilder implements CreateEnumTypeFinalStep, CreateEnumTypeLabelsStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $labels
      */
@@ -20,13 +23,9 @@ final readonly class CreateEnumTypeBuilder implements CreateEnumTypeFinalStep, C
 
     public static function create(string $name) : CreateEnumTypeLabelsStep
     {
-        $parts = \explode('.', $name);
+        $identifier = QualifiedIdentifier::parse($name);
 
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
-        }
-
-        return new self($name);
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function labels(string ...$labels) : CreateEnumTypeFinalStep

@@ -15,4 +15,6 @@ interface AlterDomainFinalStep
     public function restrict() : self;
 
     public function toAst() : AlterDomainStmt;
+
+    public function toSql() : string;
 }

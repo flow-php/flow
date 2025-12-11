@@ -8,7 +8,7 @@ use Flow\PgQuery\Protobuf\AST\{AlterObjectDependsStmt, RenameStmt};
 
 interface AlterTriggerFinalStep
 {
-    public function toDependsAst() : AlterObjectDependsStmt;
+    public function toAst() : RenameStmt|AlterObjectDependsStmt;
 
-    public function toRenameAst() : RenameStmt;
+    public function toSql() : string;
 }

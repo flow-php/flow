@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Grant;
 
 use Flow\PgQuery\Protobuf\AST\{AccessPriv, DropBehavior, GrantStmt, GrantTargetType, Node, ObjectType, PBString, RangeVar, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, RevokeOnStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $privileges
      * @param list<string> $objects
@@ -138,16 +141,16 @@ final readonly class RevokeBuilder implements RevokeFinalStep, RevokeFromStep, R
             }
         } else {
             foreach ($this->objects as $tableName) {
+                $identifier = QualifiedIdentifier::parse($tableName);
                 $rangeVar = new RangeVar();
-                $parts = \explode('.', $tableName);
 
-                if (\count($parts) === 2) {
-                    $rangeVar->setSchemaname($parts[0]);
-                    $rangeVar->setRelname($parts[1]);
-                } else {
-                    $rangeVar->setRelname($tableName);
+                $schema = $identifier->schema();
+
+                if ($schema !== null) {
+                    $rangeVar->setSchemaname($schema);
                 }
 
+                $rangeVar->setRelname($identifier->name());
                 $rangeVar->setInh(true);
 
                 $node = new Node();

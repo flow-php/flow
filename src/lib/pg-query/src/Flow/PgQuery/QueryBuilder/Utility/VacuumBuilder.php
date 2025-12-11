@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Utility;
 
 use Flow\PgQuery\Protobuf\AST\{DefElem, Integer, Node, PBString, RangeVar, VacuumRelation as VacuumRelationAST, VacuumStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class VacuumBuilder implements VacuumFinalStep
 {
+    use AstToSql;
+
     /**
      * @param array<VacuumRelation> $relations
      */
@@ -294,17 +297,16 @@ final readonly class VacuumBuilder implements VacuumFinalStep
         $rels = [];
 
         foreach ($this->relations as $relation) {
+            $identifier = QualifiedIdentifier::parse($relation->table);
             $rangeVar = new RangeVar();
 
-            $parts = \explode('.', $relation->table);
+            $schema = $identifier->schema();
 
-            if (\count($parts) === 2) {
-                $rangeVar->setSchemaname($parts[0]);
-                $rangeVar->setRelname($parts[1]);
-            } else {
-                $rangeVar->setRelname($relation->table);
+            if ($schema !== null) {
+                $rangeVar->setSchemaname($schema);
             }
 
+            $rangeVar->setRelname($identifier->name());
             $rangeVar->setInh(true);
             $rangeVar->setRelpersistence('p');
 

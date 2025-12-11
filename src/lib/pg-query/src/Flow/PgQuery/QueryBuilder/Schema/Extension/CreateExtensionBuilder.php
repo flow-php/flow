@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Extension;
 
 use Flow\PgQuery\Protobuf\AST\{CreateExtensionStmt, DefElem, Integer, Node, PBString};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class CreateExtensionBuilder implements CreateExtensionOptionsStep
 {
+    use AstToSql;
+
     /**
      * @param list<array{name: string, arg: ?Node}> $options
      */

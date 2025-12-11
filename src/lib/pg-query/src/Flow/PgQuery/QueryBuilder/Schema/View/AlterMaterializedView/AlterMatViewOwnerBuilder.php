@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView;
 
 use Flow\PgQuery\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class AlterMatViewOwnerBuilder implements AlterMatViewOwnerFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $view,
         private ?string $schema,

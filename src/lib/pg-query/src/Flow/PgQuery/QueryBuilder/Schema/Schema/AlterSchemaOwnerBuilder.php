@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Schema;
 
 use Flow\PgQuery\Protobuf\AST\{AlterOwnerStmt, Node, ObjectType, PBString, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class AlterSchemaOwnerBuilder implements AlterSchemaOwnerFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $name,
         private string $owner,

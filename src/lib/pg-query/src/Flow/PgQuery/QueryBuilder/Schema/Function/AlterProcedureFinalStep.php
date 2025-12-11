@@ -8,7 +8,19 @@ use Flow\PgQuery\Protobuf\AST\{AlterFunctionStmt, RenameStmt};
 
 interface AlterProcedureFinalStep
 {
-    public function toAlterAst() : AlterFunctionStmt;
+    public function renameTo(string $newName) : self;
 
-    public function toRenameAst() : RenameStmt;
+    public function reset(string $parameter) : self;
+
+    public function resetAll() : self;
+
+    public function securityDefiner() : self;
+
+    public function securityInvoker() : self;
+
+    public function set(string $parameter, string $value) : self;
+
+    public function toAst() : AlterFunctionStmt|RenameStmt;
+
+    public function toSql() : string;
 }

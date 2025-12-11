@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\View\RefreshMaterializedView;
 
 use Flow\PgQuery\Protobuf\AST\{RangeVar, RefreshMatViewStmt};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidExpressionException;
 
 final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFinalStep, RefreshMatViewOptionsStep
 {
+    use AstToSql;
+
     private function __construct(
         private ?string $name = null,
         private ?string $schema = null,
@@ -19,13 +22,13 @@ final readonly class RefreshMaterializedViewBuilder implements RefreshMatViewFin
 
     public static function create(string $name, ?string $schema = null) : RefreshMatViewOptionsStep
     {
-        $parts = \explode('.', $name);
-
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
+        if ($schema !== null) {
+            return new self($name, $schema);
         }
 
-        return new self($name, $schema);
+        $identifier = QualifiedIdentifier::parse($name);
+
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function concurrently() : RefreshMatViewFinalStep

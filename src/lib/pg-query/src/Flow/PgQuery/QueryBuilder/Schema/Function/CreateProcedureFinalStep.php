@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateFunctionStmt;
 interface CreateProcedureFinalStep
 {
     public function toAst() : CreateFunctionStmt;
+
+    public function toSql() : string;
 }

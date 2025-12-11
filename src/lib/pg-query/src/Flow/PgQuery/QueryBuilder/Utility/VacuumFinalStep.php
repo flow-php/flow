@@ -32,6 +32,8 @@ interface VacuumFinalStep
 
     public function toAst() : VacuumStmt;
 
+    public function toSql() : string;
+
     public function truncate(bool $enabled) : self;
 
     public function verbose() : self;

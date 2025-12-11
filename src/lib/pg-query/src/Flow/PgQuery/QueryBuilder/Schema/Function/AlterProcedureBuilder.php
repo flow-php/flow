@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\Function;
 
-use Flow\PgQuery\Protobuf\AST\{A_Const, AlterFunctionStmt, DefElem, Integer, Node, ObjectType, ObjectWithArgs, PBString, RenameStmt, TypeName};
+use Flow\PgQuery\Protobuf\AST\{A_Const, AlterFunctionStmt, DefElem, Integer, Node, ObjectType, ObjectWithArgs, PBString, RenameStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
+use Flow\PgQuery\QueryBuilder\Exception\InvalidBuilderStateException;
 
 final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, AlterProcedureFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<FunctionArgument> $arguments
      * @param list<array{name: string, arg: ?Node}> $actions
@@ -127,7 +131,20 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $this->withAction('set', $node);
     }
 
-    public function toAlterAst() : AlterFunctionStmt
+    public function toAst() : AlterFunctionStmt|RenameStmt
+    {
+        if ($this->renameTo !== null && $this->actions !== []) {
+            throw InvalidBuilderStateException::mutuallyExclusiveOptions('RENAME TO', 'other alterations');
+        }
+
+        if ($this->renameTo !== null) {
+            return $this->buildRenameAst();
+        }
+
+        return $this->buildAlterAst();
+    }
+
+    private function buildAlterAst() : AlterFunctionStmt
     {
         $stmt = new AlterFunctionStmt();
         $stmt->setObjtype(ObjectType::OBJECT_PROCEDURE);
@@ -146,9 +163,8 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
             $argNodes = [];
 
             foreach ($this->arguments as $arg) {
-                $typeName = $this->createTypeName($arg->type);
                 $node = new Node();
-                $node->setTypeName($typeName);
+                $node->setTypeName($arg->type->toAst());
                 $argNodes[] = $node;
             }
 
@@ -181,7 +197,7 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         return $stmt;
     }
 
-    public function toRenameAst() : RenameStmt
+    private function buildRenameAst() : RenameStmt
     {
         $stmt = new RenameStmt();
         $stmt->setRenameType(ObjectType::OBJECT_PROCEDURE);
@@ -200,9 +216,8 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
             $argNodes = [];
 
             foreach ($this->arguments as $arg) {
-                $typeName = $this->createTypeName($arg->type);
                 $node = new Node();
-                $node->setTypeName($typeName);
+                $node->setTypeName($arg->type->toAst());
                 $argNodes[] = $node;
             }
 
@@ -220,21 +235,6 @@ final readonly class AlterProcedureBuilder implements AlterProcedureArgsStep, Al
         }
 
         return $stmt;
-    }
-
-    private function createTypeName(string $type) : TypeName
-    {
-        $typeName = new TypeName();
-
-        $typeNames = [];
-        $str = new PBString();
-        $str->setSval($type);
-        $node = new Node();
-        $node->setString($str);
-        $typeNames[] = $node;
-        $typeName->setNames($typeNames);
-
-        return $typeName;
     }
 
     private function withAction(string $name, ?Node $arg) : self

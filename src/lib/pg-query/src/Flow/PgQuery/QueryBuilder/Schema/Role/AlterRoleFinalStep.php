@@ -40,6 +40,8 @@ interface AlterRoleFinalStep
 
     public function toAst() : AlterRoleStmt;
 
+    public function toSql() : string;
+
     public function validUntil(string $timestamp) : self;
 
     public function withPassword(string $password) : self;

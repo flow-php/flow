@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateExtensionStmt;
 interface CreateExtensionFinalStep
 {
     public function toAst() : CreateExtensionStmt;
+
+    public function toSql() : string;
 }

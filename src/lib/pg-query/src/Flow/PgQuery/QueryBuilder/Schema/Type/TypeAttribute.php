@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\Type;
 
+use Flow\PgQuery\QueryBuilder\Schema\DataType;
+
 final readonly class TypeAttribute
 {
     public function __construct(
         public string $name,
-        public string $type,
+        public DataType $type,
         public ?string $collation = null,
     ) {
     }
 
-    public static function of(string $name, string $type) : self
+    public static function of(string $name, DataType $type) : self
     {
         return new self($name, $type);
     }

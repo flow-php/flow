@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Domain;
 
 use Flow\PgQuery\Parser;
-use Flow\PgQuery\Protobuf\AST\{CollateClause, ConstrType, Constraint, CreateDomainStmt, Node, PBString, TypeName};
+use Flow\PgQuery\Protobuf\AST\{CollateClause, ConstrType, Constraint, CreateDomainStmt, Node, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
+use Flow\PgQuery\QueryBuilder\Schema\DataType;
 
 final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, CreateDomainTypeStep
 {
+    use AstToSql;
+
     /**
      * @param list<Constraint> $constraints
      */
     private function __construct(
         private string $name,
         private ?string $schema = null,
-        private ?string $dataType = null,
+        private ?DataType $dataType = null,
         private ?string $collation = null,
         private array $constraints = [],
         private ?string $currentConstraintName = null,
@@ -25,16 +29,12 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
 
     public static function create(string $name) : CreateDomainTypeStep
     {
-        $parts = \explode('.', $name);
+        $identifier = QualifiedIdentifier::parse($name);
 
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
-        }
-
-        return new self($name);
+        return new self($identifier->name(), $identifier->schema());
     }
 
-    public function as(string $dataType) : CreateDomainOptionsStep
+    public function as(DataType $dataType) : CreateDomainOptionsStep
     {
         return new self(
             $this->name,
@@ -175,17 +175,7 @@ final readonly class CreateDomainBuilder implements CreateDomainOptionsStep, Cre
         $stmt->setDomainname($domainNameNodes);
 
         if ($this->dataType !== null) {
-            $typeName = new TypeName();
-
-            $typeNames = [];
-            $str = new PBString();
-            $str->setSval($this->dataType);
-            $node = new Node();
-            $node->setString($str);
-            $typeNames[] = $node;
-            $typeName->setNames($typeNames);
-
-            $stmt->setTypeName($typeName);
+            $stmt->setTypeName($this->dataType->toAst());
         }
 
         if ($this->collation !== null) {

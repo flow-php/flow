@@ -74,6 +74,7 @@ use Flow\PgQuery\QueryBuilder\Expression\{
 };
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
 use Flow\PgQuery\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
+use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
 use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceBuilder, AlterSequenceOptionsStep};
 use Flow\PgQuery\QueryBuilder\Schema\AlterTable\{AlterTableBuilder, AlterTableFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\{ColumnDefinition, DataType, ReferentialAction};
@@ -576,13 +577,13 @@ function col(string $column, ?string $table = null, ?string $schema = null) : Co
         }
 
         if ($table === null) {
-            return Column::fromParts(\explode('.', $column));
+            return Column::fromParts(QualifiedIdentifier::parse($column)->parts());
         }
 
         return Column::tableColumn($table, $column);
     }
 
-    return Column::fromParts(\explode('.', $column));
+    return Column::fromParts(QualifiedIdentifier::parse($column)->parts());
 }
 
 /**
@@ -657,9 +658,7 @@ function param(int $position) : Parameter
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function func(string $name, array $args = []) : FunctionCall
 {
-    $nameParts = \explode('.', $name);
-
-    return new FunctionCall($nameParts, $args);
+    return new FunctionCall(QualifiedIdentifier::parse($name)->parts(), $args);
 }
 
 /**
@@ -775,9 +774,7 @@ function least(Expression ...$expressions) : Least
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function cast(Expression $expr, string $type) : TypeCast
 {
-    $typeParts = \explode('.', $type);
-
-    return new TypeCast($expr, $typeParts);
+    return new TypeCast($expr, QualifiedIdentifier::parse($type)->parts());
 }
 
 /**
@@ -1302,13 +1299,22 @@ function text_search_match(Expression $document, Expression $query) : OperatorCo
 /**
  * Create a table reference.
  *
- * @param string $name Table name
- * @param null|string $schema Schema name (optional)
+ * Supports dot notation for schema-qualified names: "public.users" or explicit schema parameter.
+ * Double-quoted identifiers preserve dots: '"my.table"' creates a single identifier.
+ *
+ * @param string $name Table name (may include schema as "schema.table")
+ * @param null|string $schema Schema name (optional, overrides parsed schema)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function table(string $name, ?string $schema = null) : Table
 {
-    return new Table($name, $schema);
+    if ($schema !== null) {
+        return new Table($name, $schema);
+    }
+
+    $identifier = QualifiedIdentifier::parse($name);
+
+    return new Table($identifier->name(), $identifier->schema());
 }
 
 /**
@@ -2078,38 +2084,65 @@ function check_constraint(string $expression) : CheckConstraint
 /**
  * Create a CREATE TABLE builder.
  *
- * @param string $table Table name
- * @param null|string $schema Schema name (optional)
+ * Supports dot notation for schema-qualified names: "public.users" or explicit schema parameter.
+ * Double-quoted identifiers preserve dots: '"my.table"' creates a single identifier.
+ *
+ * @param string $table Table name (may include schema as "schema.table")
+ * @param null|string $schema Schema name (optional, overrides parsed schema)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function create_table(string $table, ?string $schema = null) : CreateTableColumnsStep
 {
-    return CreateTableBuilder::create($table, $schema);
+    if ($schema !== null) {
+        return CreateTableBuilder::create($table, $schema);
+    }
+
+    $identifier = QualifiedIdentifier::parse($table);
+
+    return CreateTableBuilder::create($identifier->name(), $identifier->schema());
 }
 
 /**
  * Create a CREATE TABLE AS builder.
  *
- * @param string $table Table name
+ * Supports dot notation for schema-qualified names: "public.users" or explicit schema parameter.
+ * Double-quoted identifiers preserve dots: '"my.table"' creates a single identifier.
+ *
+ * @param string $table Table name (may include schema as "schema.table")
  * @param SelectFinalStep $query SELECT query to populate the table
- * @param null|string $schema Schema name (optional)
+ * @param null|string $schema Schema name (optional, overrides parsed schema)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function create_table_as(string $table, SelectFinalStep $query, ?string $schema = null) : CreateTableAsFinalStep
 {
-    return CreateTableAsBuilder::create($table, $query, $schema);
+    if ($schema !== null) {
+        return CreateTableAsBuilder::create($table, $query, $schema);
+    }
+
+    $identifier = QualifiedIdentifier::parse($table);
+
+    return CreateTableAsBuilder::create($identifier->name(), $query, $identifier->schema());
 }
 
 /**
  * Create an ALTER TABLE builder.
  *
- * @param string $table Table name
- * @param null|string $schema Schema name (optional)
+ * Supports dot notation for schema-qualified names: "public.users" or explicit schema parameter.
+ * Double-quoted identifiers preserve dots: '"my.table"' creates a single identifier.
+ *
+ * @param string $table Table name (may include schema as "schema.table")
+ * @param null|string $schema Schema name (optional, overrides parsed schema)
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
 function alter_table(string $table, ?string $schema = null) : AlterTableFinalStep
 {
-    return AlterTableBuilder::create($table, $schema);
+    if ($schema !== null) {
+        return AlterTableBuilder::create($table, $schema);
+    }
+
+    $identifier = QualifiedIdentifier::parse($table);
+
+    return AlterTableBuilder::create($identifier->name(), $identifier->schema());
 }
 
 /**
@@ -2927,12 +2960,12 @@ function drop_owned(string ...$roles) : DropOwnedFinalStep
  * Example: func_arg('integer')->named('count')->default('0')
  * Example: func_arg('text')->out()
  *
- * @param string $type The PostgreSQL data type for the argument
+ * @param DataType $type The PostgreSQL data type for the argument
  *
  * @return FunctionArgument Builder for function argument options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function func_arg(string $type) : FunctionArgument
+function func_arg(DataType $type) : FunctionArgument
 {
     return FunctionArgument::of($type);
 }
@@ -3339,12 +3372,12 @@ function create_range_type(string $name) : CreateRangeTypeSubtypeStep
  * Produces: description text COLLATE "en_US"
  *
  * @param string $name The attribute name
- * @param string $type The attribute type
+ * @param DataType $type The attribute type
  *
  * @return TypeAttribute Type attribute value object
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function type_attr(string $name, string $type) : TypeAttribute
+function type_attr(string $name, DataType $type) : TypeAttribute
 {
     return TypeAttribute::of($name, $type);
 }

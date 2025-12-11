@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_enum_type, create_composite_type, create_enum_type, create_range_type, drop_type, type_attr};
+use function Flow\PgQuery\DSL\{alter_enum_type, create_composite_type, create_enum_type, create_range_type, drop_type, sql_type_text, type_attr};
 
 final class TypeBuilderTest extends PGQueryTestCase
 {
@@ -68,14 +68,14 @@ final class TypeBuilderTest extends PGQueryTestCase
     {
         $builder = create_composite_type('address')
             ->attributes(
-                type_attr('street', 'text'),
-                type_attr('city', 'text'),
-                type_attr('zip', 'text')
+                type_attr('street', sql_type_text()),
+                type_attr('city', sql_type_text()),
+                type_attr('zip', sql_type_text())
             );
 
         $this->assertCreateCompositeTypeQuery(
             $builder,
-            'CREATE TYPE address AS (street text, city text, zip text)'
+            'CREATE TYPE address AS (street pg_catalog.text, city pg_catalog.text, zip pg_catalog.text)'
         );
     }
 
@@ -83,12 +83,12 @@ final class TypeBuilderTest extends PGQueryTestCase
     {
         $builder = create_composite_type('person')
             ->attributes(
-                type_attr('name', 'text')->collate('en_US')
+                type_attr('name', sql_type_text())->collate('en_US')
             );
 
         $this->assertCreateCompositeTypeQuery(
             $builder,
-            'CREATE TYPE person AS (name text COLLATE "en_US")'
+            'CREATE TYPE person AS (name pg_catalog.text COLLATE "en_US")'
         );
     }
 
@@ -96,12 +96,12 @@ final class TypeBuilderTest extends PGQueryTestCase
     {
         $builder = create_composite_type('public.address')
             ->attributes(
-                type_attr('street', 'text')
+                type_attr('street', sql_type_text())
             );
 
         $this->assertCreateCompositeTypeQuery(
             $builder,
-            'CREATE TYPE public.address AS (street text)'
+            'CREATE TYPE public.address AS (street pg_catalog.text)'
         );
     }
 

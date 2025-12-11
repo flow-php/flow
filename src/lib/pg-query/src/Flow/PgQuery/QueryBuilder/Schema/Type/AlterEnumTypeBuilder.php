@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Type;
 
 use Flow\PgQuery\Protobuf\AST\{AlterEnumStmt, Node, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class AlterEnumTypeBuilder implements AlterEnumTypeActionStep, AlterEnumTypeFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $name,
         private ?string $schema = null,
@@ -21,13 +24,9 @@ final readonly class AlterEnumTypeBuilder implements AlterEnumTypeActionStep, Al
 
     public static function create(string $name) : AlterEnumTypeActionStep
     {
-        $parts = \explode('.', $name);
+        $identifier = QualifiedIdentifier::parse($name);
 
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
-        }
-
-        return new self($name);
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function addValue(string $value) : AlterEnumTypeFinalStep

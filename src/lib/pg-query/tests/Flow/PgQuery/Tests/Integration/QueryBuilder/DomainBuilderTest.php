@@ -6,6 +6,8 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{alter_domain, create_domain, drop_domain};
 
+use Flow\PgQuery\QueryBuilder\Schema\DataType;
+
 final class DomainBuilderTest extends PGQueryTestCase
 {
     public function test_alter_domain_add_constraint() : void
@@ -100,108 +102,108 @@ final class DomainBuilderTest extends PGQueryTestCase
     public function test_create_domain_simple() : void
     {
         $builder = create_domain('email')
-            ->as('text');
+            ->as(DataType::text());
 
         $this->assertCreateDomainQuery(
             $builder,
-            'CREATE DOMAIN email AS text'
+            'CREATE DOMAIN email AS pg_catalog.text'
         );
     }
 
     public function test_create_domain_with_check() : void
     {
         $builder = create_domain('positive_int')
-            ->as('int4')
+            ->as(DataType::integer())
             ->check('VALUE > 0');
 
         $this->assertCreateDomainQuery(
             $builder,
-            'CREATE DOMAIN positive_int AS int4 CHECK (value > 0)'
+            'CREATE DOMAIN positive_int AS int CHECK (value > 0)'
         );
     }
 
     public function test_create_domain_with_collation() : void
     {
         $builder = create_domain('email')
-            ->as('text')
+            ->as(DataType::text())
             ->collate('en_US');
 
         $this->assertCreateDomainQuery(
             $builder,
-            'CREATE DOMAIN email AS text COLLATE "en_US"'
+            'CREATE DOMAIN email AS pg_catalog.text COLLATE "en_US"'
         );
     }
 
     public function test_create_domain_with_default() : void
     {
         $builder = create_domain('email')
-            ->as('text')
+            ->as(DataType::text())
             ->default("'default@example.com'");
 
         $this->assertCreateDomainQuery(
             $builder,
-            "CREATE DOMAIN email AS text DEFAULT 'default@example.com'"
+            "CREATE DOMAIN email AS pg_catalog.text DEFAULT 'default@example.com'"
         );
     }
 
     public function test_create_domain_with_multiple_constraints() : void
     {
         $builder = create_domain('email')
-            ->as('text')
+            ->as(DataType::text())
             ->notNull()
             ->check("VALUE ~ '^.+@.+\$'");
 
         $this->assertCreateDomainQuery(
             $builder,
-            "CREATE DOMAIN email AS text NOT NULL CHECK (value ~ '^.+@.+\$')"
+            "CREATE DOMAIN email AS pg_catalog.text NOT NULL CHECK (value ~ '^.+@.+\$')"
         );
     }
 
     public function test_create_domain_with_named_constraint() : void
     {
         $builder = create_domain('positive_int')
-            ->as('int4')
+            ->as(DataType::integer())
             ->constraint('positive_check')
             ->check('VALUE > 0');
 
         $this->assertCreateDomainQuery(
             $builder,
-            'CREATE DOMAIN positive_int AS int4 CONSTRAINT positive_check CHECK (value > 0)'
+            'CREATE DOMAIN positive_int AS int CONSTRAINT positive_check CHECK (value > 0)'
         );
     }
 
     public function test_create_domain_with_not_null() : void
     {
         $builder = create_domain('email')
-            ->as('text')
+            ->as(DataType::text())
             ->notNull();
 
         $this->assertCreateDomainQuery(
             $builder,
-            'CREATE DOMAIN email AS text NOT NULL'
+            'CREATE DOMAIN email AS pg_catalog.text NOT NULL'
         );
     }
 
     public function test_create_domain_with_null() : void
     {
         $builder = create_domain('email')
-            ->as('text')
+            ->as(DataType::text())
             ->null();
 
         $this->assertCreateDomainQuery(
             $builder,
-            'CREATE DOMAIN email AS text NULL'
+            'CREATE DOMAIN email AS pg_catalog.text NULL'
         );
     }
 
     public function test_create_domain_with_schema() : void
     {
         $builder = create_domain('public.email')
-            ->as('text');
+            ->as(DataType::text());
 
         $this->assertCreateDomainQuery(
             $builder,
-            'CREATE DOMAIN public.email AS text'
+            'CREATE DOMAIN public.email AS pg_catalog.text'
         );
     }
 

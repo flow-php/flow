@@ -15,4 +15,6 @@ interface DropDomainFinalStep
     public function restrict() : self;
 
     public function toAst() : DropStmt;
+
+    public function toSql() : string;
 }

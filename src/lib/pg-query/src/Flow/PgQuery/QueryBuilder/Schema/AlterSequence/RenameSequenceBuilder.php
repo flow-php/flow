@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\AlterSequence;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, ObjectType, RangeVar, RenameStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class RenameSequenceBuilder implements RenameSequenceFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $sequence,
         private ?string $schema,

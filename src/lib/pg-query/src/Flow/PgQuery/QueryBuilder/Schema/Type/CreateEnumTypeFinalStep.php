@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateEnumStmt;
 interface CreateEnumTypeFinalStep
 {
     public function toAst() : CreateEnumStmt;
+
+    public function toSql() : string;
 }

@@ -26,6 +26,8 @@ interface ExplainFinalStep
 
     public function toAst() : ExplainStmt;
 
+    public function toSql() : string;
+
     public function verbose() : self;
 
     public function wal(bool $enabled = true) : self;

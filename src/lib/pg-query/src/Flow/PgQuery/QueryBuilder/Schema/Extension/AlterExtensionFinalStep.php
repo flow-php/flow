@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\{AlterExtensionContentsStmt, AlterExtensionStmt};
 interface AlterExtensionFinalStep
 {
     public function toAst() : AlterExtensionStmt|AlterExtensionContentsStmt;
+
+    public function toSql() : string;
 }

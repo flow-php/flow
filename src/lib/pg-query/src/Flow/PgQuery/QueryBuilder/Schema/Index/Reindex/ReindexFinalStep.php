@@ -14,5 +14,7 @@ interface ReindexFinalStep
 
     public function toAst() : ReindexStmt;
 
+    public function toSql() : string;
+
     public function verbose() : self;
 }

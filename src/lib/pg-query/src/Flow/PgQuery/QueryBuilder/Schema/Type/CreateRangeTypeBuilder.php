@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Type;
 
 use Flow\PgQuery\Protobuf\AST\{CreateRangeStmt, DefElem, Node, PBString, TypeName};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsStep, CreateRangeTypeSubtypeStep
 {
+    use AstToSql;
+
     /**
      * @param list<array{name: string, arg: Node}> $params
      */
@@ -20,13 +23,9 @@ final readonly class CreateRangeTypeBuilder implements CreateRangeTypeOptionsSte
 
     public static function create(string $name) : CreateRangeTypeSubtypeStep
     {
-        $parts = \explode('.', $name);
+        $identifier = QualifiedIdentifier::parse($name);
 
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
-        }
-
-        return new self($name);
+        return new self($identifier->name(), $identifier->schema());
     }
 
     public function canonical(string $function) : CreateRangeTypeOptionsStep

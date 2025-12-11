@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Select;
 
 use Flow\PgQuery\Protobuf\AST\{LimitOption, Node, ResTarget, SelectStmt as ProtobufSelectStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 use Flow\PgQuery\QueryBuilder\Clause\{LockingClause, OrderByItem, WindowDefinition, WithClause};
 use Flow\PgQuery\QueryBuilder\Condition\{Condition, ConditionFactory};
 use Flow\PgQuery\QueryBuilder\Exception\InvalidAstException;
@@ -13,6 +14,8 @@ use Flow\PgQuery\QueryBuilder\Table\{AliasedTable, DerivedTable, JoinType, Joine
 
 final readonly class SelectBuilder implements SelectFromStep, SelectJoinStep, SelectSelectStep
 {
+    use AstToSql;
+
     /**
      * @param array<Expression> $selectList
      * @param array<Expression> $distinctOn

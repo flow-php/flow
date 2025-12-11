@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateTableAsStmt;
 interface CreateMatViewFinalStep
 {
     public function toAst() : CreateTableAsStmt;
+
+    public function toSql() : string;
 }

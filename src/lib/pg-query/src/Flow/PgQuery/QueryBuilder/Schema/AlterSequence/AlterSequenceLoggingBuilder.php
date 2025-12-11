@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\AlterSequence;
 
 use Flow\PgQuery\Protobuf\AST\{AlterTableCmd, AlterTableStmt, AlterTableType, DropBehavior, Node, ObjectType, RangeVar};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class AlterSequenceLoggingBuilder implements AlterSequenceLoggingFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $sequence,
         private ?string $schema,

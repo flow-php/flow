@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\Function;
 
-use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, ObjectWithArgs, PBString, TypeName};
+use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, ObjectWithArgs, PBString};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class DropProcedureBuilder implements DropProcedureFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<FunctionArgument> $arguments
      */
@@ -91,9 +94,8 @@ final readonly class DropProcedureBuilder implements DropProcedureFinalStep
             $argNodes = [];
 
             foreach ($this->arguments as $arg) {
-                $typeName = $this->createTypeName($arg->type);
                 $node = new Node();
-                $node->setTypeName($typeName);
+                $node->setTypeName($arg->type->toAst());
                 $argNodes[] = $node;
             }
 
@@ -108,20 +110,5 @@ final readonly class DropProcedureBuilder implements DropProcedureFinalStep
         $stmt->setObjects([$objectNode]);
 
         return $stmt;
-    }
-
-    private function createTypeName(string $type) : TypeName
-    {
-        $typeName = new TypeName();
-
-        $typeNames = [];
-        $str = new PBString();
-        $str->setSval($type);
-        $node = new Node();
-        $node->setString($str);
-        $typeNames[] = $node;
-        $typeName->setNames($typeNames);
-
-        return $typeName;
     }
 }

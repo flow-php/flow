@@ -16,4 +16,9 @@ interface DeleteFinalStep
      * Convert this DELETE query to a protobuf AST DeleteStmt.
      */
     public function toAst() : DeleteStmt;
+
+    /**
+     * Convert this DELETE query to SQL string.
+     */
+    public function toSql() : string;
 }

@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\AlterTableStmt;
 interface AlterTablespaceIndexFinalStep
 {
     public function toAst() : AlterTableStmt;
+
+    public function toSql() : string;
 }

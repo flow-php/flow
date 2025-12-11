@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Transaction;
 
 use Flow\PgQuery\Protobuf\AST\{A_Const, DefElem, Integer, Node, PBString, VariableSetKind, VariableSetStmt};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class SetTransactionBuilder implements SetTransactionOptionsStep
 {
+    use AstToSql;
+
     private function __construct(
         private bool $isSession = false,
         private ?string $snapshotId = null,

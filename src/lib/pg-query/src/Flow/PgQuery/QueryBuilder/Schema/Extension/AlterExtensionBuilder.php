@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Extension;
 
 use Flow\PgQuery\Protobuf\AST\{AlterExtensionContentsStmt, AlterExtensionStmt, DefElem, Node, ObjectType, ObjectWithArgs, PBList, PBString};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, AlterExtensionFinalStep
 {
+    use AstToSql;
+
     private function __construct(
         private string $name,
         private bool $isUpdate = false,
@@ -104,13 +107,14 @@ final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, 
         $stmt->setObjtype($this->objtype ?? ObjectType::OBJECT_TABLE);
 
         if ($this->objectName !== null) {
+            $identifier = QualifiedIdentifier::parse($this->objectName);
+
             if ($this->objtype === ObjectType::OBJECT_FUNCTION) {
                 $objectWithArgs = new ObjectWithArgs();
 
                 $nameNodes = [];
-                $parts = \explode('.', $this->objectName);
 
-                foreach ($parts as $part) {
+                foreach ($identifier->parts() as $part) {
                     $str = new PBString();
                     $str->setSval($part);
                     $node = new Node();
@@ -127,9 +131,8 @@ final readonly class AlterExtensionBuilder implements AlterExtensionActionStep, 
                 $stmt->setObject($objectNode);
             } else {
                 $nameNodes = [];
-                $parts = \explode('.', $this->objectName);
 
-                foreach ($parts as $part) {
+                foreach ($identifier->parts() as $part) {
                     $str = new PBString();
                     $str->setSval($part);
                     $node = new Node();

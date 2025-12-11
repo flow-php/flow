@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Transaction;
 
 use Flow\PgQuery\Protobuf\AST\{TransactionStmt, TransactionStmtKind};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class CommitBuilder implements CommitOptionsStep
 {
+    use AstToSql;
+
     private function __construct(
         private ?bool $chain = null,
     ) {

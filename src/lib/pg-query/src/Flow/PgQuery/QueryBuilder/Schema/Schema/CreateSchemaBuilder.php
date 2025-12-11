@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Schema;
 
 use Flow\PgQuery\Protobuf\AST\{CreateSchemaStmt, RoleSpec, RoleSpecType};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class CreateSchemaBuilder implements CreateSchemaFinalStep, CreateSchemaOptionsStep
 {
+    use AstToSql;
+
     private function __construct(
         private ?string $name = null,
         private ?string $authRole = null,

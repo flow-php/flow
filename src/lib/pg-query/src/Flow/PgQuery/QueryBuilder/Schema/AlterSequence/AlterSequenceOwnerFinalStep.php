@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\AlterTableStmt;
 interface AlterSequenceOwnerFinalStep
 {
     public function toAst() : AlterTableStmt;
+
+    public function toSql() : string;
 }

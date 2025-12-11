@@ -11,4 +11,6 @@ interface DropRoleFinalStep
     public function ifExists() : self;
 
     public function toAst() : DropRoleStmt;
+
+    public function toSql() : string;
 }

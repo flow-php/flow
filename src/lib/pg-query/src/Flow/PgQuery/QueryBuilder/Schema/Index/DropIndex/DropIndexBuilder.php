@@ -6,9 +6,12 @@ namespace Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString};
 use Flow\PgQuery\Protobuf\AST\PBList;
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class DropIndexBuilder implements DropIndexFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $indexes
      */
@@ -95,10 +98,10 @@ final readonly class DropIndexBuilder implements DropIndexFinalStep
 
     private function createIndexListNode(string $index) : Node
     {
-        $parts = \explode('.', $index);
+        $identifier = QualifiedIdentifier::parse($index);
         $listItems = [];
 
-        foreach ($parts as $part) {
+        foreach ($identifier->parts() as $part) {
             $str = new PBString();
             $str->setSval($part);
 

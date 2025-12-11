@@ -10,5 +10,7 @@ interface GrantRoleFinalStep
 {
     public function toAst() : GrantRoleStmt;
 
+    public function toSql() : string;
+
     public function withAdminOption() : self;
 }

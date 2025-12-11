@@ -13,4 +13,6 @@ interface RevokeFinalStep
     public function restrict() : self;
 
     public function toAst() : GrantStmt;
+
+    public function toSql() : string;
 }

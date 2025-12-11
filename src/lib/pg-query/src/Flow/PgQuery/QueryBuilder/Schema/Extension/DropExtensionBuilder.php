@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\Extension;
 
 use Flow\PgQuery\Protobuf\AST\{DropBehavior, DropStmt, Node, ObjectType, PBString};
+use Flow\PgQuery\QueryBuilder\AstToSql;
 
 final readonly class DropExtensionBuilder implements DropExtensionFinalStep
 {
+    use AstToSql;
+
     /**
      * @param list<string> $names
      */

@@ -27,5 +27,7 @@ interface CreateTableFinalStep
 
     public function toAst() : CreateStmt;
 
+    public function toSql() : string;
+
     public function unlogged() : self;
 }

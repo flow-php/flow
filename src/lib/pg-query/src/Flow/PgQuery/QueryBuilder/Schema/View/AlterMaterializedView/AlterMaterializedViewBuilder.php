@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView;
 
+use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
+
 final readonly class AlterMaterializedViewBuilder implements AlterMatViewActionStep
 {
     private function __construct(
@@ -15,13 +17,9 @@ final readonly class AlterMaterializedViewBuilder implements AlterMatViewActionS
 
     public static function create(string $name, ?string $schema = null) : AlterMatViewActionStep
     {
-        $parts = \explode('.', $name);
+        $identifier = QualifiedIdentifier::parse($name);
 
-        if (\count($parts) === 2) {
-            return new self($parts[1], $parts[0]);
-        }
-
-        return new self($name, $schema);
+        return new self($identifier->name(), $schema ?? $identifier->schema());
     }
 
     public function ifExists() : AlterMatViewActionStep

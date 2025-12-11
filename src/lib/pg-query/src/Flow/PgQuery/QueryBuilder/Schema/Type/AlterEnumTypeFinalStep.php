@@ -11,4 +11,6 @@ interface AlterEnumTypeFinalStep
     public function ifNotExists() : self;
 
     public function toAst() : AlterEnumStmt;
+
+    public function toSql() : string;
 }

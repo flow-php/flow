@@ -9,4 +9,6 @@ use Flow\PgQuery\Protobuf\AST\CreateDomainStmt;
 interface CreateDomainFinalStep
 {
     public function toAst() : CreateDomainStmt;
+
+    public function toSql() : string;
 }

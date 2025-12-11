@@ -540,7 +540,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_if_exists() : void
     {
-        $builder = drop_sequence('user_id_seq')->withIfExists();
+        $builder = drop_sequence('user_id_seq')->ifExists();
 
         $this->assertDropSequenceQuery(
             $builder,
@@ -551,7 +551,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
     public function test_drop_sequence_if_exists_cascade() : void
     {
         $builder = drop_sequence('user_id_seq')
-            ->withIfExists()
+            ->ifExists()
             ->cascade();
 
         $this->assertDropSequenceQuery(

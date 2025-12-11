@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\PgQuery\QueryBuilder\Schema\AlterSequence;
 
 use Flow\PgQuery\Protobuf\AST\{AlterSeqStmt, Boolean, DefElem, Integer, Node, PBList, PBString, RangeVar, TypeName};
+use Flow\PgQuery\QueryBuilder\{AstToSql, QualifiedIdentifier};
 
 final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, AlterSequenceOptionsStep
 {
+    use AstToSql;
+
     /**
      * @param array<array{name: string, arg: null|Node}> $options
      */
@@ -111,9 +114,9 @@ final readonly class AlterSequenceBuilder implements AlterSequenceNameStep, Alte
         $list = new PBList();
         $items = [];
 
-        $tableParts = \explode('.', $table);
+        $identifier = QualifiedIdentifier::parse($table);
 
-        foreach ($tableParts as $part) {
+        foreach ($identifier->parts() as $part) {
             $str = new PBString();
             $str->setSval($part);
             $strNode = new Node();
