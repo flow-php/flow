@@ -15,7 +15,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-if (version_compare(PHP_VERSION, '8.3', '>=')) {
+if (version_compare(PHP_VERSION, '8.4', '>=')) {
     print PHP_EOL . 'This app can be run only on PHP 8.3+' . PHP_EOL;
 
     exit(1);
