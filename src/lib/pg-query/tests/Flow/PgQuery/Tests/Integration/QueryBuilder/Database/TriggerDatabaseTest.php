@@ -10,8 +10,7 @@ use function Flow\PgQuery\DSL\{
     create,
     drop,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     primary_key,
     raw_cond,
     select,
@@ -175,7 +174,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('name')
-                ->values(literal_string('Test'))
+                ->values(literal('Test'))
                 ->toSql()
         );
 
@@ -209,7 +208,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('name', 'value')
-                ->values(literal_string('Zero'), literal_int(0))
+                ->values(literal('Zero'), literal(0))
                 ->toSql()
         );
 
@@ -225,7 +224,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('name', 'value')
-                ->values(literal_string('NonZero'), literal_int(5))
+                ->values(literal('NonZero'), literal(5))
                 ->toSql()
         );
 

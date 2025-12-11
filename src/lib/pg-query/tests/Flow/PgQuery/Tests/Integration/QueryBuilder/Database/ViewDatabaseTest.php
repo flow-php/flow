@@ -12,8 +12,7 @@ use function Flow\PgQuery\DSL\{
     eq,
     gt,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     refresh_materialized_view,
     select,
     sql_type_integer,
@@ -48,10 +47,10 @@ final class ViewDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_SOURCE)
                 ->columns('name', 'value')
-                ->values(literal_string('Item A'), literal_int(100))
-                ->values(literal_string('Item B'), literal_int(200))
-                ->values(literal_string('Item C'), literal_int(50))
-                ->values(literal_string('Item D'), literal_int(300))
+                ->values(literal('Item A'), literal(100))
+                ->values(literal('Item B'), literal(200))
+                ->values(literal('Item C'), literal(50))
+                ->values(literal('Item D'), literal(300))
                 ->toSql()
         );
     }
@@ -118,7 +117,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('table_name'))
                 ->from(table('information_schema.views'))
-                ->where(eq(col('table_name'), literal_string(self::VIEW_SIMPLE)))
+                ->where(eq(col('table_name'), literal(self::VIEW_SIMPLE)))
                 ->toSql()
         );
         $views = $this->fetchAll($check);
@@ -129,7 +128,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())
             ->from(table(self::TABLE_SOURCE))
-            ->where(gt(col('value'), literal_int(100)));
+            ->where(gt(col('value'), literal(100)));
 
         $query = create()->view(self::VIEW_FILTERED)
             ->as($selectQuery);

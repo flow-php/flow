@@ -15,8 +15,7 @@ use function Flow\PgQuery\DSL\{
     eq,
     gt,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     primary_key,
     select,
     sql_type_decimal,
@@ -62,9 +61,9 @@ final class SelectDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_USERS)
                 ->columns('name', 'email', 'age')
-                ->values(literal_string('John Doe'), literal_string('john@example.com'), literal_int(30))
-                ->values(literal_string('Jane Smith'), literal_string('jane@example.com'), literal_int(25))
-                ->values(literal_string('Bob Wilson'), literal_string('bob@example.com'), literal_int(35))
+                ->values(literal('John Doe'), literal('john@example.com'), literal(30))
+                ->values(literal('Jane Smith'), literal('jane@example.com'), literal(25))
+                ->values(literal('Bob Wilson'), literal('bob@example.com'), literal(35))
                 ->toSql()
         );
 
@@ -72,10 +71,10 @@ final class SelectDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_ORDERS)
                 ->columns('user_id', 'amount', 'status')
-                ->values(literal_int(1), literal_int(100), literal_string('completed'))
-                ->values(literal_int(1), literal_int(200), literal_string('pending'))
-                ->values(literal_int(2), literal_int(150), literal_string('completed'))
-                ->values(literal_int(3), literal_int(300), literal_string('completed'))
+                ->values(literal(1), literal(100), literal('completed'))
+                ->values(literal(1), literal(200), literal('pending'))
+                ->values(literal(2), literal(150), literal('completed'))
+                ->values(literal(3), literal(300), literal('completed'))
                 ->toSql()
         );
     }
@@ -137,7 +136,7 @@ final class SelectDatabaseTest extends DatabaseTestCase
         $query = with(cte('order_totals', $cteQuery))
             ->select(star())
             ->from(table('order_totals'))
-            ->where(gt(col('total'), literal_int(200)));
+            ->where(gt(col('total'), literal(200)));
 
         $result = $this->execute($query->toSql());
 
@@ -181,8 +180,8 @@ final class SelectDatabaseTest extends DatabaseTestCase
             ->from(table(self::TABLE_USERS))
             ->where(
                 cond_and(
-                    gt(col('age'), literal_int(20)),
-                    gt(col('age'), literal_int(25))
+                    gt(col('age'), literal(20)),
+                    gt(col('age'), literal(25))
                 )
             );
 
@@ -213,7 +212,7 @@ final class SelectDatabaseTest extends DatabaseTestCase
     {
         $query = select(star())
             ->from(table(self::TABLE_USERS))
-            ->where(eq(col('name'), literal_string('John Doe')));
+            ->where(eq(col('name'), literal('John Doe')));
 
         $result = $this->execute($query->toSql());
 

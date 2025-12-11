@@ -15,8 +15,7 @@ use function Flow\PgQuery\DSL\{
     index_method_btree,
     index_method_hash,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     select,
     sql_type_integer,
     sql_type_serial,
@@ -51,7 +50,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_INDEXED)
                 ->columns('name', 'email', 'age')
-                ->values(literal_string('Test'), literal_string('test@example.com'), literal_int(30))
+                ->values(literal('Test'), literal('test@example.com'), literal(30))
                 ->toSql()
         );
     }
@@ -91,7 +90,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
             select(agg_count(star())->as('cnt'))
                 ->from(table('pg_indexes'))
                 ->where(
-                    eq(col('tablename'), literal_string(self::TABLE_INDEXED))
+                    eq(col('tablename'), literal(self::TABLE_INDEXED))
                 )
                 ->toSql()
         );
@@ -151,7 +150,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_INDEXED)
                 ->columns('name', 'email', 'age')
-                ->values(literal_string('Test2'), literal_string('test@example.com'), literal_int(25))
+                ->values(literal('Test2'), literal('test@example.com'), literal(25))
                 ->toSql()
         );
         self::assertFalse($duplicateResult);

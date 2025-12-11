@@ -12,8 +12,7 @@ use function Flow\PgQuery\DSL\{
     create,
     explain,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     lock_table,
     primary_key,
     select,
@@ -49,8 +48,8 @@ final class UtilityDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_NAME)
                 ->columns('name', 'value')
-                ->values(literal_string('Alice'), literal_int(100))
-                ->values(literal_string('Bob'), literal_int(200))
+                ->values(literal('Alice'), literal(100))
+                ->values(literal('Bob'), literal(200))
                 ->toSql()
         );
     }

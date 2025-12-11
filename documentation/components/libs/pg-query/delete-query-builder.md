@@ -11,11 +11,11 @@ The Delete Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{delete, col, eq, literal};
 
 $query = delete()
     ->from('users')
-    ->where(eq(col('id'), literal_int(1)));
+    ->where(eq(col('id'), literal(1)));
 
 echo $query->toSQL();
 // DELETE FROM users WHERE id = 1
@@ -43,11 +43,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{delete, col, eq, literal};
 
 $query = delete()
     ->from('users', 'u')
-    ->where(eq(col('u.id'), literal_int(1)));
+    ->where(eq(col('u.id'), literal(1)));
 
 echo $query->toSQL();
 // DELETE FROM users u WHERE u.id = 1
@@ -99,12 +99,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{delete, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{delete, col, eq, literal};
 
 // Return specific columns
 $query = delete()
     ->from('users')
-    ->where(eq(col('id'), literal_int(1)))
+    ->where(eq(col('id'), literal(1)))
     ->returning(col('id'), col('name'));
 
 echo $query->toSQL();
@@ -113,7 +113,7 @@ echo $query->toSQL();
 // Return all columns
 $query = delete()
     ->from('users')
-    ->where(eq(col('id'), literal_int(1)))
+    ->where(eq(col('id'), literal(1)))
     ->returningAll();
 
 echo $query->toSQL();
@@ -126,15 +126,15 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    delete, col, eq, lt, literal_bool, literal_string, cond_and
+    delete, col, eq, lt, literal, cond_and
 };
 
 $query = delete()
     ->from('sessions')
     ->where(
         cond_and(
-            eq(col('active'), literal_bool(false)),
-            lt(col('expires_at'), literal_string('2024-01-01'))
+            eq(col('active'), literal(false)),
+            lt(col('expires_at'), literal('2024-01-01'))
         )
     );
 

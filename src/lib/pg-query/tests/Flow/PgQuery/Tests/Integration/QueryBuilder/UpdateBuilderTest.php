@@ -7,8 +7,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 use function Flow\PgQuery\DSL\{
     col,
     eq,
-    literal_int,
-    literal_string,
+    literal,
     param,
     select,
     sub_select,
@@ -22,8 +21,8 @@ final class UpdateBuilderTest extends PGQueryTestCase
     {
         $query = update()
             ->update('users')
-            ->set('name', literal_string('John'))
-            ->where(eq(col('id'), literal_int(1)));
+            ->set('name', literal('John'))
+            ->where(eq(col('id'), literal(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -35,8 +34,8 @@ final class UpdateBuilderTest extends PGQueryTestCase
     {
         $query = update()
             ->update('users', 'u')
-            ->set('name', literal_string('John'))
-            ->where(eq(col('u.id'), literal_int(1)));
+            ->set('name', literal('John'))
+            ->where(eq(col('u.id'), literal(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -49,7 +48,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('products')
             ->set('price', col('price'))
-            ->where(eq(col('id'), literal_int(1)));
+            ->where(eq(col('id'), literal(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -61,7 +60,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
     {
         $query = update()
             ->update('orders')
-            ->set('status', literal_string('completed'))
+            ->set('status', literal('completed'))
             ->from(table('users'))
             ->where(eq(col('orders.user_id'), col('users.id')));
 
@@ -75,9 +74,9 @@ final class UpdateBuilderTest extends PGQueryTestCase
     {
         $query = update()
             ->update('users')
-            ->set('name', literal_string('John'))
-            ->set('email', literal_string('john@example.com'))
-            ->where(eq(col('id'), literal_int(1)));
+            ->set('name', literal('John'))
+            ->set('email', literal('john@example.com'))
+            ->where(eq(col('id'), literal(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -102,8 +101,8 @@ final class UpdateBuilderTest extends PGQueryTestCase
     {
         $query = update()
             ->update('users')
-            ->set('name', literal_string('John'))
-            ->where(eq(col('id'), literal_int(1)))
+            ->set('name', literal('John'))
+            ->where(eq(col('id'), literal(1)))
             ->returning(col('id'), col('name'));
 
         $this->assertUpdateQueryRoundTrip(
@@ -116,8 +115,8 @@ final class UpdateBuilderTest extends PGQueryTestCase
     {
         $query = update()
             ->update('users')
-            ->set('name', literal_string('John'))
-            ->where(eq(col('id'), literal_int(1)))
+            ->set('name', literal('John'))
+            ->where(eq(col('id'), literal(1)))
             ->returningAll();
 
         $this->assertUpdateQueryRoundTrip(
@@ -131,10 +130,10 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('users')
             ->setAll([
-                'name' => literal_string('John'),
-                'email' => literal_string('john@example.com'),
+                'name' => literal('John'),
+                'email' => literal('john@example.com'),
             ])
-            ->where(eq(col('id'), literal_int(1)));
+            ->where(eq(col('id'), literal(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,
@@ -152,7 +151,7 @@ final class UpdateBuilderTest extends PGQueryTestCase
         $query = update()
             ->update('products')
             ->set('price', sub_select($subquery))
-            ->where(eq(col('id'), literal_int(1)));
+            ->where(eq(col('id'), literal(1)));
 
         $this->assertUpdateQueryRoundTrip(
             $query,

@@ -10,8 +10,7 @@ use function Flow\PgQuery\DSL\{
     conflict_constraint,
     eq,
     insert,
-    literal_bool,
-    literal_string,
+    literal,
     param,
     select,
     table
@@ -24,12 +23,12 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('email', 'name', 'active')
-            ->values(literal_string('john@example.com'), literal_string('John'), literal_bool(true))
+            ->values(literal('john@example.com'), literal('John'), literal(true))
             ->onConflictDoUpdate(
                 conflict_columns(['email']),
-                ['name' => literal_string('Updated John')]
+                ['name' => literal('Updated John')]
             )
-            ->where(eq(col('users.active'), literal_bool(true)));
+            ->where(eq(col('users.active'), literal(true)));
 
         $this->assertInsertQueryRoundTrip(
             $query,
@@ -42,7 +41,7 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('name', 'email')
-            ->values(literal_string('John'), literal_string('john@example.com'))
+            ->values(literal('John'), literal('john@example.com'))
             ->onConflictDoNothing(conflict_constraint('users_pkey'));
 
         $this->assertInsertQueryRoundTrip(
@@ -85,8 +84,8 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('name', 'email')
-            ->values(literal_string('John'), literal_string('john@example.com'))
-            ->values(literal_string('Jane'), literal_string('jane@example.com'));
+            ->values(literal('John'), literal('john@example.com'))
+            ->values(literal('Jane'), literal('jane@example.com'));
 
         $this->assertInsertQueryRoundTrip(
             $query,
@@ -99,7 +98,7 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('name', 'email')
-            ->values(literal_string('John'), literal_string('john@example.com'))
+            ->values(literal('John'), literal('john@example.com'))
             ->onConflictDoNothing();
 
         $this->assertInsertQueryRoundTrip(
@@ -113,10 +112,10 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('email', 'name')
-            ->values(literal_string('john@example.com'), literal_string('John'))
+            ->values(literal('john@example.com'), literal('John'))
             ->onConflictDoUpdate(
                 conflict_columns(['email']),
-                ['name' => literal_string('Updated John')]
+                ['name' => literal('Updated John')]
             );
 
         $this->assertInsertQueryRoundTrip(
@@ -130,7 +129,7 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('name', 'email')
-            ->values(literal_string('John'), literal_string('john@example.com'))
+            ->values(literal('John'), literal('john@example.com'))
             ->onConflictDoNothing(conflict_columns(['email']));
 
         $this->assertInsertQueryRoundTrip(
@@ -157,7 +156,7 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('name')
-            ->values(literal_string('John'))
+            ->values(literal('John'))
             ->returning(col('id'));
 
         $this->assertInsertQueryRoundTrip(
@@ -171,7 +170,7 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('name')
-            ->values(literal_string('John'))
+            ->values(literal('John'))
             ->returningAll();
 
         $this->assertInsertQueryRoundTrip(
@@ -185,7 +184,7 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('public.users')
             ->columns('name')
-            ->values(literal_string('John'));
+            ->values(literal('John'));
 
         $this->assertInsertQueryRoundTrip(
             $query,
@@ -198,7 +197,7 @@ final class InsertBuilderTest extends PGQueryTestCase
         $query = insert()
             ->into('users')
             ->columns('name', 'email')
-            ->values(literal_string('John'), literal_string('john@example.com'));
+            ->values(literal('John'), literal('john@example.com'));
 
         $this->assertInsertQueryRoundTrip(
             $query,

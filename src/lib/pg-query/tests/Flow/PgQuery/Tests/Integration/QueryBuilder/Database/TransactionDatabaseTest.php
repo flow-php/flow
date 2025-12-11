@@ -12,8 +12,7 @@ use function Flow\PgQuery\DSL\{
     create,
     eq,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     primary_key,
     release_savepoint,
     rollback,
@@ -50,8 +49,8 @@ final class TransactionDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_ACCOUNTS)
                 ->columns('name', 'balance')
-                ->values(literal_string('Account A'), literal_int(1000))
-                ->values(literal_string('Account B'), literal_int(500))
+                ->values(literal('Account A'), literal(1000))
+                ->values(literal('Account B'), literal(500))
                 ->toSql()
         );
     }
@@ -70,8 +69,8 @@ final class TransactionDatabaseTest extends DatabaseTestCase
 
         $updateQuery = update()
             ->update(self::TABLE_ACCOUNTS)
-            ->set('balance', literal_int(1500))
-            ->where(eq(col('name'), literal_string('Account A')));
+            ->set('balance', literal(1500))
+            ->where(eq(col('name'), literal('Account A')));
 
         $this->execute($updateQuery->toSql());
 
@@ -80,7 +79,7 @@ final class TransactionDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
-                ->where(eq(col('name'), literal_string('Account A')))
+                ->where(eq(col('name'), literal('Account A')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -92,7 +91,7 @@ final class TransactionDatabaseTest extends DatabaseTestCase
         $checkBefore = $this->execute(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
-                ->where(eq(col('name'), literal_string('Account A')))
+                ->where(eq(col('name'), literal('Account A')))
                 ->toSql()
         );
         $beforeRow = $this->fetchOne($checkBefore);
@@ -102,8 +101,8 @@ final class TransactionDatabaseTest extends DatabaseTestCase
 
         $updateQuery = update()
             ->update(self::TABLE_ACCOUNTS)
-            ->set('balance', literal_int(9999))
-            ->where(eq(col('name'), literal_string('Account A')));
+            ->set('balance', literal(9999))
+            ->where(eq(col('name'), literal('Account A')));
 
         $this->execute($updateQuery->toSql());
 
@@ -112,7 +111,7 @@ final class TransactionDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
-                ->where(eq(col('name'), literal_string('Account A')))
+                ->where(eq(col('name'), literal('Account A')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -152,16 +151,16 @@ final class TransactionDatabaseTest extends DatabaseTestCase
 
         $updateQuery1 = update()
             ->update(self::TABLE_ACCOUNTS)
-            ->set('balance', literal_int(750))
-            ->where(eq(col('name'), literal_string('Account A')));
+            ->set('balance', literal(750))
+            ->where(eq(col('name'), literal('Account A')));
         $this->execute($updateQuery1->toSql());
 
         $this->execute(savepoint('sp_rollback')->toSql());
 
         $updateQuery2 = update()
             ->update(self::TABLE_ACCOUNTS)
-            ->set('balance', literal_int(9999))
-            ->where(eq(col('name'), literal_string('Account A')));
+            ->set('balance', literal(9999))
+            ->where(eq(col('name'), literal('Account A')));
         $this->execute($updateQuery2->toSql());
 
         $this->execute(rollback()->toSavepoint('sp_rollback')->toSql());
@@ -169,7 +168,7 @@ final class TransactionDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
-                ->where(eq(col('name'), literal_string('Account A')))
+                ->where(eq(col('name'), literal('Account A')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -184,16 +183,16 @@ final class TransactionDatabaseTest extends DatabaseTestCase
 
         $updateQuery1 = update()
             ->update(self::TABLE_ACCOUNTS)
-            ->set('balance', literal_int(800))
-            ->where(eq(col('name'), literal_string('Account A')));
+            ->set('balance', literal(800))
+            ->where(eq(col('name'), literal('Account A')));
         $this->execute($updateQuery1->toSql());
 
         $this->execute(savepoint('sp1')->toSql());
 
         $updateQuery2 = update()
             ->update(self::TABLE_ACCOUNTS)
-            ->set('balance', literal_int(600))
-            ->where(eq(col('name'), literal_string('Account B')));
+            ->set('balance', literal(600))
+            ->where(eq(col('name'), literal('Account B')));
         $this->execute($updateQuery2->toSql());
 
         $this->execute(release_savepoint('sp1')->toSql());
@@ -202,7 +201,7 @@ final class TransactionDatabaseTest extends DatabaseTestCase
         $checkA = $this->execute(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
-                ->where(eq(col('name'), literal_string('Account A')))
+                ->where(eq(col('name'), literal('Account A')))
                 ->toSql()
         );
         $rowA = $this->fetchOne($checkA);
@@ -211,7 +210,7 @@ final class TransactionDatabaseTest extends DatabaseTestCase
         $checkB = $this->execute(
             select(col('balance'))
                 ->from(table(self::TABLE_ACCOUNTS))
-                ->where(eq(col('name'), literal_string('Account B')))
+                ->where(eq(col('name'), literal('Account B')))
                 ->toSql()
         );
         $rowB = $this->fetchOne($checkB);

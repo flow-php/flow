@@ -10,7 +10,7 @@ use function Flow\PgQuery\DSL\{
     create,
     desc,
     insert,
-    literal_string,
+    literal,
     primary_key,
     select,
     sql_type_serial,
@@ -50,9 +50,9 @@ final class TruncateDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
-                ->values(literal_string('Alice'))
-                ->values(literal_string('Bob'))
-                ->values(literal_string('Charlie'))
+                ->values(literal('Alice'))
+                ->values(literal('Bob'))
+                ->values(literal('Charlie'))
                 ->toSql()
         );
 
@@ -60,8 +60,8 @@ final class TruncateDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_TWO)
                 ->columns('name')
-                ->values(literal_string('Dave'))
-                ->values(literal_string('Eve'))
+                ->values(literal('Dave'))
+                ->values(literal('Eve'))
                 ->toSql()
         );
     }
@@ -107,7 +107,7 @@ final class TruncateDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
-                ->values(literal_string('NewRow'))
+                ->values(literal('NewRow'))
                 ->toSql()
         );
 
@@ -153,7 +153,7 @@ final class TruncateDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
-                ->values(literal_string('NewRow'))
+                ->values(literal('NewRow'))
                 ->toSql()
         );
 
@@ -228,7 +228,7 @@ final class TruncateDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_ONE)
                 ->columns('name')
-                ->values(literal_string('AfterTruncate'))
+                ->values(literal('AfterTruncate'))
                 ->toSql()
         );
 

@@ -13,8 +13,7 @@ use function Flow\PgQuery\DSL\{
     delete,
     eq,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     primary_key,
     select,
     sql_type_integer,
@@ -58,11 +57,11 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_LOGS)
                 ->columns('level', 'message')
-                ->values(literal_string('INFO'), literal_string('Application started'))
-                ->values(literal_string('DEBUG'), literal_string('Debug message 1'))
-                ->values(literal_string('DEBUG'), literal_string('Debug message 2'))
-                ->values(literal_string('WARNING'), literal_string('Warning message'))
-                ->values(literal_string('ERROR'), literal_string('Error occurred'))
+                ->values(literal('INFO'), literal('Application started'))
+                ->values(literal('DEBUG'), literal('Debug message 1'))
+                ->values(literal('DEBUG'), literal('Debug message 2'))
+                ->values(literal('WARNING'), literal('Warning message'))
+                ->values(literal('ERROR'), literal('Error occurred'))
                 ->toSql()
         );
 
@@ -70,8 +69,8 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_ARCHIVE)
                 ->columns('log_id')
-                ->values(literal_int(1))
-                ->values(literal_int(2))
+                ->values(literal(1))
+                ->values(literal(2))
                 ->toSql()
         );
     }
@@ -109,8 +108,8 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             ->from(self::TABLE_LOGS)
             ->where(
                 cond_or(
-                    eq(col('level'), literal_string('INFO')),
-                    eq(col('level'), literal_string('WARNING'))
+                    eq(col('level'), literal('INFO')),
+                    eq(col('level'), literal('WARNING'))
                 )
             );
 
@@ -124,7 +123,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
     {
         $query = delete()
             ->from(self::TABLE_LOGS)
-            ->where(eq(col('level'), literal_string('ERROR')))
+            ->where(eq(col('level'), literal('ERROR')))
             ->returning(col('id'), col('level'), col('message'));
 
         $result = $this->execute($query->toSql());
@@ -141,13 +140,13 @@ final class DeleteDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_LOGS)
                 ->columns('level', 'message')
-                ->values(literal_string('TRACE'), literal_string('Trace message'))
+                ->values(literal('TRACE'), literal('Trace message'))
                 ->toSql()
         );
 
         $query = delete()
             ->from(self::TABLE_LOGS)
-            ->where(eq(col('level'), literal_string('TRACE')))
+            ->where(eq(col('level'), literal('TRACE')))
             ->returningAll();
 
         $result = $this->execute($query->toSql());
@@ -182,7 +181,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
     {
         $query = delete()
             ->from(self::TABLE_LOGS)
-            ->where(eq(col('level'), literal_string('DEBUG')));
+            ->where(eq(col('level'), literal('DEBUG')));
 
         $result = $this->execute($query->toSql());
 
@@ -192,7 +191,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_LOGS))
-                ->where(eq(col('level'), literal_string('DEBUG')))
+                ->where(eq(col('level'), literal('DEBUG')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);

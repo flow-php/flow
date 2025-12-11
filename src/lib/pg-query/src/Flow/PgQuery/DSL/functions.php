@@ -510,48 +510,25 @@ function star(?string $table = null) : Star
 }
 
 /**
- * Create a string literal.
+ * Create a literal value for use in queries.
+ *
+ * Automatically detects the type and creates the appropriate literal:
+ * - literal('hello') creates a string literal
+ * - literal(42) creates an integer literal
+ * - literal(3.14) creates a float literal
+ * - literal(true) creates a boolean literal
+ * - literal(null) creates a NULL literal
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function literal_string(string $value) : Literal
+function literal(string|int|float|bool|null $value) : Literal
 {
-    return Literal::string($value);
-}
-
-/**
- * Create an integer literal.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function literal_int(int $value) : Literal
-{
-    return Literal::int($value);
-}
-
-/**
- * Create a float literal.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function literal_float(float $value) : Literal
-{
-    return Literal::float($value);
-}
-
-/**
- * Create a boolean literal.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function literal_bool(bool $value) : Literal
-{
-    return Literal::bool($value);
-}
-
-/**
- * Create a NULL literal.
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function literal_null() : Literal
-{
-    return Literal::null();
+    return match (true) {
+        $value === null => Literal::null(),
+        \is_string($value) => Literal::string($value),
+        \is_int($value) => Literal::int($value),
+        \is_float($value) => Literal::float($value),
+        \is_bool($value) => Literal::bool($value),
+    };
 }
 
 /**
@@ -783,10 +760,6 @@ function window_func(
     return new WindowFunction([$name], \array_values($args), \array_values($partitionBy), \array_values($orderBy));
 }
 
-// ----------------------------------------------------------------------------
-// Conditions
-// ----------------------------------------------------------------------------
-
 /**
  * Create an equality comparison (column = value).
  */
@@ -974,10 +947,6 @@ function raw_cond(string $sql) : RawCondition
     return new RawCondition($sql);
 }
 
-// ----------------------------------------------------------------------------
-// JSONB Operators
-// ----------------------------------------------------------------------------
-
 /**
  * Create a JSONB contains condition (@>).
  *
@@ -1090,10 +1059,6 @@ function json_exists_all(Expression $expr, Expression $keys) : OperatorCondition
     return new OperatorCondition($expr, '?&', $keys);
 }
 
-// ----------------------------------------------------------------------------
-// Array Operators
-// ----------------------------------------------------------------------------
-
 /**
  * Create an array contains condition (@>).
  *
@@ -1129,10 +1094,6 @@ function array_overlap(Expression $left, Expression $right) : OperatorCondition
 {
     return new OperatorCondition($left, '&&', $right);
 }
-
-// ----------------------------------------------------------------------------
-// Pattern Matching (Regex) Operators
-// ----------------------------------------------------------------------------
 
 /**
  * Create a POSIX regex match condition (~).
@@ -1190,9 +1151,6 @@ function not_regex_imatch(Expression $expr, Expression $pattern) : OperatorCondi
     return new OperatorCondition($expr, '!~*', $pattern);
 }
 
-// ----------------------------------------------------------------------------
-// Full-Text Search Operators
-// ----------------------------------------------------------------------------
 
 /**
  * Create a full-text search match condition (@@).

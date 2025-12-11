@@ -11,7 +11,7 @@ use function Flow\PgQuery\DSL\{
     drop,
     eq,
     func,
-    literal_string,
+    literal,
     select,
     table
 };
@@ -43,10 +43,10 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         self::assertNotFalse($result);
 
         $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)]))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
         $secondVal = $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)])->as('val'))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         $row = $this->fetchOne($secondVal);
         self::assertSame('11', $row['val']);
@@ -58,10 +58,10 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         $this->execute($createQuery->toSql());
 
         $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)]))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
         $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)]))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
 
         $alterQuery = alter()->sequence(self::SEQUENCE_TEST)
@@ -72,7 +72,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         self::assertNotFalse($result);
 
         $nextVal = $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)])->as('val'))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         $row = $this->fetchOne($nextVal);
         self::assertSame('1', $row['val']);
@@ -89,7 +89,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('sequencename'))
                 ->from(table('pg_sequences'))
-                ->where(eq(col('sequencename'), literal_string(self::SEQUENCE_TEST)))
+                ->where(eq(col('sequencename'), literal(self::SEQUENCE_TEST)))
                 ->toSql()
         );
         $sequences = $this->fetchAll($check);
@@ -107,10 +107,10 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         self::assertNotFalse($result);
 
         $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)]))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)]))->toSql()
         );
         $secondVal = $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)])->as('val'))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         $row = $this->fetchOne($secondVal);
         self::assertSame('15', $row['val']);
@@ -130,7 +130,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('min_value'), col('max_value'))
                 ->from(table('pg_sequences'))
-                ->where(eq(col('sequencename'), literal_string(self::SEQUENCE_TEST)))
+                ->where(eq(col('sequencename'), literal(self::SEQUENCE_TEST)))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -148,7 +148,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         self::assertNotFalse($result);
 
         $nextVal = $this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_TEST)])->as('val'))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_TEST)])->as('val'))->toSql()
         );
         $row = $this->fetchOne($nextVal);
         self::assertSame('100', $row['val']);
@@ -168,7 +168,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('sequencename'))
                 ->from(table('pg_sequences'))
-                ->where(eq(col('sequencename'), literal_string(self::SEQUENCE_TEST)))
+                ->where(eq(col('sequencename'), literal(self::SEQUENCE_TEST)))
                 ->toSql()
         );
         $sequences = $this->fetchAll($check);
@@ -190,13 +190,13 @@ final class SequenceDatabaseTest extends DatabaseTestCase
         $this->execute($createQuery->toSql());
 
         $val1 = $this->fetchOne($this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
         ));
         $val2 = $this->fetchOne($this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
         ));
         $val3 = $this->fetchOne($this->execute(
-            select(func('nextval', [literal_string(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
+            select(func('nextval', [literal(self::SEQUENCE_COUNTER)])->as('val'))->toSql()
         ));
 
         self::assertSame('1', $val1['val']);

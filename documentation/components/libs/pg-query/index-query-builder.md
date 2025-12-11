@@ -275,12 +275,12 @@ Create an index on a subset of rows:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, col, eq, literal_bool};
+use function Flow\PgQuery\DSL\{create, col, eq, literal};
 
 $query = create()->index('idx_users_active_email')
     ->on('users')
     ->columns('email')
-    ->where(eq(col('active'), literal_bool(true)));
+    ->where(eq(col('active'), literal(true)));
 
 echo $query->toSQL();
 // CREATE INDEX idx_users_active_email ON users (email) WHERE active = true

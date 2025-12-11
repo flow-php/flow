@@ -11,12 +11,12 @@ The Update Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal_string, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
 
 $query = update()
     ->update('users')
-    ->set('name', literal_string('John'))
-    ->where(eq(col('id'), literal_int(1)));
+    ->set('name', literal('John'))
+    ->where(eq(col('id'), literal(1)));
 
 echo $query->toSQL();
 // UPDATE users SET name = 'John' WHERE id = 1
@@ -45,14 +45,14 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal_string, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
 
 // Chained set() calls
 $query = update()
     ->update('users')
-    ->set('name', literal_string('John'))
-    ->set('email', literal_string('john@example.com'))
-    ->where(eq(col('id'), literal_int(1)));
+    ->set('name', literal('John'))
+    ->set('email', literal('john@example.com'))
+    ->where(eq(col('id'), literal(1)));
 
 echo $query->toSQL();
 // UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1
@@ -61,10 +61,10 @@ echo $query->toSQL();
 $query = update()
     ->update('users')
     ->setAll([
-        'name' => literal_string('John'),
-        'email' => literal_string('john@example.com'),
+        'name' => literal('John'),
+        'email' => literal('john@example.com'),
     ])
-    ->where(eq(col('id'), literal_int(1)));
+    ->where(eq(col('id'), literal(1)));
 
 echo $query->toSQL();
 // UPDATE users SET name = 'John', email = 'john@example.com' WHERE id = 1
@@ -75,12 +75,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal_string, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
 
 $query = update()
     ->update('users', 'u')
-    ->set('name', literal_string('John'))
-    ->where(eq(col('u.id'), literal_int(1)));
+    ->set('name', literal('John'))
+    ->where(eq(col('u.id'), literal(1)));
 
 echo $query->toSQL();
 // UPDATE users u SET name = 'John' WHERE u.id = 1
@@ -93,11 +93,11 @@ The FROM clause allows you to reference other tables in your UPDATE, similar to 
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal_string, table, col, eq};
+use function Flow\PgQuery\DSL\{update, literal, table, col, eq};
 
 $query = update()
     ->update('orders')
-    ->set('status', literal_string('completed'))
+    ->set('status', literal('completed'))
     ->from(table('users'))
     ->where(eq(col('orders.user_id'), col('users.id')));
 
@@ -111,7 +111,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    update, select, sub_select, table, col, eq, literal_int
+    update, select, sub_select, table, col, eq, literal
 };
 
 $subquery = select()
@@ -122,7 +122,7 @@ $subquery = select()
 $query = update()
     ->update('products')
     ->set('price', sub_select($subquery))
-    ->where(eq(col('id'), literal_int(1)));
+    ->where(eq(col('id'), literal(1)));
 
 echo $query->toSQL();
 // UPDATE products SET price = (SELECT avg_price FROM price_stats WHERE category = products.category) WHERE id = 1
@@ -133,12 +133,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{update, col, eq, literal};
 
 $query = update()
     ->update('products')
     ->set('price', col('original_price'))
-    ->where(eq(col('id'), literal_int(1)));
+    ->where(eq(col('id'), literal(1)));
 
 echo $query->toSQL();
 // UPDATE products SET price = original_price WHERE id = 1
@@ -149,13 +149,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{update, literal_string, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{update, literal, col, eq, literal};
 
 // Return specific columns
 $query = update()
     ->update('users')
-    ->set('name', literal_string('John'))
-    ->where(eq(col('id'), literal_int(1)))
+    ->set('name', literal('John'))
+    ->where(eq(col('id'), literal(1)))
     ->returning(col('id'), col('name'));
 
 echo $query->toSQL();
@@ -164,8 +164,8 @@ echo $query->toSQL();
 // Return all columns
 $query = update()
     ->update('users')
-    ->set('name', literal_string('John'))
-    ->where(eq(col('id'), literal_int(1)))
+    ->set('name', literal('John'))
+    ->where(eq(col('id'), literal(1)))
     ->returningAll();
 
 echo $query->toSQL();
@@ -178,17 +178,17 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    update, literal_string, literal_int, literal_bool,
+    update, literal, literal,
     col, eq, gt, cond_and
 };
 
 $query = update()
     ->update('users')
-    ->set('status', literal_string('premium'))
+    ->set('status', literal('premium'))
     ->where(
         cond_and(
-            eq(col('active'), literal_bool(true)),
-            gt(col('orders_count'), literal_int(100))
+            eq(col('active'), literal(true)),
+            gt(col('orders_count'), literal(100))
         )
     );
 

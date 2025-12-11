@@ -123,11 +123,11 @@ Add check options for updatable views:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, select, eq, col, literal_bool};
+use function Flow\PgQuery\DSL\{create, select, eq, col, literal};
 
 // WITH CHECK OPTION (defaults to CASCADED)
 $query = create()->view('active_users')
-    ->as(select()->from('users')->where(eq(col('active'), literal_bool(true))))
+    ->as(select()->from('users')->where(eq(col('active'), literal(true))))
     ->withCheckOption();
 
 echo $query->toSQL();
