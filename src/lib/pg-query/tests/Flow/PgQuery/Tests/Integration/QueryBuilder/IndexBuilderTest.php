@@ -13,7 +13,7 @@ use function Flow\PgQuery\DSL\{alter,
     index_method_btree,
     index_method_gin,
     index_method_hash,
-    literal_bool,
+    literal,
     reindex_database,
     reindex_index,
     reindex_schema,
@@ -300,7 +300,7 @@ final class IndexBuilderTest extends PGQueryTestCase
         $builder = create()->index('idx_users_active_email')
             ->on('users')
             ->columns('email')
-            ->where(eq(col('active'), literal_bool(true)));
+            ->where(eq(col('active'), literal(true)));
 
         $this->assertCreateIndexQuery(
             $builder,

@@ -36,14 +36,14 @@ echo $query->toSQL();
 use function Flow\PgQuery\DSL\{
     select, star, table, col,
     eq, gt, lt, gte, lte, neq, between, is_in, like, is_null,
-    literal_string, literal_int, literal_bool,
+    literal, literal,
     cond_and, cond_or, cond_not
 };
 
 // Simple condition
 $query = select(star())
     ->from(table('users'))
-    ->where(eq(col('active'), literal_bool(true)));
+    ->where(eq(col('active'), literal(true)));
 
 echo $query->toSQL();
 // SELECT * FROM users WHERE active = true
@@ -53,9 +53,9 @@ $query = select(star())
     ->from(table('products'))
     ->where(
         cond_and(
-            gt(col('price'), literal_int(10)),
-            lt(col('price'), literal_int(100)),
-            eq(col('in_stock'), literal_bool(true))
+            gt(col('price'), literal(10)),
+            lt(col('price'), literal(100)),
+            eq(col('in_stock'), literal(true))
         )
     );
 
@@ -67,10 +67,10 @@ $query = select(star())
     ->from(table('users'))
     ->where(
         cond_and(
-            eq(col('status'), literal_string('active')),
+            eq(col('status'), literal('active')),
             cond_or(
-                gte(col('age'), literal_int(18)),
-                eq(col('guardian_approved'), literal_bool(true))
+                gte(col('age'), literal(18)),
+                eq(col('guardian_approved'), literal(true))
             )
         )
     );
@@ -81,7 +81,7 @@ echo $query->toSQL();
 // BETWEEN condition
 $query = select(star())
     ->from(table('products'))
-    ->where(between(col('price'), literal_int(10), literal_int(100)));
+    ->where(between(col('price'), literal(10), literal(100)));
 
 echo $query->toSQL();
 // SELECT * FROM products WHERE price BETWEEN 10 AND 100
@@ -90,9 +90,9 @@ echo $query->toSQL();
 $query = select(star())
     ->from(table('users'))
     ->where(is_in(col('status'), [
-        literal_string('active'),
-        literal_string('pending'),
-        literal_string('verified')
+        literal('active'),
+        literal('pending'),
+        literal('verified')
     ]));
 
 echo $query->toSQL();
@@ -101,7 +101,7 @@ echo $query->toSQL();
 // LIKE condition
 $query = select(star())
     ->from(table('users'))
-    ->where(like(col('email'), literal_string('%@example.com')));
+    ->where(like(col('email'), literal('%@example.com')));
 
 echo $query->toSQL();
 // SELECT * FROM users WHERE email LIKE '%@example.com'
@@ -234,7 +234,7 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    select, with, star, table, col, cte, eq, literal_bool
+    select, with, star, table, col, cte, eq, literal
 };
 
 use Flow\PgQuery\QueryBuilder\Clause\CTEMaterialization;
@@ -245,7 +245,7 @@ $query = with(
         'active_users',
         select(col('id'), col('name'))
             ->from(table('users'))
-            ->where(eq(col('active'), literal_bool(true)))
+            ->where(eq(col('active'), literal(true)))
     )
 )
     ->select(star())
@@ -280,7 +280,7 @@ $query = with(
         'active_users',
         select(col('id'), col('name'))
             ->from(table('users'))
-            ->where(eq(col('active'), literal_bool(true))),
+            ->where(eq(col('active'), literal(true))),
         [],
         CTEMaterialization::MATERIALIZED
     )
@@ -351,7 +351,7 @@ The query builder provides native support for PostgreSQL JSONB operators:
 <?php
 
 use function Flow\PgQuery\DSL\{
-    select, star, table, col, literal_string, raw_expr,
+    select, star, table, col, literal, raw_expr,
     json_contains, json_contained_by, json_get, json_get_text,
     json_path, json_path_text, json_exists, json_exists_any, json_exists_all
 };
@@ -359,7 +359,7 @@ use function Flow\PgQuery\DSL\{
 // JSONB contains (@>)
 $query = select(star())
     ->from(table('products'))
-    ->where(json_contains(col('metadata'), literal_string('{"category": "electronics"}')));
+    ->where(json_contains(col('metadata'), literal('{"category": "electronics"}')));
 
 echo $query->toSQL();
 // SELECT * FROM products WHERE metadata @> '{"category": "electronics"}'
@@ -367,34 +367,34 @@ echo $query->toSQL();
 // JSONB is contained by (<@)
 $query = select(star())
     ->from(table('products'))
-    ->where(json_contained_by(col('metadata'), literal_string('{"category": "electronics", "price": 100}')));
+    ->where(json_contained_by(col('metadata'), literal('{"category": "electronics", "price": 100}')));
 
 echo $query->toSQL();
 // SELECT * FROM products WHERE metadata <@ '{"category": "electronics", "price": 100}'
 
 // JSON field access (->) - returns JSON
-$query = select(json_get(col('metadata'), literal_string('category'))->as('category'))
+$query = select(json_get(col('metadata'), literal('category'))->as('category'))
     ->from(table('products'));
 
 echo $query->toSQL();
 // SELECT metadata -> 'category' AS category FROM products
 
 // JSON field access (->>) - returns text
-$query = select(json_get_text(col('metadata'), literal_string('name'))->as('product_name'))
+$query = select(json_get_text(col('metadata'), literal('name'))->as('product_name'))
     ->from(table('products'));
 
 echo $query->toSQL();
 // SELECT metadata ->> 'name' AS product_name FROM products
 
 // JSON path access (#>) - returns JSON
-$query = select(json_path(col('metadata'), literal_string('{category,name}'))->as('nested'))
+$query = select(json_path(col('metadata'), literal('{category,name}'))->as('nested'))
     ->from(table('products'));
 
 echo $query->toSQL();
 // SELECT metadata #> '{category,name}' AS nested FROM products
 
 // JSON path access (#>>) - returns text
-$query = select(json_path_text(col('metadata'), literal_string('{category,name}'))->as('nested_text'))
+$query = select(json_path_text(col('metadata'), literal('{category,name}'))->as('nested_text'))
     ->from(table('products'));
 
 echo $query->toSQL();
@@ -403,7 +403,7 @@ echo $query->toSQL();
 // Key exists (?)
 $query = select(star())
     ->from(table('products'))
-    ->where(json_exists(col('metadata'), literal_string('category')));
+    ->where(json_exists(col('metadata'), literal('category')));
 
 echo $query->toSQL();
 // SELECT * FROM products WHERE metadata ? 'category'
@@ -470,14 +470,14 @@ POSIX regex operators for pattern matching:
 <?php
 
 use function Flow\PgQuery\DSL\{
-    select, star, table, col, literal_string,
+    select, star, table, col, literal,
     regex_match, regex_imatch, not_regex_match, not_regex_imatch
 };
 
 // Case-sensitive regex match (~)
 $query = select(star())
     ->from(table('users'))
-    ->where(regex_match(col('email'), literal_string('.*@gmail\\.com')));
+    ->where(regex_match(col('email'), literal('.*@gmail\\.com')));
 
 echo $query->toSQL();
 // SELECT * FROM users WHERE email ~ '.*@gmail\.com'
@@ -485,7 +485,7 @@ echo $query->toSQL();
 // Case-insensitive regex match (~*)
 $query = select(star())
     ->from(table('users'))
-    ->where(regex_imatch(col('email'), literal_string('.*@gmail\\.com')));
+    ->where(regex_imatch(col('email'), literal('.*@gmail\\.com')));
 
 echo $query->toSQL();
 // SELECT * FROM users WHERE email ~* '.*@gmail\.com'
@@ -493,7 +493,7 @@ echo $query->toSQL();
 // Does not match (!~)
 $query = select(star())
     ->from(table('users'))
-    ->where(not_regex_match(col('email'), literal_string('.*@spam\\.com')));
+    ->where(not_regex_match(col('email'), literal('.*@spam\\.com')));
 
 echo $query->toSQL();
 // SELECT * FROM users WHERE email !~ '.*@spam\.com'
@@ -501,7 +501,7 @@ echo $query->toSQL();
 // Does not match case-insensitive (!~*)
 $query = select(star())
     ->from(table('users'))
-    ->where(not_regex_imatch(col('email'), literal_string('.*@spam\\.com')));
+    ->where(not_regex_imatch(col('email'), literal('.*@spam\\.com')));
 
 echo $query->toSQL();
 // SELECT * FROM users WHERE email !~* '.*@spam\.com'
@@ -533,7 +533,7 @@ echo $query->toSQL();
 
 use function Flow\PgQuery\DSL\{
     select, table, col,
-    agg_count, agg_sum, agg_avg, agg_min, agg_max, gt, literal_int
+    agg_count, agg_sum, agg_avg, agg_min, agg_max, gt, literal
 };
 
 // Simple aggregates
@@ -555,7 +555,7 @@ echo $query->toSQL();
 $query = select(col('category'), agg_count()->as('cnt'))
     ->from(table('products'))
     ->groupBy(col('category'))
-    ->having(gt(agg_count(), literal_int(5)));
+    ->having(gt(agg_count(), literal(5)));
 
 echo $query->toSQL();
 // SELECT category, count(*) AS cnt FROM products GROUP BY category HAVING count(*) > 5
@@ -613,7 +613,7 @@ echo $query->toSQL();
 
 use function Flow\PgQuery\DSL\{
     select, star, table, col,
-    sub_select, exists, agg_count, eq, literal_int
+    sub_select, exists, agg_count, eq, literal
 };
 
 // Scalar subquery
@@ -631,7 +631,7 @@ echo $query->toSQL();
 // SELECT name, (SELECT count(*) FROM orders WHERE orders.user_id = users.id) AS order_count FROM users
 
 // EXISTS subquery
-$subquery = select(literal_int(1))
+$subquery = select(literal(1))
     ->from(table('orders'))
     ->where(eq(col('orders.user_id'), col('users.id')));
 
@@ -665,11 +665,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, star, table, col, eq, literal_int};
+use function Flow\PgQuery\DSL\{select, star, table, col, eq, literal};
 
 $query = select(star())
     ->from(table('accounts'))
-    ->where(eq(col('id'), literal_int(1)))
+    ->where(eq(col('id'), literal(1)))
     ->forUpdate();
 
 echo $query->toSQL();
@@ -677,7 +677,7 @@ echo $query->toSQL();
 
 $query = select(star())
     ->from(table('accounts'))
-    ->where(eq(col('id'), literal_int(1)))
+    ->where(eq(col('id'), literal(1)))
     ->forShare();
 
 echo $query->toSQL();

@@ -11,8 +11,7 @@ use function Flow\PgQuery\DSL\{
     eq,
     gt,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     merge,
     order_by,
     primary_key,
@@ -56,8 +55,8 @@ final class MergeDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_TARGET)
                 ->columns('name', 'value')
-                ->values(literal_string('Alice'), literal_int(100))
-                ->values(literal_string('Bob'), literal_int(200))
+                ->values(literal('Alice'), literal(100))
+                ->values(literal('Bob'), literal(200))
                 ->toSql()
         );
 
@@ -65,9 +64,9 @@ final class MergeDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_SOURCE)
                 ->columns('id', 'name', 'value')
-                ->values(literal_int(1), literal_string('Alice Updated'), literal_int(150))
-                ->values(literal_int(2), literal_string('Bob Updated'), literal_int(250))
-                ->values(literal_int(3), literal_string('Charlie'), literal_int(300))
+                ->values(literal(1), literal('Alice Updated'), literal(150))
+                ->values(literal(2), literal('Bob Updated'), literal(250))
+                ->values(literal(3), literal('Charlie'), literal(300))
                 ->toSql()
         );
     }
@@ -218,7 +217,7 @@ final class MergeDatabaseTest extends DatabaseTestCase
     {
         $sourceQuery = select(col('id'), col('name'), col('value'))
             ->from(table(self::TABLE_SOURCE))
-            ->where(gt(col('value'), literal_int(200)));
+            ->where(gt(col('value'), literal(200)));
 
         $query = merge(self::TABLE_TARGET, 't')
             ->using($sourceQuery, 's')
@@ -253,7 +252,7 @@ final class MergeDatabaseTest extends DatabaseTestCase
         $query = merge(self::TABLE_TARGET, 't')
             ->using(self::TABLE_SOURCE, 's')
             ->on(eq(col('t.id'), col('s.id')))
-            ->whenMatchedAnd(gt(col('s.value'), literal_int(200)))
+            ->whenMatchedAnd(gt(col('s.value'), literal(200)))
             ->thenUpdate([
                 'value' => col('s.value'),
             ]);

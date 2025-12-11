@@ -11,7 +11,7 @@ use function Flow\PgQuery\DSL\{
     create,
     drop,
     eq,
-    literal_bool,
+    literal,
     refresh_materialized_view,
     select,
     star,
@@ -319,7 +319,7 @@ final class ViewBuilderTest extends PGQueryTestCase
     public function test_create_view_with_check_option() : void
     {
         $builder = create()->view('active_users')
-            ->as(select(star())->from(table('users'))->where(eq(col('active'), literal_bool(true))))
+            ->as(select(star())->from(table('users'))->where(eq(col('active'), literal(true))))
             ->withCheckOption();
 
         $this->assertCreateViewQuery(

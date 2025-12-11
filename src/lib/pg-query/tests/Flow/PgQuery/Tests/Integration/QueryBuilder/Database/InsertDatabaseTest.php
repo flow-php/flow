@@ -11,8 +11,7 @@ use function Flow\PgQuery\DSL\{
     create,
     eq,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     on_conflict_nothing,
     on_conflict_update,
     primary_key,
@@ -58,7 +57,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
         $query = insert()
             ->into(self::TABLE_PRODUCTS)
             ->columns('sku', 'name', 'price')
-            ->values(literal_string('SKU001'), literal_string('Product A'), literal_int(100));
+            ->values(literal('SKU001'), literal('Product A'), literal(100));
 
         $result = $this->execute($query->toSql());
 
@@ -68,7 +67,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('name'))
                 ->from(table(self::TABLE_PRODUCTS))
-                ->where(eq(col('sku'), literal_string('SKU001')))
+                ->where(eq(col('sku'), literal('SKU001')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -80,8 +79,8 @@ final class InsertDatabaseTest extends DatabaseTestCase
         $query = insert()
             ->into(self::TABLE_PRODUCTS)
             ->columns('sku', 'name', 'price')
-            ->values(literal_string('SKU002'), literal_string('Product B'), literal_int(200))
-            ->values(literal_string('SKU003'), literal_string('Product C'), literal_int(300));
+            ->values(literal('SKU002'), literal('Product B'), literal(200))
+            ->values(literal('SKU003'), literal('Product C'), literal(300));
 
         $result = $this->execute($query->toSql());
 
@@ -95,14 +94,14 @@ final class InsertDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_PRODUCTS)
                 ->columns('sku', 'name')
-                ->values(literal_string('SKU006'), literal_string('Original'))
+                ->values(literal('SKU006'), literal('Original'))
                 ->toSql()
         );
 
         $query = insert()
             ->into(self::TABLE_PRODUCTS)
             ->columns('sku', 'name')
-            ->values(literal_string('SKU006'), literal_string('Duplicate'))
+            ->values(literal('SKU006'), literal('Duplicate'))
             ->onConflict(on_conflict_nothing(conflict_columns(['sku'])));
 
         $result = $this->execute($query->toSql());
@@ -112,7 +111,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('name'))
                 ->from(table(self::TABLE_PRODUCTS))
-                ->where(eq(col('sku'), literal_string('SKU006')))
+                ->where(eq(col('sku'), literal('SKU006')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -125,18 +124,18 @@ final class InsertDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_PRODUCTS)
                 ->columns('sku', 'name', 'price')
-                ->values(literal_string('SKU007'), literal_string('Original'), literal_int(100))
+                ->values(literal('SKU007'), literal('Original'), literal(100))
                 ->toSql()
         );
 
         $query = insert()
             ->into(self::TABLE_PRODUCTS)
             ->columns('sku', 'name', 'price')
-            ->values(literal_string('SKU007'), literal_string('Updated'), literal_int(999))
+            ->values(literal('SKU007'), literal('Updated'), literal(999))
             ->onConflict(
                 on_conflict_update(
                     conflict_columns(['sku']),
-                    ['name' => literal_string('Updated'), 'price' => literal_int(999)]
+                    ['name' => literal('Updated'), 'price' => literal(999)]
                 )
             );
 
@@ -147,7 +146,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('name'), col('price'))
                 ->from(table(self::TABLE_PRODUCTS))
-                ->where(eq(col('sku'), literal_string('SKU007')))
+                ->where(eq(col('sku'), literal('SKU007')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -160,7 +159,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
         $query = insert()
             ->into(self::TABLE_PRODUCTS)
             ->columns('sku', 'name', 'price')
-            ->values(literal_string('SKU004'), literal_string('Product D'), literal_int(400))
+            ->values(literal('SKU004'), literal('Product D'), literal(400))
             ->returning(col('id'), col('sku'));
 
         $result = $this->execute($query->toSql());
@@ -177,7 +176,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
         $query = insert()
             ->into(self::TABLE_PRODUCTS)
             ->columns('sku', 'name', 'price')
-            ->values(literal_string('SKU005'), literal_string('Product E'), literal_int(500))
+            ->values(literal('SKU005'), literal('Product E'), literal(500))
             ->returningAll();
 
         $result = $this->execute($query->toSql());

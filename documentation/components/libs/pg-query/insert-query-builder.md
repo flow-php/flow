@@ -11,12 +11,12 @@ The Insert Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string};
+use function Flow\PgQuery\DSL\{insert, literal};
 
 $query = insert()
     ->into('users')
     ->columns('name', 'email')
-    ->values(literal_string('John'), literal_string('john@example.com'));
+    ->values(literal('John'), literal('john@example.com'));
 
 echo $query->toSQL();
 // INSERT INTO users (name, email) VALUES ('John', 'john@example.com')
@@ -45,13 +45,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string};
+use function Flow\PgQuery\DSL\{insert, literal};
 
 $query = insert()
     ->into('users')
     ->columns('name', 'email')
-    ->values(literal_string('John'), literal_string('john@example.com'))
-    ->values(literal_string('Jane'), literal_string('jane@example.com'));
+    ->values(literal('John'), literal('john@example.com'))
+    ->values(literal('Jane'), literal('jane@example.com'));
 
 echo $query->toSQL();
 // INSERT INTO users (name, email) VALUES ('John', 'john@example.com'), ('Jane', 'jane@example.com')
@@ -99,13 +99,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string};
+use function Flow\PgQuery\DSL\{insert, literal};
 
 // Without specifying conflict target
 $query = insert()
     ->into('users')
     ->columns('name', 'email')
-    ->values(literal_string('John'), literal_string('john@example.com'))
+    ->values(literal('John'), literal('john@example.com'))
     ->onConflictDoNothing();
 
 echo $query->toSQL();
@@ -117,12 +117,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string, conflict_columns};
+use function Flow\PgQuery\DSL\{insert, literal, conflict_columns};
 
 $query = insert()
     ->into('users')
     ->columns('name', 'email')
-    ->values(literal_string('John'), literal_string('john@example.com'))
+    ->values(literal('John'), literal('john@example.com'))
     ->onConflictDoNothing(conflict_columns(['email']));
 
 echo $query->toSQL();
@@ -134,12 +134,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string, conflict_constraint};
+use function Flow\PgQuery\DSL\{insert, literal, conflict_constraint};
 
 $query = insert()
     ->into('users')
     ->columns('name', 'email')
-    ->values(literal_string('John'), literal_string('john@example.com'))
+    ->values(literal('John'), literal('john@example.com'))
     ->onConflictDoNothing(conflict_constraint('users_pkey'));
 
 echo $query->toSQL();
@@ -151,15 +151,15 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string, conflict_columns};
+use function Flow\PgQuery\DSL\{insert, literal, conflict_columns};
 
 $query = insert()
     ->into('users')
     ->columns('email', 'name')
-    ->values(literal_string('john@example.com'), literal_string('John'))
+    ->values(literal('john@example.com'), literal('John'))
     ->onConflictDoUpdate(
         conflict_columns(['email']),
-        ['name' => literal_string('Updated John')]
+        ['name' => literal('Updated John')]
     );
 
 echo $query->toSQL();
@@ -194,18 +194,18 @@ echo $query->toSQL();
 <?php
 
 use function Flow\PgQuery\DSL\{
-    insert, literal_string, literal_bool, conflict_columns, eq, col
+    insert, literal, conflict_columns, eq, col
 };
 
 $query = insert()
     ->into('users')
     ->columns('email', 'name', 'active')
-    ->values(literal_string('john@example.com'), literal_string('John'), literal_bool(true))
+    ->values(literal('john@example.com'), literal('John'), literal(true))
     ->onConflictDoUpdate(
         conflict_columns(['email']),
-        ['name' => literal_string('Updated John')]
+        ['name' => literal('Updated John')]
     )
-    ->where(eq(col('users.active'), literal_bool(true)));
+    ->where(eq(col('users.active'), literal(true)));
 
 echo $query->toSQL();
 // INSERT INTO users (email, name, active) VALUES ('john@example.com', 'John', true) ON CONFLICT (email) DO UPDATE SET name = 'Updated John' WHERE users.active = true
@@ -216,13 +216,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string, col};
+use function Flow\PgQuery\DSL\{insert, literal, col};
 
 // Return specific columns
 $query = insert()
     ->into('users')
     ->columns('name')
-    ->values(literal_string('John'))
+    ->values(literal('John'))
     ->returning(col('id'));
 
 echo $query->toSQL();
@@ -232,7 +232,7 @@ echo $query->toSQL();
 $query = insert()
     ->into('users')
     ->columns('name')
-    ->values(literal_string('John'))
+    ->values(literal('John'))
     ->returningAll();
 
 echo $query->toSQL();
@@ -244,12 +244,12 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal_string};
+use function Flow\PgQuery\DSL\{insert, literal};
 
 $query = insert()
     ->into('public.users')
     ->columns('name')
-    ->values(literal_string('John'));
+    ->values(literal('John'));
 
 echo $query->toSQL();
 // INSERT INTO public.users (name) VALUES ('John')

@@ -70,7 +70,7 @@ Alternative syntax using column => value pairs:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq, literal_string};
+use function Flow\PgQuery\DSL\{merge, col, eq, literal};
 
 $query = merge('users')
     ->using('new_users', 'n')
@@ -79,7 +79,7 @@ $query = merge('users')
     ->thenInsertValues([
         'id' => col('n.id'),
         'name' => col('n.name'),
-        'status' => literal_string('active'),
+        'status' => literal('active'),
     ]);
 
 echo $query->toSQL();
@@ -120,12 +120,12 @@ Add conditions to WHEN MATCHED and WHEN NOT MATCHED clauses:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{merge, col, eq, gt, literal_int};
+use function Flow\PgQuery\DSL\{merge, col, eq, gt, literal};
 
 $query = merge('products', 'p')
     ->using('price_updates', 'pu')
     ->on(eq(col('p.id'), col('pu.product_id')))
-    ->whenMatchedAnd(gt(col('pu.price'), literal_int(0)))
+    ->whenMatchedAnd(gt(col('pu.price'), literal(0)))
     ->thenUpdate([
         'price' => col('pu.price'),
     ]);

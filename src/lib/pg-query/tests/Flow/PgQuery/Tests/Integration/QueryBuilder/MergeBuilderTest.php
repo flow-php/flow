@@ -9,8 +9,7 @@ use function Flow\PgQuery\DSL\{
     cte,
     eq,
     gt,
-    literal_int,
-    literal_string,
+    literal,
     merge,
     param,
     select,
@@ -80,7 +79,7 @@ final class MergeBuilderTest extends PGQueryTestCase
         $query = merge('products', 'p')
             ->using('price_updates', 'pu')
             ->on(eq(col('p.id'), col('pu.product_id')))
-            ->whenMatchedAnd(gt(col('pu.price'), literal_int(0)))
+            ->whenMatchedAnd(gt(col('pu.price'), literal(0)))
             ->thenUpdate([
                 'price' => col('pu.price'),
             ]);
@@ -165,7 +164,7 @@ final class MergeBuilderTest extends PGQueryTestCase
             ->thenInsertValues([
                 'id' => col('n.id'),
                 'name' => col('n.name'),
-                'status' => literal_string('active'),
+                'status' => literal('active'),
             ]);
 
         $this->assertMergeQueryEquals(

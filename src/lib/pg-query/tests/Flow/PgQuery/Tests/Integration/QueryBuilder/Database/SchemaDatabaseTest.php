@@ -10,7 +10,7 @@ use function Flow\PgQuery\DSL\{
     create,
     drop,
     insert,
-    literal_string,
+    literal,
     primary_key,
     select,
     sql_type_serial,
@@ -137,7 +137,7 @@ final class SchemaDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::SCHEMA_NAME . '.' . self::TABLE_NAME)
                 ->columns('name')
-                ->values(literal_string('Test'))
+                ->values(literal('Test'))
                 ->toSql()
         );
 

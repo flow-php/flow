@@ -13,8 +13,7 @@ use function Flow\PgQuery\DSL\{
     eq,
     gt,
     insert,
-    literal_int,
-    literal_string,
+    literal,
     primary_key,
     select,
     sql_type_decimal,
@@ -60,9 +59,9 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_DEPARTMENTS)
                 ->columns('name', 'bonus_rate')
-                ->values(literal_string('Engineering'), literal_int(1))
-                ->values(literal_string('Sales'), literal_int(1))
-                ->values(literal_string('HR'), literal_int(1))
+                ->values(literal('Engineering'), literal(1))
+                ->values(literal('Sales'), literal(1))
+                ->values(literal('HR'), literal(1))
                 ->toSql()
         );
 
@@ -70,10 +69,10 @@ final class UpdateDatabaseTest extends DatabaseTestCase
             insert()
                 ->into(self::TABLE_EMPLOYEES)
                 ->columns('name', 'salary', 'department_id', 'status')
-                ->values(literal_string('Alice'), literal_int(50000), literal_int(1), literal_string('active'))
-                ->values(literal_string('Bob'), literal_int(60000), literal_int(1), literal_string('active'))
-                ->values(literal_string('Charlie'), literal_int(55000), literal_int(2), literal_string('active'))
-                ->values(literal_string('Diana'), literal_int(45000), literal_int(3), literal_string('inactive'))
+                ->values(literal('Alice'), literal(50000), literal(1), literal('active'))
+                ->values(literal('Bob'), literal(60000), literal(1), literal('active'))
+                ->values(literal('Charlie'), literal(55000), literal(2), literal('active'))
+                ->values(literal('Diana'), literal(45000), literal(3), literal('inactive'))
                 ->toSql()
         );
     }
@@ -90,7 +89,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         $query = update()
             ->update(self::TABLE_EMPLOYEES)
-            ->set('status', literal_string('updated'));
+            ->set('status', literal('updated'));
 
         $result = $this->execute($query->toSql());
 
@@ -100,7 +99,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(agg_count(star())->as('cnt'))
                 ->from(table(self::TABLE_EMPLOYEES))
-                ->where(eq(col('status'), literal_string('updated')))
+                ->where(eq(col('status'), literal('updated')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -111,9 +110,9 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         $query = update()
             ->update(self::TABLE_EMPLOYEES)
-            ->set('salary', literal_int(75000))
-            ->set('status', literal_string('promoted'))
-            ->where(eq(col('name'), literal_string('Bob')));
+            ->set('salary', literal(75000))
+            ->set('status', literal('promoted'))
+            ->where(eq(col('name'), literal('Bob')));
 
         $result = $this->execute($query->toSql());
 
@@ -122,7 +121,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('salary'), col('status'))
                 ->from(table(self::TABLE_EMPLOYEES))
-                ->where(eq(col('name'), literal_string('Bob')))
+                ->where(eq(col('name'), literal('Bob')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);
@@ -134,7 +133,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         $query = update()
             ->update(self::TABLE_EMPLOYEES)
-            ->set('status', literal_string('bonus_applied'))
+            ->set('status', literal('bonus_applied'))
             ->from(table(self::TABLE_DEPARTMENTS))
             ->where(
                 cond_and(
@@ -142,7 +141,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
                         col('department_id', self::TABLE_EMPLOYEES),
                         col('id', self::TABLE_DEPARTMENTS)
                     ),
-                    gt(col('bonus_rate', self::TABLE_DEPARTMENTS), literal_int(0))
+                    gt(col('bonus_rate', self::TABLE_DEPARTMENTS), literal(0))
                 )
             );
 
@@ -156,8 +155,8 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         $query = update()
             ->update(self::TABLE_EMPLOYEES)
-            ->set('salary', literal_int(80000))
-            ->where(eq(col('name'), literal_string('Charlie')))
+            ->set('salary', literal(80000))
+            ->where(eq(col('name'), literal('Charlie')))
             ->returning(col('id'), col('name'), col('salary'));
 
         $result = $this->execute($query->toSql());
@@ -172,8 +171,8 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         $query = update()
             ->update(self::TABLE_EMPLOYEES)
-            ->set('status', literal_string('reviewed'))
-            ->where(eq(col('name'), literal_string('Diana')))
+            ->set('status', literal('reviewed'))
+            ->where(eq(col('name'), literal('Diana')))
             ->returningAll();
 
         $result = $this->execute($query->toSql());
@@ -192,8 +191,8 @@ final class UpdateDatabaseTest extends DatabaseTestCase
     {
         $query = update()
             ->update(self::TABLE_EMPLOYEES)
-            ->set('salary', literal_int(70000))
-            ->where(eq(col('name'), literal_string('Alice')));
+            ->set('salary', literal(70000))
+            ->where(eq(col('name'), literal('Alice')));
 
         $result = $this->execute($query->toSql());
 
@@ -203,7 +202,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
         $check = $this->execute(
             select(col('salary'))
                 ->from(table(self::TABLE_EMPLOYEES))
-                ->where(eq(col('name'), literal_string('Alice')))
+                ->where(eq(col('name'), literal('Alice')))
                 ->toSql()
         );
         $row = $this->fetchOne($check);

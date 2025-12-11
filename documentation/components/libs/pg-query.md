@@ -172,13 +172,13 @@ Build PostgreSQL queries programmatically with a fluent, type-safe API.
 <?php
 
 use function Flow\PgQuery\DSL\{
-    select, col, table, literal_int, eq, asc
+    select, col, table, literal, eq, asc
 };
 
 // Build a SELECT query
 $query = select(col('id'), col('name'), col('email'))
     ->from(table('users'))
-    ->where(eq(col('active'), literal_int(1)))
+    ->where(eq(col('active'), literal(1)))
     ->orderBy(asc(col('name')))
     ->limit(10);
 
