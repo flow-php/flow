@@ -72,51 +72,17 @@ use Flow\PgQuery\QueryBuilder\Expression\{
     WhenClause,
     WindowFunction
 };
+use Flow\PgQuery\QueryBuilder\Factory\{AlterFactory, CreateFactory, DropFactory};
 use Flow\PgQuery\QueryBuilder\Insert\{InsertBuilder, InsertIntoStep};
 use Flow\PgQuery\QueryBuilder\Merge\{MergeBuilder, MergeUsingStep};
 use Flow\PgQuery\QueryBuilder\QualifiedIdentifier;
-use Flow\PgQuery\QueryBuilder\Schema\AlterSequence\{AlterSequenceBuilder, AlterSequenceOptionsStep};
-use Flow\PgQuery\QueryBuilder\Schema\AlterTable\{AlterTableBuilder, AlterTableFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\{ColumnDefinition, DataType, ReferentialAction};
 use Flow\PgQuery\QueryBuilder\Schema\Constraint\{CheckConstraint, ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint};
-use Flow\PgQuery\QueryBuilder\Schema\CreateSequence\{CreateSequenceBuilder, CreateSequenceOptionsStep};
-use Flow\PgQuery\QueryBuilder\Schema\CreateTable\{CreateTableBuilder, CreateTableColumnsStep};
-use Flow\PgQuery\QueryBuilder\Schema\CreateTableAs\{CreateTableAsBuilder, CreateTableAsFinalStep};
-use Flow\PgQuery\QueryBuilder\Schema\Domain\{
-    AlterDomainActionStep,
-    AlterDomainBuilder,
-    CreateDomainBuilder,
-    CreateDomainTypeStep,
-    DropDomainBuilder,
-    DropDomainFinalStep
-};
-use Flow\PgQuery\QueryBuilder\Schema\DropSequence\{DropSequenceBuilder, DropSequenceFinalStep};
-use Flow\PgQuery\QueryBuilder\Schema\DropTable\{DropTableBuilder, DropTableFinalStep};
-use Flow\PgQuery\QueryBuilder\Schema\Extension\{
-    AlterExtensionActionStep,
-    AlterExtensionBuilder,
-    CreateExtensionBuilder,
-    CreateExtensionOptionsStep,
-    DropExtensionBuilder,
-    DropExtensionFinalStep
-};
 use Flow\PgQuery\QueryBuilder\Schema\Function\{
-    AlterFunctionArgsStep,
-    AlterFunctionBuilder,
-    AlterProcedureArgsStep,
-    AlterProcedureBuilder,
     CallBuilder,
     CallFinalStep,
-    CreateFunctionArgsStep,
-    CreateFunctionBuilder,
-    CreateProcedureArgsStep,
-    CreateProcedureBuilder,
     DoBuilder,
     DoFinalStep,
-    DropFunctionBuilder,
-    DropFunctionFinalStep,
-    DropProcedureBuilder,
-    DropProcedureFinalStep,
     FunctionArgument
 };
 use Flow\PgQuery\QueryBuilder\Schema\Grant\{
@@ -130,9 +96,6 @@ use Flow\PgQuery\QueryBuilder\Schema\Grant\{
     RevokeRoleFromStep,
     TablePrivilege
 };
-use Flow\PgQuery\QueryBuilder\Schema\Index\AlterIndex\{AlterIndexBuilder, AlterIndexFinalStep};
-use Flow\PgQuery\QueryBuilder\Schema\Index\CreateIndex\{CreateIndexBuilder, CreateIndexOnStep};
-use Flow\PgQuery\QueryBuilder\Schema\Index\DropIndex\{DropIndexBuilder, DropIndexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Index\{IndexColumn, IndexMethod};
 use Flow\PgQuery\QueryBuilder\Schema\Index\Reindex\{ReindexBuilder, ReindexFinalStep};
 use Flow\PgQuery\QueryBuilder\Schema\Ownership\{
@@ -141,62 +104,14 @@ use Flow\PgQuery\QueryBuilder\Schema\Ownership\{
     ReassignOwnedBuilder,
     ReassignOwnedToStep
 };
-use Flow\PgQuery\QueryBuilder\Schema\Role\{
-    AlterRoleActionStep,
-    AlterRoleBuilder,
-    CreateRoleBuilder,
-    CreateRoleOptionsStep,
-    DropRoleBuilder,
-    DropRoleFinalStep
-};
-use Flow\PgQuery\QueryBuilder\Schema\Rule\{
-    CreateRuleBuilder,
-    CreateRuleEventStep,
-    DropRuleBuilder,
-    DropRuleOnStep
-};
-use Flow\PgQuery\QueryBuilder\Schema\Schema\{
-    AlterSchemaActionStep,
-    AlterSchemaBuilder,
-    CreateSchemaBuilder,
-    CreateSchemaOptionsStep,
-    DropSchemaBuilder,
-    DropSchemaFinalStep
-};
 use Flow\PgQuery\QueryBuilder\Schema\Session\{
     ResetRoleBuilder,
     ResetRoleFinalStep,
     SetRoleBuilder,
     SetRoleFinalStep
 };
-use Flow\PgQuery\QueryBuilder\Schema\Trigger\{
-    AlterTriggerBuilder,
-    AlterTriggerOnStep,
-    CreateTriggerBuilder,
-    CreateTriggerTimingStep,
-    DropTriggerBuilder,
-    DropTriggerOnStep
-};
 use Flow\PgQuery\QueryBuilder\Schema\Truncate\{TruncateBuilder, TruncateFinalStep};
-use Flow\PgQuery\QueryBuilder\Schema\Type\{
-    AlterEnumTypeActionStep,
-    AlterEnumTypeBuilder,
-    CreateCompositeTypeAttributesStep,
-    CreateCompositeTypeBuilder,
-    CreateEnumTypeBuilder,
-    CreateEnumTypeLabelsStep,
-    CreateRangeTypeBuilder,
-    CreateRangeTypeSubtypeStep,
-    DropTypeBuilder,
-    DropTypeFinalStep,
-    TypeAttribute
-};
-use Flow\PgQuery\QueryBuilder\Schema\View\AlterMaterializedView\{AlterMatViewActionStep, AlterMaterializedViewBuilder};
-use Flow\PgQuery\QueryBuilder\Schema\View\AlterView\{AlterViewActionStep, AlterViewBuilder};
-use Flow\PgQuery\QueryBuilder\Schema\View\CreateMaterializedView\{CreateMatViewOptionsStep, CreateMaterializedViewBuilder};
-use Flow\PgQuery\QueryBuilder\Schema\View\CreateView\{CreateViewBuilder, CreateViewOptionsStep};
-use Flow\PgQuery\QueryBuilder\Schema\View\DropMaterializedView\{DropMatViewFinalStep, DropMaterializedViewBuilder};
-use Flow\PgQuery\QueryBuilder\Schema\View\DropView\{DropViewBuilder, DropViewFinalStep};
+use Flow\PgQuery\QueryBuilder\Schema\Type\TypeAttribute;
 use Flow\PgQuery\QueryBuilder\Schema\View\RefreshMaterializedView\{RefreshMatViewOptionsStep, RefreshMaterializedViewBuilder};
 use Flow\PgQuery\QueryBuilder\Select\{SelectBuilder, SelectFinalStep, SelectSelectStep};
 use Flow\PgQuery\QueryBuilder\Table\{
@@ -2078,82 +1993,101 @@ function check_constraint(string $expression) : CheckConstraint
 }
 
 // ----------------------------------------------------------------------------
-// Table DDL Commands
+// DDL Factory Entry Points
 // ----------------------------------------------------------------------------
 
 /**
- * Create a CREATE TABLE builder.
+ * Create a factory for building CREATE statements.
  *
- * Supports dot notation for schema-qualified names: "public.users" or explicit schema parameter.
- * Double-quoted identifiers preserve dots: '"my.table"' creates a single identifier.
+ * Provides a unified entry point for all CREATE operations:
+ * - create()->table() - CREATE TABLE
+ * - create()->tableAs() - CREATE TABLE AS
+ * - create()->index() - CREATE INDEX
+ * - create()->view() - CREATE VIEW
+ * - create()->materializedView() - CREATE MATERIALIZED VIEW
+ * - create()->sequence() - CREATE SEQUENCE
+ * - create()->schema() - CREATE SCHEMA
+ * - create()->role() - CREATE ROLE
+ * - create()->function() - CREATE FUNCTION
+ * - create()->procedure() - CREATE PROCEDURE
+ * - create()->trigger() - CREATE TRIGGER
+ * - create()->rule() - CREATE RULE
+ * - create()->extension() - CREATE EXTENSION
+ * - create()->compositeType() - CREATE TYPE (composite)
+ * - create()->enumType() - CREATE TYPE (enum)
+ * - create()->rangeType() - CREATE TYPE (range)
+ * - create()->domain() - CREATE DOMAIN
  *
- * @param string $table Table name (may include schema as "schema.table")
- * @param null|string $schema Schema name (optional, overrides parsed schema)
+ * Example: create()->table('users')->columns(col_def('id', sql_type_serial()))
+ * Example: create()->index('idx_email')->on('users')->columns('email')
  */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_table(string $table, ?string $schema = null) : CreateTableColumnsStep
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function create() : CreateFactory
 {
-    if ($schema !== null) {
-        return CreateTableBuilder::create($table, $schema);
-    }
-
-    $identifier = QualifiedIdentifier::parse($table);
-
-    return CreateTableBuilder::create($identifier->name(), $identifier->schema());
+    return new CreateFactory();
 }
 
 /**
- * Create a CREATE TABLE AS builder.
+ * Create a factory for building DROP statements.
  *
- * Supports dot notation for schema-qualified names: "public.users" or explicit schema parameter.
- * Double-quoted identifiers preserve dots: '"my.table"' creates a single identifier.
+ * Provides a unified entry point for all DROP operations:
+ * - drop()->table() - DROP TABLE
+ * - drop()->index() - DROP INDEX
+ * - drop()->view() - DROP VIEW
+ * - drop()->materializedView() - DROP MATERIALIZED VIEW
+ * - drop()->sequence() - DROP SEQUENCE
+ * - drop()->schema() - DROP SCHEMA
+ * - drop()->role() - DROP ROLE
+ * - drop()->function() - DROP FUNCTION
+ * - drop()->procedure() - DROP PROCEDURE
+ * - drop()->trigger() - DROP TRIGGER
+ * - drop()->rule() - DROP RULE
+ * - drop()->extension() - DROP EXTENSION
+ * - drop()->type() - DROP TYPE
+ * - drop()->domain() - DROP DOMAIN
+ * - drop()->owned() - DROP OWNED
  *
- * @param string $table Table name (may include schema as "schema.table")
- * @param SelectFinalStep $query SELECT query to populate the table
- * @param null|string $schema Schema name (optional, overrides parsed schema)
+ * Example: drop()->table('users', 'orders')->ifExists()->cascade()
+ * Example: drop()->index('idx_email')->ifExists()
  */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_table_as(string $table, SelectFinalStep $query, ?string $schema = null) : CreateTableAsFinalStep
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function drop() : DropFactory
 {
-    if ($schema !== null) {
-        return CreateTableAsBuilder::create($table, $query, $schema);
-    }
-
-    $identifier = QualifiedIdentifier::parse($table);
-
-    return CreateTableAsBuilder::create($identifier->name(), $query, $identifier->schema());
+    return new DropFactory();
 }
 
 /**
- * Create an ALTER TABLE builder.
+ * Create a factory for building ALTER statements.
  *
- * Supports dot notation for schema-qualified names: "public.users" or explicit schema parameter.
- * Double-quoted identifiers preserve dots: '"my.table"' creates a single identifier.
+ * Provides a unified entry point for all ALTER operations:
+ * - alter()->table() - ALTER TABLE
+ * - alter()->index() - ALTER INDEX
+ * - alter()->view() - ALTER VIEW
+ * - alter()->materializedView() - ALTER MATERIALIZED VIEW
+ * - alter()->sequence() - ALTER SEQUENCE
+ * - alter()->schema() - ALTER SCHEMA
+ * - alter()->role() - ALTER ROLE
+ * - alter()->function() - ALTER FUNCTION
+ * - alter()->procedure() - ALTER PROCEDURE
+ * - alter()->trigger() - ALTER TRIGGER
+ * - alter()->extension() - ALTER EXTENSION
+ * - alter()->enumType() - ALTER TYPE (enum)
+ * - alter()->domain() - ALTER DOMAIN
  *
- * @param string $table Table name (may include schema as "schema.table")
- * @param null|string $schema Schema name (optional, overrides parsed schema)
+ * Rename operations are also under alter():
+ * - alter()->index('old')->renameTo('new')
+ * - alter()->view('old')->renameTo('new')
+ * - alter()->schema('old')->renameTo('new')
+ * - alter()->role('old')->renameTo('new')
+ * - alter()->trigger('old')->on('table')->renameTo('new')
+ *
+ * Example: alter()->table('users')->addColumn(col_def('email', sql_type_text()))
+ * Example: alter()->sequence('user_id_seq')->restart(1000)
  */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_table(string $table, ?string $schema = null) : AlterTableFinalStep
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function alter() : AlterFactory
 {
-    if ($schema !== null) {
-        return AlterTableBuilder::create($table, $schema);
-    }
-
-    $identifier = QualifiedIdentifier::parse($table);
-
-    return AlterTableBuilder::create($identifier->name(), $identifier->schema());
-}
-
-/**
- * Create a DROP TABLE builder.
- *
- * @param string ...$tables Table names to drop
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_table(string ...$tables) : DropTableFinalStep
-{
-    return DropTableBuilder::create(...$tables);
+    return new AlterFactory();
 }
 
 /**
@@ -2165,6 +2099,24 @@ function drop_table(string ...$tables) : DropTableFinalStep
 function truncate_table(string ...$tables) : TruncateFinalStep
 {
     return TruncateBuilder::create(...$tables);
+}
+
+/**
+ * Create a REFRESH MATERIALIZED VIEW builder.
+ *
+ * Example: refresh_materialized_view('user_stats')
+ * Produces: REFRESH MATERIALIZED VIEW user_stats
+ *
+ * Example: refresh_materialized_view('user_stats')->concurrently()->withData()
+ * Produces: REFRESH MATERIALIZED VIEW CONCURRENTLY user_stats WITH DATA
+ *
+ * @param string $name View name (may include schema as "schema.view")
+ * @param null|string $schema Schema name (optional, overrides parsed schema)
+ */
+#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
+function refresh_materialized_view(string $name, ?string $schema = null) : RefreshMatViewOptionsStep
+{
+    return RefreshMaterializedViewBuilder::create($name, $schema);
 }
 
 // ----------------------------------------------------------------------------
@@ -2214,53 +2166,6 @@ function ref_action_set_default() : ReferentialAction
 function ref_action_no_action() : ReferentialAction
 {
     return ReferentialAction::NO_ACTION;
-}
-
-/**
- * Start building a CREATE INDEX statement.
- *
- * Use chainable methods for modifiers: ->unique(), ->concurrently(), ->ifNotExists()
- *
- * Example: create_index('idx_users_email')->unique()->on('users')->columns('email')
- *
- * @param string $name The index name
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create_index(string $name) : CreateIndexOnStep
-{
-    return CreateIndexBuilder::create($name);
-}
-
-/**
- * Start building a DROP INDEX statement.
- *
- * Use chainable methods: ->ifExists(), ->concurrently(), ->cascade(), ->restrict()
- *
- * Example: drop_index('idx_users_email')->ifExists()->cascade()
- *
- * @param string ...$indexes The index names to drop
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function drop_index(string ...$indexes) : DropIndexFinalStep
-{
-    return DropIndexBuilder::create(...$indexes);
-}
-
-/**
- * Start building an ALTER INDEX statement.
- *
- * Use chainable methods: ->ifExists(), then ->renameTo() or ->setTablespace()
- *
- * Example: alter_index('idx_old')->ifExists()->renameTo('idx_new')
- * Example with schema: alter_index('idx_old', 'public')->renameTo('idx_new')
- *
- * @param string $name The index name
- * @param null|string $schema Optional schema name
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function alter_index(string $name, ?string $schema = null) : AlterIndexFinalStep
-{
-    return AlterIndexBuilder::create($name, $schema);
 }
 
 /**
@@ -2503,299 +2408,6 @@ function discard(DiscardType $type) : DiscardFinalStep
 }
 
 // ----------------------------------------------------------------------------
-// Sequence Commands
-// ----------------------------------------------------------------------------
-
-/**
- * Create a CREATE SEQUENCE builder.
- *
- * Example: create_sequence('user_id_seq')->startWith(1)->incrementBy(1)
- * Produces: CREATE SEQUENCE user_id_seq START WITH 1 INCREMENT BY 1
- *
- * @param string $name Sequence name
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create_sequence(string $name, ?string $schema = null) : CreateSequenceOptionsStep
-{
-    return CreateSequenceBuilder::create()->sequence($name, $schema);
-}
-
-/**
- * Create an ALTER SEQUENCE builder.
- *
- * Example: alter_sequence('user_id_seq')->restartWith(1000)
- * Produces: ALTER SEQUENCE user_id_seq RESTART WITH 1000
- *
- * @param string $name Sequence name
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function alter_sequence(string $name, ?string $schema = null) : AlterSequenceOptionsStep
-{
-    return AlterSequenceBuilder::create()->sequence($name, $schema);
-}
-
-/**
- * Create a DROP SEQUENCE builder.
- *
- * Example: drop_sequence('user_id_seq', 'order_id_seq')->cascade()
- * Produces: DROP SEQUENCE user_id_seq, order_id_seq CASCADE
- *
- * @param string ...$sequences Sequence names to drop
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function drop_sequence(string ...$sequences) : DropSequenceFinalStep
-{
-    return DropSequenceBuilder::create()->sequence(...$sequences);
-}
-
-// ----------------------------------------------------------------------------
-// View Commands
-// ----------------------------------------------------------------------------
-
-/**
- * Create a CREATE VIEW builder.
- *
- * Use chainable methods for modifiers: ->orReplace(), ->temporary(), ->recursive(), ->columns()
- *
- * Example: create_view('active_users')->as(select()->from('users')->where(eq(col('active'), literal_bool(true))))
- * Produces: CREATE VIEW active_users AS SELECT * FROM users WHERE active = true
- *
- * @param string $name View name (can include schema: schema.view)
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create_view(string $name, ?string $schema = null) : CreateViewOptionsStep
-{
-    return CreateViewBuilder::create($name, $schema);
-}
-
-/**
- * Create a CREATE MATERIALIZED VIEW builder.
- *
- * Use chainable methods for modifiers: ->ifNotExists(), ->columns(), ->using(), ->tablespace(), ->withData(), ->withNoData()
- *
- * Example: create_materialized_view('user_stats')->as(select()->from('users'))->withNoData()
- * Produces: CREATE MATERIALIZED VIEW user_stats AS SELECT * FROM users WITH NO DATA
- *
- * @param string $name Materialized view name (can include schema: schema.matview)
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function create_materialized_view(string $name, ?string $schema = null) : CreateMatViewOptionsStep
-{
-    return CreateMaterializedViewBuilder::create($name, $schema);
-}
-
-/**
- * Create an ALTER VIEW builder.
- *
- * Use chainable methods: ->ifExists(), then ->renameTo(), ->setSchema(), or ->ownerTo()
- *
- * Example: alter_view('old_view')->renameTo('new_view')
- * Produces: ALTER VIEW old_view RENAME TO new_view
- *
- * @param string $name View name (can include schema: schema.view)
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function alter_view(string $name, ?string $schema = null) : AlterViewActionStep
-{
-    return AlterViewBuilder::create($name, $schema);
-}
-
-/**
- * Create an ALTER MATERIALIZED VIEW builder.
- *
- * Use chainable methods: ->ifExists(), then ->renameTo(), ->setSchema(), ->ownerTo(), or ->setTablespace()
- *
- * Example: alter_materialized_view('my_matview')->setTablespace('fast_storage')
- * Produces: ALTER MATERIALIZED VIEW my_matview SET TABLESPACE fast_storage
- *
- * @param string $name Materialized view name (can include schema: schema.matview)
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function alter_materialized_view(string $name, ?string $schema = null) : AlterMatViewActionStep
-{
-    return AlterMaterializedViewBuilder::create($name, $schema);
-}
-
-/**
- * Create a DROP VIEW builder.
- *
- * Use chainable methods: ->ifExists(), ->cascade(), ->restrict()
- *
- * Example: drop_view('view1', 'view2')->ifExists()->cascade()
- * Produces: DROP VIEW IF EXISTS view1, view2 CASCADE
- *
- * @param string ...$views View names to drop
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function drop_view(string ...$views) : DropViewFinalStep
-{
-    return DropViewBuilder::create(...$views);
-}
-
-/**
- * Create a DROP MATERIALIZED VIEW builder.
- *
- * Use chainable methods: ->ifExists(), ->cascade(), ->restrict()
- *
- * Example: drop_materialized_view('matview1')->ifExists()->cascade()
- * Produces: DROP MATERIALIZED VIEW IF EXISTS matview1 CASCADE
- *
- * @param string ...$views Materialized view names to drop
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function drop_materialized_view(string ...$views) : DropMatViewFinalStep
-{
-    return DropMaterializedViewBuilder::create(...$views);
-}
-
-/**
- * Create a REFRESH MATERIALIZED VIEW builder.
- *
- * Use chainable methods: ->concurrently(), ->withData(), ->withNoData()
- *
- * Example: refresh_materialized_view('user_stats')->concurrently()->withData()
- * Produces: REFRESH MATERIALIZED VIEW CONCURRENTLY user_stats WITH DATA
- *
- * @param string $name Materialized view name (can include schema: schema.matview)
- * @param null|string $schema Schema name (optional)
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function refresh_materialized_view(string $name, ?string $schema = null) : RefreshMatViewOptionsStep
-{
-    return RefreshMaterializedViewBuilder::create($name, $schema);
-}
-
-// ----------------------------------------------------------------------------
-// Schema Commands
-// ----------------------------------------------------------------------------
-
-/**
- * Create a CREATE SCHEMA builder.
- *
- * Example: create_schema('my_schema')
- * Produces: CREATE SCHEMA my_schema
- *
- * Example: create_schema('my_schema')->ifNotExists()->authorization('admin')
- * Produces: CREATE SCHEMA IF NOT EXISTS my_schema AUTHORIZATION admin
- *
- * @param string $name The schema name
- *
- * @return CreateSchemaOptionsStep Builder for schema creation options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_schema(string $name) : CreateSchemaOptionsStep
-{
-    return CreateSchemaBuilder::create($name);
-}
-
-/**
- * Create an ALTER SCHEMA builder.
- *
- * Example: alter_schema('my_schema')->renameTo('new_schema')
- * Produces: ALTER SCHEMA my_schema RENAME TO new_schema
- *
- * Example: alter_schema('my_schema')->ownerTo('new_owner')
- * Produces: ALTER SCHEMA my_schema OWNER TO new_owner
- *
- * @param string $name The schema name
- *
- * @return AlterSchemaActionStep Builder for schema alter actions
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_schema(string $name) : AlterSchemaActionStep
-{
-    return AlterSchemaBuilder::create($name);
-}
-
-/**
- * Create a DROP SCHEMA builder.
- *
- * Example: drop_schema('my_schema')
- * Produces: DROP SCHEMA my_schema
- *
- * Example: drop_schema('schema1', 'schema2')->ifExists()->cascade()
- * Produces: DROP SCHEMA IF EXISTS schema1, schema2 CASCADE
- *
- * @param string ...$schemas The schema name(s) to drop
- *
- * @return DropSchemaFinalStep Builder for schema drop options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_schema(string ...$schemas) : DropSchemaFinalStep
-{
-    return DropSchemaBuilder::create(...$schemas);
-}
-
-// ----------------------------------------------------------------------------
-// Role Commands
-// ----------------------------------------------------------------------------
-
-/**
- * Create a CREATE ROLE builder.
- *
- * Example: create_role('admin')
- * Produces: CREATE ROLE admin
- *
- * Example: create_role('admin')->superuser()->login()->withPassword('secret')
- * Produces: CREATE ROLE admin SUPERUSER LOGIN PASSWORD 'secret'
- *
- * To create a user (role with LOGIN), use: create_role('user')->login()
- *
- * @param string $role The role name
- *
- * @return CreateRoleOptionsStep Builder for role creation options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_role(string $role) : CreateRoleOptionsStep
-{
-    return CreateRoleBuilder::create($role);
-}
-
-/**
- * Create an ALTER ROLE builder.
- *
- * Example: alter_role('admin')->superuser()
- * Produces: ALTER ROLE admin SUPERUSER
- *
- * Example: alter_role('admin')->renameTo('administrator')
- * Produces: ALTER ROLE admin RENAME TO administrator
- *
- * @param string $role The role name
- *
- * @return AlterRoleActionStep Builder for role alter actions
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_role(string $role) : AlterRoleActionStep
-{
-    return AlterRoleBuilder::create($role);
-}
-
-/**
- * Create a DROP ROLE builder.
- *
- * Example: drop_role('admin')
- * Produces: DROP ROLE admin
- *
- * Example: drop_role('user1', 'user2')->ifExists()
- * Produces: DROP ROLE IF EXISTS user1, user2
- *
- * @param string ...$roles The role name(s) to drop
- *
- * @return DropRoleFinalStep Builder for role drop options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_role(string ...$roles) : DropRoleFinalStep
-{
-    return DropRoleBuilder::create(...$roles);
-}
-
-// ----------------------------------------------------------------------------
 // Grant/Revoke Commands
 // ----------------------------------------------------------------------------
 
@@ -2949,16 +2561,16 @@ function drop_owned(string ...$roles) : DropOwnedFinalStep
 }
 
 // =====================================================
-// Function and Procedure Query Builders
+// Function and Procedure Helpers
 // =====================================================
 
 /**
  * Creates a new function argument for use in function/procedure definitions.
  *
- * Example: func_arg('integer')
- * Example: func_arg('text')->named('username')
- * Example: func_arg('integer')->named('count')->default('0')
- * Example: func_arg('text')->out()
+ * Example: func_arg(sql_type_integer())
+ * Example: func_arg(sql_type_text())->named('username')
+ * Example: func_arg(sql_type_integer())->named('count')->default('0')
+ * Example: func_arg(sql_type_text())->out()
  *
  * @param DataType $type The PostgreSQL data type for the argument
  *
@@ -2968,144 +2580,6 @@ function drop_owned(string ...$roles) : DropOwnedFinalStep
 function func_arg(DataType $type) : FunctionArgument
 {
     return FunctionArgument::of($type);
-}
-
-/**
- * Creates a CREATE FUNCTION statement builder.
- *
- * Example: create_function('add_numbers')
- *     ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
- *     ->returns('integer')
- *     ->language('sql')
- *     ->as('SELECT a + b')
- * Produces: CREATE FUNCTION add_numbers(a integer, b integer) RETURNS integer LANGUAGE sql AS 'SELECT a + b'
- *
- * Example: create_function('get_users')
- *     ->orReplace()
- *     ->returnsTable(['id' => 'integer', 'name' => 'text'])
- *     ->language('sql')
- *     ->as('SELECT id, name FROM users')
- * Produces: CREATE OR REPLACE FUNCTION get_users() RETURNS TABLE(id integer, name text) LANGUAGE sql AS '...'
- *
- * @param string $name The name of the function to create
- *
- * @return CreateFunctionArgsStep Builder for create function options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_function(string $name) : CreateFunctionArgsStep
-{
-    return CreateFunctionBuilder::create($name);
-}
-
-/**
- * Creates a CREATE PROCEDURE statement builder.
- *
- * Example: create_procedure('update_stats')
- *     ->arguments(func_arg('integer')->named('user_id'))
- *     ->language('plpgsql')
- *     ->as('BEGIN UPDATE user_stats SET last_updated = now() WHERE id = user_id; END;')
- * Produces: CREATE PROCEDURE update_stats(user_id integer) LANGUAGE plpgsql AS '...'
- *
- * Example: create_procedure('my_proc')->orReplace()->language('sql')->as('...')
- * Produces: CREATE OR REPLACE PROCEDURE my_proc() LANGUAGE sql AS '...'
- *
- * @param string $name The name of the procedure to create
- *
- * @return CreateProcedureArgsStep Builder for create procedure options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_procedure(string $name) : CreateProcedureArgsStep
-{
-    return CreateProcedureBuilder::create($name);
-}
-
-/**
- * Creates an ALTER FUNCTION statement builder.
- *
- * Example: alter_function('my_func')
- *     ->arguments(func_arg('integer'))
- *     ->immutable()
- * Produces: ALTER FUNCTION my_func(integer) IMMUTABLE
- *
- * Example: alter_function('old_name')
- *     ->arguments(func_arg('text'))
- *     ->renameTo('new_name')
- * Produces: ALTER FUNCTION old_name(text) RENAME TO new_name
- *
- * @param string $name The name of the function to alter
- *
- * @return AlterFunctionArgsStep Builder for alter function options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_function(string $name) : AlterFunctionArgsStep
-{
-    return AlterFunctionBuilder::create($name);
-}
-
-/**
- * Creates an ALTER PROCEDURE statement builder.
- *
- * Example: alter_procedure('my_proc')
- *     ->arguments(func_arg('integer'))
- *     ->securityDefiner()
- * Produces: ALTER PROCEDURE my_proc(integer) SECURITY DEFINER
- *
- * Example: alter_procedure('old_proc')
- *     ->renameTo('new_proc')
- * Produces: ALTER PROCEDURE old_proc RENAME TO new_proc
- *
- * @param string $name The name of the procedure to alter
- *
- * @return AlterProcedureArgsStep Builder for alter procedure options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_procedure(string $name) : AlterProcedureArgsStep
-{
-    return AlterProcedureBuilder::create($name);
-}
-
-/**
- * Creates a DROP FUNCTION statement builder.
- *
- * Example: drop_function('my_func')
- * Produces: DROP FUNCTION my_func
- *
- * Example: drop_function('my_func')
- *     ->ifExists()
- *     ->arguments(func_arg('integer'), func_arg('text'))
- *     ->cascade()
- * Produces: DROP FUNCTION IF EXISTS my_func(integer, text) CASCADE
- *
- * @param string $name The name of the function to drop
- *
- * @return DropFunctionFinalStep Builder for drop function options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_function(string $name) : DropFunctionFinalStep
-{
-    return DropFunctionBuilder::create($name);
-}
-
-/**
- * Creates a DROP PROCEDURE statement builder.
- *
- * Example: drop_procedure('my_proc')
- * Produces: DROP PROCEDURE my_proc
- *
- * Example: drop_procedure('my_proc')
- *     ->ifExists()
- *     ->arguments(func_arg('integer'))
- *     ->cascade()
- * Produces: DROP PROCEDURE IF EXISTS my_proc(integer) CASCADE
- *
- * @param string $name The name of the procedure to drop
- *
- * @return DropProcedureFinalStep Builder for drop procedure options
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_procedure(string $name) : DropProcedureFinalStep
-{
-    return DropProcedureBuilder::create($name);
 }
 
 /**
@@ -3146,229 +2620,17 @@ function do_block(string $code) : DoFinalStep
     return DoBuilder::create($code);
 }
 
-/**
- * Creates a CREATE TRIGGER statement builder.
- *
- * Example: create_trigger('audit_trigger')->before()->insert()->on('users')->execute('audit_function')
- * Produces: CREATE TRIGGER audit_trigger BEFORE INSERT ON users EXECUTE FUNCTION audit_function()
- *
- * Example: create_trigger('notify_trigger')->orReplace()->after()->insertOrUpdate()->on('orders')
- *          ->forEachRow()->when('NEW.status IS DISTINCT FROM OLD.status')->execute('notify_function')
- * Produces: CREATE OR REPLACE TRIGGER notify_trigger AFTER INSERT OR UPDATE ON orders
- *           FOR EACH ROW WHEN (NEW.status IS DISTINCT FROM OLD.status) EXECUTE FUNCTION notify_function()
- *
- * @param string $name The name of the trigger
- *
- * @return CreateTriggerTimingStep Builder for CREATE TRIGGER statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_trigger(string $name) : CreateTriggerTimingStep
-{
-    return CreateTriggerBuilder::create($name);
-}
-
-/**
- * Creates an ALTER TRIGGER statement builder for renaming triggers or managing extension dependencies.
- *
- * Example: alter_trigger('old_trigger')->on('users')->renameTo('new_trigger')
- * Produces: ALTER TRIGGER old_trigger ON users RENAME TO new_trigger
- *
- * Example: alter_trigger('my_trigger')->on('users')->dependsOnExtension('myext')
- * Produces: ALTER TRIGGER my_trigger ON users DEPENDS ON EXTENSION myext
- *
- * @param string $name The name of the trigger to alter
- *
- * @return AlterTriggerOnStep Builder for ALTER TRIGGER statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_trigger(string $name) : AlterTriggerOnStep
-{
-    return AlterTriggerBuilder::create($name);
-}
-
-/**
- * Creates a DROP TRIGGER statement builder.
- *
- * Example: drop_trigger('audit_trigger')->on('users')
- * Produces: DROP TRIGGER audit_trigger ON users
- *
- * Example: drop_trigger('audit_trigger')->ifExists()->on('public.users')->cascade()
- * Produces: DROP TRIGGER IF EXISTS audit_trigger ON public.users CASCADE
- *
- * @param string $name The name of the trigger to drop
- *
- * @return DropTriggerOnStep Builder for DROP TRIGGER statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_trigger(string $name) : DropTriggerOnStep
-{
-    return DropTriggerBuilder::create($name);
-}
-
-/**
- * Creates a CREATE RULE statement builder.
- *
- * Example: create_rule('prevent_delete')->asOnDelete()->to('users')->doNothing()
- * Produces: CREATE RULE prevent_delete AS ON DELETE TO users DO NOTHING
- *
- * Example: create_rule('audit_insert')->orReplace()->asOnInsert()->to('orders')
- *          ->doAlso("INSERT INTO audit_log (action, table_name) VALUES ('INSERT', 'orders')")
- * Produces: CREATE OR REPLACE RULE audit_insert AS ON INSERT TO orders
- *           DO ALSO INSERT INTO audit_log (action, table_name) VALUES ('INSERT', 'orders')
- *
- * @param string $name The name of the rule
- *
- * @return CreateRuleEventStep Builder for CREATE RULE statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_rule(string $name) : CreateRuleEventStep
-{
-    return CreateRuleBuilder::create($name);
-}
-
-/**
- * Creates a DROP RULE statement builder.
- *
- * Example: drop_rule('prevent_delete')->on('users')
- * Produces: DROP RULE prevent_delete ON users
- *
- * Example: drop_rule('audit_insert')->ifExists()->on('public.orders')->cascade()
- * Produces: DROP RULE IF EXISTS audit_insert ON public.orders CASCADE
- *
- * @param string $name The name of the rule to drop
- *
- * @return DropRuleOnStep Builder for DROP RULE statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_rule(string $name) : DropRuleOnStep
-{
-    return DropRuleBuilder::create($name);
-}
-
-/**
- * Creates a CREATE EXTENSION statement builder.
- *
- * Example: create_extension('uuid-ossp')
- * Produces: CREATE EXTENSION "uuid-ossp"
- *
- * Example: create_extension('postgis')->ifNotExists()->schema('public')->version('3.0')
- * Produces: CREATE EXTENSION IF NOT EXISTS postgis SCHEMA public VERSION '3.0'
- *
- * @param string $name The name of the extension to create
- *
- * @return CreateExtensionOptionsStep Builder for CREATE EXTENSION statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_extension(string $name) : CreateExtensionOptionsStep
-{
-    return CreateExtensionBuilder::create($name);
-}
-
-/**
- * Creates an ALTER EXTENSION statement builder.
- *
- * Example: alter_extension('postgis')->update()
- * Produces: ALTER EXTENSION postgis UPDATE
- *
- * Example: alter_extension('postgis')->updateTo('3.1')
- * Produces: ALTER EXTENSION postgis UPDATE TO '3.1'
- *
- * Example: alter_extension('postgis')->addTable('spatial_ref_sys')
- * Produces: ALTER EXTENSION postgis ADD TABLE spatial_ref_sys
- *
- * @param string $name The name of the extension to alter
- *
- * @return AlterExtensionActionStep Builder for ALTER EXTENSION statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_extension(string $name) : AlterExtensionActionStep
-{
-    return AlterExtensionBuilder::create($name);
-}
-
-/**
- * Creates a DROP EXTENSION statement builder.
- *
- * Example: drop_extension('uuid-ossp')
- * Produces: DROP EXTENSION "uuid-ossp"
- *
- * Example: drop_extension('postgis', 'pg_trgm')->ifExists()->cascade()
- * Produces: DROP EXTENSION IF EXISTS postgis, pg_trgm CASCADE
- *
- * @param string ...$extensions The names of the extensions to drop
- *
- * @return DropExtensionFinalStep Builder for DROP EXTENSION statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_extension(string ...$extensions) : DropExtensionFinalStep
-{
-    return DropExtensionBuilder::create(...$extensions);
-}
-
-/**
- * Creates a CREATE TYPE (composite) statement builder.
- *
- * Example: create_composite_type('address')->attributes(type_attr('street', 'text'), type_attr('city', 'text'))
- * Produces: CREATE TYPE address AS (street text, city text)
- *
- * Example: create_composite_type('public.person')->attributes(type_attr('name', 'text')->collate('en_US'))
- * Produces: CREATE TYPE public.person AS (name text COLLATE "en_US")
- *
- * @param string $name The name of the composite type to create (can be schema-qualified)
- *
- * @return CreateCompositeTypeAttributesStep Builder for CREATE TYPE statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_composite_type(string $name) : CreateCompositeTypeAttributesStep
-{
-    return CreateCompositeTypeBuilder::create($name);
-}
-
-/**
- * Creates a CREATE TYPE (enum) statement builder.
- *
- * Example: create_enum_type('status')->labels('pending', 'active', 'closed')
- * Produces: CREATE TYPE status AS ENUM ('pending', 'active', 'closed')
- *
- * Example: create_enum_type('public.priority')->labels('low', 'medium', 'high')
- * Produces: CREATE TYPE public.priority AS ENUM ('low', 'medium', 'high')
- *
- * @param string $name The name of the enum type to create (can be schema-qualified)
- *
- * @return CreateEnumTypeLabelsStep Builder for CREATE TYPE AS ENUM statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_enum_type(string $name) : CreateEnumTypeLabelsStep
-{
-    return CreateEnumTypeBuilder::create($name);
-}
-
-/**
- * Creates a CREATE TYPE (range) statement builder.
- *
- * Example: create_range_type('floatrange')->subtype('float8')
- * Produces: CREATE TYPE floatrange AS RANGE (SUBTYPE = float8)
- *
- * Example: create_range_type('daterange')->subtype('date')->subtypeOpclass('date_ops')
- * Produces: CREATE TYPE daterange AS RANGE (SUBTYPE = date, SUBTYPE_OPCLASS = date_ops)
- *
- * @param string $name The name of the range type to create (can be schema-qualified)
- *
- * @return CreateRangeTypeSubtypeStep Builder for CREATE TYPE AS RANGE statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_range_type(string $name) : CreateRangeTypeSubtypeStep
-{
-    return CreateRangeTypeBuilder::create($name);
-}
+// =====================================================
+// Type Helpers
+// =====================================================
 
 /**
  * Creates a type attribute for composite types.
  *
- * Example: type_attr('name', 'text')
+ * Example: type_attr('name', sql_type_text())
  * Produces: name text
  *
- * Example: type_attr('description', 'text')->collate('en_US')
+ * Example: type_attr('description', sql_type_text())->collate('en_US')
  * Produces: description text COLLATE "en_US"
  *
  * @param string $name The attribute name
@@ -3380,105 +2642,4 @@ function create_range_type(string $name) : CreateRangeTypeSubtypeStep
 function type_attr(string $name, DataType $type) : TypeAttribute
 {
     return TypeAttribute::of($name, $type);
-}
-
-/**
- * Creates an ALTER TYPE (enum) statement builder.
- *
- * Example: alter_enum_type('status')->addValue('archived')
- * Produces: ALTER TYPE status ADD VALUE 'archived'
- *
- * Example: alter_enum_type('status')->addValueBefore('pending', 'draft')
- * Produces: ALTER TYPE status ADD VALUE 'pending' BEFORE 'draft'
- *
- * Example: alter_enum_type('status')->renameValue('old_name', 'new_name')
- * Produces: ALTER TYPE status RENAME VALUE 'old_name' TO 'new_name'
- *
- * @param string $name The name of the enum type to alter (can be schema-qualified)
- *
- * @return AlterEnumTypeActionStep Builder for ALTER TYPE statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_enum_type(string $name) : AlterEnumTypeActionStep
-{
-    return AlterEnumTypeBuilder::create($name);
-}
-
-/**
- * Creates a DROP TYPE statement builder.
- *
- * Example: drop_type('address')
- * Produces: DROP TYPE address
- *
- * Example: drop_type('status', 'priority')->ifExists()->cascade()
- * Produces: DROP TYPE IF EXISTS status, priority CASCADE
- *
- * @param string ...$types The names of the types to drop (can be schema-qualified)
- *
- * @return DropTypeFinalStep Builder for DROP TYPE statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_type(string ...$types) : DropTypeFinalStep
-{
-    return DropTypeBuilder::create(...$types);
-}
-
-/**
- * Creates a CREATE DOMAIN statement builder.
- *
- * Example: create_domain('email')->as('text')->constraint('valid_email')->check("VALUE ~ '^.+@.+$'")
- * Produces: CREATE DOMAIN email AS text CONSTRAINT valid_email CHECK (VALUE ~ '^.+@.+$')
- *
- * Example: create_domain('positive_int')->as('integer')->notNull()->default('0')->check('VALUE > 0')
- * Produces: CREATE DOMAIN positive_int AS integer NOT NULL DEFAULT 0 CHECK (VALUE > 0)
- *
- * @param string $name The name of the domain to create (can be schema-qualified)
- *
- * @return CreateDomainTypeStep Builder for CREATE DOMAIN statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_domain(string $name) : CreateDomainTypeStep
-{
-    return CreateDomainBuilder::create($name);
-}
-
-/**
- * Creates an ALTER DOMAIN statement builder.
- *
- * Example: alter_domain('email')->setNotNull()
- * Produces: ALTER DOMAIN email SET NOT NULL
- *
- * Example: alter_domain('email')->dropConstraint('valid_email')
- * Produces: ALTER DOMAIN email DROP CONSTRAINT valid_email
- *
- * Example: alter_domain('positive_int')->addConstraint('min_value', 'VALUE >= 0')
- * Produces: ALTER DOMAIN positive_int ADD CONSTRAINT min_value CHECK (VALUE >= 0)
- *
- * @param string $name The name of the domain to alter (can be schema-qualified)
- *
- * @return AlterDomainActionStep Builder for ALTER DOMAIN statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_domain(string $name) : AlterDomainActionStep
-{
-    return AlterDomainBuilder::create($name);
-}
-
-/**
- * Creates a DROP DOMAIN statement builder.
- *
- * Example: drop_domain('email')
- * Produces: DROP DOMAIN email
- *
- * Example: drop_domain('email', 'positive_int')->ifExists()->cascade()
- * Produces: DROP DOMAIN IF EXISTS email, positive_int CASCADE
- *
- * @param string ...$domains The names of the domains to drop (can be schema-qualified)
- *
- * @return DropDomainFinalStep Builder for DROP DOMAIN statement
- */
-#[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_domain(string ...$domains) : DropDomainFinalStep
-{
-    return DropDomainBuilder::create(...$domains);
 }

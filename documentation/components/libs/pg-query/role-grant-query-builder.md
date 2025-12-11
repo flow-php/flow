@@ -9,21 +9,21 @@ The pg-query library provides fluent builders for managing PostgreSQL roles, use
 Create database roles with various options:
 
 ```php
-use function Flow\PgQuery\DSL\create_role;
+use function Flow\PgQuery\DSL\create;
 
 // Simple role
-create_role('admin')->toAst();
+create()->role('admin')->toAst();
 // CREATE ROLE admin
 
 // Role with login (equivalent to CREATE USER)
-create_role('app_user')
+create()->role('app_user')
     ->login()
     ->withPassword('secret')
     ->toAst();
 // CREATE ROLE app_user LOGIN PASSWORD 'secret'
 
 // Superuser with multiple options
-create_role('admin')
+create()->role('admin')
     ->superuser()
     ->login()
     ->createDb()
@@ -34,7 +34,7 @@ create_role('admin')
 // CREATE ROLE admin SUPERUSER LOGIN CREATEDB CREATEROLE CONNECTION LIMIT 10 VALID UNTIL '2025-12-31'
 
 // Role that inherits from another role
-create_role('developer')
+create()->role('developer')
     ->login()
     ->inRole('team_lead')
     ->toAst();
@@ -59,22 +59,22 @@ Available options:
 Modify existing roles:
 
 ```php
-use function Flow\PgQuery\DSL\alter_role;
+use function Flow\PgQuery\DSL\alter;
 
 // Change options
-alter_role('admin')
+alter()->role('admin')
     ->superuser()
     ->toAst();
 // ALTER ROLE admin SUPERUSER
 
-alter_role('user')
+alter()->role('user')
     ->noLogin()
     ->connectionLimit(5)
     ->toAst();
 // ALTER ROLE user NOLOGIN CONNECTION LIMIT 5
 
 // Rename role
-alter_role('old_name')
+alter()->role('old_name')
     ->renameTo('new_name')
     ->toAst();
 // ALTER ROLE old_name RENAME TO new_name
@@ -85,20 +85,20 @@ alter_role('old_name')
 Remove roles from the database:
 
 ```php
-use function Flow\PgQuery\DSL\drop_role;
+use function Flow\PgQuery\DSL\drop;
 
 // Simple drop
-drop_role('admin')->toAst();
+drop()->role('admin')->toAst();
 // DROP ROLE admin
 
 // Drop if exists
-drop_role('admin')
+drop()->role('admin')
     ->ifExists()
     ->toAst();
 // DROP ROLE IF EXISTS admin
 
 // Drop multiple roles
-drop_role('role1', 'role2', 'role3')
+drop()->role('role1', 'role2', 'role3')
     ->ifExists()
     ->toAst();
 // DROP ROLE IF EXISTS role1, role2, role3

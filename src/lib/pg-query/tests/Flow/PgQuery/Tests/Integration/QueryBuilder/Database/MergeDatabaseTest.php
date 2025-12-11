@@ -7,7 +7,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 use function Flow\PgQuery\DSL\{
     col,
     column,
-    create_table,
+    create,
     eq,
     gt,
     insert,
@@ -35,7 +35,7 @@ final class MergeDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_TARGET)
+            create()->table(self::TABLE_TARGET)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('value', sql_type_integer())->default(0))
@@ -44,7 +44,7 @@ final class MergeDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_SOURCE)
+            create()->table(self::TABLE_SOURCE)
                 ->column(column('id', sql_type_integer())->notNull())
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('value', sql_type_integer())->default(0))

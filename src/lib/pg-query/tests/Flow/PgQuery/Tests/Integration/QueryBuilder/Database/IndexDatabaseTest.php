@@ -8,9 +8,8 @@ use function Flow\PgQuery\DSL\{
     agg_count,
     col,
     column,
-    create_index,
-    create_table,
-    drop_index,
+    create,
+    drop,
     eq,
     index_col,
     index_method_btree,
@@ -40,7 +39,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $query = create_table(self::TABLE_INDEXED)
+        $query = create()->table(self::TABLE_INDEXED)
             ->column(column('id', sql_type_serial()))
             ->column(column('name', sql_type_varchar(100)))
             ->column(column('email', sql_type_varchar(255)))
@@ -69,7 +68,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_create_composite_index() : void
     {
-        $query = create_index(self::INDEX_COMPOSITE)
+        $query = create()->index(self::INDEX_COMPOSITE)
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'), index_col('email'));
 
@@ -80,7 +79,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_create_index() : void
     {
-        $query = create_index(self::INDEX_NAME)
+        $query = create()->index(self::INDEX_NAME)
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'));
 
@@ -102,7 +101,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_create_index_if_not_exists() : void
     {
-        $query = create_index(self::INDEX_NAME)
+        $query = create()->index(self::INDEX_NAME)
             ->ifNotExists()
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'));
@@ -115,7 +114,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_create_index_with_btree_method() : void
     {
-        $query = create_index(self::INDEX_NAME)
+        $query = create()->index(self::INDEX_NAME)
             ->on(self::TABLE_INDEXED)
             ->using(index_method_btree())
             ->columns(index_col('name'));
@@ -127,7 +126,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_create_index_with_hash_method() : void
     {
-        $query = create_index(self::INDEX_NAME)
+        $query = create()->index(self::INDEX_NAME)
             ->on(self::TABLE_INDEXED)
             ->using(index_method_hash())
             ->columns(index_col('name'));
@@ -139,7 +138,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_create_unique_index() : void
     {
-        $query = create_index(self::INDEX_EMAIL)
+        $query = create()->index(self::INDEX_EMAIL)
             ->unique()
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('email'));
@@ -160,12 +159,12 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_drop_index() : void
     {
-        $createQuery = create_index(self::INDEX_NAME)
+        $createQuery = create()->index(self::INDEX_NAME)
             ->on(self::TABLE_INDEXED)
             ->columns(index_col('name'));
         $this->execute($createQuery->toSql());
 
-        $dropQuery = drop_index(self::INDEX_NAME);
+        $dropQuery = drop()->index(self::INDEX_NAME);
 
         $result = $this->execute($dropQuery->toSql());
 
@@ -174,7 +173,7 @@ final class IndexDatabaseTest extends DatabaseTestCase
 
     public function test_drop_index_if_exists() : void
     {
-        $dropQuery = drop_index(self::INDEX_NAME)->ifExists();
+        $dropQuery = drop()->index(self::INDEX_NAME)->ifExists();
 
         $result = $this->execute($dropQuery->toSql());
 

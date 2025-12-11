@@ -7,11 +7,8 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 use function Flow\PgQuery\DSL\{
     col,
     column,
-    create_materialized_view,
-    create_table,
-    create_view,
-    drop_materialized_view,
-    drop_view,
+    create,
+    drop,
     eq,
     gt,
     insert,
@@ -40,7 +37,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         parent::setUp();
 
-        $query = create_table(self::TABLE_SOURCE)
+        $query = create()->table(self::TABLE_SOURCE)
             ->column(column('id', sql_type_serial()))
             ->column(column('name', sql_type_varchar(100)))
             ->column(column('value', sql_type_integer()));
@@ -73,7 +70,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
 
-        $query = create_materialized_view(self::MATVIEW_SIMPLE)
+        $query = create()->materializedView(self::MATVIEW_SIMPLE)
             ->as($selectQuery);
 
         $result = $this->execute($query->toSql());
@@ -88,11 +85,11 @@ final class ViewDatabaseTest extends DatabaseTestCase
     public function test_create_or_replace_view() : void
     {
         $selectQuery1 = select(col('id'), col('name'))->from(table(self::TABLE_SOURCE));
-        $createQuery1 = create_view(self::VIEW_SIMPLE)->as($selectQuery1);
+        $createQuery1 = create()->view(self::VIEW_SIMPLE)->as($selectQuery1);
         $this->execute($createQuery1->toSql());
 
         $selectQuery2 = select(col('id'), col('name'), col('value'))->from(table(self::TABLE_SOURCE));
-        $replaceQuery = create_view(self::VIEW_SIMPLE)
+        $replaceQuery = create()->view(self::VIEW_SIMPLE)
             ->orReplace()
             ->as($selectQuery2);
 
@@ -111,7 +108,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
 
-        $query = create_view(self::VIEW_SIMPLE)
+        $query = create()->view(self::VIEW_SIMPLE)
             ->as($selectQuery);
 
         $result = $this->execute($query->toSql());
@@ -134,7 +131,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
             ->from(table(self::TABLE_SOURCE))
             ->where(gt(col('value'), literal_int(100)));
 
-        $query = create_view(self::VIEW_FILTERED)
+        $query = create()->view(self::VIEW_FILTERED)
             ->as($selectQuery);
 
         $this->execute($query->toSql());
@@ -149,10 +146,10 @@ final class ViewDatabaseTest extends DatabaseTestCase
     public function test_drop_materialized_view() : void
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
-        $createQuery = create_materialized_view(self::MATVIEW_SIMPLE)->as($selectQuery);
+        $createQuery = create()->materializedView(self::MATVIEW_SIMPLE)->as($selectQuery);
         $this->execute($createQuery->toSql());
 
-        $dropQuery = drop_materialized_view(self::MATVIEW_SIMPLE);
+        $dropQuery = drop()->materializedView(self::MATVIEW_SIMPLE);
 
         $result = $this->execute($dropQuery->toSql());
 
@@ -166,10 +163,10 @@ final class ViewDatabaseTest extends DatabaseTestCase
     public function test_drop_view() : void
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
-        $createQuery = create_view(self::VIEW_SIMPLE)->as($selectQuery);
+        $createQuery = create()->view(self::VIEW_SIMPLE)->as($selectQuery);
         $this->execute($createQuery->toSql());
 
-        $dropQuery = drop_view(self::VIEW_SIMPLE);
+        $dropQuery = drop()->view(self::VIEW_SIMPLE);
 
         $result = $this->execute($dropQuery->toSql());
 
@@ -182,7 +179,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
 
     public function test_drop_view_if_exists() : void
     {
-        $dropQuery = drop_view(self::VIEW_SIMPLE)->ifExists();
+        $dropQuery = drop()->view(self::VIEW_SIMPLE)->ifExists();
 
         $result = $this->execute($dropQuery->toSql());
 
@@ -193,7 +190,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
 
-        $createQuery = create_materialized_view(self::MATVIEW_SIMPLE)
+        $createQuery = create()->materializedView(self::MATVIEW_SIMPLE)
             ->as($selectQuery);
         $this->execute($createQuery->toSql());
 
@@ -208,7 +205,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
 
-        $createQuery = create_materialized_view(self::MATVIEW_SIMPLE)
+        $createQuery = create()->materializedView(self::MATVIEW_SIMPLE)
             ->as($selectQuery);
         $this->execute($createQuery->toSql());
 
@@ -230,7 +227,7 @@ final class ViewDatabaseTest extends DatabaseTestCase
     {
         $selectQuery = select(star())->from(table(self::TABLE_SOURCE));
 
-        $createQuery = create_view(self::VIEW_SIMPLE)
+        $createQuery = create()->view(self::VIEW_SIMPLE)
             ->as($selectQuery);
         $this->execute($createQuery->toSql());
 

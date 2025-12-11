@@ -9,7 +9,7 @@ use function Flow\PgQuery\DSL\{
     col,
     column,
     cond_or,
-    create_table,
+    create,
     delete,
     eq,
     insert,
@@ -37,7 +37,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_LOGS)
+            create()->table(self::TABLE_LOGS)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('level', sql_type_varchar(20))->notNull())
                 ->column(column('message', sql_type_text()))
@@ -47,7 +47,7 @@ final class DeleteDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_ARCHIVE)
+            create()->table(self::TABLE_ARCHIVE)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('log_id', sql_type_integer())->notNull())
                 ->constraint(primary_key('id'))

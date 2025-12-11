@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PgQuery\DSL\{
-    alter_trigger,
+    alter,
     column,
-    create_function,
-    create_table,
-    create_trigger,
-    drop_trigger,
+    create,
+    drop,
     insert,
     literal_int,
     literal_string,
@@ -44,7 +42,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_NAME)
+            create()->table(self::TABLE_NAME)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('value', sql_type_integer())->default(0))
@@ -53,7 +51,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_LOG)
+            create()->table(self::TABLE_LOG)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('action', sql_type_varchar(50))->notNull())
                 ->constraint(primary_key('id'))
@@ -61,7 +59,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(DataType::custom('trigger'))
                 ->language('plpgsql')
@@ -84,7 +82,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_alter_trigger_rename() : void
     {
         $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -93,7 +91,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            alter_trigger(self::TRIGGER_NAME)
+            alter()->trigger(self::TRIGGER_NAME)
                 ->on(self::TABLE_NAME)
                 ->renameTo(self::TRIGGER_NAME_RENAMED)
                 ->toSql()
@@ -107,7 +105,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_create_or_replace_trigger() : void
     {
         $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -116,7 +114,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->orReplace()
                 ->after(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
@@ -132,7 +130,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_create_trigger_after_insert() : void
     {
         $result = $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->after(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -147,7 +145,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_create_trigger_after_multiple_events() : void
     {
         $result = $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->after(TriggerEvent::INSERT, TriggerEvent::UPDATE)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -162,7 +160,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_create_trigger_before_insert() : void
     {
         $result = $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -195,7 +193,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_create_trigger_with_when_condition() : void
     {
         $result = $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -243,7 +241,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_drop_trigger() : void
     {
         $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -254,7 +252,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
         self::assertTrue($this->triggerExists(self::TRIGGER_NAME, self::TABLE_NAME));
 
         $result = $this->execute(
-            drop_trigger(self::TRIGGER_NAME)->on(self::TABLE_NAME)
+            drop()->trigger(self::TRIGGER_NAME)->on(self::TABLE_NAME)
                 ->toSql()
         );
 
@@ -265,7 +263,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_drop_trigger_cascade() : void
     {
         $this->execute(
-            create_trigger(self::TRIGGER_NAME)
+            create()->trigger(self::TRIGGER_NAME)
                 ->before(TriggerEvent::INSERT)
                 ->on(self::TABLE_NAME)
                 ->forEachRow()
@@ -274,7 +272,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            drop_trigger(self::TRIGGER_NAME)->on(self::TABLE_NAME)->cascade()
+            drop()->trigger(self::TRIGGER_NAME)->on(self::TABLE_NAME)->cascade()
                 ->toSql()
         );
 
@@ -285,7 +283,7 @@ final class TriggerDatabaseTest extends DatabaseTestCase
     public function test_drop_trigger_if_exists() : void
     {
         $result = $this->execute(
-            drop_trigger(self::TRIGGER_NAME)->ifExists()->on(self::TABLE_NAME)
+            drop()->trigger(self::TRIGGER_NAME)->ifExists()->on(self::TABLE_NAME)
                 ->toSql()
         );
 

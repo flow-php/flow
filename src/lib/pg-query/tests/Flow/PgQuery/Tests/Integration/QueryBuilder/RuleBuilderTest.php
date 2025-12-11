@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{create_rule, drop_rule};
+use function Flow\PgQuery\DSL\{create, drop};
 use Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions\QueryBuilderAssertions;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_do_also_insert() : void
     {
-        $builder = create_rule('audit_insert')
+        $builder = create()->rule('audit_insert')
             ->asOnInsert()
             ->to('users')
             ->doAlso("INSERT INTO audit_log (action) VALUES ('insert')");
@@ -24,7 +24,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_do_instead_delete() : void
     {
-        $builder = create_rule('soft_delete')
+        $builder = create()->rule('soft_delete')
             ->asOnDelete()
             ->to('users')
             ->doInstead('UPDATE users SET deleted = true WHERE id = OLD.id');
@@ -34,7 +34,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_do_nothing() : void
     {
-        $builder = create_rule('prevent_delete')
+        $builder = create()->rule('prevent_delete')
             ->asOnDelete()
             ->to('users')
             ->doNothing();
@@ -44,7 +44,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_on_select() : void
     {
-        $builder = create_rule('redirect_select')
+        $builder = create()->rule('redirect_select')
             ->asOnSelect()
             ->to('old_table')
             ->doInstead('SELECT * FROM new_table');
@@ -54,7 +54,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_on_update() : void
     {
-        $builder = create_rule('track_update')
+        $builder = create()->rule('track_update')
             ->asOnUpdate()
             ->to('users')
             ->doAlso("INSERT INTO update_log (table_name) VALUES ('users')");
@@ -64,7 +64,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_or_replace() : void
     {
-        $builder = create_rule('prevent_delete')
+        $builder = create()->rule('prevent_delete')
             ->orReplace()
             ->asOnDelete()
             ->to('users')
@@ -75,7 +75,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_with_schema() : void
     {
-        $builder = create_rule('prevent_delete')
+        $builder = create()->rule('prevent_delete')
             ->asOnDelete()
             ->to('public.users')
             ->doNothing();
@@ -85,7 +85,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_create_rule_with_where_condition() : void
     {
-        $builder = create_rule('protect_admin')
+        $builder = create()->rule('protect_admin')
             ->asOnDelete()
             ->to('users')
             ->where('OLD.role = \'admin\'')
@@ -96,7 +96,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_drop_rule() : void
     {
-        $builder = drop_rule('prevent_delete')
+        $builder = drop()->rule('prevent_delete')
             ->on('users');
 
         $this->assertDropRuleQuery($builder, 'DROP RULE prevent_delete ON users');
@@ -104,7 +104,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_drop_rule_cascade() : void
     {
-        $builder = drop_rule('prevent_delete')
+        $builder = drop()->rule('prevent_delete')
             ->on('users')
             ->cascade();
 
@@ -113,7 +113,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_drop_rule_if_exists() : void
     {
-        $builder = drop_rule('prevent_delete')
+        $builder = drop()->rule('prevent_delete')
             ->ifExists()
             ->on('users');
 
@@ -122,7 +122,7 @@ final class RuleBuilderTest extends TestCase
 
     public function test_drop_rule_with_schema() : void
     {
-        $builder = drop_rule('prevent_delete')
+        $builder = drop()->rule('prevent_delete')
             ->on('public.users')
             ->restrict();
 

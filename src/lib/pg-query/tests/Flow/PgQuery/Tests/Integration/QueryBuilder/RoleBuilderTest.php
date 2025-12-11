@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_role, create_role, drop_owned, drop_role, grant, grant_role, reassign_owned, reset_role, revoke, revoke_role, set_role};
+use function Flow\PgQuery\DSL\{alter, create, drop, grant, grant_role, reassign_owned, reset_role, revoke, revoke_role, set_role};
 
 use Flow\PgQuery\QueryBuilder\Schema\Grant\TablePrivilege;
 
@@ -12,7 +12,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 {
     public function test_alter_role_rename() : void
     {
-        $builder = alter_role('old_name')
+        $builder = alter()->role('old_name')
             ->renameTo('new_name');
 
         $this->assertAlterRoleRenameQuery(
@@ -23,7 +23,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_alter_role_set_options() : void
     {
-        $builder = alter_role('admin')
+        $builder = alter()->role('admin')
             ->superuser();
 
         $this->assertAlterRoleQuery(
@@ -34,7 +34,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_alter_role_with_multiple_options() : void
     {
-        $builder = alter_role('admin')
+        $builder = alter()->role('admin')
             ->noSuperuser()
             ->createDb();
 
@@ -46,7 +46,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_create_role_simple() : void
     {
-        $builder = create_role('admin');
+        $builder = create()->role('admin');
 
         $this->assertCreateRoleQuery(
             $builder,
@@ -56,7 +56,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_create_role_with_login() : void
     {
-        $builder = create_role('app_user')
+        $builder = create()->role('app_user')
             ->login();
 
         $this->assertCreateRoleQuery(
@@ -67,7 +67,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_create_role_with_options() : void
     {
-        $builder = create_role('admin')
+        $builder = create()->role('admin')
             ->superuser()
             ->login();
 
@@ -79,7 +79,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_create_user_with_password() : void
     {
-        $builder = create_role('app_user')
+        $builder = create()->role('app_user')
             ->login()
             ->withPassword('secret');
 
@@ -91,7 +91,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_drop_owned_by() : void
     {
-        $builder = drop_owned('role1');
+        $builder = drop()->owned('role1');
 
         $this->assertDropOwnedQuery(
             $builder,
@@ -101,7 +101,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_drop_owned_by_cascade() : void
     {
-        $builder = drop_owned('role1')
+        $builder = drop()->owned('role1')
             ->cascade();
 
         $this->assertDropOwnedQuery(
@@ -112,7 +112,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_drop_role_if_exists() : void
     {
-        $builder = drop_role('admin')
+        $builder = drop()->role('admin')
             ->ifExists();
 
         $this->assertDropRoleQuery(
@@ -123,7 +123,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_drop_role_multiple() : void
     {
-        $builder = drop_role('role1', 'role2');
+        $builder = drop()->role('role1', 'role2');
 
         $this->assertDropRoleQuery(
             $builder,
@@ -133,7 +133,7 @@ final class RoleBuilderTest extends PGQueryTestCase
 
     public function test_drop_role_simple() : void
     {
-        $builder = drop_role('admin');
+        $builder = drop()->role('admin');
 
         $this->assertDropRoleQuery(
             $builder,

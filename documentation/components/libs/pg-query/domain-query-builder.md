@@ -16,9 +16,9 @@ Domains are user-defined data types with optional constraints. They are useful f
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('email')
+$query = create()->domain('email')
     ->as('text');
 
 echo $query->toSQL();
@@ -30,9 +30,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('public.email')
+$query = create()->domain('public.email')
     ->as('text');
 
 echo $query->toSQL();
@@ -44,9 +44,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('email')
+$query = create()->domain('email')
     ->as('text')
     ->notNull();
 
@@ -61,9 +61,9 @@ Explicitly allow NULL values:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('email')
+$query = create()->domain('email')
     ->as('text')
     ->null();
 
@@ -78,9 +78,9 @@ Set a default value:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('email')
+$query = create()->domain('email')
     ->as('text')
     ->default("'default@example.com'");
 
@@ -95,9 +95,9 @@ Add a CHECK constraint:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('positive_int')
+$query = create()->domain('positive_int')
     ->as('int4')
     ->check('VALUE > 0');
 
@@ -112,9 +112,9 @@ Add a named CHECK constraint:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('positive_int')
+$query = create()->domain('positive_int')
     ->as('int4')
     ->constraint('positive_check')
     ->check('VALUE > 0');
@@ -130,9 +130,9 @@ Specify a collation:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('email')
+$query = create()->domain('email')
     ->as('text')
     ->collate('en_US');
 
@@ -145,9 +145,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_domain;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_domain('email')
+$query = create()->domain('email')
     ->as('text')
     ->notNull()
     ->check("VALUE ~ '^.+@.+$'");
@@ -163,9 +163,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->setNotNull();
 
 echo $query->toSQL();
@@ -177,9 +177,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->dropNotNull();
 
 echo $query->toSQL();
@@ -191,9 +191,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->setDefault("'default@example.com'");
 
 echo $query->toSQL();
@@ -205,9 +205,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->dropDefault();
 
 echo $query->toSQL();
@@ -219,9 +219,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->addConstraint('valid_email', "VALUE ~ '^.+@.+$'");
 
 echo $query->toSQL();
@@ -233,9 +233,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->dropConstraint('valid_email');
 
 echo $query->toSQL();
@@ -247,9 +247,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->dropConstraint('valid_email')
     ->cascade();
 
@@ -264,9 +264,9 @@ Validate an existing constraint:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('email')
+$query = alter()->domain('email')
     ->validateConstraint('valid_email');
 
 echo $query->toSQL();
@@ -278,9 +278,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_domain;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_domain('public.email')
+$query = alter()->domain('public.email')
     ->setNotNull();
 
 echo $query->toSQL();
@@ -294,9 +294,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_domain;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_domain('email');
+$query = drop()->domain('email');
 
 echo $query->toSQL();
 // DROP DOMAIN email
@@ -307,9 +307,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_domain;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_domain('email')
+$query = drop()->domain('email')
     ->ifExists();
 
 echo $query->toSQL();
@@ -323,9 +323,9 @@ Drop all objects that depend on the domain:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_domain;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_domain('email')
+$query = drop()->domain('email')
     ->cascade();
 
 echo $query->toSQL();
@@ -339,9 +339,9 @@ Refuse to drop the domain if any objects depend on it (default behavior):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_domain;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_domain('email')
+$query = drop()->domain('email')
     ->restrict();
 
 echo $query->toSQL();
@@ -353,9 +353,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_domain;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_domain('email', 'phone', 'url');
+$query = drop()->domain('email', 'phone', 'url');
 
 echo $query->toSQL();
 // DROP DOMAIN email, phone, url
@@ -366,9 +366,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_domain;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_domain('email')
+$query = drop()->domain('email')
     ->ifExists()
     ->cascade();
 

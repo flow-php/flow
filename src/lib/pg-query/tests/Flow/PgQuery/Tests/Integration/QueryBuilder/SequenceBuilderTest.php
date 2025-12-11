@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
-    alter_sequence,
-    create_sequence,
-    drop_sequence
+    alter,
+    create,
+    drop
 };
 
 final class SequenceBuilderTest extends PGQueryTestCase
 {
     public function test_alter_sequence_as_type() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->asType('smallint');
 
         $this->assertAlterSequenceQuery(
@@ -25,7 +25,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_cache() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->cache(20);
 
         $this->assertAlterSequenceQuery(
@@ -36,7 +36,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_cycle() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->cycle();
 
         $this->assertAlterSequenceQuery(
@@ -47,7 +47,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_if_exists() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->withIfExists()
             ->incrementBy(10);
 
@@ -59,7 +59,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_increment_by() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->incrementBy(10);
 
         $this->assertAlterSequenceQuery(
@@ -70,7 +70,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_max_value() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->maxValue(9999999);
 
         $this->assertAlterSequenceQuery(
@@ -81,7 +81,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_min_value() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->minValue(1);
 
         $this->assertAlterSequenceQuery(
@@ -92,7 +92,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_multiple_options() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->incrementBy(10)
             ->minValue(1)
             ->maxValue(1000000)
@@ -106,7 +106,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_no_cycle() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->noCycle();
 
         $this->assertAlterSequenceQuery(
@@ -117,7 +117,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_no_max_value() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->noMaxValue();
 
         $this->assertAlterSequenceQuery(
@@ -128,7 +128,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_no_min_value() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->noMinValue();
 
         $this->assertAlterSequenceQuery(
@@ -139,7 +139,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_owned_by() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->ownedBy('users', 'id');
 
         $this->assertAlterSequenceQuery(
@@ -150,7 +150,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_owned_by_none() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->ownedByNone();
 
         $this->assertAlterSequenceQuery(
@@ -161,7 +161,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_owner_to() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->ownerTo('new_owner');
 
         $this->assertAlterSequenceOwnerQuery(
@@ -172,7 +172,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_owner_to_if_exists() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->withIfExists()
             ->ownerTo('new_owner');
 
@@ -184,7 +184,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_rename_to() : void
     {
-        $builder = alter_sequence('old_seq')
+        $builder = alter()->sequence('old_seq')
             ->renameTo('new_seq');
 
         $this->assertAlterSequenceRenameQuery(
@@ -195,7 +195,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_rename_to_if_exists() : void
     {
-        $builder = alter_sequence('old_seq')
+        $builder = alter()->sequence('old_seq')
             ->withIfExists()
             ->renameTo('new_seq');
 
@@ -207,7 +207,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_rename_to_with_schema() : void
     {
-        $builder = alter_sequence('old_seq', 'public')
+        $builder = alter()->sequence('old_seq', 'public')
             ->renameTo('new_seq');
 
         $this->assertAlterSequenceRenameQuery(
@@ -218,7 +218,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_restart() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->restart();
 
         $this->assertAlterSequenceQuery(
@@ -229,7 +229,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_restart_with_value() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->restartWith(1000);
 
         $this->assertAlterSequenceQuery(
@@ -240,7 +240,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_set_logged() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->setLogged();
 
         $this->assertAlterSequenceLoggingQuery(
@@ -251,7 +251,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_set_logged_if_exists() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->withIfExists()
             ->setLogged();
 
@@ -263,7 +263,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_set_schema() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->setSchema('new_schema');
 
         $this->assertAlterSequenceSchemaQuery(
@@ -274,7 +274,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_set_schema_if_exists() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->withIfExists()
             ->setSchema('new_schema');
 
@@ -286,7 +286,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_set_unlogged() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->setUnlogged();
 
         $this->assertAlterSequenceLoggingQuery(
@@ -297,7 +297,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_start_with() : void
     {
-        $builder = alter_sequence('user_id_seq')
+        $builder = alter()->sequence('user_id_seq')
             ->startWith(100);
 
         $this->assertAlterSequenceQuery(
@@ -308,7 +308,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_alter_sequence_with_schema() : void
     {
-        $builder = alter_sequence('user_id_seq', 'public')
+        $builder = alter()->sequence('user_id_seq', 'public')
             ->incrementBy(10);
 
         $this->assertAlterSequenceQuery(
@@ -319,7 +319,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_if_not_exists() : void
     {
-        $builder = create_sequence('user_id_seq')->ifNotExists();
+        $builder = create()->sequence('user_id_seq')->ifNotExists();
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -329,7 +329,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_simple() : void
     {
-        $builder = create_sequence('user_id_seq');
+        $builder = create()->sequence('user_id_seq');
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -339,7 +339,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_all_options() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->asType('bigint')
             ->startWith(1)
             ->incrementBy(1)
@@ -356,7 +356,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_as_type() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->asType('bigint');
 
         $this->assertCreateSequenceQuery(
@@ -367,7 +367,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_cache() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->cache(20);
 
         $this->assertCreateSequenceQuery(
@@ -378,7 +378,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_cycle() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->cycle();
 
         $this->assertCreateSequenceQuery(
@@ -389,7 +389,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_increment() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->incrementBy(10);
 
         $this->assertCreateSequenceQuery(
@@ -400,7 +400,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_max_value() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->maxValue(9999999);
 
         $this->assertCreateSequenceQuery(
@@ -411,7 +411,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_min_value() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->minValue(1);
 
         $this->assertCreateSequenceQuery(
@@ -422,7 +422,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_no_cycle() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->noCycle();
 
         $this->assertCreateSequenceQuery(
@@ -433,7 +433,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_no_max_value() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->noMaxValue();
 
         $this->assertCreateSequenceQuery(
@@ -444,7 +444,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_no_min_value() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->noMinValue();
 
         $this->assertCreateSequenceQuery(
@@ -455,7 +455,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_owned_by() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->ownedBy('users', 'id');
 
         $this->assertCreateSequenceQuery(
@@ -466,7 +466,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_owned_by_none() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->ownedByNone();
 
         $this->assertCreateSequenceQuery(
@@ -477,7 +477,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_owned_by_schema_qualified() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->ownedBy('public.users', 'id');
 
         $this->assertCreateSequenceQuery(
@@ -488,7 +488,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_schema() : void
     {
-        $builder = create_sequence('user_id_seq', 'public');
+        $builder = create()->sequence('user_id_seq', 'public');
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -498,7 +498,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_sequence_with_start_value() : void
     {
-        $builder = create_sequence('user_id_seq')
+        $builder = create()->sequence('user_id_seq')
             ->startWith(100);
 
         $this->assertCreateSequenceQuery(
@@ -509,7 +509,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_temporary_sequence() : void
     {
-        $builder = create_sequence('temp_seq')->temporary();
+        $builder = create()->sequence('temp_seq')->temporary();
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -519,7 +519,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_create_unlogged_sequence() : void
     {
-        $builder = create_sequence('fast_seq')->unlogged();
+        $builder = create()->sequence('fast_seq')->unlogged();
 
         $this->assertCreateSequenceQuery(
             $builder,
@@ -529,7 +529,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_cascade() : void
     {
-        $builder = drop_sequence('user_id_seq')
+        $builder = drop()->sequence('user_id_seq')
             ->cascade();
 
         $this->assertDropSequenceQuery(
@@ -540,7 +540,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_if_exists() : void
     {
-        $builder = drop_sequence('user_id_seq')->ifExists();
+        $builder = drop()->sequence('user_id_seq')->ifExists();
 
         $this->assertDropSequenceQuery(
             $builder,
@@ -550,7 +550,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_if_exists_cascade() : void
     {
-        $builder = drop_sequence('user_id_seq')
+        $builder = drop()->sequence('user_id_seq')
             ->ifExists()
             ->cascade();
 
@@ -562,7 +562,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_multiple() : void
     {
-        $builder = drop_sequence('user_id_seq', 'order_id_seq', 'product_id_seq');
+        $builder = drop()->sequence('user_id_seq', 'order_id_seq', 'product_id_seq');
 
         $this->assertDropSequenceQuery(
             $builder,
@@ -572,7 +572,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_restrict() : void
     {
-        $builder = drop_sequence('user_id_seq')
+        $builder = drop()->sequence('user_id_seq')
             ->restrict();
 
         $this->assertDropSequenceQuery(
@@ -583,7 +583,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_simple() : void
     {
-        $builder = drop_sequence('user_id_seq');
+        $builder = drop()->sequence('user_id_seq');
 
         $this->assertDropSequenceQuery(
             $builder,
@@ -593,7 +593,7 @@ final class SequenceBuilderTest extends PGQueryTestCase
 
     public function test_drop_sequence_with_schema() : void
     {
-        $builder = drop_sequence('public.user_id_seq');
+        $builder = drop()->sequence('public.user_id_seq');
 
         $this->assertDropSequenceQuery(
             $builder,

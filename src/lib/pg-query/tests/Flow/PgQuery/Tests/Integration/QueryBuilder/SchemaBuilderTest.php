@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_schema, create_schema, drop_schema};
+use function Flow\PgQuery\DSL\{alter, create, drop};
 
 final class SchemaBuilderTest extends PGQueryTestCase
 {
     public function test_alter_schema_owner() : void
     {
-        $builder = alter_schema('my_schema')
+        $builder = alter()->schema('my_schema')
             ->ownerTo('new_owner');
 
         $this->assertAlterSchemaOwnerQuery(
@@ -21,7 +21,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_alter_schema_rename() : void
     {
-        $builder = alter_schema('old_schema')
+        $builder = alter()->schema('old_schema')
             ->renameTo('new_schema');
 
         $this->assertAlterSchemaRenameQuery(
@@ -32,7 +32,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_create_schema_if_not_exists() : void
     {
-        $builder = create_schema('my_schema')
+        $builder = create()->schema('my_schema')
             ->ifNotExists();
 
         $this->assertCreateSchemaQuery(
@@ -43,7 +43,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_create_schema_if_not_exists_with_authorization() : void
     {
-        $builder = create_schema('my_schema')
+        $builder = create()->schema('my_schema')
             ->ifNotExists()
             ->authorization('admin_user');
 
@@ -55,7 +55,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_create_schema_simple() : void
     {
-        $builder = create_schema('my_schema');
+        $builder = create()->schema('my_schema');
 
         $this->assertCreateSchemaQuery(
             $builder,
@@ -65,7 +65,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_create_schema_with_authorization() : void
     {
-        $builder = create_schema('my_schema')
+        $builder = create()->schema('my_schema')
             ->authorization('admin_user');
 
         $this->assertCreateSchemaQuery(
@@ -76,7 +76,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_drop_schema_cascade() : void
     {
-        $builder = drop_schema('my_schema')
+        $builder = drop()->schema('my_schema')
             ->cascade();
 
         $this->assertDropSchemaQuery(
@@ -87,7 +87,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_drop_schema_if_exists() : void
     {
-        $builder = drop_schema('my_schema')
+        $builder = drop()->schema('my_schema')
             ->ifExists();
 
         $this->assertDropSchemaQuery(
@@ -98,7 +98,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_drop_schema_if_exists_cascade() : void
     {
-        $builder = drop_schema('my_schema')
+        $builder = drop()->schema('my_schema')
             ->ifExists()
             ->cascade();
 
@@ -110,7 +110,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_drop_schema_multiple() : void
     {
-        $builder = drop_schema('schema1', 'schema2');
+        $builder = drop()->schema('schema1', 'schema2');
 
         $this->assertDropSchemaQuery(
             $builder,
@@ -120,7 +120,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_drop_schema_restrict() : void
     {
-        $builder = drop_schema('my_schema')
+        $builder = drop()->schema('my_schema')
             ->restrict();
 
         $this->assertDropSchemaQuery(
@@ -131,7 +131,7 @@ final class SchemaBuilderTest extends PGQueryTestCase
 
     public function test_drop_schema_simple() : void
     {
-        $builder = drop_schema('my_schema');
+        $builder = drop()->schema('my_schema');
 
         $this->assertDropSchemaQuery(
             $builder,

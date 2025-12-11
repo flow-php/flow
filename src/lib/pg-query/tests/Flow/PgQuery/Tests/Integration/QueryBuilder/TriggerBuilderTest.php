@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_table, alter_trigger, create_trigger, drop_trigger, raw_cond};
+use function Flow\PgQuery\DSL\{alter, create, drop, raw_cond};
 use Flow\PgQuery\QueryBuilder\Schema\Trigger\TriggerEvent;
 use Flow\PgQuery\Tests\Integration\QueryBuilder\Assertions\QueryBuilderAssertions;
 use PHPUnit\Framework\TestCase;
@@ -15,7 +15,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_disable_trigger() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->disableTrigger('audit_trigger');
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users DISABLE TRIGGER audit_trigger');
@@ -23,7 +23,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_disable_trigger_all() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->disableTriggerAll();
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users DISABLE TRIGGER ALL');
@@ -31,7 +31,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_disable_trigger_user() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->disableTriggerUser();
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users DISABLE TRIGGER USER');
@@ -39,7 +39,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_enable_trigger() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->enableTrigger('audit_trigger');
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users ENABLE TRIGGER audit_trigger');
@@ -47,7 +47,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_enable_trigger_all() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->enableTriggerAll();
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users ENABLE TRIGGER ALL');
@@ -55,7 +55,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_enable_trigger_always() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->enableTriggerAlways('audit_trigger');
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users ENABLE ALWAYS TRIGGER audit_trigger');
@@ -63,7 +63,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_enable_trigger_replica() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->enableTriggerReplica('audit_trigger');
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users ENABLE REPLICA TRIGGER audit_trigger');
@@ -71,7 +71,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_table_enable_trigger_user() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->enableTriggerUser();
 
         $this->assertAlterTableQuery($builder, 'ALTER TABLE users ENABLE TRIGGER USER');
@@ -79,7 +79,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_trigger_depends_on_extension() : void
     {
-        $builder = alter_trigger('my_trigger')
+        $builder = alter()->trigger('my_trigger')
             ->on('users')
             ->dependsOnExtension('my_extension');
 
@@ -88,7 +88,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_trigger_no_depends_on_extension() : void
     {
-        $builder = alter_trigger('my_trigger')
+        $builder = alter()->trigger('my_trigger')
             ->on('users')
             ->noDependsOnExtension('my_extension');
 
@@ -97,7 +97,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_alter_trigger_rename() : void
     {
-        $builder = alter_trigger('old_trigger')
+        $builder = alter()->trigger('old_trigger')
             ->on('users')
             ->renameTo('new_trigger');
 
@@ -106,7 +106,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_after_insert() : void
     {
-        $builder = create_trigger('audit_trigger')
+        $builder = create()->trigger('audit_trigger')
             ->after(TriggerEvent::INSERT)
             ->on('users')
             ->execute('audit_function');
@@ -116,7 +116,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_after_insert_or_update() : void
     {
-        $builder = create_trigger('audit_trigger')
+        $builder = create()->trigger('audit_trigger')
             ->after(TriggerEvent::INSERT, TriggerEvent::UPDATE)
             ->on('users')
             ->forEachRow()
@@ -127,7 +127,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_after_update_of_columns() : void
     {
-        $builder = create_trigger('track_changes')
+        $builder = create()->trigger('track_changes')
             ->afterUpdateOf('status', 'updated_at')
             ->on('orders')
             ->forEachRow()
@@ -138,7 +138,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_before_delete_with_when() : void
     {
-        $builder = create_trigger('prevent_delete')
+        $builder = create()->trigger('prevent_delete')
             ->before(TriggerEvent::DELETE)
             ->on('users')
             ->forEachRow()
@@ -150,7 +150,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_constraint_deferrable() : void
     {
-        $builder = create_trigger('fk_trigger')
+        $builder = create()->trigger('fk_trigger')
             ->constraint()
             ->after(TriggerEvent::INSERT)
             ->on('orders')
@@ -165,7 +165,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_instead_of_on_view() : void
     {
-        $builder = create_trigger('view_insert')
+        $builder = create()->trigger('view_insert')
             ->insteadOf(TriggerEvent::INSERT)
             ->on('users_view')
             ->forEachRow()
@@ -176,7 +176,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_or_replace() : void
     {
-        $builder = create_trigger('audit_trigger')
+        $builder = create()->trigger('audit_trigger')
             ->orReplace()
             ->after(TriggerEvent::INSERT)
             ->on('users')
@@ -187,7 +187,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_with_referencing() : void
     {
-        $builder = create_trigger('statement_trigger')
+        $builder = create()->trigger('statement_trigger')
             ->after(TriggerEvent::INSERT)
             ->on('users')
             ->referencingNewTableAs('inserted_rows')
@@ -198,7 +198,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_create_trigger_with_schema() : void
     {
-        $builder = create_trigger('audit_trigger')
+        $builder = create()->trigger('audit_trigger')
             ->after(TriggerEvent::INSERT)
             ->on('public.users')
             ->execute('audit_function');
@@ -208,7 +208,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_drop_trigger() : void
     {
-        $builder = drop_trigger('audit_trigger')
+        $builder = drop()->trigger('audit_trigger')
             ->on('users');
 
         $this->assertDropTriggerQuery($builder, 'DROP TRIGGER audit_trigger ON users');
@@ -216,7 +216,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_drop_trigger_cascade() : void
     {
-        $builder = drop_trigger('audit_trigger')
+        $builder = drop()->trigger('audit_trigger')
             ->on('users')
             ->cascade();
 
@@ -225,7 +225,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_drop_trigger_if_exists() : void
     {
-        $builder = drop_trigger('audit_trigger')
+        $builder = drop()->trigger('audit_trigger')
             ->ifExists()
             ->on('users');
 
@@ -234,7 +234,7 @@ final class TriggerBuilderTest extends TestCase
 
     public function test_drop_trigger_with_schema() : void
     {
-        $builder = drop_trigger('audit_trigger')
+        $builder = drop()->trigger('audit_trigger')
             ->on('public.users')
             ->restrict();
 

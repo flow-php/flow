@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PgQuery\DSL\{
-    alter_enum_type,
+    alter,
     column,
-    create_composite_type,
-    create_enum_type,
-    create_range_type,
-    create_table,
-    drop_type,
+    create,
+    drop,
     insert,
     literal_string,
     primary_key,
@@ -48,13 +45,13 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_alter_enum_add_value() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active')
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_enum_type(self::ENUM_TYPE)
+            alter()->enumType(self::ENUM_TYPE)
                 ->addValue('completed')
                 ->toSql()
         );
@@ -72,13 +69,13 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_alter_enum_add_value_after() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('first', 'last')
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_enum_type(self::ENUM_TYPE)
+            alter()->enumType(self::ENUM_TYPE)
                 ->addValueAfter('middle', 'first')
                 ->toSql()
         );
@@ -97,13 +94,13 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_alter_enum_add_value_before() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('first', 'last')
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_enum_type(self::ENUM_TYPE)
+            alter()->enumType(self::ENUM_TYPE)
                 ->addValueBefore('middle', 'last')
                 ->toSql()
         );
@@ -122,13 +119,13 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_alter_enum_add_value_if_not_exists() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active')
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_enum_type(self::ENUM_TYPE)
+            alter()->enumType(self::ENUM_TYPE)
                 ->addValue('active')
                 ->ifNotExists()
                 ->toSql()
@@ -140,13 +137,13 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_alter_enum_rename_value() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('old_name', 'other')
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_enum_type(self::ENUM_TYPE)
+            alter()->enumType(self::ENUM_TYPE)
                 ->renameValue('old_name', 'new_name')
                 ->toSql()
         );
@@ -165,7 +162,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_create_composite_type() : void
     {
         $result = $this->execute(
-            create_composite_type(self::COMPOSITE_TYPE)
+            create()->compositeType(self::COMPOSITE_TYPE)
                 ->attributes(
                     TypeAttribute::of('street', sql_type_varchar(100)),
                     TypeAttribute::of('city', sql_type_varchar(50)),
@@ -181,7 +178,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_create_composite_type_and_use_in_table() : void
     {
         $this->execute(
-            create_composite_type(self::COMPOSITE_TYPE)
+            create()->compositeType(self::COMPOSITE_TYPE)
                 ->attributes(
                     TypeAttribute::of('street', sql_type_varchar(100)),
                     TypeAttribute::of('city', sql_type_varchar(50))
@@ -190,7 +187,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_NAME)
+            create()->table(self::TABLE_NAME)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100)))
                 ->column(column('address', DataType::custom(self::COMPOSITE_TYPE)))
@@ -216,7 +213,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_create_enum_type() : void
     {
         $result = $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active', 'completed', 'cancelled')
                 ->toSql()
         );
@@ -228,13 +225,13 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_create_enum_type_and_use_in_table() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('pending', 'active', 'completed')
                 ->toSql()
         );
 
         $this->execute(
-            create_table(self::TABLE_NAME)
+            create()->table(self::TABLE_NAME)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('status', DataType::custom(self::ENUM_TYPE))->notNull())
                 ->constraint(primary_key('id'))
@@ -261,7 +258,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_create_range_type() : void
     {
         $result = $this->execute(
-            create_range_type(self::RANGE_TYPE)
+            create()->rangeType(self::RANGE_TYPE)
                 ->subtype('float8')
                 ->toSql()
         );
@@ -273,7 +270,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_drop_type() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('a', 'b')
                 ->toSql()
         );
@@ -281,7 +278,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
         self::assertTrue($this->typeExists(self::ENUM_TYPE));
 
         $result = $this->execute(
-            drop_type(self::ENUM_TYPE)->toSql()
+            drop()->type(self::ENUM_TYPE)->toSql()
         );
 
         self::assertNotFalse($result);
@@ -291,13 +288,13 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_drop_type_cascade() : void
     {
         $this->execute(
-            create_enum_type(self::ENUM_TYPE)
+            create()->enumType(self::ENUM_TYPE)
                 ->labels('a', 'b')
                 ->toSql()
         );
 
         $this->execute(
-            create_table(self::TABLE_NAME)
+            create()->table(self::TABLE_NAME)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('status', DataType::custom(self::ENUM_TYPE)))
                 ->constraint(primary_key('id'))
@@ -305,7 +302,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            drop_type(self::ENUM_TYPE)->cascade()->toSql()
+            drop()->type(self::ENUM_TYPE)->cascade()->toSql()
         );
 
         self::assertNotFalse($result);
@@ -315,7 +312,7 @@ final class TypeDatabaseTest extends DatabaseTestCase
     public function test_drop_type_if_exists() : void
     {
         $result = $this->execute(
-            drop_type(self::ENUM_TYPE)->ifExists()->toSql()
+            drop()->type(self::ENUM_TYPE)->ifExists()->toSql()
         );
 
         self::assertNotFalse($result);

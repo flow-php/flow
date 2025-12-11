@@ -9,7 +9,7 @@ use function Flow\PgQuery\DSL\{
     col,
     column,
     cond_and,
-    create_table,
+    create,
     cte,
     cte_ref,
     desc,
@@ -41,7 +41,7 @@ final class SelectDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_USERS)
+            create()->table(self::TABLE_USERS)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('email', sql_type_varchar(255)))
@@ -51,7 +51,7 @@ final class SelectDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_ORDERS)
+            create()->table(self::TABLE_ORDERS)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('user_id', sql_type_integer()))
                 ->column(column('amount', sql_type_decimal(10, 2))->notNull())

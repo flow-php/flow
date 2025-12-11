@@ -9,7 +9,7 @@ use function Flow\PgQuery\DSL\{
     col,
     column,
     cond_and,
-    create_table,
+    create,
     eq,
     gt,
     insert,
@@ -37,7 +37,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_DEPARTMENTS)
+            create()->table(self::TABLE_DEPARTMENTS)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('bonus_rate', sql_type_decimal(3, 2))->default(1))
@@ -46,7 +46,7 @@ final class UpdateDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_EMPLOYEES)
+            create()->table(self::TABLE_EMPLOYEES)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('salary', sql_type_decimal(10, 2))->default(0))

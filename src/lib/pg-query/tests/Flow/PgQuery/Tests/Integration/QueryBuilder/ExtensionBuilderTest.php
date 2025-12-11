@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_extension, create_extension, drop_extension};
+use function Flow\PgQuery\DSL\{alter, create, drop};
 
 final class ExtensionBuilderTest extends PGQueryTestCase
 {
     public function test_alter_extension_add_function() : void
     {
-        $builder = alter_extension('postgis')
+        $builder = alter()->extension('postgis')
             ->addFunction('st_distance');
 
         $this->assertAlterExtensionQuery(
@@ -21,7 +21,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_alter_extension_add_table() : void
     {
-        $builder = alter_extension('postgis')
+        $builder = alter()->extension('postgis')
             ->addTable('spatial_ref_sys');
 
         $this->assertAlterExtensionQuery(
@@ -32,7 +32,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_alter_extension_drop_function() : void
     {
-        $builder = alter_extension('postgis')
+        $builder = alter()->extension('postgis')
             ->dropFunction('st_distance');
 
         $this->assertAlterExtensionQuery(
@@ -43,7 +43,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_alter_extension_drop_table() : void
     {
-        $builder = alter_extension('postgis')
+        $builder = alter()->extension('postgis')
             ->dropTable('spatial_ref_sys');
 
         $this->assertAlterExtensionQuery(
@@ -54,7 +54,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_alter_extension_update() : void
     {
-        $builder = alter_extension('postgis')
+        $builder = alter()->extension('postgis')
             ->update();
 
         $this->assertAlterExtensionQuery(
@@ -65,7 +65,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_alter_extension_update_to() : void
     {
-        $builder = alter_extension('postgis')
+        $builder = alter()->extension('postgis')
             ->updateTo('3.1');
 
         $this->assertAlterExtensionQuery(
@@ -76,7 +76,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_create_extension_full() : void
     {
-        $builder = create_extension('postgis')
+        $builder = create()->extension('postgis')
             ->ifNotExists()
             ->schema('public')
             ->version('3.0')
@@ -90,7 +90,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_create_extension_if_not_exists() : void
     {
-        $builder = create_extension('postgis')
+        $builder = create()->extension('postgis')
             ->ifNotExists();
 
         $this->assertCreateExtensionQuery(
@@ -101,7 +101,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_create_extension_simple() : void
     {
-        $builder = create_extension('uuid-ossp');
+        $builder = create()->extension('uuid-ossp');
 
         $this->assertCreateExtensionQuery(
             $builder,
@@ -111,7 +111,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_create_extension_with_cascade() : void
     {
-        $builder = create_extension('postgis')
+        $builder = create()->extension('postgis')
             ->cascade();
 
         $this->assertCreateExtensionQuery(
@@ -122,7 +122,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_create_extension_with_schema() : void
     {
-        $builder = create_extension('postgis')
+        $builder = create()->extension('postgis')
             ->schema('public');
 
         $this->assertCreateExtensionQuery(
@@ -133,7 +133,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_create_extension_with_version() : void
     {
-        $builder = create_extension('postgis')
+        $builder = create()->extension('postgis')
             ->version('3.0');
 
         $this->assertCreateExtensionQuery(
@@ -144,7 +144,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_drop_extension_cascade() : void
     {
-        $builder = drop_extension('postgis')
+        $builder = drop()->extension('postgis')
             ->cascade();
 
         $this->assertDropExtensionQuery(
@@ -155,7 +155,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_drop_extension_if_exists() : void
     {
-        $builder = drop_extension('postgis')
+        $builder = drop()->extension('postgis')
             ->ifExists();
 
         $this->assertDropExtensionQuery(
@@ -166,7 +166,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_drop_extension_if_exists_cascade() : void
     {
-        $builder = drop_extension('postgis')
+        $builder = drop()->extension('postgis')
             ->ifExists()
             ->cascade();
 
@@ -178,7 +178,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_drop_extension_multiple() : void
     {
-        $builder = drop_extension('postgis', 'pg_trgm', 'uuid-ossp');
+        $builder = drop()->extension('postgis', 'pg_trgm', 'uuid-ossp');
 
         $this->assertDropExtensionQuery(
             $builder,
@@ -188,7 +188,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_drop_extension_restrict() : void
     {
-        $builder = drop_extension('postgis')
+        $builder = drop()->extension('postgis')
             ->restrict();
 
         $this->assertDropExtensionQuery(
@@ -199,7 +199,7 @@ final class ExtensionBuilderTest extends PGQueryTestCase
 
     public function test_drop_extension_simple() : void
     {
-        $builder = drop_extension('postgis');
+        $builder = drop()->extension('postgis');
 
         $this->assertDropExtensionQuery(
             $builder,

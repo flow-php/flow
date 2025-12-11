@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PgQuery\DSL\{
-    alter_domain,
+    alter,
     column,
-    create_domain,
-    create_table,
-    drop_domain,
+    create,
+    drop,
     insert,
     literal_string,
     primary_key,
@@ -41,13 +40,13 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_alter_domain_add_constraint() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME_2)
+            create()->domain(self::DOMAIN_NAME_2)
                 ->as(DataType::integer())
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_domain(self::DOMAIN_NAME_2)
+            alter()->domain(self::DOMAIN_NAME_2)
                 ->addConstraint('positive_check', 'VALUE > 0')
                 ->toSql()
         );
@@ -58,7 +57,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_alter_domain_drop_constraint() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME_2)
+            create()->domain(self::DOMAIN_NAME_2)
                 ->as(DataType::integer())
                 ->constraint('positive_check')
                 ->check('VALUE > 0')
@@ -66,7 +65,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            alter_domain(self::DOMAIN_NAME_2)
+            alter()->domain(self::DOMAIN_NAME_2)
                 ->dropConstraint('positive_check')
                 ->toSql()
         );
@@ -77,14 +76,14 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_alter_domain_drop_default() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME_2)
+            create()->domain(self::DOMAIN_NAME_2)
                 ->as(DataType::integer())
                 ->default('0')
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_domain(self::DOMAIN_NAME_2)
+            alter()->domain(self::DOMAIN_NAME_2)
                 ->dropDefault()
                 ->toSql()
         );
@@ -95,14 +94,14 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_alter_domain_drop_not_null() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME_2)
+            create()->domain(self::DOMAIN_NAME_2)
                 ->as(DataType::integer())
                 ->notNull()
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_domain(self::DOMAIN_NAME_2)
+            alter()->domain(self::DOMAIN_NAME_2)
                 ->dropNotNull()
                 ->toSql()
         );
@@ -113,13 +112,13 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_alter_domain_set_default() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME_2)
+            create()->domain(self::DOMAIN_NAME_2)
                 ->as(DataType::integer())
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_domain(self::DOMAIN_NAME_2)
+            alter()->domain(self::DOMAIN_NAME_2)
                 ->setDefault('100')
                 ->toSql()
         );
@@ -130,13 +129,13 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_alter_domain_set_not_null() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME_2)
+            create()->domain(self::DOMAIN_NAME_2)
                 ->as(DataType::integer())
                 ->toSql()
         );
 
         $result = $this->execute(
-            alter_domain(self::DOMAIN_NAME_2)
+            alter()->domain(self::DOMAIN_NAME_2)
                 ->setNotNull()
                 ->toSql()
         );
@@ -147,7 +146,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_create_domain() : void
     {
         $result = $this->execute(
-            create_domain(self::DOMAIN_NAME)
+            create()->domain(self::DOMAIN_NAME)
                 ->as(DataType::varchar(255))
                 ->toSql()
         );
@@ -159,7 +158,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_create_domain_and_use_in_table() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME)
+            create()->domain(self::DOMAIN_NAME)
                 ->as(DataType::varchar(255))
                 ->constraint('valid_email')
                 ->check("VALUE ~ '^[^@]+@[^@]+\\.[^@]+$'")
@@ -167,7 +166,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_NAME)
+            create()->table(self::TABLE_NAME)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('email', DataType::custom(self::DOMAIN_NAME))->notNull())
                 ->constraint(primary_key('id'))
@@ -194,7 +193,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_create_domain_with_check_constraint() : void
     {
         $result = $this->execute(
-            create_domain(self::DOMAIN_NAME)
+            create()->domain(self::DOMAIN_NAME)
                 ->as(DataType::varchar(255))
                 ->constraint('valid_email')
                 ->check("VALUE ~ '^[^@]+@[^@]+\\.[^@]+$'")
@@ -208,7 +207,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_create_domain_with_default() : void
     {
         $result = $this->execute(
-            create_domain(self::DOMAIN_NAME_2)
+            create()->domain(self::DOMAIN_NAME_2)
                 ->as(DataType::integer())
                 ->default('0')
                 ->toSql()
@@ -221,7 +220,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_create_domain_with_not_null() : void
     {
         $result = $this->execute(
-            create_domain(self::DOMAIN_NAME)
+            create()->domain(self::DOMAIN_NAME)
                 ->as(DataType::varchar(255))
                 ->notNull()
                 ->toSql()
@@ -234,7 +233,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_drop_domain() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME)
+            create()->domain(self::DOMAIN_NAME)
                 ->as(DataType::varchar(255))
                 ->toSql()
         );
@@ -242,7 +241,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
         self::assertTrue($this->domainExists(self::DOMAIN_NAME));
 
         $result = $this->execute(
-            drop_domain(self::DOMAIN_NAME)->toSql()
+            drop()->domain(self::DOMAIN_NAME)->toSql()
         );
 
         self::assertNotFalse($result);
@@ -252,13 +251,13 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_drop_domain_cascade() : void
     {
         $this->execute(
-            create_domain(self::DOMAIN_NAME)
+            create()->domain(self::DOMAIN_NAME)
                 ->as(DataType::varchar(255))
                 ->toSql()
         );
 
         $this->execute(
-            create_table(self::TABLE_NAME)
+            create()->table(self::TABLE_NAME)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('email', DataType::custom(self::DOMAIN_NAME)))
                 ->constraint(primary_key('id'))
@@ -266,7 +265,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            drop_domain(self::DOMAIN_NAME)->cascade()->toSql()
+            drop()->domain(self::DOMAIN_NAME)->cascade()->toSql()
         );
 
         self::assertNotFalse($result);
@@ -276,7 +275,7 @@ final class DomainDatabaseTest extends DatabaseTestCase
     public function test_drop_domain_if_exists() : void
     {
         $result = $this->execute(
-            drop_domain(self::DOMAIN_NAME)->ifExists()->toSql()
+            drop()->domain(self::DOMAIN_NAME)->ifExists()->toSql()
         );
 
         self::assertNotFalse($result);

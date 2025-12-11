@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 
-use function Flow\PgQuery\DSL\{drop_index, drop_materialized_view, drop_sequence, drop_table, drop_view};
+use function Flow\PgQuery\DSL\drop;
 use PgSql\{Connection, Result};
 use PHPUnit\Framework\TestCase;
 
@@ -72,27 +72,27 @@ abstract class DatabaseTestCase extends TestCase
 
     protected function dropIndexIfExists(string $index) : void
     {
-        $this->execute(drop_index($index)->ifExists()->cascade()->toSql());
+        $this->execute(drop()->index($index)->ifExists()->cascade()->toSql());
     }
 
     protected function dropMaterializedViewIfExists(string $view) : void
     {
-        $this->execute(drop_materialized_view($view)->ifExists()->cascade()->toSql());
+        $this->execute(drop()->materializedView($view)->ifExists()->cascade()->toSql());
     }
 
     protected function dropSequenceIfExists(string $sequence) : void
     {
-        $this->execute(drop_sequence($sequence)->ifExists()->cascade()->toSql());
+        $this->execute(drop()->sequence($sequence)->ifExists()->cascade()->toSql());
     }
 
     protected function dropTableIfExists(string $table) : void
     {
-        $this->execute(drop_table($table)->ifExists()->cascade()->toSql());
+        $this->execute(drop()->table($table)->ifExists()->cascade()->toSql());
     }
 
     protected function dropViewIfExists(string $view) : void
     {
-        $this->execute(drop_view($view)->ifExists()->cascade()->toSql());
+        $this->execute(drop()->view($view)->ifExists()->cascade()->toSql());
     }
 
     protected function execute(string $sql) : Result|false
