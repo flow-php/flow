@@ -13,9 +13,9 @@ The Table Query Builder provides a fluent, type-safe interface for constructing 
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_serial, sql_type_varchar};
+use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_varchar};
 
-$query = create_table('users')
+$query = create()->table('users')
     ->column(column('id', sql_type_serial())->primaryKey())
     ->column(column('name', sql_type_varchar(100))->notNull());
 
@@ -28,9 +28,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_serial};
+use function Flow\PgQuery\DSL\{create, column, sql_type_serial};
 
-$query = create_table('users', 'public')
+$query = create()->table('users', 'public')
     ->column(column('id', sql_type_serial())->primaryKey());
 
 echo $query->toSQL();
@@ -42,9 +42,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_serial};
+use function Flow\PgQuery\DSL\{create, column, sql_type_serial};
 
-$query = create_table('users')
+$query = create()->table('users')
     ->ifNotExists()
     ->column(column('id', sql_type_serial())->primaryKey());
 
@@ -59,9 +59,9 @@ Columns support various constraints and options:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_integer, sql_type_varchar, sql_type_boolean, sql_type_timestamp};
+use function Flow\PgQuery\DSL\{create, column, sql_type_integer, sql_type_varchar, sql_type_boolean, sql_type_timestamp};
 
-$query = create_table('users')
+$query = create()->table('users')
     ->column(column('id', sql_type_integer())->identity('ALWAYS'))
     ->column(column('email', sql_type_varchar(255))->notNull()->unique())
     ->column(column('active', sql_type_boolean())->default(true))
@@ -81,9 +81,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_serial, sql_type_integer};
+use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_integer};
 
-$query = create_table('orders')
+$query = create()->table('orders')
     ->column(column('id', sql_type_serial())->primaryKey())
     ->column(column('user_id', sql_type_integer())->notNull()->references('users', 'id'));
 
@@ -96,9 +96,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_varchar, sql_type_text};
+use function Flow\PgQuery\DSL\{create, column, sql_type_varchar, sql_type_text};
 
-$query = create_table('users')
+$query = create()->table('users')
     ->column(column('first_name', sql_type_varchar(50)))
     ->column(column('last_name', sql_type_varchar(50)))
     ->column(column('full_name', sql_type_text())->generatedAs("first_name || ' ' || last_name"));
@@ -114,9 +114,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_integer, primary_key};
+use function Flow\PgQuery\DSL\{create, column, sql_type_integer, primary_key};
 
-$query = create_table('order_items')
+$query = create()->table('order_items')
     ->column(column('order_id', sql_type_integer())->notNull())
     ->column(column('product_id', sql_type_integer())->notNull())
     ->constraint(primary_key('order_id', 'product_id'));
@@ -130,9 +130,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_serial, sql_type_varchar, unique_constraint};
+use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_varchar, unique_constraint};
 
-$query = create_table('users')
+$query = create()->table('users')
     ->column(column('id', sql_type_serial())->primaryKey())
     ->column(column('email', sql_type_varchar(255))->notNull())
     ->constraint(unique_constraint('email'));
@@ -146,9 +146,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_serial, sql_type_integer, check_constraint};
+use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_integer, check_constraint};
 
-$query = create_table('products')
+$query = create()->table('products')
     ->column(column('id', sql_type_serial())->primaryKey())
     ->column(column('price', sql_type_integer()))
     ->constraint(check_constraint('price > 0')->name('positive_price'));
@@ -162,9 +162,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_serial, sql_type_integer, foreign_key, ref_action_cascade, ref_action_restrict};
+use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_integer, foreign_key, ref_action_cascade, ref_action_restrict};
 
-$query = create_table('orders')
+$query = create()->table('orders')
     ->column(column('id', sql_type_serial())->primaryKey())
     ->column(column('user_id', sql_type_integer())->notNull())
     ->constraint(
@@ -182,9 +182,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_integer};
+use function Flow\PgQuery\DSL\{create, column, sql_type_integer};
 
-$query = create_table('temp_results')
+$query = create()->table('temp_results')
     ->temporary()
     ->column(column('id', sql_type_integer()));
 
@@ -197,9 +197,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_integer};
+use function Flow\PgQuery\DSL\{create, column, sql_type_integer};
 
-$query = create_table('cache_data')
+$query = create()->table('cache_data')
     ->unlogged()
     ->column(column('id', sql_type_integer()));
 
@@ -212,9 +212,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_varchar};
+use function Flow\PgQuery\DSL\{create, column, sql_type_varchar};
 
-$query = create_table('employees')
+$query = create()->table('employees')
     ->column(column('department', sql_type_varchar(100)))
     ->inherits('persons');
 
@@ -227,10 +227,10 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table, column, sql_type_integer, sql_type_timestamp};
+use function Flow\PgQuery\DSL\{create, column, sql_type_integer, sql_type_timestamp};
 
 // Range partitioning
-$query = create_table('logs')
+$query = create()->table('logs')
     ->column(column('id', sql_type_integer()))
     ->column(column('created_at', sql_type_timestamp()))
     ->partitionByRange('created_at');
@@ -239,12 +239,12 @@ echo $query->toSQL();
 // CREATE TABLE logs (id int, created_at timestamp) PARTITION BY RANGE (created_at)
 
 // List partitioning
-$query = create_table('sales')
+$query = create()->table('sales')
     ->column(column('region', sql_type_varchar(50)))
     ->partitionByList('region');
 
 // Hash partitioning
-$query = create_table('data')
+$query = create()->table('data')
     ->column(column('id', sql_type_integer()))
     ->partitionByHash('id');
 ```
@@ -256,13 +256,13 @@ $query = create_table('data')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table_as, select, col, table};
+use function Flow\PgQuery\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
     ->from(table('users'));
 
-$query = create_table_as('users_backup', $selectQuery);
+$query = create()->tableAs('users_backup', $selectQuery);
 
 echo $query->toSQL();
 // CREATE TABLE users_backup AS SELECT id, name FROM users
@@ -273,13 +273,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table_as, select, col, table};
+use function Flow\PgQuery\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
     ->from(table('users'));
 
-$query = create_table_as('users_backup', $selectQuery)
+$query = create()->tableAs('users_backup', $selectQuery)
     ->ifNotExists();
 
 echo $query->toSQL();
@@ -291,13 +291,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table_as, select, col, table};
+use function Flow\PgQuery\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
     ->from(table('users'));
 
-$query = create_table_as('users_backup', $selectQuery)
+$query = create()->tableAs('users_backup', $selectQuery)
     ->columnNames('user_id', 'user_name');
 
 echo $query->toSQL();
@@ -309,13 +309,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_table_as, select, col, table};
+use function Flow\PgQuery\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
     ->from(table('users'));
 
-$query = create_table_as('users_backup', $selectQuery)
+$query = create()->tableAs('users_backup', $selectQuery)
     ->withNoData();
 
 echo $query->toSQL();
@@ -329,9 +329,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_table, column, sql_type_varchar};
+use function Flow\PgQuery\DSL\{alter, column, sql_type_varchar};
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->addColumn(column('email', sql_type_varchar(255))->notNull());
 
 echo $query->toSQL();
@@ -343,16 +343,16 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->dropColumn('temp_column');
 
 echo $query->toSQL();
 // ALTER TABLE users DROP temp_column
 
 // With CASCADE
-$query = alter_table('users')
+$query = alter()->table('users')
     ->dropColumn('temp_column', cascade: true);
 
 echo $query->toSQL();
@@ -364,9 +364,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_table, sql_type_text};
+use function Flow\PgQuery\DSL\{alter, sql_type_text};
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->alterColumnType('name', sql_type_text());
 
 echo $query->toSQL();
@@ -378,17 +378,17 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
 // Set NOT NULL
-$query = alter_table('users')
+$query = alter()->table('users')
     ->alterColumnSetNotNull('email');
 
 echo $query->toSQL();
 // ALTER TABLE users ALTER COLUMN email SET NOT NULL
 
 // Drop NOT NULL
-$query = alter_table('users')
+$query = alter()->table('users')
     ->alterColumnDropNotNull('email');
 
 echo $query->toSQL();
@@ -400,17 +400,17 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
 // Set default
-$query = alter_table('users')
+$query = alter()->table('users')
     ->alterColumnSetDefault('status', "'active'");
 
 echo $query->toSQL();
 // ALTER TABLE users ALTER COLUMN status SET DEFAULT 'active'
 
 // Drop default
-$query = alter_table('users')
+$query = alter()->table('users')
     ->alterColumnDropDefault('status');
 
 echo $query->toSQL();
@@ -422,9 +422,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_table, unique_constraint};
+use function Flow\PgQuery\DSL\{alter, unique_constraint};
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->addConstraint(unique_constraint('email')->name('users_email_unique'));
 
 echo $query->toSQL();
@@ -436,9 +436,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->dropConstraint('users_email_unique');
 
 echo $query->toSQL();
@@ -450,9 +450,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_table, column, sql_type_varchar};
+use function Flow\PgQuery\DSL\{alter, column, sql_type_varchar};
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->addColumn(column('phone', sql_type_varchar(20)))
     ->dropColumn('fax')
     ->alterColumnSetNotNull('email');
@@ -466,9 +466,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_table, column, sql_type_varchar};
+use function Flow\PgQuery\DSL\{alter, column, sql_type_varchar};
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->ifExists()
     ->addColumn(column('email', sql_type_varchar(255)));
 
@@ -481,9 +481,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->renameColumn('old_name', 'new_name');
 
 echo $query->toSQL();
@@ -495,9 +495,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->renameConstraint('old_constraint', 'new_constraint');
 
 echo $query->toSQL();
@@ -509,9 +509,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->renameTo('users_archive');
 
 echo $query->toSQL();
@@ -523,9 +523,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_table;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_table('users')
+$query = alter()->table('users')
     ->setSchema('archive');
 
 echo $query->toSQL();
@@ -539,9 +539,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_table;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_table('users');
+$query = drop()->table('users');
 
 echo $query->toSQL();
 // DROP TABLE users
@@ -552,9 +552,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_table;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_table('users')
+$query = drop()->table('users')
     ->ifExists();
 
 echo $query->toSQL();
@@ -566,9 +566,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_table;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_table('users')
+$query = drop()->table('users')
     ->cascade();
 
 echo $query->toSQL();
@@ -580,9 +580,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_table;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_table('users', 'orders', 'products');
+$query = drop()->table('users', 'orders', 'products');
 
 echo $query->toSQL();
 // DROP TABLE users, orders, products

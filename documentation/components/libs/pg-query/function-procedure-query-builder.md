@@ -14,9 +14,9 @@ CREATE FUNCTION, CREATE PROCEDURE, ALTER FUNCTION, ALTER PROCEDURE, DROP FUNCTIO
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_function, func_arg};
+use function Flow\PgQuery\DSL\{create, func_arg};
 
-$query = create_function('add_numbers')
+$query = create()->function('add_numbers')
     ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
     ->returns('integer')
     ->language('sql')
@@ -31,9 +31,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_function, func_arg};
+use function Flow\PgQuery\DSL\{create, func_arg};
 
-$query = create_function('increment')
+$query = create()->function('increment')
     ->arguments(func_arg('integer')->named('val'))
     ->returns('integer')
     ->language('plpgsql')
@@ -48,9 +48,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_function('my_func')
+$query = create()->function('my_func')
     ->orReplace()
     ->returns('integer')
     ->language('sql')
@@ -67,9 +67,9 @@ Create a function that returns a table:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_function('get_users')
+$query = create()->function('get_users')
     ->returnsTable(['id' => 'integer', 'name' => 'text'])
     ->language('sql')
     ->as('SELECT id, name FROM users');
@@ -85,9 +85,9 @@ Create a function that returns a set of values:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_function('get_user_ids')
+$query = create()->function('get_user_ids')
     ->returnsSetOf('integer')
     ->language('sql')
     ->as('SELECT id FROM users');
@@ -103,9 +103,9 @@ Create a function that returns nothing:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_function('log_event')
+$query = create()->function('log_event')
     ->returnsVoid()
     ->language('sql')
     ->as('INSERT INTO logs (msg) VALUES (current_timestamp)');
@@ -119,10 +119,10 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_function, func_arg};
+use function Flow\PgQuery\DSL\{create, func_arg};
 
 // IMMUTABLE - same input always produces same output
-$query = create_function('double')
+$query = create()->function('double')
     ->arguments(func_arg('integer')->named('x'))
     ->returns('integer')
     ->language('sql')
@@ -130,14 +130,14 @@ $query = create_function('double')
     ->as('SELECT x * 2');
 
 // STABLE - returns same result within a single statement
-$query = create_function('get_config')
+$query = create()->function('get_config')
     ->returns('text')
     ->language('sql')
     ->stable()
     ->as('SELECT current_setting(\'app.name\')');
 
 // VOLATILE (default) - can return different results on successive calls
-$query = create_function('get_time')
+$query = create()->function('get_time')
     ->returns('timestamp')
     ->language('sql')
     ->volatile()
@@ -149,10 +149,10 @@ $query = create_function('get_time')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_function, func_arg};
+use function Flow\PgQuery\DSL\{create, func_arg};
 use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
 
-$query = create_function('compute')
+$query = create()->function('compute')
     ->arguments(func_arg('integer')->named('x'))
     ->returns('integer')
     ->language('sql')
@@ -170,9 +170,9 @@ $query = create_function('compute')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_function, func_arg};
+use function Flow\PgQuery\DSL\{create, func_arg};
 
-$query = create_function('safe_add')
+$query = create()->function('safe_add')
     ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
     ->returns('integer')
     ->language('sql')
@@ -180,7 +180,7 @@ $query = create_function('safe_add')
     ->as('SELECT a + b');
 
 // Or explicitly call on NULL input
-$query = create_function('nullable_add')
+$query = create()->function('nullable_add')
     ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
     ->returns('integer')
     ->language('sql')
@@ -193,17 +193,17 @@ $query = create_function('nullable_add')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
 // Function runs with the privileges of the creator
-$query = create_function('admin_only')
+$query = create()->function('admin_only')
     ->returns('void')
     ->language('sql')
     ->securityDefiner()
     ->as('SELECT 1');
 
 // Function runs with the privileges of the caller (default)
-$query = create_function('normal_func')
+$query = create()->function('normal_func')
     ->returns('void')
     ->language('sql')
     ->securityInvoker()
@@ -215,15 +215,15 @@ $query = create_function('normal_func')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_function('expensive_func')
+$query = create()->function('expensive_func')
     ->returns('integer')
     ->language('sql')
     ->cost(1000)  // Estimated execution cost
     ->as('SELECT 1');
 
-$query = create_function('many_rows')
+$query = create()->function('many_rows')
     ->returnsSetOf('integer')
     ->language('sql')
     ->rows(10000)  // Estimated number of rows returned
@@ -235,9 +235,9 @@ $query = create_function('many_rows')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_function('no_side_effects')
+$query = create()->function('no_side_effects')
     ->returns('boolean')
     ->language('sql')
     ->leakproof()  // Function has no side effects
@@ -249,9 +249,9 @@ $query = create_function('no_side_effects')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_function;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_function('my_func')
+$query = create()->function('my_func')
     ->returns('void')
     ->language('sql')
     ->set('search_path', 'public')
@@ -288,10 +288,10 @@ $arg = func_arg('text')->variadic();    // VARIADIC - variable number of argumen
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_function, func_arg};
+use function Flow\PgQuery\DSL\{create, func_arg};
 use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
 
-$query = create_function('calculate_discount')
+$query = create()->function('calculate_discount')
     ->orReplace()
     ->arguments(
         func_arg('numeric')->named('price'),
@@ -312,9 +312,9 @@ $query = create_function('calculate_discount')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_procedure, func_arg};
+use function Flow\PgQuery\DSL\{create, func_arg};
 
-$query = create_procedure('update_stats')
+$query = create()->procedure('update_stats')
     ->arguments(func_arg('integer')->named('user_id'))
     ->language('plpgsql')
     ->as('BEGIN UPDATE stats SET count = count + 1 WHERE id = user_id; END;');
@@ -328,9 +328,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_procedure;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_procedure('my_proc')
+$query = create()->procedure('my_proc')
     ->orReplace()
     ->language('sql')
     ->as('SELECT 1');
@@ -344,9 +344,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_procedure;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_procedure('admin_proc')
+$query = create()->procedure('admin_proc')
     ->language('sql')
     ->securityDefiner()
     ->as('DELETE FROM temp_data');
@@ -357,9 +357,9 @@ $query = create_procedure('admin_proc')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_procedure;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_procedure('my_proc')
+$query = create()->procedure('my_proc')
     ->language('sql')
     ->set('work_mem', '1GB')
     ->as('SELECT 1');
@@ -372,9 +372,9 @@ $query = create_procedure('my_proc')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_function, func_arg};
+use function Flow\PgQuery\DSL\{alter, func_arg};
 
-$query = alter_function('my_func')
+$query = alter()->function('my_func')
     ->arguments(func_arg('integer'))
     ->immutable();
 
@@ -387,10 +387,10 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_function, func_arg};
+use function Flow\PgQuery\DSL\{alter, func_arg};
 use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
 
-$query = alter_function('my_func')
+$query = alter()->function('my_func')
     ->arguments(func_arg('integer'))
     ->parallel(ParallelSafety::SAFE);
 
@@ -403,9 +403,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_function, func_arg};
+use function Flow\PgQuery\DSL\{alter, func_arg};
 
-$query = alter_function('old_name')
+$query = alter()->function('old_name')
     ->arguments(func_arg('text'))
     ->renameTo('new_name');
 
@@ -418,13 +418,13 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_function, func_arg};
+use function Flow\PgQuery\DSL\{alter, func_arg};
 
-$query = alter_function('my_func')
+$query = alter()->function('my_func')
     ->arguments(func_arg('integer'))
     ->cost(500);
 
-$query = alter_function('set_returning_func')
+$query = alter()->function('set_returning_func')
     ->rows(1000);
 ```
 
@@ -433,18 +433,18 @@ $query = alter_function('set_returning_func')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_function;
+use function Flow\PgQuery\DSL\alter;
 
 // Set a configuration parameter
-$query = alter_function('my_func')
+$query = alter()->function('my_func')
     ->set('search_path', 'public');
 
 // Reset a configuration parameter
-$query = alter_function('my_func')
+$query = alter()->function('my_func')
     ->reset('search_path');
 
 // Reset all configuration parameters
-$query = alter_function('my_func')
+$query = alter()->function('my_func')
     ->resetAll();
 ```
 
@@ -455,9 +455,9 @@ $query = alter_function('my_func')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter_procedure, func_arg};
+use function Flow\PgQuery\DSL\{alter, func_arg};
 
-$query = alter_procedure('old_proc')
+$query = alter()->procedure('old_proc')
     ->arguments(func_arg('integer'))
     ->renameTo('new_proc');
 
@@ -470,9 +470,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_procedure;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_procedure('my_proc')
+$query = alter()->procedure('my_proc')
     ->securityDefiner();
 
 echo $query->toSQL();
@@ -484,15 +484,15 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_procedure;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_procedure('my_proc')
+$query = alter()->procedure('my_proc')
     ->set('work_mem', '2GB');
 
-$query = alter_procedure('my_proc')
+$query = alter()->procedure('my_proc')
     ->reset('work_mem');
 
-$query = alter_procedure('my_proc')
+$query = alter()->procedure('my_proc')
     ->resetAll();
 ```
 
@@ -503,9 +503,9 @@ $query = alter_procedure('my_proc')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_function;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_function('my_func');
+$query = drop()->function('my_func');
 
 echo $query->toSQL();
 // DROP FUNCTION my_func
@@ -516,9 +516,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop_function, func_arg};
+use function Flow\PgQuery\DSL\{drop, func_arg};
 
-$query = drop_function('my_func')
+$query = drop()->function('my_func')
     ->arguments(func_arg('integer'), func_arg('text'));
 
 echo $query->toSQL();
@@ -530,9 +530,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop_function, func_arg};
+use function Flow\PgQuery\DSL\{drop, func_arg};
 
-$query = drop_function('my_func')
+$query = drop()->function('my_func')
     ->ifExists()
     ->arguments(func_arg('integer'));
 
@@ -545,9 +545,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop_function, func_arg};
+use function Flow\PgQuery\DSL\{drop, func_arg};
 
-$query = drop_function('my_func')
+$query = drop()->function('my_func')
     ->ifExists()
     ->arguments(func_arg('integer'), func_arg('text'))
     ->cascade();
@@ -561,9 +561,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_function;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_function('my_func')
+$query = drop()->function('my_func')
     ->restrict();
 
 echo $query->toSQL();
@@ -577,9 +577,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_procedure;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_procedure('my_proc');
+$query = drop()->procedure('my_proc');
 
 echo $query->toSQL();
 // DROP PROCEDURE my_proc
@@ -590,9 +590,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop_procedure, func_arg};
+use function Flow\PgQuery\DSL\{drop, func_arg};
 
-$query = drop_procedure('my_proc')
+$query = drop()->procedure('my_proc')
     ->ifExists()
     ->arguments(func_arg('integer'))
     ->cascade();
@@ -677,12 +677,12 @@ echo $query->toSQL();
 | Function | Description |
 |----------|-------------|
 | `func_arg(string $type)` | Create a function argument |
-| `create_function(string $name)` | Create a new function |
-| `create_procedure(string $name)` | Create a new procedure |
-| `alter_function(string $name)` | Alter an existing function |
-| `alter_procedure(string $name)` | Alter an existing procedure |
-| `drop_function(string $name)` | Drop a function |
-| `drop_procedure(string $name)` | Drop a procedure |
+| `create()->function(string $name)` | Create a new function |
+| `create()->procedure(string $name)` | Create a new procedure |
+| `alter()->function(string $name)` | Alter an existing function |
+| `alter()->procedure(string $name)` | Alter an existing procedure |
+| `drop()->function(string $name)` | Drop a function |
+| `drop()->procedure(string $name)` | Drop a procedure |
 | `call(string $procedure)` | Call a procedure |
 | `do_block(string $code)` | Execute an anonymous code block |
 

@@ -6,13 +6,10 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
 use function Flow\PgQuery\DSL\{
     agg_count,
-    alter_materialized_view,
-    alter_view,
+    alter,
     col,
-    create_materialized_view,
-    create_view,
-    drop_materialized_view,
-    drop_view,
+    create,
+    drop,
     eq,
     literal_bool,
     refresh_materialized_view,
@@ -25,7 +22,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 {
     public function test_alter_materialized_view_owner_to() : void
     {
-        $builder = alter_materialized_view('my_matview')
+        $builder = alter()->materializedView('my_matview')
             ->ownerTo('new_owner');
 
         $this->assertAlterMaterializedViewOwnerQuery(
@@ -36,7 +33,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_materialized_view_rename() : void
     {
-        $builder = alter_materialized_view('old_matview')
+        $builder = alter()->materializedView('old_matview')
             ->renameTo('new_matview');
 
         $this->assertAlterMaterializedViewRenameQuery(
@@ -47,7 +44,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_materialized_view_rename_if_exists() : void
     {
-        $builder = alter_materialized_view('old_matview')
+        $builder = alter()->materializedView('old_matview')
             ->ifExists()
             ->renameTo('new_matview');
 
@@ -59,7 +56,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_materialized_view_set_schema() : void
     {
-        $builder = alter_materialized_view('my_matview')
+        $builder = alter()->materializedView('my_matview')
             ->setSchema('archive');
 
         $this->assertAlterMaterializedViewSchemaQuery(
@@ -70,7 +67,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_materialized_view_set_tablespace() : void
     {
-        $builder = alter_materialized_view('my_matview')
+        $builder = alter()->materializedView('my_matview')
             ->setTablespace('fast_storage');
 
         $this->assertAlterMaterializedViewTablespaceQuery(
@@ -81,7 +78,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_materialized_view_set_tablespace_if_exists() : void
     {
-        $builder = alter_materialized_view('my_matview')
+        $builder = alter()->materializedView('my_matview')
             ->ifExists()
             ->setTablespace('fast_storage');
 
@@ -93,7 +90,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_view_owner_to() : void
     {
-        $builder = alter_view('my_view')
+        $builder = alter()->view('my_view')
             ->ownerTo('new_owner');
 
         $this->assertAlterViewOwnerQuery(
@@ -104,7 +101,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_view_rename() : void
     {
-        $builder = alter_view('old_view')
+        $builder = alter()->view('old_view')
             ->renameTo('new_view');
 
         $this->assertAlterViewRenameQuery(
@@ -115,7 +112,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_view_rename_if_exists() : void
     {
-        $builder = alter_view('old_view')
+        $builder = alter()->view('old_view')
             ->ifExists()
             ->renameTo('new_view');
 
@@ -127,7 +124,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_view_rename_with_schema() : void
     {
-        $builder = alter_view('public.old_view')
+        $builder = alter()->view('public.old_view')
             ->renameTo('new_view');
 
         $this->assertAlterViewRenameQuery(
@@ -138,7 +135,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_view_set_schema() : void
     {
-        $builder = alter_view('my_view')
+        $builder = alter()->view('my_view')
             ->setSchema('archive');
 
         $this->assertAlterViewSchemaQuery(
@@ -149,7 +146,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_alter_view_set_schema_if_exists() : void
     {
-        $builder = alter_view('my_view')
+        $builder = alter()->view('my_view')
             ->ifExists()
             ->setSchema('archive');
 
@@ -161,7 +158,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view() : void
     {
-        $builder = create_materialized_view('user_stats')
+        $builder = create()->materializedView('user_stats')
             ->as(select(star())->from(table('users')));
 
         $this->assertCreateMaterializedViewQuery(
@@ -172,7 +169,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view_if_not_exists() : void
     {
-        $builder = create_materialized_view('user_stats')
+        $builder = create()->materializedView('user_stats')
             ->ifNotExists()
             ->as(select(star())->from(table('users')));
 
@@ -184,7 +181,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view_using_access_method() : void
     {
-        $builder = create_materialized_view('user_stats')
+        $builder = create()->materializedView('user_stats')
             ->using('heap')
             ->as(select(star())->from(table('users')));
 
@@ -196,7 +193,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view_with_columns() : void
     {
-        $builder = create_materialized_view('user_stats')
+        $builder = create()->materializedView('user_stats')
             ->columns('user_id', 'order_count')
             ->as(select(col('id'), agg_count())->from(table('users')));
 
@@ -208,7 +205,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view_with_data() : void
     {
-        $builder = create_materialized_view('user_stats')
+        $builder = create()->materializedView('user_stats')
             ->as(select()->select(star())->from(table('users')))
             ->withData();
 
@@ -220,7 +217,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view_with_no_data() : void
     {
-        $builder = create_materialized_view('user_stats')
+        $builder = create()->materializedView('user_stats')
             ->as(select()->select(star())->from(table('users')))
             ->withNoData();
 
@@ -232,7 +229,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view_with_schema() : void
     {
-        $builder = create_materialized_view('analytics.user_stats')
+        $builder = create()->materializedView('analytics.user_stats')
             ->as(select(star())->from(table('users')));
 
         $this->assertCreateMaterializedViewQuery(
@@ -243,7 +240,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_materialized_view_with_tablespace() : void
     {
-        $builder = create_materialized_view('user_stats')
+        $builder = create()->materializedView('user_stats')
             ->as(select()->select(star())->from(table('users')))
             ->tablespace('fast_storage');
 
@@ -255,7 +252,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_or_replace_view() : void
     {
-        $builder = create_view('active_users')
+        $builder = create()->view('active_users')
             ->orReplace()
             ->as(select(star())->from(table('users')));
 
@@ -273,7 +270,7 @@ final class ViewBuilderTest extends PGQueryTestCase
      */
     public function test_create_recursive_view_outputs_as_regular_view() : void
     {
-        $builder = create_view('subordinates')
+        $builder = create()->view('subordinates')
             ->recursive()
             ->columns('id', 'name', 'manager_id')
             ->as(select(col('id'), col('name'), col('manager_id'))->from(table('employees')));
@@ -286,7 +283,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_temporary_view() : void
     {
-        $builder = create_view('temp_users')
+        $builder = create()->view('temp_users')
             ->temporary()
             ->as(select(star())->from(table('users')));
 
@@ -298,7 +295,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_view_simple() : void
     {
-        $builder = create_view('active_users')
+        $builder = create()->view('active_users')
             ->as(select(star())->from(table('users')));
 
         $this->assertCreateViewQuery(
@@ -309,7 +306,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_view_with_cascaded_check_option() : void
     {
-        $builder = create_view('active_users')
+        $builder = create()->view('active_users')
             ->as(select()->select(star())->from(table('users')))
             ->withCascadedCheckOption();
 
@@ -321,7 +318,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_view_with_check_option() : void
     {
-        $builder = create_view('active_users')
+        $builder = create()->view('active_users')
             ->as(select(star())->from(table('users'))->where(eq(col('active'), literal_bool(true))))
             ->withCheckOption();
 
@@ -333,7 +330,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_view_with_columns() : void
     {
-        $builder = create_view('user_info')
+        $builder = create()->view('user_info')
             ->columns('user_id', 'user_name', 'email_address')
             ->as(select(col('id'), col('name'), col('email'))->from(table('users')));
 
@@ -345,7 +342,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_view_with_local_check_option() : void
     {
-        $builder = create_view('active_users')
+        $builder = create()->view('active_users')
             ->as(select()->select(star())->from(table('users')))
             ->withLocalCheckOption();
 
@@ -357,7 +354,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_create_view_with_schema() : void
     {
-        $builder = create_view('public.active_users')
+        $builder = create()->view('public.active_users')
             ->as(select(star())->from(table('users')));
 
         $this->assertCreateViewQuery(
@@ -368,7 +365,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_drop_materialized_view_if_exists_cascade() : void
     {
-        $builder = drop_materialized_view('user_stats')
+        $builder = drop()->materializedView('user_stats')
             ->ifExists()
             ->cascade();
 
@@ -380,7 +377,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_drop_materialized_view_simple() : void
     {
-        $builder = drop_materialized_view('user_stats');
+        $builder = drop()->materializedView('user_stats');
 
         $this->assertDropMaterializedViewQuery(
             $builder,
@@ -390,7 +387,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_drop_view_cascade() : void
     {
-        $builder = drop_view('active_users')->cascade();
+        $builder = drop()->view('active_users')->cascade();
 
         $this->assertDropViewQuery(
             $builder,
@@ -400,7 +397,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_drop_view_if_exists() : void
     {
-        $builder = drop_view('active_users')->ifExists();
+        $builder = drop()->view('active_users')->ifExists();
 
         $this->assertDropViewQuery(
             $builder,
@@ -410,7 +407,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_drop_view_if_exists_cascade() : void
     {
-        $builder = drop_view('active_users')
+        $builder = drop()->view('active_users')
             ->ifExists()
             ->cascade();
 
@@ -422,7 +419,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_drop_view_multiple() : void
     {
-        $builder = drop_view('view1', 'view2', 'view3');
+        $builder = drop()->view('view1', 'view2', 'view3');
 
         $this->assertDropViewQuery(
             $builder,
@@ -432,7 +429,7 @@ final class ViewBuilderTest extends PGQueryTestCase
 
     public function test_drop_view_simple() : void
     {
-        $builder = drop_view('active_users');
+        $builder = drop()->view('active_users');
 
         $this->assertDropViewQuery(
             $builder,

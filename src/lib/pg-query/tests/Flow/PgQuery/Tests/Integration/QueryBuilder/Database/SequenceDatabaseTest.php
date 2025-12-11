@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PgQuery\DSL\{
-    alter_sequence,
+    alter,
     col,
-    create_sequence,
-    drop_sequence,
+    create,
+    drop,
     eq,
     func,
     literal_string,
@@ -32,10 +32,10 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_alter_sequence_increment() : void
     {
-        $createQuery = create_sequence(self::SEQUENCE_TEST)->startWith(1);
+        $createQuery = create()->sequence(self::SEQUENCE_TEST)->startWith(1);
         $this->execute($createQuery->toSql());
 
-        $alterQuery = alter_sequence(self::SEQUENCE_TEST)
+        $alterQuery = alter()->sequence(self::SEQUENCE_TEST)
             ->incrementBy(10);
 
         $result = $this->execute($alterQuery->toSql());
@@ -54,7 +54,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_alter_sequence_restart() : void
     {
-        $createQuery = create_sequence(self::SEQUENCE_TEST)->startWith(1);
+        $createQuery = create()->sequence(self::SEQUENCE_TEST)->startWith(1);
         $this->execute($createQuery->toSql());
 
         $this->execute(
@@ -64,7 +64,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
             select(func('nextval', [literal_string(self::SEQUENCE_TEST)]))->toSql()
         );
 
-        $alterQuery = alter_sequence(self::SEQUENCE_TEST)
+        $alterQuery = alter()->sequence(self::SEQUENCE_TEST)
             ->restartWith(1);
 
         $result = $this->execute($alterQuery->toSql());
@@ -80,7 +80,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_create_sequence() : void
     {
-        $query = create_sequence(self::SEQUENCE_TEST);
+        $query = create()->sequence(self::SEQUENCE_TEST);
 
         $result = $this->execute($query->toSql());
 
@@ -98,7 +98,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_create_sequence_with_increment() : void
     {
-        $query = create_sequence(self::SEQUENCE_TEST)
+        $query = create()->sequence(self::SEQUENCE_TEST)
             ->incrementBy(5)
             ->startWith(10);
 
@@ -118,7 +118,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_create_sequence_with_min_max() : void
     {
-        $query = create_sequence(self::SEQUENCE_TEST)
+        $query = create()->sequence(self::SEQUENCE_TEST)
             ->minValue(1)
             ->maxValue(1000)
             ->startWith(1);
@@ -140,7 +140,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_create_sequence_with_start_value() : void
     {
-        $query = create_sequence(self::SEQUENCE_TEST)
+        $query = create()->sequence(self::SEQUENCE_TEST)
             ->startWith(100);
 
         $result = $this->execute($query->toSql());
@@ -156,10 +156,10 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_drop_sequence() : void
     {
-        $createQuery = create_sequence(self::SEQUENCE_TEST);
+        $createQuery = create()->sequence(self::SEQUENCE_TEST);
         $this->execute($createQuery->toSql());
 
-        $dropQuery = drop_sequence(self::SEQUENCE_TEST);
+        $dropQuery = drop()->sequence(self::SEQUENCE_TEST);
 
         $result = $this->execute($dropQuery->toSql());
 
@@ -177,7 +177,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_drop_sequence_if_exists() : void
     {
-        $dropQuery = drop_sequence(self::SEQUENCE_TEST)->ifExists();
+        $dropQuery = drop()->sequence(self::SEQUENCE_TEST)->ifExists();
 
         $result = $this->execute($dropQuery->toSql());
 
@@ -186,7 +186,7 @@ final class SequenceDatabaseTest extends DatabaseTestCase
 
     public function test_sequence_usage_with_nextval() : void
     {
-        $createQuery = create_sequence(self::SEQUENCE_COUNTER)->startWith(1);
+        $createQuery = create()->sequence(self::SEQUENCE_COUNTER)->startWith(1);
         $this->execute($createQuery->toSql());
 
         $val1 = $this->fetchOne($this->execute(

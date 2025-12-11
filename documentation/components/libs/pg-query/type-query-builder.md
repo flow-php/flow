@@ -14,9 +14,9 @@ CREATE TYPE (composite, enum, range), ALTER TYPE, and DROP TYPE.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_composite_type, type_attr};
+use function Flow\PgQuery\DSL\{create, type_attr};
 
-$query = create_composite_type('address')
+$query = create()->compositeType('address')
     ->attributes(
         type_attr('street', 'text'),
         type_attr('city', 'text'),
@@ -32,9 +32,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_composite_type, type_attr};
+use function Flow\PgQuery\DSL\{create, type_attr};
 
-$query = create_composite_type('public.address')
+$query = create()->compositeType('public.address')
     ->attributes(
         type_attr('street', 'text')
     );
@@ -48,9 +48,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_composite_type, type_attr};
+use function Flow\PgQuery\DSL\{create, type_attr};
 
-$query = create_composite_type('person')
+$query = create()->compositeType('person')
     ->attributes(
         type_attr('name', 'text')->collate('en_US')
     );
@@ -66,9 +66,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_enum_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_enum_type('status')
+$query = create()->enumType('status')
     ->labels('pending', 'active', 'closed');
 
 echo $query->toSQL();
@@ -80,9 +80,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_enum_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_enum_type('public.status')
+$query = create()->enumType('public.status')
     ->labels('pending', 'active');
 
 echo $query->toSQL();
@@ -96,9 +96,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_range_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_range_type('floatrange')
+$query = create()->rangeType('floatrange')
     ->subtype('float8');
 
 echo $query->toSQL();
@@ -110,9 +110,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_range_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_range_type('public.floatrange')
+$query = create()->rangeType('public.floatrange')
     ->subtype('float8');
 
 echo $query->toSQL();
@@ -124,9 +124,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_range_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_range_type('floatrange')
+$query = create()->rangeType('floatrange')
     ->subtype('float8')
     ->subtypeOpclass('float8_ops');
 
@@ -139,9 +139,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_range_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_range_type('textrange')
+$query = create()->rangeType('textrange')
     ->subtype('text')
     ->collation('en_US');
 
@@ -154,9 +154,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_range_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_range_type('daterange')
+$query = create()->rangeType('daterange')
     ->subtype('date')
     ->canonical('daterange_canonical');
 
@@ -169,9 +169,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_range_type;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_range_type('floatrange')
+$query = create()->rangeType('floatrange')
     ->subtype('float8')
     ->subtypeDiff('float8mi');
 
@@ -186,9 +186,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_enum_type;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_enum_type('status')
+$query = alter()->enumType('status')
     ->addValue('archived');
 
 echo $query->toSQL();
@@ -200,9 +200,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_enum_type;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_enum_type('status')
+$query = alter()->enumType('status')
     ->addValue('archived')
     ->ifNotExists();
 
@@ -215,9 +215,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_enum_type;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_enum_type('status')
+$query = alter()->enumType('status')
     ->addValueBefore('pending', 'active');
 
 echo $query->toSQL();
@@ -229,9 +229,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_enum_type;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_enum_type('status')
+$query = alter()->enumType('status')
     ->addValueAfter('archived', 'closed');
 
 echo $query->toSQL();
@@ -243,9 +243,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_enum_type;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_enum_type('status')
+$query = alter()->enumType('status')
     ->renameValue('old_name', 'new_name');
 
 echo $query->toSQL();
@@ -259,9 +259,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_type;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_type('address');
+$query = drop()->type('address');
 
 echo $query->toSQL();
 // DROP TYPE address
@@ -272,9 +272,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_type;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_type('address')
+$query = drop()->type('address')
     ->ifExists();
 
 echo $query->toSQL();
@@ -288,9 +288,9 @@ Drop all objects that depend on the type:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_type;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_type('address')
+$query = drop()->type('address')
     ->cascade();
 
 echo $query->toSQL();
@@ -304,9 +304,9 @@ Refuse to drop the type if any objects depend on it (default behavior):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_type;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_type('address')
+$query = drop()->type('address')
     ->restrict();
 
 echo $query->toSQL();
@@ -318,9 +318,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_type;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_type('address', 'status', 'floatrange');
+$query = drop()->type('address', 'status', 'floatrange');
 
 echo $query->toSQL();
 // DROP TYPE address, status, floatrange
@@ -331,9 +331,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_type;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_type('address')
+$query = drop()->type('address')
     ->ifExists()
     ->cascade();
 

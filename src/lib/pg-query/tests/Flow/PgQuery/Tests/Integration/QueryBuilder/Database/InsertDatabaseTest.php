@@ -8,7 +8,7 @@ use function Flow\PgQuery\DSL\{
     col,
     column,
     conflict_columns,
-    create_table,
+    create,
     eq,
     insert,
     literal_int,
@@ -34,7 +34,7 @@ final class InsertDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_PRODUCTS)
+            create()->table(self::TABLE_PRODUCTS)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('sku', sql_type_varchar(50))->notNull())
                 ->column(column('name', sql_type_varchar(100))->notNull())

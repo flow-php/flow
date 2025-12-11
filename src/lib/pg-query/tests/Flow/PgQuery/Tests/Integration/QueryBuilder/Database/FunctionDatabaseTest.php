@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 
 use function Flow\PgQuery\DSL\{
-    alter_function,
-    create_function,
-    drop_function,
+    alter,
+    create,
+    drop,
     func_arg,
     sql_type_integer
 };
@@ -33,7 +33,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_alter_function_rename() : void
     {
         $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -42,7 +42,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            alter_function(self::FUNCTION_NAME)
+            alter()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->renameTo(self::FUNCTION_NAME_RENAMED)
                 ->toSql()
@@ -56,7 +56,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_alter_function_set_volatility() : void
     {
         $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -65,7 +65,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            alter_function(self::FUNCTION_NAME)
+            alter()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->immutable()
                 ->toSql()
@@ -78,7 +78,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_create_function_returns_void() : void
     {
         $result = $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returnsVoid()
                 ->language('sql')
@@ -93,7 +93,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_create_function_with_arguments() : void
     {
         $result = $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments(
                     func_arg(sql_type_integer())->named('a'),
                     func_arg(sql_type_integer())->named('b')
@@ -114,7 +114,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_create_function_with_default_argument() : void
     {
         $result = $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments(
                     func_arg(sql_type_integer())->named('a'),
                     func_arg(sql_type_integer())->named('b')->default('10')
@@ -137,7 +137,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_create_function_with_parallel_safety() : void
     {
         $result = $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -153,7 +153,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_create_function_with_volatility() : void
     {
         $result = $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -169,7 +169,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_create_or_replace_function() : void
     {
         $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -181,7 +181,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         self::assertSame('1', $row['result']);
 
         $result = $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->orReplace()
                 ->arguments()
                 ->returns(sql_type_integer())
@@ -199,7 +199,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_create_simple_function() : void
     {
         $result = $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -217,7 +217,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_drop_function() : void
     {
         $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments()
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -228,7 +228,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         self::assertTrue($this->functionExists(self::FUNCTION_NAME));
 
         $result = $this->execute(
-            drop_function(self::FUNCTION_NAME)->toSql()
+            drop()->function(self::FUNCTION_NAME)->toSql()
         );
 
         self::assertNotFalse($result);
@@ -238,7 +238,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_drop_function_if_exists() : void
     {
         $result = $this->execute(
-            drop_function(self::FUNCTION_NAME)->ifExists()->toSql()
+            drop()->function(self::FUNCTION_NAME)->ifExists()->toSql()
         );
 
         self::assertNotFalse($result);
@@ -247,7 +247,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
     public function test_drop_function_with_arguments() : void
     {
         $this->execute(
-            create_function(self::FUNCTION_NAME)
+            create()->function(self::FUNCTION_NAME)
                 ->arguments(func_arg(sql_type_integer())->named('a'))
                 ->returns(sql_type_integer())
                 ->language('sql')
@@ -256,7 +256,7 @@ final class FunctionDatabaseTest extends DatabaseTestCase
         );
 
         $result = $this->execute(
-            drop_function(self::FUNCTION_NAME)
+            drop()->function(self::FUNCTION_NAME)
                 ->arguments(func_arg(sql_type_integer()))
                 ->toSql()
         );

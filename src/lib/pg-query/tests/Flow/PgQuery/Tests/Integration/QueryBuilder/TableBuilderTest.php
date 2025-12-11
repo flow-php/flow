@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_table,
+use function Flow\PgQuery\DSL\{alter,
     check_constraint,
     col,
     column,
-    create_table,
-    create_table_as,
-    drop_table,
+    create,
+    drop,
     foreign_key,
     primary_key,
     ref_action_cascade,
@@ -31,7 +30,7 @@ final class TableBuilderTest extends PGQueryTestCase
 {
     public function test_alter_table_add_column() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->addColumn(column('email', sql_type_varchar(255))->notNull());
 
         $this->assertAlterTableQuery(
@@ -42,7 +41,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_add_constraint() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->addConstraint(unique_constraint('email')->name('users_email_unique'));
 
         $this->assertAlterTableQuery(
@@ -53,7 +52,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_alter_column_set_default() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->alterColumnSetDefault('status', "'active'");
 
         $this->assertAlterTableQuery(
@@ -64,7 +63,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_alter_column_set_not_null() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->alterColumnSetNotNull('email');
 
         $this->assertAlterTableQuery(
@@ -75,7 +74,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_alter_column_type() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->alterColumnType('name', sql_type_text());
 
         $this->assertAlterTableQuery(
@@ -86,7 +85,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_drop_column() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->dropColumn('temp_column');
 
         $this->assertAlterTableQuery(
@@ -97,7 +96,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_drop_column_cascade() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->dropColumn('temp_column', cascade: true);
 
         $this->assertAlterTableQuery(
@@ -108,7 +107,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_drop_constraint() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->dropConstraint('users_email_unique');
 
         $this->assertAlterTableQuery(
@@ -119,7 +118,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_if_exists() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->ifExists()
             ->addColumn(column('email', sql_type_varchar(255)));
 
@@ -131,7 +130,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_multiple_operations() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->addColumn(column('phone', sql_type_varchar(20)))
             ->dropColumn('fax')
             ->alterColumnSetNotNull('email');
@@ -144,7 +143,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_rename_column() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->renameColumn('old_name', 'new_name');
 
         $this->assertRenameQuery(
@@ -155,7 +154,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_rename_column_if_exists() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->ifExists()
             ->renameColumn('old_name', 'new_name');
 
@@ -167,7 +166,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_rename_column_with_schema() : void
     {
-        $builder = alter_table('users', 'public')
+        $builder = alter()->table('users', 'public')
             ->renameColumn('old_name', 'new_name');
 
         $this->assertRenameQuery(
@@ -178,7 +177,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_rename_constraint() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->renameConstraint('old_constraint', 'new_constraint');
 
         $this->assertRenameQuery(
@@ -189,7 +188,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_rename_to() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->renameTo('users_archive');
 
         $this->assertRenameQuery(
@@ -200,7 +199,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_set_schema() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->setSchema('archive');
 
         $this->assertAlterObjectSchemaQuery(
@@ -211,7 +210,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_set_schema_if_exists() : void
     {
-        $builder = alter_table('users')
+        $builder = alter()->table('users')
             ->ifExists()
             ->setSchema('archive');
 
@@ -223,7 +222,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_alter_table_with_schema() : void
     {
-        $builder = alter_table('users', 'public')
+        $builder = alter()->table('users', 'public')
             ->addColumn(column('email', sql_type_varchar(255)));
 
         $this->assertAlterTableQuery(
@@ -238,7 +237,7 @@ final class TableBuilderTest extends PGQueryTestCase
             ->select(col('id'), col('name'))
             ->from(table('users'));
 
-        $builder = create_table_as('users_backup', $selectBuilder)
+        $builder = create()->tableAs('users_backup', $selectBuilder)
             ->ifNotExists();
 
         $this->assertCreateTableAsQuery(
@@ -253,7 +252,7 @@ final class TableBuilderTest extends PGQueryTestCase
             ->select(col('id'), col('name'))
             ->from(table('users'));
 
-        $builder = create_table_as('users_backup', $selectBuilder)
+        $builder = create()->tableAs('users_backup', $selectBuilder)
             ->columnNames('user_id', 'user_name');
 
         $this->assertCreateTableAsQuery(
@@ -268,7 +267,7 @@ final class TableBuilderTest extends PGQueryTestCase
             ->select(col('id'), col('name'))
             ->from(table('users'));
 
-        $builder = create_table_as('users_backup', $selectBuilder)
+        $builder = create()->tableAs('users_backup', $selectBuilder)
             ->withNoData();
 
         $this->assertCreateTableAsQuery(
@@ -279,7 +278,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_if_not_exists() : void
     {
-        $builder = create_table('users')
+        $builder = create()->table('users')
             ->ifNotExists()
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('name', sql_type_varchar(100)));
@@ -292,7 +291,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_simple() : void
     {
-        $builder = create_table('users')
+        $builder = create()->table('users')
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('name', sql_type_varchar(100))->notNull());
 
@@ -304,7 +303,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_check_constraint() : void
     {
-        $builder = create_table('products')
+        $builder = create()->table('products')
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('price', sql_type_integer()))
             ->constraint(check_constraint('price > 0')->name('positive_price'));
@@ -317,7 +316,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_column_default() : void
     {
-        $builder = create_table('users')
+        $builder = create()->table('users')
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('active', sql_type_boolean())->default(true));
 
@@ -329,7 +328,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_composite_primary_key() : void
     {
-        $builder = create_table('order_items')
+        $builder = create()->table('order_items')
             ->column(column('order_id', sql_type_integer())->notNull())
             ->column(column('product_id', sql_type_integer())->notNull())
             ->column(column('quantity', sql_type_integer()))
@@ -343,7 +342,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_foreign_key() : void
     {
-        $builder = create_table('orders')
+        $builder = create()->table('orders')
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('user_id', sql_type_integer())->notNull())
             ->constraint(
@@ -360,7 +359,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_foreign_key_set_null() : void
     {
-        $builder = create_table('comments')
+        $builder = create()->table('comments')
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('user_id', sql_type_integer()))
             ->constraint(
@@ -376,7 +375,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_schema() : void
     {
-        $builder = create_table('users', 'public')
+        $builder = create()->table('users', 'public')
             ->column(column('id', sql_type_serial())->primaryKey());
 
         $this->assertCreateTableQuery(
@@ -387,7 +386,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_timestamp() : void
     {
-        $builder = create_table('audit_log')
+        $builder = create()->table('audit_log')
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('created_at', sql_type_timestamp())->notNull())
             ->column(column('updated_at', sql_type_timestamp()));
@@ -400,7 +399,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_create_table_with_unique_constraint() : void
     {
-        $builder = create_table('users')
+        $builder = create()->table('users')
             ->column(column('id', sql_type_serial())->primaryKey())
             ->column(column('email', sql_type_varchar(255))->notNull())
             ->constraint(unique_constraint('email'));
@@ -413,7 +412,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_drop_table_cascade() : void
     {
-        $builder = drop_table('users')
+        $builder = drop()->table('users')
             ->cascade();
 
         $this->assertDropTableQuery(
@@ -424,7 +423,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_drop_table_if_exists() : void
     {
-        $builder = drop_table('users')
+        $builder = drop()->table('users')
             ->ifExists();
 
         $this->assertDropTableQuery(
@@ -435,7 +434,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_drop_table_if_exists_cascade() : void
     {
-        $builder = drop_table('users')
+        $builder = drop()->table('users')
             ->ifExists()
             ->cascade();
 
@@ -447,7 +446,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_drop_table_multiple_tables() : void
     {
-        $builder = drop_table('users', 'orders', 'products');
+        $builder = drop()->table('users', 'orders', 'products');
 
         $this->assertDropTableQuery(
             $builder,
@@ -457,7 +456,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_drop_table_restrict() : void
     {
-        $builder = drop_table('users')
+        $builder = drop()->table('users')
             ->restrict();
 
         $this->assertDropTableQuery(
@@ -468,7 +467,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_drop_table_simple() : void
     {
-        $builder = drop_table('users');
+        $builder = drop()->table('users');
 
         $this->assertDropTableQuery(
             $builder,
@@ -478,7 +477,7 @@ final class TableBuilderTest extends PGQueryTestCase
 
     public function test_drop_table_with_schema() : void
     {
-        $builder = drop_table('public.users');
+        $builder = drop()->table('public.users');
 
         $this->assertDropTableQuery(
             $builder,
@@ -492,7 +491,7 @@ final class TableBuilderTest extends PGQueryTestCase
             ->select(col('id'), col('name'))
             ->from(table('users'));
 
-        $builder = create_table_as('users_backup', $selectBuilder);
+        $builder = create()->tableAs('users_backup', $selectBuilder);
 
         $this->assertCreateTableAsQuery(
             $builder,

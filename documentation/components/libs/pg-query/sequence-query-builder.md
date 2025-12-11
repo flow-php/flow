@@ -14,9 +14,9 @@ CREATE SEQUENCE, ALTER SEQUENCE, and DROP SEQUENCE.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq');
+$query = create()->sequence('user_id_seq');
 
 echo $query->toSQL();
 // CREATE SEQUENCE user_id_seq
@@ -27,9 +27,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq', 'public');
+$query = create()->sequence('user_id_seq', 'public');
 
 echo $query->toSQL();
 // CREATE SEQUENCE public.user_id_seq
@@ -40,9 +40,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq')->ifNotExists();
+$query = create()->sequence('user_id_seq')->ifNotExists();
 
 echo $query->toSQL();
 // CREATE SEQUENCE IF NOT EXISTS user_id_seq
@@ -55,9 +55,9 @@ Create a temporary sequence that is automatically dropped at the end of the sess
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('temp_seq')->temporary();
+$query = create()->sequence('temp_seq')->temporary();
 
 echo $query->toSQL();
 // CREATE TEMPORARY SEQUENCE temp_seq
@@ -70,9 +70,9 @@ Create an unlogged sequence for better performance (data not written to WAL):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('fast_seq')->unlogged();
+$query = create()->sequence('fast_seq')->unlogged();
 
 echo $query->toSQL();
 // CREATE UNLOGGED SEQUENCE fast_seq
@@ -85,9 +85,9 @@ Specify the starting value of the sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->startWith(100);
 
 echo $query->toSQL();
@@ -101,9 +101,9 @@ Specify the increment value (positive for ascending, negative for descending):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->incrementBy(10);
 
 echo $query->toSQL();
@@ -117,17 +117,17 @@ Set the minimum value or remove the minimum bound:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
 // Set minimum value
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->minValue(1);
 
 echo $query->toSQL();
 // CREATE SEQUENCE user_id_seq MINVALUE 1
 
 // Remove minimum bound
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->noMinValue();
 
 echo $query->toSQL();
@@ -141,17 +141,17 @@ Set the maximum value or remove the maximum bound:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
 // Set maximum value
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->maxValue(9999999);
 
 echo $query->toSQL();
 // CREATE SEQUENCE user_id_seq MAXVALUE 9999999
 
 // Remove maximum bound
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->noMaxValue();
 
 echo $query->toSQL();
@@ -165,9 +165,9 @@ Specify how many sequence numbers are preallocated and stored in memory:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->cache(20);
 
 echo $query->toSQL();
@@ -181,17 +181,17 @@ Enable or disable cycling when the sequence reaches its bounds:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
 // Enable cycling
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->cycle();
 
 echo $query->toSQL();
 // CREATE SEQUENCE user_id_seq CYCLE
 
 // Disable cycling (explicit)
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->noCycle();
 
 echo $query->toSQL();
@@ -205,9 +205,9 @@ Specify the data type of the sequence (smallint, integer, or bigint):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->asType('bigint');
 
 echo $query->toSQL();
@@ -221,24 +221,24 @@ Associate the sequence with a table column (dropped automatically when the colum
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
 // Basic owned by
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->ownedBy('users', 'id');
 
 echo $query->toSQL();
 // CREATE SEQUENCE user_id_seq OWNED BY users.id
 
 // With schema-qualified table
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->ownedBy('public.users', 'id');
 
 echo $query->toSQL();
 // CREATE SEQUENCE user_id_seq OWNED BY public.users.id
 
 // Remove ownership
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->ownedByNone();
 
 echo $query->toSQL();
@@ -250,9 +250,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create_sequence;
+use function Flow\PgQuery\DSL\create;
 
-$query = create_sequence('user_id_seq')
+$query = create()->sequence('user_id_seq')
     ->asType('bigint')
     ->startWith(1)
     ->incrementBy(1)
@@ -274,17 +274,17 @@ Restart the sequence at its start value or at a specific value:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
 // Restart at start value
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->restart();
 
 echo $query->toSQL();
 // ALTER SEQUENCE user_id_seq RESTART
 
 // Restart at specific value
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->restartWith(1000);
 
 echo $query->toSQL();
@@ -298,9 +298,9 @@ Only alter the sequence if it exists:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->ifExists()
     ->incrementBy(10);
 
@@ -313,9 +313,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_sequence('user_id_seq', 'public')
+$query = alter()->sequence('user_id_seq', 'public')
     ->incrementBy(10);
 
 echo $query->toSQL();
@@ -329,9 +329,9 @@ All CREATE SEQUENCE options can also be modified with ALTER SEQUENCE:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->incrementBy(10)
     ->minValue(1)
     ->maxValue(1000000)
@@ -348,9 +348,9 @@ Rename a sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_sequence('old_seq')
+$query = alter()->sequence('old_seq')
     ->renameTo('new_seq');
 
 echo $query->toSQL();
@@ -364,9 +364,9 @@ Move a sequence to a different schema:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->setSchema('new_schema');
 
 echo $query->toSQL();
@@ -380,9 +380,9 @@ Change the owner of a sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->ownerTo('new_owner');
 
 echo $query->toSQL();
@@ -396,17 +396,17 @@ Change the logging behavior of a sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_sequence;
+use function Flow\PgQuery\DSL\alter;
 
 // Make the sequence logged
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->setLogged();
 
 echo $query->toSQL();
 // ALTER SEQUENCE user_id_seq SET LOGGED
 
 // Make the sequence unlogged
-$query = alter_sequence('user_id_seq')
+$query = alter()->sequence('user_id_seq')
     ->setUnlogged();
 
 echo $query->toSQL();
@@ -420,9 +420,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_sequence('user_id_seq');
+$query = drop()->sequence('user_id_seq');
 
 echo $query->toSQL();
 // DROP SEQUENCE user_id_seq
@@ -433,9 +433,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_sequence('public.user_id_seq');
+$query = drop()->sequence('public.user_id_seq');
 
 echo $query->toSQL();
 // DROP SEQUENCE public.user_id_seq
@@ -446,9 +446,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_sequence('user_id_seq')->ifExists();
+$query = drop()->sequence('user_id_seq')->ifExists();
 
 echo $query->toSQL();
 // DROP SEQUENCE IF EXISTS user_id_seq
@@ -459,9 +459,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_sequence('user_id_seq', 'order_id_seq', 'product_id_seq');
+$query = drop()->sequence('user_id_seq', 'order_id_seq', 'product_id_seq');
 
 echo $query->toSQL();
 // DROP SEQUENCE user_id_seq, order_id_seq, product_id_seq
@@ -474,9 +474,9 @@ Drop objects that depend on the sequence:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_sequence('user_id_seq')
+$query = drop()->sequence('user_id_seq')
     ->cascade();
 
 echo $query->toSQL();
@@ -490,9 +490,9 @@ Refuse to drop the sequence if any objects depend on it (default behavior):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_sequence('user_id_seq')
+$query = drop()->sequence('user_id_seq')
     ->restrict();
 
 echo $query->toSQL();
@@ -504,9 +504,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_sequence;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_sequence('user_id_seq')
+$query = drop()->sequence('user_id_seq')
     ->ifExists()
     ->cascade();
 

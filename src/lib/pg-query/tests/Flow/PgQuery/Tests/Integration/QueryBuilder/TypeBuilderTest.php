@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_enum_type, create_composite_type, create_enum_type, create_range_type, drop_type, sql_type_text, type_attr};
+use function Flow\PgQuery\DSL\{alter, create, drop, sql_type_text, type_attr};
 
 final class TypeBuilderTest extends PGQueryTestCase
 {
     public function test_alter_enum_type_add_value() : void
     {
-        $builder = alter_enum_type('status')
+        $builder = alter()->enumType('status')
             ->addValue('archived');
 
         $this->assertAlterEnumTypeQuery(
@@ -21,7 +21,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_alter_enum_type_add_value_after() : void
     {
-        $builder = alter_enum_type('status')
+        $builder = alter()->enumType('status')
             ->addValueAfter('archived', 'closed');
 
         $this->assertAlterEnumTypeQuery(
@@ -32,7 +32,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_alter_enum_type_add_value_before() : void
     {
-        $builder = alter_enum_type('status')
+        $builder = alter()->enumType('status')
             ->addValueBefore('pending', 'active');
 
         $this->assertAlterEnumTypeQuery(
@@ -43,7 +43,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_alter_enum_type_add_value_if_not_exists() : void
     {
-        $builder = alter_enum_type('status')
+        $builder = alter()->enumType('status')
             ->addValue('archived')
             ->ifNotExists();
 
@@ -55,7 +55,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_alter_enum_type_rename_value() : void
     {
-        $builder = alter_enum_type('status')
+        $builder = alter()->enumType('status')
             ->renameValue('old_name', 'new_name');
 
         $this->assertAlterEnumTypeQuery(
@@ -66,7 +66,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_composite_type_simple() : void
     {
-        $builder = create_composite_type('address')
+        $builder = create()->compositeType('address')
             ->attributes(
                 type_attr('street', sql_type_text()),
                 type_attr('city', sql_type_text()),
@@ -81,7 +81,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_composite_type_with_collation() : void
     {
-        $builder = create_composite_type('person')
+        $builder = create()->compositeType('person')
             ->attributes(
                 type_attr('name', sql_type_text())->collate('en_US')
             );
@@ -94,7 +94,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_composite_type_with_schema() : void
     {
-        $builder = create_composite_type('public.address')
+        $builder = create()->compositeType('public.address')
             ->attributes(
                 type_attr('street', sql_type_text())
             );
@@ -107,7 +107,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_enum_type_simple() : void
     {
-        $builder = create_enum_type('status')
+        $builder = create()->enumType('status')
             ->labels('pending', 'active', 'closed');
 
         $this->assertCreateEnumTypeQuery(
@@ -118,7 +118,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_enum_type_with_schema() : void
     {
-        $builder = create_enum_type('public.status')
+        $builder = create()->enumType('public.status')
             ->labels('pending', 'active');
 
         $this->assertCreateEnumTypeQuery(
@@ -129,7 +129,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_range_type_simple() : void
     {
-        $builder = create_range_type('floatrange')
+        $builder = create()->rangeType('floatrange')
             ->subtype('float8');
 
         $this->assertCreateRangeTypeQuery(
@@ -140,7 +140,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_range_type_with_collation() : void
     {
-        $builder = create_range_type('textrange')
+        $builder = create()->rangeType('textrange')
             ->subtype('text')
             ->collation('en_US');
 
@@ -152,7 +152,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_range_type_with_options() : void
     {
-        $builder = create_range_type('floatrange')
+        $builder = create()->rangeType('floatrange')
             ->subtype('float8')
             ->subtypeOpclass('float8_ops');
 
@@ -164,7 +164,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_create_range_type_with_schema() : void
     {
-        $builder = create_range_type('public.floatrange')
+        $builder = create()->rangeType('public.floatrange')
             ->subtype('float8');
 
         $this->assertCreateRangeTypeQuery(
@@ -175,7 +175,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_drop_type_cascade() : void
     {
-        $builder = drop_type('address')
+        $builder = drop()->type('address')
             ->cascade();
 
         $this->assertDropTypeQuery(
@@ -186,7 +186,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_drop_type_if_exists() : void
     {
-        $builder = drop_type('address')
+        $builder = drop()->type('address')
             ->ifExists();
 
         $this->assertDropTypeQuery(
@@ -197,7 +197,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_drop_type_if_exists_cascade() : void
     {
-        $builder = drop_type('address')
+        $builder = drop()->type('address')
             ->ifExists()
             ->cascade();
 
@@ -209,7 +209,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_drop_type_multiple() : void
     {
-        $builder = drop_type('address', 'status', 'floatrange');
+        $builder = drop()->type('address', 'status', 'floatrange');
 
         $this->assertDropTypeQuery(
             $builder,
@@ -219,7 +219,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_drop_type_restrict() : void
     {
-        $builder = drop_type('address')
+        $builder = drop()->type('address')
             ->restrict();
 
         $this->assertDropTypeQuery(
@@ -230,7 +230,7 @@ final class TypeBuilderTest extends PGQueryTestCase
 
     public function test_drop_type_simple() : void
     {
-        $builder = drop_type('address');
+        $builder = drop()->type('address');
 
         $this->assertDropTypeQuery(
             $builder,

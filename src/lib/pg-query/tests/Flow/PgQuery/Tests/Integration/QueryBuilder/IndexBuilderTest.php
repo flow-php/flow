@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_index,
+use function Flow\PgQuery\DSL\{alter,
     col,
-    create_index,
-    drop_index,
+    create,
+    drop,
     eq,
     index_col,
     index_method_btree,
@@ -23,7 +23,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 {
     public function test_alter_index_rename() : void
     {
-        $builder = alter_index('idx_old')
+        $builder = alter()->index('idx_old')
             ->renameTo('idx_new');
 
         $this->assertAlterIndexRenameQuery(
@@ -34,7 +34,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_alter_index_rename_if_exists() : void
     {
-        $builder = alter_index('idx_old')
+        $builder = alter()->index('idx_old')
             ->ifExists()
             ->renameTo('idx_new');
 
@@ -46,7 +46,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_alter_index_rename_with_schema() : void
     {
-        $builder = alter_index('idx_old', 'public')
+        $builder = alter()->index('idx_old', 'public')
             ->renameTo('idx_new');
 
         $this->assertAlterIndexRenameQuery(
@@ -57,7 +57,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_alter_index_set_tablespace() : void
     {
-        $builder = alter_index('idx_users_email')
+        $builder = alter()->index('idx_users_email')
             ->setTablespace('fast_storage');
 
         $this->assertAlterIndexTablespaceQuery(
@@ -68,7 +68,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_alter_index_set_tablespace_if_exists() : void
     {
-        $builder = alter_index('idx_users_email')
+        $builder = alter()->index('idx_users_email')
             ->ifExists()
             ->setTablespace('fast_storage');
 
@@ -80,7 +80,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_concurrently() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->concurrently()
             ->on('users')
             ->columns('email');
@@ -93,7 +93,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_if_not_exists() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->ifNotExists()
             ->on('users')
             ->columns('email');
@@ -106,7 +106,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_simple() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->on('users')
             ->columns('email');
 
@@ -118,7 +118,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_unique() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->unique()
             ->on('users')
             ->columns('email');
@@ -131,7 +131,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_unique_concurrently_if_not_exists() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->unique()
             ->concurrently()
             ->ifNotExists()
@@ -146,7 +146,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_btree_method() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->on('users')
             ->using(index_method_btree())
             ->columns('email');
@@ -159,7 +159,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_desc_order() : void
     {
-        $builder = create_index('idx_users_created_at')
+        $builder = create()->index('idx_users_created_at')
             ->on('users')
             ->columns(index_col('created_at')->desc());
 
@@ -171,7 +171,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_gin_method() : void
     {
-        $builder = create_index('idx_documents_content')
+        $builder = create()->index('idx_documents_content')
             ->on('documents')
             ->using(index_method_gin())
             ->columns('content');
@@ -184,7 +184,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_hash_method() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->on('users')
             ->using(index_method_hash())
             ->columns('email');
@@ -197,7 +197,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_include() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->on('users')
             ->columns('email')
             ->include('name', 'created_at');
@@ -210,7 +210,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_multiple_columns() : void
     {
-        $builder = create_index('idx_users_name_email')
+        $builder = create()->index('idx_users_name_email')
             ->on('users')
             ->columns('name', 'email');
 
@@ -222,7 +222,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_nulls_first() : void
     {
-        $builder = create_index('idx_users_created_at')
+        $builder = create()->index('idx_users_created_at')
             ->on('users')
             ->columns(index_col('created_at')->desc()->nullsFirst());
 
@@ -234,7 +234,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_nulls_last() : void
     {
-        $builder = create_index('idx_users_created_at')
+        $builder = create()->index('idx_users_created_at')
             ->on('users')
             ->columns(index_col('created_at')->nullsLast());
 
@@ -246,7 +246,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_nulls_not_distinct() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->unique()
             ->on('users')
             ->columns('email')
@@ -260,7 +260,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_on_only() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->onOnly('users')
             ->columns('email');
 
@@ -272,7 +272,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_schema() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->on('users', 'public')
             ->columns('email');
 
@@ -284,7 +284,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_index_with_tablespace() : void
     {
-        $builder = create_index('idx_users_email')
+        $builder = create()->index('idx_users_email')
             ->on('users')
             ->columns('email')
             ->tablespace('fast_storage');
@@ -297,7 +297,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_create_partial_index() : void
     {
-        $builder = create_index('idx_users_active_email')
+        $builder = create()->index('idx_users_active_email')
             ->on('users')
             ->columns('email')
             ->where(eq(col('active'), literal_bool(true)));
@@ -310,7 +310,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_cascade() : void
     {
-        $builder = drop_index('idx_users_email')
+        $builder = drop()->index('idx_users_email')
             ->cascade();
 
         $this->assertDropIndexQuery(
@@ -321,7 +321,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_concurrently() : void
     {
-        $builder = drop_index('idx_users_email')
+        $builder = drop()->index('idx_users_email')
             ->concurrently();
 
         $this->assertDropIndexQuery(
@@ -332,7 +332,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_if_exists() : void
     {
-        $builder = drop_index('idx_users_email')
+        $builder = drop()->index('idx_users_email')
             ->ifExists();
 
         $this->assertDropIndexQuery(
@@ -343,7 +343,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_if_exists_cascade() : void
     {
-        $builder = drop_index('idx_users_email')
+        $builder = drop()->index('idx_users_email')
             ->ifExists()
             ->cascade();
 
@@ -355,7 +355,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_multiple() : void
     {
-        $builder = drop_index('idx_users_email', 'idx_users_name', 'idx_orders_date');
+        $builder = drop()->index('idx_users_email', 'idx_users_name', 'idx_orders_date');
 
         $this->assertDropIndexQuery(
             $builder,
@@ -365,7 +365,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_restrict() : void
     {
-        $builder = drop_index('idx_users_email')
+        $builder = drop()->index('idx_users_email')
             ->restrict();
 
         $this->assertDropIndexQuery(
@@ -376,7 +376,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_simple() : void
     {
-        $builder = drop_index('idx_users_email');
+        $builder = drop()->index('idx_users_email');
 
         $this->assertDropIndexQuery(
             $builder,
@@ -386,7 +386,7 @@ final class IndexBuilderTest extends PGQueryTestCase
 
     public function test_drop_index_with_schema() : void
     {
-        $builder = drop_index('public.idx_users_email');
+        $builder = drop()->index('public.idx_users_email');
 
         $this->assertDropIndexQuery(
             $builder,

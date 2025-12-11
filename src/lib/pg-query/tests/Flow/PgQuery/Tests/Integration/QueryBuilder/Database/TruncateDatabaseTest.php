@@ -7,7 +7,7 @@ namespace Flow\PgQuery\Tests\Integration\QueryBuilder\Database;
 use function Flow\PgQuery\DSL\{
     col,
     column,
-    create_table,
+    create,
     desc,
     insert,
     literal_string,
@@ -31,7 +31,7 @@ final class TruncateDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_ONE)
+            create()->table(self::TABLE_ONE)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))
@@ -39,7 +39,7 @@ final class TruncateDatabaseTest extends DatabaseTestCase
         );
 
         $this->execute(
-            create_table(self::TABLE_TWO)
+            create()->table(self::TABLE_TWO)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->constraint(primary_key('id'))

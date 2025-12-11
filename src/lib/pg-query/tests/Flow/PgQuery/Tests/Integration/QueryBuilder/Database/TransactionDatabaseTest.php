@@ -9,7 +9,7 @@ use function Flow\PgQuery\DSL\{
     col,
     column,
     commit,
-    create_table,
+    create,
     eq,
     insert,
     literal_int,
@@ -38,7 +38,7 @@ final class TransactionDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_ACCOUNTS)
+            create()->table(self::TABLE_ACCOUNTS)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('balance', sql_type_decimal(10, 2))->default(0))

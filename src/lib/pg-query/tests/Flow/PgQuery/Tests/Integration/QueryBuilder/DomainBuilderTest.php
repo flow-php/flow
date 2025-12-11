@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\PgQuery\Tests\Integration\QueryBuilder;
 
-use function Flow\PgQuery\DSL\{alter_domain, create_domain, drop_domain};
+use function Flow\PgQuery\DSL\{alter, create, drop};
 
 use Flow\PgQuery\QueryBuilder\Schema\DataType;
 
@@ -12,7 +12,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 {
     public function test_alter_domain_add_constraint() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->addConstraint('valid_email', "VALUE ~ '^.+@.+$'");
 
         $this->assertAlterDomainQuery(
@@ -23,7 +23,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_alter_domain_drop_constraint() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->dropConstraint('valid_email');
 
         $this->assertAlterDomainQuery(
@@ -34,7 +34,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_alter_domain_drop_constraint_cascade() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->dropConstraint('valid_email')
             ->cascade();
 
@@ -46,7 +46,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_alter_domain_drop_default() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->dropDefault();
 
         $this->assertAlterDomainQuery(
@@ -57,7 +57,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_alter_domain_drop_not_null() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->dropNotNull();
 
         $this->assertAlterDomainQuery(
@@ -68,7 +68,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_alter_domain_set_default() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->setDefault("'default@example.com'");
 
         $this->assertAlterDomainQuery(
@@ -79,7 +79,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_alter_domain_set_not_null() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->setNotNull();
 
         $this->assertAlterDomainQuery(
@@ -90,7 +90,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_alter_domain_validate_constraint() : void
     {
-        $builder = alter_domain('email')
+        $builder = alter()->domain('email')
             ->validateConstraint('valid_email');
 
         $this->assertAlterDomainQuery(
@@ -101,7 +101,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_simple() : void
     {
-        $builder = create_domain('email')
+        $builder = create()->domain('email')
             ->as(DataType::text());
 
         $this->assertCreateDomainQuery(
@@ -112,7 +112,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_check() : void
     {
-        $builder = create_domain('positive_int')
+        $builder = create()->domain('positive_int')
             ->as(DataType::integer())
             ->check('VALUE > 0');
 
@@ -124,7 +124,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_collation() : void
     {
-        $builder = create_domain('email')
+        $builder = create()->domain('email')
             ->as(DataType::text())
             ->collate('en_US');
 
@@ -136,7 +136,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_default() : void
     {
-        $builder = create_domain('email')
+        $builder = create()->domain('email')
             ->as(DataType::text())
             ->default("'default@example.com'");
 
@@ -148,7 +148,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_multiple_constraints() : void
     {
-        $builder = create_domain('email')
+        $builder = create()->domain('email')
             ->as(DataType::text())
             ->notNull()
             ->check("VALUE ~ '^.+@.+\$'");
@@ -161,7 +161,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_named_constraint() : void
     {
-        $builder = create_domain('positive_int')
+        $builder = create()->domain('positive_int')
             ->as(DataType::integer())
             ->constraint('positive_check')
             ->check('VALUE > 0');
@@ -174,7 +174,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_not_null() : void
     {
-        $builder = create_domain('email')
+        $builder = create()->domain('email')
             ->as(DataType::text())
             ->notNull();
 
@@ -186,7 +186,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_null() : void
     {
-        $builder = create_domain('email')
+        $builder = create()->domain('email')
             ->as(DataType::text())
             ->null();
 
@@ -198,7 +198,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_create_domain_with_schema() : void
     {
-        $builder = create_domain('public.email')
+        $builder = create()->domain('public.email')
             ->as(DataType::text());
 
         $this->assertCreateDomainQuery(
@@ -209,7 +209,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_drop_domain_cascade() : void
     {
-        $builder = drop_domain('email')
+        $builder = drop()->domain('email')
             ->cascade();
 
         $this->assertDropDomainQuery(
@@ -220,7 +220,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_drop_domain_if_exists() : void
     {
-        $builder = drop_domain('email')
+        $builder = drop()->domain('email')
             ->ifExists();
 
         $this->assertDropDomainQuery(
@@ -231,7 +231,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_drop_domain_if_exists_cascade() : void
     {
-        $builder = drop_domain('email')
+        $builder = drop()->domain('email')
             ->ifExists()
             ->cascade();
 
@@ -243,7 +243,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_drop_domain_multiple() : void
     {
-        $builder = drop_domain('email', 'phone', 'url');
+        $builder = drop()->domain('email', 'phone', 'url');
 
         $this->assertDropDomainQuery(
             $builder,
@@ -253,7 +253,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_drop_domain_restrict() : void
     {
-        $builder = drop_domain('email')
+        $builder = drop()->domain('email')
             ->restrict();
 
         $this->assertDropDomainQuery(
@@ -264,7 +264,7 @@ final class DomainBuilderTest extends PGQueryTestCase
 
     public function test_drop_domain_simple() : void
     {
-        $builder = drop_domain('email');
+        $builder = drop()->domain('email');
 
         $this->assertDropDomainQuery(
             $builder,

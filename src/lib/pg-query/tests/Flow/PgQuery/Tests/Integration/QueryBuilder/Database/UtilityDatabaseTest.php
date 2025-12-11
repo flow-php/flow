@@ -9,8 +9,7 @@ use function Flow\PgQuery\DSL\{
     cluster,
     column,
     comment,
-    create_index,
-    create_table,
+    create,
     explain,
     insert,
     literal_int,
@@ -38,7 +37,7 @@ final class UtilityDatabaseTest extends DatabaseTestCase
         parent::setUp();
 
         $this->execute(
-            create_table(self::TABLE_NAME)
+            create()->table(self::TABLE_NAME)
                 ->column(column('id', sql_type_serial()))
                 ->column(column('name', sql_type_varchar(100))->notNull())
                 ->column(column('value', sql_type_integer())->default(0))
@@ -97,7 +96,7 @@ final class UtilityDatabaseTest extends DatabaseTestCase
     public function test_cluster_table_on_index() : void
     {
         $this->execute(
-            create_index(self::INDEX_NAME)
+            create()->index(self::INDEX_NAME)
                 ->on(self::TABLE_NAME)
                 ->columns('name')
                 ->toSql()
@@ -114,7 +113,7 @@ final class UtilityDatabaseTest extends DatabaseTestCase
     public function test_cluster_verbose() : void
     {
         $this->execute(
-            create_index(self::INDEX_NAME)
+            create()->index(self::INDEX_NAME)
                 ->on(self::TABLE_NAME)
                 ->columns('name')
                 ->toSql()

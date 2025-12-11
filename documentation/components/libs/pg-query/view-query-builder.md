@@ -14,9 +14,9 @@ CREATE VIEW, CREATE MATERIALIZED VIEW, ALTER VIEW, ALTER MATERIALIZED VIEW, DROP
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_view('active_users')
+$query = create()->view('active_users')
     ->as(select()->from('users'));
 
 echo $query->toSQL();
@@ -30,17 +30,17 @@ Schema can be specified as a separate parameter or as part of the name:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
 // Using schema.name format
-$query = create_view('public.active_users')
+$query = create()->view('public.active_users')
     ->as(select()->from('users'));
 
 echo $query->toSQL();
 // CREATE VIEW public.active_users AS SELECT * FROM users
 
 // Using separate schema parameter
-$query = create_view('active_users', 'public')
+$query = create()->view('active_users', 'public')
     ->as(select()->from('users'));
 
 echo $query->toSQL();
@@ -54,9 +54,9 @@ Create or replace an existing view:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_view('active_users')
+$query = create()->view('active_users')
     ->orReplace()
     ->as(select()->from('users'));
 
@@ -71,9 +71,9 @@ Create a temporary view that is automatically dropped at the end of the session:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_view('temp_users')
+$query = create()->view('temp_users')
     ->temporary()
     ->as(select()->from('users'));
 
@@ -88,9 +88,9 @@ Create a recursive view (typically used with CTEs):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_view('subordinates')
+$query = create()->view('subordinates')
     ->recursive()
     ->columns('id', 'name', 'manager_id')
     ->as(select('id', 'name', 'manager_id')->from('employees'));
@@ -106,9 +106,9 @@ Define column aliases for the view:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_view('user_info')
+$query = create()->view('user_info')
     ->columns('user_id', 'user_name', 'email_address')
     ->as(select('id', 'name', 'email')->from('users'));
 
@@ -123,10 +123,10 @@ Add check options for updatable views:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_view, select, eq, col, literal_bool};
+use function Flow\PgQuery\DSL\{create, select, eq, col, literal_bool};
 
 // WITH CHECK OPTION (defaults to CASCADED)
-$query = create_view('active_users')
+$query = create()->view('active_users')
     ->as(select()->from('users')->where(eq(col('active'), literal_bool(true))))
     ->withCheckOption();
 
@@ -134,7 +134,7 @@ echo $query->toSQL();
 // CREATE VIEW active_users AS SELECT * FROM users WHERE active = true WITH CHECK OPTION
 
 // WITH CASCADED CHECK OPTION
-$query = create_view('active_users')
+$query = create()->view('active_users')
     ->as(select()->from('users'))
     ->withCascadedCheckOption();
 
@@ -142,7 +142,7 @@ echo $query->toSQL();
 // CREATE VIEW active_users AS SELECT * FROM users WITH CASCADED CHECK OPTION
 
 // WITH LOCAL CHECK OPTION
-$query = create_view('active_users')
+$query = create()->view('active_users')
     ->as(select()->from('users'))
     ->withLocalCheckOption();
 
@@ -157,9 +157,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_materialized_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_materialized_view('user_stats')
+$query = create()->materializedView('user_stats')
     ->as(select()->from('users'));
 
 echo $query->toSQL();
@@ -171,9 +171,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_materialized_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_materialized_view('user_stats')
+$query = create()->materializedView('user_stats')
     ->ifNotExists()
     ->as(select()->from('users'));
 
@@ -186,9 +186,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_materialized_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_materialized_view('user_stats')
+$query = create()->materializedView('user_stats')
     ->columns('user_id', 'order_count')
     ->as(select('id', 'count(*)')->from('users'));
 
@@ -203,9 +203,9 @@ Specify a storage access method:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_materialized_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_materialized_view('user_stats')
+$query = create()->materializedView('user_stats')
     ->using('heap')
     ->as(select()->from('users'));
 
@@ -220,9 +220,9 @@ Specify the tablespace for the materialized view:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_materialized_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_materialized_view('user_stats')
+$query = create()->materializedView('user_stats')
     ->as(select()->from('users'))
     ->tablespace('fast_storage');
 
@@ -237,10 +237,10 @@ Control whether to populate the materialized view immediately:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_materialized_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
 // Populate immediately (default behavior)
-$query = create_materialized_view('user_stats')
+$query = create()->materializedView('user_stats')
     ->as(select()->from('users'))
     ->withData();
 
@@ -248,7 +248,7 @@ echo $query->toSQL();
 // CREATE MATERIALIZED VIEW user_stats AS SELECT * FROM users WITH DATA
 
 // Create empty, populate later with REFRESH
-$query = create_materialized_view('user_stats')
+$query = create()->materializedView('user_stats')
     ->as(select()->from('users'))
     ->withNoData();
 
@@ -261,9 +261,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create_materialized_view, select};
+use function Flow\PgQuery\DSL\{create, select};
 
-$query = create_materialized_view('analytics.user_stats')
+$query = create()->materializedView('analytics.user_stats')
     ->ifNotExists()
     ->columns('user_id', 'order_count', 'total_spent')
     ->using('heap')
@@ -285,9 +285,9 @@ Rename a view:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_view('old_view')
+$query = alter()->view('old_view')
     ->renameTo('new_view');
 
 echo $query->toSQL();
@@ -301,9 +301,9 @@ Only alter the view if it exists:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_view('old_view')
+$query = alter()->view('old_view')
     ->ifExists()
     ->renameTo('new_view');
 
@@ -318,9 +318,9 @@ Move a view to a different schema:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_view('my_view')
+$query = alter()->view('my_view')
     ->setSchema('archive');
 
 echo $query->toSQL();
@@ -334,9 +334,9 @@ Change the owner of a view:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_view('my_view')
+$query = alter()->view('my_view')
     ->ownerTo('new_owner');
 
 echo $query->toSQL();
@@ -350,9 +350,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_materialized_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_materialized_view('old_matview')
+$query = alter()->materializedView('old_matview')
     ->renameTo('new_matview');
 
 echo $query->toSQL();
@@ -364,9 +364,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_materialized_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_materialized_view('old_matview')
+$query = alter()->materializedView('old_matview')
     ->ifExists()
     ->renameTo('new_matview');
 
@@ -379,9 +379,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_materialized_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_materialized_view('my_matview')
+$query = alter()->materializedView('my_matview')
     ->setSchema('archive');
 
 echo $query->toSQL();
@@ -393,9 +393,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_materialized_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_materialized_view('my_matview')
+$query = alter()->materializedView('my_matview')
     ->ownerTo('new_owner');
 
 echo $query->toSQL();
@@ -409,16 +409,16 @@ Move a materialized view to a different tablespace:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter_materialized_view;
+use function Flow\PgQuery\DSL\alter;
 
-$query = alter_materialized_view('my_matview')
+$query = alter()->materializedView('my_matview')
     ->setTablespace('fast_storage');
 
 echo $query->toSQL();
 // ALTER MATERIALIZED VIEW my_matview SET TABLESPACE fast_storage
 
 // With IF EXISTS
-$query = alter_materialized_view('my_matview')
+$query = alter()->materializedView('my_matview')
     ->ifExists()
     ->setTablespace('fast_storage');
 
@@ -433,9 +433,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_view;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_view('active_users');
+$query = drop()->view('active_users');
 
 echo $query->toSQL();
 // DROP VIEW active_users
@@ -446,9 +446,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_view;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_view('view1', 'view2', 'view3');
+$query = drop()->view('view1', 'view2', 'view3');
 
 echo $query->toSQL();
 // DROP VIEW view1, view2, view3
@@ -459,9 +459,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_view;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_view('active_users')
+$query = drop()->view('active_users')
     ->ifExists();
 
 echo $query->toSQL();
@@ -475,9 +475,9 @@ Drop objects that depend on the view:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_view;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_view('active_users')
+$query = drop()->view('active_users')
     ->cascade();
 
 echo $query->toSQL();
@@ -489,9 +489,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_view;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_view('active_users')
+$query = drop()->view('active_users')
     ->ifExists()
     ->cascade();
 
@@ -506,9 +506,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_materialized_view;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_materialized_view('user_stats');
+$query = drop()->materializedView('user_stats');
 
 echo $query->toSQL();
 // DROP MATERIALIZED VIEW user_stats
@@ -519,9 +519,9 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop_materialized_view;
+use function Flow\PgQuery\DSL\drop;
 
-$query = drop_materialized_view('user_stats')
+$query = drop()->materializedView('user_stats')
     ->ifExists()
     ->cascade();
 
