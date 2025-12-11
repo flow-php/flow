@@ -13,7 +13,7 @@
         "loader"
     ],
     "require": {
-        "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
         "doctrine/dbal": "^3.6 || ^4.0",
         "flow-php/doctrine-dbal-bulk": "self.version",
         "flow-php/etl": "self.version"
