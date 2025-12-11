@@ -1,6 +1,6 @@
 # Insert Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -11,7 +11,7 @@ The Insert Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal};
+use function Flow\PostgreSql\DSL\{insert, literal};
 
 $query = insert()
     ->into('users')
@@ -29,7 +29,7 @@ Use positional parameters for prepared statements:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, param};
+use function Flow\PostgreSql\DSL\{insert, param};
 
 $query = insert()
     ->into('users')
@@ -45,7 +45,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal};
+use function Flow\PostgreSql\DSL\{insert, literal};
 
 $query = insert()
     ->into('users')
@@ -62,7 +62,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\insert;
+use function Flow\PostgreSql\DSL\insert;
 
 $query = insert()
     ->into('users')
@@ -77,7 +77,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, select, table, col};
+use function Flow\PostgreSql\DSL\{insert, select, table, col};
 
 $selectQuery = select()
     ->select(col('name'), col('email'))
@@ -99,7 +99,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal};
+use function Flow\PostgreSql\DSL\{insert, literal};
 
 // Without specifying conflict target
 $query = insert()
@@ -117,7 +117,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal, conflict_columns};
+use function Flow\PostgreSql\DSL\{insert, literal, conflict_columns};
 
 $query = insert()
     ->into('users')
@@ -134,7 +134,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal, conflict_constraint};
+use function Flow\PostgreSql\DSL\{insert, literal, conflict_constraint};
 
 $query = insert()
     ->into('users')
@@ -151,7 +151,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal, conflict_columns};
+use function Flow\PostgreSql\DSL\{insert, literal, conflict_columns};
 
 $query = insert()
     ->into('users')
@@ -173,7 +173,7 @@ Reference the values that would have been inserted using the `excluded` pseudo-t
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, param, conflict_columns, col};
+use function Flow\PostgreSql\DSL\{insert, param, conflict_columns, col};
 
 $query = insert()
     ->into('users')
@@ -193,7 +193,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     insert, literal, conflict_columns, eq, col
 };
 
@@ -216,7 +216,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal, col};
+use function Flow\PostgreSql\DSL\{insert, literal, col};
 
 // Return specific columns
 $query = insert()
@@ -244,7 +244,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{insert, literal};
+use function Flow\PostgreSql\DSL\{insert, literal};
 
 $query = insert()
     ->into('public.users')
@@ -255,4 +255,4 @@ echo $query->toSQL();
 // INSERT INTO public.users (name) VALUES ('John')
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

@@ -1,6 +1,6 @@
 # Select Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -11,7 +11,7 @@ The Select Query Builder provides a fluent, type-safe interface for constructing
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, col, star, table};
+use function Flow\PostgreSql\DSL\{select, col, star, table};
 
 // Select specific columns
 $query = select(col('id'), col('name'))
@@ -33,7 +33,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col,
     eq, gt, lt, gte, lte, neq, between, is_in, like, is_null,
     literal, literal,
@@ -112,7 +112,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, col, table, eq
 };
 
@@ -174,11 +174,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col, asc, desc, order_by
 };
 
-use Flow\PgQuery\QueryBuilder\Clause\{SortDirection, NullsPosition};
+use Flow\PostgreSql\QueryBuilder\Clause\{SortDirection, NullsPosition};
 
 // Simple ORDER BY
 $query = select(star())
@@ -216,7 +216,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, star, table, col, asc};
+use function Flow\PostgreSql\DSL\{select, star, table, col, asc};
 
 $query = select(star())
     ->from(table('users'))
@@ -233,11 +233,11 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, with, star, table, col, cte, eq, literal
 };
 
-use Flow\PgQuery\QueryBuilder\Clause\CTEMaterialization;
+use Flow\PostgreSql\QueryBuilder\Clause\CTEMaterialization;
 
 // Simple CTE
 $query = with(
@@ -297,7 +297,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, table, col, derived, agg_sum, eq
 };
 
@@ -321,7 +321,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col, derived, lateral, desc, eq, raw_cond
 };
 
@@ -350,7 +350,7 @@ The query builder provides native support for PostgreSQL JSONB operators:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col, literal, raw_expr,
     json_contains, json_contained_by, json_get, json_get_text,
     json_path, json_path_text, json_exists, json_exists_any, json_exists_all
@@ -432,7 +432,7 @@ PostgreSQL array operators are also supported:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col, raw_expr,
     array_contains, array_contained_by, array_overlap
 };
@@ -469,7 +469,7 @@ POSIX regex operators for pattern matching:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col, literal,
     regex_match, regex_imatch, not_regex_match, not_regex_imatch
 };
@@ -514,7 +514,7 @@ PostgreSQL full-text search operator:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col, raw_expr, text_search_match
 };
 
@@ -531,7 +531,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, table, col,
     agg_count, agg_sum, agg_avg, agg_min, agg_max, gt, literal
 };
@@ -573,7 +573,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, col, table};
+use function Flow\PostgreSql\DSL\{select, col, table};
 
 $query1 = select(col('name'))
     ->from(table('users'));
@@ -611,7 +611,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, star, table, col,
     sub_select, exists, agg_count, eq, literal
 };
@@ -650,7 +650,7 @@ Use positional parameters for prepared statements:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, star, table, col, eq, param};
+use function Flow\PostgreSql\DSL\{select, star, table, col, eq, param};
 
 $query = select(star())
     ->from(table('users'))
@@ -665,7 +665,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, star, table, col, eq, literal};
+use function Flow\PostgreSql\DSL\{select, star, table, col, eq, literal};
 
 $query = select(star())
     ->from(table('accounts'))
@@ -689,7 +689,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, col, table};
+use function Flow\PostgreSql\DSL\{select, col, table};
 
 $query = select(
         col('first_name')->as('fname'),
@@ -706,7 +706,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{select, col, table, asc, desc};
+use function Flow\PostgreSql\DSL\{select, col, table, asc, desc};
 
 // SELECT DISTINCT
 $query = select()
@@ -730,4 +730,4 @@ echo $query->toSQL();
 // SELECT DISTINCT ON (department) name, salary FROM employees ORDER BY department ASC, salary DESC
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

@@ -1,6 +1,6 @@
 # Table Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -13,7 +13,7 @@ The Table Query Builder provides a fluent, type-safe interface for constructing 
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_varchar};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_serial, sql_type_varchar};
 
 $query = create()->table('users')
     ->column(column('id', sql_type_serial())->primaryKey())
@@ -28,7 +28,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_serial};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_serial};
 
 $query = create()->table('users', 'public')
     ->column(column('id', sql_type_serial())->primaryKey());
@@ -42,7 +42,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_serial};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_serial};
 
 $query = create()->table('users')
     ->ifNotExists()
@@ -59,7 +59,7 @@ Columns support various constraints and options:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_integer, sql_type_varchar, sql_type_boolean, sql_type_timestamp};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_integer, sql_type_varchar, sql_type_boolean, sql_type_timestamp};
 
 $query = create()->table('users')
     ->column(column('id', sql_type_integer())->identity('ALWAYS'))
@@ -81,7 +81,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_integer};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_serial, sql_type_integer};
 
 $query = create()->table('orders')
     ->column(column('id', sql_type_serial())->primaryKey())
@@ -96,7 +96,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_varchar, sql_type_text};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_varchar, sql_type_text};
 
 $query = create()->table('users')
     ->column(column('first_name', sql_type_varchar(50)))
@@ -114,7 +114,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_integer, primary_key};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_integer, primary_key};
 
 $query = create()->table('order_items')
     ->column(column('order_id', sql_type_integer())->notNull())
@@ -130,7 +130,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_varchar, unique_constraint};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_serial, sql_type_varchar, unique_constraint};
 
 $query = create()->table('users')
     ->column(column('id', sql_type_serial())->primaryKey())
@@ -146,7 +146,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_integer, check_constraint};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_serial, sql_type_integer, check_constraint};
 
 $query = create()->table('products')
     ->column(column('id', sql_type_serial())->primaryKey())
@@ -162,7 +162,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_serial, sql_type_integer, foreign_key, ref_action_cascade, ref_action_restrict};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_serial, sql_type_integer, foreign_key, ref_action_cascade, ref_action_restrict};
 
 $query = create()->table('orders')
     ->column(column('id', sql_type_serial())->primaryKey())
@@ -182,7 +182,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_integer};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_integer};
 
 $query = create()->table('temp_results')
     ->temporary()
@@ -197,7 +197,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_integer};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_integer};
 
 $query = create()->table('cache_data')
     ->unlogged()
@@ -212,7 +212,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_varchar};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_varchar};
 
 $query = create()->table('employees')
     ->column(column('department', sql_type_varchar(100)))
@@ -227,7 +227,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, column, sql_type_integer, sql_type_timestamp};
+use function Flow\PostgreSql\DSL\{create, column, sql_type_integer, sql_type_timestamp};
 
 // Range partitioning
 $query = create()->table('logs')
@@ -256,7 +256,7 @@ $query = create()->table('data')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, select, col, table};
+use function Flow\PostgreSql\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
@@ -273,7 +273,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, select, col, table};
+use function Flow\PostgreSql\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
@@ -291,7 +291,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, select, col, table};
+use function Flow\PostgreSql\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
@@ -309,7 +309,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, select, col, table};
+use function Flow\PostgreSql\DSL\{create, select, col, table};
 
 $selectQuery = select()
     ->select(col('id'), col('name'))
@@ -329,7 +329,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, column, sql_type_varchar};
+use function Flow\PostgreSql\DSL\{alter, column, sql_type_varchar};
 
 $query = alter()->table('users')
     ->addColumn(column('email', sql_type_varchar(255))->notNull());
@@ -343,7 +343,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->table('users')
     ->dropColumn('temp_column');
@@ -364,7 +364,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, sql_type_text};
+use function Flow\PostgreSql\DSL\{alter, sql_type_text};
 
 $query = alter()->table('users')
     ->alterColumnType('name', sql_type_text());
@@ -378,7 +378,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 // Set NOT NULL
 $query = alter()->table('users')
@@ -400,7 +400,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 // Set default
 $query = alter()->table('users')
@@ -422,7 +422,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, unique_constraint};
+use function Flow\PostgreSql\DSL\{alter, unique_constraint};
 
 $query = alter()->table('users')
     ->addConstraint(unique_constraint('email')->name('users_email_unique'));
@@ -436,7 +436,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->table('users')
     ->dropConstraint('users_email_unique');
@@ -450,7 +450,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, column, sql_type_varchar};
+use function Flow\PostgreSql\DSL\{alter, column, sql_type_varchar};
 
 $query = alter()->table('users')
     ->addColumn(column('phone', sql_type_varchar(20)))
@@ -466,7 +466,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, column, sql_type_varchar};
+use function Flow\PostgreSql\DSL\{alter, column, sql_type_varchar};
 
 $query = alter()->table('users')
     ->ifExists()
@@ -481,7 +481,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->table('users')
     ->renameColumn('old_name', 'new_name');
@@ -495,7 +495,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->table('users')
     ->renameConstraint('old_constraint', 'new_constraint');
@@ -509,7 +509,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->table('users')
     ->renameTo('users_archive');
@@ -523,7 +523,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->table('users')
     ->setSchema('archive');
@@ -539,7 +539,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->table('users');
 
@@ -552,7 +552,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->table('users')
     ->ifExists();
@@ -566,7 +566,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->table('users')
     ->cascade();
@@ -580,7 +580,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->table('users', 'orders', 'products');
 
@@ -595,7 +595,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\truncate_table;
+use function Flow\PostgreSql\DSL\truncate_table;
 
 $query = truncate_table('users');
 
@@ -608,7 +608,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\truncate_table;
+use function Flow\PostgreSql\DSL\truncate_table;
 
 $query = truncate_table('users', 'orders', 'products');
 
@@ -621,7 +621,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\truncate_table;
+use function Flow\PostgreSql\DSL\truncate_table;
 
 $query = truncate_table('users')
     ->restartIdentity();
@@ -635,7 +635,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\truncate_table;
+use function Flow\PostgreSql\DSL\truncate_table;
 
 $query = truncate_table('users')
     ->cascade();
@@ -706,4 +706,4 @@ The following referential action functions are available for foreign key constra
 | `ref_action_set_null()` | SET NULL |
 | `ref_action_set_default()` | SET DEFAULT |
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

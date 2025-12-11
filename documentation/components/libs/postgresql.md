@@ -30,7 +30,7 @@ convert it back to SQL.
 ## Requirements
 
 This library requires the `pg_query` PHP extension.
-See [pg-query-ext documentation](/documentation/components/extensions/pg-query-ext.md) for installation instructions.
+See [postgresql-ext documentation](/documentation/components/extensions/postgresql-ext.md) for installation instructions.
 
 ## Installation
 
@@ -49,7 +49,7 @@ Parse, analyze, and transform existing PostgreSQL queries.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{sql_parse, sql_query_tables, sql_query_columns, sql_query_functions};
+use function Flow\PostgreSql\DSL\{sql_parse, sql_query_tables, sql_query_columns, sql_query_functions};
 
 $query = sql_parse('SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id');
 
@@ -80,7 +80,7 @@ foreach (sql_query_functions($query)->all() as $func) {
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     sql_parse,
     sql_fingerprint,
     sql_normalize,
@@ -121,7 +121,7 @@ Convert a parsed query back to SQL, optionally with pretty-printing:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{sql_parse, sql_deparse, sql_deparse_options, sql_format};
+use function Flow\PostgreSql\DSL\{sql_parse, sql_deparse, sql_deparse_options, sql_format};
 
 $query = sql_parse('SELECT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id WHERE u.active = true');
 
@@ -171,7 +171,7 @@ Build PostgreSQL queries programmatically with a fluent, type-safe API.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     select, col, table, literal, eq, asc
 };
 
@@ -190,7 +190,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{
+use function Flow\PostgreSql\DSL\{
     insert, col, param, conflict_columns, returning_all
 };
 
@@ -256,7 +256,7 @@ Add LIMIT/OFFSET pagination to any SELECT query:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\sql_to_paginated_query;
+use function Flow\PostgreSql\DSL\sql_to_paginated_query;
 
 $sql = 'SELECT * FROM users ORDER BY created_at DESC';
 
@@ -272,7 +272,7 @@ Works with complex queries including JOINs, CTEs, subqueries, and UNION:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\sql_to_paginated_query;
+use function Flow\PostgreSql\DSL\sql_to_paginated_query;
 
 $sql = <<<'SQL'
     WITH active_users AS (
@@ -295,7 +295,7 @@ Generate COUNT queries for pagination UIs ("Page 1 of 10"):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{sql_to_count_query, sql_to_paginated_query};
+use function Flow\PostgreSql\DSL\{sql_to_count_query, sql_to_paginated_query};
 
 $sql = 'SELECT * FROM products WHERE active = true ORDER BY name';
 
@@ -315,9 +315,9 @@ scanning and skipping rows:
 ```php
 <?php
 
-use Flow\PgQuery\AST\Transformers\SortOrder;
+use Flow\PostgreSql\AST\Transformers\SortOrder;
 
-use function Flow\PgQuery\DSL\{sql_to_keyset_query, sql_keyset_column};
+use function Flow\PostgreSql\DSL\{sql_to_keyset_query, sql_keyset_column};
 
 $sql = 'SELECT * FROM audit_log ORDER BY created_at DESC, id DESC';
 
@@ -350,10 +350,10 @@ For advanced use cases, traverse the AST with custom visitors:
 ```php
 <?php
 
-use Flow\PgQuery\AST\NodeVisitor;
-use Flow\PgQuery\Protobuf\AST\ColumnRef;
+use Flow\PostgreSql\AST\NodeVisitor;
+use Flow\PostgreSql\Protobuf\AST\ColumnRef;
 
-use function Flow\PgQuery\DSL\sql_parse;
+use function Flow\PostgreSql\DSL\sql_parse;
 
 class ColumnCounter implements NodeVisitor
 {
@@ -419,10 +419,10 @@ Create custom modifiers by implementing the `NodeModifier` interface:
 ```php
 <?php
 
-use Flow\PgQuery\AST\{ModificationContext, NodeModifier};
-use Flow\PgQuery\Protobuf\AST\SelectStmt;
+use Flow\PostgreSql\AST\{ModificationContext, NodeModifier};
+use Flow\PostgreSql\Protobuf\AST\SelectStmt;
 
-use function Flow\PgQuery\DSL\{sql_parse, sql_deparse};
+use function Flow\PostgreSql\DSL\{sql_parse, sql_deparse};
 
 final readonly class AddDistinctModifier implements NodeModifier
 {
@@ -437,7 +437,7 @@ final readonly class AddDistinctModifier implements NodeModifier
             return null;
         }
 
-        $node->setDistinctClause([new \Flow\PgQuery\Protobuf\AST\Node()]);
+        $node->setDistinctClause([new \Flow\PostgreSql\Protobuf\AST\Node()]);
 
         return null;
     }
@@ -481,9 +481,9 @@ For more control, you can use modifier objects directly with `traverse()`:
 ```php
 <?php
 
-use Flow\PgQuery\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
+use Flow\PostgreSql\AST\Transformers\{CountModifier, KeysetColumn, KeysetPaginationConfig, KeysetPaginationModifier, PaginationConfig, PaginationModifier, SortOrder};
 
-use function Flow\PgQuery\DSL\sql_parse;
+use function Flow\PostgreSql\DSL\sql_parse;
 
 // Offset pagination modifier
 $query = sql_parse('SELECT * FROM users ORDER BY id');
@@ -516,7 +516,7 @@ For full control, access the protobuf AST directly:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\sql_parse;
+use function Flow\PostgreSql\DSL\sql_parse;
 
 $query = sql_parse('SELECT id FROM users WHERE active = true');
 
@@ -543,10 +543,10 @@ foreach ($query->raw()->getStmts() as $stmt) {
 ```php
 <?php
 
-use Flow\PgQuery\AST\Transformers\{PaginationConfig, PaginationModifier};
-use Flow\PgQuery\Exception\{ParserException, ExtensionNotLoadedException, PaginationException};
+use Flow\PostgreSql\AST\Transformers\{PaginationConfig, PaginationModifier};
+use Flow\PostgreSql\Exception\{ParserException, ExtensionNotLoadedException, PaginationException};
 
-use function Flow\PgQuery\DSL\sql_parse;
+use function Flow\PostgreSql\DSL\sql_parse;
 
 try {
     $query = sql_parse('INVALID SQL');

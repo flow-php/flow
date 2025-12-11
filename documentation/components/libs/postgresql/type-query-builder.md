@@ -1,6 +1,6 @@
 # Type Query Builder
 
-- [Back](/documentation/components/libs/pg-query.md)
+- [Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -14,7 +14,7 @@ CREATE TYPE (composite, enum, range), ALTER TYPE, and DROP TYPE.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, type_attr};
+use function Flow\PostgreSql\DSL\{create, type_attr};
 
 $query = create()->compositeType('address')
     ->attributes(
@@ -32,7 +32,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, type_attr};
+use function Flow\PostgreSql\DSL\{create, type_attr};
 
 $query = create()->compositeType('public.address')
     ->attributes(
@@ -48,7 +48,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, type_attr};
+use function Flow\PostgreSql\DSL\{create, type_attr};
 
 $query = create()->compositeType('person')
     ->attributes(
@@ -66,7 +66,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->enumType('status')
     ->labels('pending', 'active', 'closed');
@@ -80,7 +80,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->enumType('public.status')
     ->labels('pending', 'active');
@@ -96,7 +96,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->rangeType('floatrange')
     ->subtype('float8');
@@ -110,7 +110,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->rangeType('public.floatrange')
     ->subtype('float8');
@@ -124,7 +124,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->rangeType('floatrange')
     ->subtype('float8')
@@ -139,7 +139,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->rangeType('textrange')
     ->subtype('text')
@@ -154,7 +154,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->rangeType('daterange')
     ->subtype('date')
@@ -169,7 +169,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->rangeType('floatrange')
     ->subtype('float8')
@@ -186,7 +186,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->enumType('status')
     ->addValue('archived');
@@ -200,7 +200,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->enumType('status')
     ->addValue('archived')
@@ -215,7 +215,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->enumType('status')
     ->addValueBefore('pending', 'active');
@@ -229,7 +229,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->enumType('status')
     ->addValueAfter('archived', 'closed');
@@ -243,7 +243,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->enumType('status')
     ->renameValue('old_name', 'new_name');
@@ -259,7 +259,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address');
 
@@ -272,7 +272,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address')
     ->ifExists();
@@ -288,7 +288,7 @@ Drop all objects that depend on the type:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address')
     ->cascade();
@@ -304,7 +304,7 @@ Refuse to drop the type if any objects depend on it (default behavior):
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address')
     ->restrict();
@@ -318,7 +318,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address', 'status', 'floatrange');
 
@@ -331,7 +331,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->type('address')
     ->ifExists()
@@ -341,4 +341,4 @@ echo $query->toSQL();
 // DROP TYPE IF EXISTS address CASCADE
 ```
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

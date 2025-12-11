@@ -1,6 +1,6 @@
 # Schema Query Builder
 
-- [⬅️ Back](/documentation/components/libs/pg-query.md)
+- [⬅️ Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -13,7 +13,7 @@ Create a new schema in the database.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 // Simple schema creation
 $query = create()->schema('my_schema');
@@ -60,7 +60,7 @@ Modify an existing schema.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->schema('old_schema')
     ->renameTo('new_schema');
@@ -74,7 +74,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->schema('my_schema')
     ->ownerTo('new_owner');
@@ -90,7 +90,7 @@ Remove one or more schemas from the database.
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 // Simple drop
 $query = drop()->schema('my_schema');
@@ -144,4 +144,4 @@ echo $query->toSQL();
 | `alter()->schema(string $name)` | `AlterSchemaActionStep` | Start building an ALTER SCHEMA statement |
 | `drop()->schema(string ...$names)` | `DropSchemaFinalStep` | Start building a DROP SCHEMA statement |
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).

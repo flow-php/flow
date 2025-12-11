@@ -1,6 +1,6 @@
 # Function and Procedure Query Builder
 
-- [Back](/documentation/components/libs/pg-query.md)
+- [Back](/documentation/components/libs/postgresql.md)
 
 [TOC]
 
@@ -14,7 +14,7 @@ CREATE FUNCTION, CREATE PROCEDURE, ALTER FUNCTION, ALTER PROCEDURE, DROP FUNCTIO
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg};
 
 $query = create()->function('add_numbers')
     ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
@@ -31,7 +31,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg};
 
 $query = create()->function('increment')
     ->arguments(func_arg('integer')->named('val'))
@@ -48,7 +48,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->function('my_func')
     ->orReplace()
@@ -67,7 +67,7 @@ Create a function that returns a table:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->function('get_users')
     ->returnsTable(['id' => 'integer', 'name' => 'text'])
@@ -85,7 +85,7 @@ Create a function that returns a set of values:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->function('get_user_ids')
     ->returnsSetOf('integer')
@@ -103,7 +103,7 @@ Create a function that returns nothing:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->function('log_event')
     ->returnsVoid()
@@ -119,7 +119,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg};
 
 // IMMUTABLE - same input always produces same output
 $query = create()->function('double')
@@ -149,8 +149,8 @@ $query = create()->function('get_time')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, func_arg};
-use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
+use function Flow\PostgreSql\DSL\{create, func_arg};
+use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 
 $query = create()->function('compute')
     ->arguments(func_arg('integer')->named('x'))
@@ -170,7 +170,7 @@ $query = create()->function('compute')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg};
 
 $query = create()->function('safe_add')
     ->arguments(func_arg('integer')->named('a'), func_arg('integer')->named('b'))
@@ -193,7 +193,7 @@ $query = create()->function('nullable_add')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 // Function runs with the privileges of the creator
 $query = create()->function('admin_only')
@@ -215,7 +215,7 @@ $query = create()->function('normal_func')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->function('expensive_func')
     ->returns('integer')
@@ -235,7 +235,7 @@ $query = create()->function('many_rows')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->function('no_side_effects')
     ->returns('boolean')
@@ -249,7 +249,7 @@ $query = create()->function('no_side_effects')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->function('my_func')
     ->returns('void')
@@ -265,7 +265,7 @@ The `func_arg()` DSL function creates function arguments with various options:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\func_arg;
+use function Flow\PostgreSql\DSL\func_arg;
 
 // Basic argument
 $arg = func_arg('integer');
@@ -288,8 +288,8 @@ $arg = func_arg('text')->variadic();    // VARIADIC - variable number of argumen
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, func_arg};
-use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
+use function Flow\PostgreSql\DSL\{create, func_arg};
+use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 
 $query = create()->function('calculate_discount')
     ->orReplace()
@@ -312,7 +312,7 @@ $query = create()->function('calculate_discount')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{create, func_arg};
+use function Flow\PostgreSql\DSL\{create, func_arg};
 
 $query = create()->procedure('update_stats')
     ->arguments(func_arg('integer')->named('user_id'))
@@ -328,7 +328,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->procedure('my_proc')
     ->orReplace()
@@ -344,7 +344,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->procedure('admin_proc')
     ->language('sql')
@@ -357,7 +357,7 @@ $query = create()->procedure('admin_proc')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\create;
+use function Flow\PostgreSql\DSL\create;
 
 $query = create()->procedure('my_proc')
     ->language('sql')
@@ -372,7 +372,7 @@ $query = create()->procedure('my_proc')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg};
 
 $query = alter()->function('my_func')
     ->arguments(func_arg('integer'))
@@ -387,8 +387,8 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, func_arg};
-use Flow\PgQuery\QueryBuilder\Schema\Function\ParallelSafety;
+use function Flow\PostgreSql\DSL\{alter, func_arg};
+use Flow\PostgreSql\QueryBuilder\Schema\Function\ParallelSafety;
 
 $query = alter()->function('my_func')
     ->arguments(func_arg('integer'))
@@ -403,7 +403,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg};
 
 $query = alter()->function('old_name')
     ->arguments(func_arg('text'))
@@ -418,7 +418,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg};
 
 $query = alter()->function('my_func')
     ->arguments(func_arg('integer'))
@@ -433,7 +433,7 @@ $query = alter()->function('set_returning_func')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 // Set a configuration parameter
 $query = alter()->function('my_func')
@@ -455,7 +455,7 @@ $query = alter()->function('my_func')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{alter, func_arg};
+use function Flow\PostgreSql\DSL\{alter, func_arg};
 
 $query = alter()->procedure('old_proc')
     ->arguments(func_arg('integer'))
@@ -470,7 +470,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->procedure('my_proc')
     ->securityDefiner();
@@ -484,7 +484,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\alter;
+use function Flow\PostgreSql\DSL\alter;
 
 $query = alter()->procedure('my_proc')
     ->set('work_mem', '2GB');
@@ -503,7 +503,7 @@ $query = alter()->procedure('my_proc')
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->function('my_func');
 
@@ -516,7 +516,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg};
 
 $query = drop()->function('my_func')
     ->arguments(func_arg('integer'), func_arg('text'));
@@ -530,7 +530,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg};
 
 $query = drop()->function('my_func')
     ->ifExists()
@@ -545,7 +545,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg};
 
 $query = drop()->function('my_func')
     ->ifExists()
@@ -561,7 +561,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->function('my_func')
     ->restrict();
@@ -577,7 +577,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\drop;
+use function Flow\PostgreSql\DSL\drop;
 
 $query = drop()->procedure('my_proc');
 
@@ -590,7 +590,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\{drop, func_arg};
+use function Flow\PostgreSql\DSL\{drop, func_arg};
 
 $query = drop()->procedure('my_proc')
     ->ifExists()
@@ -608,7 +608,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\call;
+use function Flow\PostgreSql\DSL\call;
 
 $query = call('update_stats');
 
@@ -621,7 +621,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\call;
+use function Flow\PostgreSql\DSL\call;
 
 $query = call('update_stats')
     ->with(123, 'test');
@@ -635,7 +635,7 @@ Arguments can be integers, strings, floats, booleans, or null:
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\call;
+use function Flow\PostgreSql\DSL\call;
 
 $query = call('process_data')
     ->with(42, 'hello', 3.14, true, null);
@@ -651,7 +651,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\do_block;
+use function Flow\PostgreSql\DSL\do_block;
 
 $query = do_block('BEGIN RAISE NOTICE $$Hello$$; END;');
 
@@ -664,7 +664,7 @@ echo $query->toSQL();
 ```php
 <?php
 
-use function Flow\PgQuery\DSL\do_block;
+use function Flow\PostgreSql\DSL\do_block;
 
 $query = do_block('SELECT 1')->language('sql');
 
@@ -686,4 +686,4 @@ echo $query->toSQL();
 | `call(string $procedure)` | Call a procedure |
 | `do_block(string $code)` | Execute an anonymous code block |
 
-For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/pg-query/namespaces/flow-pgquery-dsl.html).
+For a complete list of DSL functions, see the [DSL reference](/documentation/api/lib/postgresql/namespaces/flow-postgresql-dsl.html).
