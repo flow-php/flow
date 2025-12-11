@@ -131,10 +131,10 @@ final readonly class InsertBuilder implements InsertColumnsStep, InsertDoUpdateS
                     if ($targetList === null || \count($targetList) === 0) {
                         $defaultValues = true;
                     } else {
-                        $selectQuery = new class($selectStmt) implements SelectFinalStep {
+                        $selectQuery = new readonly class($selectStmt) implements SelectFinalStep {
                             use AstToSql;
 
-                            public function __construct(private readonly SelectStmt $stmt)
+                            public function __construct(private SelectStmt $stmt)
                             {
                             }
 

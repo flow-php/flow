@@ -8,9 +8,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 final class Option
 {
-    private const COLUMN_SCORE_WEIGHT = 100_000;
+    private const int COLUMN_SCORE_WEIGHT = 100_000;
 
-    private const COLUMNS_LENGTH_WEIGHT = 10_000;
+    private const int COLUMNS_LENGTH_WEIGHT = 10_000;
 
     /**
      * @var array<array<mixed>>

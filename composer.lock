@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6e29525550cd4fc1cd7530499ac5030d",
+    "content-hash": "cdf88bcac0dc3c9c2ee777951beab6e8",
     "packages": [
         {
             "name": "async-aws/core",
@@ -196,21 +196,21 @@
         },
         {
             "name": "coduo/php-humanizer",
-            "version": "5.0.2",
+            "version": "5.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/coduo/php-humanizer.git",
-                "reference": "8873082ace4660527641d6306513315e45087270"
+                "reference": "b38f769ec45ae708ca76ded6b2ddea2e5938fdfb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/8873082ace4660527641d6306513315e45087270",
-                "reference": "8873082ace4660527641d6306513315e45087270",
+                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/b38f769ec45ae708ca76ded6b2ddea2e5938fdfb",
+                "reference": "b38f769ec45ae708ca76ded6b2ddea2e5938fdfb",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.2 || ~8.3 || ~8.4",
-                "symfony/translation": "~5.4||~6.4||~7"
+                "php": "~8.3 || ~8.4 || ~8.5",
+                "symfony/translation": "~5.4 || ~6.4 || ~7 || ~8"
             },
             "require-dev": {
                 "aeon-php/calendar": "^1.0",
@@ -247,7 +247,7 @@
             ],
             "support": {
                 "issues": "https://github.com/coduo/php-humanizer/issues",
-                "source": "https://github.com/coduo/php-humanizer/tree/5.0.2"
+                "source": "https://github.com/coduo/php-humanizer/tree/5.0.3"
             },
             "funding": [
                 {
@@ -259,7 +259,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-06T15:51:17+00:00"
+            "time": "2025-12-11T20:13:52+00:00"
         },
         {
             "name": "doctrine/dbal",
@@ -1513,16 +1513,16 @@
         },
         {
             "name": "openspout/openspout",
-            "version": "v4.28.5",
+            "version": "v4.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/openspout/openspout.git",
-                "reference": "ab05a09fe6fce57c90338f83280648a9786ce36b"
+                "reference": "41f045c1f632e1474e15d4c7bc3abcb4a153563d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openspout/openspout/zipball/ab05a09fe6fce57c90338f83280648a9786ce36b",
-                "reference": "ab05a09fe6fce57c90338f83280648a9786ce36b",
+                "url": "https://api.github.com/repos/openspout/openspout/zipball/41f045c1f632e1474e15d4c7bc3abcb4a153563d",
+                "reference": "41f045c1f632e1474e15d4c7bc3abcb4a153563d",
                 "shasum": ""
             },
             "require": {
@@ -1532,17 +1532,17 @@
                 "ext-libxml": "*",
                 "ext-xmlreader": "*",
                 "ext-zip": "*",
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0"
             },
             "require-dev": {
                 "ext-zlib": "*",
-                "friendsofphp/php-cs-fixer": "^3.68.3",
-                "infection/infection": "^0.29.10",
-                "phpbench/phpbench": "^1.4.0",
-                "phpstan/phpstan": "^2.1.2",
-                "phpstan/phpstan-phpunit": "^2.0.4",
-                "phpstan/phpstan-strict-rules": "^2",
-                "phpunit/phpunit": "^11.5.4"
+                "friendsofphp/php-cs-fixer": "^3.86.0",
+                "infection/infection": "^0.31.2",
+                "phpbench/phpbench": "^1.4.1",
+                "phpstan/phpstan": "^2.1.22",
+                "phpstan/phpstan-phpunit": "^2.0.7",
+                "phpstan/phpstan-strict-rules": "^2.0.6",
+                "phpunit/phpunit": "^12.3.7"
             },
             "suggest": {
                 "ext-iconv": "To handle non UTF-8 CSV files (if \"php-mbstring\" is not already installed or is too limited)",
@@ -1590,7 +1590,7 @@
             ],
             "support": {
                 "issues": "https://github.com/openspout/openspout/issues",
-                "source": "https://github.com/openspout/openspout/tree/v4.28.5"
+                "source": "https://github.com/openspout/openspout/tree/v4.32.0"
             },
             "funding": [
                 {
@@ -1602,7 +1602,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-01-30T13:51:11+00:00"
+            "time": "2025-09-03T16:03:54+00:00"
         },
         {
             "name": "packaged/thrift",
@@ -5530,7 +5530,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "ext-bcmath": "*",
         "ext-dom": "*",
         "ext-hash": "*",

@@ -13,6 +13,7 @@ use Flow\Filesystem\Tests\Double\FakeNativeLocalFilesystem;
 
 final class OverwriteModeTest extends FilesystemStreamsTestCase
 {
+    #[\Override]
     protected function tearDown() : void
     {
         parent::tearDown();

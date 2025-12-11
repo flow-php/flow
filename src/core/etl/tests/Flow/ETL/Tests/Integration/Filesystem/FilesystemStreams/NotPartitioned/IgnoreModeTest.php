@@ -10,6 +10,7 @@ use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTes
 
 final class IgnoreModeTest extends FilesystemStreamsTestCase
 {
+    #[\Override]
     protected function tearDown() : void
     {
         parent::tearDown();

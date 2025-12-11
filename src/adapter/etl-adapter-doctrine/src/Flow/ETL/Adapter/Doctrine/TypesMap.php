@@ -27,7 +27,7 @@ final class TypesMap
     /**
      * @var array<class-string<DbalType>, class-string<FlowType<mixed>>>
      */
-    public const DBAL_TYPES = [
+    public const array DBAL_TYPES = [
         \Doctrine\DBAL\Types\StringType::class => StringType::class,
         TextType::class => StringType::class,
         \Doctrine\DBAL\Types\IntegerType::class => IntegerType::class,
@@ -53,7 +53,7 @@ final class TypesMap
     /**
      * @var array<class-string<FlowType<mixed>>, class-string<DbalType>>
      */
-    public const FLOW_TYPES = [
+    public const array FLOW_TYPES = [
         StringType::class => \Doctrine\DBAL\Types\StringType::class,
         IntegerType::class => \Doctrine\DBAL\Types\IntegerType::class,
         FloatType::class => \Doctrine\DBAL\Types\FloatType::class,

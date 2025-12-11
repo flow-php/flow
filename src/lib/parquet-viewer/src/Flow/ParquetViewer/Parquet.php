@@ -10,6 +10,7 @@ use Symfony\Component\Console\Command\{CompleteCommand, DumpCompletionCommand, H
 
 final class Parquet extends Application
 {
+    #[\Override]
     protected function getDefaultCommands() : array
     {
         return [

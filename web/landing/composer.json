@@ -3,7 +3,7 @@
     "description": "Flow PHP ETL - Web",
     "type": "project",
     "require": {
-        "php": "8.2.*",
+        "php": "8.3.*",
         "flow-php/etl": ">=0.23.0",
         "flow-php/etl-adapter-http": ">=0.23.0",
         "nyholm/psr7": "^1.8",

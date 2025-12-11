@@ -13,7 +13,7 @@ use Flow\Filesystem\{FilesystemTable, Partition};
  */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
-    public const FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';
+    public const string FLOW_TMP_FILE_PREFIX = '._flow_php_tmp.';
 
     private SaveMode $saveMode = SaveMode::ExceptionIfExists;
 

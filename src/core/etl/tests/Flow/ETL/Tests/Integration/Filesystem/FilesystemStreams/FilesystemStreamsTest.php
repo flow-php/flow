@@ -11,6 +11,7 @@ use Flow\Filesystem\Path\Filter\KeepAll;
 
 final class FilesystemStreamsTest extends FilesystemStreamsTestCase
 {
+    #[\Override]
     protected function tearDown() : void
     {
         parent::tearDown();

@@ -9,11 +9,11 @@ namespace Flow\Snappy;
  */
 final class SnappyCompressor
 {
-    private const BLOCK_LOG = 16;
+    private const int BLOCK_LOG = 16;
 
     private const BLOCK_SIZE = 1 << self::BLOCK_LOG;
 
-    private const MAX_HASH_TABLE_BITS = 14;
+    private const int MAX_HASH_TABLE_BITS = 14;
 
     private readonly int $arrayLength;
 

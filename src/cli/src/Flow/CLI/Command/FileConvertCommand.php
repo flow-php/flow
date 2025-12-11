@@ -26,7 +26,7 @@ final class FileConvertCommand extends Command
     use ParquetOptions;
     use XMLOptions;
 
-    private const DEFAULT_BATCH_SIZE = 100;
+    private const int DEFAULT_BATCH_SIZE = 100;
 
     private ?Config $flowConfig = null;
 

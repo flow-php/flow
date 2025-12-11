@@ -13,7 +13,7 @@ final readonly class TypePriorities
     /**
      * @var array<class-string<Entry<mixed>>,int>
      */
-    public const PRIORITIES = [
+    public const array PRIORITIES = [
         UuidEntry::class => 1,
         IntegerEntry::class => 2,
         BooleanEntry::class => 3,

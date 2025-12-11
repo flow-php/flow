@@ -12,6 +12,7 @@ use Flow\Filesystem\Partition;
 
 final class IgnoreModeTest extends FilesystemStreamsTestCase
 {
+    #[\Override]
     protected function tearDown() : void
     {
         parent::tearDown();

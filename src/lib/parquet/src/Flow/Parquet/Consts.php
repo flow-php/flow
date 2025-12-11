@@ -6,7 +6,7 @@ namespace Flow\Parquet;
 
 final class Consts
 {
-    public const PHP_INT32_MAX = 2147483647;
+    public const int PHP_INT32_MAX = 2147483647;
 
-    public const PHP_INT64_MAX = 9223372036854775807;
+    public const int PHP_INT64_MAX = 9223372036854775807;
 }

@@ -10,31 +10,31 @@ use Flow\Parquet\ThriftModel\{BsonType, DateType, DecimalType, EnumType, IntType
 
 final readonly class LogicalType
 {
-    public const BSON = 'BSON';
+    public const string BSON = 'BSON';
 
-    public const DATE = 'DATE';
+    public const string DATE = 'DATE';
 
-    public const DECIMAL = 'DECIMAL';
+    public const string DECIMAL = 'DECIMAL';
 
-    public const ENUM = 'ENUM';
+    public const string ENUM = 'ENUM';
 
-    public const INTEGER = 'INTEGER';
+    public const string INTEGER = 'INTEGER';
 
-    public const JSON = 'JSON';
+    public const string JSON = 'JSON';
 
-    public const LIST = 'LIST';
+    public const string LIST = 'LIST';
 
-    public const MAP = 'MAP';
+    public const string MAP = 'MAP';
 
-    public const STRING = 'STRING';
+    public const string STRING = 'STRING';
 
-    public const TIME = 'TIME';
+    public const string TIME = 'TIME';
 
-    public const TIMESTAMP = 'TIMESTAMP';
+    public const string TIMESTAMP = 'TIMESTAMP';
 
-    public const UNKNOWN = 'UNKNOWN';
+    public const string UNKNOWN = 'UNKNOWN';
 
-    public const UUID = 'UUID';
+    public const string UUID = 'UUID';
 
     public function __construct(
         private string $name,

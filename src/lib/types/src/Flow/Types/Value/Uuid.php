@@ -13,7 +13,7 @@ final readonly class Uuid implements \Stringable
      * This regexp is a port of the Uuid library,
      * which is copyright Ben Ramsey, @see https://github.com/ramsey/uuid.
      */
-    private const UUID_REGEXP = '/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/ms';
+    private const string UUID_REGEXP = '/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/ms';
 
     private string $value;
 

@@ -11,6 +11,7 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 final class SynchronousPipelineTest extends FlowIntegrationTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();

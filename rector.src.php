@@ -29,5 +29,5 @@ return RectorConfig::configure()
     ->withCache(__DIR__ . '/var/rector/src')
     ->withImportNames(importShortClasses: false, removeUnusedImports: true)
     ->withSets([
-        LevelSetList::UP_TO_PHP_82,
+        LevelSetList::UP_TO_PHP_83,
     ]);

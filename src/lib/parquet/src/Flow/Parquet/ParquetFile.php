@@ -23,7 +23,7 @@ use Flow\Parquet\ThriftModel\FileMetaData;
 
 final class ParquetFile
 {
-    public const PARQUET_MAGIC_NUMBER = 'PAR1';
+    public const string PARQUET_MAGIC_NUMBER = 'PAR1';
 
     private readonly DremelAssembler $dremelAssembler;
 

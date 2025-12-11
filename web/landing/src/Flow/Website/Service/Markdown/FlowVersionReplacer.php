@@ -11,7 +11,7 @@ use League\CommonMark\Node\Inline\Text;
 
 final readonly class FlowVersionReplacer
 {
-    private const VERSION_PLACEHOLDER = '--FLOW_PHP_VERSION--';
+    private const string VERSION_PLACEHOLDER = '--FLOW_PHP_VERSION--';
 
     public function __construct(private string $flowVersion)
     {

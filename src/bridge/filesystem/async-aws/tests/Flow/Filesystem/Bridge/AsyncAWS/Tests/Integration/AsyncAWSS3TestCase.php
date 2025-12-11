@@ -12,6 +12,7 @@ use Flow\Filesystem\Path;
 
 abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();
@@ -30,6 +31,7 @@ abstract class AsyncAWSS3TestCase extends FlowIntegrationTestCase
         $this->s3Client()->createBucket(['Bucket' => $this->bucket()]);
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         parent::tearDown();

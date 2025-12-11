@@ -13,7 +13,7 @@ use Flow\Types\Type;
  */
 final readonly class HTMLType implements Type
 {
-    public const HTML_ALIKE_REGEX = <<<'REGXP'
+    public const string HTML_ALIKE_REGEX = <<<'REGXP'
 @^
     <!DOCTYPE\s+html[^>]*>\s*      # must start with <!DOCTYPE html ...>
     <html[^>]*>\s*                 # opening <html>

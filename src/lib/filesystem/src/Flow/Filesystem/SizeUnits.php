@@ -6,11 +6,11 @@ namespace Flow\Filesystem;
 
 final class SizeUnits
 {
-    public const GiB_SIZE = 1073741824;
+    public const int GiB_SIZE = 1073741824;
 
-    public const KiB_SIZE = 1024;
+    public const int KiB_SIZE = 1024;
 
-    public const MiB_SIZE = 1048576;
+    public const int MiB_SIZE = 1048576;
 
     public static function gbToBytes(int $gb) : int
     {

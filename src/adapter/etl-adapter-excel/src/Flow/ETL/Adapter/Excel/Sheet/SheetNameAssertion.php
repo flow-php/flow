@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 final class SheetNameAssertion
 {
-    private const SHEET_NAME_REGEX = '/^(?!.{32,})[^\/*?:[\]]+$/';
+    private const string SHEET_NAME_REGEX = '/^(?!.{32,})[^\/*?:[\]]+$/';
 
     public static function assert(string $sheetName) : void
     {
