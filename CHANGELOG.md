@@ -30,6 +30,7 @@
 - [#2024](https://github.com/flow-php/flow/pull/2024) - **Update Homebrew TAP formula: flow-php to version: 0.28.0** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#2063](https://github.com/flow-php/flow/pull/2063) - **failing test on latest version of symfony in php 8.4** - [@norberttech](https://github.com/norberttech)
 - [#2048](https://github.com/flow-php/flow/pull/2048) - **headline links to navigate to specific section of page** - [@norberttech](https://github.com/norberttech)
 - [#2047](https://github.com/flow-php/flow/pull/2047) - **permalinks in website** - [@norberttech](https://github.com/norberttech)
 - [#2043](https://github.com/flow-php/flow/pull/2043) - **added missing styles for output in playground** - [@norberttech](https://github.com/norberttech)
