@@ -22,6 +22,7 @@
 - [#2027](https://github.com/flow-php/flow/pull/2027) - **playground - missing reset code test** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [ca8d0e](https://github.com/flow-php/flow/commit/ca8d0e9ee26e29f8550a82b7621c237b01346fdc) - **chore: add 8.5 to flow-php/pg-query-ext** - [@norberttech](https://github.com/norberttech)
 - [#2065](https://github.com/flow-php/flow/pull/2065) - **update cli composer.json while building phar to use local repositories** - [@norberttech](https://github.com/norberttech)
 - [#2065](https://github.com/flow-php/flow/pull/2065) - **updated dependncies** - [@norberttech](https://github.com/norberttech)
 - [#2065](https://github.com/flow-php/flow/pull/2065) - **updated manifest.json** - [@norberttech](https://github.com/norberttech)
