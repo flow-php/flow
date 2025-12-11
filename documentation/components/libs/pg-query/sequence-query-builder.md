@@ -301,7 +301,7 @@ Only alter the sequence if it exists:
 use function Flow\PgQuery\DSL\alter_sequence;
 
 $query = alter_sequence('user_id_seq')
-    ->withIfExists()
+    ->ifExists()
     ->incrementBy(10);
 
 echo $query->toSQL();
@@ -448,7 +448,7 @@ echo $query->toSQL();
 
 use function Flow\PgQuery\DSL\drop_sequence;
 
-$query = drop_sequence('user_id_seq')->withIfExists();
+$query = drop_sequence('user_id_seq')->ifExists();
 
 echo $query->toSQL();
 // DROP SEQUENCE IF EXISTS user_id_seq
@@ -507,7 +507,7 @@ echo $query->toSQL();
 use function Flow\PgQuery\DSL\drop_sequence;
 
 $query = drop_sequence('user_id_seq')
-    ->withIfExists()
+    ->ifExists()
     ->cascade();
 
 echo $query->toSQL();

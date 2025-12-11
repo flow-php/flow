@@ -1717,9 +1717,9 @@ function transaction_snapshot(string $snapshotId) : SetTransactionFinalStep
  * Produces: PREPARE TRANSACTION 'my_transaction'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function prepare_transaction(string $gid) : PreparedTransactionFinalStep
+function prepare_transaction(string $transactionId) : PreparedTransactionFinalStep
 {
-    return PreparedTransactionBuilder::prepare($gid);
+    return PreparedTransactionBuilder::prepare($transactionId);
 }
 
 /**
@@ -1729,9 +1729,9 @@ function prepare_transaction(string $gid) : PreparedTransactionFinalStep
  * Produces: COMMIT PREPARED 'my_transaction'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function commit_prepared(string $gid) : PreparedTransactionFinalStep
+function commit_prepared(string $transactionId) : PreparedTransactionFinalStep
 {
-    return PreparedTransactionBuilder::commitPrepared($gid);
+    return PreparedTransactionBuilder::commitPrepared($transactionId);
 }
 
 /**
@@ -1741,9 +1741,9 @@ function commit_prepared(string $gid) : PreparedTransactionFinalStep
  * Produces: ROLLBACK PREPARED 'my_transaction'
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function rollback_prepared(string $gid) : PreparedTransactionFinalStep
+function rollback_prepared(string $transactionId) : PreparedTransactionFinalStep
 {
-    return PreparedTransactionBuilder::rollbackPrepared($gid);
+    return PreparedTransactionBuilder::rollbackPrepared($transactionId);
 }
 
 // ----------------------------------------------------------------------------
@@ -2542,12 +2542,12 @@ function alter_sequence(string $name, ?string $schema = null) : AlterSequenceOpt
  * Example: drop_sequence('user_id_seq', 'order_id_seq')->cascade()
  * Produces: DROP SEQUENCE user_id_seq, order_id_seq CASCADE
  *
- * @param string ...$names Sequence names to drop
+ * @param string ...$sequences Sequence names to drop
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::SCHEMA)]
-function drop_sequence(string ...$names) : DropSequenceFinalStep
+function drop_sequence(string ...$sequences) : DropSequenceFinalStep
 {
-    return DropSequenceBuilder::create()->sequence(...$names);
+    return DropSequenceBuilder::create()->sequence(...$sequences);
 }
 
 // ----------------------------------------------------------------------------
@@ -2722,14 +2722,14 @@ function alter_schema(string $name) : AlterSchemaActionStep
  * Example: drop_schema('schema1', 'schema2')->ifExists()->cascade()
  * Produces: DROP SCHEMA IF EXISTS schema1, schema2 CASCADE
  *
- * @param string ...$names The schema name(s) to drop
+ * @param string ...$schemas The schema name(s) to drop
  *
  * @return DropSchemaFinalStep Builder for schema drop options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_schema(string ...$names) : DropSchemaFinalStep
+function drop_schema(string ...$schemas) : DropSchemaFinalStep
 {
-    return DropSchemaBuilder::create(...$names);
+    return DropSchemaBuilder::create(...$schemas);
 }
 
 // ----------------------------------------------------------------------------
@@ -2747,14 +2747,14 @@ function drop_schema(string ...$names) : DropSchemaFinalStep
  *
  * To create a user (role with LOGIN), use: create_role('user')->login()
  *
- * @param string $name The role name
+ * @param string $role The role name
  *
  * @return CreateRoleOptionsStep Builder for role creation options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function create_role(string $name) : CreateRoleOptionsStep
+function create_role(string $role) : CreateRoleOptionsStep
 {
-    return CreateRoleBuilder::create($name);
+    return CreateRoleBuilder::create($role);
 }
 
 /**
@@ -2766,14 +2766,14 @@ function create_role(string $name) : CreateRoleOptionsStep
  * Example: alter_role('admin')->renameTo('administrator')
  * Produces: ALTER ROLE admin RENAME TO administrator
  *
- * @param string $name The role name
+ * @param string $role The role name
  *
  * @return AlterRoleActionStep Builder for role alter actions
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function alter_role(string $name) : AlterRoleActionStep
+function alter_role(string $role) : AlterRoleActionStep
 {
-    return AlterRoleBuilder::create($name);
+    return AlterRoleBuilder::create($role);
 }
 
 /**
@@ -2785,14 +2785,14 @@ function alter_role(string $name) : AlterRoleActionStep
  * Example: drop_role('user1', 'user2')->ifExists()
  * Produces: DROP ROLE IF EXISTS user1, user2
  *
- * @param string ...$names The role name(s) to drop
+ * @param string ...$roles The role name(s) to drop
  *
  * @return DropRoleFinalStep Builder for role drop options
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_role(string ...$names) : DropRoleFinalStep
+function drop_role(string ...$roles) : DropRoleFinalStep
 {
-    return DropRoleBuilder::create(...$names);
+    return DropRoleBuilder::create(...$roles);
 }
 
 // ----------------------------------------------------------------------------
@@ -3295,14 +3295,14 @@ function alter_extension(string $name) : AlterExtensionActionStep
  * Example: drop_extension('postgis', 'pg_trgm')->ifExists()->cascade()
  * Produces: DROP EXTENSION IF EXISTS postgis, pg_trgm CASCADE
  *
- * @param string ...$names The names of the extensions to drop
+ * @param string ...$extensions The names of the extensions to drop
  *
  * @return DropExtensionFinalStep Builder for DROP EXTENSION statement
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_extension(string ...$names) : DropExtensionFinalStep
+function drop_extension(string ...$extensions) : DropExtensionFinalStep
 {
-    return DropExtensionBuilder::create(...$names);
+    return DropExtensionBuilder::create(...$extensions);
 }
 
 /**
@@ -3413,14 +3413,14 @@ function alter_enum_type(string $name) : AlterEnumTypeActionStep
  * Example: drop_type('status', 'priority')->ifExists()->cascade()
  * Produces: DROP TYPE IF EXISTS status, priority CASCADE
  *
- * @param string ...$names The names of the types to drop (can be schema-qualified)
+ * @param string ...$types The names of the types to drop (can be schema-qualified)
  *
  * @return DropTypeFinalStep Builder for DROP TYPE statement
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_type(string ...$names) : DropTypeFinalStep
+function drop_type(string ...$types) : DropTypeFinalStep
 {
-    return DropTypeBuilder::create(...$names);
+    return DropTypeBuilder::create(...$types);
 }
 
 /**
@@ -3473,12 +3473,12 @@ function alter_domain(string $name) : AlterDomainActionStep
  * Example: drop_domain('email', 'positive_int')->ifExists()->cascade()
  * Produces: DROP DOMAIN IF EXISTS email, positive_int CASCADE
  *
- * @param string ...$names The names of the domains to drop (can be schema-qualified)
+ * @param string ...$domains The names of the domains to drop (can be schema-qualified)
  *
  * @return DropDomainFinalStep Builder for DROP DOMAIN statement
  */
 #[DocumentationDSL(module: Module::PG_QUERY, type: DSLType::HELPER)]
-function drop_domain(string ...$names) : DropDomainFinalStep
+function drop_domain(string ...$domains) : DropDomainFinalStep
 {
-    return DropDomainBuilder::create(...$names);
+    return DropDomainBuilder::create(...$domains);
 }
