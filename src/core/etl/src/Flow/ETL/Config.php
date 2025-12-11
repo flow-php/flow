@@ -23,12 +23,12 @@ final readonly class Config
     /**
      * @deprecated Use CacheConfig::CACHE_DIR_ENV instead
      */
-    public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
+    public const string CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
 
     /**
      * @deprecated Use SortConfig::SORT_MAX_MEMORY_ENV instead
      */
-    public const SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
+    public const string SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
 
     public function __construct(
         private string $id,

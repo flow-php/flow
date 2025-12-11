@@ -34,7 +34,7 @@ final class FileAnalyzeCommand extends Command
     use StatisticsOptions;
     use XMLOptions;
 
-    private const DEFAULT_BATCH_SIZE = 1_000;
+    private const int DEFAULT_BATCH_SIZE = 1_000;
 
     private ?FileFormat $fileFormat = null;
 

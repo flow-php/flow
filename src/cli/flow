@@ -1,9 +1,9 @@
 #!/usr/bin/env php
 <?php declare(strict_types=1);
 
-if (PHP_VERSION_ID < 80200) {
+if (PHP_VERSION_ID < 80300) {
     fwrite(STDERR, sprintf(
-        "Flow PHP requires PHP 8.2 or higher. You are running PHP %s.\n",
+        "Flow PHP requires PHP 8.3 or higher. You are running PHP %s.\n",
         PHP_VERSION
     ));
     exit(1);

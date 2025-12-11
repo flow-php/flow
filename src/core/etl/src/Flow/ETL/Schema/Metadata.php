@@ -11,7 +11,7 @@ use Flow\Types\Type;
 
 final class Metadata
 {
-    public const FROM_NULL = 'from_null';
+    public const string FROM_NULL = 'from_null';
 
     /**
      * @param array<string, array<array-key, mixed>|bool|float|int|string> $map

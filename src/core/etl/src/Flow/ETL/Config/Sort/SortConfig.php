@@ -9,7 +9,7 @@ use Flow\ETL\Sort\SortAlgorithms;
 
 final readonly class SortConfig
 {
-    public const SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
+    public const string SORT_MAX_MEMORY_ENV = 'FLOW_SORT_MAX_MEMORY';
 
     public function __construct(
         public SortAlgorithms $algorithm,

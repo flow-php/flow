@@ -9,7 +9,7 @@ namespace Flow\Snappy;
  */
 final class SnappyDecompressor
 {
-    private const WORD_MASK = [0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF];
+    private const array WORD_MASK = [0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF];
 
     private readonly int $arrayLength;
 

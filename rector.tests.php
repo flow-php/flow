@@ -96,7 +96,7 @@ return RectorConfig::configure()
         __DIR__ . '/web/landing/tests',
     ])
     ->withSets([
-        LevelSetList::UP_TO_PHP_82,
+        LevelSetList::UP_TO_PHP_83,
     ])
     ->withRules([
         DataProviderAnnotationToAttributeRector::class,

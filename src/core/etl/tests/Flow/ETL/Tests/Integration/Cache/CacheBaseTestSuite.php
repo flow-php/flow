@@ -12,6 +12,7 @@ use Flow\ETL\Tests\FlowIntegrationTestCase;
 
 abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
 {
+    #[\Override]
     protected function setUp() : void
     {
         parent::setUp();
@@ -19,6 +20,7 @@ abstract class CacheBaseTestSuite extends FlowIntegrationTestCase
         $this->cache()->clear();
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         parent::tearDown();

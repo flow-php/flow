@@ -9,7 +9,7 @@ use Flow\Filesystem\Path;
 
 final readonly class CacheConfig
 {
-    public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
+    public const string CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
 
     /**
      * @param int<1, max> $externalSortBucketsCount

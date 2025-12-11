@@ -9,9 +9,9 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 
 final readonly class DeltaBinaryPackedEncoder
 {
-    private const DEFAULT_BLOCK_SIZE = 128;
+    private const int DEFAULT_BLOCK_SIZE = 128;
 
-    private const DEFAULT_MINIBLOCK_SIZE = 32;
+    private const int DEFAULT_MINIBLOCK_SIZE = 32;
 
     public function __construct(
         private int $blockSize = self::DEFAULT_BLOCK_SIZE,

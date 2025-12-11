@@ -9,7 +9,7 @@ use Flow\ETL\Sort\SortAlgorithms;
 
 final class SortConfigBuilder
 {
-    public const DEFAULT_SORT_MEMORY_PERCENTAGE = 70;
+    public const int DEFAULT_SORT_MEMORY_PERCENTAGE = 70;
 
     private SortAlgorithms $algorithm = SortAlgorithms::MEMORY_FALLBACK_EXTERNAL_SORT;
 

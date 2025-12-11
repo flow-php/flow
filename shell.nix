@@ -12,7 +12,7 @@ let
 in
 {
     pkgs ? lockedPkgs,
-    php-version ? 8.2,
+    php-version ? 8.3,
     with-blackfire ? false,
     with-xdebug ? false,
     with-pcov ? !with-blackfire,
@@ -22,9 +22,7 @@ in
 }:
 
 let
-    base-php = if php-version == 8.2 then
-        pkgs.php82
-    else if php-version == 8.3 then
+    base-php = if php-version == 8.3 then
         pkgs.php83
     else if php-version == 8.4 then
         pkgs.php84

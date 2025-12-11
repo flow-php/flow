@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 
 final readonly class BlobService implements BlobServiceInterface
 {
-    public const VERSION = '2024-08-04';
+    public const string VERSION = '2024-08-04';
 
     public function __construct(
         private Configuration $configuration,

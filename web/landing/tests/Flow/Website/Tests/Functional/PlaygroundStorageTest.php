@@ -12,6 +12,7 @@ final class PlaygroundStorageTest extends EndToEndTestCase
         $this->clearStorageBeforeTest();
     }
 
+    #[\Override]
     protected function tearDown() : void
     {
         $this->clearStorageBeforeTest();
