@@ -6,7 +6,7 @@ parameters:
         - tools/phpbench/vendor/autoload.php
         - vendor/autoload.php
     scanFiles:
-        - src/lib/pg-query/src/stubs.php
+        - src/lib/postgresql/src/stubs.php
     paths:
         - src/core/etl/src
         - src/cli/src
@@ -37,7 +37,7 @@ parameters:
         - src/lib/parquet-viewer/src
         - src/lib/snappy/src
         - src/lib/types/src
-        - src/lib/pg-query/src
+        - src/lib/postgresql/src
         - src/tools/documentation/src
         - src/core/etl/tests
         - src/cli/tests
@@ -73,7 +73,7 @@ parameters:
         - src/lib/parquet/src/Flow/Parquet/ThriftModel/*
         - src/lib/parquet/src/Flow/Parquet/BinaryReader/*
         - src/lib/parquet/src/Flow/Parquet/Dremel/ColumnData/DefinitionConverter.php
-        - src/lib/pg-query/src/Flow/PgQuery/Protobuf/*
+        - src/lib/postgresql/src/Flow/PostgreSql/Protobuf/*
 
     tmpDir: var/phpstan/cache
 

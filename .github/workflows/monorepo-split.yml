@@ -42,8 +42,8 @@ jobs:
             split_repository: 'snappy'
           - local_path: 'src/lib/types'
             split_repository: 'types'
-          - local_path: 'src/lib/pg-query'
-            split_repository: 'pg-query'
+          - local_path: 'src/lib/postgresql'
+            split_repository: 'postgresql'
 
           - local_path: 'src/adapter/etl-adapter-avro'
             split_repository: 'etl-adapter-avro'
